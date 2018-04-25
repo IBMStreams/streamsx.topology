@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.test.distributed;
 import org.junit.Test;
 
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.test.TestTopology;
 
 /**
@@ -21,7 +22,13 @@ public class PublishSubscribeTopicNames extends TestTopology {
     public void testNullTopicName() throws Exception {
         final Topology t = new Topology();
        
-        t.strings().publish(null, true);
+        t.strings().publish((String) null, true);
+    }
+    @Test(expected=NullPointerException.class)
+    public void testNullTopicNameParam() throws Exception {
+        final Topology t = new Topology();
+       
+        t.strings().publish((Supplier<String>) null);
     }
     
     @Test(expected=IllegalArgumentException.class)
@@ -68,7 +75,11 @@ public class PublishSubscribeTopicNames extends TestTopology {
     
     @Test(expected=NullPointerException.class)
     public void testNullTopicFilter() throws Exception {
-        new Topology().subscribe(null, String.class);
+        new Topology().subscribe((String) null, String.class);
+    }
+    @Test(expected=NullPointerException.class)
+    public void testNullTopicFilterParam() throws Exception {
+        new Topology().subscribe((Supplier<String>) null, String.class);
     }
     @Test(expected=IllegalArgumentException.class)
     public void testNulTopicFilter() throws Exception {

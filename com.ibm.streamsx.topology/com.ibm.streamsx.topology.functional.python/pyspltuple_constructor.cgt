@@ -1,0 +1,19 @@
+<% if ($pystyle_fn eq 'dict') { %>
+#define pyInNames_ pyInStyleObj_
+{
+     SplpyGIL lock;
+     pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
+               getInputPortAt(0));
+}
+<% } %>
+
+<% if ($pystyle_nt) { %>
+#define pyNamedtupleCls_ pyInStyleObj_
+{
+     SplpyGIL lock;
+     pyNamedtupleCls_ = streamsx::topology::SplpyGeneral::callFunction(
+        "streamsx.topology.runtime", "_get_namedtuple_cls",
+       streamsx::topology::pyUnicode_FromUTF8("<%=$iport->getSPLTupleType()%>"),
+       streamsx::topology::pyUnicode_FromUTF8("<%=substr($pystyle, 11)%>"));
+}
+<% } %>

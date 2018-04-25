@@ -15,7 +15,7 @@ package com.ibm.streamsx.topology.context;
  * {@linkplain #SERVICE_DEFINITION Service definition}.
  * </LI>
  * <LI>
- * IBM Cloud {@linkplain VCAP_SERVICES service definitions} and
+ * IBM Cloud {@linkplain #VCAP_SERVICES service definitions} and
  * a {@linkplain #SERVICE_NAME service name}. The named service must exist in
  * service definitions and must be of type {@code streaming-analytics}.
  * </LI>

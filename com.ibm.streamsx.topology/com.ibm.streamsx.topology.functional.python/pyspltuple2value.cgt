@@ -14,9 +14,16 @@
 
 <%
 print splpy_inputtuple2value($pystyle, $iport);
+
+if ($pystyle eq 'dict' || $pystyle eq 'tuple' || $pystyle_nt) {
+%>
+@include "../opt/python/codegen/py_splTupleCheckForBlobs.cgt"
+<%
+}
+
 if ($pystyle eq 'dict') {
 %>
 @include "pyspltuple2dict.cgt"
-<% } elsif ($pystyle eq 'tuple') { %>
+<% } elsif ($pystyle eq 'tuple' || $pystyle_nt) { %>
 @include "pyspltuple2tuple.cgt"
 <% } %>

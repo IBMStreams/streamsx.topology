@@ -30,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
@@ -110,8 +111,13 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
         }
                       
         if (!deploy.has(ContextProperties.TOOLKIT_DIR)) {
-            deploy.addProperty(ContextProperties.TOOLKIT_DIR, Files
-                    .createTempDirectory(Paths.get(""), "tk").toAbsolutePath().toString());
+            Path tkDir = keepToolkit ?
+                Files.createTempDirectory(Paths.get(""), "tk")
+                :
+                Files.createTempDirectory("tk");
+            
+            deploy.addProperty(ContextProperties.TOOLKIT_DIR,
+                tkDir.toAbsolutePath().toString());
         }
 
         final File toolkitRoot = new File(jstring(deploy, ContextProperties.TOOLKIT_DIR));
@@ -296,10 +302,16 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
                     copyDirectoryToDirectory(srcFile, targetDir);
             }
             // Create a jar from a classes directory.
-            if (inc.has("classes")) {
+            else if (inc.has("classes")) {
                 String classes = jstring(inc, "classes");
                 String name = jstring(inc, "name");
                 createJarFile(classes, name, targetDir);
+            }
+            // Create a file from the contents in the file.
+            else if (inc.has("contents")) {
+                byte[] contents = jstring(inc, "contents").getBytes(StandardCharsets.UTF_8);
+                Path targetFile = new File(targetDir, jstring(inc, "name")).toPath();
+                Files.write(targetFile, contents);
             }
         }
     }

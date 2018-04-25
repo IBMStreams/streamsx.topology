@@ -44,7 +44,7 @@ def main():
     # must be submitted to a context to be executed.
     
     # execute the topology by submitting to a standalone context
-    streamsx.topology.context.submit("STANDALONE", topo.graph)
+    streamsx.topology.context.submit("STANDALONE", topo)
 
 def play_fizz_buzz(counting):
     """

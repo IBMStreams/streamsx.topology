@@ -32,11 +32,15 @@ public:
   void process(uint32_t idx);
 
 private:
+
   // Members
     SplpyPyOp *pyop_;
+    PyObject *pyOutNames_0;
 
+    SplpyOp *op() { return pyop_; }
     void pySubmitTuplesPort0(PyObject * value);
     void fromPythonToPort0(PyObject * pyTuple);
+    void fromPythonDictToPort0(PyObject * pyDict);
 
 }; 
 

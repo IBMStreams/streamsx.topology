@@ -39,16 +39,26 @@ public abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
         public final Topology app;
         public final Map<String,Object> config;
         public JsonObject submission;
+        public final Map<Object,Object> saved = Collections.synchronizedMap(new HashMap<>());
         
-        public AppEntity(Topology app, Map<String,Object> config) throws Exception {
+        AppEntity(Topology app, Map<String,Object> config) throws Exception {
             this.app = app;
             this.config = config;
             
         }
-        public AppEntity(JsonObject submission) {
+        AppEntity(JsonObject submission) {
             this.app = null;
             this.config = null;
             this.submission = submission;
+        }
+        
+        public Object getSavedObject(Object key) {
+            return saved.get(key);
+        }
+        
+        public <T> T saveObject(Object key, T value) {
+            saved.put(key, value);
+            return value;
         }
     }
 
@@ -106,6 +116,7 @@ public abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
         
         JsonObject deploy = new JsonObject();        
         addConfigToDeploy(deploy, entity.config);
+        deploy.addProperty("contextType", this.getType().name());
         
         submission.add(DEPLOY,deploy);
         submission.add(SUBMISSION_GRAPH, entity.app.builder()._complete());

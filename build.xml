@@ -87,6 +87,7 @@
                <exclude name="com/ibm/streamsx/topology/builder/**"/>
                <exclude name="com/ibm/streamsx/topology/generator/**"/>
                <include name="com/ibm/streamsx/rest/**"/>
+               <exclude name="**/*.properties"/>
             </fileset>
             <fileset dir="java/runtime/src">
                <include name="com/ibm/streamsx/topology/**"/>
@@ -102,7 +103,7 @@
       <tstamp/>
       <property name="release.dir" location="${release.base}" />
       <mkdir dir="${release.dir}" />
-      <property name="releasefilename" value="${release.dir}/streamsx.topology-v1.7-${DSTAMP}-${TSTAMP}.tgz"/>
+      <property name="releasefilename" value="${release.dir}/streamsx.topology-v1.9-${DSTAMP}-${TSTAMP}.tgz"/>
       <tar compression="gzip" longfile="gnu" destfile="${releasefilename}">
          <tarfileset dir="${basedir}" filemode="755" >
            <include name="**/pyversion*.sh"/>

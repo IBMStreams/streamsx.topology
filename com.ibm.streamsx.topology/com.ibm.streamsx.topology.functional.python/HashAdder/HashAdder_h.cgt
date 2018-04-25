@@ -22,12 +22,13 @@ public:
   void process(Punctuation const & punct, uint32_t port);
 
 private:
+    SplpyOp * op() { return funcop_; }
+
     // Members
     // Control for interaction with Python
     SplpyFuncOp *funcop_;
     
-    // Names of input attributes
-    PyObject *pyInNames_;
+    PyObject *pyInStyleObj_;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

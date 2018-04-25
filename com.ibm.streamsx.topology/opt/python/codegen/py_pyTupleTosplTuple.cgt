@@ -12,9 +12,12 @@
   }
 %>
  
+// Python tuple to SPL tuple
 void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple <%=$itypeparam%>) {
 
   <%=$oport->getCppTupleType()%> otuple;
+
+try {
 
   Py_ssize_t frs = PyTuple_GET_SIZE(pyTuple); 
     
@@ -69,7 +72,92 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple <%=$
 }
  %>
 
-  Py_BEGIN_ALLOW_THREADS
-  submit(otuple, <%=$oport->getIndex()%>);
-  Py_END_ALLOW_THREADS
+ } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+    SPLPY_OP_HANDLE_EXCEPTION_INFO(excInfo);
+    return;
+ }
+
+ STREAMSX_TUPLE_SUBMIT_ALLOW_THREADS(otuple, <%=$oport->getIndex()%>);
 }
+
+<%
+{
+no strict 'vars';
+if (defined $FROM_DICT_TMP) {
+%>
+
+// Python dict to SPL tuple
+void MY_OPERATOR::fromPythonDictToPort<%=$oport->getIndex()%>(PyObject *pyDict <%=$itypeparam%>) {
+
+  <%=$oport->getCppTupleType()%> otuple;
+
+try {
+
+  Py_ssize_t available = PyDict_Size(pyDict); 
+    
+<%
+  if (defined $iport) {
+    print 'bool setAttr = false;';
+  }
+
+  for (my $ai = $oport->getNumberOfAttributes() - 1; $ai >= 0; --$ai) {
+    
+    my $attribute = $oport->getAttributeAt($ai);
+    my $name = $attribute->getName();
+    my $atype = $attribute->getSPLType();
+    splToPythonConversionCheck($atype);
+    
+    if (defined $iport) {
+             print 'setAttr = false;';
+    }
+%>
+    if (available > 0) {
+         // Value from the Python function
+         PyObject *pyAttrValue = PyDict_GetItem(pyDict, PyTuple_GET_ITEM(pyOutNames_<%=$oport->getIndex()%>, <%=$ai%>));
+         if (pyAttrValue != NULL) {
+             --available;
+             if (!SplpyGeneral::isNone(pyAttrValue)) {
+                  streamsx::topology::pySplValueFromPyObject(
+                               otuple.get_<%=$name%>(), pyAttrValue);
+<%
+    if (defined $iport) {
+             print 'setAttr = true;';
+    }
+%>
+           }
+        }
+   }
+<%
+    if (defined $iport) {
+    
+    # Only copy attributes across if they match on name and type
+    my $matchInputAttr = $iport->getAttributeByName($name);
+    if (defined $matchInputAttr) {
+       if ($matchInputAttr->getSPLType() eq $attribute->getSPLType()) {
+%>
+    if (!setAttr) {
+      // value from the input attribute
+      otuple.set_<%=$name%>(ituple.get_<%=$name%>());
+    }
+<%
+      }
+    }
+   }
+%>
+         
+<%
+}
+ %>
+
+ } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+    SPLPY_OP_HANDLE_EXCEPTION_INFO(excInfo);
+    return;
+ }
+
+ STREAMSX_TUPLE_SUBMIT_ALLOW_THREADS(otuple, <%=$oport->getIndex()%>);
+}
+
+<%
+}
+}
+%>

@@ -12,12 +12,12 @@ import os
 import datetime
 
 class Person(object):
-    def __init__(self, name, age):
+    def __init__(self, name, birth_year):
         self.name = name
-        self.age = age
+        self._birth_year = birth_year
 
-    def rough_birth_year(self):
-        return time.localtime().tm_year - self.age;
+    def birth_year(self):
+        return self._birth_year
 
 expected_contents = """8
 Punctuation received: WindowMarker
@@ -54,6 +54,8 @@ class TimeCounter(object):
         self.count += 1
         time.sleep(self.period)
         return to_return
+    def next(self):
+        return self.__next__()
 
 class TriggerDiff(object):
     """Given any input, returns the timespan (in seconds) between now
@@ -97,7 +99,8 @@ class TestPythonWindowing(unittest.TestCase):
     def test_BasicCountCountWindow(self):
         topo = Topology()
         s = topo.source([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
-        s = s.last(10).trigger(2).aggregate(lambda x: sum(x)/len(x))
+        # Need a float cast to make the value consistent with Python 2/3
+        s = s.last(10).trigger(2).aggregate(lambda x: float(sum(x))/float(len(x)))
 
         tester = Tester(topo)
         tester.contents(s, [1.5,2.5,3.5,4.5,5.5,7.5,9.5])
@@ -172,17 +175,18 @@ class TestPythonWindowing(unittest.TestCase):
 
     def test_ClassCountCountWindow(self):
         topo = Topology()
+        current_year = time.localtime().tm_year
         s = topo.source([
-                ['Wallace', 55],
-                ['Copernicus', 544],
-                ['Feynman', 99],
-                ['Dirac', 115],
-                ['Pauli', 117],
-                ['Frenkel', 49],
-                ['Terence Tao', 42]
+                ['Wallace', 1962],
+                ['Copernicus', 1473],
+                ['Feynman', 1918],
+                ['Dirac', 1902],
+                ['Pauli', 1900],
+                ['Frenkel', 1968],
+                ['Terence Tao', 1975]
         ])
         s = s.map(lambda x: Person(x[0], x[1]))
-        s = s.last(3).trigger(1).aggregate(lambda x: int(sum([p.rough_birth_year() for p in x])/len(x)))
+        s = s.last(3).trigger(1).aggregate(lambda x: int(sum([p.birth_year() for p in x])/len(x)))
 
         tester = Tester(topo)
         tester.contents(s, [1962, 1717, 1784, 1764, 1906, 1923, 1947])

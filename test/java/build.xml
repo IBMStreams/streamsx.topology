@@ -107,6 +107,8 @@
 
   <target name="test.toolkit">
     <mkdir dir="${testtk.java}/bin"/>
+    <mkdir dir="${testtk.java}/lib"/>
+    <copy file="${topology.toolkit.jar}" todir="${testtk.java}/lib"/>
     <javac debug="true"
    	   srcdir="${testtk.java}/src"
    	   destdir="${testtk.java}/bin"
@@ -117,6 +119,14 @@
      <arg value="--make-operator"/>
      <arg value="-i"/>
      <arg value="${testtk}"/>
+   </exec>
+   </target>
+  <target name="test.python.toolkit">
+   <exec executable="${topology.test.python}">
+     <arg value="${tk}/bin/spl-python-extract.py"/>
+     <arg value="-i"/>
+     <arg value="../python/spl/testtkpy"/>
+     <arg value="--make-toolkit"/>
    </exec>
    </target>
 	
@@ -152,13 +162,13 @@
      </antcall>
   </target>
 
-  <target name="unittest.standalone" depends="jar">
+  <target name="unittest.standalone" depends="jar,test.python.toolkit">
      <antcall target="unittest.base" inheritAll="no">
        <param name="topology.test.type" value="STANDALONE_TESTER"/>
      </antcall>
   </target>
 
-  <target name="unittest.distributed" depends="jar">
+  <target name="unittest.distributed" depends="jar,test.python.toolkit">
      <antcall target="unittest.base" inheritAll="no">
        <param name="topology.test.type" value="DISTRIBUTED_TESTER"/>
      </antcall>
@@ -202,7 +212,7 @@
      <property name="topology.test.coverage" value="true"/>
      <property name="topology.test.resource_dir" location="resources"/>
    <echo message="PYTHONHOME:${topology.test.python.prefix}"/>
-   <jacoco:coverage enabled="${topology.test.coverage}">
+   <jacoco:coverage enabled="${topology.test.coverage}" destfile="${test.dir}/jacoco.exec">
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="${topology.test.showoutput}"
            threads="${topology.test.threads}"
            haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
@@ -231,7 +241,7 @@
        </batchtest>
      </junit>
    </jacoco:coverage>
-   <jacoco:coverage enabled="${topology.test.coverage}">
+   <jacoco:coverage enabled="${topology.test.coverage}"  destfile="${test.dir}/jacoco.exec">
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes"
            threads="${topology.test.threads}"
            haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
@@ -318,7 +328,7 @@
      <mkdir dir="${test.dir}"/>
      <tempfile property="topology.test.dir" prefix="testrun" destDir="${test.dir}"/>
      <mkdir dir="${topology.test.dir}"/>
-   <jacoco:coverage enabled="${topology.test.coverage}">
+   <jacoco:coverage enabled="${topology.test.coverage}" destfile="${test.dir}/jacoco.exec">
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="${topology.test.showoutput}"
            threads="${topology.test.threads}"
            haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
@@ -339,9 +349,7 @@
        <batchtest todir="${topology.test.dir}">
           <fileset dir="${basedir}/src"
              excludes="**/samples/*Test.java" >
-             <include name="**/StreamsConnectionTest.java"/>
-             <include name="**/StreamingAnalyticsConnectionTest.java"/>
-             <include name="**/StreamingAnalyticsServiceTest.java"/>
+             <include name="**/rest/test/*Test.java"/>
           </fileset>
        </batchtest>
      </junit>
@@ -361,7 +369,7 @@
      <property name="topology.test.coverage" value="true"/>
      <property name="topology.test.resource_dir" location="resources"/>
      <property name="topology.test.external.run" value="false"/>
-   <jacoco:coverage enabled="${topology.test.coverage}">
+   <jacoco:coverage enabled="${topology.test.coverage}" destfile="${test.dir}/jacoco.exec">
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="${topology.test.showoutput}"
            haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
        <sysproperty key="topology.test.root" value="${topology.test.root}"/>

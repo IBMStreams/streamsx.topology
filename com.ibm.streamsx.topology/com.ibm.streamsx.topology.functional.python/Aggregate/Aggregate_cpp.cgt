@@ -32,7 +32,7 @@ using namespace streamsx::topology;
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
-   pyInNames_(NULL),
+   pyInStyleObj_(NULL),
    loads(NULL),
    occ_(-1),
    window_(<%=$windowCppInitializer%>)
@@ -194,10 +194,14 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
     PyObject *value = items;
   OPort0Type otuple;
 
+  try {
   
   if (SPLPY_AGGREGATE(funcop_->callable(), value,
        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_)){  
      submit(otuple, 0);
+  }
+  } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+     SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
   }
   submit(Punctuation::WindowMarker, 0);
 }

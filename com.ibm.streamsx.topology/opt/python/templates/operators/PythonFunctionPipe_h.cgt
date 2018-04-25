@@ -32,13 +32,16 @@ public:
   // Punctuation processing
   void process(Punctuation const & punct, uint32_t port);
 private:
+    SplpyOp *op() { return pyop_; }
   // Members
     SplpyPyOp *pyop_;
 
     PyObject *pyInNames_;
+    PyObject *pyOutNames_0;
 
     void pySubmitTuplesPort0(PyObject * value, <%=$iport->getCppTupleType()%> const & ituple);
     void fromPythonToPort0(PyObject * pyTuple, <%=$iport->getCppTupleType()%> const & ituple);
+    void fromPythonDictToPort0(PyObject * pyDict, <%=$iport->getCppTupleType()%> const & ituple);
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

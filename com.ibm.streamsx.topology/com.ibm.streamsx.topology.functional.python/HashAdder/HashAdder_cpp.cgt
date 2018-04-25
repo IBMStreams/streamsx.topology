@@ -10,32 +10,27 @@ using namespace streamsx::topology;
 @include "../pyspltuple.cgt"
 <%
  # Select the Python wrapper function
- my $pywrapfunc= $pystyle . '_in';
+ my $pywrapfunc= $pystyle_fn . '_in';
 %>
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
-   pyInNames_(NULL)
+   pyInStyleObj_(NULL)
 {
     funcop_ = new SplpyFuncOp(this, "<%=$pywrapfunc%>");
-<% if ($pystyle eq 'dict') { %>
-     SplpyGIL lock;
-     pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
-               getInputPortAt(0));
-<% } %>
+
+@include "../pyspltuple_constructor.cgt"
 }
 
 
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-<% if ($pystyle eq 'dict') { %>
-    if (pyInNames_) {
+    if (pyInStyleObj_) {
       SplpyGIL lock;
-      Py_DECREF(pyInNames_);
+      Py_DECREF(pyInStyleObj_);
     }
-<% } %>
 
     delete funcop_;
 }
@@ -49,9 +44,10 @@ void MY_OPERATOR::prepareToShutdown()
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
+try {
 @include "../pyspltuple2value.cgt"
 
-<%if ($pystyle eq 'dict' || $pystyle eq 'tuple') {%>
+<%if ($pystyle_fn eq 'dict' || $pystyle_fn eq 'tuple') {%>
 
   OPort0Type otuple;
   otuple.assignFrom(<%=$iport->getCppTupleName()%>, false);
@@ -66,6 +62,9 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 
   // submit tuple
   submit(otuple, 0);
+} catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+  SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+}
 }
 
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)

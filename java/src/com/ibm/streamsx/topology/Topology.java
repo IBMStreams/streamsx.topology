@@ -435,6 +435,7 @@ public class Topology implements TopologyElement {
      * <P>
      * Publish-subscribe only works when the topology is
      * submitted to a {@link com.ibm.streamsx.topology.context.StreamsContext.Type#DISTRIBUTED}
+     * or {@link com.ibm.streamsx.topology.context.StreamsContext.Type#STREAMING_ANALYTICS_SERVICE}
      * context. This allows different applications (or
      * even within the same application) to communicate
      * using published streams.
@@ -457,6 +458,32 @@ public class Topology implements TopologyElement {
     public <T> TStream<T> subscribe(String topic, Class<T> tupleTypeClass) {
         checkTopicFilter(topic);
         
+        return SPLStreamBridge.subscribe(this, topic, tupleTypeClass);
+    }
+    
+    /**
+     * Declare a stream that is a subscription to {@code topic}.
+     * 
+     * Differs from {@link #subscribe(String, Class)} in that it
+     * supports {@code topic} as a submission time parameter, for example
+     * using the topic defined by the submission parameter {@code eventTopic}:
+     * 
+     * <pre>
+     * <code>
+     * Supplier<String> topicParam = topology.createSubmissionParameter("eventTopic", String.class);
+     * TStream<String> events = topology.subscribe(topicParam, String.class);
+     * </code>
+     * </pre>
+
+     * @param topic Topic to subscribe to.
+     * @param tupleTypeClass Type to subscribe to.
+     * @return Stream the will contain tuples from matching publishers.
+     * 
+     * @see #subscribe(String, Class)
+     * 
+     * @since 1.8
+     */
+    public <T> TStream<T> subscribe(Supplier<String> topic, Class<T> tupleTypeClass) {        
         return SPLStreamBridge.subscribe(this, topic, tupleTypeClass);
     }
     
@@ -893,7 +920,7 @@ public class Topology implements TopologyElement {
      * and is added automatically by TODO-add link.
      * </P>
      * <P>
-     * Job control plane is only supported is distributed contexts.
+     * Job control plane is only supported in distributed contexts.
      * </P>
      * @since com.ibm.streamsx.topology 1.5
      */

@@ -36,7 +36,7 @@ def main():
   ts.print()
 
   # Submit application to a distributed instance
-  streamsx.topology.context.submit('DISTRIBUTED', topo.graph)
+  streamsx.topology.context.submit('DISTRIBUTED', topo)
 
 if __name__ == '__main__':
     main()

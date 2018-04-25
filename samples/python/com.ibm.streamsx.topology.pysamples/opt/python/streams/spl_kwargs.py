@@ -1,3 +1,4 @@
+# coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
 
@@ -24,7 +25,7 @@ def spl_namespace():
     return "com.ibm.streamsx.topology.pysamples.kwargs"
 
 @spl.map()
-class DeltaFilter:
+class DeltaFilter(object):
     "Drops any tuple that is within a delta of the last tuple for the attribute named `value`."
     def __init__(self, delta):
         self.delta = delta
@@ -45,7 +46,7 @@ class DeltaFilter:
         return self.empty
 
 @spl.filter()
-class ContainsFilter:
+class ContainsFilter(object):
     """
     Looks for a string term in any attribute in the tuple.
     """

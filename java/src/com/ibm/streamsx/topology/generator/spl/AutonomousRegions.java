@@ -2,6 +2,7 @@ package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 
+import java.util.List;
 import java.util.Set;
 
 import com.google.gson.JsonObject;
@@ -26,7 +27,7 @@ class AutonomousRegions {
 	 */
     static void preprocessAutonomousRegions(JsonObject graph) {
 
-        Set<JsonObject> autonomousOperators = GraphUtilities.findOperatorByKind(
+        List<JsonObject> autonomousOperators = GraphUtilities.findOperatorByKind(
                 BVirtualMarker.AUTONOMOUS, graph);
 
         for (JsonObject autonomous : autonomousOperators) {

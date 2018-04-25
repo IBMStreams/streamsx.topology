@@ -53,7 +53,7 @@ namespace streamsx {
       PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
 
       if(pyReturnVar == 0){
-        throw SplpyGeneral::pythonException("sink");
+        throw SplpyExceptionInfo::pythonError("for_each");
       }
 
       Py_DECREF(pyReturnVar);
@@ -73,7 +73,7 @@ namespace streamsx {
       PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
 
       if(pyReturnVar == 0){
-        throw SplpyGeneral::pythonException("filter");
+         throw SplpyExceptionInfo::pythonError("map");
       }
 
       int ret = PyObject_IsTrue(pyReturnVar);
@@ -113,7 +113,7 @@ namespace streamsx {
         Py_DECREF(pyReturnVar);
         return NULL;
       } else if(pyReturnVar == 0){
-         throw SplpyGeneral::pythonException("map");
+         throw SplpyExceptionInfo::pythonError("map");
       } 
 
       return pyReturnVar;
@@ -158,11 +158,12 @@ namespace streamsx {
       PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
 
       if (pyReturnVar == 0){
-        throw SplpyGeneral::pythonException("hash");
+        throw SplpyExceptionInfo::pythonError("hash");
       }
 
       // construct integer from return value
-      SPL::int64 hash = (SPL::int64) PyLong_AsLong(pyReturnVar);
+      SPL::int64 hash;
+      pySplValueFromPyObject(hash, pyReturnVar);
       Py_DECREF(pyReturnVar);
       return hash;
    }

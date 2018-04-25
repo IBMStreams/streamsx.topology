@@ -3,8 +3,7 @@
 # Copyright IBM Corp. 2015,2017
 
 """
-Python API to allow creation of streaming applications for
-IBM® Streams & Streaming Analytics service on Bluemix.
+Streaming application definition.
 
 Overview
 ########
@@ -37,6 +36,16 @@ The compilation step invokes the Streams compiler to produce a bundle.
 This effectively, from a Python point of view, produces a runnable
 version of the Python topology that includes application
 specific Python C extensions to optimize performance.
+
+The bundle also includes any required Python packages or modules
+that were used in the declaration of the application. For example
+the Python module containing the callable used in a
+:py:meth:`~Stream.map` invocation. These modules are copied into
+the bundle from their local location. This allows the bundle to
+be self-contained, and thus not the Streams instance have all the required
+Python packages pre-installed. The addition of packages to the bundle
+can be controlled with :py:attr:`Topology.include_packages` and
+:py:attr:`Topology.exclude_packages`.
 
 The Streams runtime distributes the application's operations
 across the resources available in the instance.
@@ -132,6 +141,16 @@ Example of using ``__enter__`` to create custom metrics::
         def __exit__(self, exc_type, exc_value, traceback):
             pass
 
+        def __call__(self):
+            pass
+
+When an instance defines a valid ``__exit__`` method then it will be called with an exception when:
+
+ * the instance raises an exception during processing of a tuple
+ * a data conversion exception is raised converting a value to an structutured schema tuple or attribute
+
+If ``__exit__`` returns a true value then the exception is suppressed and processing continues, otherwise the enclosing processing element will be terminated.
+
 Tuple semantics
 ===============
 
@@ -163,21 +182,29 @@ open source and third-party SPL toolkits.
 
 See :py:mod:`streamsx.spl.op`
 
+Module contents
+###############
+
 """
 
 from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
+from future.builtins import *
 try:
     from future import standard_library
     standard_library.install_aliases()
 except (ImportError,NameError):
     pass
 
+import copy
 import random
-from streamsx.topology import graph
-from streamsx.topology.schema import StreamSchema, CommonSchema, _SCHEMA_PENDING
+import streamsx._streams._placement as _placement
+import streamsx.spl.op
+import streamsx.spl.types
+import streamsx.topology.graph
+import streamsx.topology.schema
 import streamsx.topology.functions
 import streamsx.topology.runtime
 import json
@@ -189,6 +216,7 @@ import time
 import inspect
 import logging
 import datetime
+import pkg_resources
 from enum import Enum
 
 logger = logging.getLogger('streamsx.topology')
@@ -236,6 +264,10 @@ class Routing(Enum):
     A parallel region is started by :py:meth:`~Stream.parallel`
     and ended with :py:meth:`~Stream.end_parallel` or :py:meth:`~Stream.for_each`.
     """
+    BROADCAST=0
+    """
+    Tuples are routed to every channel in the parallel region.
+    """
     ROUND_ROBIN=1
     """
     Tuples are routed to maintain an even distribution of tuples to the channels.
@@ -262,6 +294,38 @@ class Routing(Enum):
         being in different processing elements.
     """
 
+class SubscribeConnection(Enum):
+    """Connection mode between a subscriber and matching publishers.
+
+    .. versionadded:: 1.9
+    .. seealso:: :py:meth:`~Topology.subscribe`
+    """
+    Direct = 0
+    """Direct connection between a subscriber and and matching publishers.
+    
+    When connected directly a slow subscriber will cause back-pressure
+    against the publishers, forcing them to slow tuple processing to
+    the slowest publisher.
+    """
+
+    Buffered = 1
+    """Buffered connection between a subscriber and and matching publishers.
+   
+    With a buffered connection tuples from publishers are placed in
+    a single queue owned by the subscriber. This allows a slower
+    subscriber to handle brief spikes in tuples from publishers.
+
+    A subscriber can fully isolate itself from matching publishers
+    by adding a :py:class:`CongestionPolicy` that drops tuples
+    when the queue is full. In this case when the subscriber is
+    not able to keep up with the tuple rate from all matching subscribers
+    it will have a minimal effect on matching publishers.
+    """
+
+    def spl_json(self):
+        """Internal method."""
+        return streamsx.spl.op.Expression.expression('com.ibm.streamsx.topology.topic::' + self.name).spl_json()
+
 class Topology(object):
     """The Topology class is used to define data sources, and is passed as a parameter when submitting an application.
        Topology keeps track of all sources, sinks, and data operations within your application.
@@ -277,13 +341,13 @@ class Topology(object):
               from the calling evironment if it can be determined, otherwise
               a random name.
 
-       Instance variables:
-           include_packages(set): Python package names to be included in the built application. 
+       Attributes:
+           include_packages(set[str]): Python package names to be included in the built application. Any package in this list is copied into the bundle and made available at runtime to the Python callables used in the application. By default a ``Topology`` will automatically discover which packages and modules are required to be copied, this field may be used to add additional packages that were not automatically discovered.
 
-           exclude_packages(set): Python top-level package names to be excluded from the built application. Excluding a top-level packages excludes all sub-modules at any level in the package, e.g. `sound` excludes `sound.effects.echo`. Only the top-level package can be defined, e.g. `sound` rather than `sound.filters`. Behavior when adding a module within a package is undefined.
-           When compiling the application using Anaconda this set is pre-loaded with Python packages from the Anaconda pre-loaded set.
+           exclude_packages(set[str]): Python top-level package names to be excluded from the built application. Excluding a top-level packages excludes all sub-modules at any level in the package, e.g. `sound` excludes `sound.effects.echo`. Only the top-level package can be defined, e.g. `sound` rather than `sound.filters`. Behavior when adding a module within a package is undefined.
+               When compiling the application using Anaconda this set is pre-loaded with Python packages from the Anaconda pre-loaded set.
 
-           Package names in `include_packages` take precedence over package names in `exclude_packages`.
+               Package names in `include_packages` take precedence over package names in `exclude_packages`.
     """  
 
     def __init__(self, name=None, namespace=None, files=None):
@@ -313,6 +377,7 @@ class Topology(object):
           raise ValueError("Python version not supported.")
         self.include_packages = set() 
         self.exclude_packages = set() 
+        self._pip_packages = list() 
         self._files = dict()
         if "Anaconda" in sys.version:
             import streamsx.topology.condapkgs
@@ -320,20 +385,24 @@ class Topology(object):
         import streamsx.topology._deppkgs
         self.exclude_packages.update(streamsx.topology._deppkgs._DEP_PACKAGES)
         
-        self.graph = graph.SPLGraph(self, name, namespace)
+        self.graph = streamsx.topology.graph.SPLGraph(self, name, namespace)
 
     @property
     def name(self):
         """
-        Return the name of the topology.
-        Returns:str:Name of the topology.
+        Name of the topology.
+
+        Returns:
+            str: Name of the topology.
         """
         return self.graph.name
     @property
     def namespace(self):
         """
-        Return the namespace of the topology.
-        Returns:str:Namespace of the topology.
+        Namespace of the topology.
+
+        Returns:
+            str:Namespace of the topology.
         """
         return self.graph.namespace
 
@@ -356,6 +425,19 @@ class Topology(object):
             func(callable): An iterable or a zero-argument callable that returns an iterable of tuples.
             name(str): Name of the stream, defaults to a generated name.
 
+        Exceptions raised by ``func`` or its iterator will cause
+        its processing element will terminate. 
+
+        If ``func`` is a callable object then it may suppress exceptions
+        by return a true value from its ``__exit__`` method.
+
+        Suppressing an exception raised by ``func.__iter__`` causes the
+        source to be empty, no tuples are submitted to the stream.
+
+        Suppressing an exception raised by ``__next__`` on the iterator
+        results in no tuples being submitted for that call to ``__next__``.
+        Processing continues with calls to ``__next__`` to fetch subsequent tuples.
+
         Returns:
             Stream: A stream whose tuples are the result of the iterable obtained from `func`.
         """
@@ -367,7 +449,7 @@ class Topology(object):
         else:
             if _name is None:
                 _name = type(func).__name__
-            func = streamsx.topology.functions._IterableInstance(func)
+            func = streamsx.topology.runtime._IterableInstance(func)
 
         sl = _SourceLocation(_source_info(), "source")
         _name = self.graph._requested_name(_name, action='source', func=func)
@@ -376,7 +458,7 @@ class Topology(object):
         oport = op.addOutputPort(name=_name)
         return Stream(self, oport)._make_placeable()
 
-    def subscribe(self, topic, schema=CommonSchema.Python, name=None):
+    def subscribe(self, topic, schema=streamsx.topology.schema.CommonSchema.Python, name=None, connect=None, buffer_capacity=None, buffer_full_policy=None):
         """
         Subscribe to a topic published by other Streams applications.
         A Streams application may publish a stream to allow other
@@ -397,22 +479,40 @@ class Topology(object):
         A Streams application publishing JSON streams may have been implemented in any programming language
         supported by Streams.
 
+        Subscribers can ensure they do not slow down matching publishers
+        by using a buffered connection with a buffer full policy
+        that drops tuples.
+
         Args:
             topic(str): Topic to subscribe to.
             schema(~streamsx.topology.schema.StreamSchema): schema to subscribe to.
             name(str): Name of the subscribed stream, defaults to a generated name.
+            connect(SubscribeConnection): How subscriber will be connected to matching publishers. Defaults to :py:const:`~SubscribeConnection.Direct` connection.
+            buffer_capacity(int): Buffer capacity in tuples when `connect` is set to :py:const:`~SubscribeConnection.Buffered`. Defaults to 1000 when `connect` is `Buffered`. Ignored when `connect` is `None` or `Direct`.
+            buffer_full_policy(~streamsx.types.CongestionPolicy): Policy when a pulished tuple arrives and the subscriber's buffer is full. Defaults to `Wait` when `connect` is `Buffered`. Ignored when `connect` is `None` or `Direct`.
 
         Returns:
             Stream:  A stream whose tuples have been published to the topic by other Streams applications.
+
+        .. versionchanged:: 1.9 `connect`, `buffer_capacity` and `buffer_full_policy` parameters added.
+
+        .. seealso:`SubscribeConnection`
         """
         _name = self.graph._requested_name(name, 'subscribe')
         sl = _SourceLocation(_source_info(), "subscribe")
         op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe", sl=sl, name=_name)
         oport = op.addOutputPort(schema=schema, name=_name)
-        subscribeParams = {'topic': topic, 'streamType': schema}
-        op.setParameters(subscribeParams)
+        params = {'topic': topic, 'streamType': schema}
+        if connect is not None and connect != SubscribeConnection.Direct:
+            params['connect'] = connect
+            if buffer_capacity:
+                params['bufferCapacity'] = int(buffer_capacity)
+            if buffer_full_policy:
+                params['bufferFullPolicy'] = buffer_full_policy
+            
+        op.setParameters(params)
         op._layout_group('Subscribe', name if name else _name)
-        return Stream(self, oport)
+        return Stream(self, oport)._make_placeable()
 
     def add_file_dependency(self, path, location):
         """
@@ -462,8 +562,75 @@ class Topology(object):
         else:
              self._files[location].append(path)
         return location + '/' + os.path.basename(path)
-     
-class Stream(object):
+
+    def add_pip_package(self, requirement):
+        """
+        Add a Python package dependency for this topology.
+
+        If the package defined by the requirement specifier
+        is not pre-installed on the build system then the
+        package is installed using `pip` and becomes part
+        of the Streams application bundle (`sab` file).
+        The package is expected to be available from `pypi.org`.
+
+        If the package is already installed on the build system
+        then it is not added into the `sab` file.
+        The assumption is that the runtime hosts for a Streams
+        instance have the same Python packages installed as the
+        build machines. This is always true for the Streaming
+        Analytics service on IBM Cloud.
+
+        The project name extracted from the requirement
+        specifier is added to :py:attr:`~exclude_packages`
+        to avoid the package being added by the dependency
+        resolver. Thus the package should be added before
+        it is used in any stream transformation.
+
+        Example::
+
+            topo = Topology()
+            # Add dependency on pint package
+            # and astral at version 0.8.1
+            topo.add_pip_package('pint')
+            topo.add_pip_package('astral==0.8.1')
+        
+        Args:
+            requirement(str): Package requirements specifier.
+
+        .. warning::
+            Only supported when using the remote build service with
+            the Streaming Analytics service.
+
+        .. versionadded:: 1.9
+        """
+        self._pip_packages.append(str(requirement))
+        pr = pkg_resources.Requirement.parse(requirement) 
+        self.exclude_packages.add(pr.project_name)
+
+    def _prepare(self):
+        """Prepare object prior to SPL generation."""
+        self._generate_requirements()
+
+    def _generate_requirements(self):
+        """Generate the info to create requirements.txt in the toookit."""
+        if not self._pip_packages:
+            return
+
+        reqs = ''
+        for req in self._pip_packages:
+                reqs += "{}\n".format(req)
+        reqs_include = {
+            'contents': reqs,
+            'target':'opt/python/streams',
+            'name': 'requirements.txt'}
+
+        if 'opt' not in self._files:
+             self._files['opt'] = [reqs_include]
+        else:
+             self._files['opt'].append(reqs_include)
+
+
+class Stream(_placement._Placement, object):
     """
     The Stream class is the primary abstraction within a streaming application. It represents a potentially infinite 
     series of tuples which can be operated upon to produce another stream, as in the case of :py:meth:`map`, or
@@ -473,15 +640,56 @@ class Stream(object):
         self.topology = topology
         self.oport = oport
         self._placeable = False
+        self._alias = None
+
+    def _op(self):
+        if not self._placeable:
+            raise TypeError()
+        return self.oport.operator
 
     @property
     def name(self):
-        """Name of the stream.
+        """
+        Name of the stream.
 
         Returns:
             str: Name of the stream.
+
+        .. seealso:: :py:meth:`aliased_as`
         """
-        return self.oport.name
+        return self._alias if self._alias else self.oport.name
+
+    def aliased_as(self, name):
+        """
+        Create an alias of this stream.
+
+        Returns an alias of this stream with name `name`.
+        When invocation of an SPL operator requires an
+        :py:class:`~streamsx.spl.op.Expression` against
+        an input port this can be used to ensure expression
+        matches the input port alias regardless of the name
+        of the actual stream.
+
+        Example use where the filter expression for a ``Filter`` SPL operator
+        uses ``IN`` to access input tuple attribute ``seq``::
+
+            s = ...
+            s = s.aliased_as('IN')
+
+            params =  {'filter': op.Expression.expression('IN.seq % 4ul == 0ul')}
+            f = op.Map('spl.relational::Filter', stream, params = params)
+
+        Args:
+            name(str): Name for returned stream.
+
+        Returns:
+            Stream: Alias of this stream with ``name`` equal to `name`.
+        
+        .. versionadded:: 1.9
+        """
+        stream = copy.copy(self)
+        stream._alias = name
+        return stream
 
     def for_each(self, func, name=None):
         """
@@ -493,6 +701,15 @@ class Stream(object):
             func: A callable that takes a single parameter for the tuple and returns None.
             name(str): Name of the stream, defaults to a generated name.
 
+        If invoking ``func`` for a tuple on the stream raises an exception
+        then its processing element will terminate. By default the processing
+        element will automatically restart though tuples may be lost.
+
+        If ``func`` is a callable object then it may suppress exceptions
+        by return a true value from its ``__exit__`` method. When an
+        exception is suppressed no further processing occurs for the
+        input tuple that caused the exception.
+
         Returns:
             streamsx.topology.topology.Sink: Stream termination.
 
@@ -503,7 +720,7 @@ class Stream(object):
         _name = self.topology.graph._requested_name(name, action='for_each', func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=_name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
-        StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
+        streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         op._layout(kind='ForEach', name=_name, orig_name=name)
         return Sink(op)
 
@@ -526,6 +743,16 @@ class Stream(object):
         Args:
             func: Filter callable that takes a single parameter for the tuple.
             name(str): Name of the stream, defaults to a generated name.
+
+        If invoking ``func`` for a tuple on the stream raises an exception
+        then its processing element will terminate. By default the processing
+        element will automatically restart though tuples may be lost.
+
+        If ``func`` is a callable object then it may suppress exceptions
+        by return a true value from its ``__exit__`` method. When an
+        exception is suppressed no tuple is submitted to the filtered
+        stream corresponding to the input tuple that caused the exception.
+
         Returns:
             Stream: A Stream containing tuples that have not been filtered out.
         """
@@ -533,7 +760,7 @@ class Stream(object):
         _name = self.topology.graph._requested_name(name, action="filter", func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=_name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
-        StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
+        streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         op._layout(kind='Filter', name=_name, orig_name=name)
         oport = op.addOutputPort(schema=self.oport.schema, name=_name)
         return Stream(self.topology, oport)._make_placeable()
@@ -542,7 +769,7 @@ class Stream(object):
         _name = self.topology.graph._requested_name(name, action="map", func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Map", func, name=_name)
         op.addInputPort(outputPort=self.oport, name=self.name)
-        StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
+        streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         oport = op.addOutputPort(schema=schema, name=_name)
         op._layout(name=_name, orig_name=name)
         return Stream(self.topology, oport)._make_placeable()
@@ -568,7 +795,7 @@ class Stream(object):
             name(str): Name of the view. Name must be unique within the topology. Defaults to a generated name.
             description: Description of the view.
             start(bool): Start buffering data when the job is submitted.
-                If `False` then the view is starts buffering data when the first
+                If `False` then the view starts buffering data when the first
                 remote client accesses it to retrieve data.
  
         Returns:
@@ -578,10 +805,10 @@ class Stream(object):
         if name is None:
             name = ''.join(random.choice('0123456789abcdef') for x in range(16))
 
-        if self.oport.schema == CommonSchema.Python:
+        if self.oport.schema == streamsx.topology.schema.CommonSchema.Python:
             view_stream = self.as_json(force_object=False)._layout(hidden=True)
             # colocate map operator with stream that is being viewed.
-            self.oport.operator.colocate(view_stream.oport.operator, 'view')
+            self._colocate(view_stream, 'view')
         else:
             view_stream = self
 
@@ -609,7 +836,7 @@ class Stream(object):
         no tuple submission will occur.
 
         By default the submitted tuple is ``result`` without modification
-        resulting in a stream of pickable Python objects. Setting the
+        resulting in a stream of picklable Python objects. Setting the
         `schema` parameter changes the type of the stream and
         modifies each ``result`` before submission.
 
@@ -623,6 +850,16 @@ class Stream(object):
             name(str): Name of the mapped stream, defaults to a generated name.
             schema(StreamSchema): Schema of the resulting stream.
 
+        If invoking ``func`` for a tuple on the stream raises an exception
+        then its processing element will terminate. By default the processing
+        element will automatically restart though tuples may be lost.
+
+        If ``func`` is a callable object then it may suppress exceptions
+        by return a true value from its ``__exit__`` method. When an
+        exception is suppressed no tuple is submitted to the mapped
+        stream corresponding to the input tuple that caused the exception.
+       
+
         Returns:
             Stream: A stream containing tuples mapped by `func`.
 
@@ -631,7 +868,7 @@ class Stream(object):
         .. versionadded:: 1.8 Support for submitting `dict` objects as stream tuples to a structured stream (in addition to existing support for `tuple` objects).
         """
         if schema is None:
-            schema = CommonSchema.Python
+            schema = streamsx.topology.schema.CommonSchema.Python
      
         ms = self._map(func, schema=schema, name=name)._layout('Map')
         ms.oport.operator.sl = _SourceLocation(_source_info(), 'map')
@@ -653,8 +890,8 @@ class Stream(object):
 
         For each tuple on this stream ``func(tuple)`` is called.
         If the result is not `None` then the the result is iterated over
-        with each value from the iterator that is not None will be submitted
-         to the return stream.
+        with each value from the iterator that is not `None` will be submitted
+        to the return stream.
 
         If the result is `None` or an empty iterable then no tuples are submitted to
         the returned stream.
@@ -663,8 +900,18 @@ class Stream(object):
             func: A callable that takes a single parameter for the tuple.
             name(str): Name of the flattened stream, defaults to a generated name.
 
+        If invoking ``func`` for a tuple on the stream raises an exception
+        then its processing element will terminate. By default the processing
+        element will automatically restart though tuples may be lost.
+
+        If ``func`` is a callable object then it may suppress exceptions
+        by return a true value from its ``__exit__`` method. When an
+        exception is suppressed no tuples are submitted to the flattened
+        and mapped stream corresponding to the input tuple
+        that caused the exception.
+
         Returns:
-            Stream: A Stream containing transformed tuples.
+            Stream: A Stream containing flattened and mapped tuples.
         Raises:
             TypeError: if `func` does not return an iterator nor None
         """     
@@ -672,7 +919,7 @@ class Stream(object):
         _name = self.topology.graph._requested_name(name, action='flat_map', func=func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=_name, sl=sl)
         op.addInputPort(outputPort=self.oport, name=self.name)
-        StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
+        streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         oport = op.addOutputPort(name=_name)
         return Stream(self.topology, oport)._make_placeable()._layout('FlatMap', name=_name, orig_name=name)
     
@@ -743,10 +990,6 @@ class Stream(object):
         In other words, a parallel sink is created by calling parallel() and creating a sink operation.
         It is not necessary to invoke end_parallel() on parallel sinks.
         
-        Nested parallelism is not currently supported.
-        A call to parallel() should never be made immediately after another call to parallel() without 
-        having an end_parallel() in between.
-        
         Every call to end_parallel() must have a call to parallel() preceding it.
         
         Args:
@@ -767,18 +1010,22 @@ class Stream(object):
             
         _name = self.topology.graph._requested_name(name, action='parallel', func=func)
 
-        if routing == None or routing == Routing.ROUND_ROBIN:
+        if routing is None or routing == Routing.ROUND_ROBIN or routing == Routing.BROADCAST:
             op2 = self.topology.graph.addOperator("$Parallel$", name=_name)
             op2.addInputPort(outputPort=self.oport)
-            oport = op2.addOutputPort(width, schema=self.oport.schema)
+            if routing == Routing.BROADCAST:
+                oport = op2.addOutputPort(width, schema=self.oport.schema, routing="BROADCAST")
+            else:
+                oport = op2.addOutputPort(width, schema=self.oport.schema, routing="ROUND_ROBIN")
+
             return Stream(self.topology, oport)
         elif routing == Routing.HASH_PARTITIONED:
 
             if (func is None):
-                if self.oport.schema == CommonSchema.String:
+                if self.oport.schema == streamsx.topology.schema.CommonSchema.String:
                     keys = ['string']
                     parallel_input = self.oport
-                elif self.oport.schema == CommonSchema.Python:
+                elif self.oport.schema == streamsx.topology.schema.CommonSchema.Python:
                     func = hash
                 else:
                     raise NotImplementedError("HASH_PARTITIONED for schema {0} requires a hash function.".format(self.oport.schema))
@@ -787,14 +1034,14 @@ class Stream(object):
                 keys = ['__spl_hash']
                 hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::HashAdder", func)
                 hash_adder._layout(hidden=True)
-                hash_schema = self.oport.schema.extend(StreamSchema("tuple<int64 __spl_hash>"))
+                hash_schema = self.oport.schema.extend(streamsx.topology.schema.StreamSchema("tuple<int64 __spl_hash>"))
                 hash_adder.addInputPort(outputPort=self.oport, name=self.name)
-                StreamSchema._fnop_style(self.oport.schema, hash_adder, 'pyStyle')
+                streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, hash_adder, 'pyStyle')
                 parallel_input = hash_adder.addOutputPort(schema=hash_schema)
 
             parallel_op = self.topology.graph.addOperator("$Parallel$", name=_name)
             parallel_op.addInputPort(outputPort=parallel_input)
-            parallel_op_port = parallel_op.addOutputPort(oWidth=width, schema=parallel_input.schema, partitioned_keys=keys)
+            parallel_op_port = parallel_op.addOutputPort(oWidth=width, schema=parallel_input.schema, partitioned_keys=keys, routing="HASH_PARTITIONED")
 
             if func is not None:
                 # use the Functor passthru operator to remove the hash attribute by removing it from output port schema
@@ -816,7 +1063,7 @@ class Stream(object):
         """
         lastOp = self.topology.graph.getLastOperator()
         outport = self.oport
-        if (isinstance(lastOp, graph.Marker)):
+        if (isinstance(lastOp, streamsx.topology.graph.Marker)):
             if (lastOp.kind == "$Union$"):
                 pto = self.topology.graph.addPassThruOperator()
                 pto.addInputPort(outputPort=self.oport)
@@ -826,6 +1073,21 @@ class Stream(object):
         oport = op.addOutputPort(schema=self.oport.schema)
         endP = Stream(self.topology, oport)
         return endP
+
+    def set_parallel(self, width):
+        """
+        Indicates that the stream is the start of a parallel region. Should only be invoked on source operators.
+        Args:
+            width: The degree of parallelism for the parallel region.
+
+        Returns:
+            Stream: Returns this stream.
+
+        .. versionadded:: 1.9
+        """
+        self.oport.operator.config['parallel'] = True
+        self.oport.operator.config['width'] = width
+        return self
 
     def last(self, size=1):
         """ Declares a window containing most recent tuples on this stream.
@@ -882,7 +1144,7 @@ class Stream(object):
         """
         Prints each tuple to stdout flushing after each tuple.
 
-        If `tag` is not `None` then each tuple has `tag: ` prepended
+        If `tag` is not `None` then each tuple has "tag: " prepended
         to it before printing.
 
         Args:
@@ -905,7 +1167,7 @@ class Stream(object):
             tag = str(tag) + ': '
             fn = lambda v : streamsx.topology.functions.print_flush(tag + str(v))
         sp = self.for_each(fn, name=_name)
-        sp._op.sl = _SourceLocation(_source_info(), 'print')
+        sp._op().sl = _SourceLocation(_source_info(), 'print')
         return sp
 
     def publish(self, topic, schema=None, name=None):
@@ -951,24 +1213,28 @@ class Stream(object):
         sl = _SourceLocation(_source_info(), 'publish')
         if schema is not None and self.oport.schema.schema() != schema.schema():
             nc = None
-            if schema == CommonSchema.Json:
+            if schema == streamsx.topology.schema.CommonSchema.Json:
                 schema_change = self.as_json()
-            elif schema == CommonSchema.String:
+            elif schema == streamsx.topology.schema.CommonSchema.String:
                 schema_change = self.as_string()
             else:
                 raise ValueError(schema)
                
-            self.oport.operator.colocate(schema_change.oport.operator, 'publish')
+            if self._placeable:
+                self._colocate(schema_change, 'publish')
             sp = schema_change.publish(topic, schema=schema, name=name)
-            sp._op.sl = sl
+            sp._op().sl = sl
             return sp
 
         _name = self.topology.graph._requested_name(name, action="publish")
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl, name=_name)
         op.addInputPort(outputPort=self.oport)
-        self.oport.operator.colocate(op, 'publish')
         op._layout_group('Publish', name if name else _name)
-        return Sink(op)
+        sink = Sink(op)
+
+        if self._placeable:
+            self._colocate(sink, 'publish')
+        return sink
 
     def autonomous(self):
         """
@@ -1015,7 +1281,7 @@ class Stream(object):
         Returns:
             Stream: Stream containing the string representations of tuples on this stream.
         """
-        sas = self._change_schema(CommonSchema.String, 'as_string', name)._layout('AsString')
+        sas = self._change_schema(streamsx.topology.schema.CommonSchema.String, 'as_string', name)._layout('AsString')
         sas.oport.operator.sl = _SourceLocation(_source_info(), 'as_string')
         return sas
 
@@ -1052,7 +1318,7 @@ class Stream(object):
 
         """
         func = streamsx.topology.runtime._json_force_object if force_object else None
-        saj = self._change_schema(CommonSchema.Json, 'as_json', name, func)._layout('AsJson')
+        saj = self._change_schema(streamsx.topology.schema.CommonSchema.Json, 'as_json', name, func)._layout('AsJson')
         saj.oport.operator.sl = _SourceLocation(_source_info(), 'as_json')
         return saj
 
@@ -1069,50 +1335,16 @@ class Stream(object):
         if _name is None:
             _name = action 
         css = self._map(func, schema, name=_name)
-        self.oport.operator.colocate(css.oport.operator, action)
+        if self._placeable:
+            self._colocate(css, action)
         return css
 
     def _make_placeable(self):
         self._placeable = True
         return self
 
-    @property
-    def resource_tags(self):
-        """Resource tags for this stream.
-
-        Tags are a mechanism for differentiating and identifying resources that have different physical characteristics or logical uses. For example a resource (host) that has external connectivity for public data sources may be tagged `ingest`.
-
-        A stream can be associated with one or more tags to require its
-        creating callable to run on suitably tagged resources. For example
-        adding tags `ingest` and `db` requires that the processing element
-        containing the callable that created the stream runs on a host
-        tagged with both `ingest` and `db`.
-
-        A stream that was not created directly with a Python callable
-        cannot have tags associated with it. For example a stream that
-        is a :py:meth:`union` of multiple streams cannot be tagged.
-        In this case this method returns an empty `frozenset` which
-        cannot be modified.
-
-        See https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.admin.doc/doc/tags.html for more details of tags within IBM Streams.
-
-        Returns:
-            set: Set of resource tags for the stream, initially empty.
-
-        .. warning:: If no resources exist with the required tags then job submission will fail.
-        
-        .. versionadded:: 1.7
-   
-        """
-        if not self._placeable:
-            return frozenset()
-        plc = self.oport.operator._placement
-        if not 'resourceTags' in plc:
-            plc['resourceTags'] = set()
-        return plc['resourceTags']
-
     def _layout(self, kind=None, hidden=None, name=None, orig_name=None):
-        self.oport.operator._layout(kind, hidden, name, orig_name)
+        self._op()._layout(kind, hidden, name, orig_name)
         return self
 
 
@@ -1208,7 +1440,7 @@ class PendingStream(object):
         def __init__(self, topology):
             self.topology = topology
             self._marker = topology.graph.addOperator(kind="$Pending$")
-            self._pending_schema = StreamSchema(_SCHEMA_PENDING)
+            self._pending_schema = streamsx.topology.schema.StreamSchema(streamsx.topology.schema._SCHEMA_PENDING)
 
             self.stream = Stream(topology, self._marker.addOutputPort(schema=self._pending_schema))
 
@@ -1335,7 +1567,7 @@ class Window(object):
             Stream: A `Stream` of the returned values of the supplied function.                                                                                                                                                             
         .. versionadded:: 1.8
         """
-        schema = CommonSchema.Python
+        schema = streamsx.topology.schema.CommonSchema.Python
         
         sl = _SourceLocation(_source_info(), "aggregate")
         name = self.topology.graph._requested_name(name, action="aggregate", func=function)
@@ -1343,11 +1575,10 @@ class Window(object):
         op.addInputPort(outputPort=self.stream.oport, name=self.stream.name, window_config=self._config)
         oport = op.addOutputPort(schema=schema, name=name)
 
-        return Stream(self.topology, oport)
+        return Stream(self.topology, oport)._make_placeable()
 
 
-
-class Sink(object):
+class Sink(_placement._Placement, object):
     """
     Termination of a `Stream`.
     
@@ -1361,4 +1592,7 @@ class Sink(object):
     .. versionadded:: 1.7
     """
     def __init__(self, op):
-        self._op = op
+        self.__op = op
+
+    def _op(self):
+        return self.__op

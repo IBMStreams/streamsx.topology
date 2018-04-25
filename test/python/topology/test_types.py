@@ -3,7 +3,9 @@
 import unittest
 import sys
 import dill
+import pickle
 import datetime
+import time
 import random
 
 from streamsx.spl.types import Timestamp
@@ -20,11 +22,23 @@ class TestTypes(unittest.TestCase):
       self.assertEqual(ns, ts.nanoseconds)
       self.assertEqual(mid, ts.machine_id)
 
+      self.assertEqual(Timestamp, type(ts))
+      self.assertTrue(isinstance(ts, tuple))
+
       t = ts.tuple()
       self.assertEqual(3, len(t))
       self.assertEqual(s, t[0])
       self.assertEqual(ns, t[1])
       self.assertEqual(mid, t[2])
+
+      ts2 = Timestamp(ts.seconds, ts.nanoseconds, ts.machine_id)
+      self.assertEqual(ts, ts2)
+
+      now = time.time()
+      ts2 = Timestamp(now, 0)
+      self.assertEqual(int(now), ts2.seconds)
+      self.assertEqual(0, ts2.nanoseconds)
+      self.assertEqual(0, ts2.machine_id)
 
       s = random.randint(0, 999999999999)
       ns = random.randint(0, 1000000000)
@@ -37,6 +51,34 @@ class TestTypes(unittest.TestCase):
       self.assertIsInstance(ft, float)
       eft = s + (ns / 1000.0 / 1000.0 / 1000.0)
       self.assertEqual(eft, ft)
+
+      tsft = Timestamp.from_time(23423.02, 93)
+      self.assertEqual(23423, tsft.seconds)
+      self.assertEqual(20*1000.0*1000.0, float(tsft.nanoseconds))
+      self.assertEqual(93, tsft.machine_id)
+
+  def test_timestamp_pickle(self):
+     ts = Timestamp(1,2,3)
+     tsp = pickle.loads(pickle.dumps(ts))
+     self.assertEqual(ts, tsp)
+
+  def test_timestamp_dill(self):
+     ts = Timestamp(4,5,6)
+     tsp = dill.loads(dill.dumps(ts))
+     self.assertEqual(ts, tsp)
+
+  def test_timestamp_now(self):
+      now = time.time()
+      ts = Timestamp.now()
+      self.assertTrue(ts.time() >= now)
+
+  def test_timestamp_nanos(self):
+      Timestamp(1, 0)
+      Timestamp(1, 999999999)
+      self.assertRaises(ValueError, Timestamp, 1, -1)
+      self.assertRaises(ValueError, Timestamp, 1, -2)
+      self.assertRaises(ValueError, Timestamp, 1, 1000000000)
+      self.assertRaises(ValueError, Timestamp, 1, 5000000000)
       
   def test_TimestampToDatetime(self):
       # 2017-06-04 11:48:25.008880

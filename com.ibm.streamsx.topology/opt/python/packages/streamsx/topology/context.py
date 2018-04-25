@@ -1,7 +1,13 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015,2017
-"""Context for submission of applications.
+"""
+
+Context for submission of applications.
+
+********
+Overview
+********
 
 The main function is :py:func:`submit` to submit
 a :py:class:`~streamsx.topology.topology.Topology`
@@ -18,8 +24,9 @@ try:
 except (ImportError, NameError):
     # nothing to do here
     pass
+from future.builtins import *
 
-from streamsx import rest
+from streamsx import rest, rest_primitives
 import logging
 import os
 import os.path
@@ -29,6 +36,7 @@ import threading
 import sys
 import codecs
 import tempfile
+import copy
 
 logger = logging.getLogger('streamsx.topology.context')
 
@@ -84,6 +92,7 @@ class _BaseSubmitter(object):
             # Make copy of config to avoid modifying
             # the callers config
             self.config.update(config)
+        self.config['contextType'] = str(self.ctxtype)
         self.graph = graph
         self.fn = None
         self.results_file = None
@@ -130,7 +139,7 @@ class _BaseSubmitter(object):
 
         args = [jvm, '-classpath', cp, submit_class, self.ctxtype, self.fn]
         logger.info("Generating SPL and submitting application.")
-        proc_env = env=self._get_java_env()
+        proc_env = self._get_java_env()
         process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0, env=proc_env)
 
         stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self]))
@@ -172,13 +181,15 @@ class _BaseSubmitter(object):
 
     def _get_java_env(self):
         "Get the environment to be passed to the Java execution"
-        return dict(os.environ)
+        return os.environ.copy()
 
     def _add_python_info(self):
         # Python information added to deployment
         pi = {}
         pi["prefix"] = sys.exec_prefix
         pi["version"] = sys.version
+        pi['major'] = sys.version_info.major
+        pi['minor'] = sys.version_info.minor
         self.config["python"] = pi
 
     def _create_job_config_overlays(self):
@@ -271,7 +282,15 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
     def __init__(self, ctxtype, config, graph):
         super(_StreamingAnalyticsSubmitter, self).__init__(ctxtype, config, graph)
         self._streams_connection = self._config().get(ConfigParams.STREAMS_CONNECTION)
-        self._vcap_services = self._config().get(ConfigParams.VCAP_SERVICES)
+        if ConfigParams.SERVICE_DEFINITION in self._config():
+            # Convert the service definition to a VCAP services definition.
+            # Which is then passed through to Java as a VCAP_SERVICES env var
+            # Service name matching the generated VCAP is passed through config.
+            service_def = self._config().get(ConfigParams.SERVICE_DEFINITION)
+            self._vcap_services = _vcap_from_service_definition(service_def)
+            self._config()[ConfigParams.SERVICE_NAME] = _name_from_service_definition(service_def)
+        else:
+            self._vcap_services = self._config().get(ConfigParams.VCAP_SERVICES)
         self._service_name = self._config().get(ConfigParams.SERVICE_NAME)
 
         if self._streams_connection is not None:
@@ -290,6 +309,7 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
 
         # Clear the VCAP_SERVICES key in config, since env var will contain the content
         self._config().pop(ConfigParams.VCAP_SERVICES, None)
+        self._config().pop(ConfigParams.SERVICE_DEFINITION, None)
 
         self._setup_views()
 
@@ -301,7 +321,11 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
     def _augment_submission_result(self, submission_result):
         vcap = rest._get_vcap_services(self._vcap_services)
         credentials = rest._get_credentials(vcap, self._service_name)
-        instance_id = credentials['jobs_path'].split('/service_instances/', 1)[1].split('/', 1)[0]
+        
+        if rest_primitives._IAMConstants.V2_REST_URL in credentials:
+            instance_id = credentials[rest_primitives._IAMConstants.V2_REST_URL].split('streaming_analytics/', 1)[1]
+        else:
+            instance_id = credentials['jobs_path'].split('/service_instances/', 1)[1].split('/', 1)[0]
         submission_result['instanceId'] = instance_id
         submission_result['streamsConnection'] = self.streams_connection()
 
@@ -503,6 +527,13 @@ class ContextTypes(object):
         * **STREAMS_DOMAIN_ID** - Domain identifier for the Streams instance.
         * **STREAMS_INSTANCE_ID** - Instance identifier.
         * **STREAMS_ZKCONNECT** - (optional) ZooKeeper connection string for domain (when not using an embedded ZooKeeper)
+        * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
+
+    .. warning::
+        ``streamtool`` is used to submit the job and requires that ``streamtool`` does not prompt for authentication.  This is achieved by using ``streamtool genkey``.
+
+        .. seealso::
+            `Generating authentication keys for IBM Streams <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.1/com.ibm.streams.cfg.doc/doc/ibminfospherestreams-user-security-authentication-rsa.html>`_
 
     """
 
@@ -591,10 +622,12 @@ class ConfigParams(object):
     Configuration options which may be used as keys in :py:func:`submit` `config` parameter.
     """
     VCAP_SERVICES = 'topology.service.vcap'
-    """Streaming Analytics service credentials in **VCAP_SERVICES** format.
+    """Streaming Analytics service definitions including credentials in **VCAP_SERVICES** format.
 
     Provides the connection credentials when connecting to a Streaming Analytics service
     using context type :py:const:`~ContextTypes.STREAMING_ANALYTICS_SERVICE`.
+    The ``streaming-analytics`` service to use within the service definitions is identified
+    by name using :py:const:`SERVICE_NAME`.
 
     The key overrides the environment variable **VCAP_SERVICES**.
 
@@ -606,7 +639,7 @@ class ConfigParams(object):
     SERVICE_NAME = 'topology.service.name'
     """Streaming Analytics service name.
 
-    Selects the specific Streaming Analytics service from VCAP services information
+    Selects the specific Streaming Analytics service from VCAP service definitions
     defined by the the environment variable **VCAP_SERVICES** or the key :py:const:`VCAP_SERVICES` in the `submit` config.
     """
     FORCE_REMOTE_BUILD = 'topology.forceRemoteBuild'
@@ -625,17 +658,30 @@ class ConfigParams(object):
     """
     Key for a :py:class:`StreamsConnection` object for connecting to a running IBM Streams instance.
     """
+    SERVICE_DEFINITION = 'topology.service.definition'
+    """Streaming Analytics service definition.
+    Identifies the Streaming Analytics service to use. The definition can be one of
+
+        * The `service credentials` copied from the `Service credentials` page of the service console (not the Streams console). Credentials are provided in JSON format. They contain such as the API key and secret, as well as connection information for the service. 
+        * A JSON object (`dict`) of the form: ``{ "type": "streaming-analytics", "name": "service name", "credentials": {...} }`` with the `service credentials` as the value of the ``credentials`` key.
+
+    This key takes precedence over :py:const:`VCAP_SERVICES` and :py:const:`SERVICE_NAME`.
+    """
+
 
 class JobConfig(object):
     """
     Job configuration.
 
     `JobConfig` allows configuration of job that will result from
-    submission of a py:class:`Topology` (application).
+    submission of a :py:class:`Topology` (application).
 
     A `JobConfig` is set in the `config` dictionary passed to :py:func:`~streamsx.topology.context.submit`
     using the key :py:const:`~ConfigParams.JOB_CONFIG`. :py:meth:`~JobConfig.add` exists as a convenience
     method to add it to a submission configuration.
+
+    A `JobConfig` can also be used when submitting a Streams application
+    bundle through the Streaming Analytics REST API method :py:meth:`~streamsx.rest_primitives.StreamingAnalyticsService.submit_job`.
 
     Args:
         job_name(str): The name that is assigned to the job. A job name must be unique within a Streasm instance
@@ -654,7 +700,9 @@ class JobConfig(object):
         cfg = {}
         job_config = JobConfig(job_name='NewsIngester')
         job_config.add(cfg)
-        context.submit('ANALYTICS_SERVICE', topo, cfg)
+        context.submit('STREAMING_ANALYTICS_SERVICE', topo, cfg)
+
+    .. seealso:: `Job configuration overlays reference <https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.ref.doc/doc/submitjobparameters.html>`_
     """
     def __init__(self, job_name=None, job_group=None, preload=False, data_directory=None, tracing=None):
         self.job_name = job_name
@@ -663,7 +711,59 @@ class JobConfig(object):
         self.data_directory = data_directory
         self.tracing = tracing
         self._pe_count = None
+        self._raw_overlay = None
+        self._submission_parameters = dict()
+        self._comment = None
 
+    @staticmethod
+    def from_overlays(overlays):
+        """Create a `JobConfig` instance from a full job configuration
+        overlays object.
+
+        All logical items, such as ``comment`` and ``job_name``, are
+        extracted from `overlays`. The remaining information in the
+        single job config overlay in ``overlays`` is set as ``raw_overlay``.
+
+        Args:
+            overlays(dict): Full job configuration overlays object.
+
+        Returns:
+            JobConfig: Instance representing logical view of `overlays`.
+
+        .. versionadded:: 1.9
+        """
+        jc = JobConfig()
+        jc.comment = overlays.get('comment')
+        if 'jobConfigOverlays' in overlays:
+             if len(overlays['jobConfigOverlays']) >= 1:
+                 jco = copy.deepcopy(overlays['jobConfigOverlays'][0])
+
+                 # Now extract the logical information
+                 if 'jobConfig' in jco:
+                     _jc = jco['jobConfig']
+                     jc.job_name = _jc.pop('jobName', None)
+                     jc.job_group = _jc.pop('jobGroup', None)
+                     jc.preload = _jc.pop('preloadApplicationBundles', False)
+                     jc.data_directory = _jc.pop('dataDirectory', None)
+                     jc.tracing = _jc.pop('tracing', None)
+
+                     for sp in _jc.pop('submissionParameters', []):
+                         jc.submission_parameters[sp['name']] = sp['value']
+
+                     if not _jc:
+                         del jco['jobConfig']
+                 if 'deploymentConfig' in jco:
+                     _dc = jco['deploymentConfig']
+                     if 'manual' == _dc.get('fusionScheme'):
+                         if 'fusionTargetPeCount' in _dc:
+                             jc.target_pe_count = _dc.pop('fusionTargetPeCount')
+                         if len(_dc) == 1:
+                             del jco['deploymentConfig']
+
+                 if jco:
+                     jc.raw_overlay = jco
+        return jc
+                    
     @property
     def tracing(self):
         """
@@ -736,6 +836,77 @@ class JobConfig(object):
                 raise ValueError("target_pe_count must be greater than 0.")
         self._pe_count = count
 
+    @property
+    def raw_overlay(self):
+        """Raw Job Config Overlay.
+
+        A submitted job is configured using Job Config Overlay which
+        is represented as a JSON. `JobConfig` exposes Job Config Overlay
+        logically with properties such as ``job_name`` and ``tracing``.
+        This property (as a ``dict``) allows merging of the
+        configuration defined by this object and raw representation
+        of a Job Config Overlay. This can be used when a capability
+        of Job Config Overlay is not exposed logically through this class.
+
+        For example, the threading model can be set by::
+
+            jc = streamsx.topology.context.JobConfig()
+            jc.raw_overlay = {'deploymentConfig': {'threadingModel': 'manual'}}
+
+        Any logical items set by this object **overwrite** any set with
+        ``raw_overlay``. For example this sets the job name to
+        to value set in the constructor (`DBIngest`) not the value
+        in ``raw_overlay`` (`Ingest`)::
+
+            jc = streamsx.topology.context.JobConfig(job_name='DBIngest')
+            jc.raw_overlay = {'jobConfig': {'jobName': 'Ingest'}}
+
+        .. note:: Contents of ``raw_overlay`` is a ``dict`` that is
+             must match a single Job Config Overlay and be serializable
+             as JSON to the correct format.
+
+        .. seealso:: `Job Config Overlay reference <https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.ref.doc/doc/submitjobparameters.html>`_
+
+        .. versionadded:: 1.9
+        """
+        return self._raw_overlay
+
+    @raw_overlay.setter
+    def raw_overlay(self, raw):
+        self._raw_overlay = raw
+
+    @property
+    def submission_parameters(self):
+        """Job submission parameters.
+
+        Submission parameters values for the job. A `dict` object
+        that maps submission parameter names to values.
+
+        .. versionadded:: 1.9
+        """
+        return self._submission_parameters
+
+    @property
+    def comment(self):
+        """
+        Comment for job configuration.
+
+        The comment does not change the functionality of the job configuration.
+
+        Returns:
+            str: Comment text, `None` if it has not been set.
+
+        .. versionadded:: 1.9
+        """
+        return self._comment
+
+    @comment.setter
+    def comment(self, value):
+        if value:
+            self._comment = str(value)
+        else:
+            self._comment = None
+
     def add(self, config):
         """
         Add this `JobConfig` into a submission configuration object.
@@ -745,18 +916,65 @@ class JobConfig(object):
 
         Returns:
             dict: config.
-
         """
         config[ConfigParams.JOB_CONFIG] = self
         return config
+
+    def as_overlays(self):
+        """Return this jobs configuration as a complete job configuration overlays object.
+
+        Converts this job configuration into the full format supported by IBM Streams.
+        The returned `dict` contains:
+
+            * ``jobConfigOverlays`` key with an array containing a single job configuration overlay.
+            * an optional ``comment`` key containing the comment ``str``.
+
+        For example with this ``JobConfig``::
+
+            jc = JobConfig(job_name='TestIngester')
+            jc.comment = 'Test configuration'
+            jc.target_pe_count = 2
+
+        the returned `dict` would be::
+
+            {"comment": "Test configuration",
+                "jobConfigOverlays":
+                    [{"jobConfig": {"jobName": "TestIngester"},
+                    "deploymentConfig": {"fusionTargetPeCount": 2, "fusionScheme": "manual"}}]}
+
+        The returned overlays object can be saved as JSON in a file
+        using ``json.dump``. A file can be used with job submission
+        mechanisms that support a job config overlays file, such as
+        ``streamtool submitjob`` or the IBM Streams console.
+
+        Example of saving a ``JobConfig`` instance as a file::
+        
+            jc = JobConfig(job_name='TestIngester')
+            with open('jobconfig.json', 'w') as f:
+                json.dump(jc.as_overlays(), f)
+
+
+        Returns:
+            dict: Complete job configuration overlays object built from this object.
+
+        .. versionadded:: 1.9
+        """
+        return self._add_overlays({})
 
     def _add_overlays(self, config):
         """
         Add this as a jobConfigOverlays JSON to config.
         """
+        if self._comment:
+            config['comment'] = self._comment
+
         jco = {}
         config["jobConfigOverlays"] = [jco]
-        jc = {}
+
+        if self._raw_overlay:
+            jco.update(self._raw_overlay)
+
+        jc = jco.get('jobConfig', {})
 
         if self.job_name is not None:
             jc["jobName"] = self.job_name
@@ -769,12 +987,20 @@ class JobConfig(object):
         if self.tracing is not None:
             jc['tracing'] = self.tracing
 
+        if self.submission_parameters:
+             sp = jc.get('submissionParameters', [])
+             for name in self.submission_parameters:
+                  sp.append({'name': str(name), 'value': self.submission_parameters[name]})
+             jc['submissionParameters'] = sp
+
         if jc:
             jco["jobConfig"] = jc
 
         if self.target_pe_count is not None and self.target_pe_count >= 1:
-            deployment = {'fusionScheme' : 'manual', 'fusionTargetPeCount' : self.target_pe_count}
+            deployment = jco.get('deploymentConfig', {})
+            deployment.update({'fusionScheme' : 'manual', 'fusionTargetPeCount' : self.target_pe_count})
             jco["deploymentConfig"] = deployment
+        return config
 
 
 class SubmissionResult(object):
@@ -825,3 +1051,28 @@ class SubmissionResult(object):
 
     def __contains__(self, item):
         return item in self.results
+
+    def __repr__(self):
+        r = copy.copy(self.results)
+        if 'streamsConnection' in r:
+            del r['streamsConnection']
+        return r.__repr__()
+
+
+def _vcap_from_service_definition(service_def):
+    """Turn a service definition into a vcap services
+    containing a single service.
+    """
+    if 'credentials' in service_def:
+        credentials = service_def['credentials']
+    else:
+        credentials = service_def
+
+    service = {}
+    service['credentials'] = credentials
+    service['name'] = _name_from_service_definition(service_def)
+    vcap = {'streaming-analytics': [service]}
+    return vcap
+
+def _name_from_service_definition(service_def):
+    return service_def['name'] if 'credentials' in service_def else 'service'

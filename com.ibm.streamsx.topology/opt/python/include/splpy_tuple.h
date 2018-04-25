@@ -18,6 +18,26 @@
 
 #include "splpy_general.h"
 
+/*
+ * Submit a tuple while holding the GIL.
+ * The GIL is released dueing the submit
+ * using Py_UNBLOCK_THREADS and always retaken
+ * after the submit using Py_BLOCK_THREADS
+ * (even on exception).
+ */
+#define STREAMSX_TUPLE_SUBMIT_ALLOW_THREADS(otuple, port) \
+  { PyThreadState *_save; \
+    Py_UNBLOCK_THREADS \
+    try { \
+      submit(otuple, port); \
+      Py_BLOCK_THREADS \
+    } catch (...) { \
+      Py_BLOCK_THREADS \
+      throw; \
+    } \
+  }
+
+
 /**
  * Structure representing a SPL tuple containing a PyObject * pointer.
  */

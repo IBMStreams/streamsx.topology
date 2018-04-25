@@ -22,6 +22,7 @@ using namespace streamsx::topology;
  spl_pip_packages($model, \@packages);
 
  my $iport;
+ my $FROM_DICT_TMP = 1;
  
   my $oport = $model->getOutputPortAt(0);
   my $otupleType = $oport->getSPLTupleType();
@@ -31,7 +32,8 @@ using namespace streamsx::topology;
 
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
-   pyop_(NULL)
+   pyop_(NULL),
+   pyOutNames_0(NULL)
 {
    PyObject * callable;
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
@@ -45,8 +47,9 @@ MY_OPERATOR::MY_OPERATOR() :
              "streamsx.spl.runtime", "_splpy_iter_source",
              callable, NULL);   
 
-     PyObject *pyOutNames = Splpy::pyAttributeNames(getOutputPortAt(0));
+     pyOutNames_0 = Splpy::pyAttributeNames(getOutputPortAt(0));
 
+#if 0
      // Now create the wrapper function that converts
      // other types returned by the user's function
      // (e.g. dictionaries) to Python tuples as the
@@ -55,6 +58,7 @@ MY_OPERATOR::MY_OPERATOR() :
      callable = SplpyGeneral::callFunction(
              "streamsx.spl.runtime", "_splpy_to_tuples",
              callable, pyOutNames);   
+#endif
 
      pyop_->setCallable(callable);
    }
@@ -63,6 +67,11 @@ MY_OPERATOR::MY_OPERATOR() :
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
+   {
+   SplpyGIL lock;
+   if (pyOutNames_0)
+      Py_DECREF(pyOutNames_0);
+   }
    delete pyop_;
 }
 
@@ -86,6 +95,8 @@ void MY_OPERATOR::process(uint32_t idx)
 {
   while(!getPE().getShutdownRequested()) {
 
+    try {
+
       // GIL is released across submission
       SplpyGIL lock;
 
@@ -93,6 +104,9 @@ void MY_OPERATOR::process(uint32_t idx)
       PyObject *pyDict = NULL;
 
 @include  "../../opt/.__splpy/common/py_functionReturnToTuples.cgt"
+    } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+       SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+    }
   }
 }
 

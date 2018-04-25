@@ -20,6 +20,8 @@ using namespace streamsx::topology;
 
  my $module = splpy_Module();
  my $functionName = splpy_FunctionName();
+
+ my $FROM_DICT_TMP = 1;
 %>
 
 // Constructor
@@ -31,6 +33,9 @@ MY_OPERATOR::MY_OPERATOR() :
 <%  for (my $p = 1; $p < $model->getNumberOfInputPorts(); $p++) { %>
     , pyInNames_<%=$p%>(NULL)
 <%}}%>
+<%  for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) { %>
+    , pyOutNames_<%=$p%>(NULL)
+<%}%>
 {
    PyObject * callable;
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
@@ -80,18 +85,13 @@ if ($paramStyle eq 'dictionary') { %>
 
 <% if ($model->getNumberOfOutputPorts() != 0) { %>
 {
-   // Setup the conversion of of submitted values (e.g. dict->tuple)
-   SplpyGIL lock;
-   PyObject *pyOutNames = PyTuple_New(<%=$model->getNumberOfOutputPorts()%>);
-   for (int p = 0; p < <%=$model->getNumberOfOutputPorts()%>; p++) {
-        PyTuple_SET_ITEM(pyOutNames, p, Splpy::pyAttributeNames(getOutputPortAt(p)));
-   }
-   SplpyGeneral::callVoidFunction(
-             "streamsx.spl.runtime", "_splpy_primitive_output_attrs",
-             callable, pyOutNames);   
-
+    SplpyGIL lock;
+<%  for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) { %>
+    pyOutNames_<%=$p%> = Splpy::pyAttributeNames(getOutputPortAt(<%=$p%>));
+<%}%>
 }
 <%}%>
+
 }
 
 void MY_OPERATOR::allPortsReady()
@@ -161,6 +161,10 @@ MY_OPERATOR::~MY_OPERATOR()
    if (pyInNames_<%=$p%> != NULL)
        Py_DECREF(pyInNames_<%=$p%>);
 <%}}%>
+<%  for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) { %>
+   if (pyOutNames_<%=$p%> != NULL)
+       Py_DECREF(pyOutNames_<%=$p%>);
+<%}%>
 }
 
 // Notify pending shutdown
@@ -193,7 +197,7 @@ for (my $p = 0; $p < $model->getNumberOfInputPorts(); $p++) {
   }
 
 %>
- {
+ try {
  // Code block for a single port
  @include  "../../opt/.__splpy/common/py_splTupleCheckForBlobs.cgt"
 
@@ -205,11 +209,13 @@ for (my $p = 0; $p < $model->getNumberOfInputPorts(); $p++) {
     PyObject * pyReturnVar = SplpyGeneral::pyObject_Call(fn, pyTuple, pyDict);
 
     if (pyReturnVar == NULL) {
-        SPLAPPTRC(L_ERROR, "Fatal error: function failed: " << "<%=$functionName%>", "python");
-        throw SplpyGeneral::pythonException("<%=$functionName%>");
+        throw SplpyExceptionInfo::pythonError("<%=$functionName%>");
     }
     Py_DECREF(pyReturnVar);
 
+    return;
+ } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+    SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
     return;
  }
 
@@ -228,6 +234,10 @@ for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) {
 <% } %>
 
 void MY_OPERATOR::convertAndSubmit(uint32_t port, PyObject *tuple_) {
+     if (SplpyGeneral::isNone(tuple_)) {
+          Py_DECREF(tuple_);
+          return;
+     }
 <% for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) { %>
      if (port == <%=$p%>)
          pySubmitTuplesPort<%=$p%>(tuple_);

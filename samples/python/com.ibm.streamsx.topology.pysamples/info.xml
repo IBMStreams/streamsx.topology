@@ -13,8 +13,8 @@
     If environment variable STREAMS_TOPOLOGY_TOOLKIT not exists the sample is build using the topology toolkit from 
     the streams installation.
   </info:description>
-  <info:version>1.0.0</info:version>
-  <info:requiredProductVersion>4.0.1.0</info:requiredProductVersion>
+  <info:version>1.1.0</info:version>
+  <info:requiredProductVersion>4.2</info:requiredProductVersion>
 </info:identity>
 <info:dependencies>
 </info:dependencies>

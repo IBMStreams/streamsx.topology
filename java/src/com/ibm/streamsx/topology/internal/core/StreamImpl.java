@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONSISTENT;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FILTER_KIND;
@@ -17,6 +18,7 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.logic.Logic.identity;
 import static com.ibm.streamsx.topology.logic.Logic.notKeyed;
 import static com.ibm.streamsx.topology.logic.Value.of;
+import static java.util.Objects.requireNonNull;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -43,6 +45,7 @@ import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.builder.BUnionOutput;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.consistent.ConsistentRegionConfig;
+import com.ibm.streamsx.topology.consistent.ConsistentRegionConfig.Trigger;
 import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Consumer;
@@ -52,6 +55,7 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
+import com.ibm.streamsx.topology.generator.port.PortProperties;
 import com.ibm.streamsx.topology.internal.functional.ObjectSchemas;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
@@ -367,15 +371,30 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     	publish(topic, false);
     }
     
+    @Override
+    public final void publish(Supplier<String> topic) {
+        _publish(topic, false);       
+    }
+    
+    @Override
+    public final void publish(Supplier<String> topic, boolean allowFilter) {
+        _publish(topic, allowFilter);        
+    }
+    
     private static void filtersNotAllowed(boolean allowFilter) {
     	if (allowFilter)
     		throw new IllegalArgumentException("TStream tuple type cannot be published allowing filters.");
     }
     
     @Override
-    public void publish(String topic, boolean allowFilter) {
+    public final void publish(String topic, boolean allowFilter) {
         
         checkTopicName(topic);
+        
+        _publish(topic, allowFilter);
+    }
+    
+    protected void _publish(Object topic, boolean allowFilter) {
     	
     	Type tupleType = getTupleType();
         
@@ -442,12 +461,22 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     
     @Override
     public TStream<T> parallel(Supplier<Integer> width, Routing routing) {
-        if (routing == Routing.ROUND_ROBIN)
-            return _parallel(width, null);
         
-        UnaryOperator<T> identity = Logic.identity();
-        
-        return _parallel(width, identity);
+        switch (requireNonNull(routing)) {
+        case ROUND_ROBIN:
+        case BROADCAST:
+            return _parallel(width, routing, null);
+            
+        case HASH_PARTITIONED:
+            UnaryOperator<T> identity = Logic.identity();
+            return _parallel(width, routing, identity);
+            
+        case KEY_PARTITIONED:
+            throw new IllegalArgumentException(
+                    "Routing.KEY_PARTITIONED requires a key function. Use parallel(Supplier<Integer> width, Function<T,?> keyer).");
+        default:
+            throw new UnsupportedOperationException("Unsupported routing:" + routing);            
+        }         
     }
     
     @Override
@@ -455,13 +484,13 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             Function<T, ?> keyer) {
         if (keyer == null)
             throw new IllegalArgumentException("keyer");
-        return _parallel(width, keyer);
+        return _parallel(width, Routing.KEY_PARTITIONED, keyer);
     }
     
-    private TStream<T> _parallel(Supplier<Integer> width, Function<T,?> keyer) {
+    private TStream<T> _parallel(Supplier<Integer> width, Routing routing, Function<T,?> keyer) {
 
         if (width == null)
-            throw new IllegalArgumentException("width");
+            throw new IllegalArgumentException(PortProperties.WIDTH);
         Integer widthVal;
         if (width.get() != null)
             widthVal = width.get();
@@ -475,7 +504,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                     "The parallel width must be greater than or equal to 1.");
 
         BOutput toBeParallelized = output();
-        boolean isPartitioned = false;
+        boolean isPartitioned = false;        
         if (keyer != null) {
 
             final ToIntFunction<T> hasher = new KeyFunctionHasher<>(keyer);
@@ -483,8 +512,18 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             BOperatorInvocation hashAdder = JavaFunctional.addFunctionalOperator(this,
                     "HashAdder",
                     HASH_ADDER_KIND, hasher);
+                      
+            if (isPlaceable()) {
+                BOperatorInvocation op = operator();
+                
+                JsonObject serializer = op.getRawParameter("outputSerializer");
+                if (serializer != null) {              
+                    hashAdder.setParameter("inputSerializer", serializer);
+                    JavaFunctional.copyDependencies(this, op, hashAdder);
+                }
+            }           
+            
             hashAdder.layout().addProperty("hidden", true);
-            // hashAdder.json().put("routing", routing.toString());
             BInputPort ip = connectTo(hashAdder, true, null);
 
             String hashSchema = ObjectSchemas.schemaWithHash(ip._schema());
@@ -492,12 +531,12 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             isPartitioned = true;
         }
                 
-        BOutput parallelOutput = builder().parallel(toBeParallelized, width);
+        BOutput parallelOutput = builder().parallel(toBeParallelized, routing.name(), width);
         if (isPartitioned) {
-            parallelOutput._json().addProperty("partitioned", true);
+            parallelOutput._json().addProperty(PortProperties.PARTITIONED, true);
             JsonArray partitionKeys = new JsonArray();
             partitionKeys.add(new JsonPrimitive("__spl_hash"));
-            parallelOutput._json().add("partitionedKeys", partitionKeys);
+            parallelOutput._json().add(PortProperties.PARTITION_KEYS, partitionKeys);
             // Add hash remover
             StreamImpl<T> parallelStream = new StreamImpl<T>(this,
                     parallelOutput, getTupleType());
@@ -506,6 +545,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             hashRemover.setModel(MODEL_SPL, LANGUAGE_JAVA);
             
             hashRemover.layout().addProperty("hidden", true);
+            
             @SuppressWarnings("unused")
             BInputPort pip = parallelStream.connectTo(hashRemover, true, null);
             parallelOutput = hashRemover.addOutput(output._type());
@@ -522,6 +562,15 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public TStream<T> parallel(Supplier<Integer> width) {
         return parallel(width, TStream.Routing.ROUND_ROBIN);
+    }
+    
+    @Override
+    public TStream<T> setParallel(Supplier<Integer> width){
+    	BOutputPort output = (BOutputPort)this.output;
+    	output.operator().addConfig(OpProperties.PARALLEL, true);
+    	output.operator().addConfig(OpProperties.WIDTH, width.get());
+    	
+    	return this;
     }
 
     @Override
@@ -578,11 +627,34 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     
     @Override
     public TStream<T> setConsistent(ConsistentRegionConfig config) {
-        //BOperatorInvocation op = operator();
-        throw new UnsupportedOperationException("WIP");
-        //return this;
+
+        if (!(output() instanceof BOutputPort))
+            throw new IllegalStateException();
+
+        topology().addJobControlPlane();
+
+        // Create an object representing the consistent region
+        // converting times to seconds as doubles.
+        JsonObject crann = new JsonObject();
+        crann.addProperty("trigger", config.getTrigger().name());
+
+        if (Trigger.PERIODIC == config.getTrigger())
+            crann.addProperty("period", toSeconds(config.getTimeUnit(), config.getPeriod()));
+        crann.addProperty("drainTimeout", toSeconds(config.getTimeUnit(), config.getDrainTimeout()));
+        crann.addProperty("resetTimeout", toSeconds(config.getTimeUnit(), config.getResetTimeout()));
+        crann.addProperty("maxConsecutiveResetAttempts", config.getMaxConsecutiveResetAttempts());
+
+        BOutputPort out = (BOutputPort) output();
+
+        out.operator()._json().add(CONSISTENT, crann);
+
+        return this;
     }
     
+    private static double toSeconds(TimeUnit unit, long duration) {
+        return unit.toMillis(duration) / 1000.0;
+    }
+
     @Override
     public TStream<T> lowLatency() {
         BOutput toBeLowLatency = output();
@@ -593,6 +665,9 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public TStream<T> endLowLatency() {
         BOutput toEndLowLatency = output();
+        if(toEndLowLatency instanceof BUnionOutput){
+            toEndLowLatency = builder().addPassThroughOperator(toEndLowLatency);
+        }
         BOutput endedLowLatency = builder().endLowLatency(toEndLowLatency);
         return addMatchingStream(endedLowLatency);
 

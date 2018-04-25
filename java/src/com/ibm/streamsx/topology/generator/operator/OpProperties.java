@@ -88,6 +88,22 @@ public interface OpProperties {
      * Stored within {@link OpProperties#CONFIG}.
      */
     String PLACEMENT = "placement";
+    
+    /**
+     * Attribute for start of a consistent region.
+     */
+    String CONSISTENT = "consistent";
+    
+	/** 
+	 * Top-level boolean parameter indicating whether the operator is the start of a 
+	 * parallel region.
+	 */
+	String PARALLEL = "parallel";
+	
+	/**
+	 * The width of the parallel region, if the operator is the start of a parallel region.
+	 */
+	String WIDTH = "width";
 
 
 }

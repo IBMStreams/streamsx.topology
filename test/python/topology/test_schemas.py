@@ -1,13 +1,19 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
+from past.builtins import unicode
 import unittest
 import random
 import collections
 import sys
+import threading
+
 
 from streamsx.topology.topology import Topology, Routing
 from streamsx.topology.schema import _SchemaParser
 import streamsx.topology.schema as _sch
+
+import streamsx.topology.runtime as _str
+
 _PRIMITIVES = ['boolean', 'blob', 'int8', 'int16', 'int32', 'int64',
                  'uint8', 'uint16', 'uint32', 'uint64',
                  'float32', 'float64',
@@ -50,6 +56,10 @@ def random_schema(depth=0):
     return s
 
 class TestSchema(unittest.TestCase):
+
+    # Fake out subTest
+    if sys.version_info.major == 2:
+        def subTest(self, **args): return threading.Lock()
 
     def test_simple(self):
       p = _SchemaParser('tuple<int32 a, int64 b>')
@@ -134,7 +144,7 @@ class TestSchema(unittest.TestCase):
         s = _sch.StreamSchema('tuple<set<list<int32>[9]>[100] a>')
 
 
-    @unittest.skip
+    @unittest.skip("not yet supported")
     def test_named_schema(self):
         s = _sch.StreamSchema('tuple<int32 a, boolean alert>')
 
@@ -186,9 +196,49 @@ class TestSchema(unittest.TestCase):
         self.assertEqual(dict, sd2.style)
 
         self.assertEqual(object, _sch.CommonSchema.Python.value.style)
-        self.assertEqual(str, _sch.CommonSchema.String.value.style)
+        self.assertEqual(unicode if sys.version_info.major == 2 else str, _sch.CommonSchema.String.value.style)
         self.assertEqual(dict, _sch.CommonSchema.Json.value.style)
 
+        snt = s.as_tuple(named='Alert')
+        self.assertIsNot(s, snt)
+        self.assertTrue(issubclass(snt.style, tuple))
+        self.assertTrue(hasattr(snt.style, '_fields'))
+        self.assertTrue(hasattr(snt.style, '_splpy_namedtuple'))
+        self.assertTrue('Alert', snt.style._splpy_namedtuple)
+
+        tv = snt.style(23, True)
+        self.assertEqual(23, tv[0])
+        self.assertEqual(23, tv.a)
+        self.assertTrue(tv[1])
+        self.assertTrue(tv.alert)
+
+        self.assertTrue(str(tv).startswith('Alert('))
+        
+        snt2 = s.as_tuple(named=True)
+        self.assertIsNot(s, snt2)
+        self.assertIsNot(snt, snt2)
+        self.assertTrue(issubclass(snt2.style, tuple))
+        self.assertTrue(hasattr(snt2.style, '_fields'))
+        self.assertTrue(hasattr(snt2.style, '_splpy_namedtuple'))
+        self.assertTrue('StreamTuple', snt2.style._splpy_namedtuple)
+
+        tv = snt2.style(83, False)
+        self.assertEqual(83, tv[0])
+        self.assertEqual(83, tv.a)
+        self.assertFalse(tv[1])
+        self.assertFalse(tv.alert)
+        self.assertTrue(str(tv).startswith('StreamTuple('))
+
+    def test_get_namedtuple_make(self):
+        sch = 'tuple<int32 b, rstring c>'
+        cls = _str._get_namedtuple_cls(sch, 'MyTuple')
+        tv = cls(932, 'hello')
+        self.assertEqual(932, tv.b)
+        self.assertEqual('hello', tv.c)
+        self.assertTrue(str(tv).startswith('MyTuple('))
+
+
+        
 
 class TestKeepSchema(unittest.TestCase):
     """
@@ -255,3 +305,4 @@ class TestKeepSchema(unittest.TestCase):
 
        s2 = s.union({s1})
        self.assertEqual(s.oport.schema, s2.oport.schema)
+

@@ -27,10 +27,24 @@ public abstract class ConditionChecker<T> implements Consumer<T>, Initializable 
     private static final long serialVersionUID = 1L;
     
     private final String name;
-    private transient AtomicBoolean valid;
-    private transient AtomicLong seq;
-    private transient AtomicBoolean fail;
-    private transient long count;
+    private final AtomicBoolean valid = new AtomicBoolean();
+    private final AtomicLong seq = new AtomicLong();
+    private final AtomicBoolean fail = new AtomicBoolean();
+    private long count;
+    
+    /**
+     * We need an addition transient fail status so that in the case of a
+     * reset after a consistent region checkpoint we don't reset the state
+     * to be non-failed.
+     * 
+     * Assumption is currently that a PE failure/restart always causes
+     * the test to fail, so the window of a condition fails but
+     * the PE fails before the tester notices is not currently a hidden failure.
+     * 
+     * fail is persistent so that if the PE does restart we maintain
+     * at best effort that we've already seen a failure.
+     */
+    private transient AtomicBoolean failSinceStart;
     
     public ConditionChecker(String name) {
         this.name = name;
@@ -39,9 +53,7 @@ public abstract class ConditionChecker<T> implements Consumer<T>, Initializable 
     @Override
     public void initialize(FunctionContext functionContext) throws Exception {
         
-        valid = new AtomicBoolean();
-        seq = new AtomicLong();
-        fail = new AtomicBoolean();
+        failSinceStart = new AtomicBoolean();
        
         functionContext.createCustomMetric(metricName("valid", name),
                 "Condition: " + name + " is valid", "gauge",
@@ -53,7 +65,7 @@ public abstract class ConditionChecker<T> implements Consumer<T>, Initializable 
         
         functionContext.createCustomMetric(metricName("fail", name),
                 "Condition: " + name + " failed", "gauge",
-                () -> fail.get() ? 1L: 0L);       
+                () -> failed() ? 1L: 0L);       
     }
     
     /**
@@ -63,6 +75,7 @@ public abstract class ConditionChecker<T> implements Consumer<T>, Initializable 
     void setFailed(String why) {
         TEST_TRACE.severe(name + ": " + why);
         fail.set(true);
+        failSinceStart.set(true);
         valid.set(false);
     }
     
@@ -76,7 +89,7 @@ public abstract class ConditionChecker<T> implements Consumer<T>, Initializable 
     }   
     
     void setValid() {
-        if (!fail.get()) {
+        if (!failed()) {
             valid.set(true);
         }
     }
@@ -90,7 +103,7 @@ public abstract class ConditionChecker<T> implements Consumer<T>, Initializable 
     }
     
     boolean failed() {
-        return fail.get();
+        return fail.get() || failSinceStart.get();
     }
     
     @Override

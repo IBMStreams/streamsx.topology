@@ -18,7 +18,7 @@
 
   <target name="test" depends="all,test.application.api,test.translation"/> 
 
-  <target name="all" depends="test.toolkit"/> 
+  <target name="all"> 
 	  <copy file="../../samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/spl_samples.py"
 	  	toDir="${testtk}/opt/python/streams"/>
 	  <copy file="../../samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/spl_kwargs.py"
@@ -27,33 +27,7 @@
 	  	toDir="${testtk}/opt/python/streams"/>
 	  <copy file="../../samples/python/com.ibm.streamsx.topology.pysamples/info.xml"
 	  	toDir="${testtk}"/>
-	  <target name="test.toolkit">
-		   <exec executable="${topology.test.python}" dir="${testtk}" failonerror="true">
-                     <env key="PYTHONPATH" file="${tk.opt}/python/packages"/>
-		     <arg value="${tk}/bin/spl-python-extract.py"/>
-		     <arg value="--directory"/>
-		     <arg value="${testtk}"/>
-		   </exec>
-	   <exec executable="${streams.install}/bin/spl-make-toolkit" failonerror="true">
-             <arg value="--make-operator"/>
-	     <arg value="-i"/>
-	     <arg value="${testtk}"/>
-	   </exec>
-           <exec executable="${topology.test.python}" dir="${testtk_pip_op}" failonerror="true">
-             <env key="PYTHONPATH" file="${tk.opt}/python/packages"/>
-	     <arg value="${tk}/bin/spl-python-extract.py"/>
-             <arg value="--directory"/>
-             <arg value="${testtk_pip_op}"/>
-             <arg value="--make-toolkit"/>
-	   </exec>
-           <exec executable="${topology.test.python}" dir="${testtk_pip_tk}" failonerror="true">
-             <env key="PYTHONPATH" file="${tk.opt}/python/packages"/>
-	     <arg value="${tk}/bin/spl-python-extract.py"/>
-             <arg value="--directory"/>
-             <arg value="${testtk_pip_tk}"/>
-             <arg value="--make-toolkit"/>
-	   </exec>
-	   </target>
+   </target>
 
 	  <target name="test.application.api">
              <mkdir dir="${test.dir}"/>

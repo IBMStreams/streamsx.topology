@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.spl;
 
 import static com.ibm.streams.operator.Type.Factory.getStreamSchema;
+import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -138,13 +139,24 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
         return asSPL(super.parallel(width));
     }
     
+    @Override 
+    public SPLStream setParallel(Supplier<Integer> width){
+    	return asSPL(super.setParallel(width));
+    }
+    
     @Override
     public SPLStream parallel(Supplier<Integer> width,
             com.ibm.streamsx.topology.TStream.Routing routing) {
-        if(routing != TStream.Routing.ROUND_ROBIN){
+        
+        switch (requireNonNull(routing)) {
+        case ROUND_ROBIN:
+        case BROADCAST:
+            break;
+        default:
             throw new IllegalArgumentException("Partitioning is not currently "
                     + "supported with SPLStream.");
         }
+
         return asSPL(super.parallel(width, routing));
     }
     @Override
@@ -160,8 +172,7 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
     }
     
     @Override
-    public void publish(String topic, boolean allowFilter) {
-        checkTopicName(topic);
+    protected void _publish(Object topic, boolean allowFilter) {
         
         Map<String,Object> publishParms = new HashMap<>();
         publishParms.put("topic", topic);

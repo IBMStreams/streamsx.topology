@@ -73,10 +73,10 @@ def fn_tnirp(s):
     
 class TestSourceLocations(unittest.TestCase):
     def _csl_stream(self, stream, api, meth, cls=None):
-        self._csl_op(stream.oport.operator, api, meth, cls)
+        self._csl_op(stream._op(), api, meth, cls)
 
     def _csl_sink(self, sink, api, meth, cls=None):
-        self._csl_op(sink._op, api, meth, cls)
+        self._csl_op(sink._op(), api, meth, cls)
 
     def _csl_op(self, op, api, meth, cls=None):
         sl = op.sl

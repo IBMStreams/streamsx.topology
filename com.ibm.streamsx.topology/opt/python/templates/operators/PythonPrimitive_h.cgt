@@ -26,14 +26,9 @@ public:
   void convertAndSubmit(uint32_t port, PyObject *tuple_);
 
 private:
+    SplpyOp *op() { return pyop_; }
     SplpyPyOp *pyop_;
 
-<% for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) {
-    my $oport = $model->getOutputPortAt($p);
-%>
-  void pySubmitTuplesPort<%=$oport->getIndex()%>(PyObject * value);
-  void fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple);
-<%}%>
 
 
 <%if ($model->getNumberOfInputPorts() != 0) {%>
@@ -42,6 +37,15 @@ private:
 <%  for (my $p = 1; $p < $model->getNumberOfInputPorts(); $p++) { %>
     PyObject *pyInNames_<%=$p%>;
 <%}}%>
+
+<% for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) {
+    my $oport = $model->getOutputPortAt($p);
+%>
+  PyObject *pyOutNames_<%=$oport->getIndex()%>;
+  void pySubmitTuplesPort<%=$oport->getIndex()%>(PyObject * value);
+  void fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple);
+  void fromPythonDictToPort<%=$oport->getIndex()%>(PyObject *pyDict);
+<%}%>
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

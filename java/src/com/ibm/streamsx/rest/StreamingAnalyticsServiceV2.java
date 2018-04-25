@@ -14,7 +14,6 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.auth.AUTH;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -30,16 +29,17 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
 
     private long authExpiryTime = -1L;
 
-    private String statusUrl;
     private String jobSubmitUrl;
     private String buildsUrl;
     private final String tokenUrl;
     private final String apiKey;
+    private final String statusUrl;
 
     StreamingAnalyticsServiceV2(JsonObject service) {
         super(service);
         tokenUrl = StreamsRestUtils.getTokenUrl(credentials);
         apiKey = StreamsRestUtils.getServiceApiKey(credentials);
+        statusUrl = jstring(credentials, "v2_rest_url");
     }
 
     // Synchronized because it needs to read and possibly write two members
@@ -67,10 +67,17 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
     }
 
     @Override
-    protected String getStatusUrl(CloseableHttpClient httpclient) throws IOException {
-        if (null == statusUrl) {
-            setUrls(httpclient);
+    JsonObject getServiceStatus(CloseableHttpClient httpClient)
+            throws IOException, IllegalStateException {
+        JsonObject response = super.getServiceStatus(httpClient);
+        if (null == jobSubmitUrl || null == buildsUrl) {
+            setUrls(response);
         }
+        return response;
+    }
+    
+    @Override
+    protected String getStatusUrl(CloseableHttpClient httpclient) throws IOException {
         return statusUrl;
     }
 
@@ -78,7 +85,7 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
     protected String getJobSubmitUrl(CloseableHttpClient httpclient, File bundle)
             throws IOException {
         if (null == jobSubmitUrl) {
-            setUrls(httpclient);
+            getServiceStatus(httpclient);
         }
         return jobSubmitUrl;
     }
@@ -94,19 +101,14 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
     protected String getBuildsUrl(CloseableHttpClient httpclient)
             throws IOException {
         if (null == buildsUrl) {
-            setUrls(httpclient);
+            getServiceStatus(httpclient);
         }
         return buildsUrl;
     }
 
-    private synchronized void setUrls(CloseableHttpClient httpClient)
-            throws ClientProtocolException, IOException {
-        statusUrl = jstring(credentials, "v2_rest_url");
-        HttpGet getStatus = new HttpGet(statusUrl);
-        getStatus.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
-
-        JsonObject response = StreamsRestUtils.getGsonResponse(httpClient, getStatus);
-        jobSubmitUrl = jstring(response, "jobs");
+    private synchronized void setUrls(JsonObject statusResponse)
+            throws IllegalStateException {
+        jobSubmitUrl = jstring(statusResponse, "jobs");
         // Builds URL is not public in response, kludge from jobs url
         if (!jobSubmitUrl.endsWith("/jobs")) {
             throw new IllegalStateException("Unexpected jobs URL: " + jobSubmitUrl);
@@ -136,7 +138,7 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
             throws IOException {
         String buildOutputURL = getBuildsUrl(httpclient) + "/"
                 + URLEncoder.encode(buildId, StandardCharsets.UTF_8.name())
-                + "&output_id="
+                + "?output_id="
                 + URLEncoder.encode(outputId, StandardCharsets.UTF_8.name());
         HttpGet httpget = new HttpGet(buildOutputURL);
         httpget.addHeader("Authorization", authorization);
@@ -186,34 +188,8 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
         postArtifact.setEntity(reqEntity);
 
         JsonObject jso = StreamsRestUtils.getGsonResponse(httpclient, postArtifact);
-        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): submit job response: " + jso.toString());
+        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + getName() + "): submit job response: " + jso.toString());
         return jso;
-    }
-
-    /**
-     * Submit an application bundle to execute as a job.
-     */
-    protected JsonObject postJob(CloseableHttpClient httpClient,
-            JsonObject service, File bundle, JsonObject jobConfigOverlay)
-            throws IOException {
-
-        String url = getJobSubmitUrl(httpClient, bundle);
-
-        HttpPost postJobWithConfig = new HttpPost(url);
-        postJobWithConfig.addHeader(AUTH.WWW_AUTH_RESP, getAuthorization());
-
-        FileBody bundleBody = new FileBody(bundle, ContentType.APPLICATION_OCTET_STREAM);
-        StringBody configBody = new StringBody(jobConfigOverlay.toString(), ContentType.APPLICATION_JSON);
-        HttpEntity reqEntity = MultipartEntityBuilder.create()
-                .addPart("bundle_file", bundleBody)
-                .addPart("job_options", configBody).build();
-        postJobWithConfig.setEntity(reqEntity);
-
-        JsonObject jsonResponse = StreamsRestUtils.getGsonResponse(httpClient, postJobWithConfig);
-
-        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): submit job response:" + jsonResponse.toString());
-
-        return jsonResponse;
     }
 
     @Override

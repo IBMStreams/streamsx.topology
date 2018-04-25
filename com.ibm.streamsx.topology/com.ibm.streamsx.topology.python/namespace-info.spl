@@ -467,7 +467,7 @@ For example:
        return "com.ibm.streamsx.topology.pysamples.mail"
 
 Decorating a Python class produces a stateful SPL operator. The instance fields of the class are the state for the operator. Any parameters to the
-`__init__` method (exluding the first `self` parameter) are mapped to
+`__init__` method (excluding the first `self` parameter) are mapped to
 operator parameters.
 
 Decorating a Python function produces a stateless SPL operator. The function may reference variables in the module that are effectively state but such variables are shared by all invocations of the operator within the same processing element.
@@ -575,7 +575,7 @@ of the toolkit, thus increasing the distribution size of the toolkit.
 
 # Packages installed by pip at SPL compile time
 
-Python packages can be requested to be installed during the SPL
+Python packages can be explictly requested to be installed during the SPL
 compilation using `pip install --user`. The packages are installed locally into
 the compliation's output directory, thus becoming part of the
 Streams application bundle (`sab`). The packages will be installed
@@ -594,6 +594,16 @@ For example is there was a dependency on `numpy` and `geocoder` and
 into the compliation's output directory (in addition to any dependencies
 `geocoder` has that were not globally installed).
 
+Packages are explictly requested for the whole toolkit or a specific module.
+
+Any packages the modules (under `opt/python/streams`) depend on when
+being loaded, must be accessible at operator extraction time. 
+For example, if the module `opt/python/streams/geo_ops.py` directly
+imports `geocoder` for use in its decorated functions or classes
+then since `geo_ops.py` is loaded to determine the SPL primitive
+operators, `geocoder` must be accessible to the Python environment
+running the extraction script.
+
 **Tookit wide requirements**
 
 If the file `opt/python/streams/requirements.txt` exists in the
@@ -602,6 +612,10 @@ SPL compilation it will be passed to `pip` using the `-requirement` flag
 for installation of the required packages into the output directory.
 
 See: [https://pip.pypa.io/en/stable/user_guide/#requirements-files]
+
+When a toolkit with a `requirements.txt` is built using the build
+service then its required packages are installed remotely and made available
+to the extraction script.
 
 **Module specific requirements**
 

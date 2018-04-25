@@ -41,7 +41,7 @@ import com.ibm.streamsx.topology.TStream;
  * <b>Example Use:</b>
  * <pre>
  * <code>
- * // set source to be a the start of a operator driven consistent region
+ * // set source to be a the start of an operator driven consistent region
  * // with a drain timeout of five seconds and a reset timeout of twenty seconds.
  * source.setConsistent(operatorDriven().drainTimeout(5).resetTimeout(20));
  * <code>

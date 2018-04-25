@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONSISTENT;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_COUNT;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_DELTA;
@@ -40,6 +41,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
+import com.ibm.streamsx.topology.generator.port.PortProperties;
 import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.ParamsInfo;
 import com.ibm.streamsx.topology.internal.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
@@ -59,8 +61,11 @@ class OperatorGenerator {
         JsonObject _op = op;
         StringBuilder sb = new StringBuilder();
         noteAnnotations(_op, sb);
+        categoryAnnotation(_op, sb);
         parallelAnnotation(_op, sb);
+        lowLatencyAnnotation(_op, sb);
         viewAnnotation(_op, sb);
+        consistentAnnotation(_op, sb);
         AutonomousRegions.autonomousAnnotation(_op, sb);
         threadingAnnotation(graphConfig, _op, sb);
         boolean singlePortSingleName = outputPortClause(_op, sb);
@@ -157,6 +162,15 @@ class OperatorGenerator {
         sb.append(")\n");
     }
 
+    private static void categoryAnnotation(JsonObject op, StringBuilder sb) {
+        String category = jstring(op, "category");
+        if (category != null) {
+            sb.append("@spl_category(name=");
+            SPLGenerator.stringLiteral(sb, category);
+            sb.append(")\n");
+        }
+    }
+
     private static void portTypesNote(JsonObject op, StringBuilder sb) {
 
         int[] id = new int[1];
@@ -196,34 +210,67 @@ class OperatorGenerator {
         });
     }
 
+    private void lowLatencyAnnotation(JsonObject op, StringBuilder sb){
+        boolean lowLatencyOperator = jboolean(op, "lowLatency");
+        if(lowLatencyOperator){
+            sb.append("@threading(model=manual)\n");
+        }
+    }
+    
     private void parallelAnnotation(JsonObject op, StringBuilder sb) {
         boolean parallel = jboolean(op, "parallelOperator");
-
+        
         if (parallel) {
+            boolean partitioned = jboolean(op, "partitioned");
+            JsonObject parallelInfo = op.get("parallelInfo").getAsJsonObject();
+            
             sb.append("@parallel(width=");
-            JsonElement width = op.get("width");
+            JsonElement width = parallelInfo.get(OpProperties.WIDTH);
             if (width.isJsonPrimitive()) {
                 sb.append(width.getAsString());
             } else {
                 splValueSupportingSubmission(width.getAsJsonObject(), sb);
             }
-            boolean partitioned = jboolean(op, "partitioned");
+      
             if (partitioned) {
-                String parallelInputPortName = jstring(op, "parallelInputPortName");
-                JsonArray partitionKeys = op.get("partitionedKeys").getAsJsonArray();
-
-                parallelInputPortName = getSPLCompatibleName(parallelInputPortName);
-                sb.append(", partitionBy=[{port=");
-                sb.append(parallelInputPortName);
-                sb.append(", attributes=[");
-                for (int i = 0; i < partitionKeys.size(); i++) {
+                sb.append(", partitionBy=[");
+                JsonArray partitionedPorts = array(parallelInfo, "partitionedPorts");
+                for(int i = 0; i < partitionedPorts.size(); i++){
+                    JsonObject partitionedPort = partitionedPorts.get(i).getAsJsonObject();
+                    
+                    if(i>0)
+                        sb.append(", ");
+                    
+                    sb.append("{port=");
+                    sb.append(getSPLCompatibleName(GsonUtilities.jstring(partitionedPort, "name")));
+                    sb.append(", attributes=[");
+                    JsonArray partitionKeys = partitionedPort.get("partitionedKeys").getAsJsonArray();
+                    for (int j = 0; j < partitionKeys.size(); j++) {
+                        if (j != 0)
+                            sb.append(", ");
+                        sb.append(partitionKeys.get(j).getAsString());
+                    }
+                    sb.append("]}");
+                }
+                
+                sb.append("]"); 
+            }
+            
+            JsonArray broadcastPorts = parallelInfo.get("broadcastPorts").getAsJsonArray();
+            if(broadcastPorts.size() > 0){
+                sb.append(", broadcast=[");
+                for(int i = 0; i < broadcastPorts.size(); i++){
                     if (i != 0)
                         sb.append(", ");
-                    sb.append(partitionKeys.get(i).getAsString());
+                    sb.append(getSPLCompatibleName(broadcastPorts.get(i).getAsString()));
                 }
-                sb.append("]}]");
+                sb.append("]");
+                
             }
-            sb.append(")\n");
+            
+       
+            sb.append(")");
+            sb.append("\n");
         }
     }
 
@@ -239,6 +286,36 @@ class OperatorGenerator {
             sb.append("@threading(");
             sb.append("model=");
             sb.append(jstring(threading, "model"));
+            sb.append(")\n");
+        }
+    }
+    private static void asFloat64(StringBuilder sb, JsonObject obj, String key) {
+        SPLGenerator.numberLiteral(sb, obj.getAsJsonPrimitive(key), "FLOAT64");
+    }
+    
+    private void consistentAnnotation(JsonObject op, StringBuilder sb) {
+
+        JsonObject consistent = object(op, CONSISTENT);
+        if (consistent != null) {
+            sb.append("@consistent(");
+            if (consistent.has("period")) {
+                sb.append("trigger=periodic,period=");
+                asFloat64(sb, consistent, "period");
+                sb.append(",");
+            } else {
+                sb.append("trigger=operatorDriven,");
+            }
+            sb.append("drainTimeout=");
+            asFloat64(sb, consistent, "drainTimeout");
+            sb.append(",");
+            
+            sb.append("resetTimeout=");
+            asFloat64(sb, consistent, "resetTimeout");
+            sb.append(",");
+            
+            sb.append("maxConsecutiveResetAttempts=");
+            asFloat64(sb, consistent, "maxConsecutiveResetAttempts");
+            
             sb.append(")\n");
         }
     }
@@ -295,7 +372,6 @@ class OperatorGenerator {
     }
 
     static void operatorNameAndKind(JsonObject op, StringBuilder sb, boolean singlePortSingleName) {
-
         if (!singlePortSingleName) {
             String name = jstring(op, "name");
             name = getSPLCompatibleName(name);

@@ -7,6 +7,7 @@ import itertools
 import test_vers
 
 from streamsx.topology.topology import *
+from streamsx.topology.schema import CommonSchema
 from streamsx.topology.tester import Tester
 
 """
@@ -155,8 +156,13 @@ class TestPython2SPL(unittest.TestCase):
 
         st = st.map(lambda x : (x['y'], x['x']+20), schema=CommonSchema.String)
 
+        if sys.version_info.major == 2:
+            expected = ["(u'a', 27L)", "(u'b', 28L)", "(u'c', 29L)"]
+        else:
+            expected = ["('a', 27)", "('b', 28)", "('c', 29)"]
+
         tester = Tester(topo)
-        tester.contents(st, ["('a', 27)", "('b', 28)", "('c', 29)"])
+        tester.contents(st, expected)
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_dict_to_json(self):

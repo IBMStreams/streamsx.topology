@@ -1,12 +1,16 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
+from __future__ import unicode_literals
+from future.builtins import *
+
 import os
 import sys
 import pickle
 from past.builtins import basestring
 
 import streamsx.ec as ec
+from streamsx.topology.schema import StreamSchema
 
 try:
     import dill
@@ -71,7 +75,7 @@ def _get_callable(f):
         ci = dill.loads(base64.b64decode(f))
         if callable(ci):
             return ci
-    raise TypeError("Class is not callable" + type(ci))
+    raise TypeError("Class is not callable" + str(type(ci)))
 
 def _verify_tuple(tuple_, attributes):
     if isinstance(tuple_, tuple) or tuple_ is None:
@@ -84,12 +88,12 @@ def _verify_tuple(tuple_, attributes):
 
 import inspect
 class _FunctionalCallable(object):
-    def __init__(self, callable, attributes=None):
-        self._callable = _get_callable(callable)
+    def __init__(self, callable_, attributes=None):
+        self._callable = _get_callable(callable_)
         self._cls = False
         self._attributes = attributes
 
-        if callable is not self._callable:
+        if callable_ is not self._callable:
             is_cls = not inspect.isfunction(self._callable)
             is_cls = is_cls and ( not inspect.isbuiltin(self._callable) )
             is_cls = is_cls and (not inspect.isclass(self._callable))
@@ -108,9 +112,9 @@ class _FunctionalCallable(object):
         """
         return self._callable(tuple_)
 
-    def _splpy_shutdown(self):
+    def _splpy_shutdown(self, exc_type=None, exc_value=None, traceback=None):
         if self._cls:
-            ec._callable_exit_clean(self._callable)
+            return ec._callable_exit(self._callable, exc_type, exc_value, traceback)
 
 class _PickleInObjectOut(_FunctionalCallable):
     def __call__(self, tuple_, pm=None):
@@ -219,8 +223,8 @@ class _JSONInJSONOut(_FunctionalCallable):
 ##
 ## The style is one of:
 ##
-## pickle - Object is a Python byte string representing a picked object.
-##          The object is depicked/pickled before being passed to/return from
+## pickle - Object is a Python byte string representing a pickled object.
+##          The object is depickled/pickled before being passed to/return from
 ##          the application callable.
 ##          he returned function must not maintain a reference
 ##          to the passed in value as it will be a memory view
@@ -270,34 +274,51 @@ class _JSONInJSONOut(_FunctionalCallable):
 # Given a callable that returns an iterable
 # return a function that can be called
 # repeatably by a source operator returning
+#
 # the next tuple in its pickled form
-class _IterablePickleOut(_FunctionalCallable):
+# Set up iterator from the callable.
+# If an error occurs and __exit__ asks for it to be
+# ignored then an empty source is created.
+class _IterableAnyOut(_FunctionalCallable):
     def __init__(self, callable, attributes=None):
-        super(_IterablePickleOut, self).__init__(callable, attributes)
-        self._it = iter(self._callable())
+        super(_IterableAnyOut, self).__init__(callable, attributes)
+        try:
+            self._it = iter(self._callable())
+        except:
+            ei = sys.exc_info()
+            ignore = ec._callable_exit(self._callable, ei[0], ei[1], ei[2])
+            if not ignore:
+                raise ei[1]
+            # Ignored by nothing to do so use empty iterator
+            self._it = iter([])
 
     def __call__(self):
-        try:
-            while True:
-                tuple_ = next(self._it)
-                if not tuple_ is None:
-                    return pickle.dumps(tuple_)
-        except StopIteration:
-            return None
-
-class _IterableObjectOut(_FunctionalCallable):
-    def __init__(self, callable, attributes=None):
-        super(_IterableObjectOut, self).__init__(callable, attributes)
-        self._it = iter(self._callable())
-
-    def __call__(self):
-        try:
-            while True:
+        while True:
+            try:
                 tuple_ = next(self._it)
                 if not tuple_ is None:
                     return tuple_
-        except StopIteration:
-            return None
+            except StopIteration:
+                return None
+            except:
+                ei = sys.exc_info()
+                ignore = ec._callable_exit(self._callable, ei[0], ei[1], ei[2])
+                if not ignore:
+                    raise ei[1]
+
+class _IterablePickleOut(_IterableAnyOut):
+    def __init__(self, callable, attributes=None):
+        super(_IterablePickleOut, self).__init__(callable, attributes)
+        self.pdfn = pickle.dumps
+
+    def __call__(self):
+        tuple_ = super(_IterablePickleOut, self).__call__()
+        if tuple_ is not None:
+            return self.pdfn(tuple_)
+        return tuple_
+
+class _IterableObjectOut(_IterableAnyOut):
+     pass
 
 # Iterator that wraps another iterator
 # to discard any values that are None
@@ -433,3 +454,39 @@ tuple_in__string_out = object_in__object_out
 tuple_in__json_out = object_in__json_out
 tuple_in__dict_out = object_in__dict_out
 tuple_in = object_in
+
+# Get the named tuple class for a schema.
+# used by functional operators.
+def _get_namedtuple_cls(schema, name):
+    return StreamSchema(schema).as_tuple(named=name).style
+
+class _WrappedInstance(object):
+    def __init__(self, callable_):
+        self._callable = callable_
+
+    def _hasee(self):
+        return hasattr(self._callable, '__enter__') and hasattr(self._callable, '__exit__')
+
+    def __enter__(self):
+        if self._hasee():
+            self._callable.__enter__()
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self._hasee():
+            self._callable.__exit__(exc_type, exc_value, traceback)
+
+# Wraps an iterable instance returning
+# it when called. Allows an iterable
+# instance to be passed directly to Topology.source
+class _IterableInstance(_WrappedInstance):
+    def __call__(self):
+        return self._callable
+
+# Wraps an callable instance 
+# When this is called, the callable is called.
+# Used to wrap a lambda object or a function/class
+# defined in __main__
+class _Callable(_WrappedInstance):
+    def __call__(self, *args, **kwargs):
+        return self._callable.__call__(*args, **kwargs)
+

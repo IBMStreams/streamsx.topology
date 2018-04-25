@@ -43,13 +43,14 @@ if ($pyoutstyle eq 'dict') {
     void fromPythonToPort0(PyObject * pyTuple, <%=$oport->getCppTupleType()%> & otuple);
 <%}%>
 
+    SplpyOp * op() { return funcop_; }
+
     // Members
     // Control for interaction with Python
     SplpyFuncOp *funcop_;
     PyObject *spl_in_object_out;
     
-    // Names of input attributes
-    PyObject *pyInNames_;
+    PyObject *pyInStyleObj_;
 
     PyObject *loads;
 

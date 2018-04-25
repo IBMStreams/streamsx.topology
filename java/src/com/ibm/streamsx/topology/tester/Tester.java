@@ -172,6 +172,25 @@ public interface Tester {
     Condition<String> stringTupleTester(TStream<String> stream, Predicate<String> tester);
     
     /**
+     * Create a condition that randomly resets consistent regions.
+     * 
+     * The condition becomes valid when each consistent region in
+     * the application under test has been reset {@code minimumResets} times
+     * by the tester.
+     * <P>
+     * A region is reset by initiating a request though the Job Control Plane.
+     * The reset is <B>not</B> driven by any injected failure, such as a PE restart.
+     * </P>
+     * @param minimumResets - Minimum number of resets for each region, defaults to 10.
+     * @return Condition with no result object.
+     * 
+     * @throws IllegalArgumentException {@code minimumResets} less than zero.
+     * 
+     * @since 1.9 Only supported for Streaming Analytics.
+     */
+    Condition<Void> resetConsistentRegions(Integer minimumResets);
+    
+    /**
      * Submit the topology for this tester and wait for it to complete.
      * A topology can only complete if it is executing as embedded or
      * standalone, thus only these stream context types are supported:

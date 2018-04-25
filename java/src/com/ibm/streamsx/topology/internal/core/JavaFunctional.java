@@ -172,6 +172,15 @@ public class JavaFunctional {
     }
     
     /**
+     * Copy dependencies from one operator to another.
+     */
+    public static void copyDependencies(TopologyElement te,
+            BOperatorInvocation source,
+            BOperatorInvocation op) {
+        te.topology().getDependencyResolver().copyDependencies(source, op);
+    }
+    
+    /**
      * Simple check of the fields in the serializable logic
      * to ensure that all non-transient field are serializable. 
      * @param logic

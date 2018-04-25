@@ -1,5 +1,7 @@
+# coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
+from __future__ import print_function
 from test_functions2_dep import filter2
 
 def hello_world() :

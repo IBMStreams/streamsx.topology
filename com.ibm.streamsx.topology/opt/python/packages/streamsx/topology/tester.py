@@ -1,8 +1,13 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2017
+# Copyright IBM Corp. 2017,2018
+"""
 
-"""Testing support for streaming applications.
+Testing support for streaming applications.
+
+********
+Overview
+********
 
 Allows testing of a streaming application by creation conditions
 on streams that are expected to become valid during the processing.
@@ -72,11 +77,17 @@ between tuples are within the timeout period the test remains running until ten 
 
 .. note:: The test timeout value is not configurable.
 
-
+.. note:: The submitted job (application under test) has additional elements (streams & operators) inserted to implement the conditions. These are visible through various APIs including the Streams console raw graph view. Such elements are put into the `Tester` category.
 
 .. warning::
-    Python 3.5 and Streaming Analytics service or IBM Streams 4.2 or later is required when using `Tester`.
+    Streaming Analytics service or IBM Streams 4.2 or later is required when using `Tester`.
+
+
+.. versionchanged:: 1.9 - Python 2.7 supported (except with Streaming Analytics service).
+
 """
+from __future__ import unicode_literals
+from future.builtins import *
 
 import streamsx.ec as ec
 import streamsx.topology.context as stc
@@ -89,6 +100,8 @@ from streamsx.rest import StreamsConnection
 from streamsx.rest import StreamingAnalyticsConnection
 from streamsx.topology.context import ConfigParams
 import time
+import json
+import sys
 
 import streamsx.topology.tester_runtime as sttrt
 
@@ -122,15 +135,22 @@ class Tester(object):
         topology.tester = self
         self._conditions = {}
         self.local_check = None
+        self._run_for = 0
 
     @staticmethod
     def setup_standalone(test):
         """
         Set up a unittest.TestCase to run tests using IBM Streams standalone mode.
 
-        Requires a local IBM Streams install define by the STREAMS_INSTALL
-        environment variable. If STREAMS_INSTALL is not set, then the
+        Requires a local IBM Streams install define by the ``STREAMS_INSTALL``
+        environment variable. If ``STREAMS_INSTALL`` is not set, then the
         test is skipped.
+
+        A standalone application under test will run until a condition
+        fails or all the streams are finalized or when the
+        :py:meth:`run_for` time (if set) elapses. 
+        Applications that include infinite streams must include set a
+        run for time using :py:meth:`run_for` to ensure the test completes
 
         Two attributes are set in the test case:
          * test_ctxtype - Context type the test will be run in.
@@ -151,14 +171,27 @@ class Tester(object):
         """
         Set up a unittest.TestCase to run tests using IBM Streams distributed mode.
 
-        Requires a local IBM Streams install define by the STREAMS_INSTALL
-        environment variable. If STREAMS_INSTALL is not set then the
+        Requires a local IBM Streams install define by the ``STREAMS_INSTALL``
+        environment variable. If ``STREAMS_INSTALL`` is not set then the
         test is skipped.
 
         The Streams instance to use is defined by the environment variables:
-         * STREAMS_ZKCONNECT - Zookeeper connection string
-         * STREAMS_DOMAIN_ID - Domain identifier
-         * STREAMS_INSTANCE_ID - Instance identifier
+         * ``STREAMS_ZKCONNECT`` - Zookeeper connection string (optional)
+         * ``STREAMS_DOMAIN_ID`` - Domain identifier
+         * ``STREAMS_INSTANCE_ID`` - Instance identifier
+
+        The user used to submit and monitor the job is set by the
+        optional environment variables:
+         * ``STREAMS_USERNAME - User name defaulting to `streamsadmin`.
+         * ``STREAMS_PASSWORD - User password defaulting to `passw0rd`.
+        The defaults match the setup for testing on a IBM Streams Quick
+        Start Edition (QSE) virtual machine.
+
+        .. warning::
+            ``streamtool`` is used to submit the job and requires that ``streamtool`` does not prompt for authentication.  This is achieved by using ``streamtool genkey``.
+
+            .. seealso::
+                `Generating authentication keys for IBM Streams <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.1/com.ibm.streams.cfg.doc/doc/ibminfospherestreams-user-security-authentication-rsa.html>`_
 
         Two attributes are set in the test case:
          * test_ctxtype - Context type the test will be run in.
@@ -168,6 +201,7 @@ class Tester(object):
             test(unittest.TestCase): Test case to be set up to run tests using Tester
 
         Returns: None
+
         """
         if not 'STREAMS_INSTALL' in os.environ:
             raise unittest.SkipTest("Skipped due to no local IBM Streams install")
@@ -176,9 +210,6 @@ class Tester(object):
             raise unittest.SkipTest("Skipped due to STREAMS_INSTANCE_ID environment variable not set")
         if not 'STREAMS_DOMAIN_ID' in os.environ:
             raise unittest.SkipTest("Skipped due to STREAMS_DOMAIN_ID environment variable not set")
-
-        test.username = os.getenv("STREAMS_USERNAME", "streamsadmin")
-        test.password = os.getenv("STREAMS_PASSWORD", "passw0rd")
 
         test.test_ctxtype = stc.ContextTypes.DISTRIBUTED
         test.test_config = {}
@@ -203,8 +234,13 @@ class Tester(object):
             service_name(str): Name of Streaming Analytics service to use. Must exist as an
                 entry in the VCAP services. Defaults to value of STREAMING_ANALYTICS_SERVICE_NAME environment variable.
 
+        If run with Python 2 the test is skipped, only Python 3.5
+        is supported with Streaming Analytics service.
+
         Returns: None
         """
+        if sys.version_info.major == 2:
+            raise unittest.SkipTest('Skipped due to running with Python 2')
         if not 'VCAP_SERVICES' in os.environ:
             raise unittest.SkipTest("Skipped due to VCAP_SERVICES environment variable not set")
 
@@ -387,13 +423,37 @@ class Tester(object):
         .. warning::
             A local check must not cancel the job (application under test).
 
+        .. warning::
+            A local check is not supported in standalone mode.
+
         Args:
             callable: Callable object.
 
         """
         self.local_check = callable
 
-    def test(self, ctxtype, config=None, assert_on_fail=True, username=None, password=None):
+    def run_for(self, duration):
+        """Run the test for a minimum number of seconds.
+
+        Creates a test wide condition that becomes `valid` when the
+        application under test has been running for `duration` seconds.
+        Maybe be called multiple times, the test will run as long as the maximum value provided.
+
+        Can be used to test applications without any externally visible
+        streams, or streams that do not have testable conditions. For
+        example a complete application may be tested by runnning it for
+        for ten minutes and use :py:meth:`local_check` to test
+        any external impacts, such as messages published to a
+        message queue system.
+
+        Args:
+            duration(float): Minimum number of seconds the test will run for.
+
+        .. versionadded: 1.9
+        """
+        self._run_for = max(self._run_for, float(duration))
+
+    def test(self, ctxtype, config=None, assert_on_fail=True, username=None, password=None, always_collect_logs=False):
         """Test the topology.
 
         Submits the topology for testing and verifies the test conditions are met and the job remained healthy through its execution.
@@ -415,8 +475,9 @@ class Tester(object):
             ctxtype(str): Context type for submission.
             config: Configuration for submission.
             assert_on_fail(bool): True to raise an assertion if the test fails, False to return the passed status.
-            username(str): username for distributed tests
-            password(str): password for distributed tests
+            username(str): **Deprecated** 
+            password(str): **Deprecated**
+            always_collect_logs(bool): True to always collect the console log and PE trace files of the test.
 
         Attributes:
             result: The result of the test. This can contain exit codes, application log paths, or other relevant test information.
@@ -427,6 +488,11 @@ class Tester(object):
         Returns:
             bool: `True` if test passed, `False` if test failed if `assert_on_fail` is `False`.
 
+        .. deprecated:: 1.8.3
+            ``username`` and ``password`` parameters. When required for
+             a distributed test use the environment variables
+             ``STREAMS_USERNAME`` and ``STREAMS_PASSWORD`` to define
+             the Streams user.
         """
 
         # Add the conditions into the graph as sink operators
@@ -434,10 +500,23 @@ class Tester(object):
         for ct in self._conditions.values():
             condition = ct[1]
             stream = ct[0]
-            stream.for_each(condition, name=condition.name)
+            cond_sink = stream.for_each(condition, name=condition.name)
+            cond_sink.colocate(stream)
+            cond_sink.category = 'Tester'
+            cond_sink._op()._layout(hidden=True)
+
+        # Standalone uses --kill-after parameter.
+        if self._run_for and stc.ContextTypes.STANDALONE != ctxtype:
+            run_cond = sttrt._RunFor(self._run_for)
+            self.add_condition(None, run_cond)
+            cond_run_time = self.topology.source(run_cond, name="TestRunTime")
+            cond_run_time.category = 'Tester'
+            cond_run_time._op()._layout(hidden=True)
 
         if config is None:
             config = {}
+        config['topology.alwaysCollectLogs'] = always_collect_logs
+
         _logger.debug("Starting test topology %s context %s.", self.topology.name, ctxtype)
 
         if stc.ContextTypes.STANDALONE == ctxtype:
@@ -476,6 +555,9 @@ class Tester(object):
         """ Test using STANDALONE.
         Success is solely indicated by the process completing and returning zero.
         """
+        if self._run_for:
+            config = config.copy()
+            config['topology.standaloneRunTime'] = self._run_for + 5.0
         sr = stc.submit(stc.ContextTypes.STANDALONE, self.topology, config)
         self.submission_result = sr
         self.result = {'passed': sr['return_code'], 'submission_result': sr}
@@ -494,7 +576,7 @@ class Tester(object):
         if sjr['return_code'] != 0:
             _logger.error("Failed to submit job to distributed instance.")
             return False
-        return self._distributed_wait_for_result()
+        return self._distributed_wait_for_result(stc.ContextTypes.DISTRIBUTED, config)
 
 
     def _streaming_analytics_test(self, ctxtype, config):
@@ -508,9 +590,9 @@ class Tester(object):
         if sjr['return_code'] != 0:
             _logger.error("Failed to submit job to Streaming Analytics instance")
             return False
-        return self._distributed_wait_for_result(ctxtype)
+        return self._distributed_wait_for_result(ctxtype, config)
 
-    def _distributed_wait_for_result(self, ctxtype):
+    def _distributed_wait_for_result(self, ctxtype, config):
 
         cc = _ConditionChecker(self, self.streams_connection, self.submission_result)
         # Wait for the job to be healthy before calling the local check.
@@ -524,7 +606,7 @@ class Tester(object):
 
         self.result['submission_result'] = self.submission_result
 
-        if not self.result['passed']:
+        if not self.result['passed'] or config['topology.alwaysCollectLogs']:
             path = self._fetch_application_logs(ctxtype)
             self.result['application_logs'] = path
 
@@ -535,9 +617,12 @@ class Tester(object):
 
     def _fetch_application_logs(self, ctxtype):
         # Fetch the logs if submitting to a Streaming Analytics Service
-        if stc.ContextTypes.STREAMING_ANALYTICS_SERVICE == ctxtype or stc.ContextTypes.ANALYTICS_SERVICE == ctxtype:
+        if stc.ContextTypes.STREAMING_ANALYTICS_SERVICE == ctxtype or stc.ContextTypes.ANALYTICS_SERVICE == ctxtype or stc.ContextTypes.DISTRIBUTED == ctxtype:
             application_logs = self.submission_result.job.retrieve_log_trace()
-            _logger.info("Application logs have been fetched to " + application_logs)
+            if application_logs is not None:
+                _logger.info("Application logs have been fetched to " + application_logs)
+            else:
+                _logger.warn("Fetching job application logs is not supported in this version of Streams.")
             return application_logs
 
     def _start_local_check(self):
@@ -631,7 +716,7 @@ class _ConditionChecker(object):
             return _ConditionChecker._UNHEALTHY
         cms = self._get_job_metrics()
         valid = True
-        progress = True
+        progress = False
         fail = False
         condition_states = {}
         for cn in self._sequences:
@@ -643,9 +728,9 @@ class _ConditionChecker(object):
                 valid = False
                 continue
             seq_m = cms[seq_mn]
-            if seq_m.value == self._sequences[cn]:
-                progress = False
-            else:
+            if seq_m.value != self._sequences[cn]:
+                # At least one condition making progress
+                progress = True
                 self._sequences[cn] = seq_m.value
 
             fail_mn = sttrt.Condition._mn('fail', cn)

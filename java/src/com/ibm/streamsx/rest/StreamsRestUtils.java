@@ -14,8 +14,16 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.logging.Logger;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.http.HttpEntity;
@@ -28,9 +36,13 @@ import org.apache.http.client.fluent.Response;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContexts;
+import org.apache.http.ssl.TrustStrategy;
 import org.apache.http.util.EntityUtils;
 
 import com.google.gson.Gson;
@@ -62,7 +74,7 @@ class StreamsRestUtils {
     private static final long MS = 1000L;
     private static final long EXPIRY_PAD_MS = 300 * MS;
 
-    private static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.rest.StreamsConnectionUtils");
+    private static final Logger traceLog = Logger.getLogger("com.ibm.streamsx.rest.StreamsRestUtils");
 
     /**
      * Create an encoded Basic auth header for the given credentials.
@@ -100,6 +112,53 @@ class StreamsRestUtils {
         sb.append(AUTH_BEARER);
         sb.append(tokenBase64);
         return sb.toString();
+    }
+
+    static Executor createExecutor() {
+        return Executor.newInstance(createHttpClient(false));
+    }
+
+    static Executor createExecutor(boolean allowInsecure) {
+        return Executor.newInstance(createHttpClient(allowInsecure));
+    }
+
+    static CloseableHttpClient createHttpClient() {
+        return createHttpClient(false);
+    }
+
+    static CloseableHttpClient createHttpClient(boolean allowInsecure) {
+        CloseableHttpClient client = null;
+        if (allowInsecure) {
+            try {
+                SSLContext sslContext = SSLContexts.custom()
+                        .loadTrustMaterial(new TrustStrategy() {
+                            @Override
+                            public boolean isTrusted(X509Certificate[] chain,
+                                    String authType) throws CertificateException {
+                                return true;
+                            }
+                        }).build();
+
+                // Set protocols to allow for different handling of "TLS" by Oracle and
+                // IBM JVMs.
+                SSLConnectionSocketFactory factory =
+                        new SSLConnectionSocketFactory(
+                                sslContext,
+                                new String[] {"TLSv1", "TLSv1.1","TLSv1.2"},
+                                null,
+                                NoopHostnameVerifier.INSTANCE);
+                client = HttpClients.custom()
+                        .setSSLSocketFactory(factory)
+                        .build();
+                traceLog.warning("Insecure host connections enabled.");
+            } catch (KeyStoreException | KeyManagementException | NoSuchAlgorithmException e) {
+                traceLog.warning("Unable to allow insecure host connections.");
+            }
+        }
+        if (null == client) {
+            client = HttpClients.createSystem();
+        }
+        return client;
     }
 
     /**
@@ -279,7 +338,7 @@ class StreamsRestUtils {
 
     static JsonObject getServiceResources(String authorization,
             String url)throws IOException {
-        JsonObject resources = StreamsRestUtils.getGsonResponse(Executor.newInstance(),
+        JsonObject resources = StreamsRestUtils.getGsonResponse(createExecutor(),
                 authorization, url);
         if (null == resources) {
             throw new IllegalStateException("Missing resources for service");
@@ -331,7 +390,7 @@ class StreamsRestUtils {
      * @return The response from the server.
      */
     static JsonObject getTokenResponse(String iamUrl, String apiKey) {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+        try (CloseableHttpClient httpClient = StreamsRestUtils.createHttpClient()) {
             String key = URLEncoder.encode(apiKey, StandardCharsets.UTF_8.name());
             StringBuilder sb = new StringBuilder(iamUrl.length()
                     + TOKEN_PARAMS.length() + key.length());

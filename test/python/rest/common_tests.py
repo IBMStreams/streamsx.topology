@@ -2,6 +2,7 @@ import logging
 import unittest
 import time
 from operators import DelayedTupleSourceWithLastTuple
+from requests import exceptions
 
 from streamsx.topology.tester import Tester
 from streamsx.topology import topology, schema
@@ -20,6 +21,7 @@ class CommonTests(unittest.TestCase):
         """
         if cls is CommonTests:
             raise unittest.SkipTest("Skipping base tests.")
+        cls.is_v2 = None
 
     def test_username_and_password(self):
         self.logger.debug("Beginning test: test_username_and_password.")
@@ -72,7 +74,6 @@ class CommonTests(unittest.TestCase):
 
         self.assertEqual('healthy', self.job.health)
 
-
     def test_job_refresh(self):
         top = topology.Topology('jobRefreshTest')
         src = top.source(['Hello'])
@@ -87,7 +88,11 @@ class CommonTests(unittest.TestCase):
         while hasattr(self.job, 'health') and 'healthy' == self.job.health:
             time.sleep(0.2)
             timeout -= 1
-            self.job.refresh()
+            try:
+                self.job.refresh()
+            except exceptions.HTTPError:
+                self.job = None
+                break
             self.assertGreaterEqual(timeout, 0, msg='Timeout exceeded while waiting for job to cancel')
 
         if hasattr(self.job, 'health'):
@@ -106,15 +111,23 @@ class CommonTests(unittest.TestCase):
         self.assertIsInstance(domain, Domain)
         primitives_caller.check_domain(self, domain)
 
+        nops = job.get_operators(name='.*BASIC.')
+        self.assertEqual(2, len(nops))
+
+        nops = job.get_operators(name='.*BASICD')
+        self.assertEqual(1, len(nops))
+        self.assertTrue(nops[0].name.endswith('BASICD'))
+        
+
     def test_basic_calls(self):
         """
         Test the basic rest apis.
         """
         top = topology.Topology()
         src = top.source(['Rest', 'tester'])
-        src = src.filter(lambda x : True)
+        src = src.filter(lambda x : True, name='BASICC')
         src.view()
-        src = src.map(lambda x : x)
+        src = src.map(lambda x : x, name='BASICD')
 
         self.tester = Tester(top)
         self.tester.tuple_count(src, 2)

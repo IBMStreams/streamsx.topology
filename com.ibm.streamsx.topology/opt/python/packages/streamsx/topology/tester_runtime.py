@@ -3,9 +3,24 @@
 # Copyright IBM Corp. 2017
 
 """
-Contains test related code that is executed at runtime
-in the context of the application under test.
+Runtime tester functionality.
+
+********
+Overview
+********
+
+Module containing runtime functionality for
+:py:mod:`streamsx.topology.tester`.
+
+When test is executed any specified :py:class:`Condition` instances
+are executed in the context of the application under test (and
+not the ``unittest`` class instance). This module separates out
+the runtime execution code from the test definition module
+:py:mod:`~streamsx.topology.tester`.
+
 """
+
+from future.builtins import *
 
 import streamsx.ec as ec
 import streamsx.topology.context as stc
@@ -14,9 +29,6 @@ import unittest
 import logging
 import collections
 import threading
-from streamsx.rest import StreamsConnection
-from streamsx.rest import StreamingAnalyticsConnection
-from streamsx.topology.context import ConfigParams
 import time
 
 class Condition(object):
@@ -178,3 +190,22 @@ class _TupleCheck(Condition):
 
     def __str__(self):
         return "Tuple checker:" + str(self.checker)
+
+
+class _RunFor(Condition):
+    def __init__(self, duration):
+        super(_RunFor, self).__init__("TestRunTime")
+        self.duration = duration
+
+    def __iter__(self):
+        start = time.time()
+        while True:
+            time.sleep(1)
+            if (time.time() - start) >= self.duration:
+                self.valid = True
+                return
+            self.valid = False
+            yield None
+
+    def __str__(self):
+        return "Tuple run time:" + str(self.duration)

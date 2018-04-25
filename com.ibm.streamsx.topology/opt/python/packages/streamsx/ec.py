@@ -2,14 +2,19 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
 """
-Overview
---------
 Access to the IBM Streams execution context.
+
+********
+Overview
+********
+
+This module (`streamsx.ec`) provides access to the execution
+context when Python code is running in a Streams application.
 
 A Streams application runs distributed or standalone.
 
 Distributed
------------
+===========
 Distributed is used when an application is submitted
 to the Streaming Analytics service on IBM Bluemix cloud platform
 or a IBM Streams distributed instance.
@@ -21,7 +26,7 @@ The PEs in a job may be distributed across the
 resources (hosts) in the Streams instance.
 
 Standalone
-----------
+==========
 Standalone is a mode where the complete application is run
 as a single PE (process) outside of a Streams instance.
 
@@ -29,8 +34,9 @@ Standalone is typically used for ad-hoc testing of an application.
 
 .. _streams_app_log_trc:
 
+*************************
 Application log and trace
--------------------------
+*************************
 
 IBM Streams provides application trace and log services.
 
@@ -75,13 +81,14 @@ Streams trace messages if the application is using the `logging` package.
 
 Application code must not modify the root logger, if additional handlers or different levels are required a child logger should be used.
 
+*****************
 Execution Context
------------------
-This module (`streamsx.exec`) provides access to the execution
+*****************
+
+This module (`streamsx.ec`) provides access to the execution
 context when Python code is running in a Streams application.
 
 Access is only supported when running:
- * Python 3.5
  * Streams 4.2 or later
 
 This module may be used by Python functions or classes used
@@ -90,7 +97,11 @@ in a `Topology` or decorated SPL operators.
 Most functionality is only available when a Python class is
 being invoked in a Streams application.
 
+.. versionchanged:: 1.9 Support for Python 2.7
+
 """
+
+from future.builtins import *
 
 import enum
 import pickle
@@ -130,7 +141,7 @@ def _check():
             _State._state = _State(False)
 
     if not _State._state._supported:
-        raise NotImplementedError("Access to the execution context requires Python 3.5 and Streams 4.2 or later")
+        raise NotImplementedError("Access to the execution context requires Streams 4.2 or later")
 
 def domain_id():
     """
@@ -441,25 +452,38 @@ def _get_opc(obj):
              pass
         raise AssertionError("InternalError")
 
-def _shutdown_op(callable):
-    if hasattr(callable, '_splpy_shutdown'):
-        callable._splpy_shutdown()
+def _shutdown_op(callable_, exc_info=None):
+    if hasattr(callable_, '_splpy_shutdown'):
+        if exc_info is None:
+            return callable_._splpy_shutdown()
+        exc_type = exc_info[0]
+        exc_value = exc_info[1] if len(exc_info) >=2 else None
+        traceback = exc_info[2] if len(exc_info) >=3 else None
+        return callable_._splpy_shutdown(exc_type, exc_value, traceback)
+    return False
 
-def _callable_enter(callable):
+def _callable_enter(callable_):
     """Called at initialization time.
     """
-    if hasattr(callable, '__enter__') and hasattr(callable, '__exit__'):
-        callable.__enter__()
+    if hasattr(callable_, '__enter__') and hasattr(callable_, '__exit__'):
+        callable_.__enter__()
+        callable_._splpy_entered = True
 
-def _callable_exit_clean(callable):
+def _callable_exit(callable_, exc_type, exc_value, traceback):
     """Called at shutdown time.
+    Call the callable's __exit__ returning its return.
+    If no callable then return False to indicate the error should
+    be acted upon.
     """
-    if hasattr(callable, '__enter__') and hasattr(callable, '__exit__'):
-        callable.__exit__(None, None, None)
-
+    if hasattr(callable_, '__enter__') and hasattr(callable_, '__exit__') and hasattr(callable_, '_splpy_entered') and callable_._splpy_entered:
+        ignore = callable_.__exit__(exc_type, exc_value, traceback)
+        if not ignore or exc_type is None:
+            callable_._splpy_entered = False
+        return ignore
+    return False
+        
 def _submit(primitive, port_index, tuple_):
     """Internal method to submit a tuple"""
-    tuple_ = primitive._splpy_conv_fns[port_index](tuple_)
     args = (_get_opc(primitive), port_index, tuple_)
     _ec._submit(args)
 

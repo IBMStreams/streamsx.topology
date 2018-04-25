@@ -11,7 +11,7 @@ using namespace streamsx::topology;
 <%
  # Select the Python wrapper function
  my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
- my $pywrapfunc= $pystyle . '_in__' . $pyoutstyle . '_out';
+ my $pywrapfunc= $pystyle_fn . '_in__' . $pyoutstyle . '_out';
 %>
 
 #define SPLPY_TUPLE_MAP(f, v, r, occ) \
@@ -20,7 +20,7 @@ using namespace streamsx::topology;
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
-   pyInNames_(NULL),
+   pyInStyleObj_(NULL),
    occ_(-1)
 {
     const char * wrapfn = "<%=$pywrapfunc%>";
@@ -35,7 +35,7 @@ MY_OPERATOR::MY_OPERATOR() :
  if ($oc) {
     my $occ = $oc->getValueAt(0)->getSPLExpression();
     if ($occ > 0) {
-        my $pybyrefwrapfunc = $pystyle . '_in__object_out';
+        my $pybyrefwrapfunc = $pystyle_fn . '_in__object_out';
 %>
 
 #undef SPLPY_TUPLE_MAP
@@ -54,22 +54,16 @@ MY_OPERATOR::MY_OPERATOR() :
 
     funcop_ = new SplpyFuncOp(this, wrapfn);
 
-<% if ($pystyle eq 'dict') { %>
-     SplpyGIL lock;
-     pyInNames_ = streamsx::topology::Splpy::pyAttributeNames(
-               getInputPortAt(0));
-<% } %>
+@include "../pyspltuple_constructor.cgt"
 }
 
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-<% if ($pystyle eq 'dict') { %>
-    if (pyInNames_) {
+  if (pyInStyleObj_) {
       SplpyGIL lock;
-      Py_DECREF(pyInNames_);
-    }
-<% } %>
+      Py_DECREF(pyInStyleObj_);
+  }
 
   delete funcop_;
 }
@@ -83,6 +77,7 @@ void MY_OPERATOR::prepareToShutdown()
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
+try {
 @include "../pyspltuple2value.cgt"
 
 
@@ -104,6 +99,9 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
      submit(otuple, 0);
 
 <%}%>
+} catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+  SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+}
 }
 
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)

@@ -88,7 +88,16 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
 	     * Tuples will be consistently routed to the same channel based upon 
              * their {@code hashCode()}.
 	     */
-	    HASH_PARTITIONED	    
+	    HASH_PARTITIONED,
+	    
+	    /**
+	     * Tuples are broadcast to all channels.
+	     * For example with a width of four each tuple on the stream results
+	     * in four tuples, one per channel.
+	     * 
+	     * @since 1.9
+	     */
+	    BROADCAST
 	};
 	
     /**
@@ -675,7 +684,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * For Java streams ({@code TStream<T>}) the declared Java type ({@code T}
      * ) of the stream is an exact match.</LI>
      * <LI>
-     * For {@link SPLStream SPL streams} the {@link com.ibm.streamsx.topology.spl.SPLStream#getSchema() SPL
+     * For {@link com.ibm.streamsx.topology.spl.SPLStream SPL streams} the {@link com.ibm.streamsx.topology.spl.SPLStream#getSchema() SPL
      * schema} is an exact match.</LI>
      * </UL>
      * <BR>
@@ -721,6 +730,29 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @see com.ibm.streamsx.topology.spl.SPLStreams#subscribe(TopologyElement, String, com.ibm.streams.operator.StreamSchema)
      */
     void publish(String topic);
+    
+    /**
+     * Publish tuples from this stream for consumption by other IBM Streams applications.
+     * 
+     * Differs from {@link #publish(String)} in that it
+     * supports {@code topic} as a submission time parameter, for example
+     * using the topic defined by the submission parameter {@code eventTopic}:
+     * 
+     * <pre>
+     * <code>
+     * TStream<String> events = ...
+     * Supplier<String> topicParam = topology.createSubmissionParameter("eventTopic", String.class);
+     * topology.publish(topicParam);
+     * </code>
+     * </pre>
+     * 
+     * @param topic Topic name to publish tuples to.
+     * 
+     * @see #publish(String)
+     * 
+     * @since 1.8
+     */
+    void publish(Supplier<String> topic);
     
     /**
      * Publish tuples from this stream for consumption by other IBM Streams applications.
@@ -829,6 +861,30 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @see com.ibm.streamsx.topology.spl.SPLStreams#subscribe(TopologyElement, String, com.ibm.streams.operator.StreamSchema)
      */
     void publish(String topic, boolean allowFilter);
+    
+    /**
+     * Publish tuples from this stream for consumption by other IBM Streams applications.
+     * 
+     * Differs from {@link #publish(String, boolean)} in that it
+     * supports {@code topic} as a submission time parameter, for example
+     * using the topic defined by the submission parameter {@code eventTopic}:
+     * 
+     * <pre>
+     * <code>
+     * TStream<String> events = ...
+     * Supplier<String> topicParam = topology.createSubmissionParameter("eventTopic", String.class);
+     * topology.publish(topicParam, false);
+     * </code>
+     * </pre>
+     * 
+     * @param topic Topic name to publish tuples to.
+     * @param allowFilter Allow SPL filters specified by SPL application to be executed.
+     * 
+     * @see #publish(String, boolean)
+     * 
+     * @since 1.8
+     */
+    void publish(Supplier<String> topic, boolean allowFilter);
 
     /**
      * Parallelizes the stream into a a fixed
@@ -932,19 +988,6 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * It is not necessary to invoke {@link #endParallel()} on parallel sinks.</b>
      * <br><br>
      * Limitations of parallel() are as follows: <br>
-     * Nested parallelism is not currently supported. A call to {@code parallel(...)}
-     * should never be made immediately after another call to {@code parallel(...)} without
-     * having an {@code endParallel()} in between. <br>
-     * <br>
-     * {@code parallel()} should not be invoked immediately after another call to
-     * {@code parallel()}. The following is invalid:
-     * 
-     * <pre>
-     * <code>
-     * myStream.parallel(2).parallel(2);
-     * </pre>
-     * 
-     * </code>
      * 
      * Every call to {@code endParallel()} must have a call to {@code parallel(...)} preceding it. The
      * following is invalid:
@@ -1003,6 +1046,17 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @see #parallel(Supplier, Routing)
      */
     TStream<T> parallel(Supplier<Integer> width, Function<T,?> keyer);
+    
+    /**
+     * Sets the current stream as the start of a parallel region.
+     * 
+     * @param width The degree of parallelism.
+     * @see #parallel(int)
+     * @see #parallel(Supplier, Routing)
+     * @see #parallel(Supplier, Function)
+     * @since v1.9
+     */
+    TStream<T> setParallel(Supplier<Integer> width);
     
     /**
      * Ends a parallel region by merging the channels into a single stream.
@@ -1171,17 +1225,26 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
     TStream<T> autonomous();
     
     /**
-     * Set the source operator for this stream to be the start of a
+     * Set the operator that is the source of this stream to be the start of a
      * consistent region to support at least once and exactly once
      * processing.
      * IBM Streams calculates the boundaries of the consistent region
-     * that is based on the reachability graph of this stream.
+     * based on the reachability graph of this stream. A region
+     * can be bounded though use of {@link #autonomous()}.
      * 
      * <P>
      * Consistent regions are only supported in distributed contexts.
      * </P>
+     * <P>
+     * This must be called on a stream directly produced by an
+     * SPL operator that supports consistent regions.
+     * Source streams produced by methods on {@link Topology}
+     * do not support consistent regions.
+     * </P>
 
-     * @since v1.5
+     * @since 1.5 API added
+     * @since 1.8 Working implementation.
+     * 
      * @return this
      * 
      * @see com.ibm.streamsx.topology.consistent.ConsistentRegionConfig
