@@ -576,6 +576,14 @@ class Job(_ResourceElement):
 
         Returns:
             list(View): List of views matching `name`.
+
+        Retrieving a list of views that contain the string "temperatureSensor" could be performed as followed
+        Example:
+            >>> from streamsx import rest
+            >>> sc = rest.StreamingAnalyticsConnection()
+            >>> instances = sc.get_instances()
+            >>> job = instances[0].get_jobs()[0]
+            >>> views = job.get_views(name = "*temperatureSensor*")
         """
         return self._get_elements(self.views, 'views', View, name=name)
 
@@ -621,6 +629,14 @@ class Job(_ResourceElement):
         Returns:
             list(Operator): List of Operator elements associated with this job.
 
+        Retrieving a list of operators whose name contains the string "temperatureSensor" could be performed as followed
+        Example:
+            >>> from streamsx import rest
+            >>> sc = rest.StreamingAnalyticsConnection()
+            >>> instances = sc.get_instances()
+            >>> job = instances[0].get_jobs()[0]
+            >>> operators = job.get_operators(name="*temperatureSensor*")
+
         .versionsince:: 1.9 `name` parameter
         """
         return self._get_elements(self.operators, 'operators', Operator, name=name)
@@ -630,6 +646,7 @@ class Job(_ResourceElement):
 
         Returns:
             list(PE): List of PE elements associated with this job.
+
         """
         return self._get_elements(self.pes, 'pes', PE)
 
@@ -698,6 +715,14 @@ class Operator(_ResourceElement):
 
         Returns:
              list(Metric): List of matching metrics.
+
+        Retrieving a list of metrics whose name contains the string "temperatureSensor" could be performed as followed
+        Example:
+            >>> from streamsx import rest
+            >>> sc = rest.StreamingAnalyticsConnection()
+            >>> instances = sc.get_instances()
+            >>> operator = instances[0].get_operators()[0]
+            >>> metrics = op.get_metrics(name='*temperatureSensor*')
         """
         return self._get_elements(self.metrics, 'metrics', Metric, name=name)
 
@@ -793,6 +818,15 @@ class OperatorOutputPort(_ResourceElement):
         Returns:
              list(Metric): List of matching metrics.
 
+        Retrieving a list of metrics whose name contains the string "temperatureSensor" could be performed as followed
+        Example:
+            >>> from streamsx import rest
+            >>> sc = rest.StreamingAnalyticsConnection()
+            >>> instances = sc.get_instances()
+            >>> exportedstreams = instances[0].get_exported_streams()
+            >>> operatoroutputport = exportedstreams[0].get_operator_output_port()
+            >>> operatoroutputport.get_metrics(name='*temperatureSensor*')
+
         .. versionadded:: 1.9
         """
         return self._get_elements(self.metrics, 'metrics', Metric, name=name)
@@ -816,6 +850,15 @@ class OperatorInputPort(_ResourceElement):
 
         Returns:
              list(Metric): List of matching metrics.
+        
+        Retrieving a list of metrics whose name contains the string "temperatureSensor" could be performed as followed
+        Example:
+            >>> from streamsx import rest
+            >>> sc = rest.StreamingAnalyticsConnection()
+            >>> instances = sc.get_instances()
+            >>> operator = instances[0].get_operators()[0]
+            >>> input_port = operator.get_input_ports()[0]
+            >>> metrics = input_port.get_metrics(name='*temperatureSensor*')
         """
         return self._get_elements(self.metrics, 'metrics', Metric, name=name)
 
@@ -947,6 +990,14 @@ class PE(_ResourceElement):
 
         Returns:
              list(Metric): List of matching metrics.
+        
+        Retrieving a list of metrics whose name contains the string "temperatureSensor" could be performed as followed
+        Example:
+            >>> from streamsx import rest
+            >>> sc = rest.StreamingAnalyticsConnection()
+            >>> instances = sc.get_instances()
+            >>> pe = instances.get_pes()[0]
+            >>> metrics = pe.get_metrics(name='*temperatureSensor*')
 
         .. versionadded:: 1.9
         """
@@ -1143,6 +1194,14 @@ class Instance(_ResourceElement):
 
         Returns:
             list(Operator): List of Operator elements associated with this instance.
+
+        Retrieving a list of operators whose name contains the string "temperatureSensor" could be performed as followed
+        Example:
+            >>> from streamsx import rest
+            >>> sc = rest.StreamingAnalyticsConnection()
+            >>> instance = sc.get_instances()[0]
+            >>> operators = instance.get_operators(name="*temperatureSensor*")
+
         .versionsince:: 1.9 `name` parameter
         """
         return self._get_elements(self.operators, 'operators', Operator, name=name)
@@ -1180,6 +1239,13 @@ class Instance(_ResourceElement):
 
         Returns:
             list(View): List of views matching `name`.
+
+        Retrieving a list of views whose name contains the string "temperatureSensor" could be performed as followed
+        Example:
+            >>> from streamsx import rest
+            >>> sc = rest.StreamingAnalyticsConnection()
+            >>> instance = sc.get_instances()[0]
+            >>> view = instance.get_views(name="*temperatureSensor*")
         """
         return self._get_elements(self.views, 'views', View, name=name)
 
@@ -1208,6 +1274,13 @@ class Instance(_ResourceElement):
 
         Returns:
             list(Job): A list of jobs matching the given `name`.
+        
+        Retrieving a list of jobs whose name contains the string "temperatureSensor" could be performed as followed
+        Example:
+            >>> from streamsx import rest
+            >>> sc = rest.StreamingAnalyticsConnection()
+            >>> instance = sc.get_instances()[0]
+            >>> jobs = instance.get_jobs(name="*temperatureApplication*")
         """
         return self._get_elements(self.jobs, 'jobs', Job, None, name)
 
