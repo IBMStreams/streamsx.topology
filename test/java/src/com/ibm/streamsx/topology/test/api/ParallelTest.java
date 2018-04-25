@@ -684,7 +684,6 @@ public class ParallelTest extends TestTopology {
     }
 
     @Test
-    @Ignore("Issue #131")
     public void testParallelPreFanOut() throws Exception {
         Topology topology = newTopology();
         
