@@ -557,9 +557,9 @@ class Job(_ResourceElement):
 
         .. versionadded:: 1.8
         """
-        logger.debug("Retrieving application logs from: " + self.applicationLogTrace)
 
         if hasattr(self, "applicationLogTrace") and self.applicationLogTrace is not None:
+            logger.debug("Retrieving application logs from: " + self.applicationLogTrace)
             if not filename:
                 filename = _file_name('job', self.id, '.tar.gz')
 
@@ -948,10 +948,8 @@ class PE(_ResourceElement):
 
         .. versionadded:: 1.9
         """
-        logger.debug("Retrieving PE trace: " + self.applicationTrace)
-
-
         if hasattr(self, "applicationTrace") and self.applicationTrace is not None:
+            logger.debug("Retrieving PE trace: " + self.applicationTrace)
             if not filename:
                 filename = _file_name('pe', self.id, '.trace')
             return self.rest_client._retrieve_file(self.applicationTrace, filename, dir, 'text/plain')
@@ -973,9 +971,9 @@ class PE(_ResourceElement):
             str: the path to the created file, or None if retrieving a job's logs is not supported in the version of streams to which the job is submitted.
 
         .. versionadded:: 1.9
-        """
-        logger.debug("Retrieving PE console log: " + self.consoleLog)
+        """        
         if hasattr(self, "consoleLog") and self.consoleLog is not None:
+            logger.debug("Retrieving PE console log: " + self.consoleLog)
             if not filename:
                 filename = _file_name('pe', self.id, '.stdouterr')
             return self.rest_client._retrieve_file(self.consoleLog, filename, dir, 'text/plain')
