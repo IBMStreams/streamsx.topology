@@ -1,7 +1,7 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016
-from __future__ import print_function
+# Copyright IBM Corp. 2016,2018
+from future.builtins import *
 import unittest
 import sys
 import itertools
@@ -32,8 +32,8 @@ class EnterExit(object):
         return t
     def _report(self, txt):
         with open(self.tf, 'a') as fp:
-            fp.write(txt)
-            fp.write('\n')
+            fp.write(unicode(txt))
+            fp.write(unicode('\n'))
             fp.flush()
 
 class ExcOnEnter(EnterExit):
