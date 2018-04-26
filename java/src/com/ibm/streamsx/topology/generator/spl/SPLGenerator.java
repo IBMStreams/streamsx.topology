@@ -403,7 +403,7 @@ public class SPLGenerator {
         }
         
         if(widths.size() > 1)
-            throw new IllegalArgumentException("Parallel region has conflicting inputs of different widths.");
+            throw new IllegalStateException("Parallel region has conflicting inputs of different widths.");
         
         compositeInvocation.add("parallelInfo", parallelInfo);
         compositeInvocation.addProperty("parallelOperator", true);
