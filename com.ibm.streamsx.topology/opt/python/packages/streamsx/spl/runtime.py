@@ -44,6 +44,8 @@ def _splpy_iter_source(iterable) :
                 return tv
      except StopIteration:
        return None
+  if hasattr(iterable, '_splpy_entered'):
+      _wf._splpy_entered = iterable._splpy_entered
   
   _add_shutdown_hook(iterable, _wf)
   return _wf

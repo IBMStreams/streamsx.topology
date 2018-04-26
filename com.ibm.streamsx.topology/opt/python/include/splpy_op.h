@@ -17,6 +17,9 @@
 #ifndef __SPL__SPLPY_OP_H
 #define __SPL__SPLPY_OP_H
 
+#include <SPL/Runtime/Operator/OperatorMetrics.h>
+#include <SPL/Runtime/Common/Metric.h>
+
 #include "splpy_ec_api.h"
 #include "splpy_general.h"
 #include "splpy_setup.h"
@@ -29,7 +32,8 @@ class SplpyOp {
       SplpyOp(SPL::Operator *op, const char * spl_setup_py) :
           op_(op),
           callable_(NULL),
-          pydl_(NULL)
+          pydl_(NULL),
+          exc_suppresses(NULL)
 
 #if __SPLPY_EC_MODULE_OK
           , opc_(NULL)
@@ -73,9 +77,33 @@ class SplpyOp {
 
       void setCallable(PyObject * callable) {
            callable_ = callable;
+           setup();
       }
       PyObject * callable() {
           return callable_;
+      }
+
+      /**
+       * perform any common setup for a Python callable.
+       * 
+       * - If the callable as an __enter__/__exit__ pair
+       *   (__enter__ will have already been called) then create
+       *   a metric that keeps track of exceptions suppressed
+       *   by __exit__
+       */
+      void setup() {
+          if (PyObject_HasAttrString(callable_, "_splpy_entered")) {
+              PyObject *entered = PyObject_GetAttrString(callable_, "_splpy_entered");
+              if (PyObject_IsTrue(entered)) {
+                  SPL::OperatorMetrics & metrics = op_->getContext().getMetrics();
+                  SPL::Metric &cm = metrics.createCustomMetric(
+                      "nExceptionsSuppressed",
+                      "Number of exceptions suppressed by callable's __exit__ method.",
+                      SPL::Metric::Counter);
+                  exc_suppresses = &cm;
+              }
+              Py_DECREF(entered);
+          }
       }
 
       /**
@@ -105,6 +133,8 @@ class SplpyOp {
                "streamsx.ec", "_shutdown_op", callable_, exInfo.asTuple());
              int ignoreException = PyObject_IsTrue(ignore);
              Py_DECREF(ignore);
+             if (ignoreException && exc_suppresses)
+                 exc_suppresses->incrementValue();
              return ignoreException;
           }
           return 0;
@@ -142,10 +172,14 @@ class SplpyOp {
       // Handle to libpythonX.Y.so
       void * pydl_;
 
+      // Number of exceptions suppressed by __exit__
+      SPL::Metric *exc_suppresses;
+
 #if __SPLPY_EC_MODULE_OK
       // PyLong of op_
       PyObject *opc_;
 #endif
+
 };
 
 }}

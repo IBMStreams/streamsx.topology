@@ -23,7 +23,7 @@ def _create_tf():
 
 
 class EnterExit(object):
-    def __init__(self, tf):
+    def __init__(self, tf=None):
         self.tf = tf
         self._report('__init__')
     def __enter__(self):
@@ -35,6 +35,8 @@ class EnterExit(object):
     def __call__(self, *t):
         return t
     def _report(self, txt):
+        if not self.tf:
+            return
         with open(self.tf, 'a') as fp:
             fp.write(txt)
             fp.write('\n')

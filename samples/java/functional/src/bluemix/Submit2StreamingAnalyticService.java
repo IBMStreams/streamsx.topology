@@ -15,7 +15,7 @@ import com.ibm.streamsx.topology.jobconfig.JobConfig;
 
 /**
  * Sample demonstrating submission of a topology
- * to Streaming Analytic Service on Bluemix. 
+ * to Streaming Analytic service on IBM Cloud.. 
  *
  */
 public class Submit2StreamingAnalyticService {
@@ -36,7 +36,7 @@ public class Submit2StreamingAnalyticService {
         Topology topology = new Topology("Submit2StreamingAnalyticService");
         topology.strings(
                 "Hello", "Streaming Analytic Service",
-                serviceName, "running on IBM Bluemix").print();       
+                serviceName, "running on IBM Cloud").print();       
         
         // Require a configuration object.
         Map<String,Object> config = new HashMap<>();
@@ -53,7 +53,7 @@ public class Submit2StreamingAnalyticService {
         // Optionally we can specify a job name
         // (note job names must be unique within the instance).
         JobConfig jco = new JobConfig();
-        jco.setJobName("BluemixSubmitSample");
+        jco.setJobName("StreamingAnalyticsSubmitSample");
         
         config.put(JobProperties.CONFIG, jco);
         

@@ -1,5 +1,8 @@
 # Testing
+
 ## Test targets:
+
+See end of document for tests run to verify a release.
 
 ### `test/java`
 
@@ -60,6 +63,9 @@ Run these `ant` targets in `test/java`
 * `unitest.main`
 * `unitest.standalone`
 * `unitest.distributed`
+* `unittest.restapi.distributed'
+* `unittest.restapi.distributed.streaminganalytics`
+
 
 ### test/spl
 
