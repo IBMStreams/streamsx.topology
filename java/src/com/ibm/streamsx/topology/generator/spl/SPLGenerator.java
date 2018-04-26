@@ -29,7 +29,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Stack;
 import java.util.Map.Entry;
@@ -363,12 +365,12 @@ public class SPLGenerator {
         parallelInfo.add("partitionedPorts", partitionedPorts);
         
         Set<Integer> widths = new HashSet<>();
-        boolean hasSTP = false;
+        Set<JsonElement> STPs = Collections.newSetFromMap(new IdentityHashMap<JsonElement, Boolean>());
         for(JsonObject startOp : startsEndsAndOperators.get(0)){
             if(startOp.has("config") && startOp.get("config").getAsJsonObject().has(OpProperties.WIDTH)){
                 JsonElement width = startOp.get("config").getAsJsonObject().get(OpProperties.WIDTH);
                 if(width.isJsonObject())
-                    hasSTP = true;
+                    STPs.add(width);
                 else
                     widths.add(width.getAsInt());
                 parallelInfo.add(OpProperties.WIDTH, width);
@@ -386,7 +388,7 @@ public class SPLGenerator {
             if(outputPort.has(OpProperties.WIDTH)){
                 JsonElement width = outputPort.get(OpProperties.WIDTH);
                 if(width.isJsonObject())
-                    hasSTP=true;
+                    STPs.add(width);
                 else
                     widths.add(width.getAsInt());
                 parallelInfo.add(OpProperties.WIDTH, width);
@@ -410,7 +412,7 @@ public class SPLGenerator {
         }
         
         // Fail if there is a mix of multiple widths and/or submission time parameters.
-        if(widths.size() > 1 || (widths.size() > 0 && hasSTP))
+        if(widths.size() > 1 || STPs.size() > 1 || (widths.size() > 0 && STPs.size() > 0))
             throw new IllegalStateException("Parallel region has conflicting inputs of different widths.");
         
         compositeInvocation.add("parallelInfo", parallelInfo);
