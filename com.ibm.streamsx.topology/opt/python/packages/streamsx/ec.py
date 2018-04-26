@@ -465,6 +465,8 @@ def _shutdown_op(callable_, exc_info=None):
 def _callable_enter(callable_):
     """Called at initialization time.
     """
+    if hasattr(callable_, '_splpy_entered') and callable_._splpy_entered == False:
+        return
     if hasattr(callable_, '__enter__') and hasattr(callable_, '__exit__'):
         callable_.__enter__()
         callable_._splpy_entered = True
@@ -475,9 +477,9 @@ def _callable_exit(callable_, exc_type, exc_value, traceback):
     If no callable then return False to indicate the error should
     be acted upon.
     """
-    if hasattr(callable_, '__enter__') and hasattr(callable_, '__exit__') and hasattr(callable_, '_splpy_entered') and callable_._splpy_entered:
+    if hasattr(callable_, '_splpy_entered') and callable_._splpy_entered:
         ignore = callable_.__exit__(exc_type, exc_value, traceback)
-        if not ignore or exc_type is None:
+        if (not ignore) or exc_type is None:
             callable_._splpy_entered = False
         return ignore
     return False

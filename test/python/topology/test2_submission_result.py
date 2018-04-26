@@ -21,6 +21,9 @@ class TestSubmissionResult(unittest.TestCase):
         job_job_id = self.tester.submission_result.job.id
         self.assertEqual(json_job_id, job_job_id)
 
+    def _can_retrieve_logs(self):
+        self.can_retrieve_logs = hasattr(self.tester.submission_result.job, 'applicationLogTrace')
+
     def test_get_job(self):
         topo = Topology("job_in_result_test")
         topo.source(["foo"])
@@ -44,19 +47,22 @@ class TestSubmissionResult(unittest.TestCase):
         tester.contents(s, ["bar"])
 
         try:
+            self.tester = tester
+            tester.local_check = self._can_retrieve_logs
             tester.test(self.test_ctxtype, self.test_config)
         except AssertionError:
             # This test is expected to fail, do nothing.
             pass
 
         # Check if logs were downloaded
-        logs = tester.result['application_logs']
-        exists = os.path.isfile(logs)
-
-        self.assertTrue(exists, "Application logs were not downloaded on test failure")
-
-        if exists:
-            os.remove(logs)
+        if self.can_retrieve_logs:
+            logs = tester.result['application_logs']
+            exists = os.path.isfile(logs)
+            
+            self.assertTrue(exists, "Application logs were not downloaded on test failure")
+            
+            if exists:
+                os.remove(logs)
 
     def test_always_fetch_logs(self):
         topo = Topology("always_fetch_logs")
@@ -65,16 +71,20 @@ class TestSubmissionResult(unittest.TestCase):
         tester = Tester(topo)
         tester.contents(s, ["foo"])
 
+        self.tester = tester
+        tester.local_check = self._can_retrieve_logs
         tester.test(self.test_ctxtype, self.test_config, always_collect_logs=True)
 
-        # Check if logs were downloaded
-        logs = tester.result['application_logs']
-        exists = os.path.isfile(logs)
+        if self.can_retrieve_logs:
+            # streams version is >= 4.2.4. Fetching logs is supported.
+            # Check if logs were downloaded
+            logs = tester.result['application_logs']
+            exists = os.path.isfile(logs)
 
-        self.assertTrue(exists, "Application logs were not downloaded on test success")
-
-        if exists:
-            os.remove(logs)                            
+            self.assertTrue(exists, "Application logs were not downloaded on test success")
+            
+            if exists:
+                os.remove(logs)                            
 
 
 class TestSubmissionResultStreamingAnalytics(TestSubmissionResult):
