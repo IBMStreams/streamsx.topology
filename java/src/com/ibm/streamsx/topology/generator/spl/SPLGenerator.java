@@ -363,10 +363,14 @@ public class SPLGenerator {
         parallelInfo.add("partitionedPorts", partitionedPorts);
         
         Set<Integer> widths = new HashSet<>();
+        boolean hasSTP = false;
         for(JsonObject startOp : startsEndsAndOperators.get(0)){
             if(startOp.has("config") && startOp.get("config").getAsJsonObject().has(OpProperties.WIDTH)){
                 JsonElement width = startOp.get("config").getAsJsonObject().get(OpProperties.WIDTH);
-                widths.add(width.getAsInt());
+                if(width.isJsonObject())
+                    hasSTP = true;
+                else
+                    widths.add(width.getAsInt());
                 parallelInfo.add(OpProperties.WIDTH, width);
             }
             
@@ -381,7 +385,10 @@ public class SPLGenerator {
             // Set the width if it was contained in the output port.
             if(outputPort.has(OpProperties.WIDTH)){
                 JsonElement width = outputPort.get(OpProperties.WIDTH);
-                widths.add(width.getAsInt());
+                if(width.isJsonObject())
+                    hasSTP=true;
+                else
+                    widths.add(width.getAsInt());
                 parallelInfo.add(OpProperties.WIDTH, width);
             }
             
@@ -402,7 +409,8 @@ public class SPLGenerator {
                 
         }
         
-        if(widths.size() > 1)
+        // Fail if there is a mix of multiple widths and/or submission time parameters.
+        if(widths.size() > 1 || (widths.size() > 0 && hasSTP))
             throw new IllegalStateException("Parallel region has conflicting inputs of different widths.");
         
         compositeInvocation.add("parallelInfo", parallelInfo);
