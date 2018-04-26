@@ -365,12 +365,12 @@ public class SPLGenerator {
         parallelInfo.add("partitionedPorts", partitionedPorts);
         
         Set<Integer> widths = new HashSet<>();
-        Set<JsonElement> STPs = Collections.newSetFromMap(new IdentityHashMap<JsonElement, Boolean>());
+        Set<JsonElement> stps = Collections.newSetFromMap(new IdentityHashMap<JsonElement, Boolean>());
         for(JsonObject startOp : startsEndsAndOperators.get(0)){
             if(startOp.has("config") && startOp.get("config").getAsJsonObject().has(OpProperties.WIDTH)){
                 JsonElement width = startOp.get("config").getAsJsonObject().get(OpProperties.WIDTH);
                 if(width.isJsonObject())
-                    STPs.add(width);
+                    stps.add(width);
                 else
                     widths.add(width.getAsInt());
                 parallelInfo.add(OpProperties.WIDTH, width);
@@ -388,7 +388,7 @@ public class SPLGenerator {
             if(outputPort.has(OpProperties.WIDTH)){
                 JsonElement width = outputPort.get(OpProperties.WIDTH);
                 if(width.isJsonObject())
-                    STPs.add(width);
+                    stps.add(width);
                 else
                     widths.add(width.getAsInt());
                 parallelInfo.add(OpProperties.WIDTH, width);
@@ -397,7 +397,7 @@ public class SPLGenerator {
             
             if(jstring(outputPort, PortProperties.ROUTING).equals("BROADCAST")){
                 broadcastPorts.add(inputPort.get("name"));
-            }
+            }       
             
             if(outputPort.has(PortProperties.PARTITIONED) && jboolean(outputPort, PortProperties.PARTITIONED)){
                 JsonObject partitionInfo = new JsonObject();
@@ -415,10 +415,10 @@ public class SPLGenerator {
         if(widths.size() > 1)
             throw new IllegalStateException("Parallel region has conflicting inputs of different widths.");
         
-        if(STPs.size() > 1)
+        if(stps.size() > 1)
             throw new IllegalStateException("Parallel region uses multiple submission time parameters to define its width.");
                 
-        if (widths.size() > 0 && STPs.size() > 0)
+        if (widths.size() > 0 && stps.size() > 0)
             throw new IllegalStateException("Parallel region uses a mix of submission time parameters and explicit integer values to define its width.");
         
         compositeInvocation.add("parallelInfo", parallelInfo);
