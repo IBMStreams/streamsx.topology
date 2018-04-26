@@ -412,8 +412,14 @@ public class SPLGenerator {
         }
         
         // Fail if there is a mix of multiple widths and/or submission time parameters.
-        if(widths.size() > 1 || STPs.size() > 1 || (widths.size() > 0 && STPs.size() > 0))
+        if(widths.size() > 1)
             throw new IllegalStateException("Parallel region has conflicting inputs of different widths.");
+        
+        if(STPs.size() > 1)
+            throw new IllegalStateException("Parallel region uses multiple submission time parameters to define its width.");
+                
+        if (widths.size() > 0 && STPs.size() > 0)
+            throw new IllegalStateException("Parallel region uses a mix of submission time parameters and explicit integer values to define its width.");
         
         compositeInvocation.add("parallelInfo", parallelInfo);
         compositeInvocation.addProperty("parallelOperator", true);
