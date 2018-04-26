@@ -20,7 +20,7 @@ can be obtained for items such as :py:class:`instances <.rest_primitives.Instanc
 Streaming Analytics REST API
 ****************************
 
-You can use the Streaming Analytics REST API to manage your service instance and the IBM Streams jobs that are running on the instance. The Streaming Analytics REST API is accessible from the Bluemix applications that are bound to your service instance or from an application outside of Bluemix that is configured with the service instance VCAP information.
+You can use the Streaming Analytics REST API to manage your service instance and the IBM Streams jobs that are running on the instance. The Streaming Analytics REST API is accessible from IBM Cloud applications that are bound to your service instance or from an application outside of IBM Cloud that is configured with the service instance VCAP information.
 
 :py:class:`StreamingAnalyticsConnection` is the entry point to using the
 Streaming Analytics REST API. The function :py:func:`~StreamingAnalyticsConnection.get_streaming_analytics` returns a :py:class:`~.rest_primitives.StreamingAnalyticsService` instance which is the wrapper around the Streaming Analytics REST API. This API allows functions such as
@@ -97,7 +97,7 @@ class StreamsConnection:
             username = os.getenv("STREAMS_USERNAME", "streamsadmin")
             password = os.getenv("STREAMS_PASSWORD", "passw0rd")
         else:
-            raise ValueError("Must supply either a Bluemix VCAP Services or a username, password"
+            raise ValueError("Must supply either a IBM Cloud VCAP Services or a username, password"
                              " to the StreamsConnection constructor.")
 
         self._resource_url = resource_url

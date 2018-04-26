@@ -16,7 +16,7 @@ A Streams application runs distributed or standalone.
 Distributed
 ===========
 Distributed is used when an application is submitted
-to the Streaming Analytics service on IBM Bluemix cloud platform
+to the Streaming Analytics service on IBM Cloud
 or a IBM Streams distributed instance.
 
 With distributed a running application is a `job` that
