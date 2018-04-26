@@ -46,6 +46,7 @@ import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.ParamsInfo;
 import com.ibm.streamsx.topology.internal.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.spi.builder.SourceInfo;
+import com.ibm.streamsx.topology.messages.Messages;
 
 class OperatorGenerator {
 
@@ -455,7 +456,7 @@ class OperatorGenerator {
                 sb.append("tumbing,");
                 break;
             default:
-                throw new IllegalStateException("Internal error");
+                throw new IllegalStateException(Messages.getString("GENERATOR_INTERNAL_ERROR"));
             }
 
             appendWindowPolicy(jstring(window, "evictPolicy"), window.get("evictConfig"),

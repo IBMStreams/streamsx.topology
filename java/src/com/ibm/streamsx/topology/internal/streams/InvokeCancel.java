@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
+import com.ibm.streamsx.topology.messages.Messages;
 
 public class InvokeCancel {
 
@@ -75,7 +76,7 @@ public class InvokeCancel {
         int rc = sjProcess.waitFor();
         trace.info("streamtool canceljob complete: return code=" + rc);
         if (throwOnError && rc != 0)
-            throw new Exception("streamtool canceljob failed!");
+            throw new Exception(Messages.getString("STREAMS_STREAMTOOL_CANCELJOB_FAILED"));
         return rc;
     }
 }

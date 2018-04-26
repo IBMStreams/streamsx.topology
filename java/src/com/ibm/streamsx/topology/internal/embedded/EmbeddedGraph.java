@@ -66,6 +66,7 @@ import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameterManager;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.messages.Messages;
 
 /**
  * Takes the JSON graph defined by Topology
@@ -373,9 +374,9 @@ public class EmbeddedGraph {
                         opDecl.setCustomLiteralParameter(name, e);
                 }
             }          
-            throw new IllegalArgumentException("Type for parameter " + name + " is not supported:" +  type);
+            throw new IllegalArgumentException(Messages.getString("EMBEDDED_TYPE_OF_PARAM_NOT_SUPPOTRTED", name, type));
         } else
-            throw new IllegalArgumentException("Type for parameter " + name + " is not supported:" +  type);
+            throw new IllegalArgumentException(Messages.getString("EMBEDDED_TYPE_OF_PARAM_NOT_SUPPOTRTED", name, type));
     }
     
     private IllegalStateException notSupported(JsonObject op) {
@@ -383,11 +384,11 @@ public class EmbeddedGraph {
         String namespace = jstring(builder._json(), NAMESPACE);
         String name = jstring(builder._json(), NAME);
         
-        return new IllegalStateException(
-                "Topology '"+namespace+"."+name+"'"
-                + " does not support "+StreamsContext.Type.EMBEDDED+" mode:"
-                + " the topology contains non-Java operator:" +
-                jstring(op, KIND));
+        return new IllegalStateException(Messages.getString(
+            "EMBEDDED_TOPOLOGY_NOT_SUPPORT_EMBEDDED",
+            new String("'"+namespace+"."+name+"'"),
+            StreamsContext.Type.EMBEDDED,
+            jstring(op, KIND)));
     }
 
     public OutputPortDeclaration getOutputPort(String name) {
@@ -442,7 +443,7 @@ public class EmbeddedGraph {
         // failure if any are still undefined
         for (String spName : allsp.keySet()) {
             if (allsp.get(spName) == null)
-                throw new IllegalStateException("Submission parameter \""+spName+"\" requires a value but none has been supplied");
+                throw new IllegalStateException(Messages.getString("EMBEDDED_PARAMETER_REQUIRED", spName));
         }
         
         // good to go. initialize params

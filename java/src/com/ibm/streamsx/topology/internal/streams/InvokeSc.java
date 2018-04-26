@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
+import com.ibm.streamsx.topology.messages.Messages;
 
 public class InvokeSc {
 
@@ -125,7 +126,7 @@ public class InvokeSc {
         int rc = scProcess.waitFor();
         trace.info("SPL compiler complete: return code=" + rc);
         if (rc != 0)
-            throw new Exception("SPL compilation failed!");
+            throw new Exception(Messages.getString("STREAMS_COMPILATION_FAILED"));
     }
 
     private String getToolkitPath() {

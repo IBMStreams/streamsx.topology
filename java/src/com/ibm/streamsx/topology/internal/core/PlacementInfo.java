@@ -29,6 +29,7 @@ import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.messages.Messages;
 
 /**
  * Manages fusing of Placeables. 
@@ -62,10 +63,10 @@ class PlacementInfo {
         // check high level constraints
         for (Placeable<?> element : elements) {
             if (!element.isPlaceable())
-                throw new IllegalArgumentException("Placeable.isPlaceable()==false");
+                throw new IllegalArgumentException(Messages.getString("CORE_ILLEGAL_OPERATION_PLACEABLE"));
             
             if (!first.topology().equals(element.topology()) )
-                throw new IllegalArgumentException("Different topologies: "+ first.topology().getName() + " and " + element.topology().getName());
+                throw new IllegalArgumentException(Messages.getString("CORE_DIFFERENT_TOPOLOGIES", first.topology().getName(), element.topology().getName()));
         }
         
         if (elements.size() < 2)
@@ -139,7 +140,7 @@ class PlacementInfo {
             for (Placeable<?> placeable : toFuse) {
                 JsonObject tgtOp = placeable.operator()._complete();
                 if (jstring(tgtOp, "name").equals(jstring(isolateParentOp, "name")))
-                    throw new IllegalStateException("Illegal to colocate an isolated stream with its parent.");
+                    throw new IllegalStateException(Messages.getString("CORE_ILLEGAL_TO_COLOCATE"));
             }
         }
     }
@@ -152,7 +153,7 @@ class PlacementInfo {
         for (Placeable<?> element : elements) {
             BOperatorInvocation op = element.operator();
             if (element.builder().isInLowLatencyRegion(op))
-                throw new IllegalStateException("colocate() is not allowed in a low latency region");
+                throw new IllegalStateException(Messages.getString("CORE_COLOCATE_IN_LOW_LATENCY_REGION"));
         }
     }
 

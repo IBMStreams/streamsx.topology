@@ -12,6 +12,7 @@ import com.ibm.streamsx.topology.internal.context.service.RemoteStreamingAnalyti
 import com.ibm.streamsx.topology.internal.context.streams.AnalyticsServiceStreamsContext;
 import com.ibm.streamsx.topology.internal.context.streams.BundleStreamsContext;
 import com.ibm.streamsx.topology.internal.streams.Util;
+import com.ibm.streamsx.topology.messages.Messages;
 
 /**
  * Factory for creating {@code StreamsContext} instances.
@@ -91,7 +92,7 @@ public class StreamsContextFactory {
         case STREAMING_ANALYTICS_SERVICE_TESTER:
             return new RemoteStreamingAnalyticsTester();
         default:
-            throw new IllegalArgumentException("Unknown type:" + type);
+            throw new IllegalArgumentException(Messages.getString("CONTEXT_UNKNOWN_TYPE", type));
         }
     }
     

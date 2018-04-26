@@ -32,6 +32,7 @@ import com.ibm.streamsx.topology.internal.context.remote.RemoteContexts;
 import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
 import com.ibm.streamsx.topology.internal.streams.JobConfigOverlay;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
+import com.ibm.streamsx.topology.messages.Messages;
 
 public abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
     
@@ -182,7 +183,7 @@ public abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
             try {
                 deploy.add(key, convertConfigValue(config.get(key)));
             } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Unknown type for config:" + key + " - " + e.getMessage());
+                throw new IllegalArgumentException(Messages.getString("CONTEXT_UNKNOWN_TYPE_FOR_CONFIG", key, e.getMessage()));
             }
         }
     }

@@ -32,6 +32,7 @@ import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.internal.core.StreamImpl;
 import com.ibm.streamsx.topology.internal.json4j.JSONTopoRuntime;
 import com.ibm.streamsx.topology.json.JSONSchemas;
+import com.ibm.streamsx.topology.messages.Messages;
 
 class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
 
@@ -153,8 +154,7 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
         case BROADCAST:
             break;
         default:
-            throw new IllegalArgumentException("Partitioning is not currently "
-                    + "supported with SPLStream.");
+            throw new IllegalArgumentException(Messages.getString("SPL_PARTITIONING_NOT_SUPPORTED"));
         }
 
         return asSPL(super.parallel(width, routing));
@@ -162,8 +162,7 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
     @Override
     public SPLStream parallel(Supplier<Integer> width,
             Function<Tuple, ?> keyer) {
-        throw new IllegalArgumentException("Partitioning is not currently "
-                + "supported with SPLStream.");
+        throw new IllegalArgumentException(Messages.getString("SPL_PARTITIONING_NOT_SUPPORTED"));
     }
     
     @Override

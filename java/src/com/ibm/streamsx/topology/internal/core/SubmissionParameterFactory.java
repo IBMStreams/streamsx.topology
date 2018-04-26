@@ -15,6 +15,7 @@ import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.internal.functional.SPLTypes;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.messages.Messages;
 
 /**
  * Utility to split runtime submission parameters from declaration time.
@@ -43,7 +44,7 @@ public class SubmissionParameterFactory {
     private static String getMetaType(Class<?> valueClass) {
         String metaType = toMetaType.get(valueClass);
         if (metaType == null)
-            throw new IllegalArgumentException("Unhandled valueClass " + valueClass.getCanonicalName());
+            throw new IllegalArgumentException(Messages.getString("CORE_UNHANDLED_VALUECLASS", valueClass.getCanonicalName()));
         return metaType;
     }
     

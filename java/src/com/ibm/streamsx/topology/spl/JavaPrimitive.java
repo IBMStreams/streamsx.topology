@@ -25,6 +25,7 @@ import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.TSinkImpl;
+import com.ibm.streamsx.topology.messages.Messages;
 
 /**
  * Integration between Java topologies and SPL Java primitive operators.
@@ -209,7 +210,7 @@ public class JavaPrimitive {
     private static String getInvocationName(Class<? extends Operator> opClass) {
         PrimitiveOperator po = opClass.getAnnotation(PrimitiveOperator.class);
         if (po == null)
-            throw new IllegalStateException("Missing @PrimitiveOperator for: " + opClass.getName());
+            throw new IllegalStateException(Messages.getString("SPL_MISSING_ANNOTATION", opClass.getName()));
         String opName = po.name();
         if (opName.isEmpty()) {
             opName = opClass.getSimpleName();

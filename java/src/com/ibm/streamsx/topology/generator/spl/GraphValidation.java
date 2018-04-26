@@ -15,6 +15,7 @@ import java.util.Set;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
+import com.ibm.streamsx.topology.messages.Messages;
 
 public class GraphValidation {
     
@@ -31,14 +32,14 @@ public class GraphValidation {
             do {
                 Set<JsonObject> endParallelParents = getUpstream(endParallelParent, graph);
                 if (endParallelParents.size() != 1) {
-                    throw new IllegalStateException("Cannot union multiple streams before invoking endParallel()");
+                    throw new IllegalStateException(Messages.getString("GENERATOR_CANNOT_UNION"));
                 }
                 endParallelParent = first(endParallelParents);
             } while (jstring(endParallelParent, "kind").startsWith("$"));
             
             Set<JsonObject> endParallelParentChildren = getDownstream(endParallelParent, graph);
             if (endParallelParentChildren.size() != 1) {
-                throw new IllegalStateException("Cannot fanout a stream before invoking endParallel()");
+                throw new IllegalStateException(Messages.getString("GENERATOR_CANNOT_FANOUT"));
             }
         }
     }
