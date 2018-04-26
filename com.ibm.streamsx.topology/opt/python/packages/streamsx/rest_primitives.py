@@ -1519,7 +1519,7 @@ def get_view_obj(_view, rc):
     return None
 
 class StreamingAnalyticsService(object):
-    """Streaming Analytics service running on IBM Bluemix cloud platform.
+    """Streaming Analytics service running on IBM Cloud.
     """
     def __init__(self, rest_client, credentials):
         # If IAM, create a V2 delegator, if basic http auth, create a V1 delegator

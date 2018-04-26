@@ -217,7 +217,7 @@ class Tester(object):
     @staticmethod
     def setup_streaming_analytics(test, service_name=None, force_remote_build=False):
         """
-        Set up a unittest.TestCase to run tests using Streaming Analytics service on IBM Bluemix cloud platform.
+        Set up a unittest.TestCase to run tests using Streaming Analytics service on IBM Cloud.
 
         The service to use is defined by:
          * VCAP_SERVICES environment variable containing `streaming_analytics` entries.
