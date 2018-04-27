@@ -16,6 +16,8 @@ import java.nio.charset.StandardCharsets;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import com.ibm.streamsx.topology.internal.messages.Messages;
+
 /**
  * Given the path of a file containing the JSON representation of a graph,
  * read the file, generate the SPL, and write it to the specified file. All
@@ -29,7 +31,7 @@ public class SPLFromFileName {
         
         File JSONFile = new File(JSONPath);
         if(!JSONFile.exists()){
-            throw new FileNotFoundException("File " + JSONPath + " does not exist");
+            throw new FileNotFoundException(Messages.getString("GENERATOR_FILE_NOT_EXIST", JSONPath));
         }
                 
         try (BufferedReader input = new BufferedReader(
