@@ -45,6 +45,7 @@ import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.port.PortProperties;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 public class SPLGenerator {
     // Needed for composite name generation
@@ -169,7 +170,7 @@ public class SPLGenerator {
                     compInvocation = createLowLatencyCompositeInvocation(compDefinition, startsEndsAndOperators);                  
                 }
                 else{
-                    throw new IllegalStateException("Unsupported composite type: " + compStarts.get(i));
+                    throw new IllegalStateException(Messages.getString("UNSUPPORTED_COMPOSITE_TYPE", compStarts.get(i)));
                 } 
                 
                 // Fix the naming of the operators in the composite to read from the composite input ports
@@ -297,7 +298,7 @@ public class SPLGenerator {
                 operators.add(obj);
         
         if(operators.size() == 0){
-            throw new IllegalStateException("A region must contain at least one operator.");
+            throw new IllegalStateException(Messages.getString("REGION_CONTAIN_OPERATOR"));
         }
             
         compositeDefinition.add("operators", operators);
@@ -471,7 +472,7 @@ public class SPLGenerator {
             for(JsonObject cOp : children){
                 if(compEnds.contains(kind(cOp)) && !kind(cOp).equals(endKind)){
                     // Throw an error if regions of a different type overlap
-                    throw new IllegalStateException("Cannot have overlapping regions of different types.");
+                    throw new IllegalStateException(Messages.getString("REGION_OVERLAPPING"));
                 }
                 
                 if(compStarts.contains(kind(cOp))){
@@ -493,7 +494,7 @@ public class SPLGenerator {
                 // then it means that there are at least two inputs to the end
                 // of the composite.
                 if(kind(op).equals(endKind)){
-                    throw new IllegalStateException("Cannot invoke union() before ending a region.");
+                    throw new IllegalStateException(Messages.getString("REGION_UNION"));
                 }
                 
                 // If the parent is a start operator of a different kind,
@@ -501,7 +502,7 @@ public class SPLGenerator {
                 if((compStarts.contains(kind(pOp)) && !kind(pOp).equals(startKind)) ||
                         isPhysicalStartOperator(pOp) && !isPhysicalStartOperatorOfAType(pOp, opStartParam)){
                        // Throw an error if regions of a different type overlap
-                       throw new IllegalStateException("Cannot have overlapping regions of different types.");
+                       throw new IllegalStateException(Messages.getString("REGION_OVERLAPPING"));
                 }
                 
                 if(compEnds.contains(pOp)){
@@ -680,7 +681,7 @@ public class SPLGenerator {
                 else if (TYPE_SUBMISSION_PARAMETER.equals(type))
                     ; // ignore - as it was converted to a TYPE_COMPOSITE_PARAMETER
                 else
-                    throw new IllegalArgumentException("Unhandled param name=" + name + " jo=" + param);
+                    throw new IllegalArgumentException(Messages.getString("UNHANDLED_PARAM_NAME", name, param));
             }
         }
     }
@@ -995,7 +996,7 @@ public class SPLGenerator {
         else if (integerValue instanceof Integer)
             l = ((Integer) integerValue) & 0x00ffffffffL;
         else
-            throw new IllegalArgumentException("Illegal type for unsigned " + integerValue.getClass());
+            throw new IllegalArgumentException(Messages.getString("ILLEGAL_TYPE_FOR_UNSIGNED", integerValue.getClass()));
         return Long.toString(l);
     }
 

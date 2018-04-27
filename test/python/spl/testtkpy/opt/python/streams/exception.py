@@ -133,6 +133,10 @@ class ExcNextSource(EnterExit):
     def __next__(self):
         raise KeyError()
 
+    # For Python 2
+    def next(self):
+        return self.__next__()
+
 @spl.source()
 class SuppressNextSource(EnterExit):
     def __iter__(self):
@@ -146,6 +150,10 @@ class SuppressNextSource(EnterExit):
         if self.count == 4:
            raise StopIteration()
         return 'helloSS', self.count
+
+    # For Python 2
+    def next(self):
+        return self.__next__()
 
     def __exit__(self, exc_type, exc_value, traceback):
         EnterExit.__exit__(self, exc_type, exc_value, traceback)
