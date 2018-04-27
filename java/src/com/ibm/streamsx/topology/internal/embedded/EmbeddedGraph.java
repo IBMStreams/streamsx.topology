@@ -66,7 +66,7 @@ import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameterManager;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
-import com.ibm.streamsx.topology.messages.Messages;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 /**
  * Takes the JSON graph defined by Topology

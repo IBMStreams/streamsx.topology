@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
-import com.ibm.streamsx.topology.messages.Messages;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 public class InvokeCancel {
 

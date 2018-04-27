@@ -31,8 +31,8 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.internal.core.StreamImpl;
 import com.ibm.streamsx.topology.internal.json4j.JSONTopoRuntime;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 import com.ibm.streamsx.topology.json.JSONSchemas;
-import com.ibm.streamsx.topology.messages.Messages;
 
 class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
 

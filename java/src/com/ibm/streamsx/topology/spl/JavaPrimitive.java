@@ -25,7 +25,7 @@ import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.TSinkImpl;
-import com.ibm.streamsx.topology.messages.Messages;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 /**
  * Integration between Java topologies and SPL Java primitive operators.

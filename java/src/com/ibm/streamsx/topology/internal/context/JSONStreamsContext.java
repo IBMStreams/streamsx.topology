@@ -31,8 +31,8 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.internal.context.remote.RemoteContexts;
 import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
 import com.ibm.streamsx.topology.internal.streams.JobConfigOverlay;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
-import com.ibm.streamsx.topology.messages.Messages;
 
 public abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
     

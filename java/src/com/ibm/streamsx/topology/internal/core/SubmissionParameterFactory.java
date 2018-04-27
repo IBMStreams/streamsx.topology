@@ -15,7 +15,7 @@ import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.internal.functional.SPLTypes;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
-import com.ibm.streamsx.topology.messages.Messages;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 /**
  * Utility to split runtime submission parameters from declaration time.

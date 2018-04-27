@@ -30,7 +30,7 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
-import com.ibm.streamsx.topology.messages.Messages;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 /**
  * The DependencyResolver class exists to separate the logic of jar

@@ -65,9 +65,9 @@ import com.ibm.streamsx.topology.internal.logic.LogicUtils;
 import com.ibm.streamsx.topology.internal.logic.Print;
 import com.ibm.streamsx.topology.internal.logic.RandomSample;
 import com.ibm.streamsx.topology.internal.logic.Throttle;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 import com.ibm.streamsx.topology.logic.Logic;
 import com.ibm.streamsx.topology.spi.builder.Invoker;
-import com.ibm.streamsx.topology.messages.Messages;
 
 public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 

@@ -12,7 +12,7 @@ import com.ibm.streamsx.topology.internal.context.service.RemoteStreamingAnalyti
 import com.ibm.streamsx.topology.internal.context.streams.AnalyticsServiceStreamsContext;
 import com.ibm.streamsx.topology.internal.context.streams.BundleStreamsContext;
 import com.ibm.streamsx.topology.internal.streams.Util;
-import com.ibm.streamsx.topology.messages.Messages;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 /**
  * Factory for creating {@code StreamsContext} instances.

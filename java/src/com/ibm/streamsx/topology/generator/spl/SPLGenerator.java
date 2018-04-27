@@ -45,7 +45,7 @@ import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.port.PortProperties;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
-import com.ibm.streamsx.topology.messages.Messages;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 public class SPLGenerator {
     // Needed for composite name generation

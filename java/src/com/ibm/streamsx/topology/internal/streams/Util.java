@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.messages.Messages;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 public class Util {
     public static final String STREAMS_DOMAIN_ID = "STREAMS_DOMAIN_ID";

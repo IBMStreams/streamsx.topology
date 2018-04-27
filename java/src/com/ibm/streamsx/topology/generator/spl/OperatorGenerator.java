@@ -46,7 +46,7 @@ import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.ParamsInfo;
 import com.ibm.streamsx.topology.internal.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.spi.builder.SourceInfo;
-import com.ibm.streamsx.topology.messages.Messages;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 class OperatorGenerator {
 

@@ -39,7 +39,7 @@ import com.ibm.streamsx.topology.internal.core.TSinkImpl;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.toolkit.info.IdentityType;
 import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
-import com.ibm.streamsx.topology.messages.Messages;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 /**
  * Integration between Java topologies and SPL operator invocations. If the SPL

@@ -7,7 +7,7 @@ package com.ibm.streamsx.topology.consistent;
 import java.util.concurrent.TimeUnit;
 
 import com.ibm.streamsx.topology.TStream;
-import com.ibm.streamsx.topology.messages.Messages;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 /**
  * Immutable consistent region configuration.
