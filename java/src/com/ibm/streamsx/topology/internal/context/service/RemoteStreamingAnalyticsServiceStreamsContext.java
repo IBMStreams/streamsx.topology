@@ -17,6 +17,7 @@ import com.ibm.streamsx.topology.internal.context.JSONStreamsContext;
 import com.ibm.streamsx.topology.internal.context.remote.RemoteBuildAndSubmitRemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 /**
  * Context that submits the SPL to the Streaming Analytics service
@@ -48,6 +49,6 @@ public class RemoteStreamingAnalyticsServiceStreamsContext extends JSONStreamsCo
                 return new CompletedFuture<>(new BigInteger(jobId));
         }
         
-        throw new IllegalStateException("Job submission failed!");
+        throw new IllegalStateException(Messages.getString("CONTEXT_JOB_SUBMISSION_FAILED"));
     }
 }
