@@ -29,7 +29,7 @@ After being declared, a Topology is submitted to be compiled into
 a Streams application bundle (sab file) and then executed.
 The sab file is a self contained bundle that can be executed
 in a distributed Streams instance either using the Streaming
-Analytics service on IBM Bluemix cloud platform or an on-premise
+Analytics service on IBM Cloud or an on-premise
 IBM Streams installation.
 
 The compilation step invokes the Streams compiler to produce a bundle.
@@ -53,7 +53,7 @@ across the resources available in the instance.
 .. note::
     `Topology` represents a declaration of a streaming application that
     will be executed by a Streams instance as a `job`, either using the Streaming Analytics
-    service on IBM Bluemix cloud platform or an on-premises distributed instance.
+    service on IBM Cloud or an on-premises distributed instance.
     `Topology` does not represent a running application, so an instance of `Stream` class does not contain
     the tuples, it is only a declaration of a stream.
 

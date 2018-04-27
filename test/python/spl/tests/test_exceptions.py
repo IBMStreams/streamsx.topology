@@ -242,3 +242,88 @@ class TestSuppressExceptions(TestBaseExceptions):
         self.assertEqual('__exit__\n', content[3])
         self.assertEqual('ValueError\n', content[4])
         self.assertEqual('__exit__\n', content[5])
+
+class TestSuppressMetric(TestBaseExceptions):
+    def setUp(self):
+        self.tf = None
+        Tester.setup_distributed(self)
+
+    def test_suppress_metric(self):
+        schema = 'tuple<int32 a, int32 b, int32 c, int32 d>'
+        topo = Topology()
+        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+
+        # no metric
+        st = op.Source(topo,
+            kind='com.ibm.streamsx.topology.pytest.pysource::SparseTuple',
+            schema=schema,
+            name='NOMETRIC_ST')
+        sf = op.Source(topo,
+            kind='com.ibm.streamsx.topology.pysamples.sources::Range37',
+            schema=schema,
+            name='NOMETRIC_SF')
+        s = st.stream.union({sf.stream})
+
+        sm = op.Map('com.ibm.streamsx.topology.pysamples.positional::Noop',
+            s, name='NOMETRIC_MF')
+        sm = op.Map('com.ibm.streamsx.topology.pysamples.positional::AddSeq',
+            sm.stream, name='NOMETRIC_MC')
+
+        # With metric
+        schema = 'tuple<rstring a, int32 b>'
+        ms = op.Source(topo,
+            kind='com.ibm.streamsx.topology.pytest.pyexceptions::SuppressNextSource',
+            schema=schema,
+            name='HASMETRIC_S_1')
+
+        mm = op.Map(
+            kind='com.ibm.streamsx.topology.pytest.pyexceptions::SuppressMap',
+            stream=ms.stream,
+            name='HASMETRIC_M_0')
+        mf = op.Map(
+            kind='com.ibm.streamsx.topology.pytest.pyexceptions::SuppressFilter',
+            stream=ms.stream,
+            name='HASMETRIC_F_0')
+
+        self.tester = Tester(topo)
+        self.tester.local_check = self.check_suppress_metric
+        self.tester.tuple_count(sm.stream, 38)
+        self.tester.tuple_count(ms.stream, 2)
+        self.tester.tuple_count(mm.stream, 2)
+        self.tester.tuple_count(mf.stream, 2)
+        self.tester.test(self.test_ctxtype, self.test_config)
+            
+    def check_suppress_metric(self):
+        job = self.tester.submission_result.job
+        hms = []
+        for op in job.get_operators():
+            seen_suppress_metric = False
+            for m in op.get_metrics():
+                if m.name == 'nExceptionsSuppressed':
+                    seen_suppress_metric = True
+            if 'NOMETRIC_' in op.name:
+                self.assertFalse(seen_suppress_metric, msg=op.name)
+            elif 'HASMETRIC_' in op.name:
+                hms.append(op)
+                self.assertTrue(seen_suppress_metric, msg=op.name)
+
+        self.assertEqual(3, len(hms))
+        for _ in range(10):
+            ok = True
+            for op in hms:
+                exp = int(op.name.split('_')[2])
+                m = op.get_metrics(name='nExceptionsSuppressed')[0]
+                if m.value != exp:
+                    ok = False
+            if ok:
+                break
+            time.sleep(2)
+        for op in hms:
+            exp = int(op.name.split('_')[2])
+            m = op.get_metrics(name='nExceptionsSuppressed')[0]
+            self.assertEqual(exp, m.value, msg=op.name)
+
+class TestSuppressMetricService(TestSuppressMetric):
+    def setUp(self):
+        self.tf = None
+        Tester.setup_streaming_analytics(self, force_remote_build=True)
