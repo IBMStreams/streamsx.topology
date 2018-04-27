@@ -3,6 +3,7 @@ package com.ibm.streamsx.topology.context.remote;
 import com.ibm.streamsx.topology.internal.context.remote.RemoteBuildAndSubmitRemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.ZippedToolkitRemoteContext;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 public class RemoteContextFactory {
     
@@ -20,7 +21,7 @@ public class RemoteContextFactory {
         case STREAMING_ANALYTICS_SERVICE:
         	return new RemoteBuildAndSubmitRemoteContext();
         default:
-            throw new IllegalArgumentException("Unknown type:" + type);
+            throw new IllegalArgumentException(Messages.getString("CONTEXT_UNKNOWN_TYPE", type));
         }
     }
 }
