@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 from future.builtins import *
+from past.builtins import basestring
 
 import sys
 import uuid
@@ -196,7 +197,7 @@ class SPLGraph(object):
          for location in fls:
              files = fls[location]
              for path in files:
-                 if isinstance(path, str):
+                 if isinstance(path, basestring):
                      # Simple file with a source to copy
                      f = {}
                      f['source'] = path

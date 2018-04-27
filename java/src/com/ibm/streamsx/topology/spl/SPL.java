@@ -40,6 +40,7 @@ import com.ibm.streamsx.topology.internal.core.TSinkImpl;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.toolkit.info.IdentityType;
 import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 /**
  * Integration between Java topologies and SPL operator invocations. If the SPL
@@ -119,7 +120,7 @@ public class SPL {
             SPLValue<?> splValue = SPLValue.fromJSON((JsonObject) paramValue);
             return splValue;
         }            
-        throw new IllegalArgumentException("param is not from createValue()");
+        throw new IllegalArgumentException(Messages.getString("SPL_PARAMETER_INVALID"));
     }
 
     /**
