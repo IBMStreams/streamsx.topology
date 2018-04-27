@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.consistent;
 import java.util.concurrent.TimeUnit;
 
 import com.ibm.streamsx.topology.TStream;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 /**
  * Immutable consistent region configuration.
@@ -160,7 +161,7 @@ public final class ConsistentRegionConfig {
     public ConsistentRegionConfig(int period) {
         this(Trigger.PERIODIC, period);
         if (period <= 0)
-            throw new IllegalArgumentException("period must be greater than zero:" + period); 
+            throw new IllegalArgumentException(Messages.getString("CONSISTENT_PERIOD", period));
     }
 
     /**
@@ -209,7 +210,7 @@ public final class ConsistentRegionConfig {
      */
     public ConsistentRegionConfig drainTimeout(long drainTimeout) {
         if (drainTimeout <= 0)
-            throw new IllegalArgumentException("drainTimeout must be greater than zero:" + drainTimeout);
+            throw new IllegalArgumentException(Messages.getString("CONSISTENT_DRAIN_TIMEOUT", drainTimeout));
             
         return new ConsistentRegionConfig(this, drainTimeout, null, null);
     }
@@ -235,7 +236,7 @@ public final class ConsistentRegionConfig {
      */
     public ConsistentRegionConfig resetTimeout(long resetTimeout) {
         if (resetTimeout <= 0)
-            throw new IllegalArgumentException("resetTimeout must be greater than zero:" + resetTimeout);
+            throw new IllegalArgumentException(Messages.getString("CONSISTENT_RESET_TIMEOUT", resetTimeout));
 
         return new ConsistentRegionConfig(this, null, resetTimeout, null);
     }
@@ -262,7 +263,7 @@ public final class ConsistentRegionConfig {
      */
     public ConsistentRegionConfig maxConsecutiveResetAttempts(int attempts) {
         if (attempts <= 0)
-            throw new IllegalArgumentException("maxConsecutiveResetAttempts must be greater than zero:" + attempts);
+            throw new IllegalArgumentException(Messages.getString("CONSISTENT_MAX_CONSECUTIVE_RESET_ATTEMPTS", attempts));
 
         return new ConsistentRegionConfig(this, null, null, attempts);
     }
