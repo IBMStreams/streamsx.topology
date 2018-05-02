@@ -362,9 +362,15 @@ public class SPLGenerator {
         parallelInfo.add("broadcastPorts", broadcastPorts);
         parallelInfo.add("partitionedPorts", partitionedPorts);
         
+        Set<Integer> widths = new HashSet<>();
+        boolean hasSTP = false;
         for(JsonObject startOp : startsEndsAndOperators.get(0)){
             if(startOp.has("config") && startOp.get("config").getAsJsonObject().has(OpProperties.WIDTH)){
                 JsonElement width = startOp.get("config").getAsJsonObject().get(OpProperties.WIDTH);
+                if(width.isJsonObject())
+                    hasSTP = true;
+                else
+                    widths.add(width.getAsInt());
                 parallelInfo.add(OpProperties.WIDTH, width);
             }
             
@@ -377,8 +383,14 @@ public class SPLGenerator {
             JsonObject inputPort = array(startOp, "inputs").get(0).getAsJsonObject();
             
             // Set the width if it was contained in the output port.
-            if(outputPort.has(OpProperties.WIDTH))
-                parallelInfo.add(OpProperties.WIDTH, outputPort.get(OpProperties.WIDTH));
+            if(outputPort.has(OpProperties.WIDTH)){
+                JsonElement width = outputPort.get(OpProperties.WIDTH);
+                if(width.isJsonObject())
+                    hasSTP=true;
+                else
+                    widths.add(width.getAsInt());
+                parallelInfo.add(OpProperties.WIDTH, width);
+            }
             
             
             if(jstring(outputPort, PortProperties.ROUTING).equals("BROADCAST")){
@@ -395,7 +407,11 @@ public class SPLGenerator {
                 compositeInvocation.addProperty("partitioned", true);
             }      
                 
-        } 
+        }
+        
+        // Fail if there is a mix of multiple widths and/or submission time parameters.
+        if(widths.size() > 1 || (widths.size() > 0 && hasSTP))
+            throw new IllegalStateException("Parallel region has conflicting inputs of different widths.");
         
         compositeInvocation.add("parallelInfo", parallelInfo);
         compositeInvocation.addProperty("parallelOperator", true);
