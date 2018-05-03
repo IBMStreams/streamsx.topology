@@ -487,3 +487,19 @@ class _Callable(_WrappedInstance):
     def __call__(self, *args, **kwargs):
         return self._callable.__call__(*args, **kwargs)
 
+
+class _SubmissionParam(object):
+    def __init__(self, name, default):
+        self._name = name
+        self._default = default
+    def __call__(self):
+        return self._default
+
+    def spl_json(self):
+        o = {'type': 'submissionParameter'}
+        v = {'name': self._name}
+        o['value'] = v
+        v['metaType'] = 'RSTRING'
+        if self._default is not None:
+            v['defaultValue'] = self._default
+        return o

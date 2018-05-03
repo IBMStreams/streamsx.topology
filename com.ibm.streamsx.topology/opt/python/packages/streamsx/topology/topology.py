@@ -386,6 +386,7 @@ class Topology(object):
         self.exclude_packages.update(streamsx.topology._deppkgs._DEP_PACKAGES)
         
         self.graph = streamsx.topology.graph.SPLGraph(self, name, namespace)
+        self._submission_parameters = dict()
 
     @property
     def name(self):
@@ -606,6 +607,11 @@ class Topology(object):
         self._pip_packages.append(str(requirement))
         pr = pkg_resources.Requirement.parse(requirement) 
         self.exclude_packages.add(pr.project_name)
+
+    def create_submission_parameter(self, name, default_value=None):
+        sp = streamsx.topology.runtime._SubmissionParam(name, default_value)
+        self._submission_parameters[name] = sp
+        return sp
 
     def _prepare(self):
         """Prepare object prior to SPL generation."""

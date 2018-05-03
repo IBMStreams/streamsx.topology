@@ -166,6 +166,7 @@ class SPLGraph(object):
         _graph["config"]["includes"] = []
         _graph['config']['spl'] = {}
         _graph['config']['spl']['toolkits'] = self._spl_toolkits
+        self._add_parameters(_graph)
         if self._colocate_tag_mapping:
             _graph['config']['colocateTagMapping'] = self._colocate_tag_mapping
         _ops = []
@@ -206,6 +207,15 @@ class SPLGraph(object):
                  else:
                      # Arbitray file description
                      includes.append(path)
+
+    def _add_parameters(self, _graph):
+        sps = self.topology._submission_parameters
+        if not sps:
+            return
+        params = dict()
+        _graph['parameters'] = params
+        for name, sp in sps.items():
+            params[name] = sp.spl_json()
 
     def getLastOperator(self):
         return self.operators[len(self.operators) -1]      
