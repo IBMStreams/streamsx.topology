@@ -49,7 +49,6 @@ class TestSubmissionParams(unittest.TestCase):
 
         s = op.Source(topo, "com.ibm.streamsx.topology.topic::Subscribe", sch,
             params = {'streamType': sch, 'topic': spTopic})
-        s.stream.print()
 
         jc = JobConfig()
         jc.submission_parameters['mytopic'] = topic
