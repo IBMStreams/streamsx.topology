@@ -225,6 +225,8 @@ class _SPLInvocation(object):
     def __init__(self, index, kind, function, name, params, graph, view_configs = None, sl=None):
         self.index = index
         self.kind = kind
+        self.model = None
+        self.language = None
         self.function = function
         self.name = name
         self.category = None
@@ -298,6 +300,11 @@ class _SPLInvocation(object):
             _op["category"] = self.category
 
         _op["kind"] = self.kind
+        if self.model:
+            _op["model"] = self.model
+        if self.language:
+           _op["language"] = self.language
+
         _op["partitioned"] = False
         if self._start_op:
             _op["startOp"] = True
@@ -359,6 +366,9 @@ class _SPLInvocation(object):
             return None
         if not hasattr(function, "__call__"):
             raise "argument to _addOperatorFunction is not callable"
+
+        self.model = 'functional'
+        self.language = 'python'
 
         # Wrap a lambda as a callable class instance
         if isinstance(function, types.LambdaType) and function.__name__ == "<lambda>" :
@@ -531,7 +541,7 @@ class Marker(_SPLInvocation):
 
         _op["marker"] = True
         _op["model"] = "virtual"
-        _op["language"] = "virtual"
+        _op["language"] = "marker"
 
         _outputs = []
         _inputs = []
