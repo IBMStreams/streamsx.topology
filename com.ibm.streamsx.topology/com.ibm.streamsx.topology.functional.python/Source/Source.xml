@@ -75,6 +75,7 @@
         <optional>true</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>Constant</expressionMode>
+        <type>rstring</type>
       </parameter>
       <parameter>
         <name>submissionParamValues</name>
@@ -82,6 +83,7 @@
         <optional>true</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
+        <type>rstring</type>
       </parameter>
       <parameter>
         <name>outputConnections</name>
