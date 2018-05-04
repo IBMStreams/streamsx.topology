@@ -493,7 +493,7 @@ class _SubmissionParam(object):
         self._name = name
         self._default = default
     def __call__(self):
-        return self._default
+        return ec._SUBMIT_PARAMS.get(self._name)
 
     def spl_json(self):
         o = {'type': 'submissionParameter'}

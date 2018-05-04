@@ -537,3 +537,13 @@ def _setup():
             log.propagate = False
             log.addHandler(_AppHandler(log_lvl, _ec._app_log));
             log.setLevel(log_lvl)
+
+
+_SUBMIT_PARAMS = dict()
+
+# Called from C++ Python functional operators to make
+# submission parameters visible to Python callables.
+# Each name and value are strings.
+def _set_submit_param(name, value):
+    if name not in _SUBMIT_PARAMS: 
+        _SUBMIT_PARAMS[name] = value

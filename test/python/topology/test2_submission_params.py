@@ -16,11 +16,70 @@ from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology.context import JobConfig
 import streamsx.spl.op as op
-from streamsx.spl.types import Timestamp
+
+
+class AddIt(object):
+    def __init__(self, sp):
+        self.sp = sp
+    def __call__(self, t):
+        return str(t) + '-' + self.sp()
 
 @unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestSubmissionParams(unittest.TestCase):
-    """ Test  submission params.
+    """ Test submission params (distributed).
+    """
+    def setUp(self):
+        Tester.setup_standalone(self)
+
+    def test_spl_default(self):
+        """
+        Test passing as with default using SPL
+        """
+        N=27
+        G='hey there'
+        t = ''.join(random.choice('0123456789abcdef') for x in range(20))
+        topic = 'topology/test/python/' + t
+       
+        topo = Topology()
+        spGreet = topo.create_submission_parameter('greeting', default=G)
+        self.assertIsNone(spGreet())
+
+        sch = StreamSchema('tuple<uint64 seq, rstring s>')
+        b = op.Source(topo, "spl.utility::Beacon", sch,
+            params = {'initDelay': 10.0, 'period': 0.02, 'iterations':N})
+        b.seq = b.output('IterationCount()')
+        b.s = b.output(spGreet)
+
+        tester = Tester(topo)
+        tester.tuple_count(b.stream, N)
+        tester.contents(b.stream, [{'seq':i, 's':G} for i in range(N)])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_topo(self):
+        topo = Topology()
+        s = topo.source(range(38))
+        lower = topo.create_submission_parameter('lower')
+        upper = topo.create_submission_parameter('upper')
+        addin = topo.create_submission_parameter('addin')
+
+        s = s.filter(lambda v: v < int(lower()) or v > int(upper()))
+
+        m = s.filter(lambda v : v < 3)
+        m = m.map(AddIt(addin))
+
+        jc = JobConfig()
+        jc.submission_parameters['lower'] = 7
+        jc.submission_parameters['upper'] = 33
+        jc.submission_parameters['addin'] = 'Yeah!'
+        jc.add(self.test_config)
+
+        tester = Tester(topo)
+        tester.contents(s, [0,1,2,3,4,5,6,34,35,36,37])
+        tester.contents(m, ['0-Yeah!','1-Yeah!','2-Yeah!'])
+        tester.test(self.test_ctxtype, self.test_config)
+
+class TestSubmissionParamsDistributed(TestSubmissionParams):
+    """ Test submission params (distributed).
     """
     def setUp(self):
         Tester.setup_distributed(self)
@@ -38,6 +97,9 @@ class TestSubmissionParams(unittest.TestCase):
         spTopic = topo.create_submission_parameter('mytopic')
         spGreet = topo.create_submission_parameter('greeting')
 
+        self.assertIsNone(spTopic())
+        self.assertIsNone(spGreet())
+
         sch = StreamSchema('tuple<uint64 seq, rstring s>')
         b = op.Source(topo, "spl.utility::Beacon", sch,
             params = {'initDelay': 10.0, 'period': 0.02, 'iterations':N})
@@ -54,7 +116,6 @@ class TestSubmissionParams(unittest.TestCase):
         jc.submission_parameters['mytopic'] = topic
         jc.submission_parameters['greeting'] = G
         jc.add(self.test_config)
-        self.test_config['topology.keepArtifacts'] = True
 
         tester = Tester(topo)
         tester.tuple_count(s.stream, N)
@@ -62,25 +123,3 @@ class TestSubmissionParams(unittest.TestCase):
         tester.contents(s.stream, [{'seq':i, 's':G} for i in range(N)])
         tester.test(self.test_ctxtype, self.test_config)
 
-    def test_spl_default(self):
-        """
-        Test passing as with default using SPL
-        """
-        N=27
-        G='hey there'
-        t = ''.join(random.choice('0123456789abcdef') for x in range(20))
-        topic = 'topology/test/python/' + t
-       
-        topo = Topology()
-        spGreet = topo.create_submission_parameter('greeting', default=G)
-
-        sch = StreamSchema('tuple<uint64 seq, rstring s>')
-        b = op.Source(topo, "spl.utility::Beacon", sch,
-            params = {'initDelay': 10.0, 'period': 0.02, 'iterations':N})
-        b.seq = b.output('IterationCount()')
-        b.s = b.output(spGreet)
-     
-        tester = Tester(topo)
-        tester.tuple_count(b.stream, N)
-        tester.contents(b.stream, [{'seq':i, 's':G} for i in range(N)])
-        tester.test(self.test_ctxtype, self.test_config)
