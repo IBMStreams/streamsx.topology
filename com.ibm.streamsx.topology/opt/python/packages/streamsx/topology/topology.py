@@ -608,8 +608,52 @@ class Topology(object):
         pr = pkg_resources.Requirement.parse(requirement) 
         self.exclude_packages.add(pr.project_name)
 
-    def create_submission_parameter(self, name, default_value=None):
-        sp = streamsx.topology.runtime._SubmissionParam(name, default_value)
+    def create_submission_parameter(self, name, default=None):
+        """ Create a submission parameter.
+
+        A submission parameter is a handle for a value that
+        is not defined until topology submission time.  Submission
+        parameters enable the creation of reusable topology bundles.
+ 
+        A submission parameter has a `name`. The name must be unique
+        within the topology.
+
+        The returned parameter is a `callable`.
+        Prior to submitting the topology, while constructing the topology,
+        invoking it returns ``None``.
+ 
+        After the topology is submitted, invoking the parameter
+        within the executing topology returns the actual submission time value
+        (or the default value if it was not set at submission time).
+
+        Submission parameters may be used within functional logic. e.g.::
+
+            threshold = topology.create_submission_parameter('threshold', 100);
+
+            # s is some stream of integers
+            s = ...
+            s = s.filter(lambda v : v > threshold())
+
+        .. note::
+            The parameter (value returned from this method) is only
+            supported within a lambda expression or a callable
+            that is not a function.
+
+        Topology submission behavior when a submission parameter 
+        lacking a default value is created and a value is not provided at
+        submission time is defined by the underlying topology execution runtime.
+           * Submission fails for contexts ``DISTRIBUTED``, ``STANDALONE``, and ``STREAMING_ANALYTICS_SERVICE``.
+
+        Args:
+            name(str): Name for submission parameter.
+            default: Default parameter when submission parameter is not set.
+
+        .. versionadded:: 1.9
+        """
+        
+        if name in self._submission_parameters:
+            raise ValueError("Submission parameter {} already defined.".format(name))
+        sp = streamsx.topology.runtime._SubmissionParam(name, default)
         self._submission_parameters[name] = sp
         return sp
 
