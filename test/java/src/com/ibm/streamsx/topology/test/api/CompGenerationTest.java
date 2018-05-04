@@ -182,5 +182,35 @@ public class CompGenerationTest extends TestTopology {
         assertTrue(validCount_3.valid());
     }
     
+    @Test(expected = IllegalStateException.class)
+    public void multipleInputPortsDifferentWidths() throws Exception {
+        assumeTrue(SC_OK);
+        assumeTrue(!isMainRun());
+        
+        Topology topo = new Topology();
+        
+        TStream<String> nums = topo.strings("1");
+        TStream<String> nums2 = topo.strings("2");
+        TStream<String> nums3 = topo.strings("3");
+        
+        nums = nums.parallel(() -> 3, tup -> 1);
+        nums2 = nums2.parallel(() -> 1, Routing.BROADCAST);
+        nums3 = nums3.parallel(2);
+        
+        Set<TStream<String>> streams = new HashSet<>();
+        streams.add(nums2);
+        streams.add(nums3);
+        nums = nums.union(streams);
+        
+        nums = nums.filter(tup -> true);
+        
+        nums = nums.endParallel();
+        
+        
+        Tester tester = topo.getTester();
+
+        complete(tester);
+    }
+    
     
 }
