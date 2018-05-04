@@ -21,8 +21,12 @@ import streamsx.spl.op as op
 class AddIt(object):
     def __init__(self, sp):
         self.sp = sp
+    def __enter__(self):
+        self.spv = self.sp()
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
     def __call__(self, t):
-        return str(t) + '-' + self.sp()
+        return str(t) + '-' + self.spv
 
 @unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestSubmissionParams(unittest.TestCase):
@@ -76,6 +80,22 @@ class TestSubmissionParams(unittest.TestCase):
         tester = Tester(topo)
         tester.contents(s, [0,1,2,3,4,5,6,34,35,36,37])
         tester.contents(m, ['0-Yeah!','1-Yeah!','2-Yeah!'])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_topo_with_def_and_type(self):
+        topo = Topology()
+        s = topo.source(range(38))
+        lower = topo.create_submission_parameter('lower', default=0)
+        upper = topo.create_submission_parameter('upper', default=30)
+
+        s = s.filter(lambda v: v < lower() or v > upper())
+
+        jc = JobConfig()
+        jc.submission_parameters['lower'] = 5
+        jc.add(self.test_config)
+
+        tester = Tester(topo)
+        tester.contents(s, [0,1,2,3,4,31,32,33,34,35,36,37])
         tester.test(self.test_ctxtype, self.test_config)
 
 class TestSubmissionParamsDistributed(TestSubmissionParams):

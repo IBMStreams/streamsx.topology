@@ -491,15 +491,45 @@ class _Callable(_WrappedInstance):
 class _SubmissionParam(object):
     def __init__(self, name, default):
         self._name = name
+
+        if default is None:
+            type_ = None
+            self._spl_type = 'RSTRING'
+        elif isinstance(default, basestring):
+            type_ = None
+            self._spl_type = 'RSTRING'
+        elif isinstance(default, int):
+            type_ = int
+            if default >= -2147483648 and default <= 2147483647:
+                self._spl_type = 'INT32'
+            else:
+                self._spl_type = 'INT64'
+            default = str(default)
+        elif isinstance(default, float):
+            type_ = float
+            self._spl_type = 'FLOAT64'
+            default = str(default)
+        elif isinstance(default, bool):
+            type_ = bool
+            self._spl_type = 'BOOLEAN'
+            default = str(default)
+        else:
+            raise TypeError("Type {} not supported for submission parameter default value.".format(type(default)))
+
+        self._type = type_
         self._default = default
+
     def __call__(self):
-        return ec._SUBMIT_PARAMS.get(self._name)
+        sv =  ec._SUBMIT_PARAMS.get(self._name)
+        if sv is not None and self._type is not None:
+            return self._type(sv)
+        return sv
 
     def spl_json(self):
         o = {'type': 'submissionParameter'}
         v = {'name': self._name}
         o['value'] = v
-        v['metaType'] = 'RSTRING'
+        v['metaType'] = self._spl_type
         if self._default is not None:
             v['defaultValue'] = self._default
         return o
