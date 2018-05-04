@@ -608,7 +608,7 @@ class Topology(object):
         pr = pkg_resources.Requirement.parse(requirement) 
         self.exclude_packages.add(pr.project_name)
 
-    def create_submission_parameter(self, name, default=None):
+    def create_submission_parameter(self, name, default=None, type_=None):
         """ Create a submission parameter.
 
         A submission parameter is a handle for a value that
@@ -639,6 +639,14 @@ class Topology(object):
             supported within a lambda expression or a callable
             that is not a function.
 
+        The default type of a submission parameter's value is a `str`
+        (`unicode` on Python 2.7). When a `default` is specified
+        the type of the value matches the type of the default.
+
+        If `default` is not set, then the type can be set with `type_`.
+
+        The types supported are ``str``, ``int``, ``float`` and ``bool``.
+
         Topology submission behavior when a submission parameter 
         lacking a default value is created and a value is not provided at
         submission time is defined by the underlying topology execution runtime.
@@ -647,13 +655,14 @@ class Topology(object):
         Args:
             name(str): Name for submission parameter.
             default: Default parameter when submission parameter is not set.
+            type_: Type of parameter value when default is not set. Supported values are `str`, `int`, `float` and `bool`.
 
         .. versionadded:: 1.9
         """
         
         if name in self._submission_parameters:
             raise ValueError("Submission parameter {} already defined.".format(name))
-        sp = streamsx.topology.runtime._SubmissionParam(name, default)
+        sp = streamsx.topology.runtime._SubmissionParam(name, default, type_)
         self._submission_parameters[name] = sp
         return sp
 

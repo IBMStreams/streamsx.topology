@@ -98,6 +98,46 @@ class TestSubmissionParams(unittest.TestCase):
         tester.contents(s, [0,1,2,3,4,31,32,33,34,35,36,37])
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_topo_types_from_default(self):
+        topo = Topology()
+        sp_str = topo.create_submission_parameter('sp_str', default='Hi')
+        sp_int = topo.create_submission_parameter('sp_int', default=89)
+        sp_float = topo.create_submission_parameter('sp_float', default=0.5)
+        sp_bool = topo.create_submission_parameter('sp_bool', default=False)
+        
+        s = topo.source(range(17))
+        s = s.filter(lambda v : isinstance(sp_str(), str) and sp_str() == 'Hi')
+        s = s.filter(lambda v : isinstance(sp_int(), int) and sp_int() == 89)
+        s = s.filter(lambda v : isinstance(sp_float(), float) and sp_float() == 0.5)
+        s = s.filter(lambda v : isinstance(sp_bool(), bool) and sp_bool() is False)
+     
+        tester = Tester(topo)
+        tester.tuple_count(s, 17)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_topo_types_explicit_set(self):
+        topo = Topology()
+        sp_str = topo.create_submission_parameter('sp_str', type_=str)
+        sp_int = topo.create_submission_parameter('sp_int', type_=int)
+        sp_float = topo.create_submission_parameter('sp_float', type_=float)
+        sp_bool = topo.create_submission_parameter('sp_bool', type_=bool)
+        
+        s = topo.source(range(17))
+        s = s.filter(lambda v : isinstance(sp_str(), str) and sp_str() == 'SeeYa')
+        s = s.filter(lambda v : isinstance(sp_int(), int) and sp_int() == 10)
+        s = s.filter(lambda v : isinstance(sp_float(), float) and sp_float() == -0.5)
+        s = s.filter(lambda v : isinstance(sp_bool(), bool) and sp_bool() is True)
+        jc = JobConfig()
+        jc.submission_parameters['sp_str'] = 'SeeYa'
+        jc.submission_parameters['sp_int'] = 10
+        jc.submission_parameters['sp_float'] = -0.5
+        jc.submission_parameters['sp_bool'] = True
+        jc.add(self.test_config)
+     
+        tester = Tester(topo)
+        tester.tuple_count(s, 17)
+        tester.test(self.test_ctxtype, self.test_config)
+
 class TestSubmissionParamsDistributed(TestSubmissionParams):
     """ Test submission params (distributed).
     """

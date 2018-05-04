@@ -487,34 +487,41 @@ class _Callable(_WrappedInstance):
     def __call__(self, *args, **kwargs):
         return self._callable.__call__(*args, **kwargs)
 
+def _spl_boolean_to_bool(v):
+    return not v == 'false'
 
 class _SubmissionParam(object):
-    def __init__(self, name, default):
+    def __init__(self, name, default, type_):
         self._name = name
 
-        if default is None:
+        if default is not None:
+            type_ = type(default)
+
+        if default is None and type_ is None:
             type_ = None
             self._spl_type = 'RSTRING'
         elif isinstance(default, basestring):
             type_ = None
             self._spl_type = 'RSTRING'
+        elif isinstance(default, bool):
+            self._spl_type = 'BOOLEAN'
         elif isinstance(default, int):
-            type_ = int
             if default >= -2147483648 and default <= 2147483647:
                 self._spl_type = 'INT32'
             else:
                 self._spl_type = 'INT64'
-            default = str(default)
         elif isinstance(default, float):
-            type_ = float
             self._spl_type = 'FLOAT64'
-            default = str(default)
-        elif isinstance(default, bool):
-            type_ = bool
+        elif type_ is str:
+            self._spl_type = 'RSTRING'
+        elif type_ is int:
+            self._spl_type = 'INT32'
+        elif type_ is float:
+            self._spl_type = 'FLOAT64'
+        elif type_ is bool:
             self._spl_type = 'BOOLEAN'
-            default = str(default)
         else:
-            raise TypeError("Type {} not supported for submission parameter default value.".format(type(default)))
+            raise TypeError("Type {} not supported for submission parameter default value.".format(type_))
 
         self._type = type_
         self._default = default
@@ -522,6 +529,8 @@ class _SubmissionParam(object):
     def __call__(self):
         sv =  ec._SUBMIT_PARAMS.get(self._name)
         if sv is not None and self._type is not None:
+            if self._type is bool:
+                return _spl_boolean_to_bool(sv)
             return self._type(sv)
         return sv
 
