@@ -6,6 +6,9 @@ package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_COMPOSITE_PARAMETER;
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
 import static com.ibm.streamsx.topology.internal.functional.FunctionalOpProperties.FUNCTIONAL_LOGIC_PARAM;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
@@ -20,6 +23,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.builder.JParamTypes;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
@@ -249,17 +253,16 @@ public class SubmissionTimeValue {
         JsonObject spParams = new JsonObject();
         AtomicBoolean addedAll = new AtomicBoolean();
         GsonUtilities.objectArray(composite, "operators", op -> {
-            JsonObject params = jobject(op, "parameters");
-            if (params != null) {
-                boolean addAll = false;
-                for (Entry<String, JsonElement> p : params.entrySet()) {
-                    // if functional logic add "submissionParameters" param
-                    if (params.has(FUNCTIONAL_LOGIC_PARAM)) {
-                        functionalOps.put(jstring(op, "name"), op);
-                        addAll = true;
-                        break;
-                    }
-                    else {
+            
+            boolean addAll = false;
+            if (MODEL_FUNCTIONAL.equals(jstring(op, MODEL))) {
+                functionalOps.put(jstring(op, "name"), op);
+                addAll = true;
+            } else {
+                JsonObject params = jobject(op, "parameters");
+                if (params != null) {
+                    for (Entry<String, JsonElement> p : params.entrySet()) {
+                        // if functional logic add "submissionParameters" param
                         JsonObject param = p.getValue().getAsJsonObject();
                         String type = jstring(param, "type");
                         if (TYPE_SUBMISSION_PARAMETER.equals(type)) {
@@ -267,10 +270,10 @@ public class SubmissionTimeValue {
                         }
                     }
                 }
-                if (addAll && !addedAll.getAndSet(true)) {
-                    for (String name : allSubmissionParams.keySet()) {
-                        addInnerCompositeParameter(spParams, allSubmissionParams.get(name));
-                    }
+            }
+            if (addAll && !addedAll.getAndSet(true)) {
+                for (String name : allSubmissionParams.keySet()) {
+                    addInnerCompositeParameter(spParams, allSubmissionParams.get(name));
                 }
             }
             boolean isParallel = jboolean(op, "parallelOperator"); 
