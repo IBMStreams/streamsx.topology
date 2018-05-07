@@ -387,6 +387,8 @@ class _SPLInvocation(object):
             # dill format is binary; base64 encode so it is json serializable 
             self.params["pyCallable"] = base64.b64encode(dill.dumps(function)).decode("ascii")
 
+        self.params["pyStateful"] = bool(stateful)
+
         # note: functions in the __main__ module cannot be used as input to operations 
         # function.__module__ will be '__main__', so C++ operators cannot import the module
         self.params["pyModule"] = function.__module__
