@@ -481,7 +481,7 @@ class ContextTypes(object):
 
         The main context types result in a running application and are:
 
-            * :py:const:`STREAMING_ANALYTICS_SERVICE` - Application is submitted to a Streaming Analytics service running on IBM Bluemix cloud platform.
+            * :py:const:`STREAMING_ANALYTICS_SERVICE` - Application is submitted to a Streaming Analytics service running on IBM Cloud.
             * :py:const:`DISTRIBUTED` - Application is submitted to an IBM Streams instance.
             * :py:const:`STANDALONE` - Application is executed as a local process, IBM Streams `standalone` application. Typically this is used during development or testing.
 
@@ -491,7 +491,7 @@ class ContextTypes(object):
         times to services or instances, each resulting in a unique job (running application).
     """
     STREAMING_ANALYTICS_SERVICE = 'STREAMING_ANALYTICS_SERVICE'
-    """Submission to Streaming Analytics service running on IBM Bluemix cloud platform.
+    """Submission to Streaming Analytics service running on IBM Cloud.
 
     The `Topology` is compiled and the resultant Streams application bundle
     (sab file) is submitted for execution on the Streaming Analytics service.

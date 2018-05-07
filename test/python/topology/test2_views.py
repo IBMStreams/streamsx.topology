@@ -89,3 +89,7 @@ class TestViews(unittest.TestCase):
         tester.local_check = self._object_view
         tester.tuple_count(s, 1000)
         tester.test(self.test_ctxtype, self.test_config)
+
+class TestViewsCloud(TestViews):
+    def setUp(self):
+        Tester.setup_streaming_analytics(self, force_remote_build=True)

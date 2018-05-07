@@ -46,6 +46,7 @@ import com.ibm.streamsx.topology.internal.logic.SingleToIterableSupplier;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.json.JSONSchemas;
 import com.ibm.streamsx.topology.tester.Tester;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 /**
  * A declaration of a topology of streaming data.
@@ -530,7 +531,7 @@ public class Topology implements TopologyElement {
         }
         
         if (badFilter)
-            throw new IllegalArgumentException("Invalid topic filter:" + filter);
+            throw new IllegalArgumentException(Messages.getString("TOPOLOGY_INVALID_TOPIC_FILTER", filter));
     }
 
     /**

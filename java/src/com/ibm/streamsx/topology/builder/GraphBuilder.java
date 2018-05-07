@@ -38,6 +38,7 @@ import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameterFactory;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.streams.Util;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 /**
  * Low-level graph builder. GraphBuilder provides a layer on top of
@@ -294,7 +295,7 @@ public class GraphBuilder extends BJSONObject {
      */
     public void createSubmissionParameter(String name, JsonObject jo) {
         if (params.has(name))
-            throw new IllegalArgumentException("name is already defined");
+            throw new IllegalArgumentException(Messages.getString("BUILDER_NAME_ALREADY_DEFINED", name));
         params.add(name, jo);
     }
 

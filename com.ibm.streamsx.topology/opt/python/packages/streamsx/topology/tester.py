@@ -217,7 +217,7 @@ class Tester(object):
     @staticmethod
     def setup_streaming_analytics(test, service_name=None, force_remote_build=False):
         """
-        Set up a unittest.TestCase to run tests using Streaming Analytics service on IBM Bluemix cloud platform.
+        Set up a unittest.TestCase to run tests using Streaming Analytics service on IBM Cloud.
 
         The service to use is defined by:
          * VCAP_SERVICES environment variable containing `streaming_analytics` entries.
@@ -617,9 +617,12 @@ class Tester(object):
 
     def _fetch_application_logs(self, ctxtype):
         # Fetch the logs if submitting to a Streaming Analytics Service
-        if stc.ContextTypes.STREAMING_ANALYTICS_SERVICE == ctxtype or stc.ContextTypes.ANALYTICS_SERVICE == ctxtype:
+        if stc.ContextTypes.STREAMING_ANALYTICS_SERVICE == ctxtype or stc.ContextTypes.ANALYTICS_SERVICE == ctxtype or stc.ContextTypes.DISTRIBUTED == ctxtype:
             application_logs = self.submission_result.job.retrieve_log_trace()
-            _logger.info("Application logs have been fetched to " + application_logs)
+            if application_logs is not None:
+                _logger.info("Application logs have been fetched to " + application_logs)
+            else:
+                _logger.warning("Fetching job application logs is not supported in this version of Streams.")
             return application_logs
 
     def _start_local_check(self):
