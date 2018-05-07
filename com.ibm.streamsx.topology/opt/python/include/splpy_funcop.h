@@ -30,6 +30,7 @@ class SplpyFuncOp : public SplpyOp {
       SplpyFuncOp(SPL::Operator * op, const std::string & wrapfn) :
          SplpyOp(op, "/opt/python/packages/streamsx/topology")
       {
+         setSubmissionParameters();
          addAppPythonPackages();
          loadAndWrapCallable(wrapfn);
       }
@@ -47,6 +48,33 @@ class SplpyFuncOp : public SplpyOp {
 
       const SPL::rstring & param(const char *name) {
           return op()->getParameterValues(name)[0]->getValue();
+      }
+
+      /**
+       * Set submission parameters. Note all functional operators
+       * share the same submission parameters (they are topology wide)
+       * and thus each operator will execute this code. They will
+       * all have the same values.
+       *
+       * Note at this point all the parameters are rstring values,
+       * the Python code does any type conversion.
+      */
+      void setSubmissionParameters() {
+          if (hasParam("submissionParamNames")) {
+              SplpyGIL lock;
+
+              const SPL::Operator::ParameterValueListType& names = op()->getParameterValues("submissionParamNames");
+
+              const SPL::Operator::ParameterValueListType& values = op()->getParameterValues("submissionParamValues");
+
+              for (int i = 0; i < names.size(); i++) {
+                  PyObject *n = pyUnicode_FromUTF8(names[i]->getValue());
+                  PyObject *v = pyUnicode_FromUTF8(values[i]->getValue());
+
+                  streamsx::topology::SplpyGeneral::callVoidFunction(
+                        "streamsx.ec", "_set_submit_param", n, v);
+              }
+          }
       }
 
       /**

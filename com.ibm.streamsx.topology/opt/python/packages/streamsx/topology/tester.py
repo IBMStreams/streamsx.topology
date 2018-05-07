@@ -622,7 +622,7 @@ class Tester(object):
             if application_logs is not None:
                 _logger.info("Application logs have been fetched to " + application_logs)
             else:
-                _logger.warn("Fetching job application logs is not supported in this version of Streams.")
+                _logger.warning("Fetching job application logs is not supported in this version of Streams.")
             return application_logs
 
     def _start_local_check(self):
