@@ -23,7 +23,7 @@ def _create_tf():
 
 
 class EnterExit(object):
-    def __init__(self, tf):
+    def __init__(self, tf=None):
         self.tf = tf
         self._report('__init__')
     def __enter__(self):
@@ -35,6 +35,8 @@ class EnterExit(object):
     def __call__(self, *t):
         return t
     def _report(self, txt):
+        if not self.tf:
+            return
         with open(self.tf, 'a') as fp:
             fp.write(txt)
             fp.write('\n')
@@ -131,6 +133,10 @@ class ExcNextSource(EnterExit):
     def __next__(self):
         raise KeyError()
 
+    # For Python 2
+    def next(self):
+        return self.__next__()
+
 @spl.source()
 class SuppressNextSource(EnterExit):
     def __iter__(self):
@@ -144,6 +150,10 @@ class SuppressNextSource(EnterExit):
         if self.count == 4:
            raise StopIteration()
         return 'helloSS', self.count
+
+    # For Python 2
+    def next(self):
+        return self.__next__()
 
     def __exit__(self, exc_type, exc_value, traceback):
         EnterExit.__exit__(self, exc_type, exc_value, traceback)

@@ -30,6 +30,7 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.internal.logic.WrapperFunction;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 /**
  * The DependencyResolver class exists to separate the logic of jar
@@ -52,7 +53,7 @@ public class DependencyResolver {
         final Path absPath;
         Artifact(String dirName, Path absPath) {
             if (dirName==null || absPath==null)
-                throw new IllegalArgumentException("dstDirName="+dirName+" absPath="+absPath);
+                throw new IllegalArgumentException(Messages.getString("CORE_DIR_NAME_OR_ABS_PATH_NULL"));
             this.dstDirName = dirName;
             this.absPath = absPath;
         }
@@ -87,8 +88,7 @@ public class DependencyResolver {
     public void addJarDependency(String location) throws IllegalArgumentException{
         File f = new File(location);
         if(!f.exists()){
-            throw new IllegalArgumentException("File not found. Invalid "
-      	       + "third party dependency location:"+ f.toPath().toAbsolutePath().toString());
+            throw new IllegalArgumentException(Messages.getString("CORE_THIRD_PARTY_DEP", f.toPath().toAbsolutePath().toString()));
         }
         
         addGlobalDependency(f.toPath().toAbsolutePath(), false); 
@@ -189,12 +189,11 @@ public class DependencyResolver {
             throws IllegalArgumentException {
         
         if (dstDirName==null || !(dstDirName.equals("etc") || dstDirName.equals("opt")))
-            throw new IllegalArgumentException("dstDirName="+dstDirName);
+            throw new IllegalArgumentException(Messages.getString("CORE_DEP_DIR_INVALID"));
         
         File f = new File(location);
         if (!f.exists() || (!f.isFile() && !f.isDirectory()))
-            throw new IllegalArgumentException("Not a file or directory. Invalid "
-                    + "file dependency location:"+ f.toPath().toAbsolutePath().toString());
+            throw new IllegalArgumentException(Messages.getString("CORE_DEP_FILE_INVALID", f.toPath().toAbsolutePath().toString()));
         
         globalFileDependencies.add(new Artifact(dstDirName,
                 f.toPath().toAbsolutePath()));    
@@ -280,7 +279,7 @@ public class DependencyResolver {
             }
             
             else {
-                throw new IllegalArgumentException("Path not a file or directory:" + source);
+                throw new IllegalArgumentException(Messages.getString("CORE_PATH_INVALID", source));
             }
             includes.add(include);
             previouslyCopiedDependencies.put(source, jarName);
@@ -292,7 +291,7 @@ public class DependencyResolver {
         
         // Sanity check
         if(null == jarName){
-            throw new IllegalStateException("Error resolving dependency "+ source);
+            throw new IllegalStateException(Messages.getString("CORE_ERROR_RESOLVING_DEP", source));
         }
         return jarName;
     }
@@ -300,7 +299,7 @@ public class DependencyResolver {
     /**
      * Copy the Artifact to the toolkit
      */
-    private void resolveFileDependency(Artifact a, JsonArray includes)  {    	
+    private void resolveFileDependency(Artifact a, JsonArray includes)  {
         JsonObject include = new JsonObject();
         include.addProperty("source", a.absPath.toString());
         include.addProperty("target", a.dstDirName);

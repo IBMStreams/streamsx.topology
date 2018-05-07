@@ -21,6 +21,7 @@ import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 public class InvokeSubmit {
 
@@ -89,11 +90,11 @@ public class InvokeSubmit {
             int rc = sjProcess.waitFor();
             trace.info("streamtool submitjob complete: return code=" + rc);
             if (rc != 0)
-                throw new Exception("streamtool submitjob failed!");
+                throw new Exception(Messages.getString("STREAMS_STREAMTOOL_SUBMITJOB_FAILED"));
             
             try (Scanner jobIdScanner = new Scanner(jobidFile)) {
                 if (!jobIdScanner.hasNextBigInteger())
-                    throw new Exception("streamtool failed to supply a job identifier!");
+                    throw new Exception(Messages.getString("STREAMS_STREAMTOOL_FAILED_TO_SUPPLY"));
                 
                 BigInteger jobId = jobIdScanner.nextBigInteger();
                 trace.info("Bundle: " + bundle.getName() + " submitted with jobid: " + jobId);            

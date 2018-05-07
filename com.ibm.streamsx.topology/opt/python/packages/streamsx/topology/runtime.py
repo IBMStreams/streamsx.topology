@@ -103,6 +103,8 @@ class _FunctionalCallable(object):
                     self._callable._streamsx_ec_op = ec._get_opc(self._callable)
                 self._cls = True
                 ec._callable_enter(self._callable)
+                if hasattr(self._callable, '_splpy_entered'):
+                    self._splpy_entered = self._callable._splpy_entered
 
         ec._clear_opc()
 
@@ -280,8 +282,8 @@ class _JSONInJSONOut(_FunctionalCallable):
 # If an error occurs and __exit__ asks for it to be
 # ignored then an empty source is created.
 class _IterableAnyOut(_FunctionalCallable):
-    def __init__(self, callable, attributes=None):
-        super(_IterableAnyOut, self).__init__(callable, attributes)
+    def __init__(self, callable_, attributes=None):
+        super(_IterableAnyOut, self).__init__(callable_, attributes)
         try:
             self._it = iter(self._callable())
         except:
@@ -300,11 +302,6 @@ class _IterableAnyOut(_FunctionalCallable):
                     return tuple_
             except StopIteration:
                 return None
-            except:
-                ei = sys.exc_info()
-                ignore = ec._callable_exit(self._callable, ei[0], ei[1], ei[2])
-                if not ignore:
-                    raise ei[1]
 
 class _IterablePickleOut(_IterableAnyOut):
     def __init__(self, callable, attributes=None):
@@ -463,17 +460,17 @@ def _get_namedtuple_cls(schema, name):
 class _WrappedInstance(object):
     def __init__(self, callable_):
         self._callable = callable_
+        if not self._hasee():
+            self._splpy_entered = False
 
     def _hasee(self):
-        return hasattr(self._callable, '__enter__') and hasattr(self._callable, '__exit__')
+        return hasattr(type(self._callable), '__enter__') and hasattr(type(self._callable), '__exit__')
 
     def __enter__(self):
-        if self._hasee():
-            self._callable.__enter__()
+        self._callable.__enter__()
     
     def __exit__(self, exc_type, exc_value, traceback):
-        if self._hasee():
-            self._callable.__exit__(exc_type, exc_value, traceback)
+        return self._callable.__exit__(exc_type, exc_value, traceback)
 
 # Wraps an iterable instance returning
 # it when called. Allows an iterable

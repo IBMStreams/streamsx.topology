@@ -182,6 +182,7 @@ extern "C" {
  */
 
 typedef PyObject* (*__splpy_ogas_fp)(PyObject *, const char *);
+typedef int (*__splpy_ohas_fp)(PyObject *, const char *);
 typedef int (*__splpy_rssf_fp)(const char *, PyCompilerFlags *);
 #if __SPLPY_EC_MODULE_OK
 #if PY_MAJOR_VERSION == 3
@@ -195,6 +196,7 @@ typedef PyObject * (*__splpy_im4_fp)(const char *, PyMethodDef *, const char *do
 
 extern "C" {
   static __splpy_ogas_fp __spl_fp_PyObject_GetAttrString;
+  static __splpy_ohas_fp __spl_fp_PyObject_HasAttrString;
   static __splpy_rssf_fp __spl_fp_PyRun_SimpleStringFlags;
   static __splpy_p_ppp_fp __spl_fp_PyObject_Call;
   static __splpy_p_pp_fp __spl_fp_PyObject_CallObject;
@@ -214,6 +216,9 @@ extern "C" {
 
   static PyObject * __spl_fi_PyObject_GetAttrString(PyObject *o, const char * attr_name) {
      return __spl_fp_PyObject_GetAttrString(o, attr_name);
+  }
+  static int __spl_fi_PyObject_HasAttrString(PyObject *o, const char * attr_name) {
+     return __spl_fp_PyObject_HasAttrString(o, attr_name);
   }
   static int __spl_fi_PyRun_SimpleStringFlags(const char * command, PyCompilerFlags *flags) {
      return __spl_fp_PyRun_SimpleStringFlags(command, flags);
@@ -248,6 +253,7 @@ extern "C" {
 #endif
 }
 #pragma weak PyObject_GetAttrString = __spl_fi_PyObject_GetAttrString
+#pragma weak PyObject_HasAttrString = __spl_fi_PyObject_HasAttrString
 #pragma weak PyRun_SimpleStringFlags = __spl_fi_PyRun_SimpleStringFlags
 #pragma weak PyObject_Call = __spl_fi_PyObject_Call
 #pragma weak PyObject_CallObject = __spl_fi_PyObject_CallObject
@@ -509,6 +515,7 @@ class SplpySym {
 #endif
 
      __SPLFIX(PyObject_GetAttrString, __splpy_ogas_fp);
+     __SPLFIX(PyObject_HasAttrString, __splpy_ohas_fp);
      __SPLFIX(PyRun_SimpleStringFlags, __splpy_rssf_fp);
      __SPLFIX(PyObject_Call, __splpy_p_ppp_fp);
      __SPLFIX(PyObject_CallObject, __splpy_p_pp_fp);

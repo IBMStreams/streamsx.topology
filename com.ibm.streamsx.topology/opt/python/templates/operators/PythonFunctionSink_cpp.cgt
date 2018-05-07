@@ -36,6 +36,8 @@ using namespace streamsx::topology;
  }
  
   my $ituple = $iport->getCppTupleName();
+
+  my $skip_set_callable = 0;
 %>
 
 // Constructor
@@ -53,8 +55,6 @@ MY_OPERATOR::MY_OPERATOR() :
                getInputPortAt(0));
    }
 <% } %>
-
-   pyop_->setCallable(callable);
 }
 
 // Destructor

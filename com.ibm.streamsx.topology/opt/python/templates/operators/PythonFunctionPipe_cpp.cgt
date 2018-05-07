@@ -42,6 +42,7 @@ using namespace streamsx::topology;
   my @onames = SPL::CodeGen::Type::getAttributeNames($otupleType);
   my @otypes = SPL::CodeGen::Type::getAttributeTypes($otupleType);
  
+  my $skip_set_callable = 0;
 %>
 
 // Constructor
@@ -57,25 +58,11 @@ MY_OPERATOR::MY_OPERATOR() :
       SplpyGIL lock;
       pyOutNames_0 = Splpy::pyAttributeNames(getOutputPortAt(0));
 
-#if 0
-
-     // Now create the wrapper function that converts
-     // other types returned by the user's function
-     // (e.g. dictionaries) to Python tuples as the
-     // decorated operators only handle tuples to
-     // simplify the generated code.
-     callable = SplpyGeneral::callFunction(
-             "streamsx.spl.runtime", "_splpy_to_tuples",
-             callable, pyOutNames_0);   
-#endif
-
 <% if ($paramStyle eq 'dictionary') { %>
       pyInNames_ = Splpy::pyAttributeNames(
                getInputPortAt(0));
 <% } %>
    }
-
-   pyop_->setCallable(callable);
 }
 
 // Destructor
