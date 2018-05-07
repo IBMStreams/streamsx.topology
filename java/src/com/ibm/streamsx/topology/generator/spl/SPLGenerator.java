@@ -29,7 +29,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Stack;
 import java.util.Map.Entry;
@@ -45,6 +47,7 @@ import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.port.PortProperties;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 public class SPLGenerator {
     // Needed for composite name generation
@@ -169,7 +172,7 @@ public class SPLGenerator {
                     compInvocation = createLowLatencyCompositeInvocation(compDefinition, startsEndsAndOperators);                  
                 }
                 else{
-                    throw new IllegalStateException("Unsupported composite type: " + compStarts.get(i));
+                    throw new IllegalStateException(Messages.getString("UNSUPPORTED_COMPOSITE_TYPE", compStarts.get(i)));
                 } 
                 
                 // Fix the naming of the operators in the composite to read from the composite input ports
@@ -297,7 +300,7 @@ public class SPLGenerator {
                 operators.add(obj);
         
         if(operators.size() == 0){
-            throw new IllegalStateException("A region must contain at least one operator.");
+            throw new IllegalStateException(Messages.getString("REGION_CONTAIN_OPERATOR"));
         }
             
         compositeDefinition.add("operators", operators);
@@ -361,9 +364,15 @@ public class SPLGenerator {
         parallelInfo.add("broadcastPorts", broadcastPorts);
         parallelInfo.add("partitionedPorts", partitionedPorts);
         
+        Set<Integer> widths = new HashSet<>();
+        Set<JsonElement> stps = Collections.newSetFromMap(new IdentityHashMap<JsonElement, Boolean>());
         for(JsonObject startOp : startsEndsAndOperators.get(0)){
             if(startOp.has("config") && startOp.get("config").getAsJsonObject().has(OpProperties.WIDTH)){
                 JsonElement width = startOp.get("config").getAsJsonObject().get(OpProperties.WIDTH);
+                if(width.isJsonObject())
+                    stps.add(width);
+                else
+                    widths.add(width.getAsInt());
                 parallelInfo.add(OpProperties.WIDTH, width);
             }
             
@@ -376,13 +385,19 @@ public class SPLGenerator {
             JsonObject inputPort = array(startOp, "inputs").get(0).getAsJsonObject();
             
             // Set the width if it was contained in the output port.
-            if(outputPort.has(OpProperties.WIDTH))
-                parallelInfo.add(OpProperties.WIDTH, outputPort.get(OpProperties.WIDTH));
+            if(outputPort.has(OpProperties.WIDTH)){
+                JsonElement width = outputPort.get(OpProperties.WIDTH);
+                if(width.isJsonObject())
+                    stps.add(width);
+                else
+                    widths.add(width.getAsInt());
+                parallelInfo.add(OpProperties.WIDTH, width);
+            }
             
             
             if(jstring(outputPort, PortProperties.ROUTING).equals("BROADCAST")){
                 broadcastPorts.add(inputPort.get("name"));
-            }
+            }       
             
             if(outputPort.has(PortProperties.PARTITIONED) && jboolean(outputPort, PortProperties.PARTITIONED)){
                 JsonObject partitionInfo = new JsonObject();
@@ -394,7 +409,17 @@ public class SPLGenerator {
                 compositeInvocation.addProperty("partitioned", true);
             }      
                 
-        } 
+        }
+        
+        // Fail if there is a mix of multiple widths and/or submission time parameters.
+        if(widths.size() > 1)
+            throw new IllegalStateException("Parallel region has conflicting inputs of different widths.");
+        
+        if(stps.size() > 1)
+            throw new IllegalStateException("Parallel region uses multiple submission time parameters to define its width.");
+                
+        if (widths.size() > 0 && stps.size() > 0)
+            throw new IllegalStateException("Parallel region uses a mix of submission time parameters and explicit integer values to define its width.");
         
         compositeInvocation.add("parallelInfo", parallelInfo);
         compositeInvocation.addProperty("parallelOperator", true);
@@ -471,7 +496,7 @@ public class SPLGenerator {
             for(JsonObject cOp : children){
                 if(compEnds.contains(kind(cOp)) && !kind(cOp).equals(endKind)){
                     // Throw an error if regions of a different type overlap
-                    throw new IllegalStateException("Cannot have overlapping regions of different types.");
+                    throw new IllegalStateException(Messages.getString("REGION_OVERLAPPING"));
                 }
                 
                 if(compStarts.contains(kind(cOp))){
@@ -493,7 +518,7 @@ public class SPLGenerator {
                 // then it means that there are at least two inputs to the end
                 // of the composite.
                 if(kind(op).equals(endKind)){
-                    throw new IllegalStateException("Cannot invoke union() before ending a region.");
+                    throw new IllegalStateException(Messages.getString("REGION_UNION"));
                 }
                 
                 // If the parent is a start operator of a different kind,
@@ -501,7 +526,7 @@ public class SPLGenerator {
                 if((compStarts.contains(kind(pOp)) && !kind(pOp).equals(startKind)) ||
                         isPhysicalStartOperator(pOp) && !isPhysicalStartOperatorOfAType(pOp, opStartParam)){
                        // Throw an error if regions of a different type overlap
-                       throw new IllegalStateException("Cannot have overlapping regions of different types.");
+                       throw new IllegalStateException(Messages.getString("REGION_OVERLAPPING"));
                 }
                 
                 if(compEnds.contains(pOp)){
@@ -680,7 +705,7 @@ public class SPLGenerator {
                 else if (TYPE_SUBMISSION_PARAMETER.equals(type))
                     ; // ignore - as it was converted to a TYPE_COMPOSITE_PARAMETER
                 else
-                    throw new IllegalArgumentException("Unhandled param name=" + name + " jo=" + param);
+                    throw new IllegalArgumentException(Messages.getString("UNHANDLED_PARAM_NAME", name, param));
             }
         }
     }
@@ -995,7 +1020,7 @@ public class SPLGenerator {
         else if (integerValue instanceof Integer)
             l = ((Integer) integerValue) & 0x00ffffffffL;
         else
-            throw new IllegalArgumentException("Illegal type for unsigned " + integerValue.getClass());
+            throw new IllegalArgumentException(Messages.getString("ILLEGAL_TYPE_FOR_UNSIGNED", integerValue.getClass()));
         return Long.toString(l);
     }
 

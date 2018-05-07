@@ -22,6 +22,8 @@ using namespace streamsx::topology;
  my $functionName = splpy_FunctionName();
 
  my $FROM_DICT_TMP = 1;
+
+  my $skip_set_callable = 0;
 %>
 
 // Constructor
@@ -39,8 +41,6 @@ MY_OPERATOR::MY_OPERATOR() :
 {
    PyObject * callable;
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
-
-   pyop_->setCallable(callable);
 
 <% if ($model->getNumberOfInputPorts() != 0) { %>
 {

@@ -587,7 +587,7 @@ Any required packages and their dependencies are added to the `sab`
 if they are not globally installed. Thus there is an assumption that
 the compile machines and runtime machines have an identical set of
 globally installed packages. This is guaranteed for the Streaming
-Analytics service on the IBM Bluemix cloud platform.
+Analytics service on IBM Cloud.
 
 For example is there was a dependency on `numpy` and `geocoder` and
 `numpy` was globally installed then only `geocoder` would be installed

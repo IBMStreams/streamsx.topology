@@ -188,7 +188,7 @@ class _StreamsRestClient(object):
 
         return res
 
-    def _retrieve_file(self, url, filename, dir_, mimetype):
+    def _retrieve_file(self, url, filename, dir_, mimetype):        
         logs = self.make_raw_streaming_request(url, mimetype)
         
         if dir_ is None:
@@ -553,16 +553,19 @@ class Job(_ResourceElement):
             dir (str): a valid directory in which to save the archive. Defaults to the current directory.
 
         Returns:
-            str: the path to the created tar file.
+            str: the path to the created tar file, or None if retrieving a job's logs is not supported in the version of streams to which the job is submitted.
 
         .. versionadded:: 1.8
         """
-        logger.debug("Retrieving application logs from: " + self.applicationLogTrace)
 
-        if not filename:
-            filename = _file_name('job', self.id, '.tar.gz')
- 
-        return self.rest_client._retrieve_file(self.applicationLogTrace, filename, dir, 'application/x-compressed')
+        if hasattr(self, "applicationLogTrace") and self.applicationLogTrace is not None:
+            logger.debug("Retrieving application logs from: " + self.applicationLogTrace)
+            if not filename:
+                filename = _file_name('job', self.id, '.tar.gz')
+
+            return self.rest_client._retrieve_file(self.applicationLogTrace, filename, dir, 'application/x-compressed')
+        else:
+            return None
 
     def get_views(self, name=None):
         """Get the list of :py:class:`View` elements associated with this job.
@@ -573,6 +576,14 @@ class Job(_ResourceElement):
 
         Returns:
             list(View): List of views matching `name`.
+
+        Retrieving a list of views that contain the string "temperatureSensor" could be performed as followed
+        Example:
+            >>> from streamsx import rest
+            >>> sc = rest.StreamingAnalyticsConnection()
+            >>> instances = sc.get_instances()
+            >>> job = instances[0].get_jobs()[0]
+            >>> views = job.get_views(name = "*temperatureSensor*")
         """
         return self._get_elements(self.views, 'views', View, name=name)
 
@@ -618,6 +629,14 @@ class Job(_ResourceElement):
         Returns:
             list(Operator): List of Operator elements associated with this job.
 
+        Retrieving a list of operators whose name contains the string "temperatureSensor" could be performed as followed
+        Example:
+            >>> from streamsx import rest
+            >>> sc = rest.StreamingAnalyticsConnection()
+            >>> instances = sc.get_instances()
+            >>> job = instances[0].get_jobs()[0]
+            >>> operators = job.get_operators(name="*temperatureSensor*")
+
         .versionsince:: 1.9 `name` parameter
         """
         return self._get_elements(self.operators, 'operators', Operator, name=name)
@@ -627,6 +646,7 @@ class Job(_ResourceElement):
 
         Returns:
             list(PE): List of PE elements associated with this job.
+
         """
         return self._get_elements(self.pes, 'pes', PE)
 
@@ -695,6 +715,14 @@ class Operator(_ResourceElement):
 
         Returns:
              list(Metric): List of matching metrics.
+
+        Retrieving a list of metrics whose name contains the string "temperatureSensor" could be performed as followed
+        Example:
+            >>> from streamsx import rest
+            >>> sc = rest.StreamingAnalyticsConnection()
+            >>> instances = sc.get_instances()
+            >>> operator = instances[0].get_operators()[0]
+            >>> metrics = op.get_metrics(name='*temperatureSensor*')
         """
         return self._get_elements(self.metrics, 'metrics', Metric, name=name)
 
@@ -790,6 +818,15 @@ class OperatorOutputPort(_ResourceElement):
         Returns:
              list(Metric): List of matching metrics.
 
+        Retrieving a list of metrics whose name contains the string "temperatureSensor" could be performed as followed
+        Example:
+            >>> from streamsx import rest
+            >>> sc = rest.StreamingAnalyticsConnection()
+            >>> instances = sc.get_instances()
+            >>> exportedstreams = instances[0].get_exported_streams()
+            >>> operatoroutputport = exportedstreams[0].get_operator_output_port()
+            >>> operatoroutputport.get_metrics(name='*temperatureSensor*')
+
         .. versionadded:: 1.9
         """
         return self._get_elements(self.metrics, 'metrics', Metric, name=name)
@@ -813,6 +850,15 @@ class OperatorInputPort(_ResourceElement):
 
         Returns:
              list(Metric): List of matching metrics.
+        
+        Retrieving a list of metrics whose name contains the string "temperatureSensor" could be performed as followed
+        Example:
+            >>> from streamsx import rest
+            >>> sc = rest.StreamingAnalyticsConnection()
+            >>> instances = sc.get_instances()
+            >>> operator = instances[0].get_operators()[0]
+            >>> input_port = operator.get_input_ports()[0]
+            >>> metrics = input_port.get_metrics(name='*temperatureSensor*')
         """
         return self._get_elements(self.metrics, 'metrics', Metric, name=name)
 
@@ -898,16 +944,18 @@ class PE(_ResourceElement):
             dir (str): a valid directory in which to save the file. Defaults to the current directory.
 
         Returns:
-            str: the path to the created file.
+            str: the path to the created file, or None if retrieving a job's logs is not supported in the version of streams to which the job is submitted.
 
         .. versionadded:: 1.9
         """
-        logger.debug("Retrieving PE trace: " + self.applicationTrace)
+        if hasattr(self, "applicationTrace") and self.applicationTrace is not None:
+            logger.debug("Retrieving PE trace: " + self.applicationTrace)
+            if not filename:
+                filename = _file_name('pe', self.id, '.trace')
+            return self.rest_client._retrieve_file(self.applicationTrace, filename, dir, 'text/plain')
 
-        if not filename:
-            filename = _file_name('pe', self.id, '.trace')
- 
-        return self.rest_client._retrieve_file(self.applicationTrace, filename, dir, 'text/plain')
+        else:
+            return None
 
     def retrieve_console_log(self, filename=None, dir=None):
         """Retrieves the application console log (standard out and error)
@@ -920,16 +968,18 @@ class PE(_ResourceElement):
             dir (str): a valid directory in which to save the file. Defaults to the current directory.
 
         Returns:
-            str: the path to the created file.
+            str: the path to the created file, or None if retrieving a job's logs is not supported in the version of streams to which the job is submitted.
 
         .. versionadded:: 1.9
-        """
-        logger.debug("Retrieving PE console log: " + self.consoleLog)
+        """        
+        if hasattr(self, "consoleLog") and self.consoleLog is not None:
+            logger.debug("Retrieving PE console log: " + self.consoleLog)
+            if not filename:
+                filename = _file_name('pe', self.id, '.stdouterr')
+            return self.rest_client._retrieve_file(self.consoleLog, filename, dir, 'text/plain')
 
-        if not filename:
-            filename = _file_name('pe', self.id, '.stdouterr')
- 
-        return self.rest_client._retrieve_file(self.consoleLog, filename, dir, 'text/plain')
+        else:
+            return None
 
     def get_metrics(self, name=None):
         """Get metrics for this PE.
@@ -940,6 +990,14 @@ class PE(_ResourceElement):
 
         Returns:
              list(Metric): List of matching metrics.
+        
+        Retrieving a list of metrics whose name contains the string "temperatureSensor" could be performed as followed
+        Example:
+            >>> from streamsx import rest
+            >>> sc = rest.StreamingAnalyticsConnection()
+            >>> instances = sc.get_instances()
+            >>> pe = instances.get_pes()[0]
+            >>> metrics = pe.get_metrics(name='*temperatureSensor*')
 
         .. versionadded:: 1.9
         """
@@ -1136,6 +1194,14 @@ class Instance(_ResourceElement):
 
         Returns:
             list(Operator): List of Operator elements associated with this instance.
+
+        Retrieving a list of operators whose name contains the string "temperatureSensor" could be performed as followed
+        Example:
+            >>> from streamsx import rest
+            >>> sc = rest.StreamingAnalyticsConnection()
+            >>> instance = sc.get_instances()[0]
+            >>> operators = instance.get_operators(name="*temperatureSensor*")
+
         .versionsince:: 1.9 `name` parameter
         """
         return self._get_elements(self.operators, 'operators', Operator, name=name)
@@ -1173,6 +1239,13 @@ class Instance(_ResourceElement):
 
         Returns:
             list(View): List of views matching `name`.
+
+        Retrieving a list of views whose name contains the string "temperatureSensor" could be performed as followed
+        Example:
+            >>> from streamsx import rest
+            >>> sc = rest.StreamingAnalyticsConnection()
+            >>> instance = sc.get_instances()[0]
+            >>> view = instance.get_views(name="*temperatureSensor*")
         """
         return self._get_elements(self.views, 'views', View, name=name)
 
@@ -1201,6 +1274,13 @@ class Instance(_ResourceElement):
 
         Returns:
             list(Job): A list of jobs matching the given `name`.
+        
+        Retrieving a list of jobs whose name contains the string "temperatureSensor" could be performed as followed
+        Example:
+            >>> from streamsx import rest
+            >>> sc = rest.StreamingAnalyticsConnection()
+            >>> instance = sc.get_instances()[0]
+            >>> jobs = instance.get_jobs(name="*temperatureApplication*")
         """
         return self._get_elements(self.jobs, 'jobs', Job, None, name)
 
@@ -1439,7 +1519,7 @@ def get_view_obj(_view, rc):
     return None
 
 class StreamingAnalyticsService(object):
-    """Streaming Analytics service running on IBM Bluemix cloud platform.
+    """Streaming Analytics service running on IBM Cloud.
     """
     def __init__(self, rest_client, credentials):
         # If IAM, create a V2 delegator, if basic http auth, create a V1 delegator

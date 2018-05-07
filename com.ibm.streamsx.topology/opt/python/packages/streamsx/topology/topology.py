@@ -29,7 +29,7 @@ After being declared, a Topology is submitted to be compiled into
 a Streams application bundle (sab file) and then executed.
 The sab file is a self contained bundle that can be executed
 in a distributed Streams instance either using the Streaming
-Analytics service on IBM Bluemix cloud platform or an on-premise
+Analytics service on IBM Cloud or an on-premise
 IBM Streams installation.
 
 The compilation step invokes the Streams compiler to produce a bundle.
@@ -53,7 +53,7 @@ across the resources available in the instance.
 .. note::
     `Topology` represents a declaration of a streaming application that
     will be executed by a Streams instance as a `job`, either using the Streaming Analytics
-    service on IBM Bluemix cloud platform or an on-premises distributed instance.
+    service on IBM Cloud or an on-premises distributed instance.
     `Topology` does not represent a running application, so an instance of `Stream` class does not contain
     the tuples, it is only a declaration of a stream.
 
@@ -386,6 +386,7 @@ class Topology(object):
         self.exclude_packages.update(streamsx.topology._deppkgs._DEP_PACKAGES)
         
         self.graph = streamsx.topology.graph.SPLGraph(self, name, namespace)
+        self._submission_parameters = dict()
 
     @property
     def name(self):
@@ -606,6 +607,64 @@ class Topology(object):
         self._pip_packages.append(str(requirement))
         pr = pkg_resources.Requirement.parse(requirement) 
         self.exclude_packages.add(pr.project_name)
+
+    def create_submission_parameter(self, name, default=None, type_=None):
+        """ Create a submission parameter.
+
+        A submission parameter is a handle for a value that
+        is not defined until topology submission time.  Submission
+        parameters enable the creation of reusable topology bundles.
+ 
+        A submission parameter has a `name`. The name must be unique
+        within the topology.
+
+        The returned parameter is a `callable`.
+        Prior to submitting the topology, while constructing the topology,
+        invoking it returns ``None``.
+ 
+        After the topology is submitted, invoking the parameter
+        within the executing topology returns the actual submission time value
+        (or the default value if it was not set at submission time).
+
+        Submission parameters may be used within functional logic. e.g.::
+
+            threshold = topology.create_submission_parameter('threshold', 100);
+
+            # s is some stream of integers
+            s = ...
+            s = s.filter(lambda v : v > threshold())
+
+        .. note::
+            The parameter (value returned from this method) is only
+            supported within a lambda expression or a callable
+            that is not a function.
+
+        The default type of a submission parameter's value is a `str`
+        (`unicode` on Python 2.7). When a `default` is specified
+        the type of the value matches the type of the default.
+
+        If `default` is not set, then the type can be set with `type_`.
+
+        The types supported are ``str``, ``int``, ``float`` and ``bool``.
+
+        Topology submission behavior when a submission parameter 
+        lacking a default value is created and a value is not provided at
+        submission time is defined by the underlying topology execution runtime.
+           * Submission fails for contexts ``DISTRIBUTED``, ``STANDALONE``, and ``STREAMING_ANALYTICS_SERVICE``.
+
+        Args:
+            name(str): Name for submission parameter.
+            default: Default parameter when submission parameter is not set.
+            type_: Type of parameter value when default is not set. Supported values are `str`, `int`, `float` and `bool`.
+
+        .. versionadded:: 1.9
+        """
+        
+        if name in self._submission_parameters:
+            raise ValueError("Submission parameter {} already defined.".format(name))
+        sp = streamsx.topology.runtime._SubmissionParam(name, default, type_)
+        self._submission_parameters[name] = sp
+        return sp
 
     def _prepare(self):
         """Prepare object prior to SPL generation."""

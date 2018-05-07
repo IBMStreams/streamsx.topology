@@ -27,6 +27,7 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
 import com.ibm.streamsx.topology.internal.logic.LogicUtils;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 /**
  * Utilities for SPL attribute schema streams.
@@ -187,8 +188,7 @@ public class SPLStreams {
 
         Attribute attribute = stream.getSchema().getAttribute(attributeName);
         if (attribute == null) {
-            throw new IllegalArgumentException("Atttribute " + attributeName + " not present in SPL schema "
-                   + stream.getSchema().getLanguageType());
+            throw new IllegalArgumentException(Messages.getString("SPL_ATTRIBUTE_NOT_PRESENT", attributeName, stream.getSchema().getLanguageType()));
         }
         final int attributeIndex = attribute.getIndex();
         return stream.convert(new Function<Tuple, String>() {
