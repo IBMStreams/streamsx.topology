@@ -8,6 +8,9 @@ import itertools
 import tempfile
 import os
 
+if sys.version_info.major == 3:
+    unicode = str
+
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 

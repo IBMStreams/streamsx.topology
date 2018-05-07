@@ -147,6 +147,7 @@ For example, invoking an SPL `Beacon` operator using an output function to set t
 from future.builtins import *
 
 import streamsx.topology.exop as exop
+import streamsx.topology.runtime
 import streamsx._streams._placement as _placement
 
 class Invoke(_placement._Placement, exop.ExtensionOperator):
@@ -407,6 +408,9 @@ class Expression(object):
             # Clone the expression to allow it to
             # be used in multiple contexts
             return Expression(value._type, value._value)
+        if hasattr(value, 'spl_json'):
+            sj = value.spl_json()
+            return Expression(sj['type'], sj['value'])
         return Expression('splexpr', value)
 
     def spl_json(self):

@@ -78,6 +78,22 @@
         <type>rstring</type>
         <cardinality>1</cardinality>
       </parameter>
+      <parameter>
+        <name>submissionParamNames</name>
+        <description>Submission parameter names</description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>rstring</type>
+      </parameter>
+      <parameter>
+        <name>submissionParamValues</name>
+        <description>Submission parameter values</description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>AttributeFree</expressionMode>
+        <type>rstring</type>
+      </parameter>
     </parameters>
     <inputPorts>
       <inputPortSet>
