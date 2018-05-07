@@ -70,8 +70,10 @@ void MY_OPERATOR::process(uint32_t idx)
 
     { // start lock
       SplpyGIL lock;
-      if (pyReturnVar != NULL)
+      if (pyReturnVar != NULL) {
           Py_DECREF(pyReturnVar);
+          pyReturnVar = NULL;
+      }
 
       pyReturnVar = PyObject_CallObject(funcop_->callable(), NULL);
 
