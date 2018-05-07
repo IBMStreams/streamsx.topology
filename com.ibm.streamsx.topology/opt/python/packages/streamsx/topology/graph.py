@@ -121,7 +121,7 @@ class SPLGraph(object):
         return self._requested_name(name)
 
 
-    def addOperator(self, kind, function=None, name=None, params=None, sl=None):
+    def addOperator(self, kind, function=None, name=None, params=None, sl=None, stateful=False):
         if(params is None):
             params = {}
 
@@ -133,7 +133,7 @@ class SPLGraph(object):
         else:
             if function is not None:
                 params['toolkitDir'] = streamsx.topology.param.toolkit_dir()
-            op = _SPLInvocation(len(self.operators), kind, function, name, params, self, sl=sl)
+            op = _SPLInvocation(len(self.operators), kind, function, name, params, self, sl=sl, stateful=stateful)
         self.operators.append(op)
         if not function is None:
             dep_instance = function
@@ -211,7 +211,7 @@ class SPLGraph(object):
         
 class _SPLInvocation(object):
 
-    def __init__(self, index, kind, function, name, params, graph, view_configs = None, sl=None):
+    def __init__(self, index, kind, function, name, params, graph, view_configs = None, sl=None, stateful = False):
         self.index = index
         self.kind = kind
         self.function = function
@@ -219,7 +219,7 @@ class _SPLInvocation(object):
         self.category = None
         self.params = {}
         self.setParameters(params)
-        self._addOperatorFunction(self.function)
+        self._addOperatorFunction(self.function, stateful)
         self.graph = graph
         self.viewable = True
         self.sl = sl
@@ -343,7 +343,7 @@ class _SPLInvocation(object):
             self._ex_op._generate(_op)
         return _op
 
-    def _addOperatorFunction(self, function):
+    def _addOperatorFunction(self, function, stateful=False):
         if (function is None):
             return None
         if not hasattr(function, "__call__"):
