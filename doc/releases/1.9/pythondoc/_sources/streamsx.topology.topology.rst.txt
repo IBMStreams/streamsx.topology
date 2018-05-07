@@ -22,6 +22,7 @@ streamsx\.topology\.topology
       Routing
       Sink
       Stream
+      SubscribeConnection
       Topology
       View
       Window

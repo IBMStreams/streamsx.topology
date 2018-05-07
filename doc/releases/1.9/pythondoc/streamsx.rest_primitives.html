@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.rest_primitives &mdash; streamsx 1.9.2b documentation</title>
+  <title>streamsx.rest_primitives &mdash; streamsx 1.9.3b documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.9.2b documentation" href="index.html"/>
+    <link rel="top" title="streamsx 1.9.3b documentation" href="index.html"/>
         <link rel="next" title="streamsx-runner" href="scripts/runner.html"/>
         <link rel="prev" title="streamsx.rest" href="streamsx.rest.html"/> 
 
@@ -269,7 +269,7 @@
 <td>Contains information for a tag that is defined in a Streams domain</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#streamsx.rest_primitives.StreamingAnalyticsService" title="streamsx.rest_primitives.StreamingAnalyticsService"><code class="xref py py-obj docutils literal"><span class="pre">StreamingAnalyticsService</span></code></a></td>
-<td>Streaming Analytics service running on IBM Bluemix cloud platform.</td>
+<td>Streaming Analytics service running on IBM Cloud.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#streamsx.rest_primitives.View" title="streamsx.rest_primitives.View"><code class="xref py py-obj docutils literal"><span class="pre">View</span></code></a></td>
 <td>The View resource element provides access to information about a view that is associated with an active job, and exposes methods to retrieve data from the view’s stream.</td>
@@ -909,6 +909,14 @@ regular expression. If <cite>name</cite> is not supplied, then all jobs are retu
 </tr>
 </tbody>
 </table>
+<p>Retrieving a list of jobs whose name contains the string “temperatureSensor” could be performed as followed
+.. rubric:: Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instance</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jobs</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">get_jobs</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;*temperatureApplication*&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -944,6 +952,14 @@ regular expression. If <cite>name</cite> is not supplied, then all jobs are retu
 </tr>
 </tbody>
 </table>
+<p>Retrieving a list of operators whose name contains the string “temperatureSensor” could be performed as followed
+.. rubric:: Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instance</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">operators</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">get_operators</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;*temperatureSensor*&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>.versionsince:: 1.9 <cite>name</cite> parameter</p>
 </dd></dl>
 
@@ -1041,6 +1057,14 @@ a stream of JSON tuples that are subscribed to by SPL and Java applications.</p>
 </tr>
 </tbody>
 </table>
+<p>Retrieving a list of views whose name contains the string “temperatureSensor” could be performed as followed
+.. rubric:: Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instance</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">view</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">get_views</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;*temperatureSensor*&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -1219,6 +1243,15 @@ a stream of JSON tuples that are subscribed to by SPL and Java applications.</p>
 </tr>
 </tbody>
 </table>
+<p>Retrieving a list of operators whose name contains the string “temperatureSensor” could be performed as followed
+.. rubric:: Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">job</span> <span class="o">=</span> <span class="n">instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_jobs</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">operators</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">get_operators</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;*temperatureSensor*&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>.versionsince:: 1.9 <cite>name</cite> parameter</p>
 </dd></dl>
 
@@ -1292,6 +1325,15 @@ a stream of JSON tuples that are subscribed to by SPL and Java applications.</p>
 </tr>
 </tbody>
 </table>
+<p>Retrieving a list of views that contain the string “temperatureSensor” could be performed as followed
+.. rubric:: Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">job</span> <span class="o">=</span> <span class="n">instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_jobs</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">views</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">get_views</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;*temperatureSensor*&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -1316,7 +1358,7 @@ and saves them as a compressed tar file.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the path to the created tar file.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the path to the created tar file, or None if retrieving a job’s logs is not supported in the version of streams to which the job is submitted.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str</p>
@@ -1491,6 +1533,15 @@ managed resource <code class="docutils literal"><span class="pre">None</span></c
 </tr>
 </tbody>
 </table>
+<p>Retrieving a list of metrics whose name contains the string “temperatureSensor” could be performed as followed
+.. rubric:: Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">operator</span> <span class="o">=</span> <span class="n">instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_operators</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metrics</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">get_metrics</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;*temperatureSensor*&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -1621,6 +1672,16 @@ ports.</p>
 </tr>
 </tbody>
 </table>
+<p>Retrieving a list of metrics whose name contains the string “temperatureSensor” could be performed as followed
+.. rubric:: Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">operator</span> <span class="o">=</span> <span class="n">instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_operators</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">input_port</span> <span class="o">=</span> <span class="n">operator</span><span class="o">.</span><span class="n">get_input_ports</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metrics</span> <span class="o">=</span> <span class="n">input_port</span><span class="o">.</span><span class="n">get_metrics</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;*temperatureSensor*&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -1687,6 +1748,16 @@ for a specific operator.</p>
 </tr>
 </tbody>
 </table>
+<p>Retrieving a list of metrics whose name contains the string “temperatureSensor” could be performed as followed
+.. rubric:: Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exportedstreams</span> <span class="o">=</span> <span class="n">instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_exported_streams</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">operatoroutputport</span> <span class="o">=</span> <span class="n">exportedstreams</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_operator_output_port</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">operatoroutputport</span><span class="o">.</span><span class="n">get_metrics</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;*temperatureSensor*&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 <div class="versionadded">
 <p><span class="versionmodified">New in version 1.9.</span></p>
 </div>
@@ -1843,6 +1914,15 @@ managed resource <code class="docutils literal"><span class="pre">None</span></c
 </tr>
 </tbody>
 </table>
+<p>Retrieving a list of metrics whose name contains the string “temperatureSensor” could be performed as followed
+.. rubric:: Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pe</span> <span class="o">=</span> <span class="n">instances</span><span class="o">.</span><span class="n">get_pes</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metrics</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">get_metrics</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;*temperatureSensor*&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 <div class="versionadded">
 <p><span class="versionmodified">New in version 1.9.</span></p>
 </div>
@@ -1870,7 +1950,7 @@ files for this PE and saves them as a plain text file.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the path to the created file.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the path to the created file, or None if retrieving a job’s logs is not supported in the version of streams to which the job is submitted.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str</p>
@@ -1899,7 +1979,7 @@ and saves them as a plain text file.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the path to the created file.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the path to the created file, or None if retrieving a job’s logs is not supported in the version of streams to which the job is submitted.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str</p>
@@ -2085,7 +2165,7 @@ properties.</p>
 <dl class="class">
 <dt id="streamsx.rest_primitives.StreamingAnalyticsService">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">StreamingAnalyticsService</code><span class="sig-paren">(</span><em>rest_client</em>, <em>credentials</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.StreamingAnalyticsService" title="Permalink to this definition">¶</a></dt>
-<dd><p>Streaming Analytics service running on IBM Bluemix cloud platform.</p>
+<dd><p>Streaming Analytics service running on IBM Cloud.</p>
 <dl class="method">
 <dt id="streamsx.rest_primitives.StreamingAnalyticsService.cancel_job">
 <code class="descname">cancel_job</code><span class="sig-paren">(</span><em>job_id=None</em>, <em>job_name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.StreamingAnalyticsService.cancel_job" title="Permalink to this definition">¶</a></dt>
@@ -2449,7 +2529,7 @@ created.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.9.2b',
+            VERSION:'1.9.3b',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.topology &mdash; streamsx 1.9.2b documentation</title>
+  <title>streamsx.topology.topology &mdash; streamsx 1.9.3b documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.9.2b documentation" href="index.html"/>
+    <link rel="top" title="streamsx 1.9.3b documentation" href="index.html"/>
         <link rel="next" title="streamsx.topology.context" href="streamsx.topology.context.html"/>
         <link rel="prev" title="streamsx.topology" href="streamsx.topology.html"/> 
 
@@ -213,7 +213,7 @@ tuples (data items) on those streams.</p>
 a Streams application bundle (sab file) and then executed.
 The sab file is a self contained bundle that can be executed
 in a distributed Streams instance either using the Streaming
-Analytics service on IBM Bluemix cloud platform or an on-premise
+Analytics service on IBM Cloud or an on-premise
 IBM Streams installation.</p>
 <p>The compilation step invokes the Streams compiler to produce a bundle.
 This effectively, from a Python point of view, produces a runnable
@@ -234,7 +234,7 @@ across the resources available in the instance.</p>
 <p class="first admonition-title">Note</p>
 <p class="last"><cite>Topology</cite> represents a declaration of a streaming application that
 will be executed by a Streams instance as a <cite>job</cite>, either using the Streaming Analytics
-service on IBM Bluemix cloud platform or an on-premises distributed instance.
+service on IBM Cloud or an on-premises distributed instance.
 <cite>Topology</cite> does not represent a running application, so an instance of <cite>Stream</cite> class does not contain
 the tuples, it is only a declaration of a stream.</p>
 </div>
@@ -376,13 +376,16 @@ open source and third-party SPL toolkits.</p>
 <tr class="row-even"><td><a class="reference internal" href="#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><code class="xref py py-obj docutils literal"><span class="pre">Stream</span></code></a></td>
 <td>The Stream class is the primary abstraction within a streaming application.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#streamsx.topology.topology.Topology" title="streamsx.topology.topology.Topology"><code class="xref py py-obj docutils literal"><span class="pre">Topology</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="#streamsx.topology.topology.SubscribeConnection" title="streamsx.topology.topology.SubscribeConnection"><code class="xref py py-obj docutils literal"><span class="pre">SubscribeConnection</span></code></a></td>
+<td>Connection mode between a subscriber and matching publishers.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#streamsx.topology.topology.Topology" title="streamsx.topology.topology.Topology"><code class="xref py py-obj docutils literal"><span class="pre">Topology</span></code></a></td>
 <td>The Topology class is used to define data sources, and is passed as a parameter when submitting an application.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#streamsx.topology.topology.View" title="streamsx.topology.topology.View"><code class="xref py py-obj docutils literal"><span class="pre">View</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="#streamsx.topology.topology.View" title="streamsx.topology.topology.View"><code class="xref py py-obj docutils literal"><span class="pre">View</span></code></a></td>
 <td>The View class provides access to a continuously updated sampling of data items on a Stream after submission.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#streamsx.topology.topology.Window" title="streamsx.topology.topology.Window"><code class="xref py py-obj docutils literal"><span class="pre">Window</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="#streamsx.topology.topology.Window" title="streamsx.topology.topology.Window"><code class="xref py py-obj docutils literal"><span class="pre">Window</span></code></a></td>
 <td>Declaration of a window of tuples on a <cite>Stream</cite>.</td>
 </tr>
 </tbody>
@@ -1353,6 +1356,42 @@ topology is submitted.</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="streamsx.topology.topology.SubscribeConnection">
+<em class="property">class </em><code class="descclassname">streamsx.topology.topology.</code><code class="descname">SubscribeConnection</code><a class="headerlink" href="#streamsx.topology.topology.SubscribeConnection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connection mode between a subscriber and matching publishers.</p>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.9.</span></p>
+</div>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#streamsx.topology.topology.Topology.subscribe" title="streamsx.topology.topology.Topology.subscribe"><code class="xref py py-meth docutils literal"><span class="pre">subscribe()</span></code></a></p>
+</div>
+<dl class="attribute">
+<dt id="streamsx.topology.topology.SubscribeConnection.Buffered">
+<code class="descname">Buffered</code><em class="property"> = 1</em><a class="headerlink" href="#streamsx.topology.topology.SubscribeConnection.Buffered" title="Permalink to this definition">¶</a></dt>
+<dd><p>Buffered connection between a subscriber and and matching publishers.</p>
+<p>With a buffered connection tuples from publishers are placed in
+a single queue owned by the subscriber. This allows a slower
+subscriber to handle brief spikes in tuples from publishers.</p>
+<p>A subscriber can fully isolate itself from matching publishers
+by adding a <code class="xref py py-class docutils literal"><span class="pre">CongestionPolicy</span></code> that drops tuples
+when the queue is full. In this case when the subscriber is
+not able to keep up with the tuple rate from all matching subscribers
+it will have a minimal effect on matching publishers.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.topology.SubscribeConnection.Direct">
+<code class="descname">Direct</code><em class="property"> = 0</em><a class="headerlink" href="#streamsx.topology.topology.SubscribeConnection.Direct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Direct connection between a subscriber and and matching publishers.</p>
+<p>When connected directly a slow subscriber will cause back-pressure
+against the publishers, forcing them to slow tuple processing to
+the slowest publisher.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="streamsx.topology.topology.Topology">
 <em class="property">class </em><code class="descclassname">streamsx.topology.topology.</code><code class="descname">Topology</code><span class="sig-paren">(</span><em>name=None</em>, <em>namespace=None</em>, <em>files=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Topology" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Topology class is used to define data sources, and is passed as a parameter when submitting an application.
@@ -1479,6 +1518,66 @@ the Streaming Analytics service.</p>
 </div>
 </dd></dl>
 
+<dl class="method">
+<dt id="streamsx.topology.topology.Topology.create_submission_parameter">
+<code class="descname">create_submission_parameter</code><span class="sig-paren">(</span><em>name</em>, <em>default=None</em>, <em>type_=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Topology.create_submission_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a submission parameter.</p>
+<p>A submission parameter is a handle for a value that
+is not defined until topology submission time.  Submission
+parameters enable the creation of reusable topology bundles.</p>
+<p>A submission parameter has a <cite>name</cite>. The name must be unique
+within the topology.</p>
+<p>The returned parameter is a <cite>callable</cite>.
+Prior to submitting the topology, while constructing the topology,
+invoking it returns <code class="docutils literal"><span class="pre">None</span></code>.</p>
+<p>After the topology is submitted, invoking the parameter
+within the executing topology returns the actual submission time value
+(or the default value if it was not set at submission time).</p>
+<p>Submission parameters may be used within functional logic. e.g.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">threshold</span> <span class="o">=</span> <span class="n">topology</span><span class="o">.</span><span class="n">create_submission_parameter</span><span class="p">(</span><span class="s1">&#39;threshold&#39;</span><span class="p">,</span> <span class="mi">100</span><span class="p">);</span>
+
+<span class="c1"># s is some stream of integers</span>
+<span class="n">s</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">v</span> <span class="p">:</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The parameter (value returned from this method) is only
+supported within a lambda expression or a callable
+that is not a function.</p>
+</div>
+<p>The default type of a submission parameter’s value is a <cite>str</cite>
+(<cite>unicode</cite> on Python 2.7). When a <cite>default</cite> is specified
+the type of the value matches the type of the default.</p>
+<p>If <cite>default</cite> is not set, then the type can be set with <cite>type_</cite>.</p>
+<p>The types supported are <code class="docutils literal"><span class="pre">str</span></code>, <code class="docutils literal"><span class="pre">int</span></code>, <code class="docutils literal"><span class="pre">float</span></code> and <code class="docutils literal"><span class="pre">bool</span></code>.</p>
+<p>Topology submission behavior when a submission parameter
+lacking a default value is created and a value is not provided at
+submission time is defined by the underlying topology execution runtime.</p>
+<blockquote>
+<div><ul class="simple">
+<li>Submission fails for contexts <code class="docutils literal"><span class="pre">DISTRIBUTED</span></code>, <code class="docutils literal"><span class="pre">STANDALONE</span></code>, and <code class="docutils literal"><span class="pre">STREAMING_ANALYTICS_SERVICE</span></code>.</li>
+</ul>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<em>str</em>) – Name for submission parameter.</li>
+<li><strong>default</strong> – Default parameter when submission parameter is not set.</li>
+<li><strong>type</strong> – Type of parameter value when default is not set. Supported values are <cite>str</cite>, <cite>int</cite>, <cite>float</cite> and <cite>bool</cite>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.9.</span></p>
+</div>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="streamsx.topology.topology.Topology.name">
 <code class="descname">name</code><a class="headerlink" href="#streamsx.topology.topology.Topology.name" title="Permalink to this definition">¶</a></dt>
@@ -1557,7 +1656,7 @@ Processing continues with calls to <code class="docutils literal"><span class="p
 
 <dl class="method">
 <dt id="streamsx.topology.topology.Topology.subscribe">
-<code class="descname">subscribe</code><span class="sig-paren">(</span><em>topic</em>, <em>schema=&lt;CommonSchema.Python: &lt;streamsx.topology.schema.StreamSchema object&gt;&gt;</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Topology.subscribe" title="Permalink to this definition">¶</a></dt>
+<code class="descname">subscribe</code><span class="sig-paren">(</span><em>topic</em>, <em>schema=&lt;CommonSchema.Python: &lt;streamsx.topology.schema.StreamSchema object&gt;&gt;</em>, <em>name=None</em>, <em>connect=None</em>, <em>buffer_capacity=None</em>, <em>buffer_full_policy=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Topology.subscribe" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subscribe to a topic published by other Streams applications.
 A Streams application may publish a stream to allow other
 Streams applications to subscribe to it. A subscriber matches a
@@ -1573,6 +1672,9 @@ supported by Streams.</p>
 Each tuple on the returned stream will be a Python string object.
 A Streams application publishing JSON streams may have been implemented in any programming language
 supported by Streams.</p>
+<p>Subscribers can ensure they do not slow down matching publishers
+by using a buffered connection with a buffer full policy
+that drops tuples.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1581,6 +1683,9 @@ supported by Streams.</p>
 <li><strong>topic</strong> (<em>str</em>) – Topic to subscribe to.</li>
 <li><strong>schema</strong> (<a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.StreamSchema" title="streamsx.topology.schema.StreamSchema"><em>StreamSchema</em></a>) – schema to subscribe to.</li>
 <li><strong>name</strong> (<em>str</em>) – Name of the subscribed stream, defaults to a generated name.</li>
+<li><strong>connect</strong> (<a class="reference internal" href="#streamsx.topology.topology.SubscribeConnection" title="streamsx.topology.topology.SubscribeConnection"><em>SubscribeConnection</em></a>) – How subscriber will be connected to matching publishers. Defaults to <a class="reference internal" href="#streamsx.topology.topology.SubscribeConnection.Direct" title="streamsx.topology.topology.SubscribeConnection.Direct"><code class="xref py py-const docutils literal"><span class="pre">Direct</span></code></a> connection.</li>
+<li><strong>buffer_capacity</strong> (<em>int</em>) – Buffer capacity in tuples when <cite>connect</cite> is set to <a class="reference internal" href="#streamsx.topology.topology.SubscribeConnection.Buffered" title="streamsx.topology.topology.SubscribeConnection.Buffered"><code class="xref py py-const docutils literal"><span class="pre">Buffered</span></code></a>. Defaults to 1000 when <cite>connect</cite> is <cite>Buffered</cite>. Ignored when <cite>connect</cite> is <cite>None</cite> or <cite>Direct</cite>.</li>
+<li><strong>buffer_full_policy</strong> (<em>CongestionPolicy</em>) – Policy when a pulished tuple arrives and the subscriber’s buffer is full. Defaults to <cite>Wait</cite> when <cite>connect</cite> is <cite>Buffered</cite>. Ignored when <cite>connect</cite> is <cite>None</cite> or <cite>Direct</cite>.</li>
 </ul>
 </td>
 </tr>
@@ -1592,6 +1697,9 @@ supported by Streams.</p>
 </tr>
 </tbody>
 </table>
+<div class="versionchanged">
+<p><span class="versionmodified">Changed in version 1.9: </span><cite>connect</cite>, <cite>buffer_capacity</cite> and <cite>buffer_full_policy</cite> parameters added.</p>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -1779,7 +1887,7 @@ duration of the window.</td>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.9.2b',
+            VERSION:'1.9.3b',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
