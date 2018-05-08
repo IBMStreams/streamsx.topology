@@ -54,7 +54,7 @@ class SplpyOp {
 #endif
       }
 
-      ~SplpyOp()
+      virtual ~SplpyOp()
       {
         {
           SplpyGIL lock;
