@@ -670,12 +670,10 @@ class Topology(object):
 
     @property
     def checkpoint_period(self) -> datetime.timedelta:
-        print ("checkpoint_period getter: " , self._checkpoint_period)
         return self._checkpoint_period
 
     @checkpoint_period.setter
     def checkpoint_period(self, period: datetime.timedelta) -> None:
-        print ("checkpoint period setter: ", period)
         self._checkpoint_period = period
 
     def _prepare(self):

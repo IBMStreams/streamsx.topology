@@ -219,33 +219,16 @@ class SPLGraph(object):
             params[name] = sp.spl_json()
 
     def _add_checkpoint(self, _graph):
-        print ("add checkpoint")
         # TODO there seems to be a minimum value below which
         # the period gets set to zero.  What is that value?
         # should it be an error or warning if the value is 
         # not exceeded?  Is there also a max?
 
-        # TODO can we simplify this an just always do microseconds?
         if self.topology.checkpoint_period is not None:
-            print ("checkpoint_period truthy")
             seconds = self.topology.checkpoint_period.total_seconds()
-            micros = self.topology.checkpoint_period.microseconds
-            period = None
-            # if micros == 0:
-            #     if seconds == 0:
-            #         pass # exception?
-            #     else:
-            #         # Second resolution
-            #         period = seconds
-            #         unit = "SECONDS"
-            # else:
-            # Microsecond resolution
             period = seconds * 1000 * 1000
             unit = "MICROSECONDS"
-        else:
-            print ("checkpoint period not truthy")
 
-        if period is not None:
             _graph["config"]["checkpoint"] = {}
             _graph["config"]["checkpoint"]["mode"] = "periodic"
             _graph["config"]["checkpoint"]["period"] = period

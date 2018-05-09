@@ -21,15 +21,6 @@ class SubscribeConnection(Enum):
     Direct = 0
     Buffered = 1
 
-class TimeUnit(Enum):
-    DAYS = 0
-    HOURS = 1
-    MICROSECONDS = 2
-    MILLISECONDS = 3
-    MINUTES = 4
-    NANOSECONDS = 5
-    SECONDS = 6
-
 
 class Topology(object):
     def __init__(self, name: str=None, namespace: str=None, files: Any=None) -> None: ...
