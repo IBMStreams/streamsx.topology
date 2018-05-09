@@ -102,7 +102,6 @@ class SplpyFuncOp : public SplpyOp {
 #if __SPLPY_EC_MODULE_OK
              setopc();
 #endif
-	     setupStateHandler(appCallable);
           }
 
           PyObject *extraArg = NULL;
@@ -113,9 +112,21 @@ class SplpyFuncOp : public SplpyOp {
 
           setCallable(SplpyGeneral::callFunction(
                "streamsx.topology.runtime", wrapfn, appCallable, extraArg));
+
+	  setupStateHandler();
       }
 
-      void setupStateHandler(PyObject * callable) {
+      void setupStateHandler() {
+	// If the value of the pyStateful param is true, create and register
+	// a state handler interface instance.
+	SPL::boolean stateful = static_cast<SPL::boolean>(op()->getParameterValues("pyStateful")[0]->getValue());
+	if (stateful) {
+	  std::cout << "stateful" << std::endl;
+	}
+	else {
+	  std::cout << "not stateful" << std::endl;
+	}
+	
 	/*
 	// Test whether callable is a class
 	Py_INCREF(callable);
