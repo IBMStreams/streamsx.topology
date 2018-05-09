@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 import sys
+from datetime import timedelta
 from streamsx.topology.topology import Topology
 import streamsx.topology.context
 
@@ -28,6 +29,8 @@ def main():
     """
     
     topo = Topology("echo")
+    topo.checkpoint_period = timedelta(seconds=1)
+
     # The command line arguments (sys.argv) excluding the application
     # name will be used at runtime as the contents of the echo stream.
     echo = topo.source(sys.argv[1:])
@@ -39,7 +42,7 @@ def main():
     # stream that is printed to stdout
     
     # execute the topology by submitting to a standalone context
-    streamsx.topology.context.submit("STANDALONE", topo)
+    streamsx.topology.context.submit("TOOLKIT", topo)
      
 if __name__ == '__main__':
     main()

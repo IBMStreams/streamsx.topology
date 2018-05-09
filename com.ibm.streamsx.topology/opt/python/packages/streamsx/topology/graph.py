@@ -167,6 +167,7 @@ class SPLGraph(object):
         _graph['config']['spl'] = {}
         _graph['config']['spl']['toolkits'] = self._spl_toolkits
         self._add_parameters(_graph)
+        self._add_checkpoint(_graph)
         if self._colocate_tag_mapping:
             _graph['config']['colocateTagMapping'] = self._colocate_tag_mapping
         _ops = []
@@ -216,6 +217,40 @@ class SPLGraph(object):
         _graph['parameters'] = params
         for name, sp in sps.items():
             params[name] = sp.spl_json()
+
+    def _add_checkpoint(self, _graph):
+        print ("add checkpoint")
+        # TODO there seems to be a minimum value below which
+        # the period gets set to zero.  What is that value?
+        # should it be an error or warning if the value is 
+        # not exceeded?  Is there also a max?
+
+        # TODO can we simplify this an just always do microseconds?
+        if self.topology.checkpoint_period is not None:
+            print ("checkpoint_period truthy")
+            seconds = self.topology.checkpoint_period.total_seconds()
+            micros = self.topology.checkpoint_period.microseconds
+            period = None
+            # if micros == 0:
+            #     if seconds == 0:
+            #         pass # exception?
+            #     else:
+            #         # Second resolution
+            #         period = seconds
+            #         unit = "SECONDS"
+            # else:
+            # Microsecond resolution
+            period = seconds * 1000 * 1000
+            unit = "MICROSECONDS"
+        else:
+            print ("checkpoint period not truthy")
+
+        if period is not None:
+            _graph["config"]["checkpoint"] = {}
+            _graph["config"]["checkpoint"]["mode"] = "periodic"
+            _graph["config"]["checkpoint"]["period"] = period
+            _graph["config"]["checkpoint"]["unit"] = unit
+
 
     def getLastOperator(self):
         return self.operators[len(self.operators) -1]      

@@ -21,6 +21,15 @@ class SubscribeConnection(Enum):
     Direct = 0
     Buffered = 1
 
+class TimeUnit(Enum):
+    DAYS = 0
+    HOURS = 1
+    MICROSECONDS = 2
+    MILLISECONDS = 3
+    MINUTES = 4
+    NANOSECONDS = 5
+    SECONDS = 6
+
 
 class Topology(object):
     def __init__(self, name: str=None, namespace: str=None, files: Any=None) -> None: ...
@@ -31,6 +40,7 @@ class Topology(object):
     def add_file_dependency(self, path: str, location: str) -> str: ...
     def add_pip_package(self, requirement: str) -> None: ...
     def create_submission_parameter(self, name:str, default=None, type_=None): ...
+    def checkpoint_period(self, period: int, uints: TimeUnit) -> None: ...
 
 
 class Stream(object):

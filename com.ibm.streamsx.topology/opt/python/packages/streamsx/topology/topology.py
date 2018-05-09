@@ -668,6 +668,16 @@ class Topology(object):
         self._submission_parameters[name] = sp
         return sp
 
+    @property
+    def checkpoint_period(self) -> datetime.timedelta:
+        print ("checkpoint_period getter: " , self._checkpoint_period)
+        return self._checkpoint_period
+
+    @checkpoint_period.setter
+    def checkpoint_period(self, period: datetime.timedelta) -> None:
+        print ("checkpoint period setter: ", period)
+        self._checkpoint_period = period
+
     def _prepare(self):
         """Prepare object prior to SPL generation."""
         self._generate_requirements()

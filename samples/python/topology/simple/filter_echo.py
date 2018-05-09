@@ -2,6 +2,7 @@
 # Copyright IBM Corp. 2016
 from __future__ import print_function
 import sys
+#from streamsx.topology.topology import Topology, TimeUnit
 from streamsx.topology.topology import Topology
 import streamsx.topology.context
 
@@ -26,6 +27,7 @@ def main():
     """
     
     topo = Topology("filter_echo")
+#    topo.checkpoint_period(1, TimeUnit.MINUTES)
     source = topo.source(sys.argv[1:])
     
     # Declare a stream that will execute functional logic
@@ -38,7 +40,7 @@ def main():
     
     filtered.print()
     
-    streamsx.topology.context.submit("STANDALONE", topo)
+    streamsx.topology.context.submit("TOOLKIT", topo)
      
 if __name__ == '__main__':
     main()

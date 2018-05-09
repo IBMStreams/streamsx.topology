@@ -131,6 +131,17 @@ def _splpy_all_ports_ready(callable_):
             raise
     return None
 
+# def _splpy_is_class(maybe_class):
+#     return isinstance(maybe_class, type)
+
+# def _splpy_is_iterable(maybe_iterable):
+#     try:
+#         print(type(maybe_iterable))
+#         iter(maybe_iterable)
+#         return True
+#     except TypeError:
+#         return False;
+
 _Timestamp = collections.namedtuple('Timestamp', ['seconds', 'nanoseconds', 'machine_id'])
 
 # Used by Timestamp.__reduce__ to avoid dill

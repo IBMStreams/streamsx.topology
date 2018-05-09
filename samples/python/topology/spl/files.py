@@ -38,7 +38,7 @@ def main():
     lines.print()
     
     # Now execute the topology by submitting to a standalone context.
-    streamsx.topology.context.submit("STANDALONE", topo)
+    streamsx.topology.context.submit("TOOLKIT", topo)
      
 if __name__ == '__main__':
     main()

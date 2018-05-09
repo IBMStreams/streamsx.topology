@@ -35,7 +35,7 @@ class SplpyFuncOp : public SplpyOp {
          loadAndWrapCallable(wrapfn);
       }
 
-      ~SplpyFuncOp() {
+      virtual ~SplpyFuncOp() {
       }
 
 
@@ -102,6 +102,7 @@ class SplpyFuncOp : public SplpyOp {
 #if __SPLPY_EC_MODULE_OK
              setopc();
 #endif
+	     setupStateHandler(appCallable);
           }
 
           PyObject *extraArg = NULL;
@@ -112,6 +113,29 @@ class SplpyFuncOp : public SplpyOp {
 
           setCallable(SplpyGeneral::callFunction(
                "streamsx.topology.runtime", wrapfn, appCallable, extraArg));
+      }
+
+      void setupStateHandler(PyObject * callable) {
+	/*
+	// Test whether callable is a class
+	Py_INCREF(callable);
+	PyObject * rv = SplpyGeneral::callFunction("streamsx.spl.runtime", "_splpy_is_class", callable, static_cast<PyObject*>(0));
+	if (PyObject_IsTrue(rv)) {
+	  std::cout << "A class" << std::endl;
+	}
+	else {
+	  std::cout << "Not a class" << std::endl;
+	}
+	Py_DECREF(rv);
+	rv = SplpyGeneral::callFunction("streamsx.spl.runtime", "_splpy_is_iterable", callable, static_cast<PyObject*>(0));
+	if (PyObject_IsTrue(rv)) {
+	  std::cout << "An iterable" << std::endl;
+	}
+	else {
+	  std::cout << "Not an iterable" << std::endl;
+	}
+	Py_DECREF(rv);
+	*/
       }
 
 
