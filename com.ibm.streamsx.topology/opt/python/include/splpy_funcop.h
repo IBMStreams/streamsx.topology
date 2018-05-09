@@ -35,7 +35,7 @@ class SplpyFuncOp : public SplpyOp {
          loadAndWrapCallable(wrapfn);
       }
 
-      ~SplpyFuncOp() {
+      virtual ~SplpyFuncOp() {
       }
 
 
