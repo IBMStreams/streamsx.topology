@@ -54,11 +54,11 @@ a constant,
 an input attribute (passed using the `attribute` method of the invocation),
 or an arbitrary SPL expression (passed as a string or an :py:class:`Expression`).
 Because a string is interpreted as an SPL expression, a string constant
-should be passed by enclosing the quoted string in outer quotes
-(for example, '"a string constant"').
+should be passed by enclosing the quoted string in outer quotes (for example, '"a string constant"').
 
 SPL is strictly typed so when passing a constant as a parameter value the
 value may need to be strongly typed.
+
     * ``bool``, ``int``, ``float`` and ``str`` values map automatically to SPL `boolean`, `int32`, `float64` and `rstring` respectively.
     * ``Enum`` values map to an operator custom literal using the symbolic name of the value. For custom literals only the symbolic name needs to match a value expected by the operator, the class name and other values are arbitrary.
     * The module :py:mod:`streamsx.spl.types` provides functions to create typed SPL expressions from values.
