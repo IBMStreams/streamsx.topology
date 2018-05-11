@@ -91,6 +91,7 @@ Environments
 .. toctree::
 
    service.rst
+   pysetup.rst
 
 
 Indices and tables
