@@ -635,12 +635,15 @@ class ConfigParams(object):
         * Path to a local file containing a JSON representation of the VCAP services information.
         * Dictionary containing the VCAP services information.
 
+    .. seealso:: :ref:`sas-vcap`
     """
     SERVICE_NAME = 'topology.service.name'
     """Streaming Analytics service name.
 
     Selects the specific Streaming Analytics service from VCAP service definitions
     defined by the the environment variable **VCAP_SERVICES** or the key :py:const:`VCAP_SERVICES` in the `submit` config.
+
+    .. seealso:: :ref:`sas-service-name`
     """
     FORCE_REMOTE_BUILD = 'topology.forceRemoteBuild'
     """Force a remote build of the application.
@@ -666,6 +669,8 @@ class ConfigParams(object):
         * A JSON object (`dict`) of the form: ``{ "type": "streaming-analytics", "name": "service name", "credentials": {...} }`` with the `service credentials` as the value of the ``credentials`` key.
 
     This key takes precedence over :py:const:`VCAP_SERVICES` and :py:const:`SERVICE_NAME`.
+
+    .. seealso:: :ref:`sas-service-def`
     """
 
 
