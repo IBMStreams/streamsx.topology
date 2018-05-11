@@ -32,6 +32,7 @@ the service instance.
 In addtion `StreamingAnalyticsConnection` extends from :py:class:`StreamsConnection` and thus provides access to the Streams REST API for the service instance.
 
 .. seealso::
+    :ref:`sas-main`
     `IBM Streams REST API overview <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.0/com.ibm.streams.restapi.doc/doc/restapis.html>`_
         Reference documentation for the Streams REST API.
     `Streaming Analytics REST API <https://console.ng.bluemix.net/apidocs/220-streaming-analytics?&language=node#introduction>`_
@@ -212,6 +213,8 @@ class StreamingAnalyticsConnection(StreamsConnection):
         >>> sc = StreamingAnalyticsConnection(service_name='Streaming-Analytics')
         >>> print(sc.get_streaming_analytics().get_instance_status())
         {'plan': 'Standard', 'state': 'STARTED', 'enabled': True, 'status': 'running'}
+
+    .. seealso: :ref:`sas-access`
     """
     def __init__(self, vcap_services=None, service_name=None):
         self.service_name = service_name or os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME')

@@ -84,6 +84,13 @@ The `streamsx` package provides a number of command line scripts.
    scripts/runner.rst
    scripts/extract.rst
 
+****
+****
+
+.. toctree::
+
+   service.rst
+
 
 Indices and tables
 ==================
