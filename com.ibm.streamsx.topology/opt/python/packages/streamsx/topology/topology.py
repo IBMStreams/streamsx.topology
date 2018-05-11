@@ -5,8 +5,9 @@
 """
 Streaming application definition.
 
+********
 Overview
-########
+********
 
 IBM Streams is an advanced analytic platform that allows user-developed
 applications to quickly ingest, analyze and correlate information as it
@@ -19,8 +20,9 @@ that can be executed using IBM Streams, including the processing
 being distributed across multiple computing resources
 (hosts or machines) for scalability.
 
+********
 Topology
-########
+********
 
 A :py:class:`Topology` declares a graph of *streams* and *operations* against
 tuples (data items) on those streams.
@@ -57,8 +59,9 @@ across the resources available in the instance.
     `Topology` does not represent a running application, so an instance of `Stream` class does not contain
     the tuples, it is only a declaration of a stream.
 
+******
 Stream
-######
+******
 
 A :py:class:`Stream` can be an infinite sequence of tuples, such as a stream for a traffic flow sensor.
 Alternatively, a stream can be finite, such as a stream that is created from the contents of a file.
@@ -73,8 +76,9 @@ The schema for a Python Topology is either:
 * :py:const:`~streamsx.topology.schema.CommonSchema.Json` - Each tuple is a Python dict that can be expressed as a JSON object.
 * Structured - A stream that has a structured schema of a ordered list of attributes, with each attribute having a fixed type (e.g. float64 or int32) and a name. The schema of a structured stream is defined using :py:const:`~streamsx.topology.schema.StreamSchema`.
 
+*****************
 Stream processing
-#################
+*****************
 
 Callables
 =========
@@ -182,8 +186,9 @@ open source and third-party SPL toolkits.
 
 See :py:mod:`streamsx.spl.op`
 
+***************
 Module contents
-###############
+***************
 
 """
 
@@ -650,6 +655,7 @@ class Topology(object):
         Topology submission behavior when a submission parameter 
         lacking a default value is created and a value is not provided at
         submission time is defined by the underlying topology execution runtime.
+
            * Submission fails for contexts ``DISTRIBUTED``, ``STANDALONE``, and ``STREAMING_ANALYTICS_SERVICE``.
 
         Args:
