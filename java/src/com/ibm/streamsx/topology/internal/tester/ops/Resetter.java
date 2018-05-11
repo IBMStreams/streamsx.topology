@@ -34,6 +34,7 @@ import com.ibm.streams.operator.model.PrimitiveOperator;
 /**
  * Initiates consistent region resets through ConsistentRegionMXBean.reset API.
  *
+ * Internal operator exposed through the testing apis.
  */
 @PrimitiveOperator(namespace="com.ibm.streamsx.topology.testing.consistent")
 public class Resetter extends AbstractOperator implements Controllable {
