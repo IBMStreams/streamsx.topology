@@ -70,6 +70,10 @@ The application is submitted as source (except ``--bundle``)  and compiled into
 a Streams application bundle (``sab`` file) using the build service before
 being submitted as a running job to the service instance.
 
+.. seealso:: :ref:`sas-access`
+
+.. _runner-python-apps:
+
 Python applications
 ===================
 
@@ -112,6 +116,8 @@ it is always submitted with the same job name `SensorIngester`.
 The function must be accessible from the current Python path
 (typically through environment variable ``PYTHONPATH``).
 
+.. _runner-spl-apps:
+
 SPL applications
 ================
 
@@ -132,6 +138,8 @@ where ``$HOME/app/alerters`` is the location of the SPL application toolkit cont
     Use of the default namespace for a main composite is not
     recommended as it increases the chance of a name clash with
     another SPL toolkit.
+
+.. _runner-sab:
 
 Streams application bundles
 ===========================
