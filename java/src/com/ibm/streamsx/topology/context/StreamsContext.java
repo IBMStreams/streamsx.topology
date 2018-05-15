@@ -69,7 +69,7 @@ public interface StreamsContext<T> {
          * Submission of the topology produces an Streams application bundle.
          * <P>
          * A bundle ({@code .sab} file) can be submitted to a Streaming Analytics
-         * service running on IBM Bluemix using:
+         * service running on IBM Cloud using:
          * <UL>
          * <LI> Streaming Analytics Console</LI>
          * <LI> Streaming Analytics REST API </LI>
@@ -212,7 +212,7 @@ public interface StreamsContext<T> {
         /**
          * The topology is submitted to a Streams instance running
          * in Streaming Analytics service on
-         * <a href="http://www.ibm.com/Bluemix" target="_blank">IBM Bluemix</a>
+         * <a href="http://www.ibm.com/Bluemix" target="_blank">IBM Cloud</a>
          * cloud platform.
          * 
          * <P>
@@ -225,7 +225,7 @@ public interface StreamsContext<T> {
         /**
          * The topology is submitted to a Streams instance running
          * in Streaming Analytics service on
-         * <a href="http://www.ibm.com/Bluemix" target="_blank">IBM Bluemix</a>
+         * <a href="http://www.ibm.com/Bluemix" target="_blank">IBM Cloud</a>
          * cloud platform.
          * <P>
          * The returned type for the {@code submit} calls is

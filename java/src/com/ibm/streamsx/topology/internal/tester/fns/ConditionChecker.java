@@ -44,7 +44,7 @@ public abstract class ConditionChecker<T> implements Consumer<T>, Initializable 
      * fail is persistent so that if the PE does restart we maintain
      * at best effort that we've already seen a failure.
      */
-    private transient AtomicBoolean failSinceStart = new AtomicBoolean();
+    private transient AtomicBoolean failSinceStart;
     
     public ConditionChecker(String name) {
         this.name = name;
@@ -52,6 +52,8 @@ public abstract class ConditionChecker<T> implements Consumer<T>, Initializable 
     
     @Override
     public void initialize(FunctionContext functionContext) throws Exception {
+        
+        failSinceStart = new AtomicBoolean();
        
         functionContext.createCustomMetric(metricName("valid", name),
                 "Condition: " + name + " is valid", "gauge",

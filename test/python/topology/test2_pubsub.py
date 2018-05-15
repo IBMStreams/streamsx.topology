@@ -13,6 +13,7 @@ import streamsx.topology.context
 from streamsx.topology.schema import StreamSchema as StSc
 from streamsx.topology.schema import CommonSchema as CmnSc
 import streamsx.spl.op as op
+import streamsx.types
 
 import uuid
 
@@ -72,6 +73,64 @@ class TestPubSub(unittest.TestCase):
         self.tester = Tester(topo)
         self.tester.local_check = self._check_topics
         self.tester.tuple_count(s, 100, exact=False)
+        self.tester.test(self.test_ctxtype, self.test_config)
+
+    def _check_buffer(self):
+        job = self.tester.submission_result.job
+        seen_sub = False
+        seen_qs = False
+        for op in job.get_operators():
+            if op.operatorKind == 'spl.relational::Filter':
+                seen_sub = True
+                ip = op.get_input_ports()[0]
+                for m in ip.get_metrics():
+                    if m.name == 'queueSize':
+                        seen_qs = True
+                        self.assertEqual(self._buf_size, m.value)
+
+        self.assertTrue(seen_sub)
+        self.assertTrue(seen_qs)
+
+    def test_subscribe_direct_explicit(self):
+        topic = ''.join(random.choice('0123456789abcdef') for x in range(20))
+        topo = Topology()
+        s = topo.subscribe(topic=topic, connect=SubscribeConnection.Direct)
+        self._buf_size = 0
+
+        self.tester = Tester(topo)
+        self.tester.local_check = self._check_buffer
+        self.tester.test(self.test_ctxtype, self.test_config)
+
+    def test_subscribe_buffered(self):
+        topic = ''.join(random.choice('0123456789abcdef') for x in range(20))
+        topo = Topology()
+        s = topo.subscribe(topic=topic, connect=SubscribeConnection.Buffered)
+        self._buf_size = 1000
+
+        self.tester = Tester(topo)
+        self.tester.local_check = self._check_buffer
+        self.tester.test(self.test_ctxtype, self.test_config)
+
+    def test_subscribe_buffered_capacity(self):
+        topic = ''.join(random.choice('0123456789abcdef') for x in range(20))
+        topo = Topology()
+        N = 789
+        s = topo.subscribe(topic=topic, connect=SubscribeConnection.Buffered, buffer_capacity=N)
+        self._buf_size = N
+
+        self.tester = Tester(topo)
+        self.tester.local_check = self._check_buffer
+        self.tester.test(self.test_ctxtype, self.test_config)
+
+    def test_subscribe_buffered_drop(self):
+        topic = ''.join(random.choice('0123456789abcdef') for x in range(20))
+        topo = Topology()
+        N = 563
+        s = topo.subscribe(topic=topic, connect=SubscribeConnection.Buffered, buffer_capacity=N, buffer_full_policy = streamsx.types.CongestionPolicy.DropLast)
+        self._buf_size = N
+
+        self.tester = Tester(topo)
+        self.tester.local_check = self._check_buffer
         self.tester.test(self.test_ctxtype, self.test_config)
 
 @unittest.skipIf(not test_vers.tester_supported() , "tester not supported")

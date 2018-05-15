@@ -481,7 +481,7 @@ class ContextTypes(object):
 
         The main context types result in a running application and are:
 
-            * :py:const:`STREAMING_ANALYTICS_SERVICE` - Application is submitted to a Streaming Analytics service running on IBM Bluemix cloud platform.
+            * :py:const:`STREAMING_ANALYTICS_SERVICE` - Application is submitted to a Streaming Analytics service running on IBM Cloud.
             * :py:const:`DISTRIBUTED` - Application is submitted to an IBM Streams instance.
             * :py:const:`STANDALONE` - Application is executed as a local process, IBM Streams `standalone` application. Typically this is used during development or testing.
 
@@ -491,7 +491,7 @@ class ContextTypes(object):
         times to services or instances, each resulting in a unique job (running application).
     """
     STREAMING_ANALYTICS_SERVICE = 'STREAMING_ANALYTICS_SERVICE'
-    """Submission to Streaming Analytics service running on IBM Bluemix cloud platform.
+    """Submission to Streaming Analytics service running on IBM Cloud.
 
     The `Topology` is compiled and the resultant Streams application bundle
     (sab file) is submitted for execution on the Streaming Analytics service.
@@ -635,12 +635,15 @@ class ConfigParams(object):
         * Path to a local file containing a JSON representation of the VCAP services information.
         * Dictionary containing the VCAP services information.
 
+    .. seealso:: :ref:`sas-vcap`
     """
     SERVICE_NAME = 'topology.service.name'
     """Streaming Analytics service name.
 
     Selects the specific Streaming Analytics service from VCAP service definitions
     defined by the the environment variable **VCAP_SERVICES** or the key :py:const:`VCAP_SERVICES` in the `submit` config.
+
+    .. seealso:: :ref:`sas-service-name`
     """
     FORCE_REMOTE_BUILD = 'topology.forceRemoteBuild'
     """Force a remote build of the application.
@@ -666,6 +669,8 @@ class ConfigParams(object):
         * A JSON object (`dict`) of the form: ``{ "type": "streaming-analytics", "name": "service name", "credentials": {...} }`` with the `service credentials` as the value of the ``credentials`` key.
 
     This key takes precedence over :py:const:`VCAP_SERVICES` and :py:const:`SERVICE_NAME`.
+
+    .. seealso:: :ref:`sas-service-def`
     """
 
 

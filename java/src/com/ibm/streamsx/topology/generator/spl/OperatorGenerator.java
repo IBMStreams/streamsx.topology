@@ -46,6 +46,7 @@ import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.ParamsInfo;
 import com.ibm.streamsx.topology.internal.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.spi.builder.SourceInfo;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 class OperatorGenerator {
 
@@ -63,6 +64,7 @@ class OperatorGenerator {
         noteAnnotations(_op, sb);
         categoryAnnotation(_op, sb);
         parallelAnnotation(_op, sb);
+        lowLatencyAnnotation(_op, sb);
         viewAnnotation(_op, sb);
         consistentAnnotation(_op, sb);
         AutonomousRegions.autonomousAnnotation(_op, sb);
@@ -209,39 +211,67 @@ class OperatorGenerator {
         });
     }
 
+    private void lowLatencyAnnotation(JsonObject op, StringBuilder sb){
+        boolean lowLatencyOperator = jboolean(op, "lowLatency");
+        if(lowLatencyOperator){
+            sb.append("@threading(model=manual)\n");
+        }
+    }
+    
     private void parallelAnnotation(JsonObject op, StringBuilder sb) {
         boolean parallel = jboolean(op, "parallelOperator");
-
+        
         if (parallel) {
+            boolean partitioned = jboolean(op, "partitioned");
+            JsonObject parallelInfo = op.get("parallelInfo").getAsJsonObject();
+            
             sb.append("@parallel(width=");
-            JsonElement width = op.get("width");
+            JsonElement width = parallelInfo.get(OpProperties.WIDTH);
             if (width.isJsonPrimitive()) {
                 sb.append(width.getAsString());
             } else {
                 splValueSupportingSubmission(width.getAsJsonObject(), sb);
             }
-            String parallelInputPortName = jstring(op, "parallelInputPortName");
-            boolean partitioned = jboolean(op, "partitioned");
+      
             if (partitioned) {
+                sb.append(", partitionBy=[");
+                JsonArray partitionedPorts = array(parallelInfo, "partitionedPorts");
+                for(int i = 0; i < partitionedPorts.size(); i++){
+                    JsonObject partitionedPort = partitionedPorts.get(i).getAsJsonObject();
+                    
+                    if(i>0)
+                        sb.append(", ");
+                    
+                    sb.append("{port=");
+                    sb.append(getSPLCompatibleName(GsonUtilities.jstring(partitionedPort, "name")));
+                    sb.append(", attributes=[");
+                    JsonArray partitionKeys = partitionedPort.get("partitionedKeys").getAsJsonArray();
+                    for (int j = 0; j < partitionKeys.size(); j++) {
+                        if (j != 0)
+                            sb.append(", ");
+                        sb.append(partitionKeys.get(j).getAsString());
+                    }
+                    sb.append("]}");
+                }
                 
-                JsonArray partitionKeys = op.get("partitionedKeys").getAsJsonArray();
-
-                parallelInputPortName = getSPLCompatibleName(parallelInputPortName);
-                sb.append(", partitionBy=[{port=");
-                sb.append(parallelInputPortName);
-                sb.append(", attributes=[");
-                for (int i = 0; i < partitionKeys.size(); i++) {
+                sb.append("]"); 
+            }
+            
+            JsonArray broadcastPorts = parallelInfo.get("broadcastPorts").getAsJsonArray();
+            if(broadcastPorts.size() > 0){
+                sb.append(", broadcast=[");
+                for(int i = 0; i < broadcastPorts.size(); i++){
                     if (i != 0)
                         sb.append(", ");
-                    sb.append(partitionKeys.get(i).getAsString());
+                    sb.append(getSPLCompatibleName(broadcastPorts.get(i).getAsString()));
                 }
-                sb.append("]}]");
-            } else if ("BROADCAST".equals(jstring(op, PortProperties.ROUTING))) {
-                sb.append(", broadcast=[");
-                sb.append(parallelInputPortName);
                 sb.append("]");
+                
             }
-            sb.append(")\n");
+            
+       
+            sb.append(")");
+            sb.append("\n");
         }
     }
 
@@ -343,7 +373,6 @@ class OperatorGenerator {
     }
 
     static void operatorNameAndKind(JsonObject op, StringBuilder sb, boolean singlePortSingleName) {
-
         if (!singlePortSingleName) {
             String name = jstring(op, "name");
             name = getSPLCompatibleName(name);
@@ -427,7 +456,7 @@ class OperatorGenerator {
                 sb.append("tumbing,");
                 break;
             default:
-                throw new IllegalStateException("Internal error");
+                throw new IllegalStateException(Messages.getString("GENERATOR_INTERNAL_ERROR"));
             }
 
             appendWindowPolicy(jstring(window, "evictPolicy"), window.get("evictConfig"),

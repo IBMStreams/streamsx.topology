@@ -27,6 +27,7 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameterFactory;
 import com.ibm.streamsx.topology.internal.functional.SPLTypes;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 /**
  * JSON representation.
@@ -78,7 +79,7 @@ public class BOperatorInvocation extends BOperator {
     public void setParameter(String name, Object value) {
         
         if (value == null)
-            throw new IllegalStateException("NULL PARAM:" + name);
+            throw new IllegalStateException(Messages.getString("BUILDER_NULL_PARAM", name));
                 
         if (value instanceof SubmissionParameter) {
             JsonObject svp = SubmissionParameterFactory.asJSON((SubmissionParameter<?>) value);
@@ -97,7 +98,7 @@ public class BOperatorInvocation extends BOperator {
         if (value instanceof JsonObject) {
             JsonObject jo = ((JsonObject) value);
             if (!jo.has("type") || !jo.has("value"))
-                throw new IllegalArgumentException("Illegal JSON object " + jo);
+                throw new IllegalArgumentException(Messages.getString("BUILDER_ILLEGAL_JSON_OBJECT", jo));
             String type = jstring(jo, "type");
             if ("__spl_value".equals(type)) {
                 /*
@@ -175,12 +176,22 @@ public class BOperatorInvocation extends BOperator {
         } else if (value instanceof JsonElement) {
             assert jsonType != null;
         } else {
-            throw new IllegalArgumentException("Type for parameter " + name + " is not supported:" +  value.getClass());
+            throw new IllegalArgumentException(Messages.getString("BUILDER_TYPE_OF_PARAMER_NOT_SUPPORTED", name, value.getClass()));
         }
         
         JsonObject param = JParamTypes.create(jsonType, jsonValue);
         
         jparams.add(name, param);
+    }
+    
+    /**
+     * Get the raw value for a parameter for this operator invocation.
+     * @return Json representation of parameter or null if the parameter is not set.
+     */
+    public JsonObject getRawParameter(String name) {
+        if (jparams.has(name))
+            return jparams.getAsJsonObject(name);
+        return null;             
     }
 
     public BOutputPort addOutput(String schema) {

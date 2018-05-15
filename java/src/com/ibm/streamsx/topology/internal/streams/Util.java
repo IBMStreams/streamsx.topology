@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 public class Util {
     public static final String STREAMS_DOMAIN_ID = "STREAMS_DOMAIN_ID";
@@ -52,7 +53,7 @@ public class Util {
         }
         File f = new File(si, ".product");
         if (sicp == null || !f.exists())
-            throw new IllegalStateException(STREAMS_INSTALL+" "+installDir+" is not a Streams install directory.");
+            throw new IllegalStateException(Messages.getString("STREAMS_IS_NOT_A_STREAMS_INSTALL_DIRECTORY", STREAMS_INSTALL, installDir));
         return sicp;
     }
     
@@ -76,7 +77,7 @@ public class Util {
     public static String getenv(String name) {
         String s = System.getenv(name);
         if (s==null)
-            throw new IllegalStateException(name+" environment variable is not set.");
+            throw new IllegalStateException(Messages.getString("STREAMS_ENVIRONMENT_VARIABLE_IS_NOT_SET", name));
         return s;
     }
     
@@ -109,11 +110,9 @@ public class Util {
             Class<T> requiredClass) {
         Object val = map.get(key);
         if (val==null)
-            throw new IllegalArgumentException("config item "+key+" value is null");
+            throw new IllegalArgumentException(Messages.getString("STREAMS_CONFIG_ITEM_NULL", key));
         if (!requiredClass.isAssignableFrom(val.getClass())) {
-            throw new IllegalArgumentException("config item "+key
-                                        + " value is "+val.getClass()
-                                        + " but require instanceof "+requiredClass);
+            throw new IllegalArgumentException(Messages.getString("STREAMS_CONFIG_ITEM_REQUIRE", key, val.getClass(), requiredClass));
         }
         return requiredClass.cast(val);
     }

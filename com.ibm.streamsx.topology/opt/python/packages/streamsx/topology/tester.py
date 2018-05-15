@@ -176,14 +176,17 @@ class Tester(object):
         test is skipped.
 
         The Streams instance to use is defined by the environment variables:
+
          * ``STREAMS_ZKCONNECT`` - Zookeeper connection string (optional)
          * ``STREAMS_DOMAIN_ID`` - Domain identifier
          * ``STREAMS_INSTANCE_ID`` - Instance identifier
 
         The user used to submit and monitor the job is set by the
         optional environment variables:
-         * ``STREAMS_USERNAME - User name defaulting to `streamsadmin`.
-         * ``STREAMS_PASSWORD - User password defaulting to `passw0rd`.
+
+         * ``STREAMS_USERNAME`` - User name defaulting to `streamsadmin`.
+         * ``STREAMS_PASSWORD`` - User password defaulting to `passw0rd`.
+
         The defaults match the setup for testing on a IBM Streams Quick
         Start Edition (QSE) virtual machine.
 
@@ -217,7 +220,7 @@ class Tester(object):
     @staticmethod
     def setup_streaming_analytics(test, service_name=None, force_remote_build=False):
         """
-        Set up a unittest.TestCase to run tests using Streaming Analytics service on IBM Bluemix cloud platform.
+        Set up a unittest.TestCase to run tests using Streaming Analytics service on IBM Cloud.
 
         The service to use is defined by:
          * VCAP_SERVICES environment variable containing `streaming_analytics` entries.
@@ -617,9 +620,12 @@ class Tester(object):
 
     def _fetch_application_logs(self, ctxtype):
         # Fetch the logs if submitting to a Streaming Analytics Service
-        if stc.ContextTypes.STREAMING_ANALYTICS_SERVICE == ctxtype or stc.ContextTypes.ANALYTICS_SERVICE == ctxtype:
+        if stc.ContextTypes.STREAMING_ANALYTICS_SERVICE == ctxtype or stc.ContextTypes.ANALYTICS_SERVICE == ctxtype or stc.ContextTypes.DISTRIBUTED == ctxtype:
             application_logs = self.submission_result.job.retrieve_log_trace()
-            _logger.info("Application logs have been fetched to " + application_logs)
+            if application_logs is not None:
+                _logger.info("Application logs have been fetched to " + application_logs)
+            else:
+                _logger.warning("Fetching job application logs is not supported in this version of Streams.")
             return application_logs
 
     def _start_local_check(self):

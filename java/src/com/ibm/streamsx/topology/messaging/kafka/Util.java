@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 import com.ibm.streamsx.topology.TopologyElement;
 
@@ -47,7 +48,7 @@ public class Util {
                     dstDirName);
         }
         catch (IOException e) {
-            throw new IllegalStateException("Unable to create a properties file: " + e, e);
+            throw new IllegalStateException(Messages.getString("MESSAGING_KAFKA_UNABLE_TO_CREATE_FILE", e), e);
         }
     }
  

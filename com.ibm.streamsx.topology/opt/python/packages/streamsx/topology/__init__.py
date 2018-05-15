@@ -15,8 +15,7 @@ Streams can handle very high data throughput rates, millions of events or messag
 With this API Python developers can build streaming applications that can be executed using IBM Streams,
 including the processing being distributed across multiple computing resources (hosts or machines) for scalability.
 
-IBM Streams is also available on IBM Cloud through the
-IBM Streaming Analytics service.
+IBM Streams is also available on IBM Cloud through :ref:`sas-main`
 
 Creating Applications
 #####################

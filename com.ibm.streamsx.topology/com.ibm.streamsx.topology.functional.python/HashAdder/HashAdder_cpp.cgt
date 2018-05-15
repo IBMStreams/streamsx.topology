@@ -44,6 +44,7 @@ void MY_OPERATOR::prepareToShutdown()
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
+try {
 @include "../pyspltuple2value.cgt"
 
 <%if ($pystyle_fn eq 'dict' || $pystyle_fn eq 'tuple') {%>
@@ -61,6 +62,9 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 
   // submit tuple
   submit(otuple, 0);
+} catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+  SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+}
 }
 
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)

@@ -87,14 +87,14 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
   
   std::vector<OPort0Type> output_tuples; 
   
-  {
+  try {
     SplpyGIL lock;
 
     PyObject * pyIterator = streamsx::topology::pySplProcessTuple(funcop_->callable(), value);
 
     if (pyIterator == 0) {
-         throw SplpyGeneral::pythonException(
-               getParameterValues("pyName").at(0)->getValue().toString());
+         throw SplpyExceptionInfo::pythonError(
+               getParameterValues("pyName").at(0)->getValue().toString().c_str());
     }
     if (SplpyGeneral::isNone(pyIterator)) {
         Py_DECREF(pyIterator);
@@ -116,7 +116,10 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
       output_tuples.push_back(otuple);
     }
     Py_DECREF(pyIterator);
-  } // end lock
+  } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+    SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+  }
+
   
   // submit tuples
   for(int i = 0; i < output_tuples.size() && !getPE().getShutdownRequested(); i++) {

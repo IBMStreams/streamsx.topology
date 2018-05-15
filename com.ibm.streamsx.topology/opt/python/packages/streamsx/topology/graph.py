@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 from future.builtins import *
+from past.builtins import basestring
 
 import sys
 import uuid
@@ -27,7 +28,6 @@ import streamsx.topology.param
 import streamsx.spl.op
 from streamsx.topology.schema import CommonSchema, StreamSchema
 from streamsx.topology.schema import _stream_schema
-
 
 
 def _fix_namespace(ns):
@@ -122,7 +122,7 @@ class SPLGraph(object):
         return self._requested_name(name)
 
 
-    def addOperator(self, kind, function=None, name=None, params=None, sl=None):
+    def addOperator(self, kind, function=None, name=None, params=None, sl=None, stateful=False):
         if(params is None):
             params = {}
 
@@ -134,7 +134,7 @@ class SPLGraph(object):
         else:
             if function is not None:
                 params['toolkitDir'] = streamsx.topology.param.toolkit_dir()
-            op = _SPLInvocation(len(self.operators), kind, function, name, params, self, sl=sl)
+            op = _SPLInvocation(len(self.operators), kind, function, name, params, self, sl=sl, stateful=stateful)
         self.operators.append(op)
         if not function is None:
             dep_instance = function
@@ -157,6 +157,7 @@ class SPLGraph(object):
         return lgi
 
     def generateSPLGraph(self):
+        self.topology._prepare()
         _graph = {}
         _graph["name"] = self.name
         _graph["namespace"] = self.namespace
@@ -165,6 +166,7 @@ class SPLGraph(object):
         _graph["config"]["includes"] = []
         _graph['config']['spl'] = {}
         _graph['config']['spl']['toolkits'] = self._spl_toolkits
+        self._add_parameters(_graph)
         if self._colocate_tag_mapping:
             _graph['config']['colocateTagMapping'] = self._colocate_tag_mapping
         _ops = []
@@ -196,33 +198,47 @@ class SPLGraph(object):
          for location in fls:
              files = fls[location]
              for path in files:
-                 f = {}
-                 f["source"] = path
-                 f["target"] = location
-                 includes.append(f)
+                 if isinstance(path, basestring):
+                     # Simple file with a source to copy
+                     f = {}
+                     f['source'] = path
+                     f['target'] = location
+                     includes.append(f)
+                 else:
+                     # Arbitray file description
+                     includes.append(path)
+
+    def _add_parameters(self, _graph):
+        sps = self.topology._submission_parameters
+        if not sps:
+            return
+        params = dict()
+        _graph['parameters'] = params
+        for name, sp in sps.items():
+            params[name] = sp.spl_json()
 
     def getLastOperator(self):
         return self.operators[len(self.operators) -1]      
         
-    def printJSON(self):
-      print(json.dumps(self.generateSPLGraph(), sort_keys=True, indent=4, separators=(',', ': ')))
-
 class _SPLInvocation(object):
 
-    def __init__(self, index, kind, function, name, params, graph, view_configs = None, sl=None):
+    def __init__(self, index, kind, function, name, params, graph, view_configs = None, sl=None, stateful = False):
         self.index = index
         self.kind = kind
+        self.model = None
+        self.language = None
         self.function = function
         self.name = name
         self.category = None
         self.params = {}
         self.setParameters(params)
-        self._addOperatorFunction(self.function)
+        self._addOperatorFunction(self.function, stateful)
         self.graph = graph
         self.viewable = True
         self.sl = sl
         self._placement = {}
         self._start_op = False
+        self.config = {}
 
         if view_configs is None:
             self.view_configs = []
@@ -233,10 +249,10 @@ class _SPLInvocation(object):
         self.outputPorts = []
         self._layout_hints = {}
 
-    def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema= CommonSchema.Python,partitioned_keys=None):
+    def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema= CommonSchema.Python,partitioned_keys=None, routing = None):
         if name is None:
             name = self.name + "_OUT"+str(len(self.outputPorts))
-        oport = OPort(name, self, len(self.outputPorts), schema, oWidth, partitioned_keys)
+        oport = OPort(name, self, len(self.outputPorts), schema, oWidth, partitioned_keys, routing=routing)
         self.outputPorts.append(oport)
         if schema == CommonSchema.Python:
             self.viewable = False
@@ -284,6 +300,11 @@ class _SPLInvocation(object):
             _op["category"] = self.category
 
         _op["kind"] = self.kind
+        if self.model:
+            _op["model"] = self.model
+        if self.language:
+           _op["language"] = self.language
+
         _op["partitioned"] = False
         if self._start_op:
             _op["startOp"] = True
@@ -298,7 +319,7 @@ class _SPLInvocation(object):
             _inputs.append(input.getSPLInputPort())
         _op["outputs"] = _outputs
         _op["inputs"] = _inputs
-        _op["config"] = {}
+        _op["config"] = self.config
         _op["config"]["streamViewability"] = self.viewable
         _op["config"]["viewConfigs"] = self.view_configs
         if self._placement:
@@ -340,11 +361,14 @@ class _SPLInvocation(object):
             self._ex_op._generate(_op)
         return _op
 
-    def _addOperatorFunction(self, function):
+    def _addOperatorFunction(self, function, stateful=False):
         if (function is None):
             return None
         if not hasattr(function, "__call__"):
             raise "argument to _addOperatorFunction is not callable"
+
+        self.model = 'functional'
+        self.language = 'python'
 
         # Wrap a lambda as a callable class instance
         if isinstance(function, types.LambdaType) and function.__name__ == "<lambda>" :
@@ -362,6 +386,8 @@ class _SPLInvocation(object):
             self.params["pyName"] = function.__class__.__name__
             # dill format is binary; base64 encode so it is json serializable 
             self.params["pyCallable"] = base64.b64encode(dill.dumps(function)).decode("ascii")
+
+        self.params["pyStateful"] = bool(stateful)
 
         # note: functions in the __main__ module cannot be used as input to operations 
         # function.__module__ will be '__main__', so C++ operators cannot import the module
@@ -459,7 +485,7 @@ class IPort(object):
         return _iport
 
 class OPort(object):
-    def __init__(self, name, operator, index, schema, width=None, partitioned_keys=None):
+    def __init__(self, name, operator, index, schema, width=None, partitioned_keys=None, routing=None):
         self.name = name
         self.operator = operator
         self.schema = _stream_schema(schema)
@@ -467,6 +493,7 @@ class OPort(object):
         self.width = width
         self.partitioned = partitioned_keys is not None
         self.partitioned_keys = partitioned_keys
+        self.routing = routing
 
         self.inputPorts = []
 
@@ -482,12 +509,15 @@ class OPort(object):
         _oport["type"] = self.schema.schema()
         _oport["name"] = self.name
         _oport["connections"] = [port.name for port in self.inputPorts]
+        _oport["routing"] = self.routing
+
         if not self.width is None:
             _oport["width"] = int(self.width)
         if not self.partitioned is None:
             _oport["partitioned"] = self.partitioned
         if self.partitioned_keys is not None:
             _oport["partitionedKeys"] = self.partitioned_keys
+
         return _oport
 
 class Marker(_SPLInvocation):
@@ -513,7 +543,7 @@ class Marker(_SPLInvocation):
 
         _op["marker"] = True
         _op["model"] = "virtual"
-        _op["language"] = "virtual"
+        _op["language"] = "marker"
 
         _outputs = []
         _inputs = []

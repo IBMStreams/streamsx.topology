@@ -119,7 +119,7 @@ public class TopologySourceTest extends TestTopology {
             if (lastTime != null) {
                 assertTrue(time >= lastTime);
                 long diff = time - lastTime;
-                assertTrue("Source get time difference:" + diff, diff > 450);
+                assertTrue("Source get time difference:" + diff, diff > 400);
             }
             
             lastTime = time;
@@ -165,13 +165,15 @@ public class TopologySourceTest extends TestTopology {
             prevTuple = t;
             
             long time = Long.parseLong(t.substring(1));
-            assertTrue(time >= start);
+            assertTrue("Expected time:" + time + ">= start:" + start,
+                       time >= start);
             
             if (lastTime != null) {
-                assertTrue(time >= lastTime);
+                assertTrue("Expected time:" + time + ">= lastTime:" + lastTime,
+                            time >= lastTime);
                 if (t.startsWith("A")) {
                     long diff = time - lastTime;
-                    assertTrue(Long.toString(diff), diff > 450);
+                    assertTrue(Long.toString(diff), diff > 400);
                 }
             }
             

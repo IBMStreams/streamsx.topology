@@ -84,10 +84,10 @@ public class GraphUtilities {
         params.add(name, value);
     }
     
-    static Set<JsonObject> findOperatorByKind(BVirtualMarker virtualMarker,
+    static List<JsonObject> findOperatorByKind(BVirtualMarker virtualMarker,
             JsonObject graph) {
 
-        Set<JsonObject> kindOperators = new HashSet<>();
+        List<JsonObject> kindOperators = new ArrayList<>();
         
         operators(graph, op -> {
             if (virtualMarker.isThis(kind(op)))

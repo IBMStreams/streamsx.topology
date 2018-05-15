@@ -587,7 +587,7 @@ Any required packages and their dependencies are added to the `sab`
 if they are not globally installed. Thus there is an assumption that
 the compile machines and runtime machines have an identical set of
 globally installed packages. This is guaranteed for the Streaming
-Analytics service on the IBM Bluemix cloud platform.
+Analytics service on IBM Cloud.
 
 For example is there was a dependency on `numpy` and `geocoder` and
 `numpy` was globally installed then only `geocoder` would be installed
@@ -595,6 +595,14 @@ into the compliation's output directory (in addition to any dependencies
 `geocoder` has that were not globally installed).
 
 Packages are explictly requested for the whole toolkit or a specific module.
+
+Any packages the modules (under `opt/python/streams`) depend on when
+being loaded, must be accessible at operator extraction time. 
+For example, if the module `opt/python/streams/geo_ops.py` directly
+imports `geocoder` for use in its decorated functions or classes
+then since `geo_ops.py` is loaded to determine the SPL primitive
+operators, `geocoder` must be accessible to the Python environment
+running the extraction script.
 
 **Tookit wide requirements**
 
@@ -604,6 +612,10 @@ SPL compilation it will be passed to `pip` using the `-requirement` flag
 for installation of the required packages into the output directory.
 
 See: [https://pip.pypa.io/en/stable/user_guide/#requirements-files]
+
+When a toolkit with a `requirements.txt` is built using the build
+service then its required packages are installed remotely and made available
+to the extraction script.
 
 **Module specific requirements**
 

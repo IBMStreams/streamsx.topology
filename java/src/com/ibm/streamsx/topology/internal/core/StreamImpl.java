@@ -65,6 +65,7 @@ import com.ibm.streamsx.topology.internal.logic.LogicUtils;
 import com.ibm.streamsx.topology.internal.logic.Print;
 import com.ibm.streamsx.topology.internal.logic.RandomSample;
 import com.ibm.streamsx.topology.internal.logic.Throttle;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 import com.ibm.streamsx.topology.logic.Logic;
 import com.ibm.streamsx.topology.spi.builder.Invoker;
 
@@ -310,7 +311,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public TWindow<T,Object> last(long time, TimeUnit unit) {
         if (time <= 0)
-            throw new IllegalArgumentException("Window duration of zero is not allowed.");
+            throw new IllegalArgumentException(Messages.getString("CORE_WINDOW_DURATION_OF_ZERO"));
         return new WindowDefinition<T,Object>(this, time, unit);
     }
 
@@ -383,7 +384,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     
     private static void filtersNotAllowed(boolean allowFilter) {
     	if (allowFilter)
-    		throw new IllegalArgumentException("TStream tuple type cannot be published allowing filters.");
+    		throw new IllegalArgumentException(Messages.getString("CORE_TSTREAM_TUPLE_TYPE"));
     }
     
     @Override
@@ -433,7 +434,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                     "com.ibm.streamsx.topology.topic::PublishJava",
                     params);
         } else {
-            throw new IllegalStateException("A TStream with a tuple type that contains a generic or unknown type cannot be published");
+            throw new IllegalStateException(Messages.getString("CORE_TSTREAM_TUPLE_GENERIC_TYPE"));
         }
 
         SourceInfo.setSourceInfo(op, StreamImpl.class);
@@ -455,7 +456,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                 || topic.indexOf('#') != -1
                 )
         {
-            throw new IllegalArgumentException("Invalid topic name:" + topic);
+            throw new IllegalArgumentException(Messages.getString("CORE_INVALID_TOPIC_NAME", topic));
         }
     }
     
@@ -472,18 +473,17 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             return _parallel(width, routing, identity);
             
         case KEY_PARTITIONED:
-            throw new IllegalArgumentException(
-                    "Routing.KEY_PARTITIONED requires a key function. Use parallel(Supplier<Integer> width, Function<T,?> keyer).");
+            throw new IllegalArgumentException(Messages.getString("CORE_ROUTING_KEY_PARTITIONED"));
         default:
-            throw new UnsupportedOperationException("Unsupported routing:" + routing);            
-        }         
+            throw new UnsupportedOperationException(Messages.getString("CORE_UNSUPPORTED_ROUTING", routing));
+        }
     }
     
     @Override
     public TStream<T> parallel(Supplier<Integer> width,
             Function<T, ?> keyer) {
         if (keyer == null)
-            throw new IllegalArgumentException("keyer");
+            throw new IllegalArgumentException(Messages.getString("CORE_KEYER_IS_NULL"));
         return _parallel(width, Routing.KEY_PARTITIONED, keyer);
     }
     
@@ -497,14 +497,12 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         else if (width instanceof SubmissionParameter<?>)
             widthVal = ((SubmissionParameter<Integer>)width).getDefaultValue();
         else
-            throw new IllegalArgumentException(
-                    "Illegal width Supplier: width.get() returns null.");
+            throw new IllegalArgumentException(Messages.getString("CORE_ILLEGAL_WIDTH_NULL"));
         if (widthVal != null && widthVal <= 0)
-            throw new IllegalArgumentException(
-                    "The parallel width must be greater than or equal to 1.");
+            throw new IllegalArgumentException(Messages.getString("CORE_ILLEGAL_WIDTH_VALUE"));
 
         BOutput toBeParallelized = output();
-        boolean isPartitioned = false;
+        boolean isPartitioned = false;        
         if (keyer != null) {
 
             final ToIntFunction<T> hasher = new KeyFunctionHasher<>(keyer);
@@ -512,6 +510,17 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             BOperatorInvocation hashAdder = JavaFunctional.addFunctionalOperator(this,
                     "HashAdder",
                     HASH_ADDER_KIND, hasher);
+                      
+            if (isPlaceable()) {
+                BOperatorInvocation op = operator();
+                
+                JsonObject serializer = op.getRawParameter("outputSerializer");
+                if (serializer != null) {              
+                    hashAdder.setParameter("inputSerializer", serializer);
+                    JavaFunctional.copyDependencies(this, op, hashAdder);
+                }
+            }           
+            
             hashAdder.layout().addProperty("hidden", true);
             BInputPort ip = connectTo(hashAdder, true, null);
 
@@ -534,6 +543,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             hashRemover.setModel(MODEL_SPL, LANGUAGE_JAVA);
             
             hashRemover.layout().addProperty("hidden", true);
+            
             @SuppressWarnings("unused")
             BInputPort pip = parallelStream.connectTo(hashRemover, true, null);
             parallelOutput = hashRemover.addOutput(output._type());
@@ -558,8 +568,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     	output.operator().addConfig(OpProperties.PARALLEL, true);
     	output.operator().addConfig(OpProperties.WIDTH, width.get());
     	
-    	throw new UnsupportedOperationException("setParallel is not implemented.");
-    	//return this;
+    	return this;
     }
 
     @Override
@@ -603,7 +612,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     public TStream<T> isolate() {
         BOutput toBeIsolated = output();
         if (builder().isInLowLatencyRegion(toBeIsolated))
-                throw new IllegalStateException("isolate() is not allowed in a low latency region");
+                throw new IllegalStateException(Messages.getString("CORE_ISOLATE_IN_LOW_LATENCY_REGION"));
         BOutput isolatedOutput = builder().isolate(toBeIsolated); 
         return addMatchingStream(isolatedOutput);
     }
@@ -654,6 +663,9 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public TStream<T> endLowLatency() {
         BOutput toEndLowLatency = output();
+        if(toEndLowLatency instanceof BUnionOutput){
+            toEndLowLatency = builder().addPassThroughOperator(toEndLowLatency);
+        }
         BOutput endedLowLatency = builder().endLowLatency(toEndLowLatency);
         return addMatchingStream(endedLowLatency);
 
@@ -750,7 +762,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     public BOperatorInvocation operator() {
         if (isPlaceable())
             return ((BOutputPort) output()).operator();
-        throw new IllegalStateException("Illegal operation: Placeable.isPlaceable()==false");
+        throw new IllegalStateException(Messages.getString("CORE_ILLEGAL_OPERATION_PLACEABLE"));
     }
 
     @Override

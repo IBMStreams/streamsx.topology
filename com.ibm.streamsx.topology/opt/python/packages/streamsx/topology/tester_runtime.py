@@ -29,9 +29,6 @@ import unittest
 import logging
 import collections
 import threading
-from streamsx.rest import StreamsConnection
-from streamsx.rest import StreamingAnalyticsConnection
-from streamsx.topology.context import ConfigParams
 import time
 
 class Condition(object):

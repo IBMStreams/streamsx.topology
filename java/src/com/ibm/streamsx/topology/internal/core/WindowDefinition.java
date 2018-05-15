@@ -21,6 +21,7 @@ import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.internal.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.internal.logic.LogicUtils;
 import com.ibm.streamsx.topology.internal.logic.ObjectUtils;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 import com.ibm.streamsx.topology.logic.Identity;
 
 public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> {
@@ -108,7 +109,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
     public <A> TStream<A> aggregate(Function<List<T>, A> aggregator,
             long period, TimeUnit unit) {
         if (period == 0)
-            throw new IllegalArgumentException("Aggregate period cannot be zero.");
+            throw new IllegalArgumentException(Messages.getString("CORE_AGGREGATE_PERIOD_CANNOT_BE_ZERO"));
         
         java.lang.reflect.Type aggregateType = TypeDiscoverer.determineStreamType(aggregator, null);
         

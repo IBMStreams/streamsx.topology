@@ -142,6 +142,27 @@ class TestTypes(unittest.TestCase):
         tester.contents(values.stream, expected)
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_primitive_submit(self):
+        """Simple test of submitting values from a primitive operator."""
+        topo = Topology()
+        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+
+        values = op.Source(
+            topo,
+            kind="com.ibm.streamsx.topology.pytest.pytypes::PrimitiveReturnValues",
+            schema='tuple<rstring how, int32 val>')
+
+        expected = copy.deepcopy(MRV_EXPECTED)
+        # no assignment from input tuple so all automatically
+        # assigned values will be zero
+        for d in expected:
+            if d['val'] < 100:
+                d['val'] = 0
+
+        tester = Tester(topo)
+        tester.contents(values.stream, expected)
+        tester.test(self.test_ctxtype, self.test_config)
+
 MRV_EXPECTED = [
     {'how': 'astuple', 'val':823},
     {'how': 'aspartialtuple', 'val':2},

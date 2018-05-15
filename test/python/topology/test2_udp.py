@@ -50,7 +50,7 @@ def stupid_hash(v):
     return hash(v+89)
 
 def s2_hash(t):
-    return t['s2']
+    return hash(t['s2'])
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestUDP(unittest.TestCase):
@@ -61,6 +61,49 @@ class TestUDP(unittest.TestCase):
 
   def setUp(self):
       Tester.setup_standalone(self)
+
+  def test_TopologyNestedParallel(self):
+      topo = Topology("test_TopologySetParallel")
+      s = topo.source([1])
+      s = s.parallel(5, routing=Routing.BROADCAST)
+      s = s.parallel(5, routing=Routing.BROADCAST)
+      s = s.map(lambda x: x)
+      s = s.end_parallel()
+      s = s.end_parallel()
+      s.print()
+      
+      tester = Tester(topo)
+      tester.contents(s, [1 for i in range(25)])
+      tester.test(self.test_ctxtype, self.test_config)
+      print(tester.result)
+
+  def test_TopologySetParallel(self):
+      topo = Topology("test_TopologySetParallel")
+      s = topo.source([1])
+      s.set_parallel(5)
+      s = s.end_parallel()
+      
+      tester = Tester(topo)
+      tester.contents(s, [1,1,1,1,1])
+      tester.test(self.test_ctxtype, self.test_config)
+      print(tester.result)
+
+  def test_TopologyMultiSetParallel(self):
+      topo = Topology("test_TopologyMultiSetParallel")
+
+      s = topo.source([1])
+      s.set_parallel(5)
+
+      s2 = topo.source([2])
+      s2.set_parallel(5)
+
+      s = s.union({s2})
+      s = s.end_parallel()
+      
+      tester = Tester(topo)
+      tester.contents(s, [1,1,1,1,1,2,2,2,2,2], ordered=False)
+      tester.test(self.test_ctxtype, self.test_config)
+      print(tester.result)
 
   def test_TopologyParallelRoundRobin(self):
       for width in (1,3):

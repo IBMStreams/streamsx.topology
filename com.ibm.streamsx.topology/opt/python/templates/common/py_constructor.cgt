@@ -64,5 +64,8 @@
 <%
     }
 %>
+<% if (not $skip_set_callable) { %>
+     this->pyop_->setCallable(callable);
+<% } %>
 
     }

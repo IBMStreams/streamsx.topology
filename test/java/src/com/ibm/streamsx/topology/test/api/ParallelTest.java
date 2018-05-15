@@ -684,7 +684,6 @@ public class ParallelTest extends TestTopology {
     }
 
     @Test
-    @Ignore("Issue #131")
     public void testParallelPreFanOut() throws Exception {
         Topology topology = newTopology();
         
@@ -729,6 +728,7 @@ public class ParallelTest extends TestTopology {
     
     @Test
     public void testBroadcast() throws Exception {
+        checkUdpSupported();
         Topology topology = newTopology();
         
         TStream<String> strings = topology.strings("1", "7", "19", "23", "57");
