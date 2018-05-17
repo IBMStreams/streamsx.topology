@@ -5,8 +5,9 @@
 """
 Streaming application definition.
 
+********
 Overview
-########
+********
 
 IBM Streams is an advanced analytic platform that allows user-developed
 applications to quickly ingest, analyze and correlate information as it
@@ -19,8 +20,9 @@ that can be executed using IBM Streams, including the processing
 being distributed across multiple computing resources
 (hosts or machines) for scalability.
 
+********
 Topology
-########
+********
 
 A :py:class:`Topology` declares a graph of *streams* and *operations* against
 tuples (data items) on those streams.
@@ -57,8 +59,9 @@ across the resources available in the instance.
     `Topology` does not represent a running application, so an instance of `Stream` class does not contain
     the tuples, it is only a declaration of a stream.
 
+******
 Stream
-######
+******
 
 A :py:class:`Stream` can be an infinite sequence of tuples, such as a stream for a traffic flow sensor.
 Alternatively, a stream can be finite, such as a stream that is created from the contents of a file.
@@ -73,8 +76,9 @@ The schema for a Python Topology is either:
 * :py:const:`~streamsx.topology.schema.CommonSchema.Json` - Each tuple is a Python dict that can be expressed as a JSON object.
 * Structured - A stream that has a structured schema of a ordered list of attributes, with each attribute having a fixed type (e.g. float64 or int32) and a name. The schema of a structured stream is defined using :py:const:`~streamsx.topology.schema.StreamSchema`.
 
+*****************
 Stream processing
-#################
+*****************
 
 Callables
 =========
@@ -182,8 +186,9 @@ open source and third-party SPL toolkits.
 
 See :py:mod:`streamsx.spl.op`
 
+***************
 Module contents
-###############
+***************
 
 """
 
@@ -386,6 +391,7 @@ class Topology(object):
         self.exclude_packages.update(streamsx.topology._deppkgs._DEP_PACKAGES)
         
         self.graph = streamsx.topology.graph.SPLGraph(self, name, namespace)
+        self._submission_parameters = dict()
 
     @property
     def name(self):
@@ -453,7 +459,8 @@ class Topology(object):
 
         sl = _SourceLocation(_source_info(), "source")
         _name = self.graph._requested_name(_name, action='source', func=func)
-        op = self.graph.addOperator(self.opnamespace+"::Source", func, name=_name, sl=sl)
+        # source is always stateful
+        op = self.graph.addOperator(self.opnamespace+"::Source", func, name=_name, sl=sl, stateful=True)
         op._layout(kind='Source', name=_name, orig_name=name)
         oport = op.addOutputPort(name=_name)
         return Stream(self, oport)._make_placeable()
@@ -500,7 +507,8 @@ class Topology(object):
         """
         _name = self.graph._requested_name(name, 'subscribe')
         sl = _SourceLocation(_source_info(), "subscribe")
-        op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe", sl=sl, name=_name)
+        # subscribe is never stateful
+        op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe", sl=sl, name=_name, stateful=False)
         oport = op.addOutputPort(schema=schema, name=_name)
         params = {'topic': topic, 'streamType': schema}
         if connect is not None and connect != SubscribeConnection.Direct:
@@ -606,6 +614,65 @@ class Topology(object):
         self._pip_packages.append(str(requirement))
         pr = pkg_resources.Requirement.parse(requirement) 
         self.exclude_packages.add(pr.project_name)
+
+    def create_submission_parameter(self, name, default=None, type_=None):
+        """ Create a submission parameter.
+
+        A submission parameter is a handle for a value that
+        is not defined until topology submission time.  Submission
+        parameters enable the creation of reusable topology bundles.
+ 
+        A submission parameter has a `name`. The name must be unique
+        within the topology.
+
+        The returned parameter is a `callable`.
+        Prior to submitting the topology, while constructing the topology,
+        invoking it returns ``None``.
+ 
+        After the topology is submitted, invoking the parameter
+        within the executing topology returns the actual submission time value
+        (or the default value if it was not set at submission time).
+
+        Submission parameters may be used within functional logic. e.g.::
+
+            threshold = topology.create_submission_parameter('threshold', 100);
+
+            # s is some stream of integers
+            s = ...
+            s = s.filter(lambda v : v > threshold())
+
+        .. note::
+            The parameter (value returned from this method) is only
+            supported within a lambda expression or a callable
+            that is not a function.
+
+        The default type of a submission parameter's value is a `str`
+        (`unicode` on Python 2.7). When a `default` is specified
+        the type of the value matches the type of the default.
+
+        If `default` is not set, then the type can be set with `type_`.
+
+        The types supported are ``str``, ``int``, ``float`` and ``bool``.
+
+        Topology submission behavior when a submission parameter 
+        lacking a default value is created and a value is not provided at
+        submission time is defined by the underlying topology execution runtime.
+
+           * Submission fails for contexts ``DISTRIBUTED``, ``STANDALONE``, and ``STREAMING_ANALYTICS_SERVICE``.
+
+        Args:
+            name(str): Name for submission parameter.
+            default: Default parameter when submission parameter is not set.
+            type_: Type of parameter value when default is not set. Supported values are `str`, `int`, `float` and `bool`.
+
+        .. versionadded:: 1.9
+        """
+        
+        if name in self._submission_parameters:
+            raise ValueError("Submission parameter {} already defined.".format(name))
+        sp = streamsx.topology.runtime._SubmissionParam(name, default, type_)
+        self._submission_parameters[name] = sp
+        return sp
 
     def _prepare(self):
         """Prepare object prior to SPL generation."""
@@ -718,7 +785,8 @@ class Stream(_placement._Placement, object):
         """
         sl = _SourceLocation(_source_info(), 'for_each')
         _name = self.topology.graph._requested_name(name, action='for_each', func=func)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=_name, sl=sl)
+        stateful = self._determine_statefulness(func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.oport, name=self.name)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         op._layout(kind='ForEach', name=_name, orig_name=name)
@@ -758,7 +826,8 @@ class Stream(_placement._Placement, object):
         """
         sl = _SourceLocation(_source_info(), 'filter')
         _name = self.topology.graph._requested_name(name, action="filter", func=func)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=_name, sl=sl)
+        stateful = self._determine_statefulness(func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.oport, name=self.name)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         op._layout(kind='Filter', name=_name, orig_name=name)
@@ -767,7 +836,8 @@ class Stream(_placement._Placement, object):
 
     def _map(self, func, schema, name=None):
         _name = self.topology.graph._requested_name(name, action="map", func=func)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Map", func, name=_name)
+        stateful = self._determine_statefulness(func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Map", func, name=_name, stateful=stateful)
         op.addInputPort(outputPort=self.oport, name=self.name)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         oport = op.addOutputPort(schema=schema, name=_name)
@@ -917,7 +987,8 @@ class Stream(_placement._Placement, object):
         """     
         sl = _SourceLocation(_source_info(), 'flat_map')
         _name = self.topology.graph._requested_name(name, action='flat_map', func=func)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=_name, sl=sl)
+        stateful = self._determine_statefulness(func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.oport, name=self.name)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         oport = op.addOutputPort(name=_name)
@@ -1032,7 +1103,8 @@ class Stream(_placement._Placement, object):
 
             if func is not None:
                 keys = ['__spl_hash']
-                hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::HashAdder", func)
+                stateful = self._determine_statefulness(func)
+                hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::HashAdder", func, stateful=stateful)
                 hash_adder._layout(hidden=True)
                 hash_schema = self.oport.schema.extend(streamsx.topology.schema.StreamSchema("tuple<int64 __spl_hash>"))
                 hash_adder.addInputPort(outputPort=self.oport, name=self.name)
@@ -1227,7 +1299,8 @@ class Stream(_placement._Placement, object):
             return sp
 
         _name = self.topology.graph._requested_name(name, action="publish")
-        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl, name=_name)
+        # publish is never stateful
+        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl, name=_name, stateful=False)
         op.addInputPort(outputPort=self.oport)
         op._layout_group('Publish', name if name else _name)
         sink = Sink(op)
@@ -1347,6 +1420,13 @@ class Stream(_placement._Placement, object):
         self._op()._layout(kind, hidden, name, orig_name)
         return self
 
+    """
+    Determine whether a callable has state that needs to be saved during
+    checkpointing.  
+    """
+    def _determine_statefulness(self, _callable):
+        stateful = not inspect.isroutine(_callable)
+        return stateful
 
 class View(object):
     """
@@ -1571,7 +1651,8 @@ class Window(object):
         
         sl = _SourceLocation(_source_info(), "aggregate")
         name = self.topology.graph._requested_name(name, action="aggregate", func=function)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Aggregate", function, name=name, sl=sl)
+        stateful = self.stream._determine_statefulness(function)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Aggregate", function, name=name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.stream.oport, name=self.stream.name, window_config=self._config)
         oport = op.addOutputPort(schema=schema, name=name)
 

@@ -176,14 +176,17 @@ class Tester(object):
         test is skipped.
 
         The Streams instance to use is defined by the environment variables:
+
          * ``STREAMS_ZKCONNECT`` - Zookeeper connection string (optional)
          * ``STREAMS_DOMAIN_ID`` - Domain identifier
          * ``STREAMS_INSTANCE_ID`` - Instance identifier
 
         The user used to submit and monitor the job is set by the
         optional environment variables:
-         * ``STREAMS_USERNAME - User name defaulting to `streamsadmin`.
-         * ``STREAMS_PASSWORD - User password defaulting to `passw0rd`.
+
+         * ``STREAMS_USERNAME`` - User name defaulting to `streamsadmin`.
+         * ``STREAMS_PASSWORD`` - User password defaulting to `passw0rd`.
+
         The defaults match the setup for testing on a IBM Streams Quick
         Start Edition (QSE) virtual machine.
 
@@ -622,7 +625,7 @@ class Tester(object):
             if application_logs is not None:
                 _logger.info("Application logs have been fetched to " + application_logs)
             else:
-                _logger.warn("Fetching job application logs is not supported in this version of Streams.")
+                _logger.warning("Fetching job application logs is not supported in this version of Streams.")
             return application_logs
 
     def _start_local_check(self):
