@@ -22,8 +22,6 @@ import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
-import com.ibm.streamsx.topology.spl.SPL;
-import com.ibm.streamsx.topology.spl.SPLInput;
 
 /**
  * A {@code TStream} is a declaration of a continuous sequence of tuples. A
@@ -996,7 +994,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * <ul>
      * <li>One stream invokes {@link TStream#union(TStream)} using the other as a parameter.</li>
      * <li>Both streams are used as inputs to an SPL operator created through 
-     * {@link SPL#invokeOperator(String, SPLInput, StreamSchema, Map)}
+     * {@link com.ibm.streamsx.topology.SPL#invokeOperator(String, com.ibm.streamsx.topology.spl.SPLInput, StreamSchema, java.util.Map) invokeOperator}
      * which has multiple input ports.</li> 
      * </ul>
      * <br>
