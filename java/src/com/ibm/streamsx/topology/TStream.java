@@ -921,7 +921,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
     /**
      * Parallelizes the stream into {@code width} parallel channels. Tuples are routed 
      * to the parallel channels based on the {@link Routing} parameter.
-     * <BR>
+     * <BR><BR>
      * If {@link Routing#ROUND_ROBIN}
      * is specified the tuples are routed to parallel channels such that an 
      * even distribution is maintained.
@@ -935,58 +935,214 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * routed so that all tuples with the same key are sent to the same channel.
      * This is equivalent to calling {@link #parallel(Supplier, Function)} with
      * an identity function.
-     * <br>
-     * If parallel is invoked when submitting to an embedded context, the flow
-     * will execute as though parallel had not been called.
-     * <br>
+     * <br><br>
+     * Source operations may be parallelized as well, refer to {@link TStream#setParallel(Supplier)} for more information.
+     * <br><br>
      * Given the following code:
-     * 
      * <pre>
      * <code>
-     * TStream&lt;String> myStream = ...;
-     * TStream&lt;String> parallel_start = myStream.parallel(of(3), TStream.Routing.ROUND_ROBIN);
-     * TStream&lt;String> in_parallel = parallel_start.filter(...).transform(...);
-     * TStream&lt;String> joined_parallel_streams = in_parallel.endParallel();
+     * TStream&lt;String> myStream = topology.source(...);
+     * TStream&lt;String> parallelStart = myStream.parallel(of(3), TStream.Routing.ROUND_ROBIN);
+     * TStream&lt;String> inParallel = parallelStart.map(...);
+     * TStream&lt;String> joinedParallelStreams = inParallel.endParallel();
+     * joinedParallelStreams.print();
      * </code>
      * </pre>
      * 
-     * a visual representation a visual representation for parallel() would be
-     * as follows:
+     * The following graph is created:
+     * <br>
+     * <img src="doc-files/Diagram2.jpg" width = 500/>
+     * <br>
+     * <br>
+     * Calling {@code parallel(3)} creates three parallel channels. Each of the 3 channels contains separate 
+     * instantiations of the operations (in this case, just <b>map</b>) declared in the region. Such stream operations are 
+     * run in parallel as follows:
+     * <br>
+     * 
+     * <style>
+            table, th, td {
+                border: 1px solid black;
+                border-collapse: collapse;
+            }
+            th, td {
+                padding: 5px;
+            }
+            th {
+                text-align: left;
+            }
+     * </style>
+     * <table>
+     * <tr><th>Execution Context</th><th>Parallel Behavior</th></tr>
+     * <tr><td>Standalone</td><td>Each parallel channel is separately executed by one or more threads. 
+     * The number of threads executing a channel is exactly 1 thread per input to the channel.</td></tr>
+     * <tr><td>Distributed</td><td>A parallel channel is never run in the same process as another parallel channel.
+     * Furthermore, a single parallel channel may executed across multiple processes, as determined by the Streams runtime.</td></tr>
+     * <tr><td>Streaming Analytics service</td><td>Same as Distributed.</td></tr>
+     * <tr><td>Embedded</td><td>All parallel information is ignored, and the application is executed without any added parallelism.</td></tr>
+     * </table>
+     * 
+     * <br>
+     * 
+     * A parallel region can have multiple inputs and multiple outputs. An input to a parallel 
+     * region is a stream on which {@link TStream#parallel(int)} has been called, and an output
+     * is a stream on which {@link TStream#endParallel()} has been called.
+     * A parallel region with multiple inputs is created if a stream in one parallel region connects with a stream in another
+     * parallel region. 
+     * <br><br>
+     * Two streams "connect" if:
+     * <ul>
+     * <li>One stream invokes {@link TStream#union(TStream)} using the other as a parameter.</li>
+     * <li>Both streams are used as inputs to an SPL operator created through 
+     * {@link com.ibm.streamsx.topology.SPL#invokeOperator(String, com.ibm.streamsx.topology.spl.SPLInput, StreamSchema, java.util.Map) invokeOperator}
+     * which has multiple input ports.</li> 
+     * </ul>
+     * <br>
+     * For example, the following code connects two separate parallel regions into a single parallel region with
+     * multiple inputs:
      * 
      * <pre>
      * <code>
-     *                  |----filter----transform----|
-     *                  |                           |
-     * ---myStream------|----filter----transform----|--joined_parallel_streams
-     *                  |                           |
-     *                  |----filter----transform----|
+     * TStream&lt;String> firstStream = topology.source(...);
+     * TStream&lt;String> secondStream = topology.source(...);
+     * TStream&lt;String> firstParallelStart = firstStream.parallel(of(3), TStream.Routing.ROUND_ROBIN);
+     * TStream&lt;String> secondParallelStart = secondStream.parallel(of(3), TStream.Routing.ROUND_ROBIN);
+     * TStream&lt;String> fistMapOutput = firstParallelStart.map(...);
+     * TStream&lt;String> unionedStreams = firstMapOutput.union(secondParallelStart);
+     * TStream&lt;String> secondMapOutput = unionedStreams.map(...);
+     * TStream&lt;String> nonParallelStream = secondMapOutput.endParallel();
+     * nonParallelStream.print();
      * </code>
      * </pre>
      * 
-     * Each parallel channel can be thought of as being assigned its own thread.
-     * As such, each parallelized stream function (filter and transform, in this
-     * case) are separate instances and operate independently from one another.
+     * This code results in the following graph:
      * <br>
-     * {@code parallel(...)} will only parallelize the stream operations performed <b>after</b>
-     * the call to {@code parallel(...)} and before the call to {@code endParallel()}.
-     * 
-     * In the above example, the {@code parallel(3)} was invoked on {@code myStream}, so
-     * its subsequent functions, {@code filter(...)} and {@code transform(...)}, were parallelized. <br>
-     * <br>
-     * Parallel regions aren't required to have an output stream, and thus may be
-     * used as sinks. The following would be an example of a parallel sink:
+     * <img src="doc-files/Diagram3.jpg" width=500/>
+     * <br><br>
+     * When creating a parallel region with multiple inputs, the different inputs must all have the same value
+     * for the degree of parallelism. For example, it can not be the case that one parallel region input 
+     * specifies a width of 4, while another input to the same region specifies a width of 5. Additionally,
+     * if a submission time parameter is used to specify the width of a parallel region, then different inputs 
+     * to that region must all use the same submission time parameter object.
+     * <br><br>
+     * A parallel region may contain a sink; it is not required that a parallel region have an output stream.
+     * The following defines a sink in a parallel region:
      * <pre>
      * <code>
-     * TStream&lt;String> myStream = ...;
+     * TStream&lt;String> myStream = topology.source(...);
      * TStream&lt;String> myParallelStream = myStream.parallel(6);
      * myParallelStream.print();
      * </code>
      * </pre>
-     * {@code myParallelStream} will be printed to output in parallel. In other
-     * words, a parallel sink is created by calling {@link #parallel(int)} and 
-     * creating a sink operation (such as {@link TStream#forEach(Consumer)}). <b>
-     * It is not necessary to invoke {@link #endParallel()} on parallel sinks.</b>
+     * In the above code, the parallel region is implicitly ended by the sink, without calling 
+     * {@link TStream#endParallel()}
+     * 
+     * This results in the following graph:
+     * <br>
+     * <img src="doc-files/Diagram1.jpg" width=500>
      * <br><br>
+     * 
+     * A parallel region with multiple output streams can be created by invoking {@link TStream#endParallel()}
+     * on multiple streams within the same parallel region. For example, the following code defines a parallel
+     * region with multiple output streams:
+     * <pre>
+     * <code>
+     * TStream&lt;String> myStream = topology.source(...);
+     * TStream&lt;String> parallelStart = myStream.parallel(of(3), TStream.Routing.ROUND_ROBIN);
+     * TStream&lt;String> firstInParallel = parallelStart.map(...);
+     * TStream&lt;String> secondInParallel = parallelStart.map(...);
+     * TStream&lt;String> firstParallelOutput = firstInParallel.endParallel();
+     * TStream&lt;String> secondParallelOutput = secondInParallel.endParallel();
+     * </code>
+     * </pre>
+     * The above code would yield the following graph:
+     * <br>
+     * <img src="doc-files/Diagram4.jpg" width=500/>
+     * <br><br>
+     * 
+     * When a stream outside of a parallel region connects to a stream inside of a parallel region,
+     * the outside stream and all of its prior operations implicitly become part of the parallel region.
+     * 
+     * For example, the following code connects a stream outside a parallel 
+     * region to a stream inside of a parallel region.
+     * 
+     * <pre>
+     * <code>
+     * TStream&lt;String> firstStream = topology.source(...);
+     * TStream&lt;String> secondStream = topology.source(...);
+     * TStream&lt;String> parallelStream = firstStream.parallel(of(3), TStream.Routing.ROUND_ROBIN);
+     * TStream&lt;String> secondParallelStart = 
+     * TStream&lt;String> firstInParallel = firstParallelStart.map(...);
+     * TStream&lt;String> secondInParallel = secondParallelStart.map(...);
+     * TStream&lt;String> unionStream = firstInParallel.union(secondInParallel);
+     * TStream&lt;String> nonParallelStream = unionStream.endParallel();
+     * nonParallelStream.print();
+     * </code>
+     * </pre>
+     * 
+     * Once connected, the stream outside of the parallel region (and all of its prior operations)
+     * becomes part of the parallel region:
+     * 
+     * <img src="doc-files/Diagram5.jpg" width=500/>
+     * 
+     * <br><br>
+     * 
+     * The Streams runtime supports the nesting of parallel regions inside of another parallel region.
+     * A parallel region will become nested inside of another parallel region in one of two
+     * cases:
+     * 
+     * <ul>
+     * <li>
+     * If {@link TStream#parallel(int)} is invoked on a stream which is already inside of a parallel region.
+     * </li>
+     * <li>
+     * A stream inside of a parallel region becomes connected to a stream that has a parallel region in its
+     * previous operations.
+     * </li>
+     * </ul>
+     * 
+     * For example, calling {@link TStream#parallel(int)} twice on the same stream creates a nested 
+     * parallel region as follows: 
+     * 
+     * <pre>
+     * <code>
+     * TStream&lt;String> stream = topology.source(...);
+     * stream.parallel(3).map(...).parallel(3).map(...).endParallel().endParallel();
+     * </code>
+     * </pre>
+     * 
+     * Results in a graph of the following structure:
+     * <br>
+     * <img src="doc-files/Diagram7.jpg" width=500/>
+     * <br><br>
+     * 
+     * Whereas the first map operation is instantiated exactly 3 times due to {@code parallel(3)},
+     * the second map operation is instantiated a total of 9 times since each of the 3 enclosing 
+     * parallel channels holds 3 nested parallel channels. The {@link TStream#Routing} configurations
+     * of the enclosing and nested parallel regions do not need to match.
+     * <br><br>
+     * As previously mentioned, nesting also occurs when a stream inside of a parallel region becomes 
+     * connected to a stream that has a parallel region in its previous operations. The following
+     * code creates such a situation:
+     * 
+     * <pre>
+     * <code>
+     * TStream&lt;String> streamToJoin = topology.source(...);
+     * streamToJoin.setParallel();
+     * streamToJoin = streamToJoin.map(...).endParallel();
+     * 
+     * TStream&lt;String> parallelStream = topology.source(...);
+     * parallelStream = parallelStream.parallel(4);
+     * 
+     * parallelStream = parallelStream.union(streamToJoin);
+     * parallelStream.map(...).endParallel().print();
+     * </code>
+     * </pre>
+     * 
+     * This results in the following graph structure:
+     * <br>
+     * <img src="doc-files/Diagram6.jpg" width=500>
+     * <br><br>
+     * 
      * Limitations of parallel() are as follows: <br>
      * 
      * Every call to {@code endParallel()} must have a call to {@code parallel(...)} preceding it. The
