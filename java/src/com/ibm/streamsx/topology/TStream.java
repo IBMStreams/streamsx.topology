@@ -1065,7 +1065,7 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * When a stream outside of a parallel region connects to a stream inside of a parallel region,
      * the outside stream and all of its prior operations implicitly become part of the parallel region.
      * 
-     * For example, the following code invokes connects a stream outside a parallel 
+     * For example, the following code connects a stream outside a parallel 
      * region to a stream inside of a parallel region.
      * 
      * <pre>
