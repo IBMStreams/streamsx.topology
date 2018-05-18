@@ -33,8 +33,16 @@ else:
 
 # Return the root of the com.ibm.streamsx.topology toolkit
 def _topology_tk_dir():
-    dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    for _ in range(5):
+    dir = os.path.dirname(__file__) # streamsx/scripts
+    dir = os.path.dirname(dir) # streamsx
+ 
+    # See if we are being run from streamsx package
+    pkg_tk = os.path.join(dir, '.toolkit', 'com.ibm.streamsx.topology')
+    if os.path.isdir(pkg_tk):
+        return pkg_tk
+
+    # Run from the SPL toolkit
+    for _ in range(4):
         dir = os.path.dirname(dir)
     return dir
 
