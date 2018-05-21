@@ -8,11 +8,8 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
@@ -73,27 +70,9 @@ public class Instance extends Element {
     @Expose
     private String views;
 
-    static final Instance create(final AbstractStreamsConnection sc, String gsonInstance) {
-        Instance instance = gson.fromJson(gsonInstance, Instance.class);
-        instance.setConnection(sc);
-        return instance;
-    }
-
-    final static List<Instance> getInstanceList(AbstractStreamsConnection sc, String instanceGSONList) {
-        List<Instance> iList;
-        try {
-            InstancesArray iArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create()
-                    .fromJson(instanceGSONList, InstancesArray.class);
-
-            iList = iArray.instances;
-            for (Instance instance : iList) {
-                instance.setConnection(sc);
-            }
-
-        } catch (JsonSyntaxException e) {
-            iList = Collections.<Instance> emptyList();
-        }
-        return iList;
+    final static List<Instance> createInstanceList(AbstractStreamsConnection sc, String uri)
+       throws IOException {        
+        return createList(sc, uri, InstancesArray.class);
     }
 
     /**
@@ -103,10 +82,19 @@ public class Instance extends Element {
      * @throws IOException
      */
     public List<Job> getJobs() throws IOException {
-        String sReturn = connection().getResponseString(jobs);
-
-        List<Job> lJobs = Job.getJobList(this, sReturn);
-        return lJobs;
+        return Job.createJobList(this, jobs);
+    }
+    
+    /**
+     * Gets a list of {@link ProcessingElement processing elements} for this instance.
+     * 
+     * @return List of {@link ProcessingElement Processing Elements}
+     * @throws IOException
+     * 
+     * @since 1.9
+     */
+    public List<ProcessingElement> getPes() throws IOException {
+        return ProcessingElement.createPEList(connection(), pes);
     }
 
     /**
@@ -242,8 +230,7 @@ public class Instance extends Element {
      */
     public Domain getDomain() throws IOException {
         if (_domain == null) {
-            String sReturn = connection().getResponseString(domain);
-            _domain = Domain.create(connection(), sReturn);
+            _domain = create(connection(), domain, Domain.class);
         }
         return _domain;
     }
@@ -251,12 +238,11 @@ public class Instance extends Element {
     /**
      * internal usae to get list of instances
      */
-    private static class InstancesArray {
+    private static class InstancesArray extends ElementArray<Instance> {
         @Expose
-        public ArrayList<Instance> instances;
-        @Expose
-        public String resourceType;
-        @Expose
-        public int total;
+        private ArrayList<Instance> instances;
+        
+        @Override
+        List<Instance> elements() { return instances; }
     }
 }

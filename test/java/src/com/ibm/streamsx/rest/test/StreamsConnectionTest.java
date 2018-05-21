@@ -177,6 +177,11 @@ public class StreamsConnectionTest {
         i2.refresh();
         assertEquals(instanceName, i2.getId());
         
+        List<ProcessingElement> instancePes = i2.getPes();
+        for (ProcessingElement pe : instancePes) {
+            assertNotNull(pe);
+        }
+        
         for (Instance instance : instances)
             checkDomainFromInstance(instance);
 
@@ -292,12 +297,11 @@ public class StreamsConnectionTest {
         assertEquals(2, pes.size());
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testCancelSpecificJob() throws Exception {
-        if (jobId != null) {
+        if (job != null) {
             // cancel the job
-            boolean cancel = connection.cancelJob(jobId);
+            boolean cancel = job.cancel();
             assertTrue(cancel == true);
             // remove these so @After doesn't fail
             job = null;
@@ -333,6 +337,21 @@ public class StreamsConnectionTest {
 
         // there should be 3 operators for this test, ordered by name
         assertEquals(3, operators.size());
+        
+       List<ProcessingElement> jobpes = job.getPes();
+        for (Operator op : operators) {
+            ProcessingElement pe = op.getPE();
+            assertNotNull(pe);
+            boolean inJobList = false;
+            for (ProcessingElement pej : jobpes) {
+                if (pej.getId().equals(pe.getId())) {
+                    inJobList = true;
+                    break;
+                }
+            }
+            assertTrue("PE not in job list:" + pe.getId(), inJobList);
+        }     
+        
         // the first operator will have an output port
         Operator op0 = operators.get(0);
         assertEquals("operator", op0.getResourceType());
@@ -433,6 +452,7 @@ public class StreamsConnectionTest {
             if (peMetrics.size() > 0) {
                 break;
             }
+            Thread.sleep(50);
             peMetrics = pe1.getMetrics();
         }
         assertTrue(peMetrics.size() > 0);
