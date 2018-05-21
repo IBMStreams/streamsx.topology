@@ -637,7 +637,7 @@ class Job(_ResourceElement):
             >>> job = instances[0].get_jobs()[0]
             >>> operators = job.get_operators(name="*temperatureSensor*")
 
-        .versionsince:: 1.9 `name` parameter
+        .. versionsince:: 1.9 `name` parameter
         """
         return self._get_elements(self.operators, 'operators', Operator, name=name)
 
@@ -1003,6 +1003,16 @@ class PE(_ResourceElement):
         """
         return self._get_elements(self.metrics, 'metrics', Metric, name=name)
 
+    def get_resource_allocation(self):
+        """Get the :py:class:`ResourceAllocation` element tance.
+
+        Returns:
+            ResourceAllocation: Resource allocation used to access information about the resource where this PE is running.
+
+        .. versionadded:: 1.9
+        """
+        return ResourceAllocation(self.rest_client.make_request(self.resourceAllocation), self.rest_client)
+
 
 class PEConnection(_ResourceElement):
     """The processing element (PE) connection resource provides access to information about a connection between two
@@ -1045,7 +1055,15 @@ class ResourceAllocation(_ResourceElement):
         >>> print(allocations[0].resourceType)
         resourceAllocation
     """
-    pass
+    def get_resource(self):
+        """Get the :py:class:`Resource` of the resource allocation.
+
+        Returns:
+            Resource: Resource for this allocation.
+
+        .. versionadded:: 1.9
+        """
+        return Resource(self.rest_client.make_request(self.resource), self.rest_client)
 
 
 class ActiveService(_ResourceElement):
@@ -1202,7 +1220,7 @@ class Instance(_ResourceElement):
             >>> instance = sc.get_instances()[0]
             >>> operators = instance.get_operators(name="*temperatureSensor*")
 
-        .versionsince:: 1.9 `name` parameter
+        .. versionsince:: 1.9 `name` parameter
         """
         return self._get_elements(self.operators, 'operators', Operator, name=name)
 
@@ -1499,14 +1517,44 @@ class Domain(_ResourceElement):
         """
         return self._get_elements(self.resources, 'resources', Resource)
 
-
 class Resource(_ResourceElement):
     """The Streams resource element provides access to information about a Streams resource.
 
     Attributes:
+        id(str): Resource identifier.
+        displayName(str): Resource display name.
+        ipAddress(str): IP address.
+        status(str): Resource status.
+        tags(list[str]): Tags assigned to resource.
+
+    .. versionadded:: 1.9
+    """
+    def get_metrics(self, name=None):
+        """Get metrics for this resource.
+
+        Args:
+            name(str, optional): Only return metrics matching `name`, where `name` can be a regular expression.  If
+                `name` is not supplied, then all metrics for this resource are returned.
+
+        Returns:
+             list(Metric): List of matching metrics.
+        """
+        return self._get_elements(self.metrics, 'metrics', Metric, name=name)
+
+class RestResource(_ResourceElement):
+    """HTTP REST resource identifier.
+
+    Attributes:
         name(str): Resource name.
+        resource(str): A string that identifies the URI for the resource.
+
+    .. versionsince:: 1.9 Changed to `RestResource` from `Resource`.
     """
     def get_resource(self):
+        """Make a request against this REST resource.
+           Returns:
+               dict: JSON response.
+        """
         return self.rest_client.make_request(self.resource)
 
 
