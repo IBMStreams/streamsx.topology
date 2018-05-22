@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.context &mdash; streamsx 1.9.3b documentation</title>
+  <title>streamsx.topology.context &mdash; streamsx 1.9.5 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.9.3b documentation" href="index.html"/>
+    <link rel="top" title="streamsx 1.9.5 documentation" href="index.html"/>
         <link rel="next" title="streamsx.topology.schema" href="streamsx.topology.schema.html"/>
         <link rel="prev" title="streamsx.topology.topology" href="streamsx.topology.topology.html"/> 
 
@@ -116,6 +116,10 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="scripts/runner.html">streamsx-runner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scripts/extract.html">spl-python-extract</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysetup.html">IBM Streams Python setup</a></li>
 </ul>
 
             
@@ -254,6 +258,10 @@ Identifies the Streaming Analytics service to use. The definition can be one of<
 </ul>
 </div></blockquote>
 <p>This key takes precedence over <a class="reference internal" href="#streamsx.topology.context.ConfigParams.VCAP_SERVICES" title="streamsx.topology.context.ConfigParams.VCAP_SERVICES"><code class="xref py py-const docutils literal"><span class="pre">VCAP_SERVICES</span></code></a> and <a class="reference internal" href="#streamsx.topology.context.ConfigParams.SERVICE_NAME" title="streamsx.topology.context.ConfigParams.SERVICE_NAME"><code class="xref py py-const docutils literal"><span class="pre">SERVICE_NAME</span></code></a>.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="service.html#sas-service-def"><span class="std std-ref">Service definition</span></a></p>
+</div>
 </dd></dl>
 
 <dl class="attribute">
@@ -262,6 +270,10 @@ Identifies the Streaming Analytics service to use. The definition can be one of<
 <dd><p>Streaming Analytics service name.</p>
 <p>Selects the specific Streaming Analytics service from VCAP service definitions
 defined by the the environment variable <strong>VCAP_SERVICES</strong> or the key <a class="reference internal" href="#streamsx.topology.context.ConfigParams.VCAP_SERVICES" title="streamsx.topology.context.ConfigParams.VCAP_SERVICES"><code class="xref py py-const docutils literal"><span class="pre">VCAP_SERVICES</span></code></a> in the <cite>submit</cite> config.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="service.html#sas-service-name"><span class="std std-ref">Selecting the service</span></a></p>
+</div>
 </dd></dl>
 
 <dl class="attribute">
@@ -287,6 +299,10 @@ by name using <a class="reference internal" href="#streamsx.topology.context.Con
 </ul>
 </dd>
 </dl>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="service.html#sas-vcap"><span class="std std-ref">VCAP services</span></a></p>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -788,7 +804,7 @@ constant passed as <cite>ctxtype</cite>.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015,2017 IBM Corp..
+        &copy; Copyright 2015,2018 IBM Corp..
 
     </p>
   </div>
@@ -810,7 +826,7 @@ constant passed as <cite>ctxtype</cite>.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.9.3b',
+            VERSION:'1.9.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

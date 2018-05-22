@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx-runner &mdash; streamsx 1.9.3b documentation</title>
+  <title>streamsx-runner &mdash; streamsx 1.9.5 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="streamsx 1.9.3b documentation" href="../index.html"/>
+    <link rel="top" title="streamsx 1.9.5 documentation" href="../index.html"/>
         <link rel="next" title="spl-python-extract" href="extract.html"/>
         <link rel="prev" title="streamsx.rest_primitives" href="../streamsx.rest_primitives.html"/> 
 
@@ -124,6 +124,10 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="extract.html">spl-python-extract</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pysetup.html">IBM Streams Python setup</a></li>
 </ul>
 
             
@@ -251,8 +255,12 @@ variable.</p>
 <p>The application is submitted as source (except <code class="docutils literal"><span class="pre">--bundle</span></code>)  and compiled into
 a Streams application bundle (<code class="docutils literal"><span class="pre">sab</span></code> file) using the build service before
 being submitted as a running job to the service instance.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="../service.html#sas-access"><span class="std std-ref">Accessing a service</span></a></p>
+</div>
 <div class="section" id="python-applications">
-<h3>Python applications<a class="headerlink" href="#python-applications" title="Permalink to this headline">¶</a></h3>
+<span id="runner-python-apps"></span><h3>Python applications<a class="headerlink" href="#python-applications" title="Permalink to this headline">¶</a></h3>
 <p>To submit a Python application a Python function must be defined
 that returns the application (and optionally its configuration)
 to be submitted. The fully qualified name of this function is
@@ -304,7 +312,7 @@ it is always submitted with the same job name <cite>SensorIngester</cite>.</p>
 (typically through environment variable <code class="docutils literal"><span class="pre">PYTHONPATH</span></code>).</p>
 </div>
 <div class="section" id="spl-applications">
-<h3>SPL applications<a class="headerlink" href="#spl-applications" title="Permalink to this headline">¶</a></h3>
+<span id="runner-spl-apps"></span><h3>SPL applications<a class="headerlink" href="#spl-applications" title="Permalink to this headline">¶</a></h3>
 <p>The main composite that defines the application is specified using the <code class="docutils literal"><span class="pre">-main-composite</span></code> flag specifing the fully namespace qualified name.</p>
 <p>Any required local SPL toolkits, <em>including the one containing the main composite</em>, must be indivdually specified by location to the <code class="docutils literal"><span class="pre">--toolkits</span></code> flag. Any SPL toolkit that is present on the IBM Cloud service need not be included.</p>
 <p>For example, an application that uses the Slack toolkit might be submitted as:</p>
@@ -323,7 +331,7 @@ another SPL toolkit.</p>
 </div>
 </div>
 <div class="section" id="streams-application-bundles">
-<h3>Streams application bundles<a class="headerlink" href="#streams-application-bundles" title="Permalink to this headline">¶</a></h3>
+<span id="runner-sab"></span><h3>Streams application bundles<a class="headerlink" href="#streams-application-bundles" title="Permalink to this headline">¶</a></h3>
 <p>A Streams application bundle is submitted to a service instance using <code class="docutils literal"><span class="pre">--bundle</span></code>.  The argument to <code class="docutils literal"><span class="pre">--bundle</span></code> is a locally accessible file that will be uploaded to the service.</p>
 <p>The bundle must have been created on using an IBM Streams install whose architecture and OS version matches the service instance. Currently this is <code class="docutils literal"><span class="pre">x86_64</span></code> and RedHat/CentOS 6 or 7 depending on the service instance.</p>
 <p>The <code class="docutils literal"><span class="pre">--toolkits</span></code> flag must not be specified when submitting a bundle.</p>
@@ -375,7 +383,7 @@ streamsx-runner --create-bundle \
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015,2017 IBM Corp..
+        &copy; Copyright 2015,2018 IBM Corp..
 
     </p>
   </div>
@@ -397,7 +405,7 @@ streamsx-runner --create-bundle \
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.9.3b',
+            VERSION:'1.9.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

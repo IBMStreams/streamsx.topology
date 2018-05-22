@@ -45,6 +45,7 @@ streamsx\.rest\_primitives
       Resource
       ResourceAllocation
       ResourceTag
+      RestResource
       StreamingAnalyticsService
       View
       ViewItem

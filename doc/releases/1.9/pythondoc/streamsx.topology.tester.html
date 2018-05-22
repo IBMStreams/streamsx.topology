@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.tester &mdash; streamsx 1.9.3b documentation</title>
+  <title>streamsx.topology.tester &mdash; streamsx 1.9.5 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.9.3b documentation" href="index.html"/>
+    <link rel="top" title="streamsx 1.9.5 documentation" href="index.html"/>
         <link rel="next" title="streamsx.topology.tester_runtime" href="streamsx.topology.tester_runtime.html"/>
         <link rel="prev" title="streamsx.topology.schema" href="streamsx.topology.schema.html"/> 
 
@@ -116,6 +116,10 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="scripts/runner.html">streamsx-runner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scripts/extract.html">spl-python-extract</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysetup.html">IBM Streams Python setup</a></li>
 </ul>
 
             
@@ -450,21 +454,20 @@ message queue system.</p>
 <p>Requires a local IBM Streams install define by the <code class="docutils literal"><span class="pre">STREAMS_INSTALL</span></code>
 environment variable. If <code class="docutils literal"><span class="pre">STREAMS_INSTALL</span></code> is not set then the
 test is skipped.</p>
-<dl class="docutils">
-<dt>The Streams instance to use is defined by the environment variables:</dt>
-<dd><ul class="first last simple">
+<p>The Streams instance to use is defined by the environment variables:</p>
+<blockquote>
+<div><ul class="simple">
 <li><code class="docutils literal"><span class="pre">STREAMS_ZKCONNECT</span></code> - Zookeeper connection string (optional)</li>
 <li><code class="docutils literal"><span class="pre">STREAMS_DOMAIN_ID</span></code> - Domain identifier</li>
 <li><code class="docutils literal"><span class="pre">STREAMS_INSTANCE_ID</span></code> - Instance identifier</li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
 <p>The user used to submit and monitor the job is set by the
 optional environment variables:</p>
 <blockquote>
 <div><ul class="simple">
-<li><a href="#id1"><span class="problematic" id="id2">``</span></a>STREAMS_USERNAME - User name defaulting to <cite>streamsadmin</cite>.</li>
-<li><a href="#id3"><span class="problematic" id="id4">``</span></a>STREAMS_PASSWORD - User password defaulting to <cite>passw0rd</cite>.</li>
+<li><code class="docutils literal"><span class="pre">STREAMS_USERNAME</span></code> - User name defaulting to <cite>streamsadmin</cite>.</li>
+<li><code class="docutils literal"><span class="pre">STREAMS_PASSWORD</span></code> - User password defaulting to <cite>passw0rd</cite>.</li>
 </ul>
 </div></blockquote>
 <p>The defaults match the setup for testing on a IBM Streams Quick
@@ -749,7 +752,7 @@ tuples, <cite>False</cite> if the stream must contain at least <cite>count</cite
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015,2017 IBM Corp..
+        &copy; Copyright 2015,2018 IBM Corp..
 
     </p>
   </div>
@@ -771,7 +774,7 @@ tuples, <cite>False</cite> if the stream must contain at least <cite>count</cite
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.9.3b',
+            VERSION:'1.9.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

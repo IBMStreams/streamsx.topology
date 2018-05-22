@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.rest_primitives &mdash; streamsx 1.9.3b documentation</title>
+  <title>streamsx.rest_primitives &mdash; streamsx 1.9.5 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.9.3b documentation" href="index.html"/>
+    <link rel="top" title="streamsx 1.9.5 documentation" href="index.html"/>
         <link rel="next" title="streamsx-runner" href="scripts/runner.html"/>
         <link rel="prev" title="streamsx.rest" href="streamsx.rest.html"/> 
 
@@ -116,6 +116,10 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="scripts/runner.html">streamsx-runner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scripts/extract.html">spl-python-extract</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysetup.html">IBM Streams Python setup</a></li>
 </ul>
 
             
@@ -209,80 +213,83 @@
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td><a class="reference internal" href="#streamsx.rest_primitives.ActiveService" title="streamsx.rest_primitives.ActiveService"><code class="xref py py-obj docutils literal"><span class="pre">ActiveService</span></code></a></td>
-<td>The ActiveService element resource provides access to information about a domain or an instance service.</td>
+<td>Domain or an instance service.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#streamsx.rest_primitives.ActiveVersion" title="streamsx.rest_primitives.ActiveVersion"><code class="xref py py-obj docutils literal"><span class="pre">ActiveVersion</span></code></a></td>
 <td>Contains IBM Streams installation information</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#streamsx.rest_primitives.Domain" title="streamsx.rest_primitives.Domain"><code class="xref py py-obj docutils literal"><span class="pre">Domain</span></code></a></td>
-<td>The domain element resource provides access to information about a Streams domain.</td>
+<td>IBM Streams domain.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#streamsx.rest_primitives.ExportedStream" title="streamsx.rest_primitives.ExportedStream"><code class="xref py py-obj docutils literal"><span class="pre">ExportedStream</span></code></a></td>
-<td>Exported stream resource represents a stream that has been exported by a job.</td>
+<td>Stream exported stream by a job.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#streamsx.rest_primitives.Host" title="streamsx.rest_primitives.Host"><code class="xref py py-obj docutils literal"><span class="pre">Host</span></code></a></td>
-<td>The host element resource provides access to information about a host that is allocated to a domain as a resource for running Streams services and applications.</td>
+<td>Resource in a Streams domain or instance.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#streamsx.rest_primitives.ImportedStream" title="streamsx.rest_primitives.ImportedStream"><code class="xref py py-obj docutils literal"><span class="pre">ImportedStream</span></code></a></td>
-<td>Imported stream resource represents a stream that has been imported by a job.</td>
+<td>Stream imported by a job.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#streamsx.rest_primitives.Installation" title="streamsx.rest_primitives.Installation"><code class="xref py py-obj docutils literal"><span class="pre">Installation</span></code></a></td>
-<td>The Installation element resource provides access to information about IBM Streams installations.</td>
+<td>IBM Streams installation.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#streamsx.rest_primitives.Instance" title="streamsx.rest_primitives.Instance"><code class="xref py py-obj docutils literal"><span class="pre">Instance</span></code></a></td>
-<td>The instance element resource provides access to information about a Streams instance.</td>
+<td>IBM Streams instance.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#streamsx.rest_primitives.Job" title="streamsx.rest_primitives.Job"><code class="xref py py-obj docutils literal"><span class="pre">Job</span></code></a></td>
-<td>The job element resource provides access to information about a submitted job within a specified instance.</td>
+<td>A running streams application.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#streamsx.rest_primitives.Metric" title="streamsx.rest_primitives.Metric"><code class="xref py py-obj docutils literal"><span class="pre">Metric</span></code></a></td>
-<td>Metric resource provides access to information about a Streams metric.</td>
+<td>Streams custom or system metric.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#streamsx.rest_primitives.Operator" title="streamsx.rest_primitives.Operator"><code class="xref py py-obj docutils literal"><span class="pre">Operator</span></code></a></td>
-<td>The operator element resource provides access to information about a specific operator in a job.</td>
+<td>An operator invocation within a job.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#streamsx.rest_primitives.OperatorConnection" title="streamsx.rest_primitives.OperatorConnection"><code class="xref py py-obj docutils literal"><span class="pre">OperatorConnection</span></code></a></td>
-<td>The operator connection element resource provides access to information about a connection between two operator ports.</td>
+<td>Connection between operators.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#streamsx.rest_primitives.OperatorInputPort" title="streamsx.rest_primitives.OperatorInputPort"><code class="xref py py-obj docutils literal"><span class="pre">OperatorInputPort</span></code></a></td>
-<td>Information about an input port for an operator.</td>
+<td>Operator input port.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#streamsx.rest_primitives.OperatorOutputPort" title="streamsx.rest_primitives.OperatorOutputPort"><code class="xref py py-obj docutils literal"><span class="pre">OperatorOutputPort</span></code></a></td>
-<td>Operator output port resource provides access to information about an output port for a specific operator.</td>
+<td>Operator output port.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#streamsx.rest_primitives.PE" title="streamsx.rest_primitives.PE"><code class="xref py py-obj docutils literal"><span class="pre">PE</span></code></a></td>
-<td>The processing element (PE) resource provides access to information about a PE.</td>
+<td>Processing element (PE) within a job.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#streamsx.rest_primitives.PEConnection" title="streamsx.rest_primitives.PEConnection"><code class="xref py py-obj docutils literal"><span class="pre">PEConnection</span></code></a></td>
-<td>The processing element (PE) connection resource provides access to information about a connection between two processing element (PE) ports.</td>
+<td>Stream connection between two PEs.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#streamsx.rest_primitives.PublishedTopic" title="streamsx.rest_primitives.PublishedTopic"><code class="xref py py-obj docutils literal"><span class="pre">PublishedTopic</span></code></a></td>
 <td>Metadata for a published topic.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#streamsx.rest_primitives.Resource" title="streamsx.rest_primitives.Resource"><code class="xref py py-obj docutils literal"><span class="pre">Resource</span></code></a></td>
-<td>The Streams resource element provides access to information about a Streams resource.</td>
+<td>A resource available to a IBM Streams domain.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="#streamsx.rest_primitives.ResourceAllocation" title="streamsx.rest_primitives.ResourceAllocation"><code class="xref py py-obj docutils literal"><span class="pre">ResourceAllocation</span></code></a></td>
-<td>The ResourceAllocation element resource provides access to information about a resource that is allocated to an IBM Streams instance.</td>
+<td>A resource that is allocated to an IBM Streams instance.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#streamsx.rest_primitives.ResourceTag" title="streamsx.rest_primitives.ResourceTag"><code class="xref py py-obj docutils literal"><span class="pre">ResourceTag</span></code></a></td>
-<td>Contains information for a tag that is defined in a Streams domain</td>
+<td>Resource tag defined in a Streams domain</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#streamsx.rest_primitives.StreamingAnalyticsService" title="streamsx.rest_primitives.StreamingAnalyticsService"><code class="xref py py-obj docutils literal"><span class="pre">StreamingAnalyticsService</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="#streamsx.rest_primitives.RestResource" title="streamsx.rest_primitives.RestResource"><code class="xref py py-obj docutils literal"><span class="pre">RestResource</span></code></a></td>
+<td>HTTP REST resource identifier.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#streamsx.rest_primitives.StreamingAnalyticsService" title="streamsx.rest_primitives.StreamingAnalyticsService"><code class="xref py py-obj docutils literal"><span class="pre">StreamingAnalyticsService</span></code></a></td>
 <td>Streaming Analytics service running on IBM Cloud.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#streamsx.rest_primitives.View" title="streamsx.rest_primitives.View"><code class="xref py py-obj docutils literal"><span class="pre">View</span></code></a></td>
-<td>The View resource element provides access to information about a view that is associated with an active job, and exposes methods to retrieve data from the view’s stream.</td>
+<tr class="row-odd"><td><a class="reference internal" href="#streamsx.rest_primitives.View" title="streamsx.rest_primitives.View"><code class="xref py py-obj docutils literal"><span class="pre">View</span></code></a></td>
+<td>View on a stream.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#streamsx.rest_primitives.ViewItem" title="streamsx.rest_primitives.ViewItem"><code class="xref py py-obj docutils literal"><span class="pre">ViewItem</span></code></a></td>
-<td>Represents the data of a tuple, its type, and the time when it was collected from the stream.</td>
+<tr class="row-even"><td><a class="reference internal" href="#streamsx.rest_primitives.ViewItem" title="streamsx.rest_primitives.ViewItem"><code class="xref py py-obj docutils literal"><span class="pre">ViewItem</span></code></a></td>
+<td>A stream tuple in view.</td>
 </tr>
 </tbody>
 </table>
 <dl class="class">
 <dt id="streamsx.rest_primitives.ActiveService">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">ActiveService</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ActiveService" title="Permalink to this definition">¶</a></dt>
-<dd><p>The ActiveService element resource provides access to information about a domain or an instance service.</p>
+<dd><p>Domain or an instance service.</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.ActiveService.resourceType">
 <code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.ActiveService.resourceType" title="Permalink to this definition">¶</a></dt>
@@ -394,7 +401,8 @@
 <dl class="class">
 <dt id="streamsx.rest_primitives.Domain">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">Domain</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Domain" title="Permalink to this definition">¶</a></dt>
-<dd><p>The domain element resource provides access to information about a Streams domain.</p>
+<dd><p>IBM Streams domain. A domain contains instances that support
+running Streams applications as jobs.</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.Domain.id">
 <code class="descname">id</code><a class="headerlink" href="#streamsx.rest_primitives.Domain.id" title="Permalink to this definition">¶</a></dt>
@@ -525,7 +533,7 @@
 <dl class="class">
 <dt id="streamsx.rest_primitives.ExportedStream">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">ExportedStream</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ExportedStream" title="Permalink to this definition">¶</a></dt>
-<dd><p>Exported stream resource represents a stream that has been exported by a job.</p>
+<dd><p>Stream exported stream by a job.</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.ExportedStream.resourceType">
 <code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.ExportedStream.resourceType" title="Permalink to this definition">¶</a></dt>
@@ -568,8 +576,7 @@
 <dl class="class">
 <dt id="streamsx.rest_primitives.Host">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">Host</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Host" title="Permalink to this definition">¶</a></dt>
-<dd><p>The host element resource provides access to information about a host that is allocated to a domain as a
-resource for running Streams services and applications.</p>
+<dd><p>Resource in a Streams domain or instance.</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.Host.name">
 <code class="descname">name</code><a class="headerlink" href="#streamsx.rest_primitives.Host.name" title="Permalink to this definition">¶</a></dt>
@@ -640,7 +647,7 @@ resource.</p>
 <dl class="class">
 <dt id="streamsx.rest_primitives.ImportedStream">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">ImportedStream</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ImportedStream" title="Permalink to this definition">¶</a></dt>
-<dd><p>Imported stream resource represents a stream that has been imported by a job.</p>
+<dd><p>Stream imported by a job.</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.ImportedStream.resourceType">
 <code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.ImportedStream.resourceType" title="Permalink to this definition">¶</a></dt>
@@ -667,7 +674,7 @@ resource.</p>
 <dl class="class">
 <dt id="streamsx.rest_primitives.Installation">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">Installation</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Installation" title="Permalink to this definition">¶</a></dt>
-<dd><p>The Installation element resource provides access to information about IBM Streams installations.</p>
+<dd><p>IBM Streams installation.</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.Installation.resourceType">
 <code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.Installation.resourceType" title="Permalink to this definition">¶</a></dt>
@@ -733,7 +740,7 @@ resource.</p>
 <dl class="class">
 <dt id="streamsx.rest_primitives.Instance">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">Instance</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance" title="Permalink to this definition">¶</a></dt>
-<dd><p>The instance element resource provides access to information about a Streams instance.</p>
+<dd><p>IBM Streams instance.</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.Instance.id">
 <code class="descname">id</code><a class="headerlink" href="#streamsx.rest_primitives.Instance.id" title="Permalink to this definition">¶</a></dt>
@@ -960,7 +967,6 @@ regular expression. If <cite>name</cite> is not supplied, then all jobs are retu
 <span class="gp">&gt;&gt;&gt; </span><span class="n">operators</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">get_operators</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;*temperatureSensor*&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>.versionsince:: 1.9 <cite>name</cite> parameter</p>
 </dd></dl>
 
 <dl class="method">
@@ -1078,7 +1084,7 @@ a stream of JSON tuples that are subscribed to by SPL and Java applications.</p>
 <dl class="class">
 <dt id="streamsx.rest_primitives.Job">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">Job</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Job" title="Permalink to this definition">¶</a></dt>
-<dd><p>The job element resource provides access to information about a submitted job within a specified instance.</p>
+<dd><p>A running streams application.</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.Job.id">
 <code class="descname">id</code><a class="headerlink" href="#streamsx.rest_primitives.Job.id" title="Permalink to this definition">¶</a></dt>
@@ -1252,7 +1258,6 @@ a stream of JSON tuples that are subscribed to by SPL and Java applications.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">operators</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">get_operators</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;*temperatureSensor*&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>.versionsince:: 1.9 <cite>name</cite> parameter</p>
 </dd></dl>
 
 <dl class="method">
@@ -1376,7 +1381,7 @@ and saves them as a compressed tar file.</p>
 <dl class="class">
 <dt id="streamsx.rest_primitives.Metric">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">Metric</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Metric" title="Permalink to this definition">¶</a></dt>
-<dd><p>Metric resource provides access to information about a Streams metric.</p>
+<dd><p>Streams custom or system metric.</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.Metric.name">
 <code class="descname">name</code><a class="headerlink" href="#streamsx.rest_primitives.Metric.name" title="Permalink to this definition">¶</a></dt>
@@ -1440,7 +1445,7 @@ and saves them as a compressed tar file.</p>
 <dl class="class">
 <dt id="streamsx.rest_primitives.Operator">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">Operator</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Operator" title="Permalink to this definition">¶</a></dt>
-<dd><p>The operator element resource provides access to information about a specific operator in a job.</p>
+<dd><p>An operator invocation within a job.</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.Operator.name">
 <code class="descname">name</code><a class="headerlink" href="#streamsx.rest_primitives.Operator.name" title="Permalink to this definition">¶</a></dt>
@@ -1593,8 +1598,7 @@ managed resource <code class="docutils literal"><span class="pre">None</span></c
 <dl class="class">
 <dt id="streamsx.rest_primitives.OperatorConnection">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">OperatorConnection</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.OperatorConnection" title="Permalink to this definition">¶</a></dt>
-<dd><p>The operator connection element resource provides access to information about a connection between two operator
-ports.</p>
+<dd><p>Connection between operators.</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.OperatorConnection.id">
 <code class="descname">id</code><a class="headerlink" href="#streamsx.rest_primitives.OperatorConnection.id" title="Permalink to this definition">¶</a></dt>
@@ -1633,7 +1637,7 @@ ports.</p>
 <dl class="class">
 <dt id="streamsx.rest_primitives.OperatorInputPort">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">OperatorInputPort</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.OperatorInputPort" title="Permalink to this definition">¶</a></dt>
-<dd><p>Information about an input port for an operator.</p>
+<dd><p>Operator input port.</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.OperatorInputPort.name">
 <code class="descname">name</code><a class="headerlink" href="#streamsx.rest_primitives.OperatorInputPort.name" title="Permalink to this definition">¶</a></dt>
@@ -1695,8 +1699,7 @@ ports.</p>
 <dl class="class">
 <dt id="streamsx.rest_primitives.OperatorOutputPort">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">OperatorOutputPort</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.OperatorOutputPort" title="Permalink to this definition">¶</a></dt>
-<dd><p>Operator output port resource provides access to information about an output port
-for a specific operator.</p>
+<dd><p>Operator output port.</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.OperatorOutputPort.name">
 <code class="descname">name</code><a class="headerlink" href="#streamsx.rest_primitives.OperatorOutputPort.name" title="Permalink to this definition">¶</a></dt>
@@ -1774,7 +1777,8 @@ for a specific operator.</p>
 <dl class="class">
 <dt id="streamsx.rest_primitives.PE">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">PE</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.PE" title="Permalink to this definition">¶</a></dt>
-<dd><p>The processing element (PE) resource provides access to information about a PE.</p>
+<dd><p>Processing element (PE) within a job.
+A processing element hosts one or more operators within a single job.</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.PE.id">
 <code class="descname">id</code><a class="headerlink" href="#streamsx.rest_primitives.PE.id" title="Permalink to this definition">¶</a></dt>
@@ -1929,6 +1933,25 @@ managed resource <code class="docutils literal"><span class="pre">None</span></c
 </dd></dl>
 
 <dl class="method">
+<dt id="streamsx.rest_primitives.PE.get_resource_allocation">
+<code class="descname">get_resource_allocation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.PE.get_resource_allocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the <a class="reference internal" href="#streamsx.rest_primitives.ResourceAllocation" title="streamsx.rest_primitives.ResourceAllocation"><code class="xref py py-class docutils literal"><span class="pre">ResourceAllocation</span></code></a> element tance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Resource allocation used to access information about the resource where this PE is running.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.rest_primitives.ResourceAllocation" title="streamsx.rest_primitives.ResourceAllocation">ResourceAllocation</a></td>
+</tr>
+</tbody>
+</table>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.9.</span></p>
+</div>
+</dd></dl>
+
+<dl class="method">
 <dt id="streamsx.rest_primitives.PE.refresh">
 <code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.PE.refresh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
@@ -1997,8 +2020,7 @@ and saves them as a plain text file.</p>
 <dl class="class">
 <dt id="streamsx.rest_primitives.PEConnection">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">PEConnection</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.PEConnection" title="Permalink to this definition">¶</a></dt>
-<dd><p>The processing element (PE) connection resource provides access to information about a connection between two
-processing element (PE) ports.</p>
+<dd><p>Stream connection between two PEs.</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.PEConnection.id">
 <code class="descname">id</code><a class="headerlink" href="#streamsx.rest_primitives.PEConnection.id" title="Permalink to this definition">¶</a></dt>
@@ -2062,11 +2084,57 @@ processing element (PE) ports.</p>
 <dl class="class">
 <dt id="streamsx.rest_primitives.Resource">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">Resource</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Resource" title="Permalink to this definition">¶</a></dt>
-<dd><p>The Streams resource element provides access to information about a Streams resource.</p>
+<dd><p>A resource available to a IBM Streams domain.</p>
 <dl class="attribute">
-<dt id="streamsx.rest_primitives.Resource.name">
-<code class="descname">name</code><a class="headerlink" href="#streamsx.rest_primitives.Resource.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – Resource name.</p>
+<dt id="streamsx.rest_primitives.Resource.id">
+<code class="descname">id</code><a class="headerlink" href="#streamsx.rest_primitives.Resource.id" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – Resource identifier.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Resource.displayName">
+<code class="descname">displayName</code><a class="headerlink" href="#streamsx.rest_primitives.Resource.displayName" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – Resource display name.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Resource.ipAddress">
+<code class="descname">ipAddress</code><a class="headerlink" href="#streamsx.rest_primitives.Resource.ipAddress" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – IP address.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Resource.status">
+<code class="descname">status</code><a class="headerlink" href="#streamsx.rest_primitives.Resource.status" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – Resource status.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Resource.tags">
+<code class="descname">tags</code><a class="headerlink" href="#streamsx.rest_primitives.Resource.tags" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list[str]</em> – Tags assigned to resource.</p>
+</dd></dl>
+
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.9.</span></p>
+</div>
+<dl class="method">
+<dt id="streamsx.rest_primitives.Resource.get_metrics">
+<code class="descname">get_metrics</code><span class="sig-paren">(</span><em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Resource.get_metrics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get metrics for this resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Only return metrics matching <cite>name</cite>, where <cite>name</cite> can be a regular expression.  If
+<cite>name</cite> is not supplied, then all metrics for this resource are returned.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">List of matching metrics.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.Metric" title="streamsx.rest_primitives.Metric">Metric</a>)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -2080,8 +2148,7 @@ processing element (PE) ports.</p>
 <dl class="class">
 <dt id="streamsx.rest_primitives.ResourceAllocation">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">ResourceAllocation</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ResourceAllocation" title="Permalink to this definition">¶</a></dt>
-<dd><p>The ResourceAllocation element resource provides access to information about a resource that is allocated to
-an IBM Streams instance.</p>
+<dd><p>A resource that is allocated to an IBM Streams instance.</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.ResourceAllocation.resourceType">
 <code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.ResourceAllocation.resourceType" title="Permalink to this definition">¶</a></dt>
@@ -2117,6 +2184,75 @@ streams processing applications.</p>
 </pre></div>
 </div>
 <dl class="method">
+<dt id="streamsx.rest_primitives.ResourceAllocation.get_jobs">
+<code class="descname">get_jobs</code><span class="sig-paren">(</span><em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ResourceAllocation.get_jobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves jobs running on this resource in its instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Only return jobs containing property <strong>name</strong> that matches <cite>name</cite>. <cite>name</cite> can be a
+regular expression. If <cite>name</cite> is not supplied, then all jobs are returned.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of jobs matching the given <cite>name</cite>.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.Job" title="streamsx.rest_primitives.Job">Job</a>)</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If <code class="docutils literal"><span class="pre">applicationResource</span></code> is <cite>False</cite> an empty list is returned.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.9.</span></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.ResourceAllocation.get_pes">
+<code class="descname">get_pes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ResourceAllocation.get_pes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.PE" title="streamsx.rest_primitives.PE"><code class="xref py py-class docutils literal"><span class="pre">PE</span></code></a> running on this resource
+in its instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of PE running on this resource.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.PE" title="streamsx.rest_primitives.PE">PE</a>)</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If <code class="docutils literal"><span class="pre">applicationResource</span></code> is <cite>False</cite> an empty list is returned.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.9.</span></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.ResourceAllocation.get_resource">
+<code class="descname">get_resource</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ResourceAllocation.get_resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the <a class="reference internal" href="#streamsx.rest_primitives.Resource" title="streamsx.rest_primitives.Resource"><code class="xref py py-class docutils literal"><span class="pre">Resource</span></code></a> of the resource allocation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Resource for this allocation.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.rest_primitives.Resource" title="streamsx.rest_primitives.Resource">Resource</a></td>
+</tr>
+</tbody>
+</table>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.9.</span></p>
+</div>
+</dd></dl>
+
+<dl class="method">
 <dt id="streamsx.rest_primitives.ResourceAllocation.refresh">
 <code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ResourceAllocation.refresh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
@@ -2127,7 +2263,7 @@ streams processing applications.</p>
 <dl class="class">
 <dt id="streamsx.rest_primitives.ResourceTag">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">ResourceTag</code><span class="sig-paren">(</span><em>json_resource_tag</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ResourceTag" title="Permalink to this definition">¶</a></dt>
-<dd><p>Contains information for a tag that is defined in a Streams domain</p>
+<dd><p>Resource tag defined in a Streams domain</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.ResourceTag.definition_format_properties">
 <code class="descname">definition_format_properties</code><a class="headerlink" href="#streamsx.rest_primitives.ResourceTag.definition_format_properties" title="Permalink to this definition">¶</a></dt>
@@ -2158,6 +2294,38 @@ properties.</p>
 <dt id="streamsx.rest_primitives.ResourceTag.reserved">
 <code class="descname">reserved</code><a class="headerlink" href="#streamsx.rest_primitives.ResourceTag.reserved" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>bool</em> – If <em>True</em>, this tag is defined by IBM Streams, and cannot be modified.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.RestResource">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">RestResource</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.RestResource" title="Permalink to this definition">¶</a></dt>
+<dd><p>HTTP REST resource identifier.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.RestResource.name">
+<code class="descname">name</code><a class="headerlink" href="#streamsx.rest_primitives.RestResource.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – Resource name.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.RestResource.resource">
+<code class="descname">resource</code><a class="headerlink" href="#streamsx.rest_primitives.RestResource.resource" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – A string that identifies the URI for the resource.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.RestResource.get_resource">
+<code class="descname">get_resource</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.RestResource.get_resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a request against this REST resource.
+:returns: JSON response.
+:rtype: dict</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.RestResource.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.RestResource.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
 </dd></dl>
 
 </dd></dl>
@@ -2275,8 +2443,7 @@ containing the application to be submitted</li>
 <dl class="class">
 <dt id="streamsx.rest_primitives.View">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">View</code><span class="sig-paren">(</span><em>json_view</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.View" title="Permalink to this definition">¶</a></dt>
-<dd><p>The View resource element provides access to information about a view that is associated with an active job, and
-exposes methods to retrieve data from the view’s stream.</p>
+<dd><p>View on a stream.</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.View.id">
 <code class="descname">id</code><a class="headerlink" href="#streamsx.rest_primitives.View.id" title="Permalink to this definition">¶</a></dt>
@@ -2445,7 +2612,7 @@ created.</p>
 <dl class="class">
 <dt id="streamsx.rest_primitives.ViewItem">
 <em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">ViewItem</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ViewItem" title="Permalink to this definition">¶</a></dt>
-<dd><p>Represents the data of a tuple, its type, and the time when it was collected from the stream.</p>
+<dd><p>A stream tuple in view.</p>
 <dl class="attribute">
 <dt id="streamsx.rest_primitives.ViewItem.collectionTime">
 <code class="descname">collectionTime</code><a class="headerlink" href="#streamsx.rest_primitives.ViewItem.collectionTime" title="Permalink to this definition">¶</a></dt>
@@ -2507,7 +2674,7 @@ created.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015,2017 IBM Corp..
+        &copy; Copyright 2015,2018 IBM Corp..
 
     </p>
   </div>
@@ -2529,7 +2696,7 @@ created.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.9.3b',
+            VERSION:'1.9.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

@@ -11,6 +11,7 @@ com.ibm.streamsx.topology.json
 com.ibm.streamsx.topology.logic
 com.ibm.streamsx.topology.messaging.kafka
 com.ibm.streamsx.topology.messaging.mqtt
+com.ibm.streamsx.topology.spi
 com.ibm.streamsx.topology.spi.builder
 com.ibm.streamsx.topology.spi.runtime
 com.ibm.streamsx.topology.spl

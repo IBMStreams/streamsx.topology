@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; streamsx 1.9.3b documentation</title>
+  <title>Index &mdash; streamsx 1.9.5 documentation</title>
   
 
   
@@ -36,7 +36,7 @@
         <link rel="index" title="Index"
               href="#"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.9.3b documentation" href="index.html"/> 
+    <link rel="top" title="streamsx 1.9.5 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -111,6 +111,10 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="scripts/runner.html">streamsx-runner</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scripts/extract.html">spl-python-extract</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysetup.html">IBM Streams Python setup</a></li>
 </ul>
 
             
@@ -391,6 +395,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="streamsx.topology.topology.html#streamsx.topology.topology.SubscribeConnection.Direct">Direct (streamsx.topology.topology.SubscribeConnection attribute)</a>
 </li>
+      <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Resource.displayName">displayName (streamsx.rest_primitives.Resource attribute)</a>
+</li>
       <li><a href="streamsx.topology.context.html#streamsx.topology.context.ContextTypes.DISTRIBUTED">DISTRIBUTED (streamsx.topology.context.ContextTypes attribute)</a>
 </li>
       <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Domain">Domain (class in streamsx.rest_primitives)</a>
@@ -551,16 +557,20 @@
         <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Domain.get_instances">(streamsx.rest_primitives.Domain method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Instance.get_job">get_job() (streamsx.rest_primitives.Instance method)</a>
 
       <ul>
         <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.View.get_job">(streamsx.rest_primitives.View method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Instance.get_jobs">get_jobs() (streamsx.rest_primitives.Instance method)</a>
+
+      <ul>
+        <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.ResourceAllocation.get_jobs">(streamsx.rest_primitives.ResourceAllocation method)</a>
 </li>
+      </ul></li>
       <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Operator.get_metrics">get_metrics() (streamsx.rest_primitives.Operator method)</a>
 
       <ul>
@@ -569,6 +579,8 @@
         <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.OperatorOutputPort.get_metrics">(streamsx.rest_primitives.OperatorOutputPort method)</a>
 </li>
         <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.PE.get_metrics">(streamsx.rest_primitives.PE method)</a>
+</li>
+        <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Resource.get_metrics">(streamsx.rest_primitives.Resource method)</a>
 </li>
       </ul></li>
       <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Instance.get_operator_connections">get_operator_connections() (streamsx.rest_primitives.Instance method)</a>
@@ -600,8 +612,18 @@
       <ul>
         <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Job.get_pes">(streamsx.rest_primitives.Job method)</a>
 </li>
+        <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.ResourceAllocation.get_pes">(streamsx.rest_primitives.ResourceAllocation method)</a>
+</li>
       </ul></li>
       <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Instance.get_published_topics">get_published_topics() (streamsx.rest_primitives.Instance method)</a>
+</li>
+      <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.ResourceAllocation.get_resource">get_resource() (streamsx.rest_primitives.ResourceAllocation method)</a>
+
+      <ul>
+        <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.RestResource.get_resource">(streamsx.rest_primitives.RestResource method)</a>
+</li>
+      </ul></li>
+      <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.PE.get_resource_allocation">get_resource_allocation() (streamsx.rest_primitives.PE method)</a>
 </li>
       <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Domain.get_resource_allocations">get_resource_allocations() (streamsx.rest_primitives.Domain method)</a>
 
@@ -668,6 +690,8 @@
 </li>
         <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.PEConnection.id">(streamsx.rest_primitives.PEConnection attribute)</a>
 </li>
+        <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Resource.id">(streamsx.rest_primitives.Resource attribute)</a>
+</li>
         <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.View.id">(streamsx.rest_primitives.View attribute)</a>
 </li>
       </ul></li>
@@ -714,7 +738,11 @@
       <li><a href="streamsx.spl.op.html#streamsx.spl.op.Invoke">Invoke (class in streamsx.spl.op)</a>
 </li>
       <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Host.ipAddress">ipAddress (streamsx.rest_primitives.Host attribute)</a>
+
+      <ul>
+        <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Resource.ipAddress">(streamsx.rest_primitives.Resource attribute)</a>
 </li>
+      </ul></li>
       <li><a href="streamsx.topology.schema.html#streamsx.topology.schema.is_common">is_common() (in module streamsx.topology.schema)</a>
 </li>
       <li><a href="streamsx.topology.topology.html#streamsx.topology.topology.PendingStream.is_complete">is_complete() (streamsx.topology.topology.PendingStream method)</a>
@@ -828,9 +856,9 @@
 </li>
         <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.OperatorOutputPort.name">(streamsx.rest_primitives.OperatorOutputPort attribute)</a>
 </li>
-        <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Resource.name">(streamsx.rest_primitives.Resource attribute)</a>
-</li>
         <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.ResourceTag.name">(streamsx.rest_primitives.ResourceTag attribute)</a>
+</li>
+        <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.RestResource.name">(streamsx.rest_primitives.RestResource attribute)</a>
 </li>
         <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.View.name">(streamsx.rest_primitives.View attribute)</a>
 </li>
@@ -986,6 +1014,8 @@
 </li>
         <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.ResourceAllocation.refresh">(streamsx.rest_primitives.ResourceAllocation method)</a>
 </li>
+        <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.RestResource.refresh">(streamsx.rest_primitives.RestResource method)</a>
+</li>
         <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.View.refresh">(streamsx.rest_primitives.View method)</a>
 </li>
         <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.ViewItem.refresh">(streamsx.rest_primitives.ViewItem method)</a>
@@ -1004,6 +1034,8 @@
       <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.ResourceTag.reserved">reserved (streamsx.rest_primitives.ResourceTag attribute)</a>
 </li>
       <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Resource">Resource (class in streamsx.rest_primitives)</a>
+</li>
+      <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.RestResource.resource">resource (streamsx.rest_primitives.RestResource attribute)</a>
 </li>
       <li><a href="streamsx.spl.op.html#streamsx.spl.op.Invoke.resource_tags">resource_tags (streamsx.spl.op.Invoke attribute)</a>
 
@@ -1070,6 +1102,8 @@
 </li>
       </ul></li>
       <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.PE.restartable">restartable (streamsx.rest_primitives.PE attribute)</a>
+</li>
+      <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.RestResource">RestResource (class in streamsx.rest_primitives)</a>
 </li>
       <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Host.restrictedTags">restrictedTags (streamsx.rest_primitives.Host attribute)</a>
 </li>
@@ -1178,13 +1212,15 @@
 </li>
         <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.PEConnection.status">(streamsx.rest_primitives.PEConnection attribute)</a>
 </li>
+        <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Resource.status">(streamsx.rest_primitives.Resource attribute)</a>
+</li>
         <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.ResourceAllocation.status">(streamsx.rest_primitives.ResourceAllocation attribute)</a>
 </li>
       </ul></li>
-      <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.PE.statusReason">statusReason (streamsx.rest_primitives.PE attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.PE.statusReason">statusReason (streamsx.rest_primitives.PE attribute)</a>
+</li>
       <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.View.stop_data_fetch">stop_data_fetch() (streamsx.rest_primitives.View method)</a>
 
       <ul>
@@ -1275,6 +1311,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Host.tag">tag (streamsx.rest_primitives.Host attribute)</a>
 </li>
+      <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.Resource.tags">tags (streamsx.rest_primitives.Resource attribute)</a>
+</li>
       <li><a href="streamsx.topology.context.html#streamsx.topology.context.JobConfig.target_pe_count">target_pe_count (streamsx.topology.context.JobConfig attribute)</a>
 </li>
       <li><a href="streamsx.topology.tester.html#streamsx.topology.tester.Tester.test">test() (streamsx.topology.tester.Tester method)</a>
@@ -1289,10 +1327,10 @@
 </li>
       <li><a href="streamsx.topology.context.html#streamsx.topology.context.ContextTypes.TOOLKIT">TOOLKIT (streamsx.topology.context.ContextTypes attribute)</a>
 </li>
-      <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.PublishedTopic.topic">topic (streamsx.rest_primitives.PublishedTopic attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="streamsx.rest_primitives.html#streamsx.rest_primitives.PublishedTopic.topic">topic (streamsx.rest_primitives.PublishedTopic attribute)</a>
+</li>
       <li><a href="streamsx.topology.topology.html#streamsx.topology.topology.Topology">Topology (class in streamsx.topology.topology)</a>
 </li>
       <li><a href="streamsx.topology.context.html#streamsx.topology.context.JobConfig.tracing">tracing (streamsx.topology.context.JobConfig attribute)</a>
@@ -1390,7 +1428,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015,2017 IBM Corp..
+        &copy; Copyright 2015,2018 IBM Corp..
 
     </p>
   </div>
@@ -1412,7 +1450,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.9.3b',
+            VERSION:'1.9.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
