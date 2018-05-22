@@ -6,10 +6,8 @@ package com.ibm.streamsx.rest;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
@@ -40,19 +38,9 @@ public class OutputPort extends Element {
     @Expose
     private String streamName;
 
-    static final List<OutputPort> getOutputPortList(AbstractStreamsConnection sc, String outputPortList) {
-        List<OutputPort> opList;
-        try {
-            OutputPortArray opArray = gson.fromJson(outputPortList, OutputPortArray.class);
-
-            opList = opArray.outputPorts;
-            for (OutputPort op : opList) {
-                op.setConnection(sc);
-            }
-        } catch (JsonSyntaxException e) {
-            opList = Collections.<OutputPort> emptyList();
-        }
-        return opList;
+    static final List<OutputPort> createOutputPortList(AbstractStreamsConnection sc,
+            String uri) throws IOException {       
+        return createList(sc, uri, OutputPortArray.class);
     }
 
     /**
@@ -103,13 +91,11 @@ public class OutputPort extends Element {
         return streamName;
     };
 
-    private static class OutputPortArray {
+    private static class OutputPortArray extends ElementArray<OutputPort> {
         @Expose
         private ArrayList<OutputPort> outputPorts;
-        @Expose
-        private String resourceType;
-        @Expose
-        private int total;
+        
+        @Override
+        List<OutputPort> elements() {return outputPorts;}
     }
-
 }

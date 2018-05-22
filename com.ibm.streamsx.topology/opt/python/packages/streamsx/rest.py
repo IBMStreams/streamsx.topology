@@ -44,7 +44,7 @@ from pprint import pformat
 import streamsx.topology.context
 
 from streamsx import st
-from .rest_primitives import (Domain, Instance, Installation, Resource, _StreamsRestClient, StreamingAnalyticsService,
+from .rest_primitives import (Domain, Instance, Installation, RestResource, _StreamsRestClient, StreamingAnalyticsService,
     _exact_resource, _IAMStreamsRestClient, _IAMConstants)
 
 logger = logging.getLogger('streamsx.rest')
@@ -181,13 +181,13 @@ class StreamsConnection:
         return self._get_elements('installations', Installation)
 
     def get_resources(self):
-        """Retrieves a list of all known Streams resources.
+        """Retrieves a list of all known Streams high-level REST resources.
 
         Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives.Resource`: List of all Streams resources.
+            :py:obj:`list` of :py:class:`~.rest_primitives.RestResource`: List of all Streams high-level REST resources.
         """
         json_resources = self.rest_client.make_request(self.resource_url)['resources']
-        return [Resource(resource, self.rest_client) for resource in json_resources]
+        return [RestResource(resource, self.rest_client) for resource in json_resources]
 
     def __str__(self):
         return pformat(self.__dict__)
