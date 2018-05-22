@@ -96,6 +96,18 @@ public class Instance extends Element {
     public List<ProcessingElement> getPes() throws IOException {
         return ProcessingElement.createPEList(connection(), pes);
     }
+    
+    /**
+     * Gets a list of {@link ResourceAllocation resource allocations} for this instance.
+     * 
+     * @return List of {@link ResourceAllocation resource allocations}
+     * @throws IOException
+     * 
+     * @since 1.9
+     */
+    public List<ResourceAllocation> getResourceAllocations() throws IOException {
+        return ResourceAllocation.createResourceAllocationList(connection(), resourceAllocations);
+    }
 
     /**
      * Gets the {@link Job} for a given jobId in this instance

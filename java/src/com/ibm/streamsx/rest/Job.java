@@ -180,6 +180,18 @@ public class Job extends Element {
     public List<ProcessingElement> getPes() throws IOException {
         return ProcessingElement.createPEList(connection(), pes);
     }
+    
+    /**
+     * Gets a list of {@link ResourceAllocation resource allocations} for this job.
+     * 
+     * @return List of {@link ResourceAllocation resource allocations}
+     * @throws IOException
+     * 
+     * @since 1.9
+     */
+    public List<ResourceAllocation> getResourceAllocations() throws IOException {
+        return ResourceAllocation.createResourceAllocationList(connection(), resourceAllocations);
+    }
 
     /**
      * Identifies the REST resource type

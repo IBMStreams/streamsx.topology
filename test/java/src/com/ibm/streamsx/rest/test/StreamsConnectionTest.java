@@ -13,6 +13,7 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeNotNull;
 import static org.junit.Assume.assumeTrue;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -31,6 +32,8 @@ import com.ibm.streamsx.rest.PEInputPort;
 import com.ibm.streamsx.rest.PEOutputPort;
 import com.ibm.streamsx.rest.ProcessingElement;
 import com.ibm.streamsx.rest.RESTException;
+import com.ibm.streamsx.rest.Resource;
+import com.ibm.streamsx.rest.ResourceAllocation;
 import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
@@ -206,6 +209,8 @@ public class StreamsConnectionTest {
         assertNotNull(domain.getZooKeeperConnectionString());
         assertNotNull(domain.getCreationUser());
         assertTrue(domain.getCreationTime() <= instance.getCreationTime());
+        
+        checkResourceAllocations(instance.getResourceAllocations(), false);
     }
 
     @Before
@@ -269,7 +274,7 @@ public class StreamsConnectionTest {
         assertTrue(foundJob);
 
         // get a specific job
-        Job job2 = instance.getJob(jobId);
+        final Job job2 = instance.getJob(jobId);
 
         for (int i = 0; i < 3; i++) {
 
@@ -295,6 +300,8 @@ public class StreamsConnectionTest {
         // job is setup with 2 PEs
         List<ProcessingElement> pes = job.getPes();
         assertEquals(2, pes.size());
+        
+        checkResourceAllocations(job.getResourceAllocations(), true);
     }
 
     @Test
@@ -434,10 +441,12 @@ public class StreamsConnectionTest {
     @Test
     public void testProcessingElements() throws Exception {
 
-        List<ProcessingElement> pes = job.getPes();
+        final List<ProcessingElement> pes = job.getPes();
 
         // there should be 2 processing element for this test
         assertEquals(2, pes.size());
+        
+        
 
         ProcessingElement pe1 = pes.get(0);
         assertEquals(0, pe1.getIndexWithinJob());
@@ -536,6 +545,39 @@ public class StreamsConnectionTest {
         assertEquals(peOp.getIndexWithinJob(), jobOp.getIndexWithinJob());
         assertEquals(peOp.getResourceType(), jobOp.getResourceType());
         assertEquals(peOp.getOperatorKind(), jobOp.getOperatorKind());
+        
+        for (ProcessingElement pe : pes) {
+            checkResourceAllocation(pe.getResourceAllocation(), true);
+        }
+    }
+    
+    private static void checkResourceAllocations(List<ResourceAllocation> ras, boolean app)
+        throws IOException {
+        for (ResourceAllocation ra : ras)
+            checkResourceAllocation(ra, app);
     }
 
+    private static void checkResourceAllocation(ResourceAllocation ra, boolean app) throws IOException {
+        assertEquals("resourceAllocation", ra.getResourceType());
+        if (app)
+            assertTrue(ra.isApplicationResource());
+        assertNotNull(ra.getSchedulerStatus());
+        assertNotNull(ra.getStatus());
+        
+        Resource r = ra.getResource();
+        System.out.println("DDDD:RESOURCE:" + r.getDisplayName());
+        assertNotNull(r.getId());
+        assertNotNull(r.getDisplayName());
+        assertNotNull(r.getIpAddress());       
+        assertEquals("resource", r.getResourceType());
+        
+        for (Metric metric : r.getMetrics()) {
+            assertTrue((metric.getMetricKind().equals("counter")) || (metric.getMetricKind().equals("gauge")));
+            assertEquals("system", metric.getMetricType());
+            assertEquals("metric", metric.getResourceType());
+            assertNotNull(metric.getName());
+            assertNotNull(metric.getDescription());
+            assertTrue(metric.getLastTimeRetrieved() > 0);
+        }
+    }
 }

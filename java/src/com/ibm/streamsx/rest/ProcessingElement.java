@@ -312,6 +312,19 @@ public class ProcessingElement extends Element {
     public String getTracingLevel() {
         return tracingLevel;
     }
+    
+    /**
+     * Gets the {@link ResourceAllocation resource allocation} for this
+     * processing element.
+     * 
+     * @return {@link ResourceAllocation resource allocation}
+     * @throws IOException
+     * 
+     * @since 1.9
+     */
+    public ResourceAllocation getResourceAllocation() throws IOException {
+        return create(connection(), resourceAllocation, ResourceAllocation.class);
+    }
 
     /**
      * internal usage to get the list of processing elements
