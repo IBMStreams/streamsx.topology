@@ -8,6 +8,7 @@ package com.ibm.streamsx.rest.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeNotNull;
@@ -564,12 +565,25 @@ public class StreamsConnectionTest {
         assertNotNull(ra.getSchedulerStatus());
         assertNotNull(ra.getStatus());
         
+        Instance rai = ra.getInstance();
+        for (ProcessingElement pe : ra.getPes()) {
+            assertNotNull(pe);
+            assertNotNull(pe.getStatus());
+        }
+        for (Job job : ra.getJobs()) {
+            assertNotNull(job);
+            assertNotNull(job.getStatus());
+        }
+        assertSame(rai, ra.getInstance());
+        
         Resource r = ra.getResource();
         System.out.println("DDDD:RESOURCE:" + r.getDisplayName());
         assertNotNull(r.getId());
         assertNotNull(r.getDisplayName());
         assertNotNull(r.getIpAddress());       
         assertEquals("resource", r.getResourceType());
+        
+        
         
         for (Metric metric : r.getMetrics()) {
             assertTrue((metric.getMetricKind().equals("counter")) || (metric.getMetricKind().equals("gauge")));
@@ -579,5 +593,7 @@ public class StreamsConnectionTest {
             assertNotNull(metric.getDescription());
             assertTrue(metric.getLastTimeRetrieved() > 0);
         }
+        
+
     }
 }

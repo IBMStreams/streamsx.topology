@@ -95,6 +95,11 @@ def _check_resource_allocation(tc, ra):
     tc.assertIsInstance(r.tags, list)
     _check_metrics(tc, r)
 
+    for pe in ra.get_pes():
+        tc.assertIsInstance(pe, PE)
+    for job in ra.get_jobs():
+        tc.assertIsInstance(job, Job)
+        
 def _fetch_from_job(tc, job):
     _check_non_empty_list(tc, job.get_pes(), PE)
     ops = job.get_operators()

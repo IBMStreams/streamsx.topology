@@ -1037,8 +1037,7 @@ class PEConnection(_ResourceElement):
 
 
 class ResourceAllocation(_ResourceElement):
-    """The ResourceAllocation element resource provides access to information about a resource that is allocated to
-    an IBM Streams instance.
+    """A resource that is allocated to an IBM Streams instance.
 
     Attributes:
         resourceType(str): Identifies the REST resource type, which is *resourceAllocation*.
@@ -1064,6 +1063,39 @@ class ResourceAllocation(_ResourceElement):
         .. versionadded:: 1.9
         """
         return Resource(self.rest_client.make_request(self.resource), self.rest_client)
+
+    def get_pes(self):
+        """Get the list of :py:class:`PE` running on this resource
+        in its instance.
+
+        Returns:
+            list(PE): List of PE running on this resource.
+
+        .. note:: If ``applicationResource`` is `False` an empty list is returned.
+        .. versionadded:: 1.9
+        """
+        if self.applicationResource:
+            return self._get_elements(self.pes, 'pes', PE)
+        else:
+            return []
+
+    def get_jobs(self, name=None):
+        """Retrieves jobs running on this resource in its instance.
+
+        Args:
+            name (str, optional): Only return jobs containing property **name** that matches `name`. `name` can be a
+                regular expression. If `name` is not supplied, then all jobs are returned.
+
+        Returns:
+            list(Job): A list of jobs matching the given `name`.
+        
+        .. note:: If ``applicationResource`` is `False` an empty list is returned.
+        .. versionadded:: 1.9
+        """
+        if self.applicationResource:
+            return self._get_elements(self.jobs, 'jobs', Job, None, name)
+        else:
+            return []
 
 
 class ActiveService(_ResourceElement):
@@ -1518,7 +1550,7 @@ class Domain(_ResourceElement):
         return self._get_elements(self.resources, 'resources', Resource)
 
 class Resource(_ResourceElement):
-    """The Streams resource element provides access to information about a Streams resource.
+    """A resource available to a IBM Streams domain.
 
     Attributes:
         id(str): Resource identifier.

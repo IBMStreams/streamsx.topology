@@ -6,6 +6,7 @@ package com.ibm.streamsx.rest;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.gson.annotations.Expose;
@@ -29,6 +30,14 @@ public class ResourceAllocation extends Element {
     private String schedulerStatus;
     @Expose
     private String status;
+    
+    @Expose
+    private String pes;
+    @Expose
+    private String jobs;
+    @Expose
+    private String instance;
+    private Instance instance_;
 
     /**
      * Identifies the REST resource type
@@ -81,11 +90,46 @@ public class ResourceAllocation extends Element {
     /**
      * Obtain the {@code Resource} object for detailed information
      * on the resource.
-     * @return
+     * @return Resource.
      * @throws IOException Exception communicating with Streams instance.
      */
     public Resource getResource() throws IOException {
         return create(connection(), resource, Resource.class);
+    }
+    
+    /**
+     * Obtain the {@code Instance} this resource is allocated to.
+     * @return Instance this resource is allocated to.
+     * @throws IOException Exception communicating with Streams instance.
+     */
+    public Instance getInstance() throws IOException {
+        if (instance_ == null)
+            instance_ = create(connection(), instance, Instance.class);
+        return instance_;
+    }
+    
+    /**
+     * Gets a list of jobs running on this resource in this instance.
+     * 
+     * @return List of {@link Job IBM Streams Jobs}
+     * @throws IOException Exception communicating with Streams instance.
+     */
+    public List<Job> getJobs() throws IOException {
+        if (isApplicationResource())
+            return Job.createJobList(getInstance(), jobs);
+        return Collections.emptyList();
+    }
+    
+    /**
+     * Gets a list of processing elements running on this resource in this instance.
+     * 
+     * @return List of {@link ProcessingElement Processing Elements}
+     * @throws IOException Exception communicating with Streams instance.
+     */
+    public List<ProcessingElement> getPes() throws IOException {
+        if (isApplicationResource())
+            return ProcessingElement.createPEList(connection(), pes);
+        return Collections.emptyList();
     }
     
     static final List<ResourceAllocation> createResourceAllocationList(
