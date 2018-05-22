@@ -6,10 +6,13 @@ package com.ibm.streamsx.rest;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
@@ -76,5 +79,41 @@ public abstract class Element {
         Object me = refreshJson.fromJson(response, getClass());
         
         assert me == this;
+    }
+    
+    static final <E extends Element> E create(
+            final AbstractStreamsConnection sc, String uri,
+            Class<E> elementClass) throws IOException {
+        
+        E element = gson.fromJson(sc.getResponseString(uri), elementClass);
+        element.setConnection(sc);
+        return element;
+    }
+    
+    /**
+     * internal usage to get the list of processing elements
+     * 
+     */
+    abstract static class ElementArray<E extends Element> {
+        @Expose
+        private String resourceType;
+        @Expose
+        private int total;
+
+        abstract List<E> elements();
+    }
+
+    final static <E extends Element, A extends ElementArray<E>> List<E> createList(
+            AbstractStreamsConnection sc,
+            String uri, Class<A> arrayClass) throws IOException {
+        try {
+            A array = gson.fromJson(sc.getResponseString(uri), arrayClass);
+            for (Element e : array.elements()) {
+                e.setConnection(sc);
+            }
+            return array.elements();
+        } catch (JsonSyntaxException e) {
+            return Collections.emptyList();
+        }
     }
 }

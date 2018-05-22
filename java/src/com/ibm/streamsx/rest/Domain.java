@@ -25,12 +25,6 @@ public class Domain extends Element {
     @Expose
     private String zooKeeperConnectionString;
 
-    static final Domain create(final AbstractStreamsConnection sc, String gsonInstance) {
-        Domain domain = gson.fromJson(gsonInstance, Domain.class);
-        domain.setConnection(sc);
-        return domain;
-    }
-
     /**
      * Gets the time in milliseconds when this domain was created.
      * 

@@ -6,13 +6,10 @@ package com.ibm.streamsx.rest;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
@@ -86,20 +83,11 @@ public class Job extends Element {
         return job;
     }
 
-    static final List<Job> getJobList(Instance instance, String gsonJobList) {
-        List<Job> jList;
-        JobArray jobsArray;
-        try {
-            jobsArray = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(gsonJobList,
-                    JobArray.class);
-
-            jList = jobsArray.jobs;
-            for (Job job : jList) {
-                job.setConnection(instance.connection());
-                job._instance = instance;
-            }
-        } catch (JsonSyntaxException e) {
-            jList = Collections.<Job> emptyList();
+    static final List<Job> createJobList(Instance instance, String uri) throws IOException {
+        
+        List<Job> jList = createList(instance.connection(), uri, JobArray.class);
+        for (Job job : jList) {
+            job._instance = instance;
         }
         return jList;
     }
@@ -111,10 +99,7 @@ public class Job extends Element {
      * @throws IOException
      */
     public List<Operator> getOperators() throws IOException {
-        String sReturn = connection().getResponseString(operators);
-
-        List<Operator> opList = Operator.getOperatorList(connection(), sReturn);
-        return opList;
+        return Operator.createOperatorList(connection(), operators);
     }
 
     /**
@@ -193,9 +178,19 @@ public class Job extends Element {
      * @throws IOException
      */
     public List<ProcessingElement> getPes() throws IOException {
-        String sReturn = connection().getResponseString(pes);
-        List<ProcessingElement> peList = ProcessingElement.getPEList(connection(), sReturn);
-        return peList;
+        return ProcessingElement.createPEList(connection(), pes);
+    }
+    
+    /**
+     * Gets a list of {@link ResourceAllocation resource allocations} for this job.
+     * 
+     * @return List of {@link ResourceAllocation resource allocations}
+     * @throws IOException
+     * 
+     * @since 1.9
+     */
+    public List<ResourceAllocation> getResourceAllocations() throws IOException {
+        return ResourceAllocation.createResourceAllocationList(connection(), resourceAllocations);
     }
 
     /**
@@ -291,13 +286,11 @@ public class Job extends Element {
         }
     }
 
-    private static class JobArray {
+    private static class JobArray  extends ElementArray<Job> {
         @Expose
-        public ArrayList<Job> jobs;
-        @Expose
-        public String resourceType;
-        @Expose
-        public int total;
+        private ArrayList<Job> jobs;
+        @Override
+        List<Job> elements() { return jobs; }
     }
 
 }
