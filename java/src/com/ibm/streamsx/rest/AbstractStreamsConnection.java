@@ -114,10 +114,7 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
      */
     @Override
     public List<Instance> getInstances() throws IOException {
-        String sReturn = getResponseString(instancesUrl);
-        List<Instance> instanceList = Instance.getInstanceList(this, sReturn);
-
-        return instanceList;
+        return Instance.createInstanceList(this, instancesUrl);
     }
 
     /* (non-Javadoc)
@@ -131,9 +128,8 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
             throw new IllegalArgumentException("Missing instance id");
         } else {
             String query = instancesUrl + "?id=" + instanceId;
-            String response = getResponseString(query);
 
-            List<Instance> instances = Instance.getInstanceList(this, response);
+            List<Instance> instances = Instance.createInstanceList(this, query);
             if (instances.size() == 1) {
                 // Should find one or none
                 si = instances.get(0);
