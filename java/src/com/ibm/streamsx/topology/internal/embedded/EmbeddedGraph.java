@@ -431,12 +431,14 @@ public class EmbeddedGraph {
         @SuppressWarnings("unchecked")
         Map<String,Object> spValues =
             (Map<String, Object>) config.get(ContextProperties.SUBMISSION_PARAMS);
-        for (String spName : spValues.keySet()) {
-            if (allsp.containsKey(spName)) {
-                Object val = spValues.get(spName);
-                if (val != null)
-                    val = val.toString();
-                allsp.put(spName, (String)val);
+        if (spValues != null) {
+            for (String spName : spValues.keySet()) {
+                if (allsp.containsKey(spName)) {
+                    Object val = spValues.get(spName);
+                    if (val != null)
+                        val = val.toString();
+                    allsp.put(spName, (String)val);
+                }
             }
         }
         
