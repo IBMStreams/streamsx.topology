@@ -122,7 +122,7 @@ class TestTester(unittest.TestCase):
 
 
 @unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
-class TestDistributedTester(unittest.TestCase):
+class TestDistributedTester(TestTester):
     def setUp(self):
         Tester.setup_distributed(self)
 
