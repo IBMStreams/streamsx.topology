@@ -13,42 +13,21 @@
   <target name="all" depends="spldoc,extract"/>
 
   <target name="extract">
-   <exec executable="${pythonversion}">
-     <arg value="${tk}/bin/spl-python-extract.py"/>
-     <arg value="-i"/>
-     <arg value="${pytk}"/>
-   </exec>
-
-   <exec executable="${streams.install}/bin/spl-make-toolkit">
-     <arg value="--make-operator"/>
-     <arg value="-i"/>
-     <arg value="${pytk}"/>
-   </exec>
+    <ant dir="${pytk}" target="toolkit" inheritAll="true">
+      <property name="tk" value="${tk}"/>
+    </ant>
    </target>
 
    <target name="spldoc" depends="extract">
-   <exec executable="${streams.install}/bin/spl-make-doc">
-     <arg value="--include-composite-operator-diagram"/>
-     <arg value="-i"/>
-     <arg value="${pytk}"/>
-   </exec>
+    <ant dir="${pytk}" target="spldoc" inheritAll="true">
+      <property name="tk" value="${tk}"/>
+    </ant>
    </target>
 
   <target name="clean" >
-    <delete dir="${pytk}/output"/>
-    <delete dir="${pytk}/doc"/>
-    <delete dir="${pytk}/impl"/>
-    <delete dir="${pytk}/opt/.__splpy"/>
-    <delete file="${pytk}/toolkit.xml"/>
-    <delete includeemptydirs="true" >
-       <fileset dir="${pytk}">
-          <include name="com.ibm.streamsx.topology.pysamples.kwargs/**"/>
-          <include name="com.ibm.streamsx.topology.pysamples.mail/**"/>
-          <include name="com.ibm.streamsx.topology.pysamples.positional/**"/>
-          <include name="com.ibm.streamsx.topology.pysamples.sources/**"/>
-          <exclude name="**/namespace-info.spl"/>
-       </fileset>
-    </delete>
+    <ant dir="${pytk}" target="clean" inheritAll="true">
+      <property name="tk" value="${tk}"/>
+    </ant>
   </target>
 
 </project>
