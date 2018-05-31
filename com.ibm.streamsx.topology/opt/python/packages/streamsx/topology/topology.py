@@ -1650,12 +1650,12 @@ class Window(object):
         schema = streamsx.topology.schema.CommonSchema.Python
         
         sl = _SourceLocation(_source_info(), "aggregate")
-        name = self.topology.graph._requested_name(name, action="aggregate", func=function)
+        _name = self.topology.graph._requested_name(name, action="aggregate", func=function)
         stateful = self.stream._determine_statefulness(function)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Aggregate", function, name=name, sl=sl, stateful=stateful)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Aggregate", function, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.stream.oport, name=self.stream.name, window_config=self._config)
-        oport = op.addOutputPort(schema=schema, name=name)
-
+        oport = op.addOutputPort(schema=schema, name=_name)
+        op._layout(kind='Aggregate', name=_name, orig_name=name)
         return Stream(self.topology, oport)._make_placeable()
 
 
