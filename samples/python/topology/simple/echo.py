@@ -42,7 +42,7 @@ def main():
     # stream that is printed to stdout
     
     # execute the topology by submitting to a standalone context
-    streamsx.topology.context.submit("TOOLKIT", topo)
+    streamsx.topology.context.submit("STANDALONE", topo)
      
 if __name__ == '__main__':
     main()
