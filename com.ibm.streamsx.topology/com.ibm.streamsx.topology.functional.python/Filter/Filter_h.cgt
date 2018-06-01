@@ -22,7 +22,6 @@ public:
   void process(Punctuation const & punct, uint32_t port);
 
 private:
-    void setupStateHandler();
     SplpyOp * op() { return funcop_; }
 
     // Members

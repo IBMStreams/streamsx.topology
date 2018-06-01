@@ -20,6 +20,7 @@
 #include "splpy_op.h"
 
 #include <SPL/Runtime/Operator/ParameterValue.h>
+#include <SPL/Runtime/Operator/State/StateHandler.h>
 
 namespace streamsx {
   namespace topology {
@@ -28,20 +29,22 @@ class SplpyFuncOp : public SplpyOp {
   public:
 
       SplpyFuncOp(SPL::Operator * op, const std::string & wrapfn) :
-         SplpyOp(op, "/opt/python/packages/streamsx/topology")
+        SplpyOp(op, "/opt/python/packages/streamsx/topology"),
+          stateHandler(NULL)
       {
          setSubmissionParameters();
          addAppPythonPackages();
          loadAndWrapCallable(wrapfn);
+         setupStateHandler();
       }
 
       virtual ~SplpyFuncOp() {
+        delete stateHandler;
+        stateHandler = NULL;
       }
 
 
-
   private:
-
       int hasParam(const char *name) {
           return op()->getParameterNames().count(name);
       }
@@ -112,43 +115,60 @@ class SplpyFuncOp : public SplpyOp {
 
           setCallable(SplpyGeneral::callFunction(
                "streamsx.topology.runtime", wrapfn, appCallable, extraArg));
-
-	  setupStateHandler();
       }
 
+      /**
+       * Register a state handler for the operator.  The state handler
+       * handles checkpointing and supports consistent regions.  Checkpointing
+       * will be enabled only if the operator is stateful and if it can be
+       * saved and restored using dill.
+       */
       void setupStateHandler() {
-	// If the value of the pyStateful param is true, create and register
-	// a state handler interface instance.
-	SPL::boolean stateful = static_cast<SPL::boolean>(op()->getParameterValues("pyStateful")[0]->getValue());
-	if (stateful) {
-	  std::cout << "stateful" << std::endl;
-	}
-	else {
-	  std::cout << "not stateful" << std::endl;
-	}
-	
-	/*
-	// Test whether callable is a class
-	Py_INCREF(callable);
-	PyObject * rv = SplpyGeneral::callFunction("streamsx.spl.runtime", "_splpy_is_class", callable, static_cast<PyObject*>(0));
-	if (PyObject_IsTrue(rv)) {
-	  std::cout << "A class" << std::endl;
-	}
-	else {
-	  std::cout << "Not a class" << std::endl;
-	}
-	Py_DECREF(rv);
-	rv = SplpyGeneral::callFunction("streamsx.spl.runtime", "_splpy_is_iterable", callable, static_cast<PyObject*>(0));
-	if (PyObject_IsTrue(rv)) {
-	  std::cout << "An iterable" << std::endl;
-	}
-	else {
-	  std::cout << "Not an iterable" << std::endl;
-	}
-	Py_DECREF(rv);
-	*/
-      }
+        // If the value of the pyStateful param is true, create and register
+        // a state handler instance.  Otherwise, register a do-nothing
+        // state handler.
+        SPL::boolean stateful = static_cast<SPL::boolean>(op()->getParameterValues("pyStateful")[0]->getValue());
+        assert(!stateHandler);
+        // Ensure that callable() can be pickled before using it in a state
+        // handler.
+        PyObject * pickledCallable = NULL;
+        if (stateful) {
+          SplpyGIL lock;
+          PyObject * dumps = SplpyGeneral::loadFunction("dill", "dumps");
+          PyObject * args = PyTuple_New(1);
+          Py_INCREF(callable());
+          PyTuple_SET_ITEM(args, 0, callable());
+          pickledCallable = PyObject_CallObject(dumps, args);
+          Py_DECREF(args);
+          Py_DECREF(dumps);
 
+          if (!pickledCallable) {
+            // the callable cannot be pickled
+            // continue without checkpointing for this operator
+            if (PyErr_Occurred()) {
+              PyObject * type = NULL;
+              PyObject * value = NULL;
+              PyObject * traceback = NULL;
+
+              PyErr_Fetch(&type, &value, &traceback);
+              if (value) {
+                SPL::rstring text;
+                // note pyRStringFromPyObject returns zero on success
+                if (!pyRStringFromPyObject(text, value)) {
+                  SPLAPPTRC(L_WARN, "Checkpointing is disabled for the " << op()->getContext().getName() << " operator because of python error " << text, "python");
+                }
+              }
+
+              Py_XDECREF(type);
+              Py_XDECREF(value);
+              Py_XDECREF(traceback);
+            }
+          }
+        }
+        stateHandler = (stateful && pickledCallable) ? new SplPyFuncOpStateHandler(this, pickledCallable) : new SPL::StateHandler;
+        SPLAPPTRC(L_DEBUG, "registerStateHandler", "python");
+        op()->getContext().registerStateHandler(*stateHandler);
+      }
 
       /*
        *  Add any packages in the application directory
@@ -166,6 +186,92 @@ class SplpyFuncOp : public SplpyOp {
           SplpyGeneral::callVoidFunction(
               "streamsx.topology.runtime", "setupOperator", tkDir, NULL);
       }
+
+      /**
+       * Support for saving an operator's state to checkpoints, and restoring
+       * the state from checkpoints.
+       */
+      class SplPyFuncOpStateHandler: public SPL::StateHandler {
+      public:
+        // Steals reference to pickledCallable
+        SplPyFuncOpStateHandler(SplpyOp * pyop, PyObject * pickledCallable) : op(pyop), loads(), dumps(), pickledInitialCallable(pickledCallable) {
+          // Load pickle.loads and pickle.dumps
+          SplpyGIL lock;
+          loads = SplpyGeneral::loadFunction("dill", "loads");
+          dumps = SplpyGeneral::loadFunction("dill", "dumps");
+        }
+
+        virtual ~SplPyFuncOpStateHandler() {
+          Py_CLEAR(loads);
+          Py_CLEAR(dumps);
+          Py_CLEAR(pickledInitialCallable);
+        }
+
+        virtual void checkpoint(SPL::Checkpoint & ckpt) {
+          SPLAPPTRC(L_DEBUG, "checkpoint", "python");
+          SPL::blob bytes;
+          {
+            SplpyGIL lock;
+            PyObject * ret = call(dumps, op->callable());
+            if (!ret) {
+              SplpyGeneral::tracePythonError();
+              throw SplpyGeneral::pythonException("dill.dumps");
+            }
+            pySplValueFromPyObject(bytes, ret);
+            Py_DECREF(ret);
+          }
+          ckpt << bytes;
+        }
+
+        virtual void reset(SPL::Checkpoint & ckpt) {
+          SPLAPPTRC(L_DEBUG, "reset", "python");
+          // Restore the callable from an spl blob
+          SPL::blob bytes;
+          ckpt >> bytes;
+          SplpyGIL lock;
+          PyObject * pickle = pySplValueToPyObject(bytes);
+          PyObject * ret = call(loads, pickle);
+          if (!ret) {
+            SplpyGeneral::tracePythonError();
+            throw SplpyGeneral::pythonException("dill.loads");
+          }
+          // discard the old callable, replace with the newly
+          // unpickled one.
+          Py_DECREF(op->callable());
+          op->setCallable(ret); // reference to ret stolen by op
+        }
+
+       virtual void resetToInitialState() {
+         SPLAPPTRC(L_DEBUG, "resetToInitialState", "python");
+         SplpyGIL lock;
+         PyObject * initialCallable = call(loads, pickledInitialCallable);
+         if (!initialCallable) {
+           SplpyGeneral::tracePythonError();
+           throw SplpyGeneral::pythonException("dill.loads");
+         }
+         Py_DECREF(op->callable());
+         op->setCallable(initialCallable);
+       }
+
+      private:
+        // Call a python callable with a single argument
+        // Caller must hold GILState.
+        PyObject * call(PyObject * callable, PyObject * arg) {
+          PyObject * args = PyTuple_New(1);
+          Py_INCREF(arg);
+          PyTuple_SET_ITEM(args, 0, arg);
+          PyObject * ret = PyObject_CallObject(callable, args);
+          Py_DECREF(args);
+          return ret;
+        }
+
+        SplpyOp * op;
+        PyObject * loads;
+        PyObject * dumps;
+        PyObject * pickledInitialCallable;
+      };
+
+      SPL::StateHandler * stateHandler;
 };
 
 }}

@@ -387,6 +387,7 @@ class Topology(object):
         
         self.graph = streamsx.topology.graph.SPLGraph(self, name, namespace)
         self._submission_parameters = dict()
+        self._checkpoint_period = None
 
     @property
     def name(self):
@@ -669,12 +670,15 @@ class Topology(object):
         return sp
 
     @property
-    def checkpoint_period(self) -> datetime.timedelta:
+    def checkpoint_period(self):
         return self._checkpoint_period
 
     @checkpoint_period.setter
-    def checkpoint_period(self, period: datetime.timedelta) -> None:
-        self._checkpoint_period = period
+    def checkpoint_period(self, period):
+        if (isinstance(period, datetime.timedelta) or isinstance(period, float)):
+            self._checkpoint_period = period
+        else:
+            raise TypeError("Unsupported type for checkpoint_period")
 
     def _prepare(self):
         """Prepare object prior to SPL generation."""
@@ -1653,7 +1657,7 @@ class Window(object):
         
         sl = _SourceLocation(_source_info(), "aggregate")
         name = self.topology.graph._requested_name(name, action="aggregate", func=function)
-        stateful = self._determine_statefulness(function)
+        stateful = self.stream._determine_statefulness(function)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Aggregate", function, name=name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.stream.oport, name=self.stream.name, window_config=self._config)
         oport = op.addOutputPort(schema=schema, name=name)

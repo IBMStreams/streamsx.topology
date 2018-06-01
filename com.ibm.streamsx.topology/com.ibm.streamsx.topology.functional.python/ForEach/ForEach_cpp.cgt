@@ -21,7 +21,6 @@ MY_OPERATOR::MY_OPERATOR():
     funcop_ = new SplpyFuncOp(this, "<%=$pywrapfunc%>");
 
 @include "../pyspltuple_constructor.cgt"
-    setupStateHandler();
 }
 
 // Destructor
@@ -33,22 +32,6 @@ MY_OPERATOR::~MY_OPERATOR()
   }
 
   delete funcop_;
-}
-
-void MY_OPERATOR::setupStateHandler() 
-{/*
-  SplpyGIL lock;
-  // Test whether funcop_ is a class
-  Py_INCREF(funcop_->callable());
-  PyObject * rv = SplpyGeneral::callFunction("streamsx.spl.runtime", "_splpy_is_class", funcop_->callable(), (PyObject*)0);
-  if (PyObject_IsTrue(rv)) {
-    std::cout << "A class" << std::endl;
-  }
-  else {
-    std::cout << "Not a class" << std::endl;
-  }
-  Py_DECREF(rv);
-*/
 }
 
 // Notify pending shutdown

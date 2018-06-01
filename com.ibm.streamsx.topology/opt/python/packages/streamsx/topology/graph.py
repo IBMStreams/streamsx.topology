@@ -10,6 +10,7 @@ import sys
 import uuid
 import json
 import inspect
+import datetime
 import pickle
 from enum import Enum
 
@@ -224,8 +225,15 @@ class SPLGraph(object):
         # should it be an error or warning if the value is 
         # not exceeded?  Is there also a max?
 
-        if self.topology.checkpoint_period is not None:
-            seconds = self.topology.checkpoint_period.total_seconds()
+        if self.topology.checkpoint_period is None:
+            pass
+        else:
+            if (isinstance (self.topology.checkpoint_period, float)):
+                seconds = self.topology.checkpoint_period
+            elif (isinstance (self.topology.checkpoint_period, datetime.timedelta)):
+                seconds = self.topology.checkpoint_period.total_seconds()
+            else:
+                raise TypeError("Unsupported type for checkpoint_period");
             period = seconds * 1000 * 1000
             unit = "MICROSECONDS"
 
