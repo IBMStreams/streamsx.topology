@@ -29,7 +29,6 @@ def main():
     """
     
     topo = Topology("echo")
-    topo.checkpoint_period = timedelta(seconds=1)
 
     # The command line arguments (sys.argv) excluding the application
     # name will be used at runtime as the contents of the echo stream.

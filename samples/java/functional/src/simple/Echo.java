@@ -57,7 +57,6 @@ public class Echo {
     public static void main(String[] args) throws Exception {
 
         Topology topology = new Topology("Echo");
-	topology.checkpointPeriod(1, TimeUnit.MINUTES);
 
         /*
          * The command line arguments (args) are captured by
@@ -76,7 +75,6 @@ public class Echo {
          * Now execute the topology by submitting to an
          * embedded (within this JVM) StreamsContext.
          */
-        //StreamsContextFactory.getEmbedded().submit(topology).get();
-	StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT).submit(topology).get();
+        StreamsContextFactory.getEmbedded().submit(topology).get();
     }
 }
