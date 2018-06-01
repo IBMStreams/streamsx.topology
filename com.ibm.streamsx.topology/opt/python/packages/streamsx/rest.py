@@ -13,8 +13,7 @@ The Streams REST API provides programmatic access to configuration and status in
 
 :py:class:`StreamsConnection` is the entry point to using the Streams REST API
 from Python. Through its functions and the returned objects status information
-can be obtained for items such as :py:class:`instances <.rest_primitives.Instance>` and
-:py:class:`jobs <.rest_primitives.Job>`.
+can be obtained for items such as :py:class:`instances <.rest_primitives.Instance>` and :py:class:`jobs <.rest_primitives.Job>`.
 
 ****************************
 Streaming Analytics REST API
@@ -23,13 +22,9 @@ Streaming Analytics REST API
 You can use the Streaming Analytics REST API to manage your service instance and the IBM Streams jobs that are running on the instance. The Streaming Analytics REST API is accessible from IBM Cloud applications that are bound to your service instance or from an application outside of IBM Cloud that is configured with the service instance VCAP information.
 
 :py:class:`StreamingAnalyticsConnection` is the entry point to using the
-Streaming Analytics REST API. The function :py:func:`~StreamingAnalyticsConnection.get_streaming_analytics` returns a :py:class:`~.rest_primitives.StreamingAnalyticsService` instance which is the wrapper around the Streaming Analytics REST API. This API allows functions such as
-:py:meth:`start <streamsx.rest_primitives.StreamingAnalyticsService.start_instance>`
-and 
-:py:meth:`stop <streamsx.rest_primitives.StreamingAnalyticsService.stop_instance>`
-the service instance.
+Streaming Analytics REST API. The function :py:func:`~StreamingAnalyticsConnection.get_streaming_analytics` returns a :py:class:`~.rest_primitives.StreamingAnalyticsService` instance which is the wrapper around the Streaming Analytics REST API. This API allows functions such as :py:meth:`start <streamsx.rest_primitives.StreamingAnalyticsService.start_instance>` and :py:meth:`stop <streamsx.rest_primitives.StreamingAnalyticsService.stop_instance>` the service instance.
 
-In addtion `StreamingAnalyticsConnection` extends from :py:class:`StreamsConnection` and thus provides access to the Streams REST API for the service instance.
+In addition `StreamingAnalyticsConnection` extends from :py:class:`StreamsConnection` and thus provides access to the Streams REST API for the service instance.
 
 .. seealso::
     `IBM Streams REST API overview <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.0/com.ibm.streams.restapi.doc/doc/restapis.html>`_
@@ -37,6 +32,7 @@ In addtion `StreamingAnalyticsConnection` extends from :py:class:`StreamsConnect
     `Streaming Analytics REST API <https://console.ng.bluemix.net/apidocs/220-streaming-analytics?&language=node#introduction>`_
         Reference documentation for the Streaming Analytics service REST API.
 
+.. seealso:: :ref:`sas-main`
 """
 from future.builtins import *
 
@@ -212,6 +208,8 @@ class StreamingAnalyticsConnection(StreamsConnection):
         >>> sc = StreamingAnalyticsConnection(service_name='Streaming-Analytics')
         >>> print(sc.get_streaming_analytics().get_instance_status())
         {'plan': 'Standard', 'state': 'STARTED', 'enabled': True, 'status': 'running'}
+
+    .. seealso: :ref:`sas-access`
     """
     def __init__(self, vcap_services=None, service_name=None):
         self.service_name = service_name or os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME')

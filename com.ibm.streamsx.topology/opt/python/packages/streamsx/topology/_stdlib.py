@@ -187,6 +187,14 @@ _STD_LIB_MODULES = {
     'sndhdr',
     'ossaudiodev',
 
+    # 26 Development tools
+    "typing",
+    "pydoc",
+    "doctest",
+    "unittest",
+    "2to3",
+    "test",
+
     # 29. Python Runtime Services
     'sys',
     'sysconfig',
@@ -222,5 +230,8 @@ _STD_LIB_MODULES = {
     'py_compile',
     'compileall',
     'dis',
-    'pickletools'
+    'pickletools',
+
+    # PEP0365
+    "pkg_resources",
 }
