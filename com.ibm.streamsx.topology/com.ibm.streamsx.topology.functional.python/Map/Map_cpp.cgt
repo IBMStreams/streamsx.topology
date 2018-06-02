@@ -21,6 +21,7 @@ using namespace streamsx::topology;
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
    pyInStyleObj_(NULL),
+   pyOutNames_0(NULL),
    occ_(-1)
 {
     const char * wrapfn = "<%=$pywrapfunc%>";
@@ -60,9 +61,10 @@ MY_OPERATOR::MY_OPERATOR() :
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-  if (pyInStyleObj_) {
-      SplpyGIL lock;
-      Py_DECREF(pyInStyleObj_);
+  {
+    SplpyGIL lock;
+      Py_XDECREF(pyInStyleObj_);
+      Py_XDECREF(pyOutNames_0);
   }
 
   delete funcop_;
