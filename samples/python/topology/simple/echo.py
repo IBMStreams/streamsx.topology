@@ -28,7 +28,6 @@ def main():
     """
     
     topo = Topology("echo")
-
     # The command line arguments (sys.argv) excluding the application
     # name will be used at runtime as the contents of the echo stream.
     echo = topo.source(sys.argv[1:])

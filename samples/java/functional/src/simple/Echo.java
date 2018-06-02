@@ -8,7 +8,6 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 
-
 /**
 * Sample echo topology application. This Java application builds a
 * simple topology that echos its command line arguments to standard output.
