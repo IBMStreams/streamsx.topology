@@ -3,7 +3,6 @@
 
 from __future__ import print_function
 import sys
-from datetime import timedelta
 from streamsx.topology.topology import Topology
 import streamsx.topology.context
 

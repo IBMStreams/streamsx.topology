@@ -4,12 +4,9 @@
  */
 package simple;
 
-import java.util.concurrent.TimeUnit;
-
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.context.StreamsContext;
 
 
 /**
