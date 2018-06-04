@@ -80,12 +80,6 @@ try {
  STREAMSX_TUPLE_SUBMIT_ALLOW_THREADS(otuple, <%=$oport->getIndex()%>);
 }
 
-<%
-{
-no strict 'vars';
-if (defined $FROM_DICT_TMP) {
-%>
-
 // Python dict to SPL tuple
 void MY_OPERATOR::fromPythonDictToPort<%=$oport->getIndex()%>(PyObject *pyDict <%=$itypeparam%>) {
 
@@ -156,8 +150,3 @@ try {
 
  STREAMSX_TUPLE_SUBMIT_ALLOW_THREADS(otuple, <%=$oport->getIndex()%>);
 }
-
-<%
-}
-}
-%>

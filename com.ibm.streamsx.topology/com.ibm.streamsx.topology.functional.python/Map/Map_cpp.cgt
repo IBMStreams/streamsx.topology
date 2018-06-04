@@ -21,9 +21,11 @@ using namespace streamsx::topology;
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
    pyInStyleObj_(NULL),
+   pyOutNames_0(NULL),
    occ_(-1)
 {
     const char * wrapfn = "<%=$pywrapfunc%>";
+
 
 <%
 # If occ parameter is positive then pass-by-ref is possible
@@ -55,14 +57,22 @@ MY_OPERATOR::MY_OPERATOR() :
     funcop_ = new SplpyFuncOp(this, wrapfn);
 
 @include "../pyspltuple_constructor.cgt"
+
+<%if ($pyoutstyle eq 'dict') {%>
+  {
+  SplpyGIL lock;
+  pyOutNames_0 = Splpy::pyAttributeNames(getOutputPortAt(0));
+  }
+<%}%>
 }
 
 // Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-  if (pyInStyleObj_) {
-      SplpyGIL lock;
-      Py_DECREF(pyInStyleObj_);
+  {
+    SplpyGIL lock;
+      Py_XDECREF(pyInStyleObj_);
+      Py_XDECREF(pyOutNames_0);
   }
 
   delete funcop_;
@@ -87,8 +97,16 @@ try {
   PyObject * ret = streamsx::topology::Splpy::pyTupleMap(funcop_->callable(), value);
   if (ret == NULL)
      return;
-  fromPythonToPort0(ret);
-  Py_DECREF(ret);
+  if (PyTuple_Check(ret)) {
+      fromPythonToPort0(ret);
+      Py_DECREF(ret);
+  } else if (PyDict_Check(ret)) {
+      fromPythonDictToPort0(ret);
+      Py_DECREF(ret);
+  } else {
+          throw SplpyGeneral::generalException("submit",
+             "Fatal error: Value submitted must be a Python tuple or dict.");
+  }
   }
   
 <% } else { %>
