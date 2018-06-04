@@ -142,6 +142,9 @@ class SplpyFuncOp : public SplpyOp {
           Py_DECREF(args);
           Py_DECREF(dumps);
 
+	  std::stringstream msg;
+	  msg << "Checkpointing is not available for the " << op()->getContext().getName() << " operator";
+
           if (!pickledCallable) {
             // the callable cannot be pickled
             // continue without checkpointing for this operator
@@ -155,7 +158,7 @@ class SplpyFuncOp : public SplpyOp {
                 SPL::rstring text;
                 // note pyRStringFromPyObject returns zero on success
                 if (!pyRStringFromPyObject(text, value)) {
-                  SPLAPPTRC(L_WARN, "Checkpointing is disabled for the " << op()->getContext().getName() << " operator because of python error " << text, "python");
+		  msg << " because of python error " << text;
                 }
               }
 
@@ -163,9 +166,11 @@ class SplpyFuncOp : public SplpyOp {
               Py_XDECREF(value);
               Py_XDECREF(traceback);
             }
+
+	    throw SplpyGeneral::generalException("setup", msg.str());
           }
         }
-        stateHandler = (stateful && pickledCallable) ? new SplPyFuncOpStateHandler(this, pickledCallable) : new SPL::StateHandler;
+        stateHandler = (stateful) ? new SplPyFuncOpStateHandler(this, pickledCallable) : new SPL::StateHandler;
         SPLAPPTRC(L_DEBUG, "registerStateHandler", "python");
         op()->getContext().registerStateHandler(*stateHandler);
       }
