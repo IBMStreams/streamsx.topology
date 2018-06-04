@@ -77,15 +77,6 @@ def _get_callable(f):
             return ci
     raise TypeError("Class is not callable" + str(type(ci)))
 
-def _verify_tuple(tuple_, attributes):
-    if isinstance(tuple_, tuple) or tuple_ is None:
-        return tuple_
-
-    if isinstance(tuple_, dict):
-        return tuple(tuple_.get(name, None) for name in attributes)
-   
-    raise TypeError("Function must return a tuple, dict or None:" + str(type(tuple_)))
-
 import inspect
 class _FunctionalCallable(object):
     def __init__(self, callable_, attributes=None):
@@ -153,13 +144,11 @@ class _PickleInTupleOut(_FunctionalCallable):
     def __call__(self, tuple_, pm=None):
         if pm is not None:
             tuple_ = pickle.loads(tuple_)
-        rv =  self._callable(tuple_)
-        return _verify_tuple(rv, self._attributes)
+        return self._callable(tuple_)
 
 class _ObjectInTupleOut(_FunctionalCallable):
     def __call__(self, tuple_):
-        rv =  self._callable(tuple_)
-        return _verify_tuple(rv, self._attributes)
+        return self._callable(tuple_)
 
 class _ObjectInPickleOut(_FunctionalCallable):
     def __call__(self, tuple_):
@@ -206,8 +195,7 @@ class _JSONInStringOut(_FunctionalCallable):
 
 class _JSONInTupleOut(_FunctionalCallable):
     def __call__(self, tuple_):
-        rv = self._callable(json.loads(tuple_))
-        return _verify_tuple(rv, self._attributes)
+        return self._callable(json.loads(tuple_))
 
 
 class _JSONInJSONOut(_FunctionalCallable):

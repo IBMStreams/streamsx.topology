@@ -21,8 +21,6 @@ using namespace streamsx::topology;
  my $module = splpy_Module();
  my $functionName = splpy_FunctionName();
 
- my $FROM_DICT_TMP = 1;
-
   my $skip_set_callable = 0;
 %>
 
