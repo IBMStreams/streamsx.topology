@@ -12,6 +12,7 @@ using namespace streamsx::topology;
  # Select the Python wrapper function
  my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
  my $pywrapfunc= $pystyle_fn . '_in__' . $pyoutstyle . '_out';
+ my %cpp_tuple_types;
 %>
 
 #define SPLPY_TUPLE_MAP(f, v, r, occ) \

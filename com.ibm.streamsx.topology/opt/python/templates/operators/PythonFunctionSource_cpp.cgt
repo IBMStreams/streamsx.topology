@@ -27,6 +27,7 @@ using namespace streamsx::topology;
   my $otupleType = $oport->getSPLTupleType();
   my @onames = SPL::CodeGen::Type::getAttributeNames($otupleType);
   my @otypes = SPL::CodeGen::Type::getAttributeTypes($otupleType);
+  my %cpp_tuple_types;
 
   my $skip_set_callable = 1;
 %>
