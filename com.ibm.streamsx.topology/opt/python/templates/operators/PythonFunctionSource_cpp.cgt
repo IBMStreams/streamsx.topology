@@ -22,7 +22,6 @@ using namespace streamsx::topology;
  spl_pip_packages($model, \@packages);
 
  my $iport;
- my $FROM_DICT_TMP = 1;
  
   my $oport = $model->getOutputPortAt(0);
   my $otupleType = $oport->getSPLTupleType();
