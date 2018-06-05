@@ -896,7 +896,7 @@ class Stream(_placement._Placement, object):
         self.topology.graph.get_views().append(_view)
         return _view
 
-    def map(self, func, name=None, schema=None):
+    def map(self, func=None, name=None, schema=None):
         """
         Maps each tuple from this stream into 0 or 1 stream tuples.
 
@@ -917,6 +917,7 @@ class Stream(_placement._Placement, object):
 
         Args:
             func: A callable that takes a single parameter for the tuple.
+                If not supplied then a function equivalent to ``lambda tuple_ : tuple_`` is used.
             name(str): Name of the mapped stream, defaults to a generated name.
             schema(StreamSchema): Schema of the resulting stream.
 
@@ -936,9 +937,14 @@ class Stream(_placement._Placement, object):
         .. versionadded:: 1.7 `schema` argument added to allow conversion to
             a structured stream.
         .. versionadded:: 1.8 Support for submitting `dict` objects as stream tuples to a structured stream (in addition to existing support for `tuple` objects).
+        .. versionchanged:: 1.11 `func` is optional.
         """
         if schema is None:
             schema = streamsx.topology.schema.CommonSchema.Python
+        if func is None:
+            func = streamsx.topology.runtime._identity
+            if name is None:
+               name = 'identity'
      
         ms = self._map(func, schema=schema, name=name)._layout('Map')
         ms.oport.operator.sl = _SourceLocation(_source_info(), 'map')
@@ -953,7 +959,7 @@ class Stream(_placement._Placement, object):
         """
         return self.map(func, name)
              
-    def flat_map(self, func, name=None):
+    def flat_map(self, func=None, name=None):
         """
         Maps and flatterns each tuple from this stream into 0 or more tuples.
 
@@ -968,6 +974,9 @@ class Stream(_placement._Placement, object):
         
         Args:
             func: A callable that takes a single parameter for the tuple.
+                If not supplied then a function equivalent to ``lambda tuple_ : tuple_`` is used.
+                This is suitable when each tuple on this stream is an iterable to be flattened.
+                
             name(str): Name of the flattened stream, defaults to a generated name.
 
         If invoking ``func`` for a tuple on the stream raises an exception
@@ -984,7 +993,14 @@ class Stream(_placement._Placement, object):
             Stream: A Stream containing flattened and mapped tuples.
         Raises:
             TypeError: if `func` does not return an iterator nor None
+
+        .. versionchanged:: 1.11 `func` is optional.
         """     
+        if func is None:
+            func = streamsx.topology.runtime._identity
+            if name is None:
+               name = 'flatten'
+     
         sl = _SourceLocation(_source_info(), 'flat_map')
         _name = self.topology.graph._requested_name(name, action='flat_map', func=func)
         stateful = self._determine_statefulness(func)

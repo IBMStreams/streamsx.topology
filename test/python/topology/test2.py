@@ -198,6 +198,28 @@ class TestTopologyMethodsNew(unittest.TestCase):
         self.result = tester.result['submission_result']
         verifyArtifacts(self)
 
+    def test_no_func_map(self):
+        topo = Topology()
+        s = topo.source([(1,2),(3,4),(5,6)])
+        snc = s.map().map(name='NoChange!')
+        ss = snc.map(schema='tuple<int32 x, int32 y>')
+        tester = Tester(topo)
+        tester.contents(snc, [(1,2),(3,4),(5,6)])
+        tester.contents(ss, [{'x':1,'y':2}, {'x':3,'y':4}, {'x':5,'y':6}])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_no_func_flat_map(self):
+        topo = Topology()
+        s = topo.source(['World', 'Cup', '2018'])
+        s1 = s.flat_map()
+        s2 = s.flat_map(name='JustFlatten!')
+        tester = Tester(topo)
+        tester.contents(s1, 'WorldCup2018')
+        tester.tuple_count(s1, 12)
+        tester.contents(s2, 'WorldCup2018')
+        tester.tuple_count(s2, 12)
+        tester.test(self.test_ctxtype, self.test_config)
+
     def test_TopologySourceItertools(self):
         topo = Topology('test_TopologySourceItertools')
         if sys.version_info.major == 2:
