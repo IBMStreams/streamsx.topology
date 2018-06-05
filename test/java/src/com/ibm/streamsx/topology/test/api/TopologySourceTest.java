@@ -155,7 +155,6 @@ public class TopologySourceTest extends TestTopology {
         String prevTuple = null;
         Long lastTime = null;
         for (String t : tuples.getResult()) {
-            System.out.println("TUPLE:" + t);
             if (prevTuple == null) {
                 assertTrue(t.startsWith("A"));
                 prevTuple = t;
@@ -190,7 +189,6 @@ public class TopologySourceTest extends TestTopology {
         
         // Try asserting the average period is somewhat close to 500ms.
         double averageDiff = ((double) totalDiff) / ((double) count);
-        System.err.println("AVG:" + averageDiff);
         assertTrue("Average diff:" + averageDiff, averageDiff > 350.0);
     }
     
