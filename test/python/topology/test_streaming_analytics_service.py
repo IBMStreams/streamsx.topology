@@ -19,7 +19,7 @@ def build_simple_app(name):
     return topo
 
 
-@unittest.skipIf(sys.version_info.major == 2, "Streaming Analytics service requires 3.5")
+@unittest.skipIf(not (sys.version_info.major == 3 and sys.version_info.minor == 5), "Streaming Analytics service requires 3.5")
 class TestStreamingAnalytics(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

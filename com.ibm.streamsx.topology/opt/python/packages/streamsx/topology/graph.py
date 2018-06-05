@@ -122,7 +122,7 @@ class SPLGraph(object):
         return self._requested_name(name)
 
 
-    def addOperator(self, kind, function=None, name=None, params=None, sl=None):
+    def addOperator(self, kind, function=None, name=None, params=None, sl=None, stateful=False):
         if(params is None):
             params = {}
 
@@ -134,7 +134,7 @@ class SPLGraph(object):
         else:
             if function is not None:
                 params['toolkitDir'] = streamsx.topology.param.toolkit_dir()
-            op = _SPLInvocation(len(self.operators), kind, function, name, params, self, sl=sl)
+            op = _SPLInvocation(len(self.operators), kind, function, name, params, self, sl=sl, stateful=stateful)
         self.operators.append(op)
         if not function is None:
             dep_instance = function
@@ -222,7 +222,7 @@ class SPLGraph(object):
         
 class _SPLInvocation(object):
 
-    def __init__(self, index, kind, function, name, params, graph, view_configs = None, sl=None):
+    def __init__(self, index, kind, function, name, params, graph, view_configs = None, sl=None, stateful = False):
         self.index = index
         self.kind = kind
         self.model = None
@@ -232,7 +232,7 @@ class _SPLInvocation(object):
         self.category = None
         self.params = {}
         self.setParameters(params)
-        self._addOperatorFunction(self.function)
+        self._addOperatorFunction(self.function, stateful)
         self.graph = graph
         self.viewable = True
         self.sl = sl
@@ -361,7 +361,7 @@ class _SPLInvocation(object):
             self._ex_op._generate(_op)
         return _op
 
-    def _addOperatorFunction(self, function):
+    def _addOperatorFunction(self, function, stateful=False):
         if (function is None):
             return None
         if not hasattr(function, "__call__"):
@@ -386,6 +386,8 @@ class _SPLInvocation(object):
             self.params["pyName"] = function.__class__.__name__
             # dill format is binary; base64 encode so it is json serializable 
             self.params["pyCallable"] = base64.b64encode(dill.dumps(function)).decode("ascii")
+
+        self.params["pyStateful"] = bool(stateful)
 
         # note: functions in the __main__ module cannot be used as input to operations 
         # function.__module__ will be '__main__', so C++ operators cannot import the module

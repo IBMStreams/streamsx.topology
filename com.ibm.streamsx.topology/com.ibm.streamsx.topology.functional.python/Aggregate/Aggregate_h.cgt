@@ -7,10 +7,6 @@ using namespace streamsx::topology;
 <%SPL::CodeGen::headerPrologue($model);%>
 
 @include "../pyspltuple.cgt"
-<%
- my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
- my $oport = $model->getOutputPortAt(0);
-%>
 
 class MY_OPERATOR : public MY_BASE_OPERATOR,
       public WindowEvent<PyObject *>
@@ -37,12 +33,6 @@ void afterTupleEvictionEvent(
      Window<PyObject *>::PartitionType const & partition);
 
 private:
-<%
-if ($pyoutstyle eq 'dict') {
-%>
-    void fromPythonToPort0(PyObject * pyTuple, <%=$oport->getCppTupleType()%> & otuple);
-<%}%>
-
     SplpyOp * op() { return funcop_; }
 
     // Members

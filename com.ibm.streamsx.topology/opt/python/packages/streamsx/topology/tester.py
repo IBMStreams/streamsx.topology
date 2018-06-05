@@ -244,6 +244,8 @@ class Tester(object):
         """
         if sys.version_info.major == 2:
             raise unittest.SkipTest('Skipped due to running with Python 2')
+        if not (sys.version_info.major == 3 and sys.version_info.minor == 5):
+            raise unittest.SkipTest('Skipped as Streaming Analytics service requires Python 3.5')
         if not 'VCAP_SERVICES' in os.environ:
             raise unittest.SkipTest("Skipped due to VCAP_SERVICES environment variable not set")
 
