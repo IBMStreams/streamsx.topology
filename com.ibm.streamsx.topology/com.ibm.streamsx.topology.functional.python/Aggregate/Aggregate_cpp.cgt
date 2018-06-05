@@ -19,10 +19,6 @@ using namespace streamsx::topology;
  # Select the Python wrapper function
  my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
 
- if (($pystyle eq 'dict') || ($pystyle eq 'tuple')) {
-    SPL::CodeGen::exitln("Dictionary input not supported.");
- }
- 
  my $out_pywrapfunc=  'object_in__' . $pyoutstyle . '_out';
 %>
 
@@ -69,6 +65,8 @@ MY_OPERATOR::MY_OPERATOR() :
 %>
 
     funcop_ = new SplpyFuncOp(this, out_wrapfn);
+
+@include "../pyspltuple_constructor.cgt"
     
     // Obtain the function that loads the tuple's value in process()
     {
@@ -150,7 +148,8 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 	  PyTuple_SET_ITEM(tup, 0, python_value);
 	  python_value = SplpyGeneral::pyCallObject(loads, tup);
       }
-  
+  <% } elsif ($pystyle eq 'dict' || $pystyle eq 'tuple' || $pystyle_nt) {%>
+      python_value = value;
  <% } else{
 	  SPL::CodeGen::exitln($pystyle . " is an unsupported input type.");      
     }
