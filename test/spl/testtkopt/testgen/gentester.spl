@@ -1,0 +1,28 @@
+namespace testgen;
+
+type Types = rstring r,
+             optional<rstring> orv,
+             optional<rstring> ornv,
+             int32 i32,
+             optional<int32> oi32v,
+             optional<int32> oi32nv;
+
+public composite TypeLiteralTester(output Out) {
+    param
+        expression<rstring> $r;
+        expression<optional<rstring>> $orv;
+        expression<optional<rstring>> $ornv;
+        expression<int32> $i32;
+        expression<optional<int32>> $oi32v;
+        expression<optional<int32>> $oi32nv;
+    graph
+    stream<Types> Out = Custom() {
+      logic onProcess:
+        submit({r=$r,
+                orv=$orv,
+                ornv=$ornv,
+                i32=$i32,
+                oi32v=$oi32v,
+                oi32nv=$oi32nv},Out);
+    }
+}

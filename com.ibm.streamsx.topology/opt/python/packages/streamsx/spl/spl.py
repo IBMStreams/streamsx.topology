@@ -473,8 +473,12 @@ in the SPL tuple::
     # z is set to: x+y
 
 The returned tuple may be *sparse*, any attribute value in the tuple
-that is ``None`` will be set to their SPL default or copied from the
-input tuple, depending on the operator kind::
+that is ``None`` will be set to their SPL default or copied from
+a matching attribute in the input tuple
+(same name and type,
+or same name and same type as the underlying type of an output attribute
+with an optional type),
+depending on the operator kind::
     
     # SPL input schema: tuple<int32 x, float64 y>
     # SPL output schema: tuple<int32 x, float64 y, float32 z>
@@ -487,10 +491,14 @@ input tuple, depending on the operator kind::
     # y is set to: y (set by matching input SPL attribute)
     # z is set to: x+y
 
-When a returned tuple has less values than attributes in the SPL output
+When a returned tuple has fewer values than attributes in the SPL output
 schema the attributes not set by the Python function will be set
-to their SPL default or copied from the input tuple, depending on
-the operator kind::
+to their SPL default or copied from
+a matching attribute in the input tuple
+(same name and type,
+or same name and same type as the underlying type of an output attribute
+with an optional type),
+depending on the operator kind::
     
     # SPL input schema: tuple<int32 x, float64 y>
     # SPL output schema: tuple<int32 x, float64 y, float32 z>
@@ -526,13 +534,16 @@ Python dictionary
 A Python dictionary is converted to an SPL tuple for submission to
 the associated output port. An SPL attribute is set from the
 dictionary if the dictionary contains a key equal to the attribute
-name. The value is used to set the attribute, unless the attribute is
+name. The value is used to set the attribute, unless the value is
 ``None``.
 
-If the value in the dictionary is ``None`` or no matching key exists
-then the attribute value is set from a mathing (name and type)
-attribute in the input tuple or to its
-default value depending on the operator kind.
+If the value in the dictionary is ``None``, or no matching key exists,
+then the attribute value is set to its SPL default or copied from
+a matching attribute in the input tuple
+(same name and type,
+or same name and same type as the underlying type of an output attribute
+with an optional type),
+depending on the operator kind::
 
 Any keys in the dictionary that do not map to SPL attribute names are ignored.
     

@@ -26,7 +26,9 @@ class OpAPIUtil {
         // Iterator over params as we may modify fp
         for (String name : params.keySet()) {
             Object value = fp.get(name);
-            if (value instanceof StreamSchema) {
+            if (value == null) {
+                fp.put(name, SPL.createNullValue());
+            } else if (value instanceof StreamSchema) {
                 fp.put(name, JParamTypes.create(TYPE_SPLTYPE, ((StreamSchema) value).getLanguageType()));
             } else if (value instanceof Attribute) {
                 fp.put(name, JParamTypes.create(TYPE_ATTRIBUTE, ((Attribute) value).getName()));

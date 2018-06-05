@@ -95,14 +95,20 @@ class SplpySetup {
         PyObject * none =
                 ((__splpy_bv) dlsym(pydl, "Py_BuildValue"))("");
         
-        // Call the isNone passing in none which will
+        // Call isNone() and getNone() passing in none which will
         // be the first caller (as this is in setup)
         // and thus set the local pointer to None (effectively Py_None).
         bool in = SplpyGeneral::isNone(none);
         if (!in) {
           throw SplpyGeneral::generalException("setup",
-                        "Internal error - None handling");
+                        "Internal error - None handling: isNone");
         }
+        PyObject * ret = SplpyGeneral::getNone(none);
+        if (ret != none) {
+          throw SplpyGeneral::generalException("setup",
+                        "Internal error - None handling: getNone");
+        }
+        Py_DECREF(ret);
     }
 
     /*

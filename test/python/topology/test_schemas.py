@@ -11,8 +11,9 @@ import threading
 from streamsx.topology.topology import Topology, Routing
 from streamsx.topology.schema import _SchemaParser
 import streamsx.topology.schema as _sch
-
 import streamsx.topology.runtime as _str
+
+import test_vers
 
 _PRIMITIVES = ['boolean', 'blob', 'int8', 'int16', 'int32', 'int64',
                  'uint8', 'uint16', 'uint32', 'uint64',
@@ -38,6 +39,11 @@ def random_type(depth):
     elif r < 0.35:
          c = random.choice(_COLLECTIONS)
          c += '<'
+         c += random_type(depth)
+         c += '>'
+         return c
+    elif test_vers.optional_type_supported() and r < 0.45:
+         c = 'optional<'
          c += random_type(depth)
          c += '>'
          return c
@@ -106,6 +112,19 @@ class TestSchema(unittest.TestCase):
         self.assertEqual(p._type[0][0][1][0], 'int32')
         self.assertEqual(p._type[0][0][1][1], 'complex64')
         self.assertEqual('m', p._type[0][1])
+
+    @unittest.skipIf(not test_vers.optional_type_supported() , "Optional type not supported")
+    def test_optional(self):
+        for typ in _PRIMITIVES:
+            otyp = 'optional<' + typ + '>'
+            with self.subTest(otyp = otyp):
+                p = _SchemaParser('tuple<' + otyp + ' o>')
+                p._parse()
+                self.assertEqual(1, len(p._type))
+                self.assertIsInstance(p._type[0][0], tuple)
+                self.assertEqual(p._type[0][0][0], 'optional')
+                self.assertEqual(p._type[0][0][1], typ)
+                self.assertEqual('o', p._type[0][1])
 
     def test_nested_tuple(self):
       p = _SchemaParser('tuple<int32 a, tuple<int64 b, complex32 c, float32 d> e>')
