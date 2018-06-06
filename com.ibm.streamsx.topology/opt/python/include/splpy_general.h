@@ -447,7 +447,7 @@ class SplpyExceptionInfo {
       }
 
       PyObject * asTuple() const {
-  	  PyObject *info = PyTuple_New(pyTraceback_ ? 3 : pyValue_ ? 2 : 1);
+          PyObject *info = PyTuple_New(pyTraceback_ ? 3 : pyValue_ ? 2 : 1);
           Py_INCREF(pyType_);
           PyTuple_SET_ITEM(info, 0, pyType_);
           if (pyValue_) {
