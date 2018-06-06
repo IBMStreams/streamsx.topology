@@ -175,7 +175,7 @@ class SplpyFuncOp : public SplpyOp {
                   // state handler to be created.
                   // Effectively, checkpointing will not be enabled for
                   // this operator even though it is stateful.
-                  SPLAPPTRC(L_WARN, "Proceeding with no checkpointing for this operator", "python");
+                  SPLAPPTRC(L_WARN, "Proceeding with no checkpointing for the " << op()->getContext().getName() << " operator", "python");
                 }
               }
               else {
