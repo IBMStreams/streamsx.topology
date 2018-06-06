@@ -677,6 +677,23 @@ class Topology(object):
 
     @property
     def checkpoint_period(self):
+        """Enable checkpointing for the topology, and define the checkpoint 
+        period.
+
+        When checkpointing is enabled, the state of all stateful operators
+        is saved periodically.  If the operator restarts, its state is
+        restored from the most recent checkpoint.  
+
+        The checkpoint period is the frequency at which checkpoints will
+        be taken.  It can either be a :py:class:`~datetime.timedelta` value 
+        or a floating point value in seconds.
+
+        A stateful operator is an operator whose callable is an instance of a
+        Python callable class.
+
+        Returns:
+            The checkpoint period.
+        """
         return self._checkpoint_period
 
     @checkpoint_period.setter
