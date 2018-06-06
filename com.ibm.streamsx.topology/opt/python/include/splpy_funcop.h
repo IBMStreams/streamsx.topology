@@ -170,8 +170,8 @@ class SplpyFuncOp : public SplpyOp {
                     throw exceptionInfo.exception();
                   }
                   exceptionInfo.clear();
-                  // The exception was suppressed.  Continue with 
-                  // pickledCallable == NULL, which will cause a do-nothing 
+                  // The exception was suppressed.  Continue with
+                  // pickledCallable == NULL, which will cause a do-nothing
                   // state handler to be created.
                   // Effectively, checkpointing will not be enabled for
                   // this operator even though it is stateful.
