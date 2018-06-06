@@ -412,14 +412,14 @@ class SplpyGeneral {
  * it into __exit__.
  */
 class SplpyExceptionInfo {
-    public:
-      SplpyExceptionInfo() {
+    private:
+      SplpyExceptionInfo() : et_(), location_() {
          PyErr_Fetch(&pyType_, &pyValue_, &pyTraceback_);
          PyErr_NormalizeException(&pyType_, &pyValue_, &pyTraceback_);
-         // At this point we hold refrences to the objects
+         // At this point we hold references to the objects
          // and the error indicator is cleared.
       }
-
+    public:
       /*
        * Returns a SplpyExceptionInfo instance that can be thrown
        * when a Python error is raised through the Python C-API,
@@ -447,7 +447,7 @@ class SplpyExceptionInfo {
       }
 
       PyObject * asTuple() const {
-          PyObject *info = PyTuple_New(pyValue_ ? (pyTraceback_ ? 3 : 2) : 1);
+  	  PyObject *info = PyTuple_New(pyTraceback_ ? 3 : pyValue_ ? 2 : 1);
           Py_INCREF(pyType_);
           PyTuple_SET_ITEM(info, 0, pyType_);
           if (pyValue_) {
