@@ -18,20 +18,22 @@ import streamsx.spl.toolkit
 import streamsx.scripts.extract
 import test_prod_vers
 
+import spl_tests_utils as stu
+
 class TestTypes(unittest.TestCase):
     """ Type tests.
     """
     @classmethod
     def setUpClass(cls):
         """Extract Python operators in toolkit"""
-        streamsx.scripts.extract.main(['-i', '../testtkpy', '--make-toolkit'])
+        stu._extract_tk('testtkpy')
 
     def setUp(self):
         Tester.setup_standalone(self)
 
     def test_blob_type(self):
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         data = ['Hello', 'Blob', 'Did', 'you', 'reset' ]
         s = topo.source(data)
         s = s.as_string()
@@ -65,7 +67,7 @@ class TestTypes(unittest.TestCase):
 
     def test_list_blob_type(self):
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         data = ['Hello', 'Blob', 'Did', 'you', 'reset' ]
         s = topo.source(data)
         s = s.as_string()
@@ -86,7 +88,7 @@ class TestTypes(unittest.TestCase):
 
     def test_map_blob_type(self):
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         data = ['Hello', 'Blob', 'Did', 'you', 'reset' ]
         s = topo.source(data)
         s = s.as_string()
@@ -132,7 +134,7 @@ class TestTypes(unittest.TestCase):
     def test_map_return(self):
         """Simple test of returning values from a map."""
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         s = topo.source(range(20))
         s = s.map(lambda v : (v,), schema='tuple<int32 val>')
 
@@ -148,7 +150,7 @@ class TestTypes(unittest.TestCase):
     def test_source_return(self):
         """Simple test of returning values from a source operator."""
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
 
         values = op.Source(
             topo,
@@ -169,7 +171,7 @@ class TestTypes(unittest.TestCase):
     def test_primitive_submit(self):
         """Simple test of submitting values from a primitive operator."""
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
 
         values = op.Source(
             topo,
