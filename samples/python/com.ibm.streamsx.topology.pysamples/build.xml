@@ -51,7 +51,7 @@
     </exec>
   </target>
 
-  <target name="spldoc" depends="samples" description="Make the spl doc">
+  <target name="spldoc" description="Make the SPL documentation.">
     <exec executable="${streams.install}/bin/spl-make-doc" failonerror="true">
       <arg value="--include-composite-operator-diagram"/>
       <arg value="-i"/>
