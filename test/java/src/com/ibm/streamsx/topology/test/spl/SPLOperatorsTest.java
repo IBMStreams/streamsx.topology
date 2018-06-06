@@ -25,6 +25,7 @@ import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.Type;
 import com.ibm.streams.operator.Type.MetaType;
+import com.ibm.streams.operator.types.RString;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.function.Supplier;
@@ -231,6 +232,77 @@ public class SPLOperatorsTest extends TestTopology {
     public void testParamLiterals() throws Exception {
         // Test operator parameters with literal values
         testOpParams("testParamLiterals", new OpParamAdder());
+    }
+    
+    /**
+     * Test we can invoke an SPL operator with various parameter types,
+     * where the type is an optional type.
+     */
+    private void testOpParamsOptionalTypes(String testName, OpParamAdder opParamAdder)
+        throws Exception {
+        
+        Topology topology = new Topology(testName); 
+        opParamAdder.init(topology, getConfig());
+        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
+        
+        StreamSchema schema = Type.Factory.getStreamSchema(
+                "tuple<"
+                + "rstring r"
+                + ", optional<rstring> orv"
+                + ", optional<rstring> ornv"
+                + ", int32 i32"
+                + ", optional<int32> oi32v"
+                + ", optional<int32> oi32nv"
+                + " >");
+        
+        Random rand = new Random();
+        String r = "test    X\tY\"Lit\nerals\\nX\\tY " + rand.nextInt();
+        opParamAdder.put("r", r);
+        String orv = "test    X\tY\"Lit\nerals\\nX\\tY " + rand.nextInt();
+        opParamAdder.put("orv", orv);
+        // test setting optional type to null by using null in Map
+        opParamAdder.put("ornv", null);
+        
+        int i32 = rand.nextInt();
+        opParamAdder.put("i32", i32); 
+        int oi32v = rand.nextInt();
+        opParamAdder.put("oi32v", oi32v); 
+        // test setting optional type to null by using createNullValue() in Map
+        opParamAdder.put("oi32nv", SPL.createNullValue());
+   
+        SPL.addToolkit(topology, new File(getTestRoot(), "spl/testtkopt"));
+        SPLStream paramTuple = SPL.invokeSource(topology, "testgen::TypeLiteralTester", opParamAdder.getParams(), schema);
+
+        // paramTuple.print();
+        // paramTuple.filter(new AllowAll<Tuple>());
+        
+        Tester tester = topology.getTester();
+        
+        Condition<Long> expectedCount = tester.tupleCount(paramTuple, 1);
+        MostRecent<Tuple> mr = tester.splHandler(paramTuple, new MostRecent<Tuple>());
+
+        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
+        complete(tester, expectedCount, 10, TimeUnit.SECONDS);
+
+        assertTrue(expectedCount.toString(), expectedCount.valid());
+        Tuple tuple = mr.getMostRecentTuple();
+        // System.out.println("tuple: " + tuple);
+        
+        assertEquals(r, tuple.getString("r"));
+        assertEquals(orv, tuple.getString("orv"));
+        assertEquals(new RString(orv), tuple.getObject("orv"));
+        assertEquals("null", tuple.getString("ornv"));
+        assertEquals(null, tuple.getObject("ornv"));
+        assertEquals(i32, tuple.getInt("i32"));
+        assertEquals(new Integer(oi32v), tuple.getObject("oi32v"));
+        assertEquals(null, tuple.getObject("oi32nv"));
+    }
+
+    @Test
+    public void testParamLiteralsOptionalTypes() throws Exception {
+        // Test operator parameters with literal values for optional types
+        assumeOptionalTypes();
+        testOpParamsOptionalTypes("testParamLiteralsOptionalTypes", new OpParamAdder());
     }
 
     @Test
