@@ -187,7 +187,36 @@ class SplpyGeneral {
       return ret;
     }
 
-    
+    /**
+     * Utility method to write a python exception to the application trace.
+     * The type and value are written, but not the traceback.
+     * If no python exception occurred, this does nothing.
+     * The caller must hold the GILState.
+     */
+    static void tracePythonError() {
+      if (PyErr_Occurred()) {
+        PyObject * type = NULL;
+        PyObject * value = NULL;
+        PyObject * traceback = NULL;
+
+        PyErr_Fetch(&type, &value, &traceback);
+        if (value) {
+          SPL::rstring valueString;
+          SPL::rstring typeString;
+          // note pyRStringFromPyObject returns zero on success
+          if (!pyRStringFromPyObject(typeString, type)) {
+            if (value) {
+              pyRStringFromPyObject(valueString, value);
+            }
+            SPLAPPTRC(L_ERROR, "A python error occurred: " << typeString << ": " << valueString, "python");
+          }
+        }
+
+        Py_XDECREF(type);
+        Py_XDECREF(value);
+        Py_XDECREF(traceback);
+      }
+    }
 
     /**
      * Class object for streamsx.spl.types.Timestamp.

@@ -76,8 +76,11 @@ class SplpyOp {
       }
 
       void setCallable(PyObject * callable) {
-           callable_ = callable;
-           setup();
+        bool firstTime = (callable_ == NULL);
+        callable_ = callable;
+        if (firstTime) {
+          setup();
+        }
       }
       PyObject * callable() {
           return callable_;

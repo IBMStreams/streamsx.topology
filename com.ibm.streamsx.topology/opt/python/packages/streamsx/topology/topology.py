@@ -392,6 +392,7 @@ class Topology(object):
         
         self.graph = streamsx.topology.graph.SPLGraph(self, name, namespace)
         self._submission_parameters = dict()
+        self._checkpoint_period = None
 
     @property
     def name(self):
@@ -673,6 +674,17 @@ class Topology(object):
         sp = streamsx.topology.runtime._SubmissionParam(name, default, type_)
         self._submission_parameters[name] = sp
         return sp
+
+    @property
+    def checkpoint_period(self):
+        return self._checkpoint_period
+
+    @checkpoint_period.setter
+    def checkpoint_period(self, period):
+        if (isinstance(period, datetime.timedelta) or isinstance(period, float)):
+            self._checkpoint_period = period
+        else:
+            raise TypeError("Unsupported type for checkpoint_period")
 
     def _prepare(self):
         """Prepare object prior to SPL generation."""
