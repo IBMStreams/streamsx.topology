@@ -16,6 +16,7 @@ import streamsx.topology.context
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
 import streamsx.scripts.extract
+import test_prod_vers
 
 class TestTypes(unittest.TestCase):
     """ Type tests.
@@ -99,6 +100,29 @@ class TestTypes(unittest.TestCase):
             "com.ibm.streamsx.topology.pytest.pytypes::MapBlobTest",
             toBlob.stream,
             'tuple<rstring string>')
+         
+        tester = Tester(topo)
+        tester.contents(bt.stream, data)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    @unittest.skipIf(not test_prod_vers.optional_type_supported() , "Optional type not supported")
+    def test_optional_blob_type(self):
+        topo = Topology()
+        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        data = ['Hello', 'Blob', 'Did', 'you', 'reset' ]
+        s = topo.source(data)
+        s = s.as_string()
+
+        toBlob = op.Map(
+            "com.ibm.streamsx.topology.pytest.pytypes::ToBlob",
+            s,
+            'tuple<optional<blob> ob>')
+
+        bt = op.Map(
+            "com.ibm.streamsx.topology.pytest.pytypes::BlobTest",
+            toBlob.stream,
+            'tuple<rstring string>',
+            {'keep': True})
          
         tester = Tester(topo)
         tester.contents(bt.stream, data)
