@@ -4,7 +4,7 @@ import test_vers
 
 from streamsx.topology.topology import *
 from streamsx.topology import context
-from streamsx.topology.schema import CommonSchema
+from streamsx.topology.schema import CommonSchema, StreamSchema
 from streamsx.topology.tester import Tester
 from streamsx.spl import op
 import time
@@ -193,17 +193,39 @@ class TestPythonWindowing(unittest.TestCase):
         tester.test(self.test_ctxtype, self.test_config)
 
 
-    # Windowing doesn't currently support the 'dict' type.
-    @unittest.expectedFailure
-    def test_DictInputWindow(self):
+    def test_structured_as_dict(self):
         topo = Topology()
-        s = topo.source([1,2,3,4])
-        s = s.map(lambda x: ('a', x), schema = "tuple<rstring a, int32 b>")
+        s = topo.source([('a',1),('b', 7),('c', 2),('d', 9)])
+        s = s.map(lambda x: x, schema = "tuple<rstring a, int32 b>")
 
-        # Canned aggregate
-        s = s.last(3).trigger(4).aggregate(lambda x: 0),
-                                           
+        s = s.last(3).trigger(2).aggregate(lambda items: (items[0]['a'],items[1]['b']))
+
         tester = Tester(topo)
+        tester.contents(s, [('a',7), ('b',2)] )
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_structured_as_tuple(self):
+        schema = StreamSchema("tuple<rstring a, int32 b>").as_tuple()
+        topo = Topology()
+        s = topo.source([('a',1),('b', 7),('c', 2),('d', 9)])
+        s = s.map(lambda x: x, schema = schema)
+
+        s = s.last(3).trigger(2).aggregate(lambda items: (items[1][0], items[0][1]))
+
+        tester = Tester(topo)
+        tester.contents(s, [('b',1), ('c',7)] )
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_structured_as_named_tuple(self):
+        schema = StreamSchema("tuple<rstring a, int32 b>").as_tuple(named=True)
+        topo = Topology()
+        s = topo.source([('a',1),('b', 7),('c', 2),('d', 9)])
+        s = s.map(lambda x: x, schema = schema)
+
+        s = s.last(3).trigger(2).aggregate(lambda items: (items[1].a, items[0].b))
+
+        tester = Tester(topo)
+        tester.contents(s, [('b',1), ('c',7)] )
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_WindowPunctuation(self):

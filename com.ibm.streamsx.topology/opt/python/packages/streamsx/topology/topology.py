@@ -1644,8 +1644,20 @@ class Window(object):
             name(str): The name of the returned stream. Defaults to a generated name.
 
         Returns: 
-            Stream: A `Stream` of the returned values of the supplied function.                                                                                                                                                             
+            Stream: A `Stream` of the returned values of the supplied function.
+
+        
+        .. warning::
+            In Python 3.5 or later if the stream being aggregated has a
+            structured schema that contains a ``blob`` type then any ``blob``
+            value will not be maintained in the window. Instead its
+            ``memoryview`` object will have been released. If the ``blob``
+            value is required then perform a :py:meth:`map` transformation
+            (without setting ``schema``) copying any required
+            blob value in the tuple using ``memoryview.tobytes()``.
+
         .. versionadded:: 1.8
+        .. versionchanged:: 1.11 Support for aggregation of streams with structured schemas.
         """
         schema = streamsx.topology.schema.CommonSchema.Python
         
@@ -1654,6 +1666,7 @@ class Window(object):
         stateful = self.stream._determine_statefulness(function)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Aggregate", function, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.stream.oport, name=self.stream.name, window_config=self._config)
+        streamsx.topology.schema.StreamSchema._fnop_style(self.stream.oport.schema, op, 'pyStyle')
         oport = op.addOutputPort(schema=schema, name=_name)
         op._layout(kind='Aggregate', name=_name, orig_name=name)
         return Stream(self.topology, oport)._make_placeable()
