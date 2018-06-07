@@ -218,6 +218,24 @@ class _IAMStreamsRestClient(_StreamsRestClient):
     """Handles the session connection with the Streams REST API and Streaming Analytics service
     using IAM authentication.
     """
+
+    # Thread local of used clients identified by service id.
+    _CLIENTS = threading.local()
+
+    # Re-use client across the same thread (Session is not thread safe).
+    @staticmethod
+    def _create(credentials):
+        clients = _IAMStreamsRestClient._CLIENTS
+        if not hasattr(clients, '_clients'):
+            clients._clients = {}
+        service_id = credentials[_IAMConstants.SERVICE_ID]
+        if service_id in clients._clients:
+            return clients._clients[service_id]
+
+        client = _IAMStreamsRestClient(credentials)
+        clients._clients[service_id] = client
+        return client
+        
     def __init__(self, credentials):
         """
         Args:
@@ -226,7 +244,8 @@ class _IAMStreamsRestClient(_StreamsRestClient):
         self._credentials = credentials
         self._api_key = self._credentials[_IAMConstants.API_KEY]
 
-        # Represents the epoch time at which the token is no longer valid
+        # Represents the epoch time in milliseconds at which
+        # the token is no longer valid
         # Starts at -1 such that the first invocation of a REST request
         # Retrieves a token
         self._auth_expiry_time = -1
@@ -1842,6 +1861,9 @@ class _IAMConstants(object):
     V2_REST_URL = 'v2_rest_url'
     """The credentials key for the REST url of the Streaming Analytics service
     """
+
+    SERVICE_ID = 'iam_serviceid_crn'
+    """Service identifier"""
 
     API_KEY = 'apikey'
     """The credentials key for the api key which can be used to retrieve bearer authentication
