@@ -1178,7 +1178,8 @@ class Stream(_placement._Placement, object):
         return self
 
     def last(self, size=1):
-        """ Declares a window containing most recent tuples on this stream.
+        """ Declares a slding window containing most recent tuples
+        on this stream.
 
         The number of tuples maintained in the window is defined by `size`.
 
@@ -1200,6 +1201,52 @@ class Stream(_placement._Placement, object):
             Window: Window of the last (most recent) tuples on this stream.
         """
         win = Window(self, 'SLIDING')
+        if isinstance(size, datetime.timedelta):
+            win._evict_time(size)
+        elif isinstance(size, int):
+            win._evict_count(size)
+        else:
+            raise ValueError(size)
+        return win
+
+    def batch(self, size):
+        """ Declares a tumbling window to support batch processing
+        against this stream.
+
+        The number of tuples in the batch is defined by `size`.
+
+        If `size` is an `int` then it is the count of tuples in the batch.
+        For example, with ``size=10`` the batch will contain ten tuples.
+        Thus processing against the returned :py:class:`Window`,
+        such as :py:meth:`aggregate` will be executed every ten tuples
+        against the last ten tuples on the stream. For example the
+        first three aggregations would be against the first ten tuples
+        on the stream, then the next ten tuples and then the third ten tuples.
+
+        If `size` is an `datetime.timedelta` then it is the duration
+        of the batch using wallclock time.
+        With a `timedelta` representing five minutes
+        then the window contains any tuples that arrived in the last
+        five minutes.  Thus processing against the returned :py:class:`Window`,
+        such as :py:meth:`aggregate` will be executed every five minutes tuples
+        against the batch of tuples arriving in the last five minutes
+        on the stream. For example the first three aggregations would be
+        against any tuples on the stream in the first five minutes,
+        then the next five minutes and then minutes ten to fifteen.
+
+        Each tuple on the stream appears only in a single batch.
+
+        Args:
+            size: The size of each batch, either an `int` to define the
+                number of tuples or `datetime.timedelta` to define the
+                duration of the batch.
+
+        Returns:
+            Window: Window allowing batch processing on this stream.
+
+        .. versionadded:: 1.11
+        """
+        win = Window(self, 'TUMBLING')
         if isinstance(size, datetime.timedelta):
             win._evict_time(size)
         elif isinstance(size, int):
@@ -1622,7 +1669,10 @@ class Window(object):
 
         Returns:
             Window: Window that will be triggered.
-    """
+
+        .. warning:: A trigger is only supported for a sliding window
+            such as one created by :py:meth:`last`.
+        """
         tw = Window(self.stream, self._config['type'])
         tw._config['evictPolicy'] = self._config['evictPolicy']
         tw._config['evictConfig'] = self._config['evictConfig']

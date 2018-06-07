@@ -33,8 +33,13 @@ MY_OPERATOR::MY_OPERATOR() :
    occ_(-1),
    window_(<%=$windowCppInitializer%>)
 {
+<% if ($window->isSliding()) {%>
     window_.registerOnWindowTriggerHandler(this);
     window_.registerAfterTupleEvictionHandler(this);
+<%}%>
+<% if ($window->isTumbling()) {%>
+    window_.registerBeforeWindowFlushHandler(this);
+<%}%>
 
     const char * out_wrapfn = "<%=$out_pywrapfunc%>";
 <%
