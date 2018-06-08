@@ -87,7 +87,10 @@ class TestSPL(unittest.TestCase):
            Including with operator parameters and output clauses.
         """
         topo = Topology('test_map_attr_opt')
-        streamsx.spl.toolkit.add_toolkit(topo, '../../spl/testtkopt')
+        this_dir = os.path.dirname(os.path.realpath(__file__))
+        spl_dir = os.path.join(os.path.dirname(os.path.dirname(this_dir)), 'spl')
+        tk_dir = os.path.join(spl_dir, 'testtkopt')
+        streamsx.spl.toolkit.add_toolkit(topo, tk_dir)
         schema = 'tuple<' \
             'rstring r, ' \
             'optional<rstring> orv, ' \

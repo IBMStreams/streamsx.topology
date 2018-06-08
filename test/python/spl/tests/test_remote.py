@@ -8,6 +8,7 @@ from streamsx.topology.tester import Tester
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
 
+import spl_tests_utils as stu
 
 class TestRemote(unittest.TestCase):
     """ Test remote build with a SPL python primitive operator
@@ -20,7 +21,7 @@ class TestRemote(unittest.TestCase):
     def test_with_pint(self):
         schema='tuple<float64 temp>'
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy_remote')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy_remote'))
         s = topo.source([0, 100, 28.5])
         s = s.map(lambda t : {'temp':t}, schema=schema)
         fh = op.Map(
