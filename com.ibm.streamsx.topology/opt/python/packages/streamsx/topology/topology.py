@@ -1705,13 +1705,12 @@ class Window(object):
             win = s.last(10).trigger(1)
             moving_averages = win.aggregate(lambda tuples: sum(tuples)/len(tuples))
 
-        .. note:: If the window's stream is finite then a final aggregation is
-            performed if the window partition is not empty. Thus ``function``
-            may return fewer tuples for a window sized using a count.
-            For example a stream with 105 tuples and a batch size of 25
-            will perform four aggregations with 25 tuples each and a final
-            aggregation of 5 tuples.s
-            
+        .. note:: If a tumbling (:py:meth:`~Stream.batch`) window's stream
+            is finite then a final aggregation is performed if the
+            window is not empty. Thus ``function`` may be passed fewer tuples
+            for a window sized using a count. For example a stream with 105
+            tuples and a batch size of 25 tuples will perform four aggregations
+            with 25 tuples each and a final aggregation of 5 tuples.
             
         Args:
             function: The function which aggregates the contents of the window

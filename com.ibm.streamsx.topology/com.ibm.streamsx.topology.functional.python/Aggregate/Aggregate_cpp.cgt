@@ -166,6 +166,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
 {
+<% if ($window->isTumbling()) {%>
    // Aggregate the remaining contents if there are some.
    if (punct == Punctuation::FinalMarker) {
        SPL::AutoWindowDataAcquirer<PyObject *> awd(window_);
@@ -174,6 +175,7 @@ void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
        if (content.size() > 0)
             onWindowTriggerEvent(window_, 0);
    }
+<%}%>
 }
 
 
