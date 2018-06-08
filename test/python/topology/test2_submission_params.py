@@ -9,8 +9,6 @@ from enum import IntEnum
 import datetime
 import decimal
 
-import test_vers
-
 from streamsx.topology.schema import StreamSchema
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
@@ -28,7 +26,6 @@ class AddIt(object):
     def __call__(self, t):
         return str(t) + '-' + self.spv
 
-@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestSubmissionParams(unittest.TestCase):
     """ Test submission params (distributed).
     """

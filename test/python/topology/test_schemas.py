@@ -13,7 +13,7 @@ from streamsx.topology.schema import _SchemaParser
 import streamsx.topology.schema as _sch
 import streamsx.topology.runtime as _str
 
-import test_vers
+import vers_utils
 
 _PRIMITIVES = ['boolean', 'blob', 'int8', 'int16', 'int32', 'int64',
                  'uint8', 'uint16', 'uint32', 'uint64',
@@ -42,7 +42,7 @@ def random_type(depth):
          c += random_type(depth)
          c += '>'
          return c
-    elif test_vers.optional_type_supported() and r < 0.45:
+    elif vers_utils.optional_type_supported() and r < 0.45:
          c = 'optional<'
          c += random_type(depth)
          c += '>'
@@ -113,7 +113,7 @@ class TestSchema(unittest.TestCase):
         self.assertEqual(p._type[0][0][1][1], 'complex64')
         self.assertEqual('m', p._type[0][1])
 
-    @unittest.skipIf(not test_vers.optional_type_supported() , "Optional type not supported")
+    @unittest.skipIf(not vers_utils.optional_type_supported() , "Optional type not supported")
     def test_optional(self):
         for typ in _PRIMITIVES:
             otyp = 'optional<' + typ + '>'
