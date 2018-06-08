@@ -4,8 +4,6 @@ import unittest
 import sys
 import itertools
 
-import test_vers
-
 from streamsx.topology.topology import *
 from streamsx.topology.schema import CommonSchema, StreamSchema
 from streamsx.topology.tester import Tester
@@ -78,7 +76,6 @@ class check_is_tuple_map_to_json(check_for_tuple_type):
     check_correct(self.named, t)
     return {'a':t[0]*15, 'b':t[1] + "-MapJSON"}
 
-@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestSchemaTuple(unittest.TestCase):
     """ Test invocations handling of SPL schemas in Python ops.
     """
@@ -172,7 +169,6 @@ class TestSchemaTuple(unittest.TestCase):
         tester.test(self.test_ctxtype, self.test_config)
 
 
-@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestSchemaNamedTuple(TestSchemaTuple):
     def is_named(self):
         return True

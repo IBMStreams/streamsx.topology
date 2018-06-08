@@ -12,8 +12,6 @@ from streamsx.topology.context import ConfigParams
 import streamsx.spl.op as op
 import test_functions
 
-import test_vers
-
 class CheckForEach(object):
     def __init__(self):
         self.expected = ['ByRef', 3, 'a', 42]
@@ -24,7 +22,6 @@ class CheckForEach(object):
             raise AssertionError()
         self.count += 1
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestByRef(unittest.TestCase):
 
     def setUp(self):

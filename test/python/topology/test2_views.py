@@ -12,14 +12,11 @@ import streamsx.spl.op as op
 import streamsx.spl.types as spltypes
 import queue
 
-import test_vers
-
 def rands():
     r = random.Random()
     while True:
        yield r.random()
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestViews(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)

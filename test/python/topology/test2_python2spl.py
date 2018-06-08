@@ -14,7 +14,6 @@ from streamsx.topology.tester import Tester
 Test that we can covert Python streams to SPL tuples.
 """
 
-@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestPython2SPL(unittest.TestCase):
     """ Test invocations handling of SPL schemas in Python ops.
     """

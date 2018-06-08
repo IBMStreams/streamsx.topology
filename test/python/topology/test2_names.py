@@ -9,9 +9,6 @@ from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 import streamsx.topology.context as stc
 
-import test_vers
-
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestNames(unittest.TestCase):
 
   def setUp(self):

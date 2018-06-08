@@ -1,7 +1,5 @@
 import unittest
 
-import test_vers
-
 from streamsx.topology.topology import *
 from streamsx.topology import context
 from streamsx.topology.schema import CommonSchema, StreamSchema
@@ -91,7 +89,6 @@ class TupleTimespanCheck(object):
 # within the margin of error.
 within_tolerance = lambda val, tol, exp: val < exp + (tol*exp) and val > exp - (tol*exp)
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestPythonWindowing(unittest.TestCase):
     def setUp(self):
         Tester.setup_standalone(self)

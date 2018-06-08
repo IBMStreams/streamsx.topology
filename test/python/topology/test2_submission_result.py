@@ -6,9 +6,6 @@ from streamsx import rest
 import os
 import fnmatch
 
-import test_vers
-
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestSubmissionResult(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)

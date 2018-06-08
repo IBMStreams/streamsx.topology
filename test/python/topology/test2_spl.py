@@ -35,7 +35,6 @@ class TestParseOption(IntEnum):
     fast = 2
     
 
-@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestSPL(unittest.TestCase):
     """ Test invocations of SPL operators from Python topology.
     """
@@ -220,12 +219,10 @@ class TestSPL(unittest.TestCase):
         tester.contents(ts, [{'a':1,'b':'ABC'},{'a':2,'b':'DEF'}])
         tester.test(self.test_ctxtype, self.test_config)
 
-@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestDistributedSPL(TestSPL):
     def setUp(self):
         Tester.setup_distributed(self)
 
-@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestBluemixSPL(TestSPL):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
@@ -257,7 +254,6 @@ GOOD_DATA = {
 }
 
 
-@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestConversion(unittest.TestCase):
     """ Test conversions of Python values to SPL attributes/types.
     """

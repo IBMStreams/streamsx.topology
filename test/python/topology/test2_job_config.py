@@ -13,9 +13,6 @@ from streamsx.topology.tester import Tester
 from streamsx import rest
 from streamsx.rest_primitives import _IAMConstants
 
-import test_vers
-
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestJobConfig(unittest.TestCase):
   def setUp(self):
       Tester.setup_streaming_analytics(self, force_remote_build=True)
