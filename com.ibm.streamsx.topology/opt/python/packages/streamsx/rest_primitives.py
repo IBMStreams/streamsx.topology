@@ -172,12 +172,6 @@ class _StreamsRestClient(object):
         self.handle_http_errors(res)
         return res.json()
 
-    def make_raw_request(self, url):
-        logger.debug('Beginning a REST request to: ' + url)
-        res = self.session.get(url, headers=headers)
-        self.handle_http_errors(res)
-        return res
-
     def make_raw_streaming_request(self, url, mimetype=None):
         logger.debug('Beginning a REST request to: ' + url)
         headers = {}
@@ -283,26 +277,19 @@ class _IAMStreamsRestClient(_StreamsRestClient):
                                        _IAMConstants.API_KEY : api_key})
 
     def make_request(self, url):
-        return self.make_raw_request(url).json()
-
-    def make_raw_request(self, url):
-        # Preparing statements in this manner is necessary. For reasons that are unclear,
-        # SSL proxies have issues when simply calling requests.get
         logger.debug('Beginning a REST request to: ' + url)
-        req = requests.Request("GET", url, headers = {'Authorization' : self._get_authorization()})
-        prepared = req.prepare()
-        res = self.session.send(prepared)
+        headers={'Authorization' : self._get_authorization(),
+                 'Accept': 'application/json'}
+        res = self.session.get(url, headers=headers)
         self.handle_http_errors(res)
-        return res
+        return res.json()
 
     def make_raw_streaming_request(self, url, mimetype=None):
         logger.debug('Beginning a REST request to: ' + url)
         headers = {'Authorization' : self._get_authorization()}
         if mimetype:
             headers['Accept'] = mimetype
-        req = requests.Request("GET", url, headers = headers)
-        prepared = req.prepare()
-        res = self.session.send(prepared, stream=True)
+        res = self.session.get(url, stream=True, headers=headers)
         self.handle_http_errors(res)
         return res
 
@@ -1724,11 +1711,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         
         if job_id is None:
             # Get the job id using the job name, since it's required by the REST API
-            req = requests.Request("GET", self.get_jobs_url(),
-                               headers = {'Authorization' : self.rest_client._get_authorization(),
-                                          'Accept' : 'application/json'})
-            prepared = req.prepare()
-            res = self.rest_client.session.send(prepared).json()
+            res = self.rest_client.make_request(self.get_jobs_url())
             self.rest_client.handle_http_errors(res)
             for job in res['resources']:
                 if job['name'] == job_name:
@@ -1736,31 +1719,26 @@ class _StreamingAnalyticsServiceV2Delegator(object):
                     job_id = job['id']
 
         # Cancel the job using the job id
-        req = requests.Request("DELETE", self._get_jobs_url() + '/' + str(job_id),
-                               headers = {'Authorization' : self.rest_client._get_authorization(),
-                                          'Accept' : 'application/json'})
-        prepared = req.prepare()
-        res = self.rest_client.session.send(prepared)
+        cancel_url = self._get_jobs_url() + '/' + str(job_id)
+        headers = {'Authorization' : self.rest_client._get_authorization(),
+                  'Accept' : 'application/json'}
+        res = self.rest_client.session.delete(cancel_url, headers=headers)
         self.rest_client.handle_http_errors(res)
         return res.json()
 
     def start_instance(self):
-        req = requests.Request("PATCH", self._v2_rest_url, json={'state' : 'STARTED'},
+        res = self.rest_client.session.patch(self._v2_rest_url, json={'state' : 'STARTED'},
                                headers = {'Authorization' : self.rest_client._get_authorization(),
                                           'Content-Type' : 'application/json',
                                           'Accept' : 'application/json'})
-        prepared = req.prepare()
-        res = self.rest_client.session.send(prepared)
         self.rest_client.handle_http_errors(res)
         return res.json()
 
     def stop_instance(self):
-        req = requests.Request("PATCH", self._v2_rest_url, json={'state' : 'STOPPED'},
+        res = self.rest_client.session.patch(self._v2_rest_url, json={'state' : 'STOPPED'},
                                headers = {'Authorization' : self.rest_client._get_authorization(),
                                           'Content-Type' : 'application/json',
                                           'Accept' : 'application/json'})
-        prepared = req.prepare()
-        res = self.rest_client.session.send(prepared)
         self.rest_client.handle_http_errors(res)
         return res.json()
 
