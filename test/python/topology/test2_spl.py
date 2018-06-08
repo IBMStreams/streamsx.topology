@@ -9,7 +9,7 @@ from enum import IntEnum
 import datetime
 import decimal
 
-import test_vers
+import vers_utils
 
 from streamsx.topology.schema import StreamSchema
 from streamsx.topology.topology import *
@@ -80,7 +80,7 @@ class TestSPL(unittest.TestCase):
         tester.contents(s, [0, 4, 8, 12, 16, 20, 24])
         tester.test(self.test_ctxtype, self.test_config)
 
-    @unittest.skipIf(not test_vers.optional_type_supported() , "Optional type not supported")
+    @unittest.skipIf(not vers_utils.optional_type_supported() , "Optional type not supported")
     def test_map_attr_opt(self):
         """Test a Source and a Map operator with optional types.
            Including with operator parameters and output clauses.

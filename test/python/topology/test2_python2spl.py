@@ -4,7 +4,7 @@ import unittest
 import sys
 import itertools
 
-import test_vers
+import vers_utils
 
 from streamsx.topology.topology import *
 from streamsx.topology.schema import CommonSchema
@@ -38,7 +38,7 @@ class TestPython2SPL(unittest.TestCase):
         tester.contents(st, [{'x':1}, {'x':2}, {'x':3}])
         tester.test(self.test_ctxtype, self.test_config)
 
-    @unittest.skipIf(not test_vers.optional_type_supported() , "Optional type not supported")
+    @unittest.skipIf(not vers_utils.optional_type_supported() , "Optional type not supported")
     def test_object_to_schema_opt(self):
         topo = Topology()
         s = topo.source([1,2,3])
@@ -51,7 +51,7 @@ class TestPython2SPL(unittest.TestCase):
         tester.contents(st, [{'x':1, 'y':None}, {'x':None, 'y':None}, {'x':None, 'y':33}])
         tester.test(self.test_ctxtype, self.test_config)
 
-    @unittest.skipIf(not test_vers.optional_type_supported() , "Optional type not supported")
+    @unittest.skipIf(not vers_utils.optional_type_supported() , "Optional type not supported")
     def test_object_to_schema_dict_opt(self):
         topo = Topology()
         s = topo.source([1,2,3])

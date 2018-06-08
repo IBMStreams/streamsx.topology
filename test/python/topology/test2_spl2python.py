@@ -5,7 +5,7 @@ import sys
 import itertools
 import threading
 
-import test_vers
+import vers_utils
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
@@ -110,7 +110,7 @@ class TestSPL2Python(unittest.TestCase):
                 tester.tuple_count(b, 100)
                 tester.test(self.test_ctxtype, self.test_config)
 
-    @unittest.skipIf(not test_vers.optional_type_supported() , "Optional type not supported")
+    @unittest.skipIf(not vers_utils.optional_type_supported() , "Optional type not supported")
     def test_map_opt(self):
         """Test optional type value and no value are passed correctly
         """
