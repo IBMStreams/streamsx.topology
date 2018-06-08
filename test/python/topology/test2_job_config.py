@@ -18,7 +18,6 @@ class TestJobConfig(unittest.TestCase):
       Tester.setup_streaming_analytics(self, force_remote_build=True)
       sc = rest.StreamingAnalyticsConnection()
 
-  # Known failure. Submitting a jobconfig during a remote build submission is not supported.
   def test_UnicodeJobName(self):
      """ Test unicode topo names
      """
@@ -253,6 +252,7 @@ class TestOverlays(unittest.TestCase):
         jc.submission_parameters['two'] = 2
         self._check_matching(jc)
 
+    @unittest.skipUnless('STREAMS_INSTALL' in os.environ, "requires STREAMS_INSTALL")
     def test_from_topology(self):
         topo = Topology('SabTest', namespace='mynamespace')
         s = topo.source([1,2])
