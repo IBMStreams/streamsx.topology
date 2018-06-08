@@ -8,6 +8,15 @@ that used the topology tester. ('2' for nextgen, not Python 2!).
 
 Now all tests run on Python 2.7, 3.5 and 3.6.
 
+Note testing using `nose` is experimental and has only been
+tried with Python 3.5.
+
+Python path must include the streamsx code either by:
+
+ * Setting environment variable `PYTHONPATH` to the absolute path of `streamsx.topology/com.ibm.streamsx.topology/opt/python/packages`.
+ * Install `streamsx` package (to test the released package).
+
+
 ## Test locations
 
  * `topology` - Tests of the Python application api
@@ -47,7 +56,11 @@ Use the `*.cfg` files in `test/python`.
  * `all_tests.cfg` - All Python tests supported under nose.
 
 ```
+# All tests
 nosetests --config nose.cfg --config all_tests.cfg
+
+# Single test class
+nosetests --config nose.cfg ../topology/test2_spl.py
 ```
 
 ## Restricting test destination
