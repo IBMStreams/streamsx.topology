@@ -164,6 +164,18 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
   window_.insert(python_value);
 }
 
+void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
+{
+   // Aggregate the remaining contents if there are some.
+   if (punct == Punctuation::FinalMarker) {
+       SPL::AutoWindowDataAcquirer<PyObject *> awd(window_);
+       Window<PyObject *>::StorageType & storage = window_.getWindowStorage();
+       Window<PyObject *>::DataType & content = storage[0];
+       if (content.size() > 0)
+            onWindowTriggerEvent(window_, 0);
+   }
+}
+
 
 // ##############################
 // Window Event Handler Overrides
@@ -184,7 +196,7 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
     PyObject *items;
     {
     SplpyGIL lock;
-    items = PyList_New(std::distance(content.begin(), content.end()));
+    items = PyList_New(content.size());
     unsigned int idx = 0;
     for(WindowType::DataType::iterator it=content.begin(); it!=content.end(); ++it) {
         PyObject *item = *it;
@@ -195,17 +207,17 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
 	++idx;
     }
     }
-    PyObject *value = items;
   OPort0Type otuple;
 
   try {
   
-  if (SPLPY_AGGREGATE(funcop_->callable(), value,
+  if (SPLPY_AGGREGATE(funcop_->callable(), items,
        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_)){  
      submit(otuple, 0);
   }
   } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
      SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+     return;
   }
   submit(Punctuation::WindowMarker, 0);
 }
