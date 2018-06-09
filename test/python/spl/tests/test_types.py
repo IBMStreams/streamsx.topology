@@ -16,7 +16,7 @@ import streamsx.topology.context
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
 import streamsx.scripts.extract
-import test_prod_vers
+import vers_utils
 
 import spl_tests_utils as stu
 
@@ -107,7 +107,7 @@ class TestTypes(unittest.TestCase):
         tester.contents(bt.stream, data)
         tester.test(self.test_ctxtype, self.test_config)
 
-    @unittest.skipIf(not test_prod_vers.optional_type_supported() , "Optional type not supported")
+    @unittest.skipIf(not vers_utils.optional_type_supported() , "Optional type not supported")
     def test_optional_blob_type(self):
         topo = Topology()
         streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
