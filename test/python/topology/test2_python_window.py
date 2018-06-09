@@ -129,7 +129,7 @@ class TestPythonWindowing(unittest.TestCase):
         s = s.last(10).trigger(2).aggregate(lambda x: float(sum(x))/float(len(x)))
 
         tester = Tester(topo)
-        tester.contents(s, [1.5,2.5,3.5,4.5,5.5,7.5,9.5,10])
+        tester.contents(s, [1.5,2.5,3.5,4.5,5.5,7.5,9.5])
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_BasicCountTimeWindow(self):
