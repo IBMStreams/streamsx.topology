@@ -1,15 +1,42 @@
 import unittest
 
-import test_vers
-
 from streamsx.topology.topology import *
 from streamsx.topology import context
-from streamsx.topology.schema import CommonSchema
+from streamsx.topology.schema import CommonSchema, StreamSchema
 from streamsx.topology.tester import Tester
 from streamsx.spl import op
 import time
 import os
 import datetime
+
+def _delay(x):
+    time.sleep(0.2)
+    return x
+
+class _BatchTimeCheck(object):
+    def __init__(self):
+        self.expect = 0 
+        self.last = None;
+    def __call__(self, items):
+        for i in items:
+            if i != self.expect:
+                print("Expected ", self.expect, " got ", i)
+                return False
+            self.expect = i + 1
+        if self.last is not None and self.expect < 49:
+            delay = time.time() - self.last
+            if delay < 1.5 or delay > 3:
+                print("Expected 2 sec window got ", delay)
+                return False
+            print("GOT DELAY", delay, flush=True)
+            n = delay / 0.2
+            l = len(items)
+            if l < n-1 or l > n+1:
+                print("Expected ", n, " items +/-1 - got ", l)
+                return False
+        self.last = time.time()
+        return True
+        
 
 class Person(object):
     def __init__(self, name, birth_year):
@@ -91,7 +118,6 @@ class TupleTimespanCheck(object):
 # within the margin of error.
 within_tolerance = lambda val, tol, exp: val < exp + (tol*exp) and val > exp - (tol*exp)
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestPythonWindowing(unittest.TestCase):
     def setUp(self):
         Tester.setup_standalone(self)
@@ -193,17 +219,39 @@ class TestPythonWindowing(unittest.TestCase):
         tester.test(self.test_ctxtype, self.test_config)
 
 
-    # Windowing doesn't currently support the 'dict' type.
-    @unittest.expectedFailure
-    def test_DictInputWindow(self):
+    def test_structured_as_dict(self):
         topo = Topology()
-        s = topo.source([1,2,3,4])
-        s = s.map(lambda x: ('a', x), schema = "tuple<rstring a, int32 b>")
+        s = topo.source([('a',1),('b', 7),('c', 2),('d', 9)])
+        s = s.map(lambda x: x, schema = "tuple<rstring a, int32 b>")
 
-        # Canned aggregate
-        s = s.last(3).trigger(4).aggregate(lambda x: 0),
-                                           
+        s = s.last(3).trigger(2).aggregate(lambda items: (items[0]['a'],items[1]['b']))
+
         tester = Tester(topo)
+        tester.contents(s, [('a',7), ('b',2)] )
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_structured_as_tuple(self):
+        schema = StreamSchema("tuple<rstring a, int32 b>").as_tuple()
+        topo = Topology()
+        s = topo.source([('a',1),('b', 7),('c', 2),('d', 9)])
+        s = s.map(lambda x: x, schema = schema)
+
+        s = s.last(3).trigger(2).aggregate(lambda items: (items[1][0], items[0][1]))
+
+        tester = Tester(topo)
+        tester.contents(s, [('b',1), ('c',7)] )
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_structured_as_named_tuple(self):
+        schema = StreamSchema("tuple<rstring a, int32 b>").as_tuple(named=True)
+        topo = Topology()
+        s = topo.source([('a',1),('b', 7),('c', 2),('d', 9)])
+        s = s.map(lambda x: x, schema = schema)
+
+        s = s.last(3).trigger(2).aggregate(lambda items: (items[1].a, items[0].b))
+
+        tester = Tester(topo)
+        tester.contents(s, [('b',1), ('c',7)] )
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_WindowPunctuation(self):
@@ -240,5 +288,27 @@ class TestPythonWindowing(unittest.TestCase):
             
         os.remove(path)
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_batch_count(self):
+        topo = Topology()
+        s = topo.source(range(20))
+        b = s.batch(4)
+        r = b.aggregate(lambda items : sum(items))
+
+        tester = Tester(topo)
+        tester.contents(r, [0+1+2+3,4+5+6+7,8+9+10+11,12+13+14+15,16+17+18+19])
+        tester.tuple_count(r, 5)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_batch_time(self):
+        topo = Topology()
+        s = topo.source(map(_delay, range(50)), name='A')
+        b = s.batch(datetime.timedelta(seconds=2))
+        r = b.aggregate(lambda x : x)
+        rf = r.flat_map()
+        r.print()
+
+        tester = Tester(topo)
+        tester.tuple_count(rf, 50)
+        tester.run_for((50*0.2) + 5)
+        tester.tuple_check(r, _BatchTimeCheck())
+        tester.test(self.test_ctxtype, self.test_config)

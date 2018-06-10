@@ -9,7 +9,7 @@ from enum import IntEnum
 import datetime
 import decimal
 
-import test_vers
+import vers_utils
 
 from streamsx.topology.schema import StreamSchema
 from streamsx.topology.topology import *
@@ -35,7 +35,6 @@ class TestParseOption(IntEnum):
     fast = 2
     
 
-@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestSPL(unittest.TestCase):
     """ Test invocations of SPL operators from Python topology.
     """
@@ -81,13 +80,16 @@ class TestSPL(unittest.TestCase):
         tester.contents(s, [0, 4, 8, 12, 16, 20, 24])
         tester.test(self.test_ctxtype, self.test_config)
 
-    @unittest.skipIf(not test_vers.optional_type_supported() , "Optional type not supported")
+    @unittest.skipIf(not vers_utils.optional_type_supported() , "Optional type not supported")
     def test_map_attr_opt(self):
         """Test a Source and a Map operator with optional types.
            Including with operator parameters and output clauses.
         """
         topo = Topology('test_map_attr_opt')
-        streamsx.spl.toolkit.add_toolkit(topo, '../../spl/testtkopt')
+        this_dir = os.path.dirname(os.path.realpath(__file__))
+        spl_dir = os.path.join(os.path.dirname(os.path.dirname(this_dir)), 'spl')
+        tk_dir = os.path.join(spl_dir, 'testtkopt')
+        streamsx.spl.toolkit.add_toolkit(topo, tk_dir)
         schema = 'tuple<' \
             'rstring r, ' \
             'optional<rstring> orv, ' \
@@ -217,12 +219,10 @@ class TestSPL(unittest.TestCase):
         tester.contents(ts, [{'a':1,'b':'ABC'},{'a':2,'b':'DEF'}])
         tester.test(self.test_ctxtype, self.test_config)
 
-@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestDistributedSPL(TestSPL):
     def setUp(self):
         Tester.setup_distributed(self)
 
-@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestBluemixSPL(TestSPL):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
@@ -254,7 +254,6 @@ GOOD_DATA = {
 }
 
 
-@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestConversion(unittest.TestCase):
     """ Test conversions of Python values to SPL attributes/types.
     """

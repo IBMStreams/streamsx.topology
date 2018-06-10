@@ -28,6 +28,11 @@ from pkgutil import extend_path
 import streamsx
 
 
+# Simple identity function used by map, flat_map as default function.
+def _identity(tuple_):
+    return tuple_
+
+
 def __splpy_addDirToPath(dir):
     if os.path.isdir(dir):
         if dir not in sys.path:

@@ -453,7 +453,7 @@ class OperatorGenerator {
                 sb.append("sliding,");
                 break;
             case TYPE_TUMBLING:
-                sb.append("tumbing,");
+                sb.append("tumbling,");
                 break;
             default:
                 throw new IllegalStateException(Messages.getString("GENERATOR_INTERNAL_ERROR"));
