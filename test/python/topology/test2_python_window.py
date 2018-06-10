@@ -9,6 +9,35 @@ import time
 import os
 import datetime
 
+def _delay(x):
+    time.sleep(0.2)
+    return x
+
+class _BatchTimeCheck(object):
+    def __init__(self):
+        self.expect = 0 
+        self.last = None;
+    def __call__(self, items):
+        for i in items:
+            if i != self.expect:
+                print("Expected ", self.expect, " got ", i)
+                return False
+            self.expect = i + 1
+        if self.last is not None and self.expect < 49:
+            delay = time.time() - self.last
+            if delay < 1.5 or delay > 3:
+                print("Expected 2 sec window got ", delay)
+                return False
+            print("GOT DELAY", delay, flush=True)
+            n = delay / 0.2
+            l = len(items)
+            if l < n-1 or l > n+1:
+                print("Expected ", n, " items +/-1 - got ", l)
+                return False
+        self.last = time.time()
+        return True
+        
+
 class Person(object):
     def __init__(self, name, birth_year):
         self.name = name
@@ -259,5 +288,27 @@ class TestPythonWindowing(unittest.TestCase):
             
         os.remove(path)
 
-if __name__ == '__main__':
-    unittest.main()
+    def test_batch_count(self):
+        topo = Topology()
+        s = topo.source(range(20))
+        b = s.batch(4)
+        r = b.aggregate(lambda items : sum(items))
+
+        tester = Tester(topo)
+        tester.contents(r, [0+1+2+3,4+5+6+7,8+9+10+11,12+13+14+15,16+17+18+19])
+        tester.tuple_count(r, 5)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_batch_time(self):
+        topo = Topology()
+        s = topo.source(map(_delay, range(50)), name='A')
+        b = s.batch(datetime.timedelta(seconds=2))
+        r = b.aggregate(lambda x : x)
+        rf = r.flat_map()
+        r.print()
+
+        tester = Tester(topo)
+        tester.tuple_count(rf, 50)
+        tester.run_for((50*0.2) + 5)
+        tester.tuple_check(r, _BatchTimeCheck())
+        tester.test(self.test_ctxtype, self.test_config)
