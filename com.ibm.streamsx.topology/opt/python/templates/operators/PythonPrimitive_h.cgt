@@ -9,6 +9,10 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
+<%
+  my %h_tuple_types;
+%>
+
 class MY_OPERATOR : public MY_BASE_OPERATOR, public SplpyPrimitiveOp
 {
 public:
@@ -45,6 +49,15 @@ private:
   void pySubmitTuplesPort<%=$oport->getIndex()%>(PyObject * value);
   void fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple);
   void fromPythonDictToPort<%=$oport->getIndex()%>(PyObject *pyDict);
+
+  <%
+     my $otype = $oport->getCppTupleType();
+     if (! exists $h_tuple_types{$otype}) {
+        $h_tuple_types{$otype} = 1;
+  %>
+  void fromPyTupleToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleType()%> & otuple);
+  void fromPyDictToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupleType()%> & otuple);
+  <%}%>
 <%}%>
 }; 
 

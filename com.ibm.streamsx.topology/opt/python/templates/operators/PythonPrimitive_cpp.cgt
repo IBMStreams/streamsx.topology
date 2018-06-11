@@ -22,6 +22,7 @@ using namespace streamsx::topology;
  my $functionName = splpy_FunctionName();
 
   my $skip_set_callable = 0;
+ my %cpp_tuple_types;
 %>
 
 // Constructor

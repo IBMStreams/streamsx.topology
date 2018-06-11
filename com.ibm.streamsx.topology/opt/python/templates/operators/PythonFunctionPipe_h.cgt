@@ -42,6 +42,8 @@ private:
     void pySubmitTuplesPort0(PyObject * value, <%=$iport->getCppTupleType()%> const & ituple);
     void fromPythonToPort0(PyObject * pyTuple, <%=$iport->getCppTupleType()%> const & ituple);
     void fromPythonDictToPort0(PyObject * pyDict, <%=$iport->getCppTupleType()%> const & ituple);
+    void fromPyTupleToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleType()%> & otuple, <%=$iport->getCppTupleType()%> const & ituple);
+    void fromPyDictToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupleType()%> & otuple, <%=$iport->getCppTupleType()%> const & ituple);
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>
