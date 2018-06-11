@@ -151,34 +151,42 @@ class SplpyFuncOp : public SplpyOp {
 	    
 	    if (!pickledCallable) {
 	      // The callable cannot be pickled.  Throw an exception that
-	      // shuts down the operator.
-	      // (TODO: enable the exception optionally to be suppressed.
+              // shuts down the operator, unless it is supressed.
 	      // If it is suppressed, this operator will continue to run, but
 	      // with no checkpointing enabled.)
 	      if (PyErr_Occurred()) {
-		PyObject * type = NULL;
-		PyObject * value = NULL;
-		PyObject * traceback = NULL;
-		
-		PyErr_Fetch(&type, &value, &traceback);
-		if (value) {
+                SplpyExceptionInfo exceptionInfo = SplpyExceptionInfo::pythonError("setup");
+                if (exceptionInfo.pyValue_) {
 		  SPL::rstring text;
 		  // note pyRStringFromPyObject returns zero on success
-		  if (!pyRStringFromPyObject(text, value)) {
+                  if (pyRStringFromPyObject(text, exceptionInfo.pyValue_) == 0) {
 		    msg << " because of python error " << text;
 		  }
-		}
-		
-		Py_XDECREF(type);
-		Py_XDECREF(value);
-		Py_XDECREF(traceback);
+
+                  SPLAPPTRC(L_WARN, msg.str(), "python");
+                  // Offer the exception to the operator, so the operator
+                  // can suppress it.
+                  if (exceptionRaised(exceptionInfo) == 0) {
+                    throw exceptionInfo.exception();
+                  }
+                  exceptionInfo.clear();
+                  // The exception was suppressed.  Continue with
+                  // pickledCallable == NULL, which will cause a do-nothing
+                  // state handler to be created.
+                  // Effectively, checkpointing will not be enabled for
+                  // this operator even though it is stateful.
+                  SPLAPPTRC(L_WARN, "Proceeding with no checkpointing for the " << op()->getContext().getName() << " operator", "python");
+                }
+              }
+              else {
+                // This is probably unreachable.  PyObject_CallObject
+                // returned NULL, but there was no python exception.
+		throw SplpyGeneral::generalException("setup", msg.str());
 	      }
-	      
-	      throw SplpyGeneral::generalException("setup", msg.str());
-	    }
+            }
 	  }
 	  assert(!stateHandler);
-	  stateHandler = (stateful) ? new SplPyFuncOpStateHandler(this, pickledCallable) : new SPL::StateHandler;
+          stateHandler = (stateful && pickledCallable) ? new SplPyFuncOpStateHandler(this, pickledCallable) : new SPL::StateHandler;
 	  SPLAPPTRC(L_DEBUG, "registerStateHandler", "python");
 	  op()->getContext().registerStateHandler(*stateHandler);
 	}
