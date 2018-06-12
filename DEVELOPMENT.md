@@ -63,18 +63,18 @@ ant unittest.distributed
 ```
 This requires that your environment is setup so that `streamtool submitjob` submit jobs to an instance without requiring any authentication. This is the case for the [Streams Quicksttart VM image](http://www-01.ibm.com/software/data/infosphere/stream-computing/trials.html).
 
-### IBM Bluemix Streaming Analytics service testing
+### IBM Cloud Streaming Analytics service testing
 
 Tests are run against the service if these environment variables are set:
 
-* `topology_test_vcap_services` - File containing JSON VCAP services
-* `topology_test_vcap_service_name` - Name of Streaming Analytics service to use
+* `VCAP_SERVICES` - File containing JSON VCAP services
+* `STREAMING_ANALYTICS_SERVICE_NAME` - Name of Streaming Analytics service to use
 
 e.g.
 
 ```
-export topology_test_vcap_services=$HOME/vcap/my_vcap
-export topology_test_vcap_service_name=debrunne-streams2
+export VCAP_SERVICES=$HOME/vcap/my_vcap
+export STREAMING_ANALYTICS_SERVICE_NAME=debrunne-streams2
 ```
 
 The tests are run with this target:
