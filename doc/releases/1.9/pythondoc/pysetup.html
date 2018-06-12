@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IBM Streams Python setup &mdash; streamsx 1.9.5 documentation</title>
+  <title>IBM Streams Python setup &mdash; streamsx 1.9.6 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.9.5 documentation" href="index.html"/>
+    <link rel="top" title="streamsx 1.9.6 documentation" href="index.html"/>
         <link rel="prev" title="IBM Streaming Analytics service" href="service.html"/> 
 
   
@@ -191,21 +191,21 @@
 <div class="section" id="streaming-analytics-service">
 <h2>Streaming Analytics service<a class="headerlink" href="#streaming-analytics-service" title="Permalink to this headline">¶</a></h2>
 <p>The service instance has Anaconda 4.1 installed with Python 3.5 as the
-runtime environment and has <code class="docutils literal"><span class="pre">PYTHONHOME</span></code> application environment variable
+runtime environment and has <code class="docutils literal"><span class="pre">PYTHONHOME</span></code> Streams application environment variable
 pre-configured.</p>
 <p>Any streaming applications using Python must use Python 3.5 when
 submitted to the service instance.</p>
 </div>
 <div class="section" id="ibm-streams-on-premises">
 <h2>IBM Streams on-premises<a class="headerlink" href="#ibm-streams-on-premises" title="Permalink to this headline">¶</a></h2>
-<p>For a distributed cluster running Streams Python 2.7 or Python 3.5 may
+<p>For a distributed cluster running Streams Python 2.7, 3.5 or 3.6 may
 be used.</p>
 <p>Anaconda may be used as the Python runtime, Anaconda has the advantage of
 being pre-built and including a number of standard packages. Ananconda
 installs may be downloaded at: <a class="reference external" href="https://www.continuum.io/downloads">https://www.continuum.io/downloads</a> .</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">An Anaconda distribution for Python 2.7 or 3.5 must be used.</p>
+<p class="last">An Anaconda distribution for Python 2.7, 3.5 or 3.6 must be used.</p>
 </div>
 <p>If building Python from source then it must be built to support embedding
 of the runtime with shared libraries (<code class="docutils literal"><span class="pre">--enabled-shared</span></code> option to <cite>configure</cite>).</p>
@@ -224,6 +224,10 @@ for that section allows modification of the set of environment
 variables available to Streams applications.</p>
 <p>The Python install path must be accessible on every application resource
 that will execute Python code within a Streams application.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The Python version used to declare and submit the application must match the setting of <code class="docutils literal"><span class="pre">PYTHONHOME</span></code> in the instance. For example, if <code class="docutils literal"><span class="pre">PYTHONHOME</span></code> Streams application instance variable points to a Python 3.6 install, then Python 3.6 must be used to declare and submit the application.</p>
+</div>
 </div>
 <div class="section" id="standalone">
 <h3>Standalone<a class="headerlink" href="#standalone" title="Permalink to this headline">¶</a></h3>
@@ -274,7 +278,7 @@ that will execute Python code within a Streams application.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.9.5',
+            VERSION:'1.9.6',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
