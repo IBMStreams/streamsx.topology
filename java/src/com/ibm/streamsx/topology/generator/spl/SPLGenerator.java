@@ -78,7 +78,7 @@ public class SPLGenerator {
         breakoutVersion(graphConfig);
                 
         stvHelper = new SubmissionTimeValue(graph);
-        new Preprocessor(this, graph).preprocess();
+        Preprocessor preprocessor = new Preprocessor(this, graph).preprocess();
         
         separateIntoComposites(graph);
         
@@ -90,6 +90,8 @@ public class SPLGenerator {
         mainCompsiteDef.addProperty("__spl_mainComposite", true);
         mainCompsiteDef.add("operators", graph.get("operators"));
         composites.add(mainCompsiteDef);
+        
+        preprocessor.compositeColocateIdUsage(composites);
         
         stvHelper.addJsonParamDefs(mainCompsiteDef);
         
@@ -422,6 +424,7 @@ public class SPLGenerator {
         
         compositeInvocation.add("parallelInfo", parallelInfo);
         compositeInvocation.addProperty("parallelOperator", true);
+        opDefinition.addProperty("parallelComposite", true);
         return compositeInvocation;
     }
 
