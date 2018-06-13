@@ -7,7 +7,6 @@ package com.ibm.streamsx.topology.generator.spl;
 import java.util.Arrays;
 import java.util.List;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 
