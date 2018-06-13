@@ -67,12 +67,12 @@ class test_dillable_class(unittest.TestCase):
         tester.test(self.test_ctxtype, self.test_config, always_collect_logs=True)
 
 @unittest.skipIf(not test_vers.tester_supported(), "TesterNotSupported")
-class test_dillable_class_distributed(test_dillable_class):
+class test_distributed_dillable_class(test_dillable_class):
     def setUp(self):
         Tester.setup_distributed(self)
 
 @unittest.skipIf(not test_vers.tester_supported(), "TesterNotSupported")
-class test_dillable_class_service(test_dillable_class):
+class test_sas_dillable_class(test_dillable_class):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
 
@@ -96,7 +96,7 @@ class test_undillable_class(unittest.TestCase):
 
 # Distributed and cloud should fail to become healthy.
 @unittest.skipIf(not test_vers.tester_supported(), "TesterNotSupported")
-class test_undillable_class_distributed(test_undillable_class):
+class test_distributed_undillable_class(test_undillable_class):
     def setUp(self):
         Tester.setup_distributed(self)
 
@@ -110,7 +110,7 @@ class test_undillable_class_distributed(test_undillable_class):
         self.assertFalse(tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False))
 
 @unittest.skipIf(not test_vers.tester_supported(), "TesterNotSupported")
-class test_undillable_class_service(test_undillable_class_distributed):
+class test_sas_undillable_class(test_distributed_undillable_class):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
 
@@ -131,11 +131,11 @@ class test_undillable_class_suppress(unittest.TestCase):
         tester.test(self.test_ctxtype, self.test_config)
 
 @unittest.skipIf(not test_vers.tester_supported(), "TesterNotSupported")
-class test_undillable_class_suppress_distributed(test_undillable_class_suppress):
+class test_distributed_undillable_class_suppress(test_undillable_class_suppress):
     def setUp(self):
         Tester.setup_distributed(self)
 
 @unittest.skipIf(not test_vers.tester_supported(), "TesterNotSupported")
-class test_undillable_class_suppress_service(test_undillable_class_suppress):
+class test_sas_undillable_class_suppress(test_undillable_class_suppress):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
