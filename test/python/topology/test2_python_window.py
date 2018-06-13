@@ -20,19 +20,15 @@ class _BatchTimeCheck(object):
     def __call__(self, items):
         for i in items:
             if i != self.expect:
-                print("Expected ", self.expect, " got ", i)
                 return False
             self.expect = i + 1
         if self.last is not None and self.expect < 49:
             delay = time.time() - self.last
             if delay < 1.5 or delay > 3:
-                print("Expected 2 sec window got ", delay)
                 return False
-            print("GOT DELAY", delay, flush=True)
             n = delay / 0.2
             l = len(items)
             if l < n-1 or l > n+1:
-                print("Expected ", n, " items +/-1 - got ", l)
                 return False
         self.last = time.time()
         return True
@@ -305,7 +301,6 @@ class TestPythonWindowing(unittest.TestCase):
         b = s.batch(datetime.timedelta(seconds=2))
         r = b.aggregate(lambda x : x)
         rf = r.flat_map()
-        r.print()
 
         tester = Tester(topo)
         tester.tuple_count(rf, 50)
