@@ -19,7 +19,6 @@ import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.operators;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_COLOCATE_TAG_MAPPING;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_ISOLATE;
-import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_LOW_LATENCY;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
@@ -201,8 +200,6 @@ class PEPlacement {
         
         if (lowLatencyStartOperators.isEmpty())
             return;
-        
-        graph.getAsJsonObject("config").addProperty(CFG_HAS_LOW_LATENCY, true);
         
         // Assign isolation regions their lowLatency tag
         for (JsonObject llStart : lowLatencyStartOperators) {

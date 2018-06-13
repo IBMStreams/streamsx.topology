@@ -12,7 +12,6 @@ import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.kind;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.DEPLOYMENT_CONFIG;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_ISOLATE;
-import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_LOW_LATENCY;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_COMPILE_VERSION;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppNamespace;
@@ -563,7 +562,6 @@ public class SPLGenerator {
         config.add(DEPLOYMENT_CONFIG, deploymentConfig);
         
         boolean hasIsolate = jboolean(config, CFG_HAS_ISOLATE);
-        boolean hasLowLatency = jboolean(config, CFG_HAS_LOW_LATENCY);
         
         if (hasIsolate)     
             deploymentConfig.addProperty("fusionScheme", "legacy");
