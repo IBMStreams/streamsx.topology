@@ -116,5 +116,5 @@ class _Placement(object):
             except TypeError:
                 pass
  
-        self._op().colocate(other_ops, 'colocate')
+        self._op().colocate(other_ops, why)
         return self
