@@ -22,8 +22,12 @@
 #include <SPL/Runtime/Operator/ParameterValue.h>
 #include <SPL/Runtime/Operator/State/StateHandler.h>
 
+
 namespace streamsx {
   namespace topology {
+
+using UTILS_NAMESPACE_QUALIFIER AutoMutex;
+using UTILS_NAMESPACE_QUALIFIER Mutex;
 
 class SplpyFuncOp : public SplpyOp {
   public:
@@ -43,6 +47,26 @@ class SplpyFuncOp : public SplpyOp {
         stateHandler = NULL;
       }
 
+
+      Mutex * getStateHandlerMutex() const {
+        return stateHandler ? stateHandler->getMutex() : NULL;
+      }
+
+      class AutoMaybeMutex {
+      public:
+        AutoMaybeMutex(Mutex * mutex) : mutex_(mutex)
+        {
+          if (mutex)
+            mutex->lock();
+        }
+        ~AutoMaybeMutex() {
+          if (mutex_)
+            mutex_->unlock();
+          mutex_ = NULL;
+        }
+      private:
+        Mutex * mutex_;
+      };
 
   private:
       int hasParam(const char *name) {
@@ -186,7 +210,7 @@ class SplpyFuncOp : public SplpyOp {
             }
 	  }
 	  assert(!stateHandler);
-          stateHandler = (stateful && pickledCallable) ? new SplPyFuncOpStateHandler(this, pickledCallable) : new SPL::StateHandler;
+          stateHandler = (stateful && pickledCallable) ? new SplPyFuncOpStateHandlerImpl(this, pickledCallable) : new SplPyFuncOpStateHandler;
 	  SPLAPPTRC(L_DEBUG, "registerStateHandler", "python");
 	  op()->getContext().registerStateHandler(*stateHandler);
 	}
@@ -209,21 +233,27 @@ class SplpyFuncOp : public SplpyOp {
               "streamsx.topology.runtime", "setupOperator", tkDir, NULL);
       }
 
+      // Do-nothing base class.
+      class SplPyFuncOpStateHandler : public SPL::StateHandler {
+      public:
+        virtual Mutex * getMutex() { return NULL; }
+      };
+
       /**
        * Support for saving an operator's state to checkpoints, and restoring
        * the state from checkpoints.
        */
-      class SplPyFuncOpStateHandler: public SPL::StateHandler {
+      class SplPyFuncOpStateHandlerImpl: public SplPyFuncOpStateHandler {
       public:
         // Steals reference to pickledCallable
-        SplPyFuncOpStateHandler(SplpyOp * pyop, PyObject * pickledCallable) : op(pyop), loads(), dumps(), pickledInitialCallable(pickledCallable) {
+      SplPyFuncOpStateHandlerImpl(SplpyOp * pyop, PyObject * pickledCallable) : op(pyop), loads(), dumps(), pickledInitialCallable(pickledCallable), mutex_() {
           // Load pickle.loads and pickle.dumps
           SplpyGIL lock;
           loads = SplpyGeneral::loadFunction("dill", "loads");
           dumps = SplpyGeneral::loadFunction("dill", "dumps");
         }
 
-        virtual ~SplPyFuncOpStateHandler() {
+        virtual ~SplPyFuncOpStateHandlerImpl() {
           Py_CLEAR(loads);
           Py_CLEAR(dumps);
           Py_CLEAR(pickledInitialCallable);
@@ -231,6 +261,7 @@ class SplpyFuncOp : public SplpyOp {
 
         virtual void checkpoint(SPL::Checkpoint & ckpt) {
           SPLAPPTRC(L_DEBUG, "checkpoint", "python");
+          AutoMutex am(mutex_);
           SPL::blob bytes;
           {
             SplpyGIL lock;
@@ -247,6 +278,7 @@ class SplpyFuncOp : public SplpyOp {
 
         virtual void reset(SPL::Checkpoint & ckpt) {
           SPLAPPTRC(L_DEBUG, "reset", "python");
+          AutoMutex am(mutex_);
           // Restore the callable from an spl blob
           SPL::blob bytes;
           ckpt >> bytes;
@@ -264,6 +296,7 @@ class SplpyFuncOp : public SplpyOp {
         }
 
        virtual void resetToInitialState() {
+         AutoMutex am(mutex_);
          SPLAPPTRC(L_DEBUG, "resetToInitialState", "python");
          SplpyGIL lock;
          PyObject * initialCallable = call(loads, pickledInitialCallable);
@@ -273,6 +306,10 @@ class SplpyFuncOp : public SplpyOp {
          }
          Py_DECREF(op->callable());
          op->setCallable(initialCallable);
+       }
+
+       virtual Mutex* getMutex() {
+         return &mutex_;
        }
 
       private:
@@ -291,9 +328,10 @@ class SplpyFuncOp : public SplpyOp {
         PyObject * loads;
         PyObject * dumps;
         PyObject * pickledInitialCallable;
+        Mutex mutex_;
       };
 
-      SPL::StateHandler * stateHandler;
+      SplPyFuncOpStateHandler * stateHandler;
 };
 
 }}

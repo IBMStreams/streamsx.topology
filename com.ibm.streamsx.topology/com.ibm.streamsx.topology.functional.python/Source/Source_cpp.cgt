@@ -55,6 +55,7 @@ void MY_OPERATOR::allPortsReady()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
+    SplpyFuncOp::AutoMaybeMutex am(funcop_->getStateHandlerMutex());    
     funcop_->prepareToShutdown();
 }
 
@@ -65,7 +66,7 @@ void MY_OPERATOR::process(uint32_t idx)
 
   while(!getPE().getShutdownRequested()) {
    try {
-    
+    SplpyFuncOp::AutoMaybeMutex am(funcop_->getStateHandlerMutex());    
     OPort0Type otuple;
 
     { // start lock
