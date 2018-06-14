@@ -698,10 +698,10 @@ class OperatorGenerator {
                     // stays within a channel (if any)
                     
                     SPLGenerator.value(sbPlacement, JParamTypes.TYPE_SPL_EXPRESSION,
-                            new JsonPrimitive("getThisCompositeInstanceId()+"));
+                            new JsonPrimitive("getThisCompositeInstanceName()+"));
                     stringLiteral(sbPlacement, colocationId);
                     SPLGenerator.value(sbPlacement, JParamTypes.TYPE_SPL_EXPRESSION,
-                            new JsonPrimitive("+'$$'+getChannel()"));
+                            new JsonPrimitive("+'$$'+((rstring)getChannel())"));
                 } else {
                     stringLiteral(sbPlacement, colocationId);
                 }
