@@ -26,7 +26,6 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -147,43 +146,7 @@ class PEPlacement {
             assignIsolateRegionIds(getDownstream(isolate, graph));
         }
  
-        // For 4.2 and later we do not force colocation
-        // on every operator, instead we allow submission
-        // time fusion to figure out the best plan.
-        if (!generator.versionAtLeast(4, 2))
-            tagIslandIsolatedRegions();
         GraphUtilities.removeOperators(isolateOperators, graph);
-    }
-    
-    /**
-     * Tag any "island" regions with their own isolated region id.
-     * This can occur when there are there sub-graphs that are
-     * not connected to a region already processed with an isolate.
-     * So two cases:
-     *   a) No isolates exist at all in the graph
-     *   b) Isolates exist in the whole graph but a disconnected
-     *   sub-graph has no isolates. 
-     */
-    private void tagIslandIsolatedRegions(){
-        Set<JsonObject> starts = GraphUtilities.findStarts(graph);   
-        
-        for(JsonObject start : starts){
-            final String colocationTag = newIsolateRegionId();
-            
-            JsonObject placement = objectCreate(start, CONFIG, PLACEMENT);
-                     
-            String regionTag = jstring(placement, PLACEMENT_ISOLATE_REGION_ID);         
-            if (regionTag != null && !regionTag.isEmpty()) {
-                continue;
-            }
-            
-            Set<JsonObject> startList = Collections.singleton(start);
-            
-            Set<BVirtualMarker> boundaries = EnumSet.of(BVirtualMarker.ISOLATE);
-            
-            GraphUtilities.visitOnce(startList, boundaries, graph,
-                    op -> setIsolateRegionId(op, colocationTag));          
-        }
     }
     
     private String newIsolateRegionId() {
