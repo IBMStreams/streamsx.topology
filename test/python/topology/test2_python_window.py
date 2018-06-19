@@ -286,7 +286,7 @@ class TestPythonWindowing(unittest.TestCase):
 
     def test_batch_count(self):
         topo = Topology()
-        s = topo.source(range(20))
+        s = topo.source(lambda : range(20))
         b = s.batch(4)
         r = b.aggregate(lambda items : sum(items))
 
@@ -297,13 +297,13 @@ class TestPythonWindowing(unittest.TestCase):
 
     def test_batch_time(self):
         topo = Topology()
-        s = topo.source(map(_delay, range(50)), name='A')
+        s = topo.source(lambda : map(_delay, range(50)), name='A')
         b = s.batch(datetime.timedelta(seconds=2))
         r = b.aggregate(lambda x : x)
         rf = r.flat_map()
 
         tester = Tester(topo)
         tester.tuple_count(rf, 50)
-        tester.run_for((50*0.2) + 5)
+        tester.run_for((50*0.2) + 20)
         tester.tuple_check(r, _BatchTimeCheck())
         tester.test(self.test_ctxtype, self.test_config)
