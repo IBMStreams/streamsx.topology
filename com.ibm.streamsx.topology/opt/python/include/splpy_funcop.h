@@ -71,25 +71,6 @@ class SplpyFuncOp : public SplpyOp {
 
       friend class RealAutoLock;
 
- private:
-      /*
-      void lock() {
-        Mutex * mutex = getStateHandlerMutex();
-        if (mutex)
-          mutex->lock();
-      }
-
-      void unlock() {
-        Mutex * mutex = getStateHandlerMutex();
-        if (mutex)
-          mutex->unlock();
-      }
-
-      Mutex * getStateHandlerMutex() const {
-        return stateHandler ? stateHandler->getMutex() : NULL;
-      }
-      */
-
   private:
       int hasParam(const char *name) {
           return op()->getParameterNames().count(name);
