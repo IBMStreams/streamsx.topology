@@ -34,15 +34,11 @@ import com.google.gson.JsonObject;
 import com.ibm.streams.operator.PERuntime;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.context.StreamsContext;
-import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
-import com.ibm.streamsx.topology.logic.Logic;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
@@ -63,7 +59,7 @@ public class LowLatencyTest extends TestTopology {
         
         Document adl = produceADL(topology);
         adlAssertDefaultHostpool(adl);
-        adlAssertColocated(adl, "SS1", "SS2");
+        adlAssertColocated(adl, false, "SS1", "SS2");
     }
     
     @Test
@@ -88,41 +84,8 @@ public class LowLatencyTest extends TestTopology {
         
         Document adl = produceADL(topology);
         adlAssertDefaultHostpool(adl);
-        adlAssertColocated(adl, "R1_A", "R1_B", "R1_C");
-        adlAssertColocated(adl, "R1_X", "R1_Y", "R1_Z");
-    }
-    
-    @Test
-    public void testThreadedPort() throws Exception{
-        assumeTrue(SC_OK);
-        
-        Topology topology = newTopology();
-
-        // Construct topology
-        TStream<String> ss = topology.strings("hello").lowLatency();
-        TStream<String> ss1 = ss.transform(getContainerId());
-        TStream<String> ss2 = ss1.transform(getContainerId()).endLowLatency();
-        
-        SPLGenerator generator = new SPLGenerator();
-        
-        JsonObject ggraph = topology.builder()._complete();
-        generator.generateSPL(ggraph);
-        
-        GsonUtilities.objectArray(ggraph , "operators", op -> {
-            String lowLatencyTag = null;
-            JsonObject placement = object(op, CONFIG, PLACEMENT);
-            if (placement != null)
-                lowLatencyTag = jstring(placement, PLACEMENT_LOW_LATENCY_REGION_ID);
-            String kind = jstring(op, "kind");
-            JsonObject queue = object(op, "queue");
-            if(queue != null && (lowLatencyTag == null || lowLatencyTag.equals(""))){
-                throw new IllegalStateException("Operator has threaded port when it shouldn't.");
-            }
-            if(queue != null 
-                    && kind.equals("com.ibm.streamsx.topology.functional.java::FunctionTransform")){
-                throw new IllegalStateException("Transform operator expecting threaded port; none found.");
-            }
-        });
+        adlAssertColocated(adl, false, "R1_A", "R1_B", "R1_C");
+        adlAssertColocated(adl, false, "R2_X", "R2_Y", "R2_Z");
     }
     
     @Test

@@ -106,6 +106,16 @@ public class GsonUtilities {
         }
         return null;
     }
+    
+    public static boolean intersect(JsonArray a1, JsonArray a2) {
+        for (JsonElement e : a1) {
+            if (a2.contains(e))
+                return true;
+        }
+        return false;
+    }
+    
+    
     /**
      * Return a Json object.
      * Returns null if the object is not present or null.

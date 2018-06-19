@@ -46,9 +46,6 @@ class Preprocessor {
         pePlacementPreprocess.tagIsolationRegions();
         pePlacementPreprocess.tagLowLatencyRegions();
 
-        
-        ThreadingModel.preProcessThreadedPorts(graph);
-        
         removeRemainingVirtualMarkers();
         
         AutonomousRegions.preprocessAutonomousRegions(graph);

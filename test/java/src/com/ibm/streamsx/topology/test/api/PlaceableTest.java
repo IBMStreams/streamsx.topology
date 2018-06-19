@@ -4,11 +4,6 @@
  */
 package com.ibm.streamsx.topology.test.api;
 
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONFIG;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_EXPLICIT_COLOCATE_ID;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_RESOURCE_TAGS;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.logic.Logic.identity;
 import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerIdAppend;
 import static org.junit.Assert.assertEquals;
@@ -42,21 +37,14 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
-import com.ibm.streamsx.topology.builder.BOperator;
-import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
-import com.ibm.streamsx.topology.logic.Logic;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
@@ -126,7 +114,7 @@ public class PlaceableTest extends TestTopology {
         testTagThenFuse(s1, s2);
         
         Document adl = produceADL(t);
-        adlAssertColocated(adl, "S1", "S2");
+        adlAssertColocated(adl, false, "S1", "S2");
     }
     
     @Test
@@ -139,7 +127,7 @@ public class PlaceableTest extends TestTopology {
         testTagThenFuse(s1.print().invocationName("S1P"), s2.print().invocationName("S2P"));
         
         Document adl = produceADL(t);
-        adlAssertColocated(adl, "S1P", "S2P");
+        adlAssertColocated(adl, false, "S1P", "S2P");
     }
     
     @Test
@@ -152,7 +140,7 @@ public class PlaceableTest extends TestTopology {
         testTagThenFuse(s1, s2.print().invocationName("S2P"));
         
         Document adl = produceADL(t);
-        adlAssertColocated(adl, "S1", "S2P");
+        adlAssertColocated(adl, false, "S1", "S2P");
     }
     
     private void testTagThenFuse(Placeable<?> s1, Placeable<?> s2) {
@@ -189,7 +177,7 @@ public class PlaceableTest extends TestTopology {
         testTagBothThenFuse(s1, s2);
         
         Document adl = produceADL(t);
-        adlAssertColocated(adl, "S1", "S2");
+        adlAssertColocated(adl, false, "S1", "S2");
     }
     @Test
     public void testTagBothThenFuseSink() throws Exception {
@@ -201,7 +189,7 @@ public class PlaceableTest extends TestTopology {
         testTagBothThenFuse(s1.print().invocationName("S1P"), s2.print().invocationName("S2P"));
         
         Document adl = produceADL(t);
-        adlAssertColocated(adl, "S1P", "S2P");
+        adlAssertColocated(adl, false, "S1P", "S2P");
     }
     @Test
     public void testTagBothThenFuseSinkStream() throws Exception {
@@ -213,7 +201,7 @@ public class PlaceableTest extends TestTopology {
         testTagBothThenFuse(s1.print().invocationName("S1P"), s2);
         
         Document adl = produceADL(t);
-        adlAssertColocated(adl, "S1P", "S2");
+        adlAssertColocated(adl, false, "S1P", "S2");
     }
     
     private void testTagBothThenFuse(Placeable<?> s1, Placeable<?> s2)  {
@@ -243,7 +231,7 @@ public class PlaceableTest extends TestTopology {
         testFuseThenTag(s1, s2);
         
         Document adl = produceADL(t);
-        adlAssertColocated(adl, "S1", "S2");
+        adlAssertColocated(adl, false, "S1", "S2");
     }
     @Test
     public void testFuseThenTagSink() throws Exception {
@@ -255,7 +243,7 @@ public class PlaceableTest extends TestTopology {
         testFuseThenTag(s1.print().invocationName("S1P"), s2.print().invocationName("S2P"));
         
         Document adl = produceADL(t);
-        adlAssertColocated(adl, "S1P", "S2P");
+        adlAssertColocated(adl, false, "S1P", "S2P");
     }
     @Test
     public void testFuseThenTagStreamSink() throws Exception {
@@ -267,7 +255,7 @@ public class PlaceableTest extends TestTopology {
         testFuseThenTag(s1, s2.print().invocationName("S2P"));
         
         Document adl = produceADL(t);
-        adlAssertColocated(adl, "S1", "S2P");
+        adlAssertColocated(adl, false, "S1", "S2P");
     }
     
     @Test
@@ -323,15 +311,6 @@ public class PlaceableTest extends TestTopology {
         assertTrue(s1.isPlaceable());
         
         assertSame(s1.colocate(s2), s1);
-                
-                
-        String id1 = getFusingId(s1);
-        String id2 = getFusingId(s2);
-        
-        assertNotNull(id1);
-        assertFalse(id1.isEmpty());
-        
-        assertEquals(id1, id2);
         
         TStream<String> s3 = t.strings("3").invocationName("S3");
         TStream<String> s4 = t.strings("3").invocationName("S4");
@@ -339,21 +318,14 @@ public class PlaceableTest extends TestTopology {
         assertTrue(s5.isPlaceable());
         
         assertSame(s3.colocate(s4, s5), s3);
-        assertEquals(getFusingId(s3), getFusingId(s4));
-        assertEquals(getFusingId(s3), getColocate(s5.operator()));
-        
-        assertFalse(getFusingId(s1).equals(getFusingId(s3)));
-        
-        assertNull(getFusingId(snf));
         
         TStream<String> s6 = StringStreams.toString(s4).invocationName("S6");
         s1.colocate(s6);
-        assertEquals(getFusingId(s1), getFusingId(s6));
         
         Document adl = produceADL(s6);
         adlAssertDefaultHostpool(adl);
-        adlAssertColocated(adl, "S1", "S2", "S6");
-        adlAssertColocated(adl, "S3", "S4", "S5");
+        adlAssertColocated(adl, false, "S1", "S2", "S6");
+        adlAssertColocated(adl, false, "S3", "S4", "S5");
     }
     
     @Test
@@ -374,43 +346,6 @@ public class PlaceableTest extends TestTopology {
         assertFalse(sp.endParallel().isPlaceable());
     }
     
-    private static String getFusingId(TStream<?> s) {
-        BOperator bop  =  ((BOutputPort) s.output()).operator();
-        return getColocate(bop);
-    }
-    
-    private static String getColocate(BOperator bop) {
-        JsonObject placement = GsonUtilities.object(bop._json(), CONFIG, PLACEMENT);
-        if (placement == null)
-            return null;
-        String ido = jstring(placement, PLACEMENT_EXPLICIT_COLOCATE_ID);
-        if (ido == null)
-            return null;
-        return ido;
-    }
-    
-    private static Set<String> getResourceTags(TStream<?> s) {
-        BOperator bop  =  ((BOutputPort) s.output()).operator();
-        return getResourceTags(bop);
-    }
-    
-    private static Set<String> getResourceTags(BOperator bop) {
-        JsonObject placement = GsonUtilities.object(bop._json(), CONFIG, PLACEMENT);
-        if (placement == null)
-            return null;
-
-        JsonArray jat = GsonUtilities.array(placement, PLACEMENT_RESOURCE_TAGS);
-        if (jat == null)
-            return null;
-        
-        Set<String> tags = new HashSet<>();
-        
-        for (JsonElement rt : jat)
-            tags.add(rt.getAsString());
-        
-        return tags;
-    }
-    
     @Test
     public void testTags() {
         assumeTrue(isMainRun());
@@ -420,29 +355,29 @@ public class PlaceableTest extends TestTopology {
         TStream<String> s3 = t.strings("3");
         
         s1.addResourceTags();
-        assertNull(getResourceTags(s1));
+        assertTrue(s1.getResourceTags().isEmpty());
         
         s2.addResourceTags("A", "B");
-        Set<String> s2s = getResourceTags(s2);
+        Set<String> s2s = s2.getResourceTags();
         assertEquals(2, s2s.size());
         assertTrue(s2s.contains("A"));
         assertTrue(s2s.contains("B"));
         
         
         s3.addResourceTags("C", "D", "E");
-        Set<String> s3s = getResourceTags(s3);
+        Set<String> s3s = s3.getResourceTags();
         assertEquals(3, s3s.size());
         assertTrue(s3s.contains("C"));
         assertTrue(s3s.contains("D"));
         assertTrue(s3s.contains("E"));
         
-        s2s = getResourceTags(s2);
+        s2s = s2.getResourceTags();
         assertEquals(2, s2s.size());
         assertTrue(s2s.contains("A"));
         assertTrue(s2s.contains("B"));
 
         s2.addResourceTags("X", "Y");
-        s2s = getResourceTags(s2);
+        s2s = s2.getResourceTags();
         assertEquals(4, s2s.size());
         assertTrue(s2s.contains("A"));
         assertTrue(s2s.contains("B"));
@@ -452,7 +387,7 @@ public class PlaceableTest extends TestTopology {
         // Colocating means the s1 will inherit
         // s3 resource tags
         s1.colocate(s3);
-        Set<String> s1s = getResourceTags(s1);
+        Set<String> s1s = s1.getResourceTags();
         assertEquals(3, s1s.size());
         assertTrue(s1s.contains("C"));
         assertTrue(s1s.contains("D"));
@@ -483,7 +418,7 @@ public class PlaceableTest extends TestTopology {
         
         Document adl = produceADL(t);
         adlAssertDefaultHostpool(adl);
-        adlAssertColocated(adl, "SA", "SB");
+        adlAssertColocated(adl, false, "SA", "SB");
     }
     
     @Test
@@ -700,6 +635,7 @@ public class PlaceableTest extends TestTopology {
     }
 
     public static Document produceADL(TopologyElement te) throws Exception {
+        @SuppressWarnings("unchecked")
         StreamsContext<File> ctx = (StreamsContext<File>) StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT);
         File tkDir = ctx.submit(te.topology()).get();
         
@@ -769,7 +705,7 @@ public class PlaceableTest extends TestTopology {
      * Assert that all named operators are colocated and
      * that no others are colocated with them.
      */
-    public static void adlAssertColocated(Document adl, String ...names) {
+    public static void adlAssertColocated(Document adl, boolean channel, String ...names) {
         
         Set<String> cnames = new HashSet<>(Arrays.asList(names));
         assertEquals(names.length, cnames.size());
@@ -780,9 +716,13 @@ public class PlaceableTest extends TestTopology {
         NodeList ops = adl.getElementsByTagName("primitiveOperInstance");
         assertTrue(ops.getLength() >= names.length);
         for (int i = 0; i < ops.getLength(); i++) {
+            
             Node op = ops.item(i);
             assertEquals(Node.ELEMENT_NODE, op.getNodeType());
-            if (cnames.contains(attr(op, "name")))
+            String opName = attr(op, "name");
+            if (opName.indexOf('.') != -1)
+                opName = opName.substring(opName.lastIndexOf('.')+1);
+            if (cnames.contains(opName))
                 colocated.add(op);
             else
                 notcolocated.add(op);
@@ -797,6 +737,11 @@ public class PlaceableTest extends TestTopology {
 
         for (Node op : notcolocated)
             assertFalse(colocateId.equals(colocateId(op)));
+        
+        if (channel)
+            assertTrue(colocateId, colocateId.contains("getChannel()"));
+        else
+            assertFalse(colocateId, colocateId.contains("getChannel()"));
     }
     /**
      * Assert that no operators are colocated.
