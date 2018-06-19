@@ -1,0 +1,19 @@
+<% 
+#Enable or disable checkpointing, including support for the necessary locking.
+
+ # enable or disable checkpointing
+ my $isInConsistentRegion = $model->getContext()->getOptionalContext("ConsistentRegion");
+ my $ckptKind = $model->getContext()->getCheckpointingKind();
+ my $isCheckpointing = $isInConsistentRegion or $ckptKind ne "none";
+ # TODO also check pyStateful parameter
+ if ($isCheckpointing) {
+ %>
+ typedef SplpyFuncOp::RealAutoLock AutoLock;
+ <%
+ }
+ else {
+ %>
+ typedef SplpyFuncOp::NoAutoLock AutoLock;
+ <%
+ }
+%>
