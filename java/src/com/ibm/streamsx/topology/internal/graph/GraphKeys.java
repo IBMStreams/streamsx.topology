@@ -132,6 +132,13 @@ public interface GraphKeys {
      * Object containing string to string mapping. 
      */
     String CFG_COLOCATE_TAG_MAPPING = "colocateTagMapping";
+    
+    /**
+     * Object of colocate tags to count of composites
+     * that use them. Each id maps to a JSON object
+     * containing a count.
+     */
+    String CFG_COLOCATE_IDS = "colocateIds";
 
     /**
      * Version of Streams the graph is targeted at.

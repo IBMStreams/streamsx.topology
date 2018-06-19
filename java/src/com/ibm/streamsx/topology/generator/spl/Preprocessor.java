@@ -18,18 +18,18 @@ class Preprocessor {
     
     private final SPLGenerator generator;
     private final JsonObject graph;
+    private final PEPlacement pePlacementPreprocess;
     
     Preprocessor(SPLGenerator generator, JsonObject graph) {
         this.generator = generator;
         this.graph = graph;
+        pePlacementPreprocess = new PEPlacement(this.generator, graph);
     }
     
-    void preprocess() {
+    Preprocessor preprocess() {
         
         GraphValidation graphValidationProcess = new GraphValidation();
         graphValidationProcess.validateGraph(graph);
-                
-        PEPlacement pePlacementPreprocess = new PEPlacement(generator, graph);
 
         // The hash adder operators need to be relocated to enable directly 
 	// adjacent parallel regions
@@ -50,7 +50,9 @@ class Preprocessor {
         pePlacementPreprocess.resolveColocationTags();
 
         // Optimize phase.
-        new Optimizer(graph).optimize();       
+        new Optimizer(graph).optimize();
+        
+        return this;
     }
     
     private void removeRemainingVirtualMarkers(){
@@ -58,5 +60,12 @@ class Preprocessor {
             List<JsonObject> unionOps = GraphUtilities.findOperatorByKind(marker, graph);
             GraphUtilities.removeOperators(unionOps, graph);
         }
+    }
+
+    public void compositeColocateIdUsage(List<JsonObject> composites) {
+        if (composites.size() < 2)
+            return;
+        for (JsonObject composite : composites)
+            pePlacementPreprocess.compositeColocateIdUse(composite);
     }
 }
