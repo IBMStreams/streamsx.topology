@@ -9,6 +9,7 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMEN
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_EXPLICIT_COLOCATE_ID;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_RESOURCE_TAGS;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.logic.Logic.identity;
 import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerIdAppend;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -18,14 +19,28 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.lang.ProcessBuilder.Redirect;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.junit.Ignore;
 import org.junit.Test;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -33,12 +48,15 @@ import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.TopologyElement;
 import com.ibm.streamsx.topology.builder.BOperator;
 import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.context.StreamsContext;
+import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.logic.Logic;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
@@ -99,30 +117,42 @@ public class PlaceableTest extends TestTopology {
     }
     
     @Test
-    public void testTagThenFuseStream() {
-        assumeTrue(isMainRun());
+    public void testTagThenFuseStream() throws Exception {
+        adlOk();
+        
         Topology t = newTopology();        
-        TStream<String> s1 = t.strings("3");
-        TStream<String> s2 = t.strings("3");
+        TStream<String> s1 = t.strings("3").invocationName("S1");
+        TStream<String> s2 = t.strings("3").invocationName("S2");
         testTagThenFuse(s1, s2);
+        
+        Document adl = produceADL(t);
+        adlAssertColocated(adl, "S1", "S2");
     }
     
     @Test
-    public void testTagThenFuseSink() {
-        assumeTrue(isMainRun());
+    public void testTagThenFuseSink() throws Exception {
+        adlOk();
+        
         Topology t = newTopology();        
-        TStream<String> s1 = t.strings("3");
-        TStream<String> s2 = t.strings("3");
-        testTagThenFuse(s1.print(), s2.print());
+        TStream<String> s1 = t.strings("3").invocationName("S1");
+        TStream<String> s2 = t.strings("3").invocationName("S2");
+        testTagThenFuse(s1.print().invocationName("S1P"), s2.print().invocationName("S2P"));
+        
+        Document adl = produceADL(t);
+        adlAssertColocated(adl, "S1P", "S2P");
     }
     
     @Test
-    public void testTagThenFuseStreamSink() {
-        assumeTrue(isMainRun());
+    public void testTagThenFuseStreamSink() throws Exception {
+        adlOk();
+        
         Topology t = newTopology();        
-        TStream<String> s1 = t.strings("3");
-        TStream<String> s2 = t.strings("3");
-        testTagThenFuse(s1, s2.print());
+        TStream<String> s1 = t.strings("3").invocationName("S1");
+        TStream<String> s2 = t.strings("3").invocationName("S2");
+        testTagThenFuse(s1, s2.print().invocationName("S2P"));
+        
+        Document adl = produceADL(t);
+        adlAssertColocated(adl, "S1", "S2P");
     }
     
     private void testTagThenFuse(Placeable<?> s1, Placeable<?> s2) {
@@ -150,28 +180,40 @@ public class PlaceableTest extends TestTopology {
     }
     
     @Test
-    public void testTagBothThenFuseStream() {
-        assumeTrue(isMainRun());
+    public void testTagBothThenFuseStream() throws Exception {
+        adlOk();
+        
         Topology t = newTopology();        
-        TStream<String> s1 = t.strings("3");
-        TStream<String> s2 = t.strings("3");
+        TStream<String> s1 = t.strings("3").invocationName("S1");
+        TStream<String> s2 = t.strings("3").invocationName("S2");
         testTagBothThenFuse(s1, s2);
+        
+        Document adl = produceADL(t);
+        adlAssertColocated(adl, "S1", "S2");
     }
     @Test
-    public void testTagBothThenFuseSink() {
-        assumeTrue(isMainRun());
+    public void testTagBothThenFuseSink() throws Exception {
+        adlOk();
+        
         Topology t = newTopology();        
         TStream<String> s1 = t.strings("3");
         TStream<String> s2 = t.strings("3");
-        testTagBothThenFuse(s1.print(), s2.print());
+        testTagBothThenFuse(s1.print().invocationName("S1P"), s2.print().invocationName("S2P"));
+        
+        Document adl = produceADL(t);
+        adlAssertColocated(adl, "S1P", "S2P");
     }
     @Test
-    public void testTagBothThenFuseSinkStream() {
-        assumeTrue(isMainRun());
+    public void testTagBothThenFuseSinkStream() throws Exception {
+        adlOk();
+        
         Topology t = newTopology();        
         TStream<String> s1 = t.strings("3");
-        TStream<String> s2 = t.strings("3");
-        testTagBothThenFuse(s1.print(), s2);
+        TStream<String> s2 = t.strings("3").invocationName("S2");
+        testTagBothThenFuse(s1.print().invocationName("S1P"), s2);
+        
+        Document adl = produceADL(t);
+        adlAssertColocated(adl, "S1P", "S2");
     }
     
     private void testTagBothThenFuse(Placeable<?> s1, Placeable<?> s2)  {
@@ -192,28 +234,40 @@ public class PlaceableTest extends TestTopology {
     }
 
     @Test
-    public void testFuseThenTagStream() {
-        assumeTrue(isMainRun());
+    public void testFuseThenTagStream() throws Exception {
+        adlOk();
+        
         Topology t = newTopology();        
-        TStream<String> s1 = t.strings("3");
-        TStream<String> s2 = t.strings("3");
+        TStream<String> s1 = t.strings("3").invocationName("S1");
+        TStream<String> s2 = t.strings("3").invocationName("S2");
         testFuseThenTag(s1, s2);
+        
+        Document adl = produceADL(t);
+        adlAssertColocated(adl, "S1", "S2");
     }
     @Test
-    public void testFuseThenTagSink() {
-        assumeTrue(isMainRun());
+    public void testFuseThenTagSink() throws Exception {
+        adlOk();
+        
         Topology t = newTopology();        
         TStream<String> s1 = t.strings("3");
         TStream<String> s2 = t.strings("3");
-        testFuseThenTag(s1.print(), s2.print());
+        testFuseThenTag(s1.print().invocationName("S1P"), s2.print().invocationName("S2P"));
+        
+        Document adl = produceADL(t);
+        adlAssertColocated(adl, "S1P", "S2P");
     }
     @Test
-    public void testFuseThenTagStreamSink() {
-        assumeTrue(isMainRun());
+    public void testFuseThenTagStreamSink() throws Exception {
+        adlOk();
+        
         Topology t = newTopology();        
-        TStream<String> s1 = t.strings("3");
+        TStream<String> s1 = t.strings("3").invocationName("S1");
         TStream<String> s2 = t.strings("3");
-        testFuseThenTag(s1, s2.print());
+        testFuseThenTag(s1, s2.print().invocationName("S2P"));
+        
+        Document adl = produceADL(t);
+        adlAssertColocated(adl, "S1", "S2P");
     }
     
     @Test
@@ -256,12 +310,14 @@ public class PlaceableTest extends TestTopology {
         assertEquals(s1.getResourceTags(), s2.getResourceTags()); 
     }
     
+    
     @Test
-    public void testFusing() {
-        assumeTrue(isMainRun());
+    public void testFusing() throws Exception {
+        adlOk();
+        
         Topology t = newTopology();        
-        TStream<String> s1 = t.strings("3");
-        TStream<String> s2 = t.strings("3");
+        TStream<String> s1 = t.strings("3").invocationName("S1");
+        TStream<String> s2 = t.strings("3").invocationName("S2");
         TStream<String> snf = t.strings("3");
         
         assertTrue(s1.isPlaceable());
@@ -277,9 +333,9 @@ public class PlaceableTest extends TestTopology {
         
         assertEquals(id1, id2);
         
-        TStream<String> s3 = t.strings("3");
-        TStream<String> s4 = t.strings("3");
-        TSink s5 = s4.print();
+        TStream<String> s3 = t.strings("3").invocationName("S3");
+        TStream<String> s4 = t.strings("3").invocationName("S4");
+        TSink s5 = s4.print().invocationName("S5");
         assertTrue(s5.isPlaceable());
         
         assertSame(s3.colocate(s4, s5), s3);
@@ -290,9 +346,14 @@ public class PlaceableTest extends TestTopology {
         
         assertNull(getFusingId(snf));
         
-        TStream<String> s6 = StringStreams.toString(s4);
+        TStream<String> s6 = StringStreams.toString(s4).invocationName("S6");
         s1.colocate(s6);
         assertEquals(getFusingId(s1), getFusingId(s6));
+        
+        Document adl = produceADL(s6);
+        adlAssertDefaultHostpool(adl);
+        adlAssertColocated(adl, "S1", "S2", "S6");
+        adlAssertColocated(adl, "S3", "S4", "S5");
     }
     
     @Test
@@ -399,38 +460,51 @@ public class PlaceableTest extends TestTopology {
     }
     
     /**
-     * Test with a distributed execution with explicit
-     * colocation of two functions end up on the same container.
+     *
      */
     @Test
-    public void testSimpleDistributedColocate() throws Exception {
-        assumeTrue(SC_OK);
-        assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
+    public void testSimpleColocate() throws Exception {
+        adlOk();
         
         Topology t = newTopology();
         
         TStream<String> sa = t.strings("a");
         TStream<String> sb = t.strings("b");
         
-        sa = sa.transform(IsolateTest.getContainerId());
-        sb = sb.transform(IsolateTest.getContainerId());
+        sa = sa.transform(tuple->tuple).invocationName("SA");
+        sb = sb.transform(tuple->tuple).invocationName("SB");
         
         sa.colocate(sb);
                 
-        sa = sa.isolate().filter(new AllowAll<String>());
-        sb = sb.isolate().filter(new AllowAll<String>());
+        sa = sa.isolate().filter(tuple->true);
+        sb = sb.isolate().filter(tuple->true);
         
         sa = sa.union(sb);
         
-        Condition<List<String>> pes = t.getTester().stringContents(sa);
+        Document adl = produceADL(t);
+        adlAssertDefaultHostpool(adl);
+        adlAssertColocated(adl, "SA", "SB");
+    }
+    
+    @Test
+    public void testNoColocate() throws Exception {
+        adlOk();
         
-        Condition<Long> tc = t.getTester().tupleCount(sa, 2);
+        Topology t = newTopology();
         
-        complete(t.getTester(), tc, 10, TimeUnit.SECONDS);
+        TStream<String> sa = t.strings("a");
+        TStream<String> sb = t.strings("b");
         
-        Set<String> singlePe = new HashSet<>(pes.getResult());
-     
-        assertTrue(pes.getResult().toString(), singlePe.size() == 1);
+        sa = sa.transform(identity());
+        sb = sb.transform(tuple->tuple);
+       
+        sa = sa.union(sb);
+        
+        sa.forEach(tuple->{});
+        
+        Document adl = produceADL(t);
+        adlAssertDefaultHostpool(adl);
+        adlAssertNoColocated(adl);
     }
     
     /**
@@ -625,4 +699,115 @@ public class PlaceableTest extends TestTopology {
             ;
     }
 
+    public static Document produceADL(TopologyElement te) throws Exception {
+        StreamsContext<File> ctx = (StreamsContext<File>) StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT);
+        File tkDir = ctx.submit(te.topology()).get();
+        
+        System.out.println("TKDIR:" + tkDir);
+        
+       
+        String topoTkDir = System.getProperty("topology.toolkit.release");
+        
+        List<String> cmd = new ArrayList<>();
+        cmd.add(System.getenv("STREAMS_INSTALL") + "/bin/sc");    
+        cmd.add("--suppress-all-but-the-application-model");
+        cmd.add("--spl-path");
+        cmd.add(topoTkDir);
+        cmd.add("--main-composite");
+        cmd.add(te.topology().getNamespace() + "::" + te.topology().getName());
+        
+        ProcessBuilder pb = new ProcessBuilder(cmd);
+        pb.directory(tkDir);
+        pb.redirectInput(Redirect.INHERIT);
+        pb.redirectOutput(Redirect.INHERIT);
+        pb.redirectError(Redirect.INHERIT);
+        
+        Process p = pb.start();
+        int rc = p.waitFor();
+        System.out.println("RC:" + rc);
+        assertEquals(0, rc);
+        
+        File adl = new File(tkDir, "output/" + te.topology().getNamespace() + "." + te.topology().getName() + ".adl");
+        assertTrue(adl.exists());
+        assertTrue(adl.isFile());
+        
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        
+        DocumentBuilder db = dbf.newDocumentBuilder(); 
+        
+        
+        try(InputStream adlIn = new FileInputStream(adl)) {
+
+        return db.parse(new InputSource(adlIn));
+        }
+    }
+    
+    private static String attr(Node node, String name) {
+        String value = node.getAttributes().getNamedItem(name).getTextContent();
+        assertNotNull(value);
+        return value;
+    }
+    
+    public static void adlAssertDefaultHostpool(Document adl) {
+        
+        NodeList pools = adl.getElementsByTagName("hostpool");
+        assertEquals(1, pools.getLength());
+        assertEquals("$default", attr(pools.item(0), "name")); 
+    }
+    
+    // <coLocation colocId="__jaa_colocate1"/>;
+    public static String colocateId(Node op) {
+        Element ope = (Element) op;
+        NodeList colocates = ope.getElementsByTagName("coLocation");
+        if (colocates.getLength() == 0)
+            return null;
+        assertEquals(1, colocates.getLength());
+        return attr(colocates.item(0), "colocId");
+    }
+    
+    /**
+     * Assert that all named operators are colocated and
+     * that no others are colocated with them.
+     */
+    public static void adlAssertColocated(Document adl, String ...names) {
+        
+        Set<String> cnames = new HashSet<>(Arrays.asList(names));
+        assertEquals(names.length, cnames.size());
+        
+        List<Node> colocated = new ArrayList<>();
+        List<Node> notcolocated = new ArrayList<>();
+        
+        NodeList ops = adl.getElementsByTagName("primitiveOperInstance");
+        assertTrue(ops.getLength() >= names.length);
+        for (int i = 0; i < ops.getLength(); i++) {
+            Node op = ops.item(i);
+            assertEquals(Node.ELEMENT_NODE, op.getNodeType());
+            if (cnames.contains(attr(op, "name")))
+                colocated.add(op);
+            else
+                notcolocated.add(op);
+        }
+        assertEquals(names.length, colocated.size());
+        
+        final String colocateId = colocateId(colocated.get(0));
+        assertNotNull(colocateId);
+        
+        for (Node op : colocated)
+            assertEquals(colocateId, colocateId(op));
+
+        for (Node op : notcolocated)
+            assertFalse(colocateId.equals(colocateId(op)));
+    }
+    /**
+     * Assert that no operators are colocated.
+     */
+    public static void adlAssertNoColocated(Document adl) {
+               
+        NodeList ops = adl.getElementsByTagName("primitiveOperInstance");
+        for (int i = 0; i < ops.getLength(); i++) {
+            Node op = ops.item(i);
+            assertEquals(Node.ELEMENT_NODE, op.getNodeType());
+            assertNull(colocateId(op));
+        }
+    }
 }

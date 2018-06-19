@@ -9,9 +9,13 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMEN
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_LOW_LATENCY_REGION_ID;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+import static com.ibm.streamsx.topology.logic.Logic.identity;
 import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerId;
 import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerIdAppend;
 import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerIds;
+import static com.ibm.streamsx.topology.test.api.PlaceableTest.adlAssertColocated;
+import static com.ibm.streamsx.topology.test.api.PlaceableTest.adlAssertDefaultHostpool;
+import static com.ibm.streamsx.topology.test.api.PlaceableTest.produceADL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
@@ -24,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
+import org.w3c.dom.Document;
 
 import com.google.gson.JsonObject;
 import com.ibm.streams.operator.PERuntime;
@@ -31,11 +36,13 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
+import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.logic.Logic;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
@@ -44,37 +51,45 @@ import com.ibm.streamsx.topology.tester.Tester;
 public class LowLatencyTest extends TestTopology {
     @Test
     public void testSimpleLowLatency() throws Exception{
-        assumeTrue(SC_OK);
+        adlOk();
         
         Topology topology = newTopology();
 
         // Construct topology
         TStream<String> ss = topology.strings("hello");
-        TStream<String> ss1 = ss.transform(getContainerId()).lowLatency();
-        TStream<String> ss2 = ss1.transform(getContainerId()).endLowLatency();
-        ss2.print();
+        TStream<String> ss1 = ss.transform(identity()).invocationName("SS1").lowLatency();
+        TStream<String> ss2 = ss1.transform(identity()).invocationName("SS2").endLowLatency();
+        ss2.forEach(tuple->{});
         
-        StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT).submit(topology).get();
+        Document adl = produceADL(topology);
+        adlAssertDefaultHostpool(adl);
+        adlAssertColocated(adl, "SS1", "SS2");
     }
     
     @Test
     public void testMultipleRegionLowLatency() throws Exception{
-        assumeTrue(SC_OK);
+        adlOk();
         
         Topology topology = newTopology();
 
         // Construct topology
         TStream<String> ss = topology.strings("hello")
-                .transform(getContainerId()).transform(getContainerId());
+                .map(identity()).map(identity());
         
-        TStream<String> ss1 = ss.transform(getContainerId()).lowLatency();
-        TStream<String> ss2 = ss1.transform(getContainerId()).
-                transform(getContainerId()).endLowLatency().transform(getContainerId());
-        TStream<String> ss3 = ss2.transform(getContainerId()).lowLatency();
-        ss3.transform(getContainerId()).transform(getContainerId())
-            .endLowLatency().print();
+        TStream<String> ss1 = ss.map(identity()).invocationName("R1_A").lowLatency();
+        TStream<String> ss2 = ss1
+                .map(identity()).invocationName("R1_B")
+                .map(identity()).invocationName("R1_C")
+                .endLowLatency().map(identity());
         
-        StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT).submit(topology).get();
+        TStream<String> ss3 = ss2.map(identity()).invocationName("R2_X").lowLatency();
+        ss3.map(identity()).invocationName("R2_Y").map(identity()).invocationName("R2_Z")
+            .endLowLatency().forEach(tuple->{});
+        
+        Document adl = produceADL(topology);
+        adlAssertDefaultHostpool(adl);
+        adlAssertColocated(adl, "R1_A", "R1_B", "R1_C");
+        adlAssertColocated(adl, "R1_X", "R1_Y", "R1_Z");
     }
     
     @Test
