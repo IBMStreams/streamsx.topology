@@ -91,7 +91,7 @@ Run `python3 -u -m unittest` in each of these directories:
 Since Streaming Analytics is only Python 3.5 these tests should be run without a `VCAP_SERVICES` environment variable set.
  
 
-Run `python -u -m unittest` in each of these directories:
+Run `python -u -m unittest discover` in each of these directories:
 
 A distributed environment with a 2.7 Python setup must exist (and `STREAMS_INSTANCE_ID` set to it.)
 
