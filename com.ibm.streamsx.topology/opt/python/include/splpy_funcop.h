@@ -34,7 +34,7 @@ class SplpyFuncOp : public SplpyOp {
 
       SplpyFuncOp(SPL::Operator * op, const std::string & wrapfn) :
         SplpyOp(op, "/opt/python/packages/streamsx/topology"),
-          stateHandler(NULL)
+          stateHandler(NULL), stateHandlerMutex(NULL)
       {
          setSubmissionParameters();
          addAppPythonPackages();
@@ -45,28 +45,50 @@ class SplpyFuncOp : public SplpyOp {
       virtual ~SplpyFuncOp() {
         delete stateHandler;
         stateHandler = NULL;
+        stateHandlerMutex = NULL; // not owned by this class
       }
 
+      class RealAutoLock {
+      public:
+        RealAutoLock(SplpyFuncOp * op) : op_(op) {
+          assert(op->stateHandlerMutex);
+          op->stateHandlerMutex->lock();
+        }
+        ~RealAutoLock() {
+          op_->stateHandlerMutex->unlock();
+        }
+      private:
+        RealAutoLock(RealAutoLock const & other);
+        RealAutoLock();
+
+        SplpyFuncOp * op_;
+      };
+
+      class NoAutoLock {
+      public:
+        NoAutoLock(SplpyFuncOp *) {}
+      };
+
+      friend class RealAutoLock;
+
+ private:
+      /*
+      void lock() {
+        Mutex * mutex = getStateHandlerMutex();
+        if (mutex)
+          mutex->lock();
+      }
+
+      void unlock() {
+        Mutex * mutex = getStateHandlerMutex();
+        if (mutex)
+          mutex->unlock();
+      }
 
       Mutex * getStateHandlerMutex() const {
         return stateHandler ? stateHandler->getMutex() : NULL;
       }
-
-      class AutoMaybeMutex {
-      public:
-        AutoMaybeMutex(Mutex * mutex) : mutex_(mutex)
-        {
-          if (mutex)
-            mutex->lock();
-        }
-        ~AutoMaybeMutex() {
-          if (mutex_)
-            mutex_->unlock();
-          mutex_ = NULL;
-        }
-      private:
-        Mutex * mutex_;
-      };
+      */
 
   private:
       int hasParam(const char *name) {
@@ -210,7 +232,14 @@ class SplpyFuncOp : public SplpyOp {
             }
 	  }
 	  assert(!stateHandler);
-          stateHandler = (stateful && pickledCallable) ? new SplPyFuncOpStateHandlerImpl(this, pickledCallable) : new SplPyFuncOpStateHandler;
+          if (stateful && pickledCallable) {
+            stateHandler = new SplPyFuncOpStateHandlerImpl(this, pickledCallable);
+            stateHandlerMutex = stateHandler->getMutex();
+          }
+          else {
+            stateHandler = new SplPyFuncOpStateHandler;
+            stateHandlerMutex = NULL;
+          }
 	  SPLAPPTRC(L_DEBUG, "registerStateHandler", "python");
 	  op()->getContext().registerStateHandler(*stateHandler);
 	}
@@ -235,8 +264,9 @@ class SplpyFuncOp : public SplpyOp {
 
       // Do-nothing base class.
       class SplPyFuncOpStateHandler : public SPL::StateHandler {
-      public:
+      private:
         virtual Mutex * getMutex() { return NULL; }
+        friend class SplpyFuncOp;
       };
 
       /**
@@ -308,12 +338,12 @@ class SplpyFuncOp : public SplpyOp {
          op->setCallable(initialCallable);
        }
 
-       virtual Mutex* getMutex() {
+      private:
+        virtual Mutex* getMutex() {
          return &mutex_;
        }
 
-      private:
-        // Call a python callable with a single argument
+       // Call a python callable with a single argument
         // Caller must hold GILState.
         PyObject * call(PyObject * callable, PyObject * arg) {
           PyObject * args = PyTuple_New(1);
@@ -332,6 +362,7 @@ class SplpyFuncOp : public SplpyOp {
       };
 
       SplPyFuncOpStateHandler * stateHandler;
+      Mutex * stateHandlerMutex;
 };
 
 }}
