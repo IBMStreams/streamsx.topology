@@ -7,7 +7,6 @@ package com.ibm.streamsx.topology.generator.spl;
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONSISTENT;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_COLOCATE_TAGS;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_COUNT;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_DELTA;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_NONE;
@@ -684,28 +683,22 @@ class OperatorGenerator {
             JsonObject placement = jobject(config, PLACEMENT);
             StringBuilder sbPlacement = new StringBuilder();
 
-            JsonArray colocateTags = GsonUtilities.array(placement, PLACEMENT_COLOCATE_TAGS);
-            String colocateTag = colocateTags != null && colocateTags.size() >= 1 ? colocateTags.get(0).getAsString() : null;
+            String colocateKey = jstring(placement, OpProperties.PLACEMENT_COLOCATE_KEY);
+            //String colocateKey = colocateTags != null && colocateTags.size() >= 1 ? colocateTags.get(0).getAsString() : null;
             //String colocateTag = jstring(placement, OpProperties.PLACEMENT_COLOCATE_KEY);
-            if (colocateTag != null) {
+            if (colocateKey != null) {
                 JsonObject mapping = object(graphConfig, CFG_COLOCATE_TAG_MAPPING);               
-                String colocationId = jstring(mapping, colocateTag);               
+                String colocationId = jstring(mapping, colocateKey);               
                 JsonObject colocateIds = object(graphConfig, CFG_COLOCATE_IDS);
                 JsonObject idInfo = object(colocateIds, colocationId);
                 int count = idInfo.get("count").getAsInt();
                 sbPlacement.append("      partitionColocation(");
                 
-                if (count == 1) {
-                    // Only used once, use a "relative" path to ensure the colocation
-                    // stays within a channel (if any)
-                    
+                stringLiteral(sbPlacement, colocationId);
+                if (count == 1 && jboolean(idInfo, "parallel")) {
+                    // Only used once, use getChannel() to remain within a channel.                   
                     SPLGenerator.value(sbPlacement, JParamTypes.TYPE_SPL_EXPRESSION,
-                            new JsonPrimitive("getThisCompositeInstanceName()+"));
-                    stringLiteral(sbPlacement, colocationId);
-                    SPLGenerator.value(sbPlacement, JParamTypes.TYPE_SPL_EXPRESSION,
-                            new JsonPrimitive("+'$$'+((rstring)getChannel())"));
-                } else {
-                    stringLiteral(sbPlacement, colocationId);
+                            new JsonPrimitive("+'$'+((rstring)getChannel())"));
                 }
                 
                 sbPlacement.append(")\n");

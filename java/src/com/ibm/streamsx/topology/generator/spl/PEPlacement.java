@@ -272,19 +272,18 @@ class PEPlacement {
     }
     
     /**
-     * Bump the count for each colocation id used in a parallel or main composite.
+     * Bump the count for each colocation id used in a composite.
      * If a colocation tag is only used in a single parallel composite
      * then its actually id needs to be channel based and relative to the
      * composite instance name, otherwise it's absolute.
      */
-    void compositeColocateIdUse(JsonObject composite) {
+    void compositeColocateIdUse(JsonObject compositeDefinition) {
         
-        if (!jboolean(composite, "__spl_mainComposite")
-                && !jboolean(composite, "parallelComposite"))
+        if (jboolean(compositeDefinition, "lowLatencyComposite"))
             return;
-        
+               
         Set<String> usedColocateKeys = new HashSet<>();
-        operators(composite, op -> {
+        operators(compositeDefinition, op -> {
             JsonObject placement = object(op, CONFIG, PLACEMENT);
             if (placement == null)
                 return;
@@ -302,10 +301,13 @@ class PEPlacement {
         for (String key : usedColocateKeys)
             usedColocateIds.add(jstring(tagMaps, key));
         
-        JsonObject colocateIds = objectCreate(graph, CONFIG, CFG_COLOCATE_IDS);
+        final boolean parallel = jboolean(compositeDefinition, "parallelComposite");
+        JsonObject colocateIds = object(graph, CONFIG, CFG_COLOCATE_IDS);
         for (String id : usedColocateIds) {
             JsonObject idInfo = colocateIds.getAsJsonObject(id);
             idInfo.addProperty("count", idInfo.get("count").getAsInt()+1);
+            if (parallel)
+                idInfo.addProperty("parallel", parallel);
         }
     }
 }

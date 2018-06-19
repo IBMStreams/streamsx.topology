@@ -80,6 +80,26 @@ public class LowLatencyTest extends TestTopology {
     }
     
     @Test
+    public void testUDPLowLatency() throws Exception{
+        adlOk();
+        
+        Topology topology = newTopology();
+
+        // Construct topology
+        TStream<String> ss = topology.strings("hello");
+        ss = ss.parallel(3);
+        TStream<String> ss1 = ss.map(identity()).invocationName("UDP_SS1").lowLatency();
+        ss1 = ss1.map(identity()).invocationName("UDP_SS2");
+        TStream<String> ss2 = ss1.map(identity()).invocationName("UDP_SS3").endLowLatency();
+        ss2 = ss2.endParallel();
+        ss2.forEach(tuple->{});
+        
+        Document adl = produceADL(topology);
+        adlAssertDefaultHostpool(adl);
+        adlAssertColocated(adl, true, "UDP_SS1", "UDP_SS2", "UDP_SS3");
+    }
+    
+    @Test
     public void testLowLatencySplit() throws Exception {
         // Uses Condition.getResult - not supported.
         assumeTrue(!isStreamingAnalyticsRun());
