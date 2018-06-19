@@ -4,13 +4,7 @@
  */
 package com.ibm.streamsx.topology.test.api;
 
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONFIG;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_LOW_LATENCY_REGION_ID;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.logic.Logic.identity;
-import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerId;
 import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerIdAppend;
 import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerIds;
 import static com.ibm.streamsx.topology.test.api.PlaceableTest.adlAssertColocated;
@@ -30,15 +24,12 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import org.w3c.dom.Document;
 
-import com.google.gson.JsonObject;
 import com.ibm.streams.operator.PERuntime;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
-import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
