@@ -211,12 +211,14 @@
   <target name="unittest.main" depends="jar">
      <antcall target="unittest.base" inheritAll="no">
        <param name="topology.test.type" value="EMBEDDED_TESTER"/>
+       <param name="topology.samples.jar" value="${topology.samples.jar}"/>
      </antcall>
   </target>
 
   <target name="unittest.standalone" depends="jar,test.python.toolkit">
      <antcall target="unittest.base" inheritAll="no">
        <param name="topology.test.type" value="STANDALONE_TESTER"/>
+       <param name="topology.samples.jar" value="${topology.samples.jar}"/>
      </antcall>
   </target>
 
@@ -256,6 +258,7 @@
   <property name="topology.test.base.pattern" value="**/*Test.java"/>
 
   <target name="unittest.base" depends="unittest.base.scala">
+    <echo message="topology.samples.jar=${topology.samples.jar}"/>
      <mkdir dir="${test.dir}"/>
      <tempfile property="topology.test.dir" prefix="testrun" destDir="${test.dir}"/>
      <mkdir dir="${topology.test.dir}"/>
