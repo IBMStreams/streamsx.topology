@@ -30,11 +30,32 @@ public interface Placeable<T extends Placeable<T>> extends TopologyElement {
     
     /**
      * Colocate this element with other topology elements so that
-     * at runtime they all execute within the same operating system process.
+     * at runtime they all execute within the same processing element
+     * (PE or operating system process).
      * {@code elements} may contain any {@code Placeable} within
      * the same topology, there is no requirement
      * that the element is connected (by a stream) directly or indirectly
      * to this element.
+     * 
+     * <P>
+     * When a set of colocated elements are completely within a single parallel
+     * region then the colocation constraint is limited to that channel. So if elements
+     * {@code A} and {@code B} are colocated then it
+     * is guaranteed that {@code A[0],B[0]} from channel 0 are in a single PE
+     * and {@code A[1],B[1]}from channel 1 are in a single PE,
+     * but typically a different PE to {@code A[0],B[0]}.
+     * <BR>
+     * When a a set of colocated elements are not completely within a single parallel
+     * region then the colocation constraint applies to the whole topology.
+     * So if {@code A,B} are in a parallel region but {@code C} is outside then
+     * all the replicas of {@code A,B} are colocated with {@code C} and each other. 
+     * </P>
+     * 
+     * <P>
+     * Colocation is also referred to as fusing, when topology elements
+     * are connected by streams then the communication between them is in-process
+     * using direct method calls (instead of a network transport such as TCP).
+     * </P>
      * 
      * @param elements Elements to colocate with this container.
      * 

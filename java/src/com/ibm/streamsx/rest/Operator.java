@@ -6,10 +6,8 @@ package com.ibm.streamsx.rest;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
@@ -51,19 +49,9 @@ public class Operator extends Element {
     @Expose
     private String restid;
 
-    static final List<Operator> getOperatorList(AbstractStreamsConnection sc, String operatorsList) {
-        List<Operator> opList;
-        try {
-            OperatorArray opArray = gson.fromJson(operatorsList, OperatorArray.class);
-
-            opList = opArray.operators;
-            for (Operator op : opList) {
-                op.setConnection(sc);
-            }
-        } catch (JsonSyntaxException e) {
-            opList = Collections.<Operator> emptyList();
-        }
-        return opList;
+    static final List<Operator> createOperatorList(AbstractStreamsConnection sc,
+             String uri) throws IOException {
+        return createList(sc, uri, OperatorArray.class);
     }
 
     /**
@@ -107,9 +95,7 @@ public class Operator extends Element {
      * @throws IOException
      */
     public List<InputPort> getInputPorts() throws IOException {
-        String sReturn = connection().getResponseString(inputPorts);
-        List<InputPort> lInPorts = InputPort.getInputPortList(connection(), sReturn);
-        return lInPorts;
+        return InputPort.createInputPortList(connection(), inputPorts);
     }
 
     /**
@@ -137,9 +123,7 @@ public class Operator extends Element {
      * @throws IOException
      */
     public List<OutputPort> getOutputPorts() throws IOException {
-        String sReturn = connection().getResponseString(outputPorts);
-        List<OutputPort> lOutPorts = OutputPort.getOutputPortList(connection(), sReturn);
-        return lOutPorts;
+        return OutputPort.createOutputPortList(connection(), outputPorts);
     }
 
     /**
@@ -151,13 +135,22 @@ public class Operator extends Element {
         return resourceType;
     }
     
-    private static class OperatorArray {
+    /**
+     * Get the PE for this operator.
+     * @return PE for this operator.
+     * @throws IOException
+     * 
+     * @since 1.9
+     */
+    public ProcessingElement getPE() throws IOException {
+        return create(connection(), pe, ProcessingElement.class);
+    }
+    
+    private static class OperatorArray extends ElementArray<Operator> {
         @Expose
         private ArrayList<Operator> operators;
-        @Expose
-        private String resourceType;
-        @Expose
-        private int total;
+        
+        List<Operator> elements() { return operators; }
     }
 
 }

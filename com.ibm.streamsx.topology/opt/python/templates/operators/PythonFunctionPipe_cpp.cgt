@@ -25,8 +25,6 @@ using namespace streamsx::topology;
  
  my $iport = $model->getInputPortAt(0);
 
- my $FROM_DICT_TMP = 1;
-
  my $inputAttrs2Py = $iport->getNumberOfAttributes();
  if ($fixedParam != -1) {
     $inputAttrs2Py = $fixedParam;
@@ -41,6 +39,7 @@ using namespace streamsx::topology;
   my $otupleType = $oport->getSPLTupleType();
   my @onames = SPL::CodeGen::Type::getAttributeNames($otupleType);
   my @otypes = SPL::CodeGen::Type::getAttributeTypes($otupleType);
+  my %cpp_tuple_types;
  
   my $skip_set_callable = 0;
 %>

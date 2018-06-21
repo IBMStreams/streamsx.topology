@@ -7,8 +7,6 @@ import itertools
 import test_functions
 from test_utilities import standalone
 
-import test_vers
-
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology import schema
@@ -17,7 +15,6 @@ import streamsx.topology.context
 import test_package.test_subpackage.test_module
 import test2_pkg_helpers
 
-@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestPackages(unittest.TestCase):
   def setUp(self):
       Tester.setup_standalone(self)
@@ -64,12 +61,10 @@ class TestPackages(unittest.TestCase):
           if pypath is not None:
               os.environ['PYTHONPATH'] = pypath
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestDistributedPackages(TestPackages):
   def setUp(self):
       Tester.setup_distributed(self)
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestBluemixPackages(TestPackages):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)

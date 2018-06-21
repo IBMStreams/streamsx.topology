@@ -459,7 +459,8 @@ class Topology(object):
 
         sl = _SourceLocation(_source_info(), "source")
         _name = self.graph._requested_name(_name, action='source', func=func)
-        op = self.graph.addOperator(self.opnamespace+"::Source", func, name=_name, sl=sl)
+        # source is always stateful
+        op = self.graph.addOperator(self.opnamespace+"::Source", func, name=_name, sl=sl, stateful=True)
         op._layout(kind='Source', name=_name, orig_name=name)
         oport = op.addOutputPort(name=_name)
         return Stream(self, oport)._make_placeable()
@@ -506,7 +507,8 @@ class Topology(object):
         """
         _name = self.graph._requested_name(name, 'subscribe')
         sl = _SourceLocation(_source_info(), "subscribe")
-        op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe", sl=sl, name=_name)
+        # subscribe is never stateful
+        op = self.graph.addOperator(kind="com.ibm.streamsx.topology.topic::Subscribe", sl=sl, name=_name, stateful=False)
         oport = op.addOutputPort(schema=schema, name=_name)
         params = {'topic': topic, 'streamType': schema}
         if connect is not None and connect != SubscribeConnection.Direct:
@@ -783,7 +785,8 @@ class Stream(_placement._Placement, object):
         """
         sl = _SourceLocation(_source_info(), 'for_each')
         _name = self.topology.graph._requested_name(name, action='for_each', func=func)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=_name, sl=sl)
+        stateful = self._determine_statefulness(func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.oport, name=self.name)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         op._layout(kind='ForEach', name=_name, orig_name=name)
@@ -823,7 +826,8 @@ class Stream(_placement._Placement, object):
         """
         sl = _SourceLocation(_source_info(), 'filter')
         _name = self.topology.graph._requested_name(name, action="filter", func=func)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=_name, sl=sl)
+        stateful = self._determine_statefulness(func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.oport, name=self.name)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         op._layout(kind='Filter', name=_name, orig_name=name)
@@ -832,7 +836,8 @@ class Stream(_placement._Placement, object):
 
     def _map(self, func, schema, name=None):
         _name = self.topology.graph._requested_name(name, action="map", func=func)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Map", func, name=_name)
+        stateful = self._determine_statefulness(func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Map", func, name=_name, stateful=stateful)
         op.addInputPort(outputPort=self.oport, name=self.name)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         oport = op.addOutputPort(schema=schema, name=_name)
@@ -891,7 +896,7 @@ class Stream(_placement._Placement, object):
         self.topology.graph.get_views().append(_view)
         return _view
 
-    def map(self, func, name=None, schema=None):
+    def map(self, func=None, name=None, schema=None):
         """
         Maps each tuple from this stream into 0 or 1 stream tuples.
 
@@ -912,6 +917,7 @@ class Stream(_placement._Placement, object):
 
         Args:
             func: A callable that takes a single parameter for the tuple.
+                If not supplied then a function equivalent to ``lambda tuple_ : tuple_`` is used.
             name(str): Name of the mapped stream, defaults to a generated name.
             schema(StreamSchema): Schema of the resulting stream.
 
@@ -931,9 +937,14 @@ class Stream(_placement._Placement, object):
         .. versionadded:: 1.7 `schema` argument added to allow conversion to
             a structured stream.
         .. versionadded:: 1.8 Support for submitting `dict` objects as stream tuples to a structured stream (in addition to existing support for `tuple` objects).
+        .. versionchanged:: 1.11 `func` is optional.
         """
         if schema is None:
             schema = streamsx.topology.schema.CommonSchema.Python
+        if func is None:
+            func = streamsx.topology.runtime._identity
+            if name is None:
+               name = 'identity'
      
         ms = self._map(func, schema=schema, name=name)._layout('Map')
         ms.oport.operator.sl = _SourceLocation(_source_info(), 'map')
@@ -948,7 +959,7 @@ class Stream(_placement._Placement, object):
         """
         return self.map(func, name)
              
-    def flat_map(self, func, name=None):
+    def flat_map(self, func=None, name=None):
         """
         Maps and flatterns each tuple from this stream into 0 or more tuples.
 
@@ -963,6 +974,9 @@ class Stream(_placement._Placement, object):
         
         Args:
             func: A callable that takes a single parameter for the tuple.
+                If not supplied then a function equivalent to ``lambda tuple_ : tuple_`` is used.
+                This is suitable when each tuple on this stream is an iterable to be flattened.
+                
             name(str): Name of the flattened stream, defaults to a generated name.
 
         If invoking ``func`` for a tuple on the stream raises an exception
@@ -979,10 +993,18 @@ class Stream(_placement._Placement, object):
             Stream: A Stream containing flattened and mapped tuples.
         Raises:
             TypeError: if `func` does not return an iterator nor None
+
+        .. versionchanged:: 1.11 `func` is optional.
         """     
+        if func is None:
+            func = streamsx.topology.runtime._identity
+            if name is None:
+               name = 'flatten'
+     
         sl = _SourceLocation(_source_info(), 'flat_map')
         _name = self.topology.graph._requested_name(name, action='flat_map', func=func)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=_name, sl=sl)
+        stateful = self._determine_statefulness(func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.oport, name=self.name)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         oport = op.addOutputPort(name=_name)
@@ -1097,7 +1119,8 @@ class Stream(_placement._Placement, object):
 
             if func is not None:
                 keys = ['__spl_hash']
-                hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::HashAdder", func)
+                stateful = self._determine_statefulness(func)
+                hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::HashAdder", func, stateful=stateful)
                 hash_adder._layout(hidden=True)
                 hash_schema = self.oport.schema.extend(streamsx.topology.schema.StreamSchema("tuple<int64 __spl_hash>"))
                 hash_adder.addInputPort(outputPort=self.oport, name=self.name)
@@ -1155,7 +1178,8 @@ class Stream(_placement._Placement, object):
         return self
 
     def last(self, size=1):
-        """ Declares a window containing most recent tuples on this stream.
+        """ Declares a slding window containing most recent tuples
+        on this stream.
 
         The number of tuples maintained in the window is defined by `size`.
 
@@ -1177,6 +1201,52 @@ class Stream(_placement._Placement, object):
             Window: Window of the last (most recent) tuples on this stream.
         """
         win = Window(self, 'SLIDING')
+        if isinstance(size, datetime.timedelta):
+            win._evict_time(size)
+        elif isinstance(size, int):
+            win._evict_count(size)
+        else:
+            raise ValueError(size)
+        return win
+
+    def batch(self, size):
+        """ Declares a tumbling window to support batch processing
+        against this stream.
+
+        The number of tuples in the batch is defined by `size`.
+
+        If `size` is an `int` then it is the count of tuples in the batch.
+        For example, with ``size=10`` the batch will contain ten tuples.
+        Thus processing against the returned :py:class:`Window`,
+        such as :py:meth:`aggregate` will be executed every ten tuples
+        against the last ten tuples on the stream. For example the
+        first three aggregations would be against the first ten tuples
+        on the stream, then the next ten tuples and then the third ten tuples.
+
+        If `size` is an `datetime.timedelta` then it is the duration
+        of the batch using wallclock time.
+        With a `timedelta` representing five minutes
+        then the window contains any tuples that arrived in the last
+        five minutes.  Thus processing against the returned :py:class:`Window`,
+        such as :py:meth:`aggregate` will be executed every five minutes tuples
+        against the batch of tuples arriving in the last five minutes
+        on the stream. For example the first three aggregations would be
+        against any tuples on the stream in the first five minutes,
+        then the next five minutes and then minutes ten to fifteen.
+
+        Each tuple on the stream appears only in a single batch.
+
+        Args:
+            size: The size of each batch, either an `int` to define the
+                number of tuples or `datetime.timedelta` to define the
+                duration of the batch.
+
+        Returns:
+            Window: Window allowing batch processing on this stream.
+
+        .. versionadded:: 1.11
+        """
+        win = Window(self, 'TUMBLING')
         if isinstance(size, datetime.timedelta):
             win._evict_time(size)
         elif isinstance(size, int):
@@ -1292,7 +1362,8 @@ class Stream(_placement._Placement, object):
             return sp
 
         _name = self.topology.graph._requested_name(name, action="publish")
-        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl, name=_name)
+        # publish is never stateful
+        op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl, name=_name, stateful=False)
         op.addInputPort(outputPort=self.oport)
         op._layout_group('Publish', name if name else _name)
         sink = Sink(op)
@@ -1412,6 +1483,13 @@ class Stream(_placement._Placement, object):
         self._op()._layout(kind, hidden, name, orig_name)
         return self
 
+    """
+    Determine whether a callable has state that needs to be saved during
+    checkpointing.  
+    """
+    def _determine_statefulness(self, _callable):
+        stateful = not inspect.isroutine(_callable)
+        return stateful
 
 class View(object):
     """
@@ -1591,7 +1669,10 @@ class Window(object):
 
         Returns:
             Window: Window that will be triggered.
-    """
+
+        .. warning:: A trigger is only supported for a sliding window
+            such as one created by :py:meth:`last`.
+        """
         tw = Window(self.stream, self._config['type'])
         tw._config['evictPolicy'] = self._config['evictPolicy']
         tw._config['evictConfig'] = self._config['evictConfig']
@@ -1623,23 +1704,44 @@ class Window(object):
         
             win = s.last(10).trigger(1)
             moving_averages = win.aggregate(lambda tuples: sum(tuples)/len(tuples))
+
+        .. note:: If a tumbling (:py:meth:`~Stream.batch`) window's stream
+            is finite then a final aggregation is performed if the
+            window is not empty. Thus ``function`` may be passed fewer tuples
+            for a window sized using a count. For example a stream with 105
+            tuples and a batch size of 25 tuples will perform four aggregations
+            with 25 tuples each and a final aggregation of 5 tuples.
             
         Args:
             function: The function which aggregates the contents of the window
             name(str): The name of the returned stream. Defaults to a generated name.
 
         Returns: 
-            Stream: A `Stream` of the returned values of the supplied function.                                                                                                                                                             
+            Stream: A `Stream` of the returned values of the supplied function.
+
+        
+        .. warning::
+            In Python 3.5 or later if the stream being aggregated has a
+            structured schema that contains a ``blob`` type then any ``blob``
+            value will not be maintained in the window. Instead its
+            ``memoryview`` object will have been released. If the ``blob``
+            value is required then perform a :py:meth:`map` transformation
+            (without setting ``schema``) copying any required
+            blob value in the tuple using ``memoryview.tobytes()``.
+
         .. versionadded:: 1.8
+        .. versionchanged:: 1.11 Support for aggregation of streams with structured schemas.
         """
         schema = streamsx.topology.schema.CommonSchema.Python
         
         sl = _SourceLocation(_source_info(), "aggregate")
-        name = self.topology.graph._requested_name(name, action="aggregate", func=function)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Aggregate", function, name=name, sl=sl)
+        _name = self.topology.graph._requested_name(name, action="aggregate", func=function)
+        stateful = self.stream._determine_statefulness(function)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Aggregate", function, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.stream.oport, name=self.stream.name, window_config=self._config)
-        oport = op.addOutputPort(schema=schema, name=name)
-
+        streamsx.topology.schema.StreamSchema._fnop_style(self.stream.oport.schema, op, 'pyStyle')
+        oport = op.addOutputPort(schema=schema, name=_name)
+        op._layout(kind='Aggregate', name=_name, orig_name=name)
         return Stream(self.topology, oport)._make_placeable()
 
 

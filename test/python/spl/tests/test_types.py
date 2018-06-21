@@ -16,6 +16,9 @@ import streamsx.topology.context
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
 import streamsx.scripts.extract
+import vers_utils
+
+import spl_tests_utils as stu
 
 class TestTypes(unittest.TestCase):
     """ Type tests.
@@ -23,14 +26,14 @@ class TestTypes(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Extract Python operators in toolkit"""
-        streamsx.scripts.extract.main(['-i', '../testtkpy', '--make-toolkit'])
+        stu._extract_tk('testtkpy')
 
     def setUp(self):
         Tester.setup_standalone(self)
 
     def test_blob_type(self):
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         data = ['Hello', 'Blob', 'Did', 'you', 'reset' ]
         s = topo.source(data)
         s = s.as_string()
@@ -64,7 +67,7 @@ class TestTypes(unittest.TestCase):
 
     def test_list_blob_type(self):
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         data = ['Hello', 'Blob', 'Did', 'you', 'reset' ]
         s = topo.source(data)
         s = s.as_string()
@@ -85,7 +88,7 @@ class TestTypes(unittest.TestCase):
 
     def test_map_blob_type(self):
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         data = ['Hello', 'Blob', 'Did', 'you', 'reset' ]
         s = topo.source(data)
         s = s.as_string()
@@ -104,11 +107,34 @@ class TestTypes(unittest.TestCase):
         tester.contents(bt.stream, data)
         tester.test(self.test_ctxtype, self.test_config)
 
+    @unittest.skipIf(not vers_utils.optional_type_supported() , "Optional type not supported")
+    def test_optional_blob_type(self):
+        topo = Topology()
+        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        data = ['Hello', 'Blob', 'Did', 'you', 'reset' ]
+        s = topo.source(data)
+        s = s.as_string()
+
+        toBlob = op.Map(
+            "com.ibm.streamsx.topology.pytest.pytypes::ToBlob",
+            s,
+            'tuple<optional<blob> ob>')
+
+        bt = op.Map(
+            "com.ibm.streamsx.topology.pytest.pytypes::BlobTest",
+            toBlob.stream,
+            'tuple<rstring string>',
+            {'keep': True})
+         
+        tester = Tester(topo)
+        tester.contents(bt.stream, data)
+        tester.test(self.test_ctxtype, self.test_config)
+
 
     def test_map_return(self):
         """Simple test of returning values from a map."""
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         s = topo.source(range(20))
         s = s.map(lambda v : (v,), schema='tuple<int32 val>')
 
@@ -124,7 +150,7 @@ class TestTypes(unittest.TestCase):
     def test_source_return(self):
         """Simple test of returning values from a source operator."""
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
 
         values = op.Source(
             topo,
@@ -145,7 +171,7 @@ class TestTypes(unittest.TestCase):
     def test_primitive_submit(self):
         """Simple test of submitting values from a primitive operator."""
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
 
         values = op.Source(
             topo,

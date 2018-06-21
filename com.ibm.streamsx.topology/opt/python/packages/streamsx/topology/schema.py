@@ -70,6 +70,7 @@ def _is_pending(schema):
 # with type being
 #    primitive type (str), e.g. 'int32'
 #    collection type (tuple), e.g. ('list', 'int32')
+#    optional type (tuple), e.g. ('optional', 'int32')
 #    nested tuple type (tuple), e.g. ('tuple', [('int32', 'a'), ('float64', 'b')])
 # This is an internal api.
 #
@@ -148,6 +149,12 @@ class _SchemaParser(object):
             self._req_op('>')
             bound = self._parse_optional_bounded()
             return ('map', (key_type, value_type), bound)
+
+        if 'optional' == attr_type[1]:
+            self._req_op('<')
+            value_type = self._parse_type(next(self.tokens))
+            self._req_op('>')
+            return ('optional', value_type)
             
         if attr_type[1] in _SchemaParser._SPL_PRIMITIVE_TYPES:
             if attr_type[1] == 'rstring':
@@ -266,6 +273,7 @@ class StreamSchema(object) :
     ``set<T>[N]``                 Bounded set                     ``set``                                    -
     ``map<K,V>``                  Map with typed keys and values  ``dict``                                   -
     ``map<K,V>[N]``               Bounded map, limted to N pairs  ``dict``                                   -
+    ``optional<T>``               Optional value of type `T`      Value of type `T`, or None                 Value of for type ``T``
     ``enum{id [,...]}``           Enumeration                     Not supported                              Not supported
     ``xml``                       XML value                       Not supported                              Not supported
     ``tuple<type name [, ...]>``  Nested tuple                    Not supported                              Not supported
@@ -277,7 +285,6 @@ class StreamSchema(object) :
     For example a value ``v`` assigned to ``float64`` attribute is converted as though ``float(v)`` is called first,
     thus ``v`` may be a ``float``, ``int`` or any type that has a ``__float__`` method.
     
-
     When a type is not supported in Python it can only be used in a schema used for streams produced and consumed by invocation of SPL operators.
 
     A `StreamSchema` can be created by passing a string of the

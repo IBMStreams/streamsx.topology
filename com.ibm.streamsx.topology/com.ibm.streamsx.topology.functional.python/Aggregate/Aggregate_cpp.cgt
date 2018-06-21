@@ -19,10 +19,6 @@ using namespace streamsx::topology;
  # Select the Python wrapper function
  my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
 
- if (($pystyle eq 'dict') || ($pyoutstyle eq 'dict') || ($pystyle eq 'tuple')) {
-    SPL::CodeGen::exitln("Dictionary input and output not supported.");
- }
- 
  my $out_pywrapfunc=  'object_in__' . $pyoutstyle . '_out';
 %>
 
@@ -37,8 +33,13 @@ MY_OPERATOR::MY_OPERATOR() :
    occ_(-1),
    window_(<%=$windowCppInitializer%>)
 {
+<% if ($window->isSliding()) {%>
     window_.registerOnWindowTriggerHandler(this);
     window_.registerAfterTupleEvictionHandler(this);
+<%}%>
+<% if ($window->isTumbling()) {%>
+    window_.registerBeforeWindowFlushHandler(this);
+<%}%>
 
     const char * out_wrapfn = "<%=$out_pywrapfunc%>";
 <%
@@ -69,6 +70,8 @@ MY_OPERATOR::MY_OPERATOR() :
 %>
 
     funcop_ = new SplpyFuncOp(this, out_wrapfn);
+
+@include "../pyspltuple_constructor.cgt"
     
     // Obtain the function that loads the tuple's value in process()
     {
@@ -150,7 +153,8 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 	  PyTuple_SET_ITEM(tup, 0, python_value);
 	  python_value = SplpyGeneral::pyCallObject(loads, tup);
       }
-  
+  <% } elsif ($pystyle eq 'dict' || $pystyle eq 'tuple' || $pystyle_nt) {%>
+      python_value = value;
  <% } else{
 	  SPL::CodeGen::exitln($pystyle . " is an unsupported input type.");      
     }
@@ -158,6 +162,20 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 
 
   window_.insert(python_value);
+}
+
+void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
+{
+<% if ($window->isTumbling()) {%>
+   // Aggregate the remaining contents if there are some.
+   if (punct == Punctuation::FinalMarker) {
+       SPL::AutoWindowDataAcquirer<PyObject *> awd(window_);
+       Window<PyObject *>::StorageType & storage = window_.getWindowStorage();
+       Window<PyObject *>::DataType & content = storage[0];
+       if (content.size() > 0)
+            onWindowTriggerEvent(window_, 0);
+   }
+<%}%>
 }
 
 
@@ -180,7 +198,7 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
     PyObject *items;
     {
     SplpyGIL lock;
-    items = PyList_New(std::distance(content.begin(), content.end()));
+    items = PyList_New(content.size());
     unsigned int idx = 0;
     for(WindowType::DataType::iterator it=content.begin(); it!=content.end(); ++it) {
         PyObject *item = *it;
@@ -191,17 +209,17 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
 	++idx;
     }
     }
-    PyObject *value = items;
   OPort0Type otuple;
 
   try {
   
-  if (SPLPY_AGGREGATE(funcop_->callable(), value,
+  if (SPLPY_AGGREGATE(funcop_->callable(), items,
        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_)){  
      submit(otuple, 0);
   }
   } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
      SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+     return;
   }
   submit(Punctuation::WindowMarker, 0);
 }

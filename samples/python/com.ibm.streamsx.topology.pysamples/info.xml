@@ -3,7 +3,16 @@
  xmlns:info="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo">
 <info:identity>
   <info:name>com.ibm.streamsx.topology.pysamples</info:name>
-  <info:description>Sample toolkit for Python support</info:description>
+  <info:description>
+    Sample toolkit for Python support.
+    This sample demonstrates the usage of operators written in python in a Streams spl application.
+    In directory opt/python/streams there are some python modules which implement streams operators.
+    There are two spl applications in namespace com.ibm.streamsx.topology.pysamples.apps which use these python operators.
+    To build this sample export the environment variable STREAMS_TOPOLOGY_TOOLKIT with the path to your toplogy toolki and 
+    execute ant all from the command line.
+    If environment variable STREAMS_TOPOLOGY_TOOLKIT not exists the sample is build using the topology toolkit from 
+    the streams installation.
+  </info:description>
   <info:version>1.1.0</info:version>
   <info:requiredProductVersion>4.2</info:requiredProductVersion>
 </info:identity>
