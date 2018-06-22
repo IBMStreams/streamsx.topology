@@ -47,26 +47,35 @@ class SplpyFuncOp : public SplpyOp {
         stateHandler = NULL;
         stateHandlerMutex = NULL; // not owned by this class
       }
-
+      
       class RealAutoLock {
       public:
         RealAutoLock(SplpyFuncOp * op) : op_(op) {
-          assert(op->stateHandlerMutex);
-          op->stateHandlerMutex->lock();
+          locked_ = (op->stateHandlerMutex != NULL);
+          if (locked_){
+            op->stateHandlerMutex->lock();
+          }
         }
         ~RealAutoLock() {
-          op_->stateHandlerMutex->unlock();
+          unlock();
+        }
+        void unlock() {
+          if (locked_) {
+            op_->stateHandlerMutex->unlock();
+          }
         }
       private:
         RealAutoLock(RealAutoLock const & other);
         RealAutoLock();
 
+        bool locked_;
         SplpyFuncOp * op_;
       };
 
       class NoAutoLock {
       public:
         NoAutoLock(SplpyFuncOp *) {}
+        void unlock() {}
       };
 
       friend class RealAutoLock;
@@ -214,10 +223,13 @@ class SplpyFuncOp : public SplpyOp {
 	  }
 	  assert(!stateHandler);
           if (stateful && pickledCallable) {
+            SPLAPPTRC(L_DEBUG, "Creating functional state handler", "python");
+            // pickledCallable reference stolen here.
             stateHandler = new SplPyFuncOpStateHandlerImpl(this, pickledCallable);
             stateHandlerMutex = stateHandler->getMutex();
           }
           else {
+            SPLAPPTRC(L_DEBUG, "Creating nonfunctional state handler", "python");
             stateHandler = new SplPyFuncOpStateHandler;
             stateHandlerMutex = NULL;
           }
@@ -285,6 +297,7 @@ class SplpyFuncOp : public SplpyOp {
             Py_DECREF(ret);
           }
           ckpt << bytes;
+          SPLAPPTRC(L_TRACE, "exit checkpoint", "python");
         }
 
         virtual void reset(SPL::Checkpoint & ckpt) {

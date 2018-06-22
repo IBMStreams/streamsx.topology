@@ -78,7 +78,7 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    AutoLock lock(funcop_);
+    AutoLock stateLock(funcop_);
     funcop_->prepareToShutdown();
 }
 
@@ -89,8 +89,8 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
   
   std::vector<OPort0Type> output_tuples; 
   
-  AutoLock lock(funcop_);
   try {
+    AutoLock stateLock(funcop_);
     SplpyGIL lock;
 
     PyObject * pyIterator = streamsx::topology::pySplProcessTuple(funcop_->callable(), value);

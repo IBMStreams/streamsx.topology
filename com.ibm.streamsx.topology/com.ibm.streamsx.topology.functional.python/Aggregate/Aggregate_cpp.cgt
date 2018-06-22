@@ -101,7 +101,7 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    AutoLock lock(funcop_);
+    AutoLock stateLock(funcop_);
     funcop_->prepareToShutdown();
 }
 

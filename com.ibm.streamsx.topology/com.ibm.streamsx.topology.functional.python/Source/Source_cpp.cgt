@@ -68,10 +68,10 @@ void MY_OPERATOR::process(uint32_t idx)
 
   while(!getPE().getShutdownRequested()) {
    try {
-    AutoLock stateLock(funcop_);
     OPort0Type otuple;
 
     { // start lock
+      AutoLock stateLock(funcop_);
       SplpyGIL lock;
       if (pyReturnVar != NULL) {
           Py_DECREF(pyReturnVar);
