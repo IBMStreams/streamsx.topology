@@ -128,3 +128,98 @@ class test_distributed_undillable_class_suppress(test_undillable_class_suppress)
 class test_sas_undillable_class_suppress(test_undillable_class_suppress):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
+
+# checkpoint_period can be either a datetime.timedelta value, or
+# any type that can be cast to float.  Here we verify timedelta,
+# float, int, string, bool, as well as some negative tests.
+# This test is standalone only because the deployment type is
+# irrelevant.
+class CheckpointPeriodTypes(unittest.TestCase):
+    def setUp(self):
+        Tester.setup_standalone(self)
+
+    def test_timedelta(self):
+        topo = Topology("test")
+        topo.checkpoint_period = timedelta(seconds=1)
+        s = topo.source(undillable_source(3, True))
+        tester = Tester(topo)
+        tester.contents(s, [1, 2, 3])
+
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_float(self):
+        topo = Topology("test")
+        topo.checkpoint_period = 1.0
+        s = topo.source(undillable_source(3, True))
+        tester = Tester(topo)
+        tester.contents(s, [1, 2, 3])
+
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_int(self):
+        topo = Topology("test")
+        topo.checkpoint_period = 1
+        s = topo.source(undillable_source(3, True))
+        tester = Tester(topo)
+        tester.contents(s, [1, 2, 3])
+
+        tester.test(self.test_ctxtype, self.test_config)
+
+    # bool can be cast to float
+    def test_bool(self):
+        topo = Topology("test")
+        topo.checkpoint_period = True
+        # If no exception, the test passes.
+
+    # imaginary literal cannot be cast to float.
+    def test_imaginary(self):
+        topo = Topology("test")
+        with self.assertRaises(TypeError):
+            topo.checkpoint_period = 1j
+
+    # None cannot be cast to float
+    def test_none(self):
+        topo = Topology("test")
+        with self.assertRaises(TypeError):
+            topo.checkpoint_period = None
+
+    # test a string that can be cast to float
+    def test_string_valid(self):
+        topo = Topology("test")
+        topo.checkpoint_period = "42.0"
+        # if no exception, the test passed
+
+    # test a string that cannnot be cast to float
+    def test_string_invalid(self):
+        topo = Topology("test")
+        with self.assertRaises(ValueError):
+            topo.checkpoint_period = "Forty-two"
+
+    # Negative period should raise ValueError
+    def test_float_negative(self):
+        topo = Topology("test")
+        with self.assertRaises(ValueError):
+             topo.checkpoint_period = -0.1
+
+    # False is zero, so should raise ValueError
+    def test_bool_false(self):
+        topo = Topology("test")
+        with self.assertRaises(ValueError):
+            topo.checkpoint_period = False
+
+
+    # Less than 0.001 is not allowed, but exactly 0.001 is.
+    def test_float_low(self):
+        topo = Topology("test")
+
+        with self.assertRaises(ValueError):
+            topo.checkpoint_period = 0.0009
+
+        # Try again with 0.001
+        topo.checkpoint_period = 0.001
+
+        s = topo.source(undillable_source(3, True))
+        tester = Tester(topo)
+        tester.contents(s, [1, 2, 3])
+
+        tester.test(self.test_ctxtype, self.test_config)
