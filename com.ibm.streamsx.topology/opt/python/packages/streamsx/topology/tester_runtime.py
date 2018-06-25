@@ -83,9 +83,12 @@ class Condition(object):
     def __getstate__(self):
         # Remove metrics from saved state.
         state = self.__dict__.copy()
+        to_be_deleted = []
         for key in state:
             if key.startswith('_metric'):
-              del state[key]
+                to_be_deleted.append(key)
+        for key in to_be_deleted:
+            del state[key]
         return state
 
     def __setstate__(self, state):

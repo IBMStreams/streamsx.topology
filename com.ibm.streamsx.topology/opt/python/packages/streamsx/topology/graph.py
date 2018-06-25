@@ -10,6 +10,7 @@ import sys
 import uuid
 import json
 import inspect
+import datetime
 import pickle
 from enum import Enum
 
@@ -167,6 +168,7 @@ class SPLGraph(object):
         _graph['config']['spl'] = {}
         _graph['config']['spl']['toolkits'] = self._spl_toolkits
         self._add_parameters(_graph)
+        self._add_checkpoint(_graph)
         if self._colocate_tag_mapping:
             _graph['config']['colocateTagMapping'] = self._colocate_tag_mapping
         _ops = []
@@ -216,6 +218,19 @@ class SPLGraph(object):
         _graph['parameters'] = params
         for name, sp in sps.items():
             params[name] = sp.spl_json()
+
+    def _add_checkpoint(self, _graph):
+
+        if self.topology.checkpoint_period is None:
+            pass
+        else:            
+            unit = "MICROSECONDS"
+
+            _graph["config"]["checkpoint"] = {}
+            _graph["config"]["checkpoint"]["mode"] = "periodic"
+            _graph["config"]["checkpoint"]["period"] = self.topology.checkpoint_period * 1000 * 1000 # Seconds to microseconds
+            _graph["config"]["checkpoint"]["unit"] = unit
+
 
     def getLastOperator(self):
         return self.operators[len(self.operators) -1]      
