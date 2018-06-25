@@ -43,3 +43,9 @@ samples/java/functional/classes/
 samples/java/functional/functionalsamples.jar
 /.project
 /.pydevproject
+
+# Ignore IntelliJ files.
+.idea/
+*.iml
+*.ipr
+*.iws
