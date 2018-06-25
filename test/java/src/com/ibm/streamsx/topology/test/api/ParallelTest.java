@@ -78,7 +78,7 @@ public class ParallelTest extends TestTopology {
 	assertTrue(expectedCount.valid());
     }
 
-    public void testAdjacentParallel(Routing routing1, Routing routing2) throws Exception {
+    private void testAdjacentParallel(Routing routing1, Routing routing2) throws Exception {
         checkUdpSupported();
         
         List<String> stringList = getListOfUniqueStrings(800);
