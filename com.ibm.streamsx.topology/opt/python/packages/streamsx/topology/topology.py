@@ -686,7 +686,8 @@ class Topology(object):
 
         The checkpoint period is the frequency at which checkpoints will
         be taken.  It can either be a :py:class:`~datetime.timedelta` value
-        or a floating point value in seconds.
+        or a floating point value in seconds.  It must be at 0.001
+        seconds or greater.
 
         A stateful operator is an operator whose callable is an instance of a
         Python callable class.
@@ -698,10 +699,14 @@ class Topology(object):
 
     @checkpoint_period.setter
     def checkpoint_period(self, period):
-        if (isinstance(period, datetime.timedelta) or isinstance(period, float)):
-            self._checkpoint_period = period
+        if (isinstance(period, datetime.timedelta)):
+            self._checkpoint_period = period.total_seconds()
         else:
-            raise TypeError("Unsupported type for checkpoint_period")
+            self._checkpoint_period = float (period)
+
+        # checkpoint period must be greater or equal to 0.001
+        if self._checkpoint_period < 0.001:
+            raise ValueError("checkpoint_period must be 0.001 or greater")
 
     def _prepare(self):
         """Prepare object prior to SPL generation."""
