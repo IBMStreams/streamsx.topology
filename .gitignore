@@ -85,6 +85,7 @@ com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python2/Filter/Fi
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python2/Filter/Filter_cpp.cgt
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python2/Filter/Filter_h.cgt
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python2/README.md
+com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python2/pysplenablecheckpointing.cgt
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python2/pyspltuple.cgt
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python2/pyspltuple2dict.cgt
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python2/pyspltuple2tuple.cgt

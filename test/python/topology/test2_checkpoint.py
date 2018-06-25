@@ -97,18 +97,29 @@ class StatefulStupidHash(object):
     def __call__(self, x):
         return hash(x) + 89
 
-class AddChannel(object):
-    def __init__(self):
-        pass
+# listiterater objects cannot be pickled in python 2.7, so here is a
+# list iterator class
+class ListIterator(object):
+    def __init__(self, listToIterate, period=None):
+        self.listToIterate = listToIterate
+        if period is None:
+            self.period=0.1
+        self.index = 0
 
-    def __call__(self, tuple):
-        return tuple, 1
+    def __iter__(self):
+        return self
 
-#    def __enter__(self):
-#        self.channel = ec.channel(self)
+    def __next__(self):
+        if self.index >= len(self.listToIterate):
+            raise StopIteration
+        time.sleep(self.period);
+        ret = self.listToIterate[self.index];
+        self.index += 1
+        return ret
 
-#    def __exit__(self, type, value, traceback):
-#        pass
+    def next(self):
+        return __next__(self)
+    
 
 class TestCheckpointing(unittest.TestCase):
     def setUp(self):
@@ -145,7 +156,8 @@ class TestCheckpointing(unittest.TestCase):
     def test_flat_map(self):
         topo = Topology();
         topo.checkpoint_period = timedelta(seconds=1)
-        lines = topo.source(["mary had a little lamb", "its fleece was white as snow"])
+
+        lines = topo.source(ListIterator(["mary had a little lamb", "its fleece was white as snow"]))
         # slow things down so checkpoints can be taken.
         lines = lines.filter(StatefulDelay(0.5)) 
         words = lines.flat_map(StatefulSplit())
