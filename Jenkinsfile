@@ -12,6 +12,11 @@ pipeline {
         echo 'Testing..'
         sh 'ci/test_java_embedded.sh'
       }
+      post {
+        always {
+            junit "test/java/unittest/*/*.xml"
+        }
+      }
     }
     stage('Deploy') {
       steps {
