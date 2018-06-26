@@ -116,11 +116,6 @@ public class ParallelTest extends TestTopology {
     }
 
     @Test
-    public void testAdjacentKeyPartitionedParallel() throws Exception {
-        testAdjacentParallel(Routing.KEY_PARTITIONED, Routing.KEY_PARTITIONED);
-    }
-
-    @Test
     public void testAdjacentRoundRobinParallel() throws Exception {
         testAdjacentParallel(Routing.ROUND_ROBIN, Routing.ROUND_ROBIN);
     }
@@ -131,14 +126,10 @@ public class ParallelTest extends TestTopology {
     }
 
     @Test
-    public void testAdjacentKeyPartitionedRoundRobinParallel() throws Exception {
-        testAdjacentParallel(Routing.KEY_PARTITIONED, Routing.ROUND_ROBIN);
+    public void testAdjacentHashPartitionedRoundRobinParallel() throws Exception {
+        testAdjacentParallel(Routing.HASH_PARTITIONED, Routing.ROUND_ROBIN);
     }
 
-    @Test
-    public void testAdjacentKeyPartitionedHashPartitionedParallel() throws Exception {
-        testAdjacentParallel(Routing.KEY_PARTITIONED, Routing.HASH_PARTITIONED);
-    }
 
     @Test
     public void testAdjacentEndParallelUnionSource() throws Exception {
