@@ -4,7 +4,7 @@ pipeline {
     stage('Build') {
       steps {
         echo 'Building..'
-        sh 'ant'
+        sh 'ci/build.sh'
       }
     }
     stage('Test') {
