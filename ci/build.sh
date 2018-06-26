@@ -1,4 +1,4 @@
+. $WORKSPACE/ci/setup
 echo 'Building'
-echo 'STREAMS_INSTALL=' $STREAMS_INSTALL
-export JAVA_HOME=$STREAMS_INSTALL/java
+cd $WORKSPACE
 ant
