@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.HASH_ADDER;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.START_OP;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
@@ -74,7 +75,14 @@ public class GraphUtilities {
     static boolean isKind(JsonObject op, String kind) {
         return kind.equals(kind(op));
     }
-    
+
+    /**
+     * Is an operator a HashAdder created for a partitioned parallel region.
+     */
+    static boolean isHashAdder(JsonObject op) {
+        return jboolean(op, HASH_ADDER);
+    }
+
     /**
      * Add an operator parameter, replacing the existing value if it exists.
      * Handles the case where no parameters exist.

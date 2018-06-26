@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.core;
 
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONSISTENT;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.HASH_ADDER;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FILTER_KIND;
@@ -510,7 +511,9 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             BOperatorInvocation hashAdder = JavaFunctional.addFunctionalOperator(this,
                     "HashAdder",
                     HASH_ADDER_KIND, hasher);
-                      
+
+            hashAdder._json().addProperty(HASH_ADDER, true);
+
             if (isPlaceable()) {
                 BOperatorInvocation op = operator();
                 
