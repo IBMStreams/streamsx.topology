@@ -79,7 +79,7 @@ class Preprocessor {
                 new HashSet<BVirtualMarker>(),
                 graph,
                 (JsonObject op) -> {
-                    if (jstring(op, "kind").equals("com.ibm.streamsx.topology.functional.java::HashAdder")) {
+                    if (GraphUtilities.isKind(op, "com.ibm.streamsx.topology.functional.java::HashAdder")) {
                         hashAdders.add(op);
                     }
                 }
@@ -106,8 +106,10 @@ class Preprocessor {
             return;
 
         if (GraphUtilities.isKind(parent, BVirtualMarker.END_PARALLEL.kind())) {
+            JsonObject hashAdderCopy = GraphUtilities.copyOperatorNewName(
+                    hashAdder, jstring(hashAdder, "name"));
             GraphUtilities.removeOperator(hashAdder, graph);
-            GraphUtilities.addBefore(parent, hashAdder, graph);
+            GraphUtilities.addBefore(parent, hashAdderCopy, graph);
         }
     }
 }
