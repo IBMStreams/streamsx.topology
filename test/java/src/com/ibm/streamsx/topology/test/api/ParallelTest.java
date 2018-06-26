@@ -130,6 +130,38 @@ public class ParallelTest extends TestTopology {
         testAdjacentParallel(Routing.HASH_PARTITIONED, Routing.ROUND_ROBIN);
     }
 
+    @Test
+    public void testAdjacentKeyPartitionedParallel() throws Exception {
+        checkUdpSupported();
+
+        List<String> stringList = getListOfUniqueStrings(800);
+        String stringArray[] = new String[800];
+        stringArray = stringList.toArray(stringArray);
+        Topology topology = newTopology("testAdj");
+
+        TStream<String> out0 = topology.strings(stringArray).parallel(of(3),
+                (String s) -> s.hashCode() % 20);
+        out0 = out0.transform(randomStringProducer("region1")).endParallel();
+
+        TStream<String> out2 = out0.parallel(of(5),
+                (String s) -> s.hashCode() % 30);
+        out2 = out2.transform(randomStringProducer("region2")).endParallel();
+
+        TStream<String> numRegions = out2.flatMap(uniqueStringCounter(800,
+                "region"));
+
+        Tester tester = topology.getTester();
+
+        Condition<List<String>> assertFinished = tester.stringContentsUnordered(numRegions, "20", "5");
+
+        Condition<Long> expectedCount = tester.tupleCount(out2, 800);
+
+
+        complete(tester, allConditions(assertFinished, expectedCount), 60, TimeUnit.SECONDS);
+
+        assertTrue(expectedCount.valid());
+        assertTrue(assertFinished.valid());
+    }
 
     @Test
     public void testAdjacentEndParallelUnionSource() throws Exception {
