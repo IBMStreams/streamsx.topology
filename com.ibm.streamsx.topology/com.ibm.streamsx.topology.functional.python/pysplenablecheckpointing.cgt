@@ -16,12 +16,12 @@
  my $isCheckpointing = $stateful && ($isInConsistentRegion or $ckptKind ne "none");
  if ($isCheckpointing) {
  %>
-   typedef SplpyFuncOp::RealAutoLock AutoLock;
+   typedef SplpyOp::RealAutoLock AutoLock;
  <%
  }
  else {
  %>
-   typedef SplpyFuncOp::NoAutoLock AutoLock;
+   typedef SplpyOp::NoAutoLock AutoLock;
  <%
  }
 %>
