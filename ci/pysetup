@@ -1,0 +1,4 @@
+echo 'PYTHONHOME' ${PYTHONHOME:?}
+export PATH=$PYTHONHOME/bin:$PATH
+export PYTHONPATH=${WORKSPACE}/com.ibm.streamsx.topology/opt/python/packages
+python -V
