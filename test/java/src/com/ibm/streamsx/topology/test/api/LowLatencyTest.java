@@ -80,7 +80,7 @@ public class LowLatencyTest extends TestTopology {
     }
     
     @Test
-    public void testUDPLowLatency() throws Exception{
+    public void testUDPContainingLowLatency() throws Exception{
         adlOk();
         
         Topology topology = newTopology();
@@ -97,6 +97,25 @@ public class LowLatencyTest extends TestTopology {
         Document adl = produceADL(topology);
         adlAssertDefaultHostpool(adl);
         adlAssertColocated(adl, true, "UDP_SS1", "UDP_SS2", "UDP_SS3");
+    }
+    @Test
+    public void testUDPNextToLowLatency() throws Exception{
+        adlOk();
+        
+        Topology topology = newTopology();
+
+        // Construct topology
+        TStream<String> ss = topology.strings("hello").invocationName("UDP_SRC");
+        ss = ss.parallel(3);
+        TStream<String> ss1 = ss.lowLatency();
+        ss1 = ss1.map(identity()).invocationName("UDP_SS1");
+        TStream<String> ss2 = ss1.map(identity()).invocationName("UDP_SS2").endLowLatency();
+        ss2 = ss2.endParallel();
+        ss2.forEach(tuple->{});
+        
+        Document adl = produceADL(topology);
+        adlAssertDefaultHostpool(adl);
+        adlAssertColocated(adl, true, "UDP_SS1", "UDP_SS2");
     }
     
     @Test

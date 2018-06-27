@@ -66,8 +66,6 @@ class Preprocessor {
     }
 
     public void compositeColocateIdUsage(List<JsonObject> composites) {
-        if (composites.size() < 2)
-            return;
         for (JsonObject composite : composites)
             pePlacementPreprocess.compositeColocateIdUse(composite);
     }

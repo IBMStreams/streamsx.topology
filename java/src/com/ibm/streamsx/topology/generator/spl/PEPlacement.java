@@ -16,6 +16,7 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.addColoc
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.findOperatorByKind;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.kind;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.operators;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_COLOCATE_IDS;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_COLOCATE_TAG_MAPPING;
@@ -189,8 +190,16 @@ class PEPlacement {
                 op -> addColocationTag(op, lowLatencyTag));
         
         // Low latency merges with upstream.
-        for (JsonObject op : getUpstream(llStart, graph))
+        for (JsonObject op : getUpstream(llStart, graph)) {
+            String kind = kind(op);
+            if (BVirtualMarker.PARALLEL.isThis(kind))
+                continue;
+            if (BVirtualMarker.END_PARALLEL.isThis(kind))
+                continue;
+            if (BVirtualMarker.UNION.isThis(kind))
+                continue;
             addColocationTag(op, lowLatencyTag);
+        }
     }
     
     /**
@@ -266,7 +275,8 @@ class PEPlacement {
       
          for (Entry<String, JsonElement> entry : tagMaps.entrySet()) {
              JsonObject idInfo = new JsonObject();
-             idInfo.addProperty("count", 0);
+             idInfo.addProperty("parallel", 0);
+             idInfo.addProperty("lowLatency", 0);
              colocateIds.add(entry.getValue().getAsString(), idInfo);
          }
     }
@@ -302,12 +312,18 @@ class PEPlacement {
             usedColocateIds.add(jstring(tagMaps, key));
         
         final boolean parallel = jboolean(compositeDefinition, "parallelComposite");
+        final boolean main = jboolean(compositeDefinition, "__spl_mainComposite");
+        final boolean lowLatency = jboolean(compositeDefinition, "lowLatencyComposite");
         JsonObject colocateIds = object(graph, CONFIG, CFG_COLOCATE_IDS);
         for (String id : usedColocateIds) {
             JsonObject idInfo = colocateIds.getAsJsonObject(id);
-            idInfo.addProperty("count", idInfo.get("count").getAsInt()+1);
-            if (parallel)
-                idInfo.addProperty("parallel", parallel);
+            
+            if (parallel) 
+                idInfo.addProperty("parallel", idInfo.get("parallel").getAsInt()+1);
+            if (lowLatency)
+                idInfo.addProperty("lowLatency", idInfo.get("lowLatency").getAsInt()+1);
+            if (main)
+                idInfo.addProperty("main", main);
         }
     }
 }

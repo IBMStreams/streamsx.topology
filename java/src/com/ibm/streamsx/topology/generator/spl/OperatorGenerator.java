@@ -691,12 +691,19 @@ class OperatorGenerator {
                 String colocationId = jstring(mapping, colocateKey);               
                 JsonObject colocateIds = object(graphConfig, CFG_COLOCATE_IDS);
                 JsonObject idInfo = object(colocateIds, colocationId);
-                int count = idInfo.get("count").getAsInt();
+                
+                boolean absoluteColocate = jboolean(idInfo, "main");
+                if (!absoluteColocate) {
+                    int parallel = idInfo.get("parallel").getAsInt();
+                    if (parallel >= 2)
+                        absoluteColocate = true;
+                }
+                
                 sbPlacement.append("      partitionColocation(");
                 
                 stringLiteral(sbPlacement, colocationId);
-                if (count == 1 && jboolean(idInfo, "parallel")) {
-                    // Only used once, use getChannel() to remain within a channel.                   
+                if (!absoluteColocate) {
+                    // Use getChannel() to remain within a channel.                   
                     SPLGenerator.value(sbPlacement, JParamTypes.TYPE_SPL_EXPRESSION,
                             new JsonPrimitive("+'$'+((rstring)getChannel())"));
                 }
