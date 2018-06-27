@@ -3,19 +3,23 @@ pipeline {
   stages {
     stage('Build') {
       steps {
-        echo 'Building..'
         sh 'ci/build.sh'
       }
     }
-    stage('Test') {
-      steps {
-        echo 'Testing..'
-      }
+    stage('Java/Scala embedded') {
+       steps {
+         sh 'ci/test_java_embedded.sh'
+       }
     }
-    stage('Deploy') {
-      steps {
-        echo 'Deploying....'
-      }
+    stage('Java/Scala standalone') {
+       steps {
+         sh 'ci/test_java_standalone.sh'
+       }
+    }
+  }
+  post {
+    always {
+      junit "test/java/unittests/*/TEST-*.xml"
     }
   }
 }
