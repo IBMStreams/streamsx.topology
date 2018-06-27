@@ -71,10 +71,11 @@ class Preprocessor {
             pePlacementPreprocess.compositeColocateIdUse(composite);
     }
 
-    @SuppressWarnings("serial")
     private void relocateHashAdders(){
         final Set<JsonObject> hashAdders = new HashSet<>();
-        // Firstly, find each hashAdder
+        // First, find all HashAdders in the graph. The reason for not
+        // moving HashAdders in this loop is to avoid modifying the graph
+        // structure while traversing the graph.
         GraphUtilities.visitOnce(GraphUtilities.findStarts(graph),
                 new HashSet<BVirtualMarker>(),
                 graph,
@@ -85,6 +86,7 @@ class Preprocessor {
                 }
         );
 
+        // Second, relocate HashAdders one by one.
         for(JsonObject hashAdder : hashAdders){
             relocateHashAdder(hashAdder);
         }
@@ -100,14 +102,12 @@ class Preprocessor {
         if (parents.size() != 1) return;
 
         JsonObject parent = parents.iterator().next();
-
-        // check if $Unparallel$ has only one child
-        if (GraphUtilities.getDownstream(parent, graph).size() != 1)
-            return;
-
-        if (GraphUtilities.isKind(parent, BVirtualMarker.END_PARALLEL.kind())) {
+        // check if HashAdder's parent is $Unparallel$, and $Unparallel$
+        // has only one child
+        if (GraphUtilities.isKind(parent, BVirtualMarker.END_PARALLEL.kind()) &&
+                GraphUtilities.getDownstream(parent, graph).size() == 1) {
             JsonObject hashAdderCopy = GraphUtilities.copyOperatorNewName(
-                    hashAdder, jstring(hashAdder, "name") + "_0");
+                    hashAdder, jstring(hashAdder, "name"));
             GraphUtilities.removeOperator(hashAdder, graph);
             GraphUtilities.addBefore(parent, hashAdderCopy, graph);
         }
