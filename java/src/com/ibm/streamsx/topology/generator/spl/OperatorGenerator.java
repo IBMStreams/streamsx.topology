@@ -17,6 +17,7 @@ import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_TUMBLING;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.getSPLCompatibleName;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.stringLiteral;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_COLOCATE_IDS;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_COLOCATE_TAG_MAPPING;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
@@ -39,14 +40,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
-import com.ibm.streamsx.topology.generator.port.PortProperties;
 import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.ParamsInfo;
 import com.ibm.streamsx.topology.internal.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
-import com.ibm.streamsx.topology.spi.builder.SourceInfo;
 import com.ibm.streamsx.topology.internal.messages.Messages;
+import com.ibm.streamsx.topology.spi.builder.SourceInfo;
 
 class OperatorGenerator {
 
@@ -453,7 +454,7 @@ class OperatorGenerator {
                 sb.append("sliding,");
                 break;
             case TYPE_TUMBLING:
-                sb.append("tumbing,");
+                sb.append("tumbling,");
                 break;
             default:
                 throw new IllegalStateException(Messages.getString("GENERATOR_INTERNAL_ERROR"));
@@ -685,11 +686,26 @@ class OperatorGenerator {
             // Explicit placement takes precedence.
             String colocationKey = jstring(placement, OpProperties.PLACEMENT_COLOCATE_KEY);
             if (colocationKey != null) {
-                JsonObject mapping = object(graphConfig, CFG_COLOCATE_TAG_MAPPING);
-                String colocationTag = jstring(mapping, colocationKey);
-
+                JsonObject mapping = object(graphConfig, CFG_COLOCATE_TAG_MAPPING);               
+                String colocationId = jstring(mapping, colocationKey);               
+                JsonObject colocateIds = object(graphConfig, CFG_COLOCATE_IDS);
+                JsonObject idInfo = object(colocateIds, colocationId);
+                int count = idInfo.get("count").getAsInt();
                 sbPlacement.append("      partitionColocation(");
-                stringLiteral(sbPlacement, colocationTag);
+                
+                if (count == 1) {
+                    // Only used once, use a "relative" path to ensure the colocation
+                    // stays within a channel (if any)
+                    
+                    SPLGenerator.value(sbPlacement, JParamTypes.TYPE_SPL_EXPRESSION,
+                            new JsonPrimitive("getThisCompositeInstanceName()+"));
+                    stringLiteral(sbPlacement, colocationId);
+                    SPLGenerator.value(sbPlacement, JParamTypes.TYPE_SPL_EXPRESSION,
+                            new JsonPrimitive("+'$$'+((rstring)getChannel())"));
+                } else {
+                    stringLiteral(sbPlacement, colocationId);
+                }
+                
                 sbPlacement.append(")\n");
             }
 

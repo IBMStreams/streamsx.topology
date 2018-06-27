@@ -41,6 +41,8 @@ private:
     void pySubmitTuplesPort0(PyObject * value);
     void fromPythonToPort0(PyObject * pyTuple);
     void fromPythonDictToPort0(PyObject * pyDict);
+    void fromPyTupleToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleType()%> & otuple);
+    void fromPyDictToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupleType()%> & otuple);
 
 }; 
 

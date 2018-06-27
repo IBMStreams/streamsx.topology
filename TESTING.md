@@ -10,7 +10,7 @@ These Ant targets include the Scala tests.
 
 Some of the JUnit tests include Python application API and decorator operator tests (e.g. test packages with `python`, `splpy`).
 
-* `unitest.main` - Runs Java application api tests using `EMBEDDED_TESTER` context 
+* `unitest.quick` - Runs Java application api tests using `EMBEDDED_TESTER` context 
 * `unitest.standalone` - Runs Java application api tests using `STANDALONE_TESTER` context
 * `unitest.distributed` - Runs Java application api tests using `DISTRIBUTED_TESTER` context
 * `unittest.streaminganalytics` - Runs Java application api tests using the `STREAMING_ANALYTICS_SERVICE` context.
@@ -91,7 +91,7 @@ Run `python3 -u -m unittest` in each of these directories:
 Since Streaming Analytics is only Python 3.5 these tests should be run without a `VCAP_SERVICES` environment variable set.
  
 
-Run `python -u -m unittest` in each of these directories:
+Run `python -u -m unittest discover` in each of these directories:
 
 A distributed environment with a 2.7 Python setup must exist (and `STREAMS_INSTANCE_ID` set to it.)
 

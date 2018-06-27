@@ -13,7 +13,8 @@ import streamsx.topology.context
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
 import streamsx.scripts.extract
-import streamsx.scripts.extract
+
+import spl_tests_utils as stu
 
 class TestSources(unittest.TestCase):
     """ 
@@ -22,7 +23,7 @@ class TestSources(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Extract Python operators in toolkit"""
-        streamsx.scripts.extract.main(['-i', '../testtkpy', '--make-toolkit'])
+        stu._extract_tk('testtkpy')
 
     def setUp(self):
         Tester.setup_standalone(self)
@@ -30,7 +31,7 @@ class TestSources(unittest.TestCase):
     def test_class_source(self):
         count = 43
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         bop = op.Source(topo, "com.ibm.streamsx.topology.pysamples.sources::Range", schema.StreamSchema('tuple<int64 c>').as_tuple(), params={'count':count})
         r = bop.stream
         self.tester = Tester(topo)
@@ -41,7 +42,7 @@ class TestSources(unittest.TestCase):
     def test_fn_source(self):
         count = 37
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         bop = op.Source(topo, "com.ibm.streamsx.topology.pysamples.sources::Range37", schema.StreamSchema('tuple<int64 c>').as_tuple())
         r = bop.stream
         self.tester = Tester(topo)

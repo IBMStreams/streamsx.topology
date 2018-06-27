@@ -17,9 +17,10 @@ import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.findOperato
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.operators;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_COLOCATE_IDS;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_COLOCATE_TAG_MAPPING;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_ISOLATE;
-import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_LOW_LATENCY;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
@@ -29,9 +30,11 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.function.Consumer;
@@ -202,8 +205,6 @@ class PEPlacement {
         if (lowLatencyStartOperators.isEmpty())
             return;
         
-        graph.getAsJsonObject("config").addProperty(CFG_HAS_LOW_LATENCY, true);
-        
         // Assign isolation regions their lowLatency tag
         for (JsonObject llStart : lowLatencyStartOperators) {
             assignLowLatency(llStart);
@@ -320,5 +321,61 @@ class PEPlacement {
         });
         
         object(graph, CONFIG).add(CFG_COLOCATE_TAG_MAPPING, tagMaps);
+        
+        setupForRelativizeColocateTags();
+    }
+    
+    /**
+     * Create a Json object containing a count (initially 0)
+     * for each colocation tag. The count will be the number
+     * of unique composites it is used in.
+     */
+    void setupForRelativizeColocateTags() {   
+         JsonObject tagMaps = object(graph, CONFIG, CFG_COLOCATE_TAG_MAPPING);
+         JsonObject colocateIds = objectCreate(graph, CONFIG, CFG_COLOCATE_IDS);
+      
+         for (Entry<String, JsonElement> entry : tagMaps.entrySet()) {
+             JsonObject idInfo = new JsonObject();
+             idInfo.addProperty("count", 0);
+             colocateIds.add(entry.getValue().getAsString(), idInfo);
+         }
+    }
+    
+    /**
+     * Bump the count for each colocation id used in a parallel or main composite.
+     * If a colocation tag is only used in a single parallel composite
+     * then its actually id needs to be channel based and relative to the
+     * composite instance name, otherwise it's absolute.
+     */
+    void compositeColocateIdUse(JsonObject composite) {
+        
+        if (!jboolean(composite, "__spl_mainComposite")
+                && !jboolean(composite, "parallelComposite"))
+            return;
+        
+        Set<String> usedColocateKeys = new HashSet<>();
+        operators(composite, op -> {
+            JsonObject placement = object(op, CONFIG, PLACEMENT);
+            if (placement == null)
+                return;
+            
+            String colocateKey = jstring(placement, PLACEMENT_COLOCATE_KEY);
+            if (colocateKey != null)
+                usedColocateKeys.add(colocateKey);
+        });
+        
+        if (usedColocateKeys.isEmpty())
+            return;
+            
+        Set<String> usedColocateIds = new HashSet<>();       
+        JsonObject tagMaps = object(graph, CONFIG, CFG_COLOCATE_TAG_MAPPING);
+        for (String key : usedColocateKeys)
+            usedColocateIds.add(jstring(tagMaps, key));
+        
+        JsonObject colocateIds = objectCreate(graph, CONFIG, CFG_COLOCATE_IDS);
+        for (String id : usedColocateIds) {
+            JsonObject idInfo = colocateIds.getAsJsonObject(id);
+            idInfo.addProperty("count", idInfo.get("count").getAsInt()+1);
+        }
     }
 }

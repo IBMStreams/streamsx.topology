@@ -22,12 +22,12 @@ using namespace streamsx::topology;
  spl_pip_packages($model, \@packages);
 
  my $iport;
- my $FROM_DICT_TMP = 1;
  
   my $oport = $model->getOutputPortAt(0);
   my $otupleType = $oport->getSPLTupleType();
   my @onames = SPL::CodeGen::Type::getAttributeNames($otupleType);
   my @otypes = SPL::CodeGen::Type::getAttributeTypes($otupleType);
+  my %cpp_tuple_types;
 
   my $skip_set_callable = 1;
 %>

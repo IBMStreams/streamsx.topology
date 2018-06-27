@@ -14,20 +14,22 @@ import streamsx.spl.op as op
 import streamsx.spl.toolkit
 import streamsx.scripts.extract
 
+import spl_tests_utils as stu
+
 class TestVersion(unittest.TestCase):
     """ 
     """
     @classmethod
     def setUpClass(cls):
         """Extract Python operators in toolkit"""
-        streamsx.scripts.extract.main(['-i', '../testtkpy', '--make-toolkit'])
+        stu._extract_tk('testtkpy')
 
     def setUp(self):
         Tester.setup_standalone(self)
 
     def test_single_toolkit(self):
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         bop = op.Source(topo, "spl.utility::Beacon",
             'tuple<rstring a>',
             {'iterations': 1})
@@ -45,8 +47,8 @@ class TestVersion(unittest.TestCase):
     @unittest.expectedFailure
     def test_mixed_toolkits(self):
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
-        streamsx.spl.toolkit.add_toolkit(topo, '../tk17')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('tk17'))
         data = ['A']
         bop = op.Source(topo, "spl.utility::Beacon",
             'tuple<rstring a>',

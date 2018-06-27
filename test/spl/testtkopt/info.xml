@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toolkitInfoModel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo" xsi:schemaLocation="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo toolkitInfoModel.xsd">
+  <identity>
+    <name>testtkopt</name>
+    <description>
+    </description>
+    <version>0.9.9</version>
+    <!-- Require optional data types support -->
+    <requiredProductVersion>4.3</requiredProductVersion>
+  </identity>
+  <dependencies/>
+</toolkitInfoModel>

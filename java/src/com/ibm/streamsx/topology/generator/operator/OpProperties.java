@@ -32,6 +32,12 @@ public interface OpProperties {
      * a start (no input ports operator).
      */
     String START_OP = "startOp";
+
+    /**
+     * Boolean parameter indicating the operator is a HashAdder created
+     * for a partitioned parallel region.
+     */
+    String HASH_ADDER = "hashAdder";
       
     /**
      * JSON attribute for operator configuration.
@@ -50,7 +56,7 @@ public interface OpProperties {
      * 
      * An explicit colocate identifier is an instruction
      * from the application that it wants two (or more) operators
-     * to be isolated.
+     * to be colocated.
      */
     String PLACEMENT_EXPLICIT_COLOCATE_ID = "explicitColocate";
     

@@ -1,0 +1,14 @@
+#Streams studio creates sometimes a .gitignore file at this place so we should put the staff for that sample here
+/com.ibm.streamsx.topology.pysamples.mail/
+/com.ibm.streamsx.topology.pysamples.positional/
+/com.ibm.streamsx.topology.pysamples.kwargs/
+/com.ibm.streamsx.topology.pysamples.sources/
+/com.ibm.streamsx.topology.pysamples.primitives/
+/impl/
+/opt/.__splpy/
+/opt/python/streams/__pycache__/
+/output/
+/doc/
+/.toolkitList
+/.classpath
+/.externalToolBuilders/

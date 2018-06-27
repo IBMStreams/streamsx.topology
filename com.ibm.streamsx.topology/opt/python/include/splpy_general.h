@@ -27,6 +27,7 @@
 #include <TopologySplpyResource.h>
 #include <SPL/Runtime/Common/RuntimeException.h>
 #include <SPL/Runtime/Type/Meta/BaseType.h>
+#include <SPL/Runtime/Type/SPLType.h>
 #include <SPL/Runtime/Function/SPLFunctions.h>
 #include <SPL/Runtime/ProcessingElement/PE.h>
 #include <SPL/Runtime/Operator/Port/OperatorPort.h>
@@ -124,16 +125,27 @@ class SplpyGeneral {
 
   public:
     /*
+     * Return true if Python object is Py_None.
      * We load Py_None indirectly to avoid
      * having a reference to it when the
      * operator shared library is loaded.
      */
     static bool isNone(PyObject *o) {
-
         static PyObject * none = o;
-
         return o == none;
     }
+ 
+    /*
+     * Return Py_None.
+     * First call is through setup to set the static variable.
+     * Subsequent calls pass null and receive the value.
+     */
+    static PyObject * getNone(PyObject *o) {
+        static PyObject * none = o;
+        Py_INCREF(none);
+        return none;
+    }
+
     /**
       PyMemoryView_Check macro gets reassigned to
       this function. This is because using it directly
@@ -806,6 +818,20 @@ class SplpyExceptionInfo {
            pySplValueFromPyObject(sv, v);
         }
     }
+ 
+#ifdef SPL_RUNTIME_TYPE_OPTIONAL_H 
+    // SPL optional tyoe from Python optional tyoe
+    template <typename T>
+    inline void pySplValueFromPyObject(SPL::optional<T> & s, PyObject *value) {
+        if (SplpyGeneral::isNone(value)) {
+            s.clear();
+            return;
+        }
+        T v;
+        pySplValueFromPyObject(v, value);
+        s = v;
+    }
+#endif
 
     /**************************************************************/
 
@@ -1011,6 +1037,16 @@ class SplpyExceptionInfo {
         }
         return pySet;
     }
+ 
+#ifdef SPL_RUNTIME_TYPE_OPTIONAL_H 
+    // SPL optional type to Python object for an optional type
+    template <typename T>
+    inline PyObject * pySplValueToPyObject(const SPL::optional<T> & o) {
+        if (o.isPresent())
+             return pySplValueToPyObject(o.value());
+        return SplpyGeneral::getNone(NULL);
+    }
+#endif
 
 /*
  * A MemoryView from a blob attribute in an SPL schema

@@ -6,10 +6,8 @@ package com.ibm.streamsx.rest;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
@@ -75,20 +73,9 @@ public class ProcessingElement extends Element {
     @Expose
     private String tracingLevel;
 
-    final static List<ProcessingElement> getPEList(AbstractStreamsConnection sc, String peGSONList) {
-        List<ProcessingElement> peList;
-        try {
-            ProcessingElementArray peArray = gson.fromJson(peGSONList, ProcessingElementArray.class);
-
-            peList = peArray.pes;
-            for (ProcessingElement pe : peList) {
-                pe.setConnection(sc);
-            }
-        } catch (JsonSyntaxException e) {
-
-            peList = Collections.<ProcessingElement> emptyList();
-        }
-        return peList;
+    final static List<ProcessingElement> createPEList(AbstractStreamsConnection sc,
+            String pes) throws IOException {
+        return createList(sc, pes, ProcessingElementArray.class);
     }
 
     /**
@@ -110,9 +97,7 @@ public class ProcessingElement extends Element {
      * @throws IOException
      */
     public List<PEInputPort> getInputPorts() throws IOException {
-        String sReturn = connection().getResponseString(inputPorts);
-        List<PEInputPort> lInPorts = PEInputPort.getInputPortList(connection(), sReturn);
-        return lInPorts;
+        return PEInputPort.createInputPortList(connection(), inputPorts);
     }
 
     /**
@@ -122,9 +107,7 @@ public class ProcessingElement extends Element {
      * @throws IOException
      */
     public List<Operator> getOperators() throws IOException {
-        String sReturn = connection().getResponseString(operators);
-        List<Operator> oList = Operator.getOperatorList(connection(), sReturn);
-        return oList;
+       return Operator.createOperatorList(connection(), operators);
     }
 
     /**
@@ -135,9 +118,7 @@ public class ProcessingElement extends Element {
      * @throws IOException
      */
     public List<PEOutputPort> getOutputPorts() throws IOException {
-        String sReturn = connection().getResponseString(outputPorts);
-        List<PEOutputPort> lOutPorts = PEOutputPort.getOutputPortList(connection(), sReturn);
-        return lOutPorts;
+        return PEOutputPort.createOutputPortList(connection(), outputPorts);
     }
 
     /**
@@ -331,18 +312,27 @@ public class ProcessingElement extends Element {
     public String getTracingLevel() {
         return tracingLevel;
     }
+    
+    /**
+     * Gets the {@link ResourceAllocation resource allocation} for this
+     * processing element.
+     * 
+     * @return {@link ResourceAllocation resource allocation}
+     * @throws IOException
+     * 
+     * @since 1.9
+     */
+    public ResourceAllocation getResourceAllocation() throws IOException {
+        return create(connection(), resourceAllocation, ResourceAllocation.class);
+    }
 
     /**
      * internal usage to get the list of processing elements
      * 
      */
-    private static class ProcessingElementArray {
+    private static class ProcessingElementArray extends ElementArray<ProcessingElement> {
         @Expose
         private ArrayList<ProcessingElement> pes;
-        @Expose
-        private String resourceType;
-        @Expose
-        private int total;
-
+        List<ProcessingElement> elements() { return pes;}
     }
 }

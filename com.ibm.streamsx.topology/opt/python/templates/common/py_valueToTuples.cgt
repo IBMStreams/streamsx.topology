@@ -48,7 +48,7 @@ void MY_OPERATOR::pySubmitTuplesPort<%=$oport->getIndex()%>(PyObject *value <%=$
   }
   else {
      throw SplpyGeneral::generalException("submit",
-        "Fatal error: Value submitted must be a Python tuple or a Python list of tuples: Port <%=$oport->getIndex()%>");
+        "Fatal error: Value submitted must be a Python tuple, dict or a Python list of tuples or dicts: Port <%=$oport->getIndex()%>");
   }
 }
 <%}%>
