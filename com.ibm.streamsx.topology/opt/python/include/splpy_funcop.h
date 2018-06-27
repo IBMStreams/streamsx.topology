@@ -22,15 +22,19 @@
 #include <SPL/Runtime/Operator/ParameterValue.h>
 #include <SPL/Runtime/Operator/State/StateHandler.h>
 
+
 namespace streamsx {
   namespace topology {
+
+using UTILS_NAMESPACE_QUALIFIER AutoMutex;
+using UTILS_NAMESPACE_QUALIFIER Mutex;
 
 class SplpyFuncOp : public SplpyOp {
   public:
 
       SplpyFuncOp(SPL::Operator * op, const std::string & wrapfn) :
         SplpyOp(op, "/opt/python/packages/streamsx/topology"),
-          stateHandler(NULL)
+          stateHandler(NULL), stateHandlerMutex(NULL)
       {
          setSubmissionParameters();
          addAppPythonPackages();
@@ -41,8 +45,40 @@ class SplpyFuncOp : public SplpyOp {
       virtual ~SplpyFuncOp() {
         delete stateHandler;
         stateHandler = NULL;
+        stateHandlerMutex = NULL; // not owned by this class
       }
+      
+      class RealAutoLock {
+      public:
+        RealAutoLock(SplpyFuncOp * op) : op_(op) {
+          locked_ = (op->stateHandlerMutex != NULL);
+          if (locked_){
+            op->stateHandlerMutex->lock();
+          }
+        }
+        ~RealAutoLock() {
+          unlock();
+        }
+        void unlock() {
+          if (locked_) {
+            op_->stateHandlerMutex->unlock();
+          }
+        }
+      private:
+        RealAutoLock(RealAutoLock const & other);
+        RealAutoLock();
 
+        bool locked_;
+        SplpyFuncOp * op_;
+      };
+
+      class NoAutoLock {
+      public:
+        NoAutoLock(SplpyFuncOp *) {}
+        void unlock() {}
+      };
+
+      friend class RealAutoLock;
 
   private:
       int hasParam(const char *name) {
@@ -186,7 +222,17 @@ class SplpyFuncOp : public SplpyOp {
             }
 	  }
 	  assert(!stateHandler);
-          stateHandler = (stateful && pickledCallable) ? new SplPyFuncOpStateHandler(this, pickledCallable) : new SPL::StateHandler;
+          if (stateful && pickledCallable) {
+            SPLAPPTRC(L_DEBUG, "Creating functional state handler", "python");
+            // pickledCallable reference stolen here.
+            stateHandler = new SplPyFuncOpStateHandlerImpl(this, pickledCallable);
+            stateHandlerMutex = stateHandler->getMutex();
+          }
+          else {
+            SPLAPPTRC(L_DEBUG, "Creating nonfunctional state handler", "python");
+            stateHandler = new SplPyFuncOpStateHandler;
+            stateHandlerMutex = NULL;
+          }
 	  SPLAPPTRC(L_DEBUG, "registerStateHandler", "python");
 	  op()->getContext().registerStateHandler(*stateHandler);
 	}
@@ -209,21 +255,28 @@ class SplpyFuncOp : public SplpyOp {
               "streamsx.topology.runtime", "setupOperator", tkDir, NULL);
       }
 
+      // Do-nothing base class.
+      class SplPyFuncOpStateHandler : public SPL::StateHandler {
+      private:
+        virtual Mutex * getMutex() { return NULL; }
+        friend class SplpyFuncOp;
+      };
+
       /**
        * Support for saving an operator's state to checkpoints, and restoring
        * the state from checkpoints.
        */
-      class SplPyFuncOpStateHandler: public SPL::StateHandler {
+      class SplPyFuncOpStateHandlerImpl: public SplPyFuncOpStateHandler {
       public:
         // Steals reference to pickledCallable
-        SplPyFuncOpStateHandler(SplpyOp * pyop, PyObject * pickledCallable) : op(pyop), loads(), dumps(), pickledInitialCallable(pickledCallable) {
+      SplPyFuncOpStateHandlerImpl(SplpyOp * pyop, PyObject * pickledCallable) : op(pyop), loads(), dumps(), pickledInitialCallable(pickledCallable), mutex_() {
           // Load pickle.loads and pickle.dumps
           SplpyGIL lock;
           loads = SplpyGeneral::loadFunction("dill", "loads");
           dumps = SplpyGeneral::loadFunction("dill", "dumps");
         }
 
-        virtual ~SplPyFuncOpStateHandler() {
+        virtual ~SplPyFuncOpStateHandlerImpl() {
           Py_CLEAR(loads);
           Py_CLEAR(dumps);
           Py_CLEAR(pickledInitialCallable);
@@ -231,6 +284,7 @@ class SplpyFuncOp : public SplpyOp {
 
         virtual void checkpoint(SPL::Checkpoint & ckpt) {
           SPLAPPTRC(L_DEBUG, "checkpoint", "python");
+          AutoMutex am(mutex_);
           SPL::blob bytes;
           {
             SplpyGIL lock;
@@ -243,10 +297,12 @@ class SplpyFuncOp : public SplpyOp {
             Py_DECREF(ret);
           }
           ckpt << bytes;
+          SPLAPPTRC(L_TRACE, "exit checkpoint", "python");
         }
 
         virtual void reset(SPL::Checkpoint & ckpt) {
           SPLAPPTRC(L_DEBUG, "reset", "python");
+          AutoMutex am(mutex_);
           // Restore the callable from an spl blob
           SPL::blob bytes;
           ckpt >> bytes;
@@ -264,6 +320,7 @@ class SplpyFuncOp : public SplpyOp {
         }
 
        virtual void resetToInitialState() {
+         AutoMutex am(mutex_);
          SPLAPPTRC(L_DEBUG, "resetToInitialState", "python");
          SplpyGIL lock;
          PyObject * initialCallable = call(loads, pickledInitialCallable);
@@ -276,7 +333,11 @@ class SplpyFuncOp : public SplpyOp {
        }
 
       private:
-        // Call a python callable with a single argument
+        virtual Mutex* getMutex() {
+         return &mutex_;
+       }
+
+       // Call a python callable with a single argument
         // Caller must hold GILState.
         PyObject * call(PyObject * callable, PyObject * arg) {
           PyObject * args = PyTuple_New(1);
@@ -291,9 +352,11 @@ class SplpyFuncOp : public SplpyOp {
         PyObject * loads;
         PyObject * dumps;
         PyObject * pickledInitialCallable;
+        Mutex mutex_;
       };
 
-      SPL::StateHandler * stateHandler;
+      SplPyFuncOpStateHandler * stateHandler;
+      Mutex * stateHandlerMutex;
 };
 
 }}
