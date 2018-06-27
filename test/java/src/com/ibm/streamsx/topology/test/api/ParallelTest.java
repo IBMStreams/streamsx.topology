@@ -152,7 +152,7 @@ public class ParallelTest extends TestTopology {
 
         Tester tester = topology.getTester();
 
-        Condition<List<String>> assertFinished = tester.stringContentsUnordered(numRegions, "20", "5");
+        Condition<List<String>> assertFinished = tester.stringContentsUnordered(numRegions, "3", "5");
 
         Condition<Long> expectedCount = tester.tupleCount(out2, 800);
 

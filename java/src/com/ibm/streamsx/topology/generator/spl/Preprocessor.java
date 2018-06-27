@@ -106,10 +106,15 @@ class Preprocessor {
         // has only one child
         if (GraphUtilities.isKind(parent, BVirtualMarker.END_PARALLEL.kind()) &&
                 GraphUtilities.getDownstream(parent, graph).size() == 1) {
+            // retrieve HashAdder's output port schema
+            String schema = GraphUtilities.getOutputPortType(hashAdder, 0);
+            // insert a copy of HashAdder to the front of Unparallel
             JsonObject hashAdderCopy = GraphUtilities.copyOperatorNewName(
                     hashAdder, jstring(hashAdder, "name"));
             GraphUtilities.removeOperator(hashAdder, graph);
             GraphUtilities.addBefore(parent, hashAdderCopy, graph);
+            // set Unparallel's output port schema using HashAdder's schema
+            GraphUtilities.setOutputPortType(parent, 0, schema);
         }
     }
 }

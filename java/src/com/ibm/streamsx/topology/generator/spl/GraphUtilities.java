@@ -513,7 +513,26 @@ public class GraphUtilities {
         JsonObject output = outputs.get(index).getAsJsonObject();
         return jstring(output, "name");
 
-    }  
+    }
+
+    /**
+     * @return the output port schema type
+     */
+    static String getOutputPortType(JsonObject op, int index) {
+        JsonArray outputs = op.get("outputs").getAsJsonArray();
+        JsonObject output = outputs.get(index).getAsJsonObject();
+        return jstring(output, "type");
+    }
+
+    /**
+     * set the output port schema type to the given value
+     */
+    static void setOutputPortType(JsonObject op, int index, String schema) {
+        JsonArray outputs = op.get("outputs").getAsJsonArray();
+        JsonObject output = outputs.get(index).getAsJsonObject();
+        output.remove("type");
+        output.addProperty("type", schema);
+    }
     
     /**
      * Add an operator before another operator.
