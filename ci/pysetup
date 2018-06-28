@@ -1,5 +1,5 @@
 echo 'PYTHONHOME' ${PYTHONHOME:?}
 export PATH=$PYTHONHOME/bin:$PATH
 export PYTHONPATH=${WORKSPACE}/com.ibm.streamsx.topology/opt/python/packages
-python -V
-pip install -r ${WORKSPACE}/requirements.txt
+${PYTHONHOME}/bin/python -V
+${PYTHONHOME}/bin/python -m pip install -r ${WORKSPACE}/requirements.txt
