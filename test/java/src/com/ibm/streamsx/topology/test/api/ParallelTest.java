@@ -197,6 +197,167 @@ public class ParallelTest extends TestTopology {
     }
 
     @Test
+    public void testMultiAdjacentPartitionedParallelChildren() throws Exception {
+        checkUdpSupported();
+
+        List<String> stringList = getListOfUniqueStrings(800);
+        String stringArray[] = new String[800];
+        stringArray = stringList.toArray(stringArray);
+        Topology topology = newTopology("testAdj");
+
+
+        TStream<String> out0 = topology.strings(stringArray).parallel(of(3),
+                (String s) -> s.hashCode() % 20);
+        out0 = out0.transform(randomStringProducer("region1")).endParallel();
+
+        TStream<String> out2 = out0.parallel(of(5),
+                (String s) -> s.hashCode() % 30);
+        out2 = out2.transform(randomStringProducer("region2")).endParallel();
+
+        TStream<String> out3 = out0.parallel(of(2),
+                (String s) -> s.hashCode() % 40);
+        out3 = out3.transform(randomStringProducer("region3")).endParallel();
+
+        TStream<String> numRegions2 = out2.flatMap(uniqueStringCounter(800,
+                "region"));
+
+        TStream<String> numRegions3 = out3.flatMap(uniqueStringCounter(800,
+                "region"));
+
+        Tester tester = topology.getTester();
+
+        Condition<List<String>> assertFinished2 = tester.stringContentsUnordered(numRegions2, "3", "5");
+        Condition<List<String>> assertFinished3 = tester.stringContentsUnordered(numRegions3, "3", "2");
+
+        Condition<Long> expectedCount2 = tester.tupleCount(out2, 800);
+        Condition<Long> expectedCount3 = tester.tupleCount(out3, 800);
+
+        complete(tester,
+                allConditions(assertFinished2, expectedCount2,
+                        assertFinished3, expectedCount3),
+                60,
+                TimeUnit.SECONDS);
+
+        assertTrue(expectedCount2.valid());
+        assertTrue(expectedCount3.valid());
+        assertTrue(assertFinished2.valid());
+        assertTrue(assertFinished3.valid());
+    }
+
+    @Test
+    public void testMultiAdjacentMixedParallelChildren1() throws Exception {
+        checkUdpSupported();
+
+        List<String> stringList = getListOfUniqueStrings(800);
+        String stringArray[] = new String[800];
+        stringArray = stringList.toArray(stringArray);
+        Topology topology = newTopology("testAdj");
+
+
+        TStream<String> out0 = topology.strings(stringArray).parallel(of(3),
+                (String s) -> s.hashCode() % 20);
+        out0 = out0.transform(randomStringProducer("region1")).endParallel();
+
+        TStream<String> out2 = out0.parallel(of(5),
+                (String s) -> s.hashCode() % 30);
+        out2 = out2.transform(randomStringProducer("region2")).endParallel();
+
+        TStream<String> out3 = out0.parallel(of(2),
+                (String s) -> s.hashCode() % 40);
+        out3 = out3.transform(randomStringProducer("region3")).endParallel();
+
+        TStream<String> out4 = out0.transform(randomStringProducer("region4"));
+
+        TStream<String> numRegions2 = out2.flatMap(uniqueStringCounter(800,
+                "region"));
+
+        TStream<String> numRegions3 = out3.flatMap(uniqueStringCounter(800,
+                "region"));
+
+        Tester tester = topology.getTester();
+
+        Condition<List<String>> assertFinished2 = tester.stringContentsUnordered(numRegions2, "3", "5");
+        Condition<List<String>> assertFinished3 = tester.stringContentsUnordered(numRegions3, "3", "2");
+
+        Condition<Long> expectedCount2 = tester.tupleCount(out2, 800);
+        Condition<Long> expectedCount3 = tester.tupleCount(out3, 800);
+        Condition<Long> expectedCount4 = tester.tupleCount(out4, 800);
+
+
+        complete(tester,
+                allConditions(assertFinished2, expectedCount2,
+                        assertFinished3, expectedCount3,
+                        expectedCount4),
+                60,
+                TimeUnit.SECONDS);
+
+        assertTrue(expectedCount2.valid());
+        assertTrue(expectedCount3.valid());
+        assertTrue(expectedCount4.valid());
+        assertTrue(assertFinished2.valid());
+        assertTrue(assertFinished3.valid());
+    }
+
+
+    @Test
+    public void testMultiAdjacentMixedParallelChildren2() throws Exception {
+        checkUdpSupported();
+
+        List<String> stringList = getListOfUniqueStrings(800);
+        String stringArray[] = new String[800];
+        stringArray = stringList.toArray(stringArray);
+        Topology topology = newTopology("testAdj");
+
+
+        TStream<String> out0 = topology.strings(stringArray).parallel(of(3),
+                (String s) -> s.hashCode() % 20);
+        out0 = out0.transform(randomStringProducer("region1")).endParallel();
+
+        TStream<String> out2 = out0.parallel(of(5),
+                (String s) -> s.hashCode() % 30);
+        out2 = out2.transform(randomStringProducer("region2")).endParallel();
+
+        TStream<String> out3 = out0.parallel(of(2),
+                (String s) -> s.hashCode() % 40);
+        out3 = out3.transform(randomStringProducer("region3")).endParallel();
+
+        TStream<String> out4 = out0.transform(randomStringProducer("region4"));
+        TStream<String> out5 = out0.transform(randomStringProducer("region5"));
+
+        TStream<String> numRegions2 = out2.flatMap(uniqueStringCounter(800,
+                "region"));
+
+        TStream<String> numRegions3 = out3.flatMap(uniqueStringCounter(800,
+                "region"));
+
+        Tester tester = topology.getTester();
+
+        Condition<List<String>> assertFinished2 = tester.stringContentsUnordered(numRegions2, "3", "5");
+        Condition<List<String>> assertFinished3 = tester.stringContentsUnordered(numRegions3, "3", "2");
+
+        Condition<Long> expectedCount2 = tester.tupleCount(out2, 800);
+        Condition<Long> expectedCount3 = tester.tupleCount(out3, 800);
+        Condition<Long> expectedCount4 = tester.tupleCount(out4, 800);
+        Condition<Long> expectedCount5 = tester.tupleCount(out5, 800);
+
+        complete(tester,
+                allConditions(assertFinished2, expectedCount2,
+                        assertFinished3, expectedCount3,
+                        expectedCount4,
+                        expectedCount5),
+                60,
+                TimeUnit.SECONDS);
+
+        assertTrue(expectedCount2.valid());
+        assertTrue(expectedCount3.valid());
+        assertTrue(expectedCount4.valid());
+        assertTrue(expectedCount5.valid());
+        assertTrue(assertFinished2.valid());
+        assertTrue(assertFinished3.valid());
+    }
+
+
+    @Test
     public void testParallelNonPartitioned() throws Exception {
         checkUdpSupported();
 

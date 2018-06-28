@@ -533,6 +533,17 @@ public class GraphUtilities {
         output.remove("type");
         output.addProperty("type", schema);
     }
+
+
+    /**
+     * set the output port schema type to the given value
+     */
+    static void setInputPortType(JsonObject op, int index, String schema) {
+        JsonArray inputs = op.get("inputs").getAsJsonArray();
+        JsonObject input = inputs.get(index).getAsJsonObject();
+        input.remove("type");
+        input.addProperty("type", schema);
+    }
     
     /**
      * Add an operator before another operator.
@@ -613,6 +624,113 @@ public class GraphUtilities {
             if (inputConns.get(i).getAsString().equals(oportName))
                 inputConns.set(i, new JsonPrimitive(opOportName));
         }
+    }
+
+    /**
+     * Finds the first occurrence of the {@code iportName} in all {@code oports}
+     * connections, and removes the connection.
+     *
+     * @param oports    output ports of an operator
+     * @param iportName the target input port name
+     * @return the first output port that was connected to the target input port
+     */
+    static private JsonObject findOutputPortAndRemoveConnection(
+            JsonArray oports, String iportName) {
+	    return findOutputPort(oports, iportName, true);
+    }
+
+    /**
+     * Finds the first occurrence of the {@code iportName} in all {@code oports}
+     * connections.
+     *
+     * @param oports    output ports of an operator
+     * @param iportName the target input port name
+     * @return the first output port that is connected to the target input port
+     */
+    static private JsonObject findOutputPort(JsonArray oports, String iportName) {
+	    return findOutputPort(oports, iportName, false);
+    }
+
+    static private JsonObject findOutputPort(
+            JsonArray oports, String iportName, boolean shouldRemove) {
+        for (JsonElement oport: oports) {
+            JsonArray outConns = oport.getAsJsonObject().get("connections").getAsJsonArray();
+            for (JsonElement outConn: outConns) {
+                if (outConn.getAsString().equals(iportName)) {
+                    if (shouldRemove) {
+                        outConns.remove(outConn);
+                    }
+                    return oport.getAsJsonObject();
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Moves the operator upstream, i.e., detaches the operator from its
+     * parent and relocates the operator to be its grand parent's child.
+     * This method requires the operator has only one parent and one grand
+     * parent.
+     * <BR>
+     * <pre><code>
+     *     grandParent -> parent -> op
+     * </code></pre>
+     * <BR>
+     * becomes
+     * <BR>
+     * <pre><code>
+     *     grandParent -> parent
+     *                \-> op
+     * </code></pre>
+     *
+     * @param op    the operator to be relocated
+     * @param graph the entire graph
+     */
+    static void moveOperatorUpstream(JsonObject op, JsonObject graph) {
+        // ensure that op has only one parent
+        Set<JsonObject> parents = getUpstream(op, graph);
+        assert parents.size() == 1;
+        JsonObject parent = parents.iterator().next();
+
+        // ensure that op has only one grand parent
+        Set<JsonObject> grandParents = getUpstream(parent, graph);
+        assert grandParents.size() == 1;
+        JsonObject grandParent = grandParents.iterator().next();
+
+        JsonArray grandParentOports = grandParent.get("outputs").getAsJsonArray();
+        JsonObject parentIport = parent.get("inputs").getAsJsonArray().get(0).getAsJsonObject();
+        JsonArray parentOports = parent.get("outputs").getAsJsonArray();
+        JsonObject opIport = op.get("inputs").getAsJsonArray().get(0).getAsJsonObject();
+
+        // 1. find the connection from grandParent to parent
+        String parentIportName = jstring(parentIport, "name");
+
+        // grandParent's output port to be connected to op
+        JsonObject grandParentOport = findOutputPort(grandParentOports, parentIportName);
+        assert grandParentOport != null;
+
+        // 2. find the connection from parent to op, and remove the connection
+        String opIportName = jstring(opIport, "name");
+
+        // parent's output port that is detached from op
+        JsonObject parentOport = findOutputPortAndRemoveConnection(parentOports, opIportName);
+        assert parentOport != null;
+
+        // 3. connect op to grandParent
+
+        // get parent's and grandParent's output port name
+        String grandParentOportName = jstring(grandParentOport, "name");
+        String parentOportName = jstring(parentOport, "name");
+
+        // set op's only input connection to grandParent's output port name
+        JsonArray opIConns = opIport.get("connections").getAsJsonArray();
+        assert opIConns.get(0).getAsString().equals(parentOportName);
+        opIConns.set(0, new JsonPrimitive(grandParentOportName));
+
+        // add op's input port name to grandParent's connections
+        JsonArray grandParentOConns = grandParentOport.get("connections").getAsJsonArray();
+        grandParentOConns.add(new JsonPrimitive(opIportName));
     }
     
     /**
