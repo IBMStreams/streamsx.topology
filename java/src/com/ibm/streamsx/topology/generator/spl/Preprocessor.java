@@ -92,6 +92,119 @@ class Preprocessor {
         }
     }
 
+    /**
+     * This method relocates {@code HashAdder} to directly connect $Unparallel$
+     * to $Parallel$ operators which enables cat's-cradle shuffle. There could
+     * be four scenarios
+     * <p>
+     * Scenario 1 (supported):
+     * <pre><code>
+     *     TStream<T> u = someStream.endParallel();
+     *     TStream<T> p = u.parallel(()->3, Routing.HASH_PARTITIONED);
+     * </code></pre>
+     * <BR>
+     * The code above demonstrates the simplest case where HashAdder is
+     * $Unparellel$'s only child, and $Unparallel$ is HashAdder's only
+     * parent:
+     * <pre><code>
+     *  $Unparallel$ -> HashAdder -> $Parallel$ -> HashRemover
+     * </code></pre>
+     * <BR>
+     * To enable cat's-cradle shuffle, this method moves {@code HashAdder}
+     * to the front of $Unparellel$.
+     * </p>
+     * <p>
+     * Scenario 2 (not yet supported):
+     * <pre><code>
+     *     TStream<T> u1 = stream1.endParallel();
+     *     TStream<T> u2 = stream2.endParallel();
+     *     TStream<T> d = stream3.sample(0.5);
+     *     TStream<T> u = u1.union(u2);
+     *     TStream<T> p = u.parallel(()->3, Routing.HASH_PARTITIONED);
+     * </code></pre>
+     * <BR>
+     * This is slightly more complicated case where the {@code HashAdder}
+     * has multiple parents and each parent has only one child.
+     * <pre><code>
+     *           $Unparellel1$
+     *                |
+     *                V
+     *  sample -> HashAdder -> $Parallel$ -> HashRemover
+     *                ^
+     *                |
+     *           $Unparellel2$
+     *
+     * </code></pre>
+     * <BR>
+     * To enable cat's-cradle shuffle, this method inserts one copy of
+     * {@code HashAdder} to the front of every $Unparellel$, inserts one copy
+     * of {@code HashAdder} after every non-parallel parent, and removes the
+     * original {@code HashAdder}. The original graph will be modified to the
+     * following structure.
+     * <pre><code>
+     *           HashAdder -> $Unparellel1$
+     *                             |
+     *                             V
+     *  sample -> HashAdder -> $Parallel$ -> HashRemover
+     *                             ^
+     *                             |
+     *           HashAdder -> $Unparellel2$
+     * </code></pre>
+     * </p>
+     * <p>
+     * Scenario 3 (supported):
+     * <pre><code>
+     *     TStream<T> u = input.endParallel();
+     *     TStream<T> p1 = u.parallel(()->3, keyer1);
+     *     TStream<T> p2 = u.parallel(()->4, keyer2);
+     *     TStream<T> f1 = u.filter((T x) -> true);
+     *     TStream<T> f2 = u.filter((T x) -> false);
+     * </code></pre>
+     * In this scenario, one $Unparallel can have multiple children, but each
+     * {@code HashAdder} has only one parent. The example code above results
+     * in the following graph structure.
+     * <pre><code>
+     *           HashAdder1 -> $Parellel1$ -> HashRemover1
+     *               ^
+     *               |         ----> filter1
+     *               |        /
+     * input -> $Unparallel$
+     *               |       \
+     *               |        ----> filter 2
+     *               V
+     *           HashAdder2 -> $Parellel2$ -> HashRemover2
+     * </code></pre>
+     * <BR>
+     * To enable cat's-cradle shuffle, this method needs to move all
+     * HashAdders to the front of $Unparallel$. Besides, as the two
+     * non-parallel streams should not consume data from HashAdder, this
+     * method needs to insert a PassThrough operator before $Unparallel$
+     * as well, resulting in the following structure.
+     * <pre><code>
+     * HashAdder1 -> $Unparallel$ -> $Parellel1$ -> HashRemover1
+     *     ^
+     *     |                            ----> filter1
+     *     |                           /
+     *   input -> PassThrough -> $Unparallel$
+     *     |                          \
+     *     |                           ----> filter 2
+     *     V
+     * HashAdder2 -> $Unparallel$ -> $Parellel2$ -> HashRemover2
+     * </code></pre>
+     * <BR>
+     * The {@code PassThrough} operator is only necessary when there are more
+     * than one downstream non-parallel children. If there is only one
+     * non-parallel children, the $Unparallel$ operator can be directly linked
+     * with {@code input}.
+     * </p>
+     * <p>
+     * Scenario 4 (not yet supported):
+     * This scenario is a mix of Scenario 2 and 3, where $Unparallel$ can have
+     * multiple children and {@code HashAdder} can have multiple parents.
+     * </p>
+     *
+     * @param hashAdder the target HashAdder operator to be relocated
+     */
     private void relocateHashAdder(JsonObject hashAdder){
         // Only optimize the case where $Unparallel$ is the HashAdder's only
         // parent and the HashAdder is $Unparallel$'s only child.
