@@ -239,6 +239,8 @@ class _SPLInvocation(object):
         self._placement = {}
         self._start_op = False
         self.config = {}
+        # Arbitrary JSON for operator
+        self._op_def = {}
 
         if view_configs is None:
             self.view_configs = []
@@ -298,7 +300,7 @@ class _SPLInvocation(object):
 
 
     def generateSPLOperator(self):
-        _op = {}
+        _op = dict(self._op_def)
         _op["name"] = self.name
         if self.category:
             _op["category"] = self.category
