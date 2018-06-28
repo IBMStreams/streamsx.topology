@@ -1121,6 +1121,7 @@ class Stream(_placement._Placement, object):
                 keys = ['__spl_hash']
                 stateful = self._determine_statefulness(func)
                 hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::HashAdder", func, stateful=stateful)
+                hash_adder._op_def['hashAdder'] = True
                 hash_adder._layout(hidden=True)
                 hash_schema = self.oport.schema.extend(streamsx.topology.schema.StreamSchema("tuple<int64 __spl_hash>"))
                 hash_adder.addInputPort(outputPort=self.oport, name=self.name)
