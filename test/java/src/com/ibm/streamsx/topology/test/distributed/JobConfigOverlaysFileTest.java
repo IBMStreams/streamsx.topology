@@ -116,18 +116,11 @@ public class JobConfigOverlaysFileTest extends TestTopology {
         assertTrue(jco.has("deploymentConfig"));
         assertTrue(jco.get("deploymentConfig").isJsonObject());
         
+        // Now parall channel isolation is not set by default
         JsonObject deployConfig = jco.get("deploymentConfig").getAsJsonObject();
-        assertEquals(1, deployConfig.entrySet().size());
+        assertEquals(0, deployConfig.entrySet().size());
         assertMissing(deployConfig, "fusionScheme");
         
-        assertTrue(deployConfig.has("parallelRegionConfig"));
-        assertTrue(deployConfig.get("parallelRegionConfig").isJsonObject());
-        
-        JsonObject parallelRegionConfig = deployConfig.get("parallelRegionConfig").getAsJsonObject();
-        assertTrue(parallelRegionConfig.has("fusionType"));
-        assertTrue(parallelRegionConfig.get("fusionType").isJsonPrimitive());
-        assertEquals("channelIsolation", parallelRegionConfig.get("fusionType").getAsString());
-                  
         assertMissing(jco, "operatorConfigs");
     }
     
