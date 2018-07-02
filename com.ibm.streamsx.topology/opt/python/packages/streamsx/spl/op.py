@@ -195,6 +195,8 @@ class Invoke(_placement._Placement, exop.ExtensionOperator):
         name = topology.graph._requested_name(name, action)
         super(Invoke,self).__init__(topology,kind,inputs,schemas,params,name)
         self._op()._ex_op = self
+        self._op().model = 'spl'
+        self._op().language = 'spl'
 
     def attribute(self, stream, name):
         """Expression for an input attribute.
