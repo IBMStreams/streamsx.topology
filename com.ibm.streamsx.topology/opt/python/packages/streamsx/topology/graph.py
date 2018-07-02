@@ -163,6 +163,7 @@ class SPLGraph(object):
         _graph["namespace"] = self.namespace
         _graph["public"] = True
         _graph["config"] = {}
+        self._determine_model(_graph["config"])
         _graph["config"]["includes"] = []
         _graph['config']['spl'] = {}
         _graph['config']['spl']['toolkits'] = self._spl_toolkits
@@ -178,7 +179,20 @@ class SPLGraph(object):
 
         _graph["operators"] = _ops
         return _graph
-   
+
+    def _determine_model(self, graph_cfg):
+        # Python can be used to build pure SPL
+        # graphs so if that's the case mark the
+        # graph model/langauge as spl/spl
+        all_spl = True
+        for op in self.operators:
+            if op.model != 'spl':
+                all_spl = False
+                break
+
+        graph_cfg['model'] = 'spl' if all_spl else 'functional' 
+        graph_cfg['language'] = 'spl' if all_spl else 'python'
+
     def _add_packages(self, includes):
         for package_path in self.resolver.packages:
            mf = {}
