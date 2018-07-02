@@ -12,15 +12,16 @@ from past.builtins import basestring
 import streamsx.ec as ec
 from streamsx.topology.schema import StreamSchema
 
-try:
-    import dill
-    # Importing cloudpickle break dill's deserialization.
-    # Workaround is to make dill aware of the ClassType type.
-    if sys.version_info.major == 3:
-        dill.dill._reverse_typemap['ClassType'] = type
-    dill.settings['recurse'] = True
-except ImportError:
-    dill = pickle
+import dill
+# Importing cloudpickle break dill's deserialization.
+# Workaround is to make dill aware of the ClassType type.
+if sys.version_info.major == 3:
+    if not 'dill._dill' in sys.modules:
+        sys.modules['dill._dill'] = dill.dill
+        dill._dill = dill.dill
+    dill._dill._reverse_typemap['ClassType'] = type
+    
+dill.settings['recurse'] = True
 
 import base64
 import json
