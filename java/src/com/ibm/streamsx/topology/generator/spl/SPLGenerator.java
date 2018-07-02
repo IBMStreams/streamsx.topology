@@ -7,6 +7,10 @@ package com.ibm.streamsx.topology.generator.spl;
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_COMPOSITE_PARAMETER;
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_PYTHON;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.kind;
@@ -571,11 +575,17 @@ public class SPLGenerator {
             deploymentConfig.addProperty("fusionScheme", "legacy");
         else {
             
-            // Default to isolating parallel channels.
-            JsonObject parallelRegionConfig = new JsonObject();
-            deploymentConfig.add("parallelRegionConfig", parallelRegionConfig);
-            
-            parallelRegionConfig.addProperty("fusionType", "channelIsolation");
+            // Default to isolating parallel channels for Python
+            // topologies only. We do this for Python to ensure that
+            // parallism can be exploited through multiple PEs across
+            // channels and hence multiple Pythjon VMs
+            // and not a single GIL for the whole region.
+            if (MODEL_FUNCTIONAL.equals(jstring(config, MODEL))
+                    && LANGUAGE_PYTHON.equals(jstring(config, LANGUAGE))) {
+                JsonObject parallelRegionConfig = new JsonObject();
+                deploymentConfig.add("parallelRegionConfig", parallelRegionConfig);
+                parallelRegionConfig.addProperty("fusionType", "channelIsolation");
+            }
         }
     }
     

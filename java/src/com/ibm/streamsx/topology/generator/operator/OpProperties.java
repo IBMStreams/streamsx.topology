@@ -10,11 +10,15 @@ import com.google.gson.JsonPrimitive;
 public interface OpProperties {
     /**
      * Programming model used to create the operator.
+     * Also used at the graph config level to provide
+     * how the graph was created.
      */
     String MODEL = "model";
     
     /**
      * Language for the operator within its {@link #MODEL}.
+     * Also used at the graph config level to provide
+     * how the graph was created.
      */
     String LANGUAGE = "language";
     
