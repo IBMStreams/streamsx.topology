@@ -533,7 +533,17 @@ public class GraphUtilities {
         output.remove("type");
         output.addProperty("type", schema);
     }
-    
+
+    /**
+     * set the input port schema type to the given value
+     */
+    static void setInputPortType(JsonObject op, int index, String schema) {
+        JsonArray inputs = op.get("inputs").getAsJsonArray();
+        JsonObject input = inputs.get(index).getAsJsonObject();
+        input.remove("type");
+        input.addProperty("type", schema);
+    }
+
     /**
      * Add an operator before another operator.
      * @param op Operator the new operator is to be added before.
