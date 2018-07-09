@@ -530,7 +530,6 @@ public class GraphUtilities {
     static void setOutputPortType(JsonObject op, int index, String schema) {
         JsonArray outputs = op.get("outputs").getAsJsonArray();
         JsonObject output = outputs.get(index).getAsJsonObject();
-        output.remove("type");
         output.addProperty("type", schema);
     }
 
@@ -540,7 +539,6 @@ public class GraphUtilities {
     static void setInputPortType(JsonObject op, int index, String schema) {
         JsonArray inputs = op.get("inputs").getAsJsonArray();
         JsonObject input = inputs.get(index).getAsJsonObject();
-        input.remove("type");
         input.addProperty("type", schema);
     }
 
