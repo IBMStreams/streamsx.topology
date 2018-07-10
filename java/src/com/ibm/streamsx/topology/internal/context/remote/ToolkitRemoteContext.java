@@ -175,10 +175,12 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
     private void generateSPL(File toolkitRoot, JsonObject jsonGraph)
             throws IOException {
 
-        // Create the SPL file, and save a copy of the JSON file.
-        SPLGenerator generator = new SPLGenerator();
-        createNamespaceFile(toolkitRoot, jsonGraph, "spl", generator.generateSPL(jsonGraph));
+        // Save a copy of the input JSON file.
         createNamespaceFile(toolkitRoot, jsonGraph, "json", jsonGraph.toString());
+        
+        // Create the SPL file
+        SPLGenerator generator = new SPLGenerator();        
+        createNamespaceFile(toolkitRoot, jsonGraph, "spl", generator.generateSPL(jsonGraph));      
     }
     
     private void createNamespaceFile(File toolkitRoot, JsonObject json, String suffix, String content)
