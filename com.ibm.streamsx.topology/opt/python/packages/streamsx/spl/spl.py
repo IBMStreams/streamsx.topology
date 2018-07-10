@@ -569,6 +569,7 @@ import inspect
 import re
 import sys
 import streamsx.ec as ec
+import importlib
 
 ############################################
 # setup for function inspection
@@ -580,6 +581,14 @@ elif sys.version_info.major == 2:
 else:
   raise ValueError("Python version not supported.")
 ############################################
+
+# Used to recreate instances of decorated operators
+# from their module & class name during pickleling (dill)
+# See __reduce__ implementation below
+def _recreate_op(op_module, op_name):
+    module_ = importlib.import_module(op_module)
+    class_ = getattr(module_, op_name)
+    return class_.__new__(class_)
 
 _OperatorType = Enum('_OperatorType', 'Ignore Source Sink Pipe Filter Primitive')
 _OperatorType.Source.spl_template = 'PythonFunctionSource'
@@ -648,6 +657,15 @@ def _wrapforsplop(optype, wrapped, style, docpy):
                 if ec._is_supported():
                     ec._save_opc(self)
                 ec._callable_enter(self)
+
+            # Use reduce to save the state of the class and its
+            # module and operator name.
+            def __reduce__(self):
+                if hasattr(self, '__getstate__'):
+                    state = self.__getstate__()
+                else:
+                    state = self.__dict__
+                return _recreate_op, (wrapped.__module__, wrapped.__name__), state
 
             def _splpy_shutdown(self, exc_type=None, exc_value=None, traceback=None):
                 return ec._callable_exit(self, exc_type, exc_value, traceback)
