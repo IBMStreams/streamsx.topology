@@ -231,9 +231,6 @@ class SPLGraph(object):
         for name, sp in sps.items():
             params[name] = sp.spl_json()
 
-    def getLastOperator(self):
-        return self.operators[len(self.operators) -1]      
-        
 class _SPLInvocation(object):
 
     def __init__(self, index, kind, function, name, params, graph, view_configs = None, sl=None, stateful = False):
