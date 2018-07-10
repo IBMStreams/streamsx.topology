@@ -50,3 +50,26 @@ class M2(object):
         
     def __getstate__(self):
         return {'c': self.c + 43, 'v': self.v}
+
+
+@spl.for_each()
+class FE1(object):
+    def __init__(self, v):
+        self.c = 0
+        self.v = v
+
+    def __call__(self, *tuple_):
+        self.c += self.v + tuple_[0]
+        
+
+@spl.map()
+class FE2(object):
+    def __init__(self, v):
+        self.c = 0
+        self.v = v
+
+    def __call__(self, *tuple_):
+        self.c += self.v + tuple_[0]
+        
+    def __getstate__(self):
+        return {'c': self.c + 74, 'v': self.v}

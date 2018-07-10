@@ -80,3 +80,39 @@ class TestDillState(unittest.TestCase):
         op = dill.loads(dill.dumps(op))
         self.assertEqual(43+2+43, op.c)
         self.assertEqual(17, op.v)
+
+    def test_for_each(self):
+        op = ops_dill.FE1(91)
+        self.assertEqual(0, op.c)
+        self.assertEqual(91, op.v)
+
+        op = dill.loads(dill.dumps(op))
+        self.assertEqual(0, op.c)
+        self.assertEqual(91, op.v)
+
+        self.assertIsNone(op(3))
+        self.assertIsNone(op(8))
+        self.assertEqual(91+91+3+8, op.c)
+        self.assertEqual(91, op.v)
+
+        op = dill.loads(dill.dumps(op))
+        self.assertEqual(91+91+3+8, op.c)
+        self.assertEqual(91, op.v)
+
+    def test_for_each_getstate(self):
+        op = ops_dill.FE2(63)
+        self.assertEqual(0, op.c)
+        self.assertEqual(63, op.v)
+
+        op = dill.loads(dill.dumps(op))
+        self.assertEqual(74, op.c)
+        self.assertEqual(63, op.v)
+
+        self.assertIsNone(op(3))
+        self.assertIsNone(op(8))
+        self.assertEqual(63+63+3+8+74, op.c)
+        self.assertEqual(63, op.v)
+
+        op = dill.loads(dill.dumps(op))
+        self.assertEqual(63+63+3+8+74+74, op.c)
+        self.assertEqual(63, op.v)
