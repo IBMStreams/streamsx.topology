@@ -109,6 +109,7 @@ class Preprocessor {
             GraphUtilities.addBefore(parent, hashAdderCopy, graph);
             // set Unparallel's output port schema using HashAdder's schema
             GraphUtilities.setOutputPortType(parent, 0, schema);
+            GraphUtilities.setInputPortType(parent, 0, schema);
         }
     }
 }
