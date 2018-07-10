@@ -431,19 +431,11 @@ class _SPLInvocation(object):
         if isinstance(self, Marker):
             return
 
-        colocate_id = self._placement.get('explicitColocate')
-        if not colocate_id:
-            colocate_id = '__spl_' + why + '_' + str(self.index)
-            self._placement['explicitColocate'] = colocate_id
-            self._remap_colocate_tag(colocate_id, colocate_id)
+        if 'colocateTags' not in self._placement:
+            self._placement['colocateTags'] = []
 
-        for op in others:
-            tag = op._placement.get('explicitColocate')
-            if tag:
-                if tag != colocate_id:
-                    self._remap_colocate_tag(colocate_id, tag)
-            else:
-                op._placement['explicitColocate'] = colocate_id
+        colocate_tag = '__spl_' + why + '$' + str(self.index)
+        self._placement['colocateTags'].append(colocate_tag)
 
     def _layout(self, kind=None, hidden=None, name=None, orig_name=None):
         if kind:
