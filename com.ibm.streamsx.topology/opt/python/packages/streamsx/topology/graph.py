@@ -534,6 +534,7 @@ class Marker(_SPLInvocation):
     def __init__(self, index, kind, name, params, graph):
         self.index = index
         self.kind = kind
+        self.model = 'virtual'
         self.name = name
         self.params = {}
         self.setParameters(params)
@@ -551,7 +552,7 @@ class Marker(_SPLInvocation):
         _op["partitioned"] = False
 
         _op["marker"] = True
-        _op["model"] = "virtual"
+        _op["model"] = self.model
         _op["language"] = "marker"
 
         _outputs = []
