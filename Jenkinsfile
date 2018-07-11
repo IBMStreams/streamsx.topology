@@ -19,6 +19,17 @@ pipeline {
          sh 'ci/test_java_standalone.sh'
        }
     }
+    stage('Python 3.6 standalone') {
+       steps {
+         sh 'ci/test_python36_standalone.sh'
+       }
+    }
+    stage('Python 3.5 standalone') {
+       when { branch 'master' }
+       steps {
+         sh 'ci/test_python35_standalone.sh'
+       }
+    }
   }
   post {
     always {
