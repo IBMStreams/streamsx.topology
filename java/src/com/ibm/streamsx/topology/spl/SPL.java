@@ -79,6 +79,14 @@ import com.ibm.streamsx.topology.internal.messages.Messages;
  * params.put("aUInt8", SPL.createSubmissionParameter(topology, "uint8Param", SPL.createValue((byte)13, MetaType.UINT8), true);
  * ... = SPLPrimitive.invokeOperator(..., params);
  * }</pre>
+ * <P>
+ * <B>Note:</B> Invoking an SPL composite operator with internal
+ * {@code config placement} clauses can cause logical topology constraints
+ * declared by {@link SPLStream#isolate() isolate}, {@link SPLStream#lowLatency() lowLatency}
+ * or {@link SPLStream#colocate(com.ibm.streamsx.topology.context.Placeable...) colocate}
+ * to be violated. This is due to the config placement clause within the composite definition
+ * overriding the invocation clauses generated for the logical constraints.
+ * </P>
  */
 public class SPL {
     

@@ -320,7 +320,17 @@
        </batchtest>
      </junit>
    </jacoco:coverage>
-   <fail message="Unittests failed" if="topology.tests.failed"/>
+   <fail message="Unittests failed">
+       <condition>
+          <and>
+          <isset property="topology.tests.failed"/>
+          <not>
+              <!-- For Jenkins runs failing tests are tracked as unstable build -->
+              <isset property="env.JENKINS_URL"/>
+          </not>
+          </and>
+       </condition>
+   </fail>
    </target>
 
   <target name="unittest.kafka.standalone">
