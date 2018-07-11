@@ -683,27 +683,29 @@ class OperatorGenerator {
             JsonObject placement = jobject(config, PLACEMENT);
             StringBuilder sbPlacement = new StringBuilder();
 
-            // Explicit placement takes precedence.
-            String colocationKey = jstring(placement, OpProperties.PLACEMENT_COLOCATE_KEY);
-            if (colocationKey != null) {
+            String colocateKey = jstring(placement, OpProperties.PLACEMENT_COLOCATE_KEY);
+            //String colocateKey = colocateTags != null && colocateTags.size() >= 1 ? colocateTags.get(0).getAsString() : null;
+            //String colocateTag = jstring(placement, OpProperties.PLACEMENT_COLOCATE_KEY);
+            if (colocateKey != null) {
                 JsonObject mapping = object(graphConfig, CFG_COLOCATE_TAG_MAPPING);               
-                String colocationId = jstring(mapping, colocationKey);               
+                String colocationId = jstring(mapping, colocateKey);               
                 JsonObject colocateIds = object(graphConfig, CFG_COLOCATE_IDS);
                 JsonObject idInfo = object(colocateIds, colocationId);
-                int count = idInfo.get("count").getAsInt();
+                
+                boolean absoluteColocate = jboolean(idInfo, "main");
+                if (!absoluteColocate) {
+                    int parallel = idInfo.get("parallel").getAsInt();
+                    if (parallel >= 2)
+                        absoluteColocate = true;
+                }
+                
                 sbPlacement.append("      partitionColocation(");
                 
-                if (count == 1) {
-                    // Only used once, use a "relative" path to ensure the colocation
-                    // stays within a channel (if any)
-                    
+                stringLiteral(sbPlacement, colocationId);
+                if (!absoluteColocate) {
+                    // Use getChannel() to remain within a channel.                   
                     SPLGenerator.value(sbPlacement, JParamTypes.TYPE_SPL_EXPRESSION,
-                            new JsonPrimitive("getThisCompositeInstanceName()+"));
-                    stringLiteral(sbPlacement, colocationId);
-                    SPLGenerator.value(sbPlacement, JParamTypes.TYPE_SPL_EXPRESSION,
-                            new JsonPrimitive("+'$$'+((rstring)getChannel())"));
-                } else {
-                    stringLiteral(sbPlacement, colocationId);
+                            new JsonPrimitive("+'$'+((rstring)getChannel())"));
                 }
                 
                 sbPlacement.append(")\n");

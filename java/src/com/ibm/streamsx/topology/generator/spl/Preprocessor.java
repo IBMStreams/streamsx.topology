@@ -46,9 +46,6 @@ class Preprocessor {
         pePlacementPreprocess.tagIsolationRegions();
         pePlacementPreprocess.tagLowLatencyRegions();
 
-        
-        ThreadingModel.preProcessThreadedPorts(graph);
-        
         removeRemainingVirtualMarkers();
         
         AutonomousRegions.preprocessAutonomousRegions(graph);
@@ -69,8 +66,6 @@ class Preprocessor {
     }
 
     public void compositeColocateIdUsage(List<JsonObject> composites) {
-        if (composites.size() < 2)
-            return;
         for (JsonObject composite : composites)
             pePlacementPreprocess.compositeColocateIdUse(composite);
     }
@@ -114,6 +109,7 @@ class Preprocessor {
             GraphUtilities.addBefore(parent, hashAdderCopy, graph);
             // set Unparallel's output port schema using HashAdder's schema
             GraphUtilities.setOutputPortType(parent, 0, schema);
+            GraphUtilities.setInputPortType(parent, 0, schema);
         }
     }
 }

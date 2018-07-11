@@ -435,6 +435,7 @@ public class SPLGenerator {
     private JsonObject createLowLatencyCompositeInvocation(JsonObject opDefinition, List<List<JsonObject>> startsEndsAndOperators) {
         JsonObject compositeInvocation = createCompositeInvocation(opDefinition, startsEndsAndOperators);
         compositeInvocation.addProperty("lowLatency", true);
+        opDefinition.addProperty("lowLatencyComposite", true);
         return compositeInvocation;
     }
 

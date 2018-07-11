@@ -203,20 +203,31 @@ public class BOperatorInvocation extends BOperator {
         if (outputs == null)
             outputs = new HashMap<>();
         
-        String _name;
+        String portName;
         if (name.isPresent())
-            _name = name.get();
-        else
-            _name = this.name() + "_OUT" + outputs.size();
+            portName = name.get();
+        else {
+            portName = this.name() + "_OUT" + outputs.size();
+            // Just in case the resultant name does clash with an operator name.
+            portName = builder().userSuppliedName(portName);
+        }
         
         final BOutputPort stream = new BOutputPort(this, outputs.size(),
-                _name,
+                portName,
                 schema);
         assert !outputs.containsKey(stream.name());
         outputs.put(stream.name(), stream);
         return stream;
     }
 
+    /**
+     * Each input port has a unique generated name to ensure connections
+     * are tracked correctly. However the port is not assigned
+     * that name during SPL generation, instead taking the name
+     * from its connected output stream (and the first if there
+     * are multiple). The port may also have an alias which
+     * will be used as the port alias (local to the operator).
+     */
     public BInputPort inputFrom(BOutput output, BInputPort input) {
         if (input != null) {
             assert input.operator() == this;
@@ -228,8 +239,15 @@ public class BOperatorInvocation extends BOperator {
         if (inputs == null) {
             inputs = new ArrayList<>();
         }
+        
+        // The operator name is unique so most likely
+        // adding a port specific suffix creates a unique port name.
+        String portName = name() + "_IN" + inputs.size();
+        
+        // Just in case the resultant name does clash with an operator name.
+        portName = builder().userSuppliedName(portName);
 
-        input = new BInputPort(this, inputs.size(), name() + "_IN" + inputs.size(), output._type());
+        input = new BInputPort(this, inputs.size(), portName, output._type());
         inputs.add(input);
         output.connectTo(input);
 

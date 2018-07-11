@@ -1150,10 +1150,9 @@ class Stream(_placement._Placement, object):
         Returns:
             Stream: Stream for which subsequent transformations are no longer parallelized.
         """
-        lastOp = self.topology.graph.getLastOperator()
         outport = self.oport
-        if (isinstance(lastOp, streamsx.topology.graph.Marker)):
-            if (lastOp.kind == "$Union$"):
+        if isinstance(self.oport.operator, streamsx.topology.graph.Marker):
+            if self.oport.operator.kind == "$Union$":
                 pto = self.topology.graph.addPassThruOperator()
                 pto.addInputPort(outputPort=self.oport)
                 outport = pto.addOutputPort(schema=self.oport.schema)

@@ -1,5 +1,12 @@
 package com.ibm.streamsx.topology.generator.operator;
 
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.arrayCreate;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+
 public interface OpProperties {
     /**
      * Programming model used to create the operator.
@@ -54,33 +61,39 @@ public interface OpProperties {
      * has a unique isolate region identifier.
      */
     String PLACEMENT_ISOLATE_REGION_ID = "isolateRegion";
-
-    /**
-     * Attribute for an explicit colocation identifier.
-     * 
-     * An explicit colocate identifier is an instruction
-     * from the application that it wants two (or more) operators
-     * to be colocated.
-     */
-    String PLACEMENT_EXPLICIT_COLOCATE_ID = "explicitColocate";
     
     /**
      * Attribute for derived colocation key.
      * 
-     * Selected from one of the tags in the placement.
+     * Selected from one of the tags in the placement during preprocessing.
      * Note at code generation the actual value to
      * use must be looked up from the map object
      * in the graph config.
      * 
      */
     String PLACEMENT_COLOCATE_KEY = "colocateIdKey";
-
+    
     /**
-     * Attribute for low latency region identifier.
+     * List of colocation tags for each colocation the operator
+     * is involved in. For example with operators A,B,C,D
+     * and A colocated with B and D, A might have ['x','y']
+     * B ['x'] and D ['y']. During preprocessing these tags
+     * will be resolved to a single colocation identifier
+     * used in the placement clause.
      * 
-     * A low latency region has a unique isolate region identifier.
+     * For any operator it will be colocated with another
+     * if it shares at least one tag.
+     * 
+     * Colocations can come from explicit colocations
+     * or low latency regions.
      */
-    String PLACEMENT_LOW_LATENCY_REGION_ID = "lowLatencyRegion";
+    String PLACEMENT_COLOCATE_TAGS = "colocateTags";
+    
+    static void addColocationTag(JsonObject op, JsonPrimitive tag) {
+        JsonObject placement = objectCreate(op, CONFIG, PLACEMENT);
+        JsonArray colocateTags = arrayCreate(placement, PLACEMENT_COLOCATE_TAGS);
+        colocateTags.add(tag);
+    }
 
     /**
      * Attribute for an resource tags, a list of tags.
@@ -90,9 +103,8 @@ public interface OpProperties {
     /**
      * Attribute for placement of the operator, a JSON object.
      * Can contain:
-     * PLACEMENT_ISOLATE_REGION_ID
-     * PLACEMENT_EXPLICIT_COLOCATE_ID
-     * PLACEMENT_LOW_LATENCY_REGION_ID
+     * PLACEMENT_COLOCATE_TAGS
+     * PLACEMENT_COLOCATE_KEY (after preprocessor)
      * PLACEMENT_RESOURCE_TAGS
      * 
      * Stored within {@link OpProperties#CONFIG}.
