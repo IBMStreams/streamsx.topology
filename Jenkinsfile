@@ -30,6 +30,12 @@ pipeline {
          sh 'ci/test_python35_standalone.sh'
        }
     }
+    stage('Python 2.7 standalone') {
+       when { branch 'master' }
+       steps {
+         sh 'ci/test_python27_standalone.sh'
+       }
+    }
   }
   post {
     always {
