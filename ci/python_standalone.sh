@@ -4,4 +4,4 @@ unset VCAP_SERVICES
 unset STREAMING_ANALYTICS_SERVICE_NAME
 
 cd $WORKSPACE/test/python/topology
-python3 -u -m unittest discover
+$PYTHONHOME/bin/python -u -m unittest discover
