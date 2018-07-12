@@ -12,6 +12,10 @@ import java.util.Set;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 
+import static com.ibm.streamsx.topology.builder.BVirtualMarker.END_PARALLEL;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.isHashAdder;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.kind;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.operators;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 /**
@@ -42,9 +46,6 @@ class Preprocessor {
         pePlacementPreprocess.tagIsolationRegions();
         pePlacementPreprocess.tagLowLatencyRegions();
 
-        
-        ThreadingModel.preProcessThreadedPorts(graph);
-        
         removeRemainingVirtualMarkers();
         
         AutonomousRegions.preprocessAutonomousRegions(graph);
@@ -65,8 +66,6 @@ class Preprocessor {
     }
 
     public void compositeColocateIdUsage(List<JsonObject> composites) {
-        if (composites.size() < 2)
-            return;
         for (JsonObject composite : composites)
             pePlacementPreprocess.compositeColocateIdUse(composite);
     }
@@ -76,15 +75,10 @@ class Preprocessor {
         // First, find all HashAdders in the graph. The reason for not
         // moving HashAdders in this loop is to avoid modifying the graph
         // structure while traversing the graph.
-        GraphUtilities.visitOnce(GraphUtilities.findStarts(graph),
-                new HashSet<BVirtualMarker>(),
-                graph,
-                (JsonObject op) -> {
-                    if (GraphUtilities.isHashAdder(op)) {
-                        hashAdders.add(op);
-                    }
-                }
-        );
+        operators(graph, op -> {
+            if (isHashAdder(op))
+                hashAdders.add(op);
+        });
 
         // Second, relocate HashAdders one by one.
         for(JsonObject hashAdder : hashAdders){
@@ -104,12 +98,18 @@ class Preprocessor {
         JsonObject parent = parents.iterator().next();
         // check if HashAdder's parent is $Unparallel$, and $Unparallel$
         // has only one child
-        if (GraphUtilities.isKind(parent, BVirtualMarker.END_PARALLEL.kind()) &&
+        if (END_PARALLEL.isThis(kind(parent)) &&
                 GraphUtilities.getDownstream(parent, graph).size() == 1) {
+            // retrieve HashAdder's output port schema
+            String schema = GraphUtilities.getOutputPortType(hashAdder, 0);
+            // insert a copy of HashAdder to the front of Unparallel
             JsonObject hashAdderCopy = GraphUtilities.copyOperatorNewName(
                     hashAdder, jstring(hashAdder, "name"));
             GraphUtilities.removeOperator(hashAdder, graph);
             GraphUtilities.addBefore(parent, hashAdderCopy, graph);
+            // set Unparallel's output port schema using HashAdder's schema
+            GraphUtilities.setOutputPortType(parent, 0, schema);
+            GraphUtilities.setInputPortType(parent, 0, schema);
         }
     }
 }

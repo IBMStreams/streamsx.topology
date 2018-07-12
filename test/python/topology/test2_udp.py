@@ -95,6 +95,8 @@ class TestUDP(unittest.TestCase):
       s2.set_parallel(5)
 
       s = s.union({s2})
+      # #1750 ensure we are not depending on last op
+      o = topo.source([2])
       s = s.end_parallel()
       
       tester = Tester(topo)

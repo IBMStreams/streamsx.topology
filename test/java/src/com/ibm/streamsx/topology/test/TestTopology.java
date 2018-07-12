@@ -415,4 +415,12 @@ public class TestTopology {
         }
         return false;
     }
+    
+    /**
+     * Can the test generate ADL.
+     */
+    protected void adlOk() {
+        assumeTrue(SC_OK);
+        assumeTrue(getTesterType() == StreamsContext.Type.STANDALONE_TESTER);
+    }
 }

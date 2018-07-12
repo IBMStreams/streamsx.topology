@@ -163,6 +163,7 @@ class SPLGraph(object):
         _graph["namespace"] = self.namespace
         _graph["public"] = True
         _graph["config"] = {}
+        self._determine_model(_graph["config"])
         _graph["config"]["includes"] = []
         _graph['config']['spl'] = {}
         _graph['config']['spl']['toolkits'] = self._spl_toolkits
@@ -178,7 +179,20 @@ class SPLGraph(object):
 
         _graph["operators"] = _ops
         return _graph
-   
+
+    def _determine_model(self, graph_cfg):
+        # Python can be used to build pure SPL
+        # graphs so if that's the case mark the
+        # graph model/langauge as spl/spl
+        all_spl = True
+        for op in self.operators:
+            if op.model != 'spl':
+                all_spl = False
+                break
+
+        graph_cfg['model'] = 'spl' if all_spl else 'functional' 
+        graph_cfg['language'] = 'spl' if all_spl else 'python'
+
     def _add_packages(self, includes):
         for package_path in self.resolver.packages:
            mf = {}
@@ -217,9 +231,6 @@ class SPLGraph(object):
         for name, sp in sps.items():
             params[name] = sp.spl_json()
 
-    def getLastOperator(self):
-        return self.operators[len(self.operators) -1]      
-        
 class _SPLInvocation(object):
 
     def __init__(self, index, kind, function, name, params, graph, view_configs = None, sl=None, stateful = False):
@@ -239,6 +250,8 @@ class _SPLInvocation(object):
         self._placement = {}
         self._start_op = False
         self.config = {}
+        # Arbitrary JSON for operator
+        self._op_def = {}
 
         if view_configs is None:
             self.view_configs = []
@@ -298,7 +311,7 @@ class _SPLInvocation(object):
 
 
     def generateSPLOperator(self):
-        _op = {}
+        _op = dict(self._op_def)
         _op["name"] = self.name
         if self.category:
             _op["category"] = self.category
@@ -415,19 +428,11 @@ class _SPLInvocation(object):
         if isinstance(self, Marker):
             return
 
-        colocate_id = self._placement.get('explicitColocate')
-        if not colocate_id:
-            colocate_id = '__spl_' + why + '_' + str(self.index)
-            self._placement['explicitColocate'] = colocate_id
-            self._remap_colocate_tag(colocate_id, colocate_id)
+        if 'colocateTags' not in self._placement:
+            self._placement['colocateTags'] = []
 
-        for op in others:
-            tag = op._placement.get('explicitColocate')
-            if tag:
-                if tag != colocate_id:
-                    self._remap_colocate_tag(colocate_id, tag)
-            else:
-                op._placement['explicitColocate'] = colocate_id
+        colocate_tag = '__spl_' + why + '$' + str(self.index)
+        self._placement['colocateTags'].append(colocate_tag)
 
     def _layout(self, kind=None, hidden=None, name=None, orig_name=None):
         if kind:
@@ -529,6 +534,7 @@ class Marker(_SPLInvocation):
     def __init__(self, index, kind, name, params, graph):
         self.index = index
         self.kind = kind
+        self.model = 'virtual'
         self.name = name
         self.params = {}
         self.setParameters(params)
@@ -546,7 +552,7 @@ class Marker(_SPLInvocation):
         _op["partitioned"] = False
 
         _op["marker"] = True
-        _op["model"] = "virtual"
+        _op["model"] = self.model
         _op["language"] = "marker"
 
         _outputs = []

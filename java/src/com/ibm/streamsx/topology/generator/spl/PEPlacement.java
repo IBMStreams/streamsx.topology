@@ -10,12 +10,13 @@ import static com.ibm.streamsx.topology.builder.BVirtualMarker.LOW_LATENCY;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONFIG;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_COLOCATE_KEY;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_EXPLICIT_COLOCATE_ID;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_COLOCATE_TAGS;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_ISOLATE_REGION_ID;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_LOW_LATENCY_REGION_ID;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.addColocationTag;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.findOperatorByKind;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.kind;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.operators;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_COLOCATE_IDS;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_COLOCATE_TAG_MAPPING;
@@ -26,18 +27,19 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.function.Consumer;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 class PEPlacement {
     
@@ -145,43 +147,7 @@ class PEPlacement {
             assignIsolateRegionIds(getDownstream(isolate, graph));
         }
  
-        // For 4.2 and later we do not force colocation
-        // on every operator, instead we allow submission
-        // time fusion to figure out the best plan.
-        if (!generator.versionAtLeast(4, 2))
-            tagIslandIsolatedRegions();
         GraphUtilities.removeOperators(isolateOperators, graph);
-    }
-    
-    /**
-     * Tag any "island" regions with their own isolated region id.
-     * This can occur when there are there sub-graphs that are
-     * not connected to a region already processed with an isolate.
-     * So two cases:
-     *   a) No isolates exist at all in the graph
-     *   b) Isolates exist in the whole graph but a disconnected
-     *   sub-graph has no isolates. 
-     */
-    private void tagIslandIsolatedRegions(){
-        Set<JsonObject> starts = GraphUtilities.findStarts(graph);   
-        
-        for(JsonObject start : starts){
-            final String colocationTag = newIsolateRegionId();
-            
-            JsonObject placement = objectCreate(start, CONFIG, PLACEMENT);
-                     
-            String regionTag = jstring(placement, PLACEMENT_ISOLATE_REGION_ID);         
-            if (regionTag != null && !regionTag.isEmpty()) {
-                continue;
-            }
-            
-            Set<JsonObject> startList = Collections.singleton(start);
-            
-            Set<BVirtualMarker> boundaries = EnumSet.of(BVirtualMarker.ISOLATE);
-            
-            GraphUtilities.visitOnce(startList, boundaries, graph,
-                    op -> setIsolateRegionId(op, colocationTag));          
-        }
     }
     
     private String newIsolateRegionId() {
@@ -205,55 +171,35 @@ class PEPlacement {
         if (lowLatencyStartOperators.isEmpty())
             return;
         
-        // Assign isolation regions their lowLatency tag
+        // Assign isolation regions a colocation tag
         for (JsonObject llStart : lowLatencyStartOperators) {
             assignLowLatency(llStart);
         }
     }
 
-    @SuppressWarnings("serial")
     private void assignLowLatency(JsonObject llStart) {
         
-        final String lowLatencyTag = "__spl_lowLatencyRegionId" + lowLatencyRegionCount++;
+        final JsonPrimitive lowLatencyTag =
+                new JsonPrimitive("__spl_lowLatency$" + lowLatencyRegionCount++);
 
         Set<JsonObject> llStartChildren = getDownstream(llStart, graph);
-        
-        // Determine if the region has already been tagged, which would happen if there are
-        // multiple starts to the low latency region.
-        AtomicBoolean isAlreadyTagged = new AtomicBoolean(false);
-        llStartChildren.forEach(oper -> {
-            JsonObject placement = object(oper, CONFIG, PLACEMENT);
-            if(placement!=null && jstring(placement, PLACEMENT_LOW_LATENCY_REGION_ID) != null)
-                isAlreadyTagged.set(true);;
-                
-        });
-        
-        if(isAlreadyTagged.get())
-            return;
         
         Set<BVirtualMarker> boundaries = EnumSet.of(LOW_LATENCY, END_LOW_LATENCY);
 
         GraphUtilities.visitOnce(llStartChildren, boundaries, graph,
-                new Consumer<JsonObject>() {
-                    @Override
-                    public void accept(JsonObject op) {
-                        // Add a manual threading annotation
-                        // to ensure low latency by not allowing
-                        // any scheduled ports to be added
-                        //JsonObject threading = new JsonObject();
-                        //threading.addProperty("model", "manual");
-                        // op.add("threading", threading);
-                                            
-                        // If the region has already been assigned a
-                        // lowLatency tag, simply return.
-                        JsonObject placement = objectCreate(op, CONFIG, PLACEMENT);
-                        
-                        assert jstring(placement, PLACEMENT_LOW_LATENCY_REGION_ID) == null
-                                || jstring(placement, PLACEMENT_LOW_LATENCY_REGION_ID).equals(lowLatencyTag);
-                        placement.addProperty(PLACEMENT_LOW_LATENCY_REGION_ID, lowLatencyTag);
-                    }
-                });
-
+                op -> addColocationTag(op, lowLatencyTag));
+        
+        // Low latency merges with upstream.
+        for (JsonObject op : getUpstream(llStart, graph)) {
+            String kind = kind(op);
+            if (BVirtualMarker.PARALLEL.isThis(kind))
+                continue;
+            if (BVirtualMarker.END_PARALLEL.isThis(kind))
+                continue;
+            if (BVirtualMarker.UNION.isThis(kind))
+                continue;
+            addColocationTag(op, lowLatencyTag);
+        }
     }
     
     /**
@@ -275,20 +221,13 @@ class PEPlacement {
             if (placement == null)
                 return;
             
-            // Three types of co-locate.
-            String explicit = jstring(placement, PLACEMENT_EXPLICIT_COLOCATE_ID);
-            String lowLatency = jstring(placement, PLACEMENT_LOW_LATENCY_REGION_ID);
-            String isolate = jstring(placement, PLACEMENT_ISOLATE_REGION_ID);
+            JsonArray tags = GsonUtilities.array(placement, PLACEMENT_COLOCATE_TAGS);
+            if (tags == null)
+                return;
             
             Set<String> sameTags = new HashSet<>();
-            if (explicit != null)
-                sameTags.add(explicit);
-            if (lowLatency != null)
-                sameTags.add(lowLatency);
-            if (isolate != null)
-                sameTags.add(isolate);
-            if (sameTags.isEmpty())
-                return;
+            for (JsonElement e : tags)
+                sameTags.add(e.getAsString());
             
             // Find if any of these tags are already mapped.
             Set<String> existingTags = new HashSet<>();
@@ -336,25 +275,25 @@ class PEPlacement {
       
          for (Entry<String, JsonElement> entry : tagMaps.entrySet()) {
              JsonObject idInfo = new JsonObject();
-             idInfo.addProperty("count", 0);
+             idInfo.addProperty("parallel", 0);
+             idInfo.addProperty("lowLatency", 0);
              colocateIds.add(entry.getValue().getAsString(), idInfo);
          }
     }
     
     /**
-     * Bump the count for each colocation id used in a parallel or main composite.
+     * Bump the count for each colocation id used in a composite.
      * If a colocation tag is only used in a single parallel composite
      * then its actually id needs to be channel based and relative to the
      * composite instance name, otherwise it's absolute.
      */
-    void compositeColocateIdUse(JsonObject composite) {
+    void compositeColocateIdUse(JsonObject compositeDefinition) {
         
-        if (!jboolean(composite, "__spl_mainComposite")
-                && !jboolean(composite, "parallelComposite"))
+        if (jboolean(compositeDefinition, "lowLatencyComposite"))
             return;
-        
+               
         Set<String> usedColocateKeys = new HashSet<>();
-        operators(composite, op -> {
+        operators(compositeDefinition, op -> {
             JsonObject placement = object(op, CONFIG, PLACEMENT);
             if (placement == null)
                 return;
@@ -372,10 +311,19 @@ class PEPlacement {
         for (String key : usedColocateKeys)
             usedColocateIds.add(jstring(tagMaps, key));
         
-        JsonObject colocateIds = objectCreate(graph, CONFIG, CFG_COLOCATE_IDS);
+        final boolean parallel = jboolean(compositeDefinition, "parallelComposite");
+        final boolean main = jboolean(compositeDefinition, "__spl_mainComposite");
+        final boolean lowLatency = jboolean(compositeDefinition, "lowLatencyComposite");
+        JsonObject colocateIds = object(graph, CONFIG, CFG_COLOCATE_IDS);
         for (String id : usedColocateIds) {
             JsonObject idInfo = colocateIds.getAsJsonObject(id);
-            idInfo.addProperty("count", idInfo.get("count").getAsInt()+1);
+            
+            if (parallel) 
+                idInfo.addProperty("parallel", idInfo.get("parallel").getAsInt()+1);
+            if (lowLatency)
+                idInfo.addProperty("lowLatency", idInfo.get("lowLatency").getAsInt()+1);
+            if (main)
+                idInfo.addProperty("main", main);
         }
     }
 }
