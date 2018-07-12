@@ -143,7 +143,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): submit job request:" + jco.toString());
 
             JsonObject response = postJob(httpClient, service, bundle, jco);
-            return jobResult(response);
+            return addConsoleURLs(jobResult(response));
             
         } finally {
             httpClient.close();
@@ -263,10 +263,16 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             
             Result<Job,JsonObject> result = jobResult(response);
             result.getRawResult().add(SubmissionResultsKeys.SUBMIT_METRICS, metrics);
-            return result;
+            return addConsoleURLs(result);
         } finally {
             httpclient.close();
         }
+    }
+    
+    private Result<Job,JsonObject> addConsoleURLs(final Result<Job,JsonObject> result) throws IOException {
+        result.getRawResult().addProperty(SubmissionResultsKeys.CONSOLE_APPLICATION_URL,
+                getInstance().getApplicationConsoleURL());
+        return result;
     }
 
     private String prettyPrintOutput(JsonObject output) {
