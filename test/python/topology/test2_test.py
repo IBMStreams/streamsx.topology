@@ -10,14 +10,11 @@ from streamsx.topology import context
 from streamsx import rest
 import streamsx.ec as ec
 
-import test_vers
-
 def rands():
     r = random.Random()
     while True:
        yield r.random()
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestTester(unittest.TestCase):
     def setUp(self):
         Tester.setup_standalone(self)
@@ -121,13 +118,11 @@ class TestTester(unittest.TestCase):
         self.rf_start = job.submitTime / 1000.0
 
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
-class TestDistributedTester(unittest.TestCase):
+class TestDistributedTester(TestTester):
     def setUp(self):
         Tester.setup_distributed(self)
 
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestCloudTester(TestTester):
     def setUp(self):
         Tester.setup_streaming_analytics(self)

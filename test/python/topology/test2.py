@@ -12,8 +12,6 @@ from streamsx.topology.context import ConfigParams, submit
 from streamsx import rest
 import test_functions
 
-import test_vers
-
 def s4():
     return ['one', 'two', 'three', 'four']
 
@@ -77,7 +75,6 @@ def verifyArtifacts(test):
             test.assertNotIn('bundlePath', test.result)
             test.assertNotIn('archivePath', test.result)
 
-@unittest.skipIf(not test_vers.tester_supported(), "Tester not supported")
 class TestToolkitMethodsNew(unittest.TestCase):
 
     def setUp(self):
@@ -100,7 +97,6 @@ class TestToolkitMethodsNew(unittest.TestCase):
         self.result = submit(self.test_ctxtype, self.topo, self.test_config)
         verifyArtifacts(self)
 
-@unittest.skipIf(not test_vers.tester_supported(), "Tester not supported")
 class TestBuildArchiveMethodsNew(TestToolkitMethodsNew):
 
     def setUp(self):
@@ -110,7 +106,6 @@ class TestBuildArchiveMethodsNew(TestToolkitMethodsNew):
         self.test_config = {}
         self.result = {}
 
-@unittest.skipIf(not test_vers.tester_supported(), "Tester not supported")
 @unittest.skipUnless('STREAMS_INSTALL' in os.environ, "requires STREAMS_INSTALL")
 class TestBundleMethodsNew(TestToolkitMethodsNew):
 
@@ -121,7 +116,6 @@ class TestBundleMethodsNew(TestToolkitMethodsNew):
         self.test_config = {}
         self.result = {}
 
-@unittest.skipIf(not test_vers.tester_supported(), "Tester not supported")
 @unittest.skipUnless('STREAMS_INSTALL' in os.environ, "requires STREAMS_INSTALL")
 class TestDistributedSubmitMethodsNew(unittest.TestCase):
 
@@ -143,7 +137,6 @@ class TestDistributedSubmitMethodsNew(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             submit(self.test_ctxtype, self.topo, self.test_config, username='user1', password='pass2')
 
-@unittest.skipIf(not test_vers.tester_supported(), "Tester not supported")
 @unittest.skipUnless('VCAP_SERVICES' in os.environ, "requires VCAP_SERVICES")
 @unittest.skipUnless('STREAMING_ANALYTICS_SERVICE_NAME' in os.environ, "requires STREAMING_ANALYTICS_SERVICE_NAME")
 class TestBluemixSubmitMethodsNew(unittest.TestCase):
@@ -168,7 +161,6 @@ class TestBluemixSubmitMethodsNew(unittest.TestCase):
         result.job.cancel()
 
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestTopologyMethodsNew(unittest.TestCase):
 
     def setUp(self):
@@ -198,6 +190,28 @@ class TestTopologyMethodsNew(unittest.TestCase):
         self.result = tester.result['submission_result']
         verifyArtifacts(self)
 
+    def test_no_func_map(self):
+        topo = Topology()
+        s = topo.source([(1,2),(3,4),(5,6)])
+        snc = s.map().map(name='NoChange!')
+        ss = snc.map(schema='tuple<int32 x, int32 y>')
+        tester = Tester(topo)
+        tester.contents(snc, [(1,2),(3,4),(5,6)])
+        tester.contents(ss, [{'x':1,'y':2}, {'x':3,'y':4}, {'x':5,'y':6}])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_no_func_flat_map(self):
+        topo = Topology()
+        s = topo.source(['World', 'Cup', '2018'])
+        s1 = s.flat_map()
+        s2 = s.flat_map(name='JustFlatten!')
+        tester = Tester(topo)
+        tester.contents(s1, 'WorldCup2018')
+        tester.tuple_count(s1, 12)
+        tester.contents(s2, 'WorldCup2018')
+        tester.tuple_count(s2, 12)
+        tester.test(self.test_ctxtype, self.test_config)
+
     def test_TopologySourceItertools(self):
         topo = Topology('test_TopologySourceItertools')
         if sys.version_info.major == 2:
@@ -216,13 +230,11 @@ class TestTopologyMethodsNew(unittest.TestCase):
         tester.contents(hw, [9, 9, 9])
         tester.test(self.test_ctxtype, self.test_config)
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestDistributedTopologyMethodsNew(TestTopologyMethodsNew):
     def setUp(self):
         Tester.setup_distributed(self)
         self.result = {}
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestBluemixTopologyMethodsNew(TestTopologyMethodsNew):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)

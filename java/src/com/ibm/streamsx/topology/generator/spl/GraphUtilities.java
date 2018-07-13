@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.HASH_ADDER;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.START_OP;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
@@ -74,7 +75,14 @@ public class GraphUtilities {
     static boolean isKind(JsonObject op, String kind) {
         return kind.equals(kind(op));
     }
-    
+
+    /**
+     * Is an operator a HashAdder created for a partitioned parallel region.
+     */
+    static boolean isHashAdder(JsonObject op) {
+        return jboolean(op, HASH_ADDER);
+    }
+
     /**
      * Add an operator parameter, replacing the existing value if it exists.
      * Handles the case where no parameters exist.
@@ -84,10 +92,10 @@ public class GraphUtilities {
         params.add(name, value);
     }
     
-    static Set<JsonObject> findOperatorByKind(BVirtualMarker virtualMarker,
+    static List<JsonObject> findOperatorByKind(BVirtualMarker virtualMarker,
             JsonObject graph) {
 
-        Set<JsonObject> kindOperators = new HashSet<>();
+        List<JsonObject> kindOperators = new ArrayList<>();
         
         operators(graph, op -> {
             if (virtualMarker.isThis(kind(op)))
@@ -505,8 +513,35 @@ public class GraphUtilities {
         JsonObject output = outputs.get(index).getAsJsonObject();
         return jstring(output, "name");
 
-    }  
-    
+    }
+
+    /**
+     * @return the output port schema type
+     */
+    static String getOutputPortType(JsonObject op, int index) {
+        JsonArray outputs = op.get("outputs").getAsJsonArray();
+        JsonObject output = outputs.get(index).getAsJsonObject();
+        return jstring(output, "type");
+    }
+
+    /**
+     * set the output port schema type to the given value
+     */
+    static void setOutputPortType(JsonObject op, int index, String schema) {
+        JsonArray outputs = op.get("outputs").getAsJsonArray();
+        JsonObject output = outputs.get(index).getAsJsonObject();
+        output.addProperty("type", schema);
+    }
+
+    /**
+     * set the input port schema type to the given value
+     */
+    static void setInputPortType(JsonObject op, int index, String schema) {
+        JsonArray inputs = op.get("inputs").getAsJsonArray();
+        JsonObject input = inputs.get(index).getAsJsonObject();
+        input.addProperty("type", schema);
+    }
+
     /**
      * Add an operator before another operator.
      * @param op Operator the new operator is to be added before.

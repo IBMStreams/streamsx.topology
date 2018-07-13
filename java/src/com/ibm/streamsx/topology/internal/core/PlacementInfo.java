@@ -7,9 +7,11 @@ package com.ibm.streamsx.topology.internal.core;
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.ISOLATE;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONFIG;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_EXPLICIT_COLOCATE_ID;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_COLOCATE_TAGS;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_RESOURCE_TAGS;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.arrayCreate;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.intersect;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
@@ -29,6 +31,7 @@ import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.context.Placeable;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 /**
  * Manages fusing of Placeables. 
@@ -62,10 +65,10 @@ class PlacementInfo {
         // check high level constraints
         for (Placeable<?> element : elements) {
             if (!element.isPlaceable())
-                throw new IllegalArgumentException("Placeable.isPlaceable()==false");
+                throw new IllegalArgumentException(Messages.getString("CORE_ILLEGAL_OPERATION_PLACEABLE"));
             
             if (!first.topology().equals(element.topology()) )
-                throw new IllegalArgumentException("Different topologies: "+ first.topology().getName() + " and " + element.topology().getName());
+                throw new IllegalArgumentException(Messages.getString("CORE_DIFFERENT_TOPOLOGIES", first.topology().getName(), element.topology().getName()));
         }
         
         if (elements.size() < 2)
@@ -73,25 +76,16 @@ class PlacementInfo {
         
         disallowColocateInLowLatency(elements);
         disallowColocateIsolatedOpWithParent(first, toFuse);
-            
-        String fusingId = null;
-        for (Placeable<?> element : elements) {
-            JsonObject placement = placement(element);
-            fusingId = jstring(placement, PLACEMENT_EXPLICIT_COLOCATE_ID);
-            if (fusingId != null) {
-                break;
-            }
-        }
-        if (fusingId == null) {
-            fusingId = "__jaa_colocate" + nextFuseId.incrementAndGet();
-        }
-        
+     
+        final JsonPrimitive colocateTag =
+                new JsonPrimitive("__spl_colocate$" +  nextFuseId.getAndIncrement());
         Set<String> fusedResourceTags = new HashSet<>();
-        
-        // Determine the union of all resource tags for the colocated operators
         for (Placeable<?> element : elements) {
             JsonObject placement = placement(element);
-                       
+            JsonArray colocateIds = arrayCreate(placement, PLACEMENT_COLOCATE_TAGS);
+            colocateIds.add(colocateTag);
+            
+            // Determine the union of all resource tags for the colocated operators
             if (placement.has(PLACEMENT_RESOURCE_TAGS)) {
                 addToSet(fusedResourceTags, array(placement, PLACEMENT_RESOURCE_TAGS));
             }
@@ -102,7 +96,6 @@ class PlacementInfo {
         // And finally update all the JSON info
         for (Placeable<?> element : elements) {
             JsonObject placement = placement(element);
-            placement.addProperty(PLACEMENT_EXPLICIT_COLOCATE_ID, fusingId);
             placement.add(PLACEMENT_RESOURCE_TAGS, fusedResourceTagsJson);
         }
         
@@ -139,7 +132,7 @@ class PlacementInfo {
             for (Placeable<?> placeable : toFuse) {
                 JsonObject tgtOp = placeable.operator()._complete();
                 if (jstring(tgtOp, "name").equals(jstring(isolateParentOp, "name")))
-                    throw new IllegalStateException("Illegal to colocate an isolated stream with its parent.");
+                    throw new IllegalStateException(Messages.getString("CORE_ILLEGAL_TO_COLOCATE"));
             }
         }
     }
@@ -152,7 +145,7 @@ class PlacementInfo {
         for (Placeable<?> element : elements) {
             BOperatorInvocation op = element.operator();
             if (element.builder().isInLowLatencyRegion(op))
-                throw new IllegalStateException("colocate() is not allowed in a low latency region");
+                throw new IllegalStateException(Messages.getString("CORE_COLOCATE_IN_LOW_LATENCY_REGION"));
         }
     }
 
@@ -181,25 +174,25 @@ class PlacementInfo {
                 
         if (placement.has(PLACEMENT_RESOURCE_TAGS))            
             addToSet(elementResourceTags, array(placement, PLACEMENT_RESOURCE_TAGS));
-        
-        
-        if (placement.has(PLACEMENT_EXPLICIT_COLOCATE_ID))
-            findAllColocatedResourceTags(element, jstring(placement, PLACEMENT_EXPLICIT_COLOCATE_ID), elementResourceTags);
+               
+        if (placement.has(PLACEMENT_COLOCATE_TAGS))
+            findAllColocatedResourceTags(element, array(placement, PLACEMENT_COLOCATE_TAGS), elementResourceTags);
 
         JsonArray resourceTags = setToArray(elementResourceTags);
         placement.add(PLACEMENT_RESOURCE_TAGS, resourceTags);
         
-        if (placement.has(PLACEMENT_EXPLICIT_COLOCATE_ID))
-            updateAllColocatedResourceTags(element, jstring(placement, PLACEMENT_EXPLICIT_COLOCATE_ID), resourceTags);      
+        if (placement.has(PLACEMENT_COLOCATE_TAGS))
+            updateAllColocatedResourceTags(element, array(placement, PLACEMENT_COLOCATE_TAGS), resourceTags);      
     }
     
-    private static void findAllColocatedResourceTags(Placeable<?> element, String colocateId, Set<String> elementResourceTags) {               
+    private static void findAllColocatedResourceTags(Placeable<?> element, JsonArray colocateTags, Set<String> elementResourceTags) {               
         JsonObject graph = element.builder()._complete();
                
         GsonUtilities.objectArray(graph, "operators", op -> {
             JsonObject placement = object(op, CONFIG, PLACEMENT);
             if (placement != null) {
-                if (colocateId.equals(jstring(placement, PLACEMENT_EXPLICIT_COLOCATE_ID))) {
+                JsonArray opColocateTags = array(placement, PLACEMENT_COLOCATE_TAGS);
+                if (opColocateTags != null && intersect(colocateTags, opColocateTags)) {
                     if (placement.has(PLACEMENT_RESOURCE_TAGS))
                         addToSet(elementResourceTags, array(placement, PLACEMENT_RESOURCE_TAGS));
                 }
@@ -207,13 +200,14 @@ class PlacementInfo {
                 
         });
     }
-    private static void updateAllColocatedResourceTags(Placeable<?> element, String colocateId, JsonArray resourceTags) {               
+    private static void updateAllColocatedResourceTags(Placeable<?> element, JsonArray colocateTags, JsonArray resourceTags) {               
         JsonObject graph = element.builder()._complete();
                
         GsonUtilities.objectArray(graph, "operators", op -> {
             JsonObject placement = object(op, CONFIG, PLACEMENT);
             if (placement != null) {
-                if (colocateId.equals(jstring(placement, PLACEMENT_EXPLICIT_COLOCATE_ID))) {
+                JsonArray opColocateTags = array(placement, PLACEMENT_COLOCATE_TAGS);
+                if (opColocateTags != null && intersect(colocateTags, opColocateTags)) {
                     placement.add(PLACEMENT_RESOURCE_TAGS, resourceTags);
                 }
             }

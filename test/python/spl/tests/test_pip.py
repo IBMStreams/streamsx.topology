@@ -13,6 +13,8 @@ import streamsx.spl.op as op
 import streamsx.spl.toolkit
 import streamsx.scripts.extract
 
+import spl_tests_utils as stu
+
 def down_a_pint():
     try:
         import pint
@@ -33,8 +35,8 @@ class TestPipInstalls(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Extract Python operators in toolkit"""
-        streamsx.scripts.extract.main(['-i', '../testtkpy_pip_op', '--make-toolkit'])
-        streamsx.scripts.extract.main(['-i', '../testtkpy_pip_toolkit', '--make-toolkit'])
+        stu._extract_tk('testtkpy_pip_op')
+        stu._extract_tk('testtkpy_pip_toolkit')
 
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
@@ -50,7 +52,7 @@ class TestPipInstalls(unittest.TestCase):
     def test_verify_operator_pip_install(self):
         """ Verify pint is installed by the operator module """
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy_pip_op')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy_pip_op'))
         s = topo.source(['a'])
         s = s.as_string()
 
@@ -64,7 +66,7 @@ class TestPipInstalls(unittest.TestCase):
     def test_verify_toolkit_pip_install(self):
         """ Verify pint is installed by requirements.txt in toolkit """
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy_pip_toolkit')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy_pip_toolkit'))
         s = topo.source(['a'])
         s = s.as_string()
 

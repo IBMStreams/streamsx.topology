@@ -4,14 +4,12 @@
  */
 package com.ibm.streamsx.topology.test.api;
 
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONFIG;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT_LOW_LATENCY_REGION_ID;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
-import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerId;
+import static com.ibm.streamsx.topology.logic.Logic.identity;
 import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerIdAppend;
 import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerIds;
+import static com.ibm.streamsx.topology.test.api.PlaceableTest.adlAssertColocated;
+import static com.ibm.streamsx.topology.test.api.PlaceableTest.adlAssertDefaultHostpool;
+import static com.ibm.streamsx.topology.test.api.PlaceableTest.produceADL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
@@ -24,18 +22,14 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
+import org.w3c.dom.Document;
 
-import com.google.gson.JsonObject;
 import com.ibm.streams.operator.PERuntime;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.context.StreamsContext;
-import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
-import com.ibm.streamsx.topology.generator.spl.SPLGenerator;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
@@ -44,72 +38,84 @@ import com.ibm.streamsx.topology.tester.Tester;
 public class LowLatencyTest extends TestTopology {
     @Test
     public void testSimpleLowLatency() throws Exception{
-        assumeTrue(SC_OK);
-        assumeTrue(isMainRun());
+        adlOk();
         
         Topology topology = newTopology();
 
         // Construct topology
         TStream<String> ss = topology.strings("hello");
-        TStream<String> ss1 = ss.transform(getContainerId()).lowLatency();
-        TStream<String> ss2 = ss1.transform(getContainerId()).endLowLatency();
-        ss2.print();
+        TStream<String> ss1 = ss.transform(identity()).invocationName("SS1").lowLatency();
+        TStream<String> ss2 = ss1.transform(identity()).invocationName("SS2").endLowLatency();
+        ss2.forEach(tuple->{});
         
-        StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT).submit(topology).get();
+        Document adl = produceADL(topology);
+        adlAssertDefaultHostpool(adl);
+        adlAssertColocated(adl, false, "SS1", "SS2");
     }
     
     @Test
     public void testMultipleRegionLowLatency() throws Exception{
-        assumeTrue(SC_OK);
-        assumeTrue(isMainRun());
+        adlOk();
         
         Topology topology = newTopology();
 
         // Construct topology
         TStream<String> ss = topology.strings("hello")
-                .transform(getContainerId()).transform(getContainerId());
+                .map(identity()).map(identity());
         
-        TStream<String> ss1 = ss.transform(getContainerId()).lowLatency();
-        TStream<String> ss2 = ss1.transform(getContainerId()).
-                transform(getContainerId()).endLowLatency().transform(getContainerId());
-        TStream<String> ss3 = ss2.transform(getContainerId()).lowLatency();
-        ss3.transform(getContainerId()).transform(getContainerId())
-            .endLowLatency().print();
+        TStream<String> ss1 = ss.map(identity()).invocationName("R1_A").lowLatency();
+        TStream<String> ss2 = ss1
+                .map(identity()).invocationName("R1_B")
+                .map(identity()).invocationName("R1_C")
+                .endLowLatency().map(identity());
         
-        StreamsContextFactory.getStreamsContext(StreamsContext.Type.TOOLKIT).submit(topology).get();
+        TStream<String> ss3 = ss2.map(identity()).invocationName("R2_X").lowLatency();
+        ss3.map(identity()).invocationName("R2_Y").map(identity()).invocationName("R2_Z")
+            .endLowLatency().forEach(tuple->{});
+        
+        Document adl = produceADL(topology);
+        adlAssertDefaultHostpool(adl);
+        adlAssertColocated(adl, false, "R1_A", "R1_B", "R1_C");
+        adlAssertColocated(adl, false, "R2_X", "R2_Y", "R2_Z");
     }
     
     @Test
-    public void testThreadedPort() throws Exception{
-        assumeTrue(isMainRun());
+    public void testUDPContainingLowLatency() throws Exception{
+        adlOk();
         
         Topology topology = newTopology();
 
         // Construct topology
-        TStream<String> ss = topology.strings("hello").lowLatency();
-        TStream<String> ss1 = ss.transform(getContainerId());
-        TStream<String> ss2 = ss1.transform(getContainerId()).endLowLatency();
+        TStream<String> ss = topology.strings("hello");
+        ss = ss.parallel(3);
+        TStream<String> ss1 = ss.map(identity()).invocationName("UDP_SS1").lowLatency();
+        ss1 = ss1.map(identity()).invocationName("UDP_SS2");
+        TStream<String> ss2 = ss1.map(identity()).invocationName("UDP_SS3").endLowLatency();
+        ss2 = ss2.endParallel();
+        ss2.forEach(tuple->{});
         
-        SPLGenerator generator = new SPLGenerator();
+        Document adl = produceADL(topology);
+        adlAssertDefaultHostpool(adl);
+        adlAssertColocated(adl, true, "UDP_SS1", "UDP_SS2", "UDP_SS3");
+    }
+    @Test
+    public void testUDPNextToLowLatency() throws Exception{
+        adlOk();
         
-        JsonObject ggraph = topology.builder()._complete();
-        generator.generateSPL(ggraph);
+        Topology topology = newTopology();
+
+        // Construct topology
+        TStream<String> ss = topology.strings("hello").invocationName("UDP_SRC");
+        ss = ss.parallel(3);
+        TStream<String> ss1 = ss.lowLatency();
+        ss1 = ss1.map(identity()).invocationName("UDP_SS1");
+        TStream<String> ss2 = ss1.map(identity()).invocationName("UDP_SS2").endLowLatency();
+        ss2 = ss2.endParallel();
+        ss2.forEach(tuple->{});
         
-        GsonUtilities.objectArray(ggraph , "operators", op -> {
-            String lowLatencyTag = null;
-            JsonObject placement = object(op, CONFIG, PLACEMENT);
-            if (placement != null)
-                lowLatencyTag = jstring(placement, PLACEMENT_LOW_LATENCY_REGION_ID);
-            String kind = jstring(op, "kind");
-            JsonObject queue = object(op, "queue");
-            if(queue != null && (lowLatencyTag == null || lowLatencyTag.equals(""))){
-                throw new IllegalStateException("Operator has threaded port when it shouldn't.");
-            }
-            if(queue != null 
-                    && kind.equals("com.ibm.streamsx.topology.functional.java::FunctionTransform")){
-                throw new IllegalStateException("Transform operator expecting threaded port; none found.");
-            }
-        });
+        Document adl = produceADL(topology);
+        adlAssertDefaultHostpool(adl);
+        adlAssertColocated(adl, true, "UDP_SS1", "UDP_SS2");
     }
     
     @Test
@@ -132,7 +138,7 @@ public class LowLatencyTest extends TestTopology {
         
         // assume that if s1.modify and the split().[modify()] are
         // in the same PE, that s1.split() is in the same too
-        TStream<String> s2 = s1.modify(unaryGetPEId());
+        TStream<String> s2 = s1.modify(unaryGetPEId()).endLowLatency();
         
         List<TStream<String>> splits = s1
                 .split(splitWidth, roundRobinSplitter());
@@ -242,6 +248,7 @@ public class LowLatencyTest extends TestTopology {
      */
     @Test
     public void testSameThread() throws Exception {
+        assumeTrue(SC_OK);
         final int tc = 2000;
         final Topology topology = newTopology("testSameThread");
         final Tester tester = topology.getTester();

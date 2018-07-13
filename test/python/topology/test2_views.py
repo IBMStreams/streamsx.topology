@@ -12,14 +12,11 @@ import streamsx.spl.op as op
 import streamsx.spl.types as spltypes
 import queue
 
-import test_vers
-
 def rands():
     r = random.Random()
     while True:
        yield r.random()
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestViews(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)
@@ -89,3 +86,7 @@ class TestViews(unittest.TestCase):
         tester.local_check = self._object_view
         tester.tuple_count(s, 1000)
         tester.test(self.test_ctxtype, self.test_config)
+
+class TestViewsCloud(TestViews):
+    def setUp(self):
+        Tester.setup_streaming_analytics(self, force_remote_build=True)

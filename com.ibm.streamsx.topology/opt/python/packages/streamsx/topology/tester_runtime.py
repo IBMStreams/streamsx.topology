@@ -29,9 +29,6 @@ import unittest
 import logging
 import collections
 import threading
-from streamsx.rest import StreamsConnection
-from streamsx.rest import StreamingAnalyticsConnection
-from streamsx.topology.context import ConfigParams
 import time
 
 class Condition(object):
@@ -86,9 +83,12 @@ class Condition(object):
     def __getstate__(self):
         # Remove metrics from saved state.
         state = self.__dict__.copy()
+        to_be_deleted = []
         for key in state:
             if key.startswith('_metric'):
-              del state[key]
+                to_be_deleted.append(key)
+        for key in to_be_deleted:
+            del state[key]
         return state
 
     def __setstate__(self, state):

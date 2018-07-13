@@ -12,20 +12,26 @@ from past.builtins import basestring
 import streamsx.ec as ec
 from streamsx.topology.schema import StreamSchema
 
-try:
-    import dill
-    # Importing cloudpickle break dill's deserialization.
-    # Workaround is to make dill aware of the ClassType type.
-    if sys.version_info.major == 3:
-        dill.dill._reverse_typemap['ClassType'] = type
-    dill.settings['recurse'] = True
-except ImportError:
-    dill = pickle
+import dill
+# Importing cloudpickle break dill's deserialization.
+# Workaround is to make dill aware of the ClassType type.
+if sys.version_info.major == 3:
+    if not 'dill._dill' in sys.modules:
+        sys.modules['dill._dill'] = dill.dill
+        dill._dill = dill.dill
+    dill._dill._reverse_typemap['ClassType'] = type
+    
+dill.settings['recurse'] = True
 
 import base64
 import json
 from pkgutil import extend_path
 import streamsx
+
+
+# Simple identity function used by map, flat_map as default function.
+def _identity(tuple_):
+    return tuple_
 
 
 def __splpy_addDirToPath(dir):
@@ -77,15 +83,6 @@ def _get_callable(f):
             return ci
     raise TypeError("Class is not callable" + str(type(ci)))
 
-def _verify_tuple(tuple_, attributes):
-    if isinstance(tuple_, tuple) or tuple_ is None:
-        return tuple_
-
-    if isinstance(tuple_, dict):
-        return tuple(tuple_.get(name, None) for name in attributes)
-   
-    raise TypeError("Function must return a tuple, dict or None:" + str(type(tuple_)))
-
 import inspect
 class _FunctionalCallable(object):
     def __init__(self, callable_, attributes=None):
@@ -103,6 +100,8 @@ class _FunctionalCallable(object):
                     self._callable._streamsx_ec_op = ec._get_opc(self._callable)
                 self._cls = True
                 ec._callable_enter(self._callable)
+                if hasattr(self._callable, '_splpy_entered'):
+                    self._splpy_entered = self._callable._splpy_entered
 
         ec._clear_opc()
 
@@ -112,9 +111,9 @@ class _FunctionalCallable(object):
         """
         return self._callable(tuple_)
 
-    def _splpy_shutdown(self):
+    def _splpy_shutdown(self, exc_type=None, exc_value=None, traceback=None):
         if self._cls:
-            ec._callable_exit_clean(self._callable)
+            return ec._callable_exit(self._callable, exc_type, exc_value, traceback)
 
 class _PickleInObjectOut(_FunctionalCallable):
     def __call__(self, tuple_, pm=None):
@@ -151,13 +150,11 @@ class _PickleInTupleOut(_FunctionalCallable):
     def __call__(self, tuple_, pm=None):
         if pm is not None:
             tuple_ = pickle.loads(tuple_)
-        rv =  self._callable(tuple_)
-        return _verify_tuple(rv, self._attributes)
+        return self._callable(tuple_)
 
 class _ObjectInTupleOut(_FunctionalCallable):
     def __call__(self, tuple_):
-        rv =  self._callable(tuple_)
-        return _verify_tuple(rv, self._attributes)
+        return self._callable(tuple_)
 
 class _ObjectInPickleOut(_FunctionalCallable):
     def __call__(self, tuple_):
@@ -204,8 +201,7 @@ class _JSONInStringOut(_FunctionalCallable):
 
 class _JSONInTupleOut(_FunctionalCallable):
     def __call__(self, tuple_):
-        rv = self._callable(json.loads(tuple_))
-        return _verify_tuple(rv, self._attributes)
+        return self._callable(json.loads(tuple_))
 
 
 class _JSONInJSONOut(_FunctionalCallable):
@@ -274,34 +270,46 @@ class _JSONInJSONOut(_FunctionalCallable):
 # Given a callable that returns an iterable
 # return a function that can be called
 # repeatably by a source operator returning
+#
 # the next tuple in its pickled form
-class _IterablePickleOut(_FunctionalCallable):
-    def __init__(self, callable, attributes=None):
-        super(_IterablePickleOut, self).__init__(callable, attributes)
-        self._it = iter(self._callable())
+# Set up iterator from the callable.
+# If an error occurs and __exit__ asks for it to be
+# ignored then an empty source is created.
+class _IterableAnyOut(_FunctionalCallable):
+    def __init__(self, callable_, attributes=None):
+        super(_IterableAnyOut, self).__init__(callable_, attributes)
+        try:
+            self._it = iter(self._callable())
+        except:
+            ei = sys.exc_info()
+            ignore = ec._callable_exit(self._callable, ei[0], ei[1], ei[2])
+            if not ignore:
+                raise ei[1]
+            # Ignored by nothing to do so use empty iterator
+            self._it = iter([])
 
     def __call__(self):
-        try:
-            while True:
-                tuple_ = next(self._it)
-                if not tuple_ is None:
-                    return pickle.dumps(tuple_)
-        except StopIteration:
-            return None
-
-class _IterableObjectOut(_FunctionalCallable):
-    def __init__(self, callable, attributes=None):
-        super(_IterableObjectOut, self).__init__(callable, attributes)
-        self._it = iter(self._callable())
-
-    def __call__(self):
-        try:
-            while True:
+        while True:
+            try:
                 tuple_ = next(self._it)
                 if not tuple_ is None:
                     return tuple_
-        except StopIteration:
-            return None
+            except StopIteration:
+                return None
+
+class _IterablePickleOut(_IterableAnyOut):
+    def __init__(self, callable, attributes=None):
+        super(_IterablePickleOut, self).__init__(callable, attributes)
+        self.pdfn = pickle.dumps
+
+    def __call__(self):
+        tuple_ = super(_IterablePickleOut, self).__call__()
+        if tuple_ is not None:
+            return self.pdfn(tuple_)
+        return tuple_
+
+class _IterableObjectOut(_IterableAnyOut):
+     pass
 
 # Iterator that wraps another iterator
 # to discard any values that are None
@@ -446,17 +454,17 @@ def _get_namedtuple_cls(schema, name):
 class _WrappedInstance(object):
     def __init__(self, callable_):
         self._callable = callable_
+        if not self._hasee():
+            self._splpy_entered = False
 
     def _hasee(self):
-        return hasattr(self._callable, '__enter__') and hasattr(self._callable, '__exit__')
+        return hasattr(type(self._callable), '__enter__') and hasattr(type(self._callable), '__exit__')
 
     def __enter__(self):
-        if self._hasee():
-            self._callable.__enter__()
+        self._callable.__enter__()
     
     def __exit__(self, exc_type, exc_value, traceback):
-        if self._hasee():
-            self._callable.__exit__(exc_type, exc_value, traceback)
+        return self._callable.__exit__(exc_type, exc_value, traceback)
 
 # Wraps an iterable instance returning
 # it when called. Allows an iterable
@@ -473,3 +481,58 @@ class _Callable(_WrappedInstance):
     def __call__(self, *args, **kwargs):
         return self._callable.__call__(*args, **kwargs)
 
+def _spl_boolean_to_bool(v):
+    return not v == 'false'
+
+class _SubmissionParam(object):
+    def __init__(self, name, default, type_):
+        self._name = name
+
+        if default is not None:
+            type_ = type(default)
+
+        if default is None and type_ is None:
+            type_ = None
+            self._spl_type = 'RSTRING'
+        elif isinstance(default, basestring):
+            type_ = None
+            self._spl_type = 'RSTRING'
+        elif isinstance(default, bool):
+            self._spl_type = 'BOOLEAN'
+        elif isinstance(default, int):
+            if default >= -2147483648 and default <= 2147483647:
+                self._spl_type = 'INT32'
+            else:
+                self._spl_type = 'INT64'
+        elif isinstance(default, float):
+            self._spl_type = 'FLOAT64'
+        elif type_ is str:
+            self._spl_type = 'RSTRING'
+        elif type_ is int:
+            self._spl_type = 'INT32'
+        elif type_ is float:
+            self._spl_type = 'FLOAT64'
+        elif type_ is bool:
+            self._spl_type = 'BOOLEAN'
+        else:
+            raise TypeError("Type {} not supported for submission parameter default value.".format(type_))
+
+        self._type = type_
+        self._default = default
+
+    def __call__(self):
+        sv =  ec._SUBMIT_PARAMS.get(self._name)
+        if sv is not None and self._type is not None:
+            if self._type is bool:
+                return _spl_boolean_to_bool(sv)
+            return self._type(sv)
+        return sv
+
+    def spl_json(self):
+        o = {'type': 'submissionParameter'}
+        v = {'name': self._name}
+        o['value'] = v
+        v['metaType'] = self._spl_type
+        if self._default is not None:
+            v['defaultValue'] = self._default
+        return o

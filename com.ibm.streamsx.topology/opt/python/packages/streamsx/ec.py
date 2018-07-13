@@ -16,7 +16,7 @@ A Streams application runs distributed or standalone.
 Distributed
 ===========
 Distributed is used when an application is submitted
-to the Streaming Analytics service on IBM Bluemix cloud platform
+to the Streaming Analytics service on IBM Cloud
 or a IBM Streams distributed instance.
 
 With distributed a running application is a `job` that
@@ -452,25 +452,40 @@ def _get_opc(obj):
              pass
         raise AssertionError("InternalError")
 
-def _shutdown_op(callable):
-    if hasattr(callable, '_splpy_shutdown'):
-        callable._splpy_shutdown()
+def _shutdown_op(callable_, exc_info=None):
+    if hasattr(callable_, '_splpy_shutdown'):
+        if exc_info is None:
+            return callable_._splpy_shutdown()
+        exc_type = exc_info[0]
+        exc_value = exc_info[1] if len(exc_info) >=2 else None
+        traceback = exc_info[2] if len(exc_info) >=3 else None
+        return callable_._splpy_shutdown(exc_type, exc_value, traceback)
+    return False
 
-def _callable_enter(callable):
+def _callable_enter(callable_):
     """Called at initialization time.
     """
-    if hasattr(callable, '__enter__') and hasattr(callable, '__exit__'):
-        callable.__enter__()
+    if hasattr(callable_, '_splpy_entered') and callable_._splpy_entered == False:
+        return
+    if hasattr(callable_, '__enter__') and hasattr(callable_, '__exit__'):
+        callable_.__enter__()
+        callable_._splpy_entered = True
 
-def _callable_exit_clean(callable):
+def _callable_exit(callable_, exc_type, exc_value, traceback):
     """Called at shutdown time.
+    Call the callable's __exit__ returning its return.
+    If no callable then return False to indicate the error should
+    be acted upon.
     """
-    if hasattr(callable, '__enter__') and hasattr(callable, '__exit__'):
-        callable.__exit__(None, None, None)
-
+    if hasattr(callable_, '_splpy_entered') and callable_._splpy_entered:
+        ignore = callable_.__exit__(exc_type, exc_value, traceback)
+        if (not ignore) or exc_type is None:
+            callable_._splpy_entered = False
+        return ignore
+    return False
+        
 def _submit(primitive, port_index, tuple_):
     """Internal method to submit a tuple"""
-    tuple_ = primitive._splpy_conv_fns[port_index](tuple_)
     args = (_get_opc(primitive), port_index, tuple_)
     _ec._submit(args)
 
@@ -495,24 +510,40 @@ class _AppHandler(logging.Handler):
         self._emit_to_streams((pylvl, record.getMessage(), aspects,
               record.funcName, record.filename, lineno))
 
-_ROOT_LOGGER = None
-_STREAMS_LOG = None
+# Hold onto loggers to ensure
+# our appender does not disappear
+_LOGGERS = {}
 
+# Ensure we setup each logger once only.
 def _setup():
     if _is_supported():
-        trc_lvl = _ec._app_trc_level()
-        # Python does not have the concept of OFF
-        if trc_lvl == 0:
-            trc_lvl = logging.CRITICAL
-        _ROOT_LOGGER = logging.getLogger()
-        _ROOT_LOGGER.addHandler(_AppHandler(trc_lvl, _ec._app_trc));
-        _ROOT_LOGGER.setLevel(trc_lvl)
+        trace = logging.getLogger()
+        if 'trace' not in _LOGGERS:
+            _LOGGERS['trace'] = trace
+            trc_lvl = _ec._app_trc_level()
+            # Python does not have the concept of OFF
+            if trc_lvl == 0:
+                trc_lvl = logging.CRITICAL
+            trace.addHandler(_AppHandler(trc_lvl, _ec._app_trc));
+            trace.setLevel(trc_lvl)
 
-        log_lvl = _ec._app_log_level()
-        # Python does not have the concept of OFF
-        if log_lvl == 0:
-            log_lvl = logging.CRITICAL
-        _STREAMS_LOG = logging.getLogger('com.ibm.streams.log')
-        _STREAMS_LOG.propagate = False
-        _STREAMS_LOG.addHandler(_AppHandler(log_lvl, _ec._app_log));
-        _STREAMS_LOG.setLevel(log_lvl)
+        log = logging.getLogger('com.ibm.streams.log')
+        if 'log' not in _LOGGERS:
+            _LOGGERS['log'] = log
+            log_lvl = _ec._app_log_level()
+            # Python does not have the concept of OFF
+            if log_lvl == 0:
+                log_lvl = logging.CRITICAL
+            log.propagate = False
+            log.addHandler(_AppHandler(log_lvl, _ec._app_log));
+            log.setLevel(log_lvl)
+
+
+_SUBMIT_PARAMS = dict()
+
+# Called from C++ Python functional operators to make
+# submission parameters visible to Python callables.
+# Each name and value are strings.
+def _set_submit_param(name, value):
+    if name not in _SUBMIT_PARAMS: 
+        _SUBMIT_PARAMS[name] = value

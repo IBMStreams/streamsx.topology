@@ -6,9 +6,6 @@ from streamsx import rest
 import os
 import fnmatch
 
-import test_vers
-
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestSubmissionResult(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)
@@ -20,6 +17,9 @@ class TestSubmissionResult(unittest.TestCase):
         json_job_id = self.tester.submission_result.jobId
         job_job_id = self.tester.submission_result.job.id
         self.assertEqual(json_job_id, job_job_id)
+
+    def _can_retrieve_logs(self):
+        self.can_retrieve_logs = hasattr(self.tester.submission_result.job, 'applicationLogTrace')
 
     def test_get_job(self):
         topo = Topology("job_in_result_test")
@@ -34,6 +34,54 @@ class TestSubmissionResult(unittest.TestCase):
 
         tester.local_check = self._correct_job_ids
         tester.test(self.test_ctxtype, config)
+
+    def test_fetch_logs_on_failure(self):
+        topo = Topology("fetch_logs_on_failure")
+        s = topo.source(["foo"])
+
+        tester = Tester(topo)
+        # Causes test to fail
+        tester.contents(s, ["bar"])
+
+        try:
+            self.tester = tester
+            tester.local_check = self._can_retrieve_logs
+            tester.test(self.test_ctxtype, self.test_config)
+        except AssertionError:
+            # This test is expected to fail, do nothing.
+            pass
+
+        # Check if logs were downloaded
+        if self.can_retrieve_logs:
+            logs = tester.result['application_logs']
+            exists = os.path.isfile(logs)
+            
+            self.assertTrue(exists, "Application logs were not downloaded on test failure")
+            
+            if exists:
+                os.remove(logs)
+
+    def test_always_fetch_logs(self):
+        topo = Topology("always_fetch_logs")
+        s = topo.source(["foo"])
+
+        tester = Tester(topo)
+        tester.contents(s, ["foo"])
+
+        self.tester = tester
+        tester.local_check = self._can_retrieve_logs
+        tester.test(self.test_ctxtype, self.test_config, always_collect_logs=True)
+
+        if self.can_retrieve_logs:
+            # streams version is >= 4.2.4. Fetching logs is supported.
+            # Check if logs were downloaded
+            logs = tester.result['application_logs']
+            exists = os.path.isfile(logs)
+
+            self.assertTrue(exists, "Application logs were not downloaded on test success")
+            
+            if exists:
+                os.remove(logs)                            
 
 
 class TestSubmissionResultStreamingAnalytics(TestSubmissionResult):
@@ -63,46 +111,3 @@ class TestSubmissionResultStreamingAnalytics(TestSubmissionResult):
         self.assertTrue(m['totalBuildTime_ms'] > 0)
         self.assertTrue(m['jobSubmissionTime_ms'] > 0)
 
-    def test_fetch_logs_on_failure(self):
-        topo = Topology("fetch_logs_on_failure")
-        s = topo.source(["foo"])
-
-        tester = Tester(topo)
-        # Causes test to fail
-        tester.contents(s, ["bar"])
-
-        try:
-            tester.test(self.test_ctxtype, self.test_config)
-        except AssertionError:
-            # This test is expected to fail, do nothing.
-            pass
-
-        # Check if logs were downloaded
-        logs = tester.result['application_logs']
-        exists = os.path.isfile(logs)
-
-        self.assertTrue(exists, "Application logs were not downloaded on test failure")
-
-        if exists:
-            os.remove(logs)
-
-    def test_always_fetch_logs(self):
-        topo = Topology("always_fetch_logs")
-        s = topo.source(["foo"])
-
-        tester = Tester(topo)
-        tester.contents(s, ["foo"])
-
-        tester.test(self.test_ctxtype, self.test_config, always_collect_logs=True)
-
-        # Check if logs were downloaded
-        logs = tester.result['application_logs']
-        exists = os.path.isfile(logs)
-
-        self.assertTrue(exists, "Application logs were not downloaded on test success")
-
-        if exists:
-            os.remove(logs)
-
-            
-                

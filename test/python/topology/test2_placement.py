@@ -19,8 +19,6 @@ from streamsx import rest
 from streamsx.rest_primitives import _IAMConstants
 from streamsx.spl.op import Source
 
-import test_vers
-
 def host_name():
     return [socket.gethostname()]
 
@@ -36,7 +34,6 @@ class RemoveDup(object):
          return t
 
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestPlacement(unittest.TestCase):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)

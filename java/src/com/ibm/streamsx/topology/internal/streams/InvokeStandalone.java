@@ -51,29 +51,22 @@ public class InvokeStandalone {
         commands.add(jvm.getAbsolutePath());
         commands.add("-jar");
         commands.add(bundle.getAbsolutePath());
-        Level traceLevel = jc.getTracing();
+        String traceLevel = jc.getStreamsTracing();
         if (traceLevel != null) {
             commands.add("-t");
 
             // -t, --trace-level=INT Trace level: 0 - OFF, 1 - ERROR, 2 - WARN,
             // 3 - INFO, 4 - DEBUG, 5 - TRACE.
-            
-            int tli = traceLevel.intValue();
-            String tls;
-            if (tli == Level.OFF.intValue())
-                tls = "0";
-            else if (tli == Level.ALL.intValue())
-                tls = "5";
-            else if (tli >= Level.SEVERE.intValue())
-                tls = "1";
-            else if (tli >= Level.WARNING.intValue())
-                tls = "2";
-            else if (tli >= Level.INFO.intValue())
-                tls = "3";
-            else if (tli >= Level.FINE.intValue())
-                tls = "4";
-            else
-                tls = "5";
+            final String tls;
+            switch (traceLevel) {
+                case "off": tls = "0"; break;
+                default:
+                case "error": tls = "1"; break;
+                case "warn":  tls = "2"; break;
+                case "info":  tls = "3"; break;
+                case "debug": tls = "4"; break;
+                case "trace": tls = "5"; break;
+            }
             commands.add(tls);
         }
         if (jc.hasSubmissionParameters()) {

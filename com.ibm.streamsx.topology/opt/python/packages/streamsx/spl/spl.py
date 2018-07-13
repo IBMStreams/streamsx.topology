@@ -141,6 +141,13 @@ Example of using ``__enter__`` and ``__exit__`` to open and close a file::
         def __call__(self):
             pass
 
+When an instance defines a valid ``__exit__`` method then it will be called with an exception when:
+
+ * the instance raises an exception during processing of a tuple
+ * a data conversion exception is raised converting a Python value to an SPL tuple or attribute
+
+If ``__exit__`` returns a true value then the exception is suppressed and processing continues, otherwise the enclosing processing element will be terminated.
+
 Application log and trace
 =========================
 
@@ -466,8 +473,12 @@ in the SPL tuple::
     # z is set to: x+y
 
 The returned tuple may be *sparse*, any attribute value in the tuple
-that is ``None`` will be set to their SPL default or copied from the
-input tuple, depending on the operator kind::
+that is ``None`` will be set to their SPL default or copied from
+a matching attribute in the input tuple
+(same name and type,
+or same name and same type as the underlying type of an output attribute
+with an optional type),
+depending on the operator kind::
     
     # SPL input schema: tuple<int32 x, float64 y>
     # SPL output schema: tuple<int32 x, float64 y, float32 z>
@@ -480,10 +491,14 @@ input tuple, depending on the operator kind::
     # y is set to: y (set by matching input SPL attribute)
     # z is set to: x+y
 
-When a returned tuple has less values than attributes in the SPL output
+When a returned tuple has fewer values than attributes in the SPL output
 schema the attributes not set by the Python function will be set
-to their SPL default or copied from the input tuple, depending on
-the operator kind::
+to their SPL default or copied from
+a matching attribute in the input tuple
+(same name and type,
+or same name and same type as the underlying type of an output attribute
+with an optional type),
+depending on the operator kind::
     
     # SPL input schema: tuple<int32 x, float64 y>
     # SPL output schema: tuple<int32 x, float64 y, float32 z>
@@ -519,13 +534,16 @@ Python dictionary
 A Python dictionary is converted to an SPL tuple for submission to
 the associated output port. An SPL attribute is set from the
 dictionary if the dictionary contains a key equal to the attribute
-name. The value is used to set the attribute, unless the attribute is
+name. The value is used to set the attribute, unless the value is
 ``None``.
 
-If the value in the dictionary is ``None`` or no matching key exists
-then the attribute value is set from a mathing (name and type)
-attribute in the input tuple or to its
-default value depending on the operator kind.
+If the value in the dictionary is ``None``, or no matching key exists,
+then the attribute value is set to its SPL default or copied from
+a matching attribute in the input tuple
+(same name and type,
+or same name and same type as the underlying type of an output attribute
+with an optional type),
+depending on the operator kind::
 
 Any keys in the dictionary that do not map to SPL attribute names are ignored.
     
@@ -551,6 +569,7 @@ import inspect
 import re
 import sys
 import streamsx.ec as ec
+import importlib
 
 ############################################
 # setup for function inspection
@@ -562,6 +581,14 @@ elif sys.version_info.major == 2:
 else:
   raise ValueError("Python version not supported.")
 ############################################
+
+# Used to recreate instances of decorated operators
+# from their module & class name during pickleling (dill)
+# See __reduce__ implementation below
+def _recreate_op(op_module, op_name):
+    module_ = importlib.import_module(op_module)
+    class_ = getattr(module_, op_name)
+    return class_.__new__(class_)
 
 _OperatorType = Enum('_OperatorType', 'Ignore Source Sink Pipe Filter Primitive')
 _OperatorType.Source.spl_template = 'PythonFunctionSource'
@@ -631,8 +658,17 @@ def _wrapforsplop(optype, wrapped, style, docpy):
                     ec._save_opc(self)
                 ec._callable_enter(self)
 
-            def _splpy_shutdown(self):
-                ec._callable_exit_clean(self)
+            # Use reduce to save the state of the class and its
+            # module and operator name.
+            def __reduce__(self):
+                if hasattr(self, '__getstate__'):
+                    state = self.__getstate__()
+                else:
+                    state = self.__dict__
+                return _recreate_op, (wrapped.__module__, wrapped.__name__), state
+
+            def _splpy_shutdown(self, exc_type=None, exc_value=None, traceback=None):
+                return ec._callable_exit(self, exc_type, exc_value, traceback)
 
         if optype in (_OperatorType.Sink, _OperatorType.Pipe, _OperatorType.Filter):
             _op_class._splpy_style = _define_style(wrapped, wrapped.__call__, style)
@@ -810,6 +846,26 @@ class source(object):
 
     Args:
        docpy: Copy Python docstrings into SPL operator model for SPLDOC.
+
+    Exceptions raised by ``__iter__`` and ``__next__`` can be suppressed
+    when this decorator wraps a class with context manager
+    ``__enter__`` and ``__exit__`` methods.
+
+    If ``__exit__`` returns a true value when called with an exception 
+    then the exception is suppressed.
+
+    Suppressing an exception raised by ``__iter__`` results in the
+    source producing an empty iteration. No tuples will be submitted.
+
+    Suppressing an exception raised by ``__next__`` results in the
+    source not producing any tuples for that invocation. Processing
+    continues with a call to ``__next__``.
+
+    Data conversion errors of the value returned by ``__next__`` can
+    also be suppressed by ``__exit__``.
+    If ``__exit__`` returns a true value when called with the exception 
+    then the exception is suppressed and the value that caused the
+    exception is not submitted as an SPL tuple.
     """
     def __init__(self, docpy=True):
         self.style = None
@@ -850,6 +906,18 @@ class map(object):
     Args:
        style: How the SPL tuple is passed into Python callable or function, see  :ref:`spl-tuple-to-python`.
        docpy: Copy Python docstrings into SPL operator model for SPLDOC.
+
+    Exceptions raised by ``__call__`` can be suppressed when this decorator
+    wraps a class with context manager ``__enter__`` and ``__exit__`` methods.
+    If ``__exit__`` returns a true value when called with the exception 
+    then the exception is suppressed and the tuple that caused the
+    exception is dropped.
+
+    Data conversion errors of the value returned by ``__call__`` can
+    also be suppressed by ``__exit__``.
+    If ``__exit__`` returns a true value when called with the exception 
+    then the exception is suppressed and the value that caused the
+    exception is not submitted as an SPL tuple.
     """
     def __init__(self, style=None, docpy=True):
         self.style = style
@@ -898,6 +966,12 @@ class filter(object):
               attr: "voltage";
               threshold: 225.0;
         }
+
+    Exceptions raised by ``__call__`` can be suppressed when this decorator
+    wraps a class with context manager ``__enter__`` and ``__exit__`` methods.
+    If ``__exit__`` returns a true value when called with the exception 
+    then the expression is suppressed and the tuple that caused the
+    exception is dropped.
     """
     def __init__(self, style=None, docpy=True):
         self.style = style
@@ -962,6 +1036,12 @@ class for_each(object):
     Args:
        style: How the SPL tuple is passed into Python callable, see  :ref:`spl-tuple-to-python`.
        docpy: Copy Python docstrings into SPL operator model for SPLDOC.
+
+    Exceptions raised by ``__call__`` can be suppressed when this decorator
+    wraps a class with context manager ``__enter__`` and ``__exit__`` methods.
+    If ``__exit__`` returns a true value when called with the exception 
+    then the expression is suppressed and the tuple that caused the
+    exception is ignored.
     """
     def __init__(self, style=None, docpy=True):
         self.style = style

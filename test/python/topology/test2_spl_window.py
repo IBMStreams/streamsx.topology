@@ -5,8 +5,6 @@ import sys
 import itertools
 import threading
 
-import test_vers
-
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology import schema
@@ -14,7 +12,6 @@ import streamsx.topology.context
 import streamsx.spl.op as op
 
 
-@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestSPLWindow(unittest.TestCase):
     """ Test invocations of SPL operators from Python topology.
     """

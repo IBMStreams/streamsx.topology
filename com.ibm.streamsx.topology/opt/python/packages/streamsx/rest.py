@@ -13,23 +13,18 @@ The Streams REST API provides programmatic access to configuration and status in
 
 :py:class:`StreamsConnection` is the entry point to using the Streams REST API
 from Python. Through its functions and the returned objects status information
-can be obtained for items such as :py:class:`instances <.rest_primitives.Instance>` and
-:py:class:`jobs <.rest_primitives.Job>`.
+can be obtained for items such as :py:class:`instances <.rest_primitives.Instance>` and :py:class:`jobs <.rest_primitives.Job>`.
 
 ****************************
 Streaming Analytics REST API
 ****************************
 
-You can use the Streaming Analytics REST API to manage your service instance and the IBM Streams jobs that are running on the instance. The Streaming Analytics REST API is accessible from the Bluemix applications that are bound to your service instance or from an application outside of Bluemix that is configured with the service instance VCAP information.
+You can use the Streaming Analytics REST API to manage your service instance and the IBM Streams jobs that are running on the instance. The Streaming Analytics REST API is accessible from IBM Cloud applications that are bound to your service instance or from an application outside of IBM Cloud that is configured with the service instance VCAP information.
 
 :py:class:`StreamingAnalyticsConnection` is the entry point to using the
-Streaming Analytics REST API. The function :py:func:`~StreamingAnalyticsConnection.get_streaming_analytics` returns a :py:class:`~.rest_primitives.StreamingAnalyticsService` instance which is the wrapper around the Streaming Analytics REST API. This API allows functions such as
-:py:meth:`start <streamsx.rest_primitives.StreamingAnalyticsService.start_instance>`
-and 
-:py:meth:`stop <streamsx.rest_primitives.StreamingAnalyticsService.stop_instance>`
-the service instance.
+Streaming Analytics REST API. The function :py:func:`~StreamingAnalyticsConnection.get_streaming_analytics` returns a :py:class:`~.rest_primitives.StreamingAnalyticsService` instance which is the wrapper around the Streaming Analytics REST API. This API allows functions such as :py:meth:`start <streamsx.rest_primitives.StreamingAnalyticsService.start_instance>` and :py:meth:`stop <streamsx.rest_primitives.StreamingAnalyticsService.stop_instance>` the service instance.
 
-In addtion `StreamingAnalyticsConnection` extends from :py:class:`StreamsConnection` and thus provides access to the Streams REST API for the service instance.
+In addition `StreamingAnalyticsConnection` extends from :py:class:`StreamsConnection` and thus provides access to the Streams REST API for the service instance.
 
 .. seealso::
     `IBM Streams REST API overview <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.0/com.ibm.streams.restapi.doc/doc/restapis.html>`_
@@ -37,6 +32,7 @@ In addtion `StreamingAnalyticsConnection` extends from :py:class:`StreamsConnect
     `Streaming Analytics REST API <https://console.ng.bluemix.net/apidocs/220-streaming-analytics?&language=node#introduction>`_
         Reference documentation for the Streaming Analytics service REST API.
 
+.. seealso:: :ref:`sas-main`
 """
 from future.builtins import *
 
@@ -48,7 +44,7 @@ from pprint import pformat
 import streamsx.topology.context
 
 from streamsx import st
-from .rest_primitives import (Domain, Instance, Installation, Resource, _StreamsRestClient, StreamingAnalyticsService,
+from .rest_primitives import (Domain, Instance, Installation, RestResource, _StreamsRestClient, StreamingAnalyticsService,
     _exact_resource, _IAMStreamsRestClient, _IAMConstants)
 
 logger = logging.getLogger('streamsx.rest')
@@ -97,7 +93,7 @@ class StreamsConnection:
             username = os.getenv("STREAMS_USERNAME", "streamsadmin")
             password = os.getenv("STREAMS_PASSWORD", "passw0rd")
         else:
-            raise ValueError("Must supply either a Bluemix VCAP Services or a username, password"
+            raise ValueError("Must supply either a IBM Cloud VCAP Services or a username, password"
                              " to the StreamsConnection constructor.")
 
         self._resource_url = resource_url
@@ -185,13 +181,13 @@ class StreamsConnection:
         return self._get_elements('installations', Installation)
 
     def get_resources(self):
-        """Retrieves a list of all known Streams resources.
+        """Retrieves a list of all known Streams high-level REST resources.
 
         Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives.Resource`: List of all Streams resources.
+            :py:obj:`list` of :py:class:`~.rest_primitives.RestResource`: List of all Streams high-level REST resources.
         """
         json_resources = self.rest_client.make_request(self.resource_url)['resources']
-        return [Resource(resource, self.rest_client) for resource in json_resources]
+        return [RestResource(resource, self.rest_client) for resource in json_resources]
 
     def __str__(self):
         return pformat(self.__dict__)
@@ -212,6 +208,8 @@ class StreamingAnalyticsConnection(StreamsConnection):
         >>> sc = StreamingAnalyticsConnection(service_name='Streaming-Analytics')
         >>> print(sc.get_streaming_analytics().get_instance_status())
         {'plan': 'Standard', 'state': 'STARTED', 'enabled': True, 'status': 'running'}
+
+    .. seealso: :ref:`sas-access`
     """
     def __init__(self, vcap_services=None, service_name=None):
         self.service_name = service_name or os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME')
@@ -223,7 +221,7 @@ class StreamingAnalyticsConnection(StreamsConnection):
             self._iam = True
 
         if self._iam:
-            self.rest_client = _IAMStreamsRestClient(self.credentials)
+            self.rest_client = _IAMStreamsRestClient._create(self.credentials)
         else:
             self.rest_client = _StreamsRestClient(self.credentials['userid'], self.credentials['password'])
         self.rest_client._sc = self

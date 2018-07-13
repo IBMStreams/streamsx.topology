@@ -14,8 +14,6 @@ from streamsx.topology.tester import Tester
 import streamsx.ec as ec
 import streamsx.spl.op as op
 
-import test_vers
-
 class AddChannel(object):
     def __init__(self):
         pass
@@ -50,9 +48,8 @@ def stupid_hash(v):
     return hash(v+89)
 
 def s2_hash(t):
-    return t['s2']
+    return hash(t['s2'])
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestUDP(unittest.TestCase):
 
   # Fake out subTest
@@ -61,6 +58,51 @@ class TestUDP(unittest.TestCase):
 
   def setUp(self):
       Tester.setup_standalone(self)
+
+  def test_TopologyNestedParallel(self):
+      topo = Topology("test_TopologySetParallel")
+      s = topo.source([1])
+      s = s.parallel(5, routing=Routing.BROADCAST)
+      s = s.parallel(5, routing=Routing.BROADCAST)
+      s = s.map(lambda x: x)
+      s = s.end_parallel()
+      s = s.end_parallel()
+      s.print()
+      
+      tester = Tester(topo)
+      tester.contents(s, [1 for i in range(25)])
+      tester.test(self.test_ctxtype, self.test_config)
+      print(tester.result)
+
+  def test_TopologySetParallel(self):
+      topo = Topology("test_TopologySetParallel")
+      s = topo.source([1])
+      s.set_parallel(5)
+      s = s.end_parallel()
+      
+      tester = Tester(topo)
+      tester.contents(s, [1,1,1,1,1])
+      tester.test(self.test_ctxtype, self.test_config)
+      print(tester.result)
+
+  def test_TopologyMultiSetParallel(self):
+      topo = Topology("test_TopologyMultiSetParallel")
+
+      s = topo.source([1])
+      s.set_parallel(5)
+
+      s2 = topo.source([2])
+      s2.set_parallel(5)
+
+      s = s.union({s2})
+      # #1750 ensure we are not depending on last op
+      o = topo.source([2])
+      s = s.end_parallel()
+      
+      tester = Tester(topo)
+      tester.contents(s, [1,1,1,1,1,2,2,2,2,2], ordered=False)
+      tester.test(self.test_ctxtype, self.test_config)
+      print(tester.result)
 
   def test_TopologyParallelRoundRobin(self):
       for width in (1,3):
@@ -177,12 +219,10 @@ class TestUDP(unittest.TestCase):
               tester.test(self.test_ctxtype, self.test_config)
               print(tester.result)
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestDistributedUDP(TestUDP):
   def setUp(self):
       Tester.setup_distributed(self)
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestBluemixUDP(TestUDP):
   def setUp(self):
       Tester.setup_streaming_analytics(self, force_remote_build=True)

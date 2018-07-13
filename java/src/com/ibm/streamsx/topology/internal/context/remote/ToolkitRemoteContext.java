@@ -30,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
@@ -174,10 +175,12 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
     private void generateSPL(File toolkitRoot, JsonObject jsonGraph)
             throws IOException {
 
-        // Create the SPL file, and save a copy of the JSON file.
-        SPLGenerator generator = new SPLGenerator();
-        createNamespaceFile(toolkitRoot, jsonGraph, "spl", generator.generateSPL(jsonGraph));
+        // Save a copy of the input JSON file.
         createNamespaceFile(toolkitRoot, jsonGraph, "json", jsonGraph.toString());
+        
+        // Create the SPL file
+        SPLGenerator generator = new SPLGenerator();        
+        createNamespaceFile(toolkitRoot, jsonGraph, "spl", generator.generateSPL(jsonGraph));      
     }
     
     private void createNamespaceFile(File toolkitRoot, JsonObject json, String suffix, String content)
@@ -301,10 +304,16 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
                     copyDirectoryToDirectory(srcFile, targetDir);
             }
             // Create a jar from a classes directory.
-            if (inc.has("classes")) {
+            else if (inc.has("classes")) {
                 String classes = jstring(inc, "classes");
                 String name = jstring(inc, "name");
                 createJarFile(classes, name, targetDir);
+            }
+            // Create a file from the contents in the file.
+            else if (inc.has("contents")) {
+                byte[] contents = jstring(inc, "contents").getBytes(StandardCharsets.UTF_8);
+                Path targetFile = new File(targetDir, jstring(inc, "name")).toPath();
+                Files.write(targetFile, contents);
             }
         }
     }

@@ -21,7 +21,7 @@ def splNamespace():
     return "453535351&%$="
 
 #
-# Returns a value matching the test schema TEST_ALL_PYTHON_TYPES
+# Returns a value matching the test schema ALL_PYTHON_TYPES_SCHEMA
 @spl.source()
 class SpecificValues(object):
     def __init__(self):

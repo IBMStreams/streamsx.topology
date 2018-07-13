@@ -1,5 +1,16 @@
 ## Development of streamsx.topology project
 
+### Workflow
+
+The recommended workflow is forking workflow.
+https://www.atlassian.com/git/tutorials/comparing-workflows/forking-workflow
+
+Fork this repository and develop in feature branches in your fork. When ready, sumbmit a pull request against the target branch.
+
+**Please do not use of short-lived temporary development branches in the main IBMStreams/streamsx.topology repo**
+If a need does occur, please ensure the branch is deleted once merged.
+The main repo should only contain `master`, release branches (`vX_Y`)and shared development feature branches (`feature/xxx`).
+
 ### Setup
 
 Once you have forked the repository and created your local clone you need to download
@@ -63,18 +74,18 @@ ant unittest.distributed
 ```
 This requires that your environment is setup so that `streamtool submitjob` submit jobs to an instance without requiring any authentication. This is the case for the [Streams Quicksttart VM image](http://www-01.ibm.com/software/data/infosphere/stream-computing/trials.html).
 
-### IBM Bluemix Streaming Analytics service testing
+### IBM Cloud Streaming Analytics service testing
 
 Tests are run against the service if these environment variables are set:
 
-* `topology_test_vcap_services` - File containing JSON VCAP services
-* `topology_test_vcap_service_name` - Name of Streaming Analytics service to use
+* `VCAP_SERVICES` - File containing JSON VCAP services
+* `STREAMING_ANALYTICS_SERVICE_NAME` - Name of Streaming Analytics service to use
 
 e.g.
 
 ```
-export topology_test_vcap_services=$HOME/vcap/my_vcap
-export topology_test_vcap_service_name=debrunne-streams2
+export VCAP_SERVICES=$HOME/vcap/my_vcap
+export STREAMING_ANALYTICS_SERVICE_NAME=debrunne-streams2
 ```
 
 The tests are run with this target:
@@ -154,3 +165,22 @@ Container types such as lists and dictionaries can use the following syntax:
 ```
 
 The `__init__` method should be documented on the `__init__` method itself (not in the class level docstring).  This results in better rendering for the builtin help() function. 
+
+## Proposing changes
+Please submit changes through a pull request (PR), typically against `master` or a feature branch.
+
+For a pull request:
+
+ * **Restrict to a single issue**, this speeds up acceptance and makes it easier to merge across release branches if needed.
+    * Don't lump several unrelated fixes/features into a single PR
+    * Don't fix/change formatting in unrelated code in the same PR
+    * Don't fix unrelated documentation/comments in the same PR
+    * Propose such unrelated fixes in new PRs, it's git, branches are cheap.
+    * If unsure if something is related, just ask!
+ * Features and defect fixes are typically associated with an issue.
+    * For a defect, create an issue that describes the problem as its summary (not the fix).
+ * Describe what changes you made in the PR summary (or indirectly in the associated issue)
+    * Help out reviewers with explanations, don't make them have to make assumuptions to review the code.
+ * Describe what tests were run.
+ 
+ It's recommended that you use branches for your development, modifying the target branch (e.g. `master` or the feature branch) directly (even locally in the clone) is not recommended, as multiple changes by other developers may be made to the official copy before you have a chance to merge.  

@@ -13,8 +13,6 @@ from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 import streamsx.ec as ec
 
-import test_vers
-
 def _trc_msg_direct(level):
     atm = (level, "direct _ec message:" + str(level*77), "A1,B2,python", "MyFile.py", "MyFunc", 4242)
     import _streamsx_ec
@@ -113,7 +111,6 @@ def get_sys_argv():
     import sys as sys_ec_test
     return sys_ec_test.argv
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestEc(unittest.TestCase):
 
   def setUp(self):
@@ -192,12 +189,10 @@ class TestEc(unittest.TestCase):
       tester.tuple_count(s, 2)
       tester.test(self.test_ctxtype, self.test_config)
       
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestDistributedEc(TestEc):
   def setUp(self):
       Tester.setup_distributed(self)
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestBluemixEc(TestEc):
   def setUp(self):
       Tester.setup_streaming_analytics(self, force_remote_build=True)

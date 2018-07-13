@@ -3,7 +3,7 @@
         Common definitions for streamsx.topology
     </description>
 
-  <property name="streamsx.topology.version" value="1.7"/>
+  <property name="streamsx.topology.version" value="1.10"/>
 
   <dirname property="streamsx.topology" file="${ant.file.streamsx.topology.common}"/>
 
@@ -40,7 +40,7 @@
     <pathelement location="${streams.install}/ext/lib/JSON4J.jar" />
   </path>
   <path id="httpclient.classpath">
-        <fileset dir="${tk.opt}/client/httpcomponents-client-4.3.6/lib">
+        <fileset dir="${tk.opt}/client/httpcomponents-client-4.5.2/lib">
            <include name="*.jar" />
         </fileset>
   </path>

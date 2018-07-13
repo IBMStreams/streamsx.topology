@@ -27,6 +27,7 @@ import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameterFactory;
 import com.ibm.streamsx.topology.internal.functional.SPLTypes;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 
 /**
  * JSON representation.
@@ -78,7 +79,7 @@ public class BOperatorInvocation extends BOperator {
     public void setParameter(String name, Object value) {
         
         if (value == null)
-            throw new IllegalStateException("NULL PARAM:" + name);
+            throw new IllegalStateException(Messages.getString("BUILDER_NULL_PARAM", name));
                 
         if (value instanceof SubmissionParameter) {
             JsonObject svp = SubmissionParameterFactory.asJSON((SubmissionParameter<?>) value);
@@ -97,7 +98,7 @@ public class BOperatorInvocation extends BOperator {
         if (value instanceof JsonObject) {
             JsonObject jo = ((JsonObject) value);
             if (!jo.has("type") || !jo.has("value"))
-                throw new IllegalArgumentException("Illegal JSON object " + jo);
+                throw new IllegalArgumentException(Messages.getString("BUILDER_ILLEGAL_JSON_OBJECT", jo));
             String type = jstring(jo, "type");
             if ("__spl_value".equals(type)) {
                 /*
@@ -106,7 +107,7 @@ public class BOperatorInvocation extends BOperator {
                  * object {
                  *   type : "__spl_value"
                  *   value : object {
-                 *     value : any. non-null. type appropriate for metaType
+                 *     value : any. non-null. value appropriate for metaType
                  *     metaType : com.ibm.streams.operator.Type.MetaType.name() string
                  *   }
                  * }
@@ -175,12 +176,22 @@ public class BOperatorInvocation extends BOperator {
         } else if (value instanceof JsonElement) {
             assert jsonType != null;
         } else {
-            throw new IllegalArgumentException("Type for parameter " + name + " is not supported:" +  value.getClass());
+            throw new IllegalArgumentException(Messages.getString("BUILDER_TYPE_OF_PARAMER_NOT_SUPPORTED", name, value.getClass()));
         }
         
         JsonObject param = JParamTypes.create(jsonType, jsonValue);
         
         jparams.add(name, param);
+    }
+    
+    /**
+     * Get the raw value for a parameter for this operator invocation.
+     * @return Json representation of parameter or null if the parameter is not set.
+     */
+    public JsonObject getRawParameter(String name) {
+        if (jparams.has(name))
+            return jparams.getAsJsonObject(name);
+        return null;             
     }
 
     public BOutputPort addOutput(String schema) {
@@ -192,20 +203,31 @@ public class BOperatorInvocation extends BOperator {
         if (outputs == null)
             outputs = new HashMap<>();
         
-        String _name;
+        String portName;
         if (name.isPresent())
-            _name = name.get();
-        else
-            _name = this.name() + "_OUT" + outputs.size();
+            portName = name.get();
+        else {
+            portName = this.name() + "_OUT" + outputs.size();
+            // Just in case the resultant name does clash with an operator name.
+            portName = builder().userSuppliedName(portName);
+        }
         
         final BOutputPort stream = new BOutputPort(this, outputs.size(),
-                _name,
+                portName,
                 schema);
         assert !outputs.containsKey(stream.name());
         outputs.put(stream.name(), stream);
         return stream;
     }
 
+    /**
+     * Each input port has a unique generated name to ensure connections
+     * are tracked correctly. However the port is not assigned
+     * that name during SPL generation, instead taking the name
+     * from its connected output stream (and the first if there
+     * are multiple). The port may also have an alias which
+     * will be used as the port alias (local to the operator).
+     */
     public BInputPort inputFrom(BOutput output, BInputPort input) {
         if (input != null) {
             assert input.operator() == this;
@@ -217,8 +239,15 @@ public class BOperatorInvocation extends BOperator {
         if (inputs == null) {
             inputs = new ArrayList<>();
         }
+        
+        // The operator name is unique so most likely
+        // adding a port specific suffix creates a unique port name.
+        String portName = name() + "_IN" + inputs.size();
+        
+        // Just in case the resultant name does clash with an operator name.
+        portName = builder().userSuppliedName(portName);
 
-        input = new BInputPort(this, inputs.size(), name() + "_IN" + inputs.size(), output._type());
+        input = new BInputPort(this, inputs.size(), portName, output._type());
         inputs.add(input);
         output.connectTo(input);
 

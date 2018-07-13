@@ -12,9 +12,6 @@ from streamsx import rest
 import streamsx.ec as ec
 
 
-import test_vers
-
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestUnicode(unittest.TestCase):
     def setUp(self):
         Tester.setup_standalone(self)
@@ -71,7 +68,6 @@ class TestUnicode(unittest.TestCase):
         self.assertIn(u"®®®®", view_names)
         self.assertIn(u"™¬⊕⇔", view_names)
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestDistributedUnicode(TestUnicode):
     def setUp(self):
         Tester.setup_distributed(self)
@@ -86,7 +82,6 @@ class TestDistributedUnicode(TestUnicode):
         self.sc.session.verify = False
         self.test_config[ConfigParams.STREAMS_CONNECTION] = self.sc
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestBluemixUnicode(TestUnicode):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
