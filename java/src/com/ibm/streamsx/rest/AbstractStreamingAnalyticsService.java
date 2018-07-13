@@ -6,6 +6,8 @@
 package com.ibm.streamsx.rest;
 
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.getSPLCompatibleName;
+import static com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys.CONSOLE_APPLICATION_JOB_URL;
+import static com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys.CONSOLE_APPLICATION_URL;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
@@ -269,9 +271,20 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         }
     }
     
+    /**
+     * Add any required Streams console URLs into the result.
+     */
     private Result<Job,JsonObject> addConsoleURLs(final Result<Job,JsonObject> result) throws IOException {
-        result.getRawResult().addProperty(SubmissionResultsKeys.CONSOLE_APPLICATION_URL,
-                getInstance().getApplicationConsoleURL());
+        
+        final JsonObject json = result.getRawResult();
+        
+        final String appUrl = getInstance().getApplicationConsoleURL();
+        json.addProperty(CONSOLE_APPLICATION_URL, appUrl);
+        
+        String jobUrl = appUrl + "&job=" +
+            URLEncoder.encode(json.getAsJsonPrimitive("name").getAsString(), "UTF-8");
+        json.addProperty(CONSOLE_APPLICATION_JOB_URL, jobUrl);
+               
         return result;
     }
 
