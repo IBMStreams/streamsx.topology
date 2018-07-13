@@ -32,6 +32,7 @@ optDir = os.path.dirname(splpyDir)
 pythonDir = os.path.join(optDir, 'python')
 
 __splpy_addDirToPath(os.path.join(splpyDir, 'packages'))
+__splpy_addDirToPath(os.path.join(splpyDir, 'common'))
 
 __splpy_addDirToPath(os.path.join(pythonDir, 'streams'))
 __splpy_addDirToPath(os.path.join(pythonDir, 'packages'))

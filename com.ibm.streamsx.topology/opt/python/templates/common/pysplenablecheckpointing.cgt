@@ -5,23 +5,17 @@
  # or has checkpointing configured.  Also, the operator must be stateful,
  # otherwise no checkpointing is needed.
 
- # In functional operators, ensure that this file is @include d after
- # require "splpy_operator.pm"
-
  my $isInConsistentRegion = $model->getContext()->getOptionalContext("ConsistentRegion");
  my $ckptKind = $model->getContext()->getCheckpointingKind();
- my $stateful = 0;
  my $pyStateful = $model->getParameterByName("pyStateful");
+ my $stateful = 0;
  if (defined($pyStateful)) {
-   # Topology operators are expected to have this parameter.
    $stateful = $pyStateful->getValueAt(0)->getSPLExpression() eq "true";
  }
  else {
-   # no pyStateful parameter
-   # This must be a python functional operator.
-   # Try calling splpy_OperatorCallable().
-   if (defined splpy_OperatorCallable) {
-     $stateful = (splpy_OperatorCallable() eq 'class')
+   # no pyStateful parameter.  Try calling splpy_OperatorCallable().
+   if (defined &splpy_OperatorCallable) {
+     $stateful = splpy_OperatorCallable()
    }
  }
 

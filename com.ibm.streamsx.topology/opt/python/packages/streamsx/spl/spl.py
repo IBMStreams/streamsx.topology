@@ -558,6 +558,8 @@ import inspect
 import re
 import sys
 import streamsx.ec as ec
+import dill
+import importlib
 
 ############################################
 # setup for function inspection
@@ -625,8 +627,8 @@ def _wrapforsplop(optype, wrapped, style, docpy):
         _valid_identifier(wrapped.__name__)
 
         class _op_class(wrapped):
-
             __doc__ = wrapped.__doc__
+
             _splpy_wrapped = wrapped
             _splpy_optype = optype
             _splpy_callable = 'class'

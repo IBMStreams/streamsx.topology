@@ -209,7 +209,11 @@ class SplpyOp {
       }
 #endif
 
-      virtual bool isStateful () { return false; } // TODO 
+      /**
+       * Is this operator stateful for checkpointing?  Derived classes
+       * must override this to support checkpointing.
+       */
+      virtual bool isStateful () { return false; }
 
       /**
        * Register a state handler for the operator.  The state handler
@@ -312,6 +316,7 @@ class SplpyOp {
             op_->stateHandlerMutex->unlock();
           }
         }
+
       private:
         RealAutoLock(RealAutoLock const & other);
         RealAutoLock();
@@ -329,7 +334,7 @@ class SplpyOp {
 
    private:
       SPL::Operator *op_;
- 
+
       // Python object used to process tuples
       PyObject *callable_;
 
@@ -356,14 +361,14 @@ class SplpyOp {
   loads = SplpyGeneral::loadFunction("dill", "loads");
   dumps = SplpyGeneral::loadFunction("dill", "dumps");
  }
- 
+
  SplpyOpStateHandlerImpl::~SplpyOpStateHandlerImpl() {
    SplpyGIL lock;
    Py_CLEAR(loads);
    Py_CLEAR(dumps);
    Py_CLEAR(pickledInitialCallable);
  }
- 
+
  void SplpyOpStateHandlerImpl::checkpoint(SPL::Checkpoint & ckpt) {
    SPLAPPTRC(L_DEBUG, "checkpoint", "python");
    AutoMutex am(mutex_);
@@ -381,7 +386,7 @@ class SplpyOp {
    ckpt << bytes;
    SPLAPPTRC(L_TRACE, "exit checkpoint", "python");
  }
- 
+
  void SplpyOpStateHandlerImpl::reset(SPL::Checkpoint & ckpt) {
    SPLAPPTRC(L_DEBUG, "reset", "python");
    AutoMutex am(mutex_);
@@ -413,11 +418,11 @@ class SplpyOp {
    Py_DECREF(op->callable());
    op->setCallable(initialCallable);
  }
- 
+
  Mutex* SplpyOpStateHandlerImpl::getMutex() {
    return &mutex_;
  }
- 
+
  // Call a python callable with a single argument
  // Caller must hold GILState.
  PyObject * SplpyOpStateHandlerImpl::call(PyObject * callable, PyObject * arg) {
