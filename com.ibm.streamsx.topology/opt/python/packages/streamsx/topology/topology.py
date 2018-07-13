@@ -878,7 +878,8 @@ class Stream(_placement._Placement, object):
         if self.oport.schema == streamsx.topology.schema.CommonSchema.Python:
             view_stream = self.as_json(force_object=False)._layout(hidden=True)
             # colocate map operator with stream that is being viewed.
-            self._colocate(view_stream, 'view')
+            if self._placeable:
+                self._colocate(view_stream, 'view')
         else:
             view_stream = self
 

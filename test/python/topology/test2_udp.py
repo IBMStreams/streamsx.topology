@@ -112,6 +112,8 @@ class TestUDP(unittest.TestCase):
               s = s.parallel(width)
               s = s.map(lambda tuple : tuple + 19)
               s = s.end_parallel()
+              # Issue #1742 - ensure a view can be created
+              v = s.view()
 
               tester = Tester(topo)
               tester.contents(s, range(36,161), ordered=width==1)
