@@ -55,4 +55,10 @@ public interface SubmissionResultsKeys {
     static String buildStateMetricKey(String state) {
         return  SUBMIT_BUILD_STATE_PREFIX + state + TIME_MS_SUFFIX;
     }
+    
+    /**
+     * URLs for Streams console application dashboard.
+     */
+    String CONSOLE_APPLICATION_URL = "console.application.url";
+    String CONSOLE_APPLICATION_JOB_URL = "console.application.job.url";
 }

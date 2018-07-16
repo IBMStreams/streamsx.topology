@@ -6,6 +6,8 @@
 package com.ibm.streamsx.rest;
 
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.getSPLCompatibleName;
+import static com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys.CONSOLE_APPLICATION_JOB_URL;
+import static com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys.CONSOLE_APPLICATION_URL;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
@@ -143,7 +145,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): submit job request:" + jco.toString());
 
             JsonObject response = postJob(httpClient, service, bundle, jco);
-            return jobResult(response);
+            return addConsoleURLs(jobResult(response));
             
         } finally {
             httpClient.close();
@@ -263,10 +265,27 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             
             Result<Job,JsonObject> result = jobResult(response);
             result.getRawResult().add(SubmissionResultsKeys.SUBMIT_METRICS, metrics);
-            return result;
+            return addConsoleURLs(result);
         } finally {
             httpclient.close();
         }
+    }
+    
+    /**
+     * Add any required Streams console URLs into the result.
+     */
+    private Result<Job,JsonObject> addConsoleURLs(final Result<Job,JsonObject> result) throws IOException {
+        
+        final JsonObject json = result.getRawResult();
+        
+        final String appUrl = getInstance().getApplicationConsoleURL();
+        json.addProperty(CONSOLE_APPLICATION_URL, appUrl);
+        
+        String jobUrl = appUrl + "&job=" +
+            URLEncoder.encode(json.getAsJsonPrimitive("name").getAsString(), "UTF-8");
+        json.addProperty(CONSOLE_APPLICATION_JOB_URL, jobUrl);
+               
+        return result;
     }
 
     private String prettyPrintOutput(JsonObject output) {

@@ -30,6 +30,7 @@ abstract class AbstractStreamingAnalyticsConnection
 
     JsonObject credentials;
     private Instance instance;
+    String baseConsoleURL;
 
     AbstractStreamingAnalyticsConnection(String authorization,
             String resourcesUrl, JsonObject credentials, boolean allowInsecure)
@@ -53,7 +54,9 @@ abstract class AbstractStreamingAnalyticsConnection
         List<Instance> instances = getInstances();
         if (instances.size() == 1) {
             // Should find one only
-            return instance = instances.get(0);
+            instance = instances.get(0);
+            instance.setApplicationConsoleURL(baseConsoleURL);
+            return instance;
         } else {
             throw new RESTException("Unexpected number of instances: " + instances.size());
         }
