@@ -128,16 +128,17 @@ public interface GraphKeys {
     String CFG_HAS_ISOLATE = "hasIsolate";
     
     /**
-     * Does the graph include low latency virtual markers/regions.
-     * Boolean.
-     */
-    String CFG_HAS_LOW_LATENCY = "hasLowLatency";
-    
-    /**
      * Mapping of colocation keys to actual colocate tag.
      * Object containing string to string mapping. 
      */
     String CFG_COLOCATE_TAG_MAPPING = "colocateTagMapping";
+    
+    /**
+     * Object of colocate tags to count of composites
+     * that use them. Each id maps to a JSON object
+     * containing a count.
+     */
+    String CFG_COLOCATE_IDS = "colocateIds";
 
     /**
      * Version of Streams the graph is targeted at.

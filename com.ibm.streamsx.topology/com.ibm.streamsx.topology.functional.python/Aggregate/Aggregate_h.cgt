@@ -6,11 +6,14 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
-@include "../pyspltuple.cgt"
 <%
- my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
- my $oport = $model->getOutputPortAt(0);
+# Configure Windowing
+ my $inputPort = $model->getInputPortAt(0); 
+ my $window = $inputPort->getWindow();
+ my $windowCppType = SPL::CodeGen::getWindowCppType($window,"PyObject *");
 %>
+
+@include "../pyspltuple.cgt"
 
 class MY_OPERATOR : public MY_BASE_OPERATOR,
       public WindowEvent<PyObject *>
@@ -27,22 +30,23 @@ public:
 
   // Tuple processing for non-mutating ports
   void process(Tuple const & tuple, uint32_t port);
+  void process(Punctuation const & punct, uint32_t port);
 
   // Window
   void onWindowTriggerEvent(
      Window<PyObject *> & window, Window<PyObject *>::PartitionType const& key);
+
+  void beforeWindowFlushEvent(
+     Window<PyObject *> & window, Window<PyObject *>::PartitionType const& key) {
+
+     onWindowTriggerEvent(window, key);
+  }
   
 void afterTupleEvictionEvent(
      Window<PyObject *> & window,  Window<PyObject *>::TupleType & tuple,
      Window<PyObject *>::PartitionType const & partition);
 
 private:
-<%
-if ($pyoutstyle eq 'dict') {
-%>
-    void fromPythonToPort0(PyObject * pyTuple, <%=$oport->getCppTupleType()%> & otuple);
-<%}%>
-
     SplpyOp * op() { return funcop_; }
 
     // Members
@@ -59,7 +63,7 @@ if ($pyoutstyle eq 'dict') {
     int32_t occ_;
 
     // Window definition
-    SlidingWindow<PyObject *>  window_;	       
+    <%=$windowCppType%>  window_;	       
 
 }; 
 

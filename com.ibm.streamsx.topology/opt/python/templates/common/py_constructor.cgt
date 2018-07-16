@@ -1,6 +1,10 @@
     // Common code for the constructor of SPL Python operators
     // that are created from Python functions
     // Loads the Python runtime and initializes the function and module variables.
+<%
+    # Initialize splpy.pm
+    splpyInit($model);
+%>
     pyop_ = new SplpyPyOp(this);
     
     {

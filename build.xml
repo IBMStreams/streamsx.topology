@@ -80,19 +80,17 @@
           failonerror="yes"
           additionalparam="-Xdoclint:none"
           >
-            <fileset dir="java/src">
-               <include name="com/ibm/streamsx/topology/**"/>
+            <packageset dir="java/src">
                <exclude name="com/ibm/streamsx/topology/context/remote/**"/>
                <exclude name="com/ibm/streamsx/topology/internal/**"/>
                <exclude name="com/ibm/streamsx/topology/builder/**"/>
                <exclude name="com/ibm/streamsx/topology/generator/**"/>
-               <include name="com/ibm/streamsx/rest/**"/>
-               <exclude name="**/*.properties"/>
-            </fileset>
-            <fileset dir="java/runtime/src">
+               
+            </packageset>
+            <packageset dir="java/runtime/src">
                <include name="com/ibm/streamsx/topology/**"/>
                <exclude name="com/ibm/streamsx/topology/internal/**"/>
-            </fileset>
+            </packageset>
        </javadoc>
        <ant dir="toolkit" target="spldoc"/>
        <ant dir="scala" target="scaladoc"/>
@@ -103,7 +101,7 @@
       <tstamp/>
       <property name="release.dir" location="${release.base}" />
       <mkdir dir="${release.dir}" />
-      <property name="releasefilename" value="${release.dir}/streamsx.topology-v1.9-${DSTAMP}-${TSTAMP}.tgz"/>
+      <property name="releasefilename" value="${release.dir}/streamsx.topology-v1.11-${DSTAMP}-${TSTAMP}.tgz"/>
       <tar compression="gzip" longfile="gnu" destfile="${releasefilename}">
          <tarfileset dir="${basedir}" filemode="755" >
            <include name="**/pyversion*.sh"/>

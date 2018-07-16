@@ -7,8 +7,11 @@ package com.ibm.streamsx.topology.builder;
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.END_LOW_LATENCY;
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.LOW_LATENCY;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND_CLASS;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_SPL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_VIRTUAL;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.NS_COLON;
@@ -37,8 +40,8 @@ import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
 import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameterFactory;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
-import com.ibm.streamsx.topology.internal.streams.Util;
 import com.ibm.streamsx.topology.internal.messages.Messages;
+import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
  * Low-level graph builder. GraphBuilder provides a layer on top of
@@ -76,7 +79,9 @@ public class GraphBuilder extends BJSONObject {
         _json().add("parameters", params);
 
         getConfig().addProperty(CFG_STREAMS_VERSION, Util.productVersion());
-        ;
+        // Indicate how the graph was generated.
+        getConfig().addProperty(MODEL, MODEL_FUNCTIONAL);
+        getConfig().addProperty(LANGUAGE, LANGUAGE_JAVA);
     }
    
    private final Map<String,Integer> usedNames = new HashMap<>();

@@ -20,6 +20,7 @@
   <property name="samples.src.dir" location="../../samples/java/functional/src"/>
   <property name="testtk" location="../spl/testtk"/>
   <property name="testtk.java" location="${testtk}/impl/java"/>
+  <property name="testtkopt" location="../spl/testtkopt"/>
 
 
   <makeurl file="${basedir}/log4j.properties" property="topology.log4j"/>
@@ -88,7 +89,7 @@
     <mkdir dir="${classes}"/>
   </target>
 
-  <target name="compile" depends="init,test.toolkit">
+  <target name="compile" depends="init,test.toolkit,test.toolkitopt">
     <javac debug="true" 
            includeantruntime="no"
 	   srcdir="${basedir}/src" 
@@ -120,7 +121,7 @@
      <arg value="-i"/>
      <arg value="${testtk}"/>
    </exec>
-   </target>
+  </target>
   <target name="test.python.toolkit">
    <exec executable="${topology.test.python}">
      <arg value="${tk}/bin/spl-python-extract.py"/>
@@ -137,8 +138,59 @@
   	<delete dir="${testtk.java}/bin"/>
   </target>
 
+  <target name="test.toolkitopt" depends="optional_types.check" if="optional_types.supported">
+   <property name="topology.install.compile" value="${topology.install.compile}"/>
+   <exec executable="${streams.install}/bin/spl-make-toolkit">
+     <arg value="-i"/>
+     <arg value="${testtkopt}"/>
+   </exec>
+  </target>
+	
+  <target name="test.toolkitopt.clean">
+  	<delete file="${testtkopt}/toolkit.xml"/>
+  </target>
 
-  <target name="clean" depends="test.toolkit.clean">
+  <target name="optional_types.check">
+    <!-- This test assumes the fixpack ("F") is numeric, or not specified. -->
+    <property name="required.product.version" value="4.3"/>
+    <loadproperties srcFile="${streams.install}/.product" prefix="product">
+      <filterchain>
+        <linecontains>
+          <contains value="Version"/>
+        </linecontains>
+      </filterchain>
+    </loadproperties>
+    <script language="javascript">
+      <![CDATA[
+        productVersion = project.getProperty("product.Version");
+        requiredVersion = project.getProperty("required.product.version");
+        hasMinimumVersion = true;
+        vrmf = requiredVersion.split(".");
+        pvrmf = productVersion.split(".");
+        for (i = 0; i < vrmf.length; i++) {
+          if (i > pvrmf.length) {
+            hasMinimumVersion = false;
+            break;
+          }
+          pn = parseInt(pvrmf[i]);
+          rn = parseInt(vrmf[i]);
+          if (pn < rn) {
+            hasMinimumVersion = false;
+            break;
+          }
+          if (pn > rn) {
+            break;
+          }
+        }
+        project.setProperty("has.required.product.version", hasMinimumVersion);
+      ]]>
+    </script>
+    <condition property="optional_types.supported">
+      <istrue value="${has.required.product.version}"/>
+    </condition>
+  </target>
+
+  <target name="clean" depends="test.toolkit.clean,test.toolkitopt.clean">
     <delete dir="${classes}"/>
     <delete file="${jarname}"/>
     <delete dir="${test.dir}"/>
@@ -159,12 +211,14 @@
   <target name="unittest.main" depends="jar">
      <antcall target="unittest.base" inheritAll="no">
        <param name="topology.test.type" value="EMBEDDED_TESTER"/>
+       <param name="topology.samples.jar" value="${topology.samples.jar}"/>
      </antcall>
   </target>
 
   <target name="unittest.standalone" depends="jar,test.python.toolkit">
      <antcall target="unittest.base" inheritAll="no">
        <param name="topology.test.type" value="STANDALONE_TESTER"/>
+       <param name="topology.samples.jar" value="${topology.samples.jar}"/>
      </antcall>
   </target>
 
@@ -204,6 +258,7 @@
   <property name="topology.test.base.pattern" value="**/*Test.java"/>
 
   <target name="unittest.base" depends="unittest.base.scala">
+    <echo message="topology.samples.jar=${topology.samples.jar}"/>
      <mkdir dir="${test.dir}"/>
      <tempfile property="topology.test.dir" prefix="testrun" destDir="${test.dir}"/>
      <mkdir dir="${topology.test.dir}"/>
@@ -265,7 +320,17 @@
        </batchtest>
      </junit>
    </jacoco:coverage>
-   <fail message="Unittests failed" if="topology.tests.failed"/>
+   <fail message="Unittests failed">
+       <condition>
+          <and>
+          <isset property="topology.tests.failed"/>
+          <not>
+              <!-- For Jenkins runs failing tests are tracked as unstable build -->
+              <isset property="env.JENKINS_URL"/>
+          </not>
+          </and>
+       </condition>
+   </fail>
    </target>
 
   <target name="unittest.kafka.standalone">

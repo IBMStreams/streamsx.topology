@@ -4,8 +4,6 @@ import unittest
 import sys
 import itertools
 
-import test_vers
-
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology import schema
@@ -18,7 +16,6 @@ import streamsx.types
 import uuid
 
 
-@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestPubSub(unittest.TestCase):
     """ Test publish/subscribe
     """
@@ -133,7 +130,6 @@ class TestPubSub(unittest.TestCase):
         self.tester.local_check = self._check_buffer
         self.tester.test(self.test_ctxtype, self.test_config)
 
-@unittest.skipIf(not test_vers.tester_supported() , "tester not supported")
 class TestBluemixPubSub(TestPubSub):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)

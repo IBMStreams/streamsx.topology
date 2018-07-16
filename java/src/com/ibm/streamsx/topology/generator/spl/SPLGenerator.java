@@ -7,12 +7,15 @@ package com.ibm.streamsx.topology.generator.spl;
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_COMPOSITE_PARAMETER;
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_PYTHON;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.kind;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.DEPLOYMENT_CONFIG;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_ISOLATE;
-import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_HAS_LOW_LATENCY;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_COMPILE_VERSION;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppNamespace;
@@ -79,7 +82,7 @@ public class SPLGenerator {
         breakoutVersion(graphConfig);
                 
         stvHelper = new SubmissionTimeValue(graph);
-        new Preprocessor(this, graph).preprocess();
+        Preprocessor preprocessor = new Preprocessor(this, graph).preprocess();
         
         separateIntoComposites(graph);
         
@@ -91,6 +94,8 @@ public class SPLGenerator {
         mainCompsiteDef.addProperty("__spl_mainComposite", true);
         mainCompsiteDef.add("operators", graph.get("operators"));
         composites.add(mainCompsiteDef);
+        
+        preprocessor.compositeColocateIdUsage(composites);
         
         stvHelper.addJsonParamDefs(mainCompsiteDef);
         
@@ -423,12 +428,14 @@ public class SPLGenerator {
         
         compositeInvocation.add("parallelInfo", parallelInfo);
         compositeInvocation.addProperty("parallelOperator", true);
+        opDefinition.addProperty("parallelComposite", true);
         return compositeInvocation;
     }
 
     private JsonObject createLowLatencyCompositeInvocation(JsonObject opDefinition, List<List<JsonObject>> startsEndsAndOperators) {
         JsonObject compositeInvocation = createCompositeInvocation(opDefinition, startsEndsAndOperators);
         compositeInvocation.addProperty("lowLatency", true);
+        opDefinition.addProperty("lowLatencyComposite", true);
         return compositeInvocation;
     }
 
@@ -563,17 +570,22 @@ public class SPLGenerator {
         config.add(DEPLOYMENT_CONFIG, deploymentConfig);
         
         boolean hasIsolate = jboolean(config, CFG_HAS_ISOLATE);
-        boolean hasLowLatency = jboolean(config, CFG_HAS_LOW_LATENCY);
         
         if (hasIsolate)     
             deploymentConfig.addProperty("fusionScheme", "legacy");
         else {
             
-            // Default to isolating parallel channels.
-            JsonObject parallelRegionConfig = new JsonObject();
-            deploymentConfig.add("parallelRegionConfig", parallelRegionConfig);
-            
-            parallelRegionConfig.addProperty("fusionType", "channelIsolation");
+            // Default to isolating parallel channels for Python
+            // topologies only. We do this for Python to ensure that
+            // parallism can be exploited through multiple PEs across
+            // channels and hence multiple Pythjon VMs
+            // and not a single GIL for the whole region.
+            if (MODEL_FUNCTIONAL.equals(jstring(config, MODEL))
+                    && LANGUAGE_PYTHON.equals(jstring(config, LANGUAGE))) {
+                JsonObject parallelRegionConfig = new JsonObject();
+                deploymentConfig.add("parallelRegionConfig", parallelRegionConfig);
+                parallelRegionConfig.addProperty("fusionType", "channelIsolation");
+            }
         }
     }
     

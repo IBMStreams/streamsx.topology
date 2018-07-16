@@ -32,6 +32,9 @@ private:
 if ($pyoutstyle eq 'dict') {
 %>
     void fromPythonToPort0(PyObject * pyTuple);
+    void fromPythonDictToPort0(PyObject * pyDict);
+    void fromPyTupleToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleType()%> & otuple);
+    void fromPyDictToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupleType()%> & otuple);
 <%}%>
 
     SplpyOp * op() { return funcop_; }
@@ -41,6 +44,7 @@ if ($pyoutstyle eq 'dict') {
     SplpyFuncOp *funcop_;
     
     PyObject *pyInStyleObj_;
+    PyObject *pyOutNames_0;
 
     // Number of output connections when passing by ref
     // -1 when cannot pass by ref

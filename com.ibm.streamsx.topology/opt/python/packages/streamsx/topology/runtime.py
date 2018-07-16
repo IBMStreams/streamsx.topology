@@ -12,20 +12,26 @@ from past.builtins import basestring
 import streamsx.ec as ec
 from streamsx.topology.schema import StreamSchema
 
-try:
-    import dill
-    # Importing cloudpickle break dill's deserialization.
-    # Workaround is to make dill aware of the ClassType type.
-    if sys.version_info.major == 3:
-        dill.dill._reverse_typemap['ClassType'] = type
-    dill.settings['recurse'] = True
-except ImportError:
-    dill = pickle
+import dill
+# Importing cloudpickle break dill's deserialization.
+# Workaround is to make dill aware of the ClassType type.
+if sys.version_info.major == 3:
+    if not 'dill._dill' in sys.modules:
+        sys.modules['dill._dill'] = dill.dill
+        dill._dill = dill.dill
+    dill._dill._reverse_typemap['ClassType'] = type
+    
+dill.settings['recurse'] = True
 
 import base64
 import json
 from pkgutil import extend_path
 import streamsx
+
+
+# Simple identity function used by map, flat_map as default function.
+def _identity(tuple_):
+    return tuple_
 
 
 def __splpy_addDirToPath(dir):
@@ -76,15 +82,6 @@ def _get_callable(f):
         if callable(ci):
             return ci
     raise TypeError("Class is not callable" + str(type(ci)))
-
-def _verify_tuple(tuple_, attributes):
-    if isinstance(tuple_, tuple) or tuple_ is None:
-        return tuple_
-
-    if isinstance(tuple_, dict):
-        return tuple(tuple_.get(name, None) for name in attributes)
-   
-    raise TypeError("Function must return a tuple, dict or None:" + str(type(tuple_)))
 
 import inspect
 class _FunctionalCallable(object):
@@ -153,13 +150,11 @@ class _PickleInTupleOut(_FunctionalCallable):
     def __call__(self, tuple_, pm=None):
         if pm is not None:
             tuple_ = pickle.loads(tuple_)
-        rv =  self._callable(tuple_)
-        return _verify_tuple(rv, self._attributes)
+        return self._callable(tuple_)
 
 class _ObjectInTupleOut(_FunctionalCallable):
     def __call__(self, tuple_):
-        rv =  self._callable(tuple_)
-        return _verify_tuple(rv, self._attributes)
+        return self._callable(tuple_)
 
 class _ObjectInPickleOut(_FunctionalCallable):
     def __call__(self, tuple_):
@@ -206,8 +201,7 @@ class _JSONInStringOut(_FunctionalCallable):
 
 class _JSONInTupleOut(_FunctionalCallable):
     def __call__(self, tuple_):
-        rv = self._callable(json.loads(tuple_))
-        return _verify_tuple(rv, self._attributes)
+        return self._callable(json.loads(tuple_))
 
 
 class _JSONInJSONOut(_FunctionalCallable):

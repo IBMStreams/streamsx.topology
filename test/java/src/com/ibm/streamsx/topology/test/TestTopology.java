@@ -252,6 +252,13 @@ public class TestTopology {
         assumeTrue(getTesterType() != StreamsContext.Type.EMBEDDED_TESTER);
         assumeTrue(SC_OK);
     }
+
+    /**
+     * Assume optional data types support.
+     */
+    protected void assumeOptionalTypes() {
+        checkMinimumVersion("Optional data types support required", 4, 3);
+    }
         
     /**
      * Only run a test at a specific minimum version or higher.
@@ -269,6 +276,14 @@ public class TestTopology {
         }
         
         switch (vrmf.length) {
+        case 3:
+            assumeTrue((Product.getVersion().getVersion() > vrmf[0])
+                     || (Product.getVersion().getVersion() == vrmf[0] &&
+                             Product.getVersion().getRelease() > vrmf[1])
+                     || (Product.getVersion().getVersion() == vrmf[0] &&
+                             Product.getVersion().getRelease() == vrmf[1] &&
+                             Product.getVersion().getMod() >= vrmf[2]));
+            break;
         case 2:
             assumeTrue((Product.getVersion().getVersion() > vrmf[0])
                      || (Product.getVersion().getVersion() == vrmf[0] &&
@@ -399,5 +414,13 @@ public class TestTopology {
             return true;
         }
         return false;
+    }
+    
+    /**
+     * Can the test generate ADL.
+     */
+    protected void adlOk() {
+        assumeTrue(SC_OK);
+        assumeTrue(getTesterType() == StreamsContext.Type.STANDALONE_TESTER);
     }
 }

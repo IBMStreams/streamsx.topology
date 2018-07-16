@@ -11,6 +11,7 @@ def check_instance(tc, instance):
     _fetch_from_instance(tc, instance)
     instance.refresh()
     _fetch_from_instance(tc, instance)
+    _check_resource_allocations(tc, instance)
 
 def _fetch_from_instance(tc, instance):    
     _check_non_empty_list(tc, instance.get_pes(), PE)
@@ -76,11 +77,35 @@ def _check_metrics(tc, obj):
         tc.assertIsInstance(m.name, str)
         tc.assertIsInstance(m.value, int)
 
+def _check_resource_allocations(tc, obj):
+    for ra in obj.get_resource_allocations():
+        _check_resource_allocation(tc, ra)
+
+def _check_resource_allocation(tc, ra):
+    tc.assertIsInstance(ra, ResourceAllocation)
+    tc.assertIsInstance(ra.applicationResource, bool)
+    tc.assertIsInstance(ra.schedulerStatus, str)
+    tc.assertIsInstance(ra.status, str)
+
+    r = ra.get_resource()
+    tc.assertIsInstance(r.id, str)
+    tc.assertIsInstance(r.displayName, str)
+    tc.assertIsInstance(r.ipAddress, str)
+    tc.assertIsInstance(r.status, str)
+    tc.assertIsInstance(r.tags, list)
+    _check_metrics(tc, r)
+
+    for pe in ra.get_pes():
+        tc.assertIsInstance(pe, PE)
+    for job in ra.get_jobs():
+        tc.assertIsInstance(job, Job)
+        
 def _fetch_from_job(tc, job):
     _check_non_empty_list(tc, job.get_pes(), PE)
     ops = job.get_operators()
     _check_non_empty_list(tc, ops, Operator)
     _check_operators(tc, ops)
+    _check_resource_allocations(tc, job)
 
     pes = job.get_pes()
     for pe in pes:
@@ -130,6 +155,7 @@ def _fetch_from_job(tc, job):
 
         # PE
         pe = job.get_pes()[0]
+        _check_resource_allocation(tc, pe.get_resource_allocation())
 
         trace = pe.retrieve_trace()
         tc.assertTrue(os.path.isfile(trace))
@@ -214,6 +240,7 @@ def _fetch_from_domain(tc, domain):
     # See issue 952
     if tc.test_ctxtype != 'STREAMING_ANALYTICS_SERVICE':
         _check_non_empty_list(tc, domain.get_resource_allocations(), ResourceAllocation)
+        _check_resource_allocations(tc, domain)
     _check_non_empty_list(tc, domain.get_resources(), Resource)
 
     _check_list(tc, domain.get_hosts(), Host)

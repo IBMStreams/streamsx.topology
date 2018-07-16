@@ -1,5 +1,16 @@
 ## Development of streamsx.topology project
 
+### Workflow
+
+The recommended workflow is forking workflow.
+https://www.atlassian.com/git/tutorials/comparing-workflows/forking-workflow
+
+Fork this repository and develop in feature branches in your fork. When ready, sumbmit a pull request against the target branch.
+
+**Please do not use of short-lived temporary development branches in the main IBMStreams/streamsx.topology repo**
+If a need does occur, please ensure the branch is deleted once merged.
+The main repo should only contain `master`, release branches (`vX_Y`)and shared development feature branches (`feature/xxx`).
+
 ### Setup
 
 Once you have forked the repository and created your local clone you need to download
@@ -63,18 +74,18 @@ ant unittest.distributed
 ```
 This requires that your environment is setup so that `streamtool submitjob` submit jobs to an instance without requiring any authentication. This is the case for the [Streams Quicksttart VM image](http://www-01.ibm.com/software/data/infosphere/stream-computing/trials.html).
 
-### IBM Bluemix Streaming Analytics service testing
+### IBM Cloud Streaming Analytics service testing
 
 Tests are run against the service if these environment variables are set:
 
-* `topology_test_vcap_services` - File containing JSON VCAP services
-* `topology_test_vcap_service_name` - Name of Streaming Analytics service to use
+* `VCAP_SERVICES` - File containing JSON VCAP services
+* `STREAMING_ANALYTICS_SERVICE_NAME` - Name of Streaming Analytics service to use
 
 e.g.
 
 ```
-export topology_test_vcap_services=$HOME/vcap/my_vcap
-export topology_test_vcap_service_name=debrunne-streams2
+export VCAP_SERVICES=$HOME/vcap/my_vcap
+export STREAMING_ANALYTICS_SERVICE_NAME=debrunne-streams2
 ```
 
 The tests are run with this target:

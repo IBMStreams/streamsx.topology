@@ -14,8 +14,6 @@ from streamsx.topology.tester import Tester
 import streamsx.ec as ec
 import streamsx.spl.op as op
 
-import test_vers
-
 class AddChannel(object):
     def __init__(self):
         pass
@@ -52,7 +50,6 @@ def stupid_hash(v):
 def s2_hash(t):
     return hash(t['s2'])
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestUDP(unittest.TestCase):
 
   # Fake out subTest
@@ -98,6 +95,8 @@ class TestUDP(unittest.TestCase):
       s2.set_parallel(5)
 
       s = s.union({s2})
+      # #1750 ensure we are not depending on last op
+      o = topo.source([2])
       s = s.end_parallel()
       
       tester = Tester(topo)
@@ -220,12 +219,10 @@ class TestUDP(unittest.TestCase):
               tester.test(self.test_ctxtype, self.test_config)
               print(tester.result)
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestDistributedUDP(TestUDP):
   def setUp(self):
       Tester.setup_distributed(self)
 
-@unittest.skipIf(not test_vers.tester_supported() , "Tester not supported")
 class TestBluemixUDP(TestUDP):
   def setUp(self):
       Tester.setup_streaming_analytics(self, force_remote_build=True)

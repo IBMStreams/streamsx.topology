@@ -72,6 +72,11 @@ sub splToPythonConversionCheck{
     elsif (SPL::CodeGen::Type::isComplex32($type) || SPL::CodeGen::Type::isComplex64($type)) {
       return;
     }
+    elsif(hasOptionalTypesSupport() && SPL::CodeGen::Type::isOptional($type)) {
+      my $value_type = SPL::CodeGen::Type::getUnderlyingType($type);
+      splToPythonConversionCheck($value_type);
+      return;
+    }
 
     SPL::CodeGen::errorln("SPL type: " . $type . " is not supported for conversion to or from Python."); 
 }
@@ -108,7 +113,7 @@ sub convertToPythonValueFromExpr {
 
 # Check if a type includes blobs in its definition.
 # Could be just blob, or list<blob> etc.
-# blob is not supported for map/set
+# blob is not supported for map keys or set values.
 sub typeHasBlobs {
   my $type = $_[0];
 
@@ -121,6 +126,10 @@ sub typeHasBlobs {
   }
   if (SPL::CodeGen::Type::isMap($type)) {
       my $value_type = SPL::CodeGen::Type::getValueType($type);
+      return typeHasBlobs($value_type);
+  }
+  if(hasOptionalTypesSupport() && SPL::CodeGen::Type::isOptional($type)) {
+      my $value_type = SPL::CodeGen::Type::getUnderlyingType($type);
       return typeHasBlobs($value_type);
   }
 
@@ -367,6 +376,49 @@ sub spl_pip_packages {
       $ENV{'PYTHONUSERBASE'} = $pub;
     }
   }
+}
+
+my $model;  # local copy of the operator model variable
+
+#
+# Initialize this module.
+#
+sub splpyInit {
+    if (defined $model) {
+        # Attempt to detect possible future concurrent processing of operators.
+        SPL::CodeGen::errorln("Internal error: splpyInit() already called.");
+    }
+    ($model) = @_;
+}
+
+#
+# Return true if optional data types are supported, else false.
+#
+sub hasOptionalTypesSupport {
+    return hasMinimumProductVersion("4.3");
+}
+
+#
+# Return true if the Streams product version matches or exceeds
+# the given version number in "VRMF" format, else false.
+#
+# Note: This test assumes the fixpack ("F") is numeric, or not specified.
+#
+sub hasMinimumProductVersion {
+    my ($requiredVersion) = @_;
+
+    my @vrmf = split(/\./, $requiredVersion);
+    my @pvrmf = split(/\./, $model->getContext()->getProductVersion());
+    for (my $i = 0; $i <= $#vrmf; $i++) {
+        if (!($vrmf[$i] =~ /^\d+$/)) {
+            SPL::CodeGen::errorln("Invalid version: " . $requiredVersion);
+            return 0;
+        }
+        return 0 if ($i > $#pvrmf);
+        return 0 if ($pvrmf[$i] < $vrmf[$i]);
+        return 1 if ($pvrmf[$i] > $vrmf[$i]);
+    }
+    return 1;
 }
 
 1;

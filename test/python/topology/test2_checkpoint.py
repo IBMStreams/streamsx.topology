@@ -5,8 +5,6 @@ import streamsx.ec as ec
 import unittest
 from datetime import timedelta
 
-import test_vers
-
 # Tests for checkpointing.  This does not actually test that checkpoints
 # can be created and destroyed.  It only tests that operators containing
 # serializable callables can be run successfully with checkpointing enabled.

@@ -15,6 +15,8 @@ import streamsx.scripts.extract
 import streamsx.spl.toolkit
 import streamsx.spl.op as op
 
+import spl_tests_utils as stu
+
 def _create_tf():
     with tempfile.NamedTemporaryFile(delete=False) as fp:
         fp.write("CREATE\n".encode('utf-8'))
@@ -28,7 +30,7 @@ class TestBaseExceptions(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Extract Python operators in toolkit"""
-        streamsx.scripts.extract.main(['-i', '../testtkpy', '--make-toolkit'])
+        stu._extract_tk('testtkpy')
 
     def setUp(self):
         self.tf = _create_tf()
@@ -53,7 +55,7 @@ class TestExceptions(TestBaseExceptions):
     def _run_app(self, kind, opi='M'):
         schema = 'tuple<rstring a, int32 b>'
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         s = topo.source(range(13))
 
         if opi == 'M':
@@ -154,7 +156,7 @@ class TestSuppressExceptions(TestBaseExceptions):
     def _run_app(self, kind, e, opi='M'):
         schema = 'tuple<rstring a, int32 b>'
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
 
         if opi == 'M':
             data = [1,2,3]
@@ -251,7 +253,7 @@ class TestSuppressMetric(TestBaseExceptions):
     def test_suppress_metric(self):
         schema = 'tuple<int32 a, int32 b, int32 c, int32 d>'
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
 
         # no metric
         st = op.Source(topo,

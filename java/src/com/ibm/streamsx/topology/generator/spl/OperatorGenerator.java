@@ -17,6 +17,7 @@ import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_TUMBLING;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.getSPLCompatibleName;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.stringLiteral;
+import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_COLOCATE_IDS;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_COLOCATE_TAG_MAPPING;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
@@ -39,14 +40,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
-import com.ibm.streamsx.topology.generator.port.PortProperties;
 import com.ibm.streamsx.topology.generator.spl.SubmissionTimeValue.ParamsInfo;
 import com.ibm.streamsx.topology.internal.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
-import com.ibm.streamsx.topology.spi.builder.SourceInfo;
 import com.ibm.streamsx.topology.internal.messages.Messages;
+import com.ibm.streamsx.topology.spi.builder.SourceInfo;
 
 class OperatorGenerator {
 
@@ -453,7 +454,7 @@ class OperatorGenerator {
                 sb.append("sliding,");
                 break;
             case TYPE_TUMBLING:
-                sb.append("tumbing,");
+                sb.append("tumbling,");
                 break;
             default:
                 throw new IllegalStateException(Messages.getString("GENERATOR_INTERNAL_ERROR"));
@@ -682,14 +683,31 @@ class OperatorGenerator {
             JsonObject placement = jobject(config, PLACEMENT);
             StringBuilder sbPlacement = new StringBuilder();
 
-            // Explicit placement takes precedence.
-            String colocationKey = jstring(placement, OpProperties.PLACEMENT_COLOCATE_KEY);
-            if (colocationKey != null) {
-                JsonObject mapping = object(graphConfig, CFG_COLOCATE_TAG_MAPPING);
-                String colocationTag = jstring(mapping, colocationKey);
-
+            String colocateKey = jstring(placement, OpProperties.PLACEMENT_COLOCATE_KEY);
+            //String colocateKey = colocateTags != null && colocateTags.size() >= 1 ? colocateTags.get(0).getAsString() : null;
+            //String colocateTag = jstring(placement, OpProperties.PLACEMENT_COLOCATE_KEY);
+            if (colocateKey != null) {
+                JsonObject mapping = object(graphConfig, CFG_COLOCATE_TAG_MAPPING);               
+                String colocationId = jstring(mapping, colocateKey);               
+                JsonObject colocateIds = object(graphConfig, CFG_COLOCATE_IDS);
+                JsonObject idInfo = object(colocateIds, colocationId);
+                
+                boolean absoluteColocate = jboolean(idInfo, "main");
+                if (!absoluteColocate) {
+                    int parallel = idInfo.get("parallel").getAsInt();
+                    if (parallel >= 2)
+                        absoluteColocate = true;
+                }
+                
                 sbPlacement.append("      partitionColocation(");
-                stringLiteral(sbPlacement, colocationTag);
+                
+                stringLiteral(sbPlacement, colocationId);
+                if (!absoluteColocate) {
+                    // Use getChannel() to remain within a channel.                   
+                    SPLGenerator.value(sbPlacement, JParamTypes.TYPE_SPL_EXPRESSION,
+                            new JsonPrimitive("+'$'+((rstring)getChannel())"));
+                }
+                
                 sbPlacement.append(")\n");
             }
 

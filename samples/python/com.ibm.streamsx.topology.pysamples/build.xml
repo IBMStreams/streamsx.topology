@@ -1,0 +1,84 @@
+<project name="streamsx.topology.sample.python" default="all" >
+  <description>
+        Build the sample python toolkit.
+  </description>
+
+  <property environment="env"/>
+  <fail unless="env.STREAMS_INSTALL" message="STREAMS_INSTALL not set."/>
+  <property name="streams.install" value="${env.STREAMS_INSTALL}"/>
+  <condition property="tk" value="${env.STREAMS_TOPOLOGY_TOOLKIT}" else="${streams.install}/toolkits/com.ibm.streamsx.topology">
+    <isset property="env.STREAMS_TOPOLOGY_TOOLKIT"/>
+  </condition>
+  <property name="tkloc" location="${tk}"/>
+  <echo message="Build the toolkit with topology toolkit in ${tkloc}"/>
+
+  <property name="pytk" location="."/>
+  <property name="pythonversion" value="python3"/>
+
+  <target name="all" depends="spldoc,samples,toolkit" description="Make toolkit, samples and docs"/>
+
+  <target name="toolkit" description="Extracts the spl toolkit from python sources and build toolkit index">
+    <exec executable="${pythonversion}" failonerror="true">
+      <arg value="${tkloc}/bin/spl-python-extract.py"/>
+      <arg value="-i"/>
+      <arg value="${pytk}"/>
+    </exec>
+    <exec executable="${streams.install}/bin/spl-make-toolkit" failonerror="true">
+      <arg value="--make-operator"/>
+      <arg value="-i"/>
+      <arg value="${pytk}"/>
+    </exec>
+  </target>
+
+  <target name="samples" depends="toolkit" description="build the spl samples">
+    <exec executable="${streams.install}/bin/sc" failonerror="true">
+      <arg value="-M"/>
+      <arg value="com.ibm.streamsx.topology.pysamples.apps::MailSample"/>
+      <arg value="--output-directory=output/com.ibm.streamsx.topology.pysamples.apps.MailSample/BuildConfig"/>
+      <arg value="--data-directory=data"/>
+      <arg value="-a"/>
+      <arg value="--no-toolkit-indexing"/>
+      <arg value="--no-mixed-mode-preprocessing"/>
+    </exec>
+    <exec executable="${streams.install}/bin/sc" failonerror="true">
+      <arg value="-M"/>
+      <arg value="com.ibm.streamsx.topology.pysamples.apps::NoopSample"/>
+      <arg value="--output-directory=output/com.ibm.streamsx.topology.pysamples.apps.MailSample/BuildConfig"/>
+      <arg value="--data-directory=data"/>
+      <arg value="-a"/>
+      <arg value="--no-toolkit-indexing"/>
+      <arg value="--no-mixed-mode-preprocessing"/>
+    </exec>
+  </target>
+
+  <target name="spldoc" description="Make the SPL documentation.">
+    <exec executable="${streams.install}/bin/spl-make-doc" failonerror="true">
+      <arg value="--include-composite-operator-diagram"/>
+      <arg value="-i"/>
+      <arg value="${pytk}"/>
+    </exec>
+  </target>
+
+  <target name="clean" description="clean all generated artifacts">
+    <exec executable="${streams.install}/bin/spl-make-toolkit">
+      <arg value="--clean"/>
+      <arg value="-i"/>
+      <arg value="${pytk}"/>
+    </exec>
+    <delete dir="${pytk}/output"/>
+    <delete dir="${pytk}/doc"/>
+    <delete dir="${pytk}/impl"/>
+    <delete dir="${pytk}/opt/.__splpy"/>
+    <delete includeemptydirs="true" >
+       <fileset dir="${pytk}">
+          <include name="com.ibm.streamsx.topology.pysamples.kwargs/**"/>
+          <include name="com.ibm.streamsx.topology.pysamples.mail/**"/>
+          <include name="com.ibm.streamsx.topology.pysamples.positional/**"/>
+          <include name="com.ibm.streamsx.topology.pysamples.primitives/**"/>
+          <include name="com.ibm.streamsx.topology.pysamples.sources/**"/>
+          <exclude name="**/namespace-info.spl"/>
+       </fileset>
+    </delete>
+  </target>
+
+</project>

@@ -15,6 +15,8 @@ import streamsx.spl.toolkit
 import streamsx.spl.runtime as ssr
 import streamsx.scripts.extract
 
+import spl_tests_utils as stu
+
 class TestKWArgs(unittest.TestCase):
     """ 
     Test decorated operators with **kwargs
@@ -22,14 +24,14 @@ class TestKWArgs(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Extract Python operators in toolkit"""
-        streamsx.scripts.extract.main(['-i', '../testtkpy', '--make-toolkit'])
+        stu._extract_tk('testtkpy')
 
     def setUp(self):
         Tester.setup_standalone(self)
 
     def test_filer_for_each(self):
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         s = topo.source([(1,2,3), (1,2,201), (2,2,301), (3,4,401), (5,6,78), (8,6,501), (803, 9324, 901)])
         sch = 'tuple<int32 a, int32 b, int32 c>'
         s = s.map(lambda x : x, schema=sch)
