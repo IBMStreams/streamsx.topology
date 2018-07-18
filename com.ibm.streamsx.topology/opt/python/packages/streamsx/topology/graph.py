@@ -55,6 +55,16 @@ def _as_spl_expr(value):
         value = streamsx.spl.op.Expression.expression(value.name)
     return value
 
+# Return a value suitable for use inthe JSON used to
+# create the SPL. Returns `value.spl_json() if value has it otherwise
+# fn(value) or value if fn is not supplied.
+def _as_spl_json(value, fn=None):
+    if hasattr(value, 'spl_json'):
+        return value.spl_json()
+    if fn:
+        return fn(value)
+    return value
+
 class SPLGraph(object):
 
     def __init__(self, topology, name=None, namespace=None):
@@ -512,7 +522,7 @@ class OPort(object):
         _oport["routing"] = self.routing
 
         if not self.width is None:
-            _oport["width"] = int(self.width)
+            _oport['width'] = _as_spl_json(self.width, int)
         if not self.partitioned is None:
             _oport["partitioned"] = self.partitioned
         if self.partitioned_keys is not None:

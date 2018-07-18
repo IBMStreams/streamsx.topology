@@ -1159,7 +1159,7 @@ class Stream(_placement._Placement, object):
         .. versionadded:: 1.9
         """
         self.oport.operator.config['parallel'] = True
-        self.oport.operator.config['width'] = width
+        self.oport.operator.config['width'] = streamsx.topology.graph._as_spl_json(width, int)
         return self
 
     def last(self, size=1):

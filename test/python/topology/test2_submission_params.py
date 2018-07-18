@@ -138,6 +138,27 @@ class TestSubmissionParams(unittest.TestCase):
         tester.tuple_count(s, 17)
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_parallel(self):
+        topo = Topology()
+        sp_w1 = topo.create_submission_parameter('w1', type_=int)
+        sp_w2 = topo.create_submission_parameter('w2', type_=int)
+        
+        s = topo.source(range(67)).set_parallel(sp_w1)
+        s = s.filter(lambda v : v % sp_w1() == 0)
+        s = s.end_parallel()
+        s = s.parallel(width=sp_w2)
+        s = s.filter(lambda v : v % sp_w2() == 0)
+        s = s.end_parallel()
+
+        jc = JobConfig()
+        jc.submission_parameters['w1'] = 3
+        jc.submission_parameters['w2'] = 5
+        jc.add(self.test_config)
+     
+        tester = Tester(topo)
+        tester.contents(s,[0,15,30,45,60]*3, ordered=False)
+        tester.test(self.test_ctxtype, self.test_config)
+
 class TestSubmissionParamsDistributed(TestSubmissionParams):
     """ Test submission params (distributed).
     """
