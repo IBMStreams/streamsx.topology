@@ -208,6 +208,7 @@ import random
 import streamsx._streams._placement as _placement
 import streamsx.spl.op
 import streamsx.spl.types
+import streamsx.topology.consistent
 import streamsx.topology.graph
 import streamsx.topology.schema
 import streamsx.topology.functions
@@ -393,6 +394,8 @@ class Topology(object):
         self.graph = streamsx.topology.graph.SPLGraph(self, name, namespace)
         self._submission_parameters = dict()
         self._checkpoint_period = None
+        self._consistent_region_config = None
+        self._has_jcp = False
 
     @property
     def name(self):
@@ -729,6 +732,17 @@ class Topology(object):
              self._files['opt'] = [reqs_include]
         else:
              self._files['opt'].append(reqs_include)
+
+    def addJobControlPlane(self):
+        """
+        Add a JobControlPlane operator to the topology, if one has not already
+        been added.  If a JobControlPlane operator has already been added,
+        this has no effect.
+        """
+        if not self._has_jcp:
+            jcp = self.graph.addOperator(kind="spl.control::JobControlPlane", name="JobControlPlane")
+            jcp.viewable = False
+            has_jcp = True
 
 
 class Stream(_placement._Placement, object):
@@ -1209,6 +1223,12 @@ class Stream(_placement._Placement, object):
         """
         self.oport.operator.config['parallel'] = True
         self.oport.operator.config['width'] = width
+        return self
+
+    def set_consistent(self, consistent_config):
+        # add job control plane if needed
+        self.topology.addJobControlPlane()
+        self.oport.operator.consistent(consistent_config)
         return self
 
     def last(self, size=1):
