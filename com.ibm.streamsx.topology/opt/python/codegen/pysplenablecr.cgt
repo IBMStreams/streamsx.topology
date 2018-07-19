@@ -1,0 +1,7 @@
+<%
+ my $isInConsistentRegion = defined($model->getContext()->getOptionalContext("ConsistentRegion"));
+%>
+
+  static const bool isInConsistentRegion = <%=$isInConsistentRegion ? "true" : "false"%>;
+  typedef OptionalConsistentRegionContext<isInConsistentRegion> AutoConsistentRegionContext;
+  typedef AutoConsistentRegionContext::Permit AutoConsistentRegionPermit;

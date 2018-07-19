@@ -33,6 +33,9 @@ private:
   // Number of output connections when passing by ref
   // -1 when cannot pass by ref
   int32_t occ_;
+
+  @include "../../opt/python/codegen/pysplenablecr.cgt"
+  AutoConsistentRegionContext crContext;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

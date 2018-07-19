@@ -14,7 +14,8 @@ using namespace streamsx::topology;
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
     funcop_(NULL),
-    occ_(-1)
+    occ_(-1),
+    crContext(this)
 {
     const char * wrapfn = "<%=$pywrapfunc%>";
 <%
@@ -71,6 +72,7 @@ void MY_OPERATOR::process(uint32_t idx)
     OPort0Type otuple;
 
     { // start lock
+      AutoConsistentRegionPermit crp(crContext);
       AutoLock stateLock(funcop_);
       SplpyGIL lock;
       if (pyReturnVar != NULL) {

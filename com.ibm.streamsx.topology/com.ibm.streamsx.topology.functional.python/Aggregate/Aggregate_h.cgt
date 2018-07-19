@@ -65,6 +65,8 @@ private:
     // Window definition
     <%=$windowCppType%>  window_;	       
 
+    @include "../../opt/python/codegen/pysplenablecr.cgt"
+    AutoConsistentRegionContext crContext;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

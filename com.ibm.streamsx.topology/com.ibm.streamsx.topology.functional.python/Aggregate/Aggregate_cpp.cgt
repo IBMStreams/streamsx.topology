@@ -32,7 +32,8 @@ MY_OPERATOR::MY_OPERATOR() :
    pyInStyleObj_(NULL),
    loads(NULL),
    occ_(-1),
-   window_(<%=$windowCppInitializer%>)
+   window_(<%=$windowCppInitializer%>),
+   crContext(this)
 {
 <% if ($window->isSliding()) {%>
     window_.registerOnWindowTriggerHandler(this);
@@ -113,6 +114,9 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
 @include "../pyspltuple2value.cgt"
 
+  SPLAPPTRC(L_DEBUG, "Acquire consistent region permit if needed", SPL_OPER_DBG);
+  AutoConsistentRegionPermit crp(crContext);
+  SPLAPPTRC(L_DEBUG, "Acquire state lock if needed", SPL_OPER_DBG);
   AutoLock stateLock(funcop_);
 
   PyObject *python_value;
@@ -215,17 +219,21 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
     }
   OPort0Type otuple;
 
-  try {
+  {
+    // TODO if this was a time-based trigger we need locks and permits here...
+    try {
   
-  if (SPLPY_AGGREGATE(funcop_->callable(), items,
-       otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_)){  
-     submit(otuple, 0);
+      SPLAPPTRC(L_DEBUG, "Call python callable and submit", SPL_OPER_DBG);
+      if (SPLPY_AGGREGATE(funcop_->callable(), items,
+        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_)){  
+        submit(otuple, 0);
+      }  
+    } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+      SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+      return;
+    }
+    submit(Punctuation::WindowMarker, 0);
   }
-  } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
-     SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
-     return;
-  }
-  submit(Punctuation::WindowMarker, 0);
 }
 
 // ##################################

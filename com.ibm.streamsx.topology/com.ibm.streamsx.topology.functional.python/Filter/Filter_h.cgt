@@ -29,6 +29,9 @@ private:
     SplpyFuncOp *funcop_;
     
     PyObject *pyInStyleObj_;
+
+    @include "../../opt/python/codegen/pysplenablecr.cgt"
+    AutoConsistentRegionContext crContext;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

@@ -24,7 +24,8 @@ using namespace streamsx::topology;
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
    pyInStyleObj_(NULL),
-   occ_(-1)
+   occ_(-1),
+   crContext(this)
 { 
     const char * wrapfn = "<%=$pywrapfunc%>";
 
@@ -123,12 +124,14 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
     SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
   }
 
-  
-  // submit tuples
-  for(int i = 0; i < output_tuples.size() && !getPE().getShutdownRequested(); i++) {
-    submit(output_tuples[i], 0);
-  } 
-  
+  {
+    AutoConsistentRegionPermit crp(crContext);
+    AutoLock stateLock(funcop_);
+    // submit tuples
+    for(int i = 0; i < output_tuples.size() && !getPE().getShutdownRequested(); i++) {
+      submit(output_tuples[i], 0);
+    } 
+  }   
 }
 
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)

@@ -24,7 +24,8 @@ MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
    pyInStyleObj_(NULL),
    pyOutNames_0(NULL),
-   occ_(-1)
+   occ_(-1),
+   crContext(this)
 {
     const char * wrapfn = "<%=$pywrapfunc%>";
 
@@ -93,6 +94,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 try {
 @include "../pyspltuple2value.cgt"
 
+  AutoConsistentRegionPermit crp(crContext);
   AutoLock stateLock(funcop_);
 
 <%if ($pyoutstyle eq 'dict') {%>
