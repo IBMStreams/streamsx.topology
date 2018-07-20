@@ -12,7 +12,7 @@ public class BOutputPort extends BOutput implements BPort {
 
     BOutputPort(BOperatorInvocation op, int index, String name, String schema) {
         this.op = op;
-        addPortInfo(index, name, schema);
+        addPortInfo(op.builder().uniqueId("OP"), index, name, schema);
     }
 
     public BOperatorInvocation operator() {

@@ -787,7 +787,7 @@ class Stream(_placement._Placement, object):
         _name = self.topology.graph._requested_name(name, action='for_each', func=func)
         stateful = self._determine_statefulness(func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=_name, sl=sl, stateful=stateful)
-        op.addInputPort(outputPort=self.oport, name=self.name)
+        op.addInputPort(output_port=self.oport, name=self.name)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         op._layout(kind='ForEach', name=_name, orig_name=name)
         return Sink(op)
@@ -828,7 +828,7 @@ class Stream(_placement._Placement, object):
         _name = self.topology.graph._requested_name(name, action="filter", func=func)
         stateful = self._determine_statefulness(func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=_name, sl=sl, stateful=stateful)
-        op.addInputPort(outputPort=self.oport, name=self.name)
+        op.addInputPort(output_port=self.oport, name=self.name)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         op._layout(kind='Filter', name=_name, orig_name=name)
         oport = op.addOutputPort(schema=self.oport.schema, name=_name)
@@ -838,7 +838,7 @@ class Stream(_placement._Placement, object):
         _name = self.topology.graph._requested_name(name, action="map", func=func)
         stateful = self._determine_statefulness(func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Map", func, name=_name, stateful=stateful)
-        op.addInputPort(outputPort=self.oport, name=self.name)
+        op.addInputPort(output_port=self.oport, name=self.name)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         oport = op.addOutputPort(schema=schema, name=_name)
         op._layout(name=_name, orig_name=name)
@@ -1006,7 +1006,7 @@ class Stream(_placement._Placement, object):
         _name = self.topology.graph._requested_name(name, action='flat_map', func=func)
         stateful = self._determine_statefulness(func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=_name, sl=sl, stateful=stateful)
-        op.addInputPort(outputPort=self.oport, name=self.name)
+        op.addInputPort(output_port=self.oport, name=self.name)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         oport = op.addOutputPort(name=_name)
         return Stream(self.topology, oport)._make_placeable()._layout('FlatMap', name=_name, orig_name=name)
@@ -1029,7 +1029,7 @@ class Stream(_placement._Placement, object):
         """
         op = self.topology.graph.addOperator("$Isolate$")
         # does the addOperator above need the packages
-        op.addInputPort(outputPort=self.oport)
+        op.addInputPort(output_port=self.oport)
         oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
@@ -1046,7 +1046,7 @@ class Stream(_placement._Placement, object):
         op = self.topology.graph.addOperator("$LowLatency$")
         # include_packages=self.include_packages, exclude_packages=self.exclude_packages)
         # include_packages=self.include_packages, exclude_packages=self.exclude_packages)
-        op.addInputPort(outputPort=self.oport)
+        op.addInputPort(output_port=self.oport)
         oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
@@ -1059,7 +1059,7 @@ class Stream(_placement._Placement, object):
             Stream
         """
         op = self.topology.graph.addOperator("$EndLowLatency$")
-        op.addInputPort(outputPort=self.oport)
+        op.addInputPort(output_port=self.oport)
         oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
     
@@ -1100,7 +1100,7 @@ class Stream(_placement._Placement, object):
 
         if routing is None or routing == Routing.ROUND_ROBIN or routing == Routing.BROADCAST:
             op2 = self.topology.graph.addOperator("$Parallel$", name=_name)
-            op2.addInputPort(outputPort=self.oport)
+            op2.addInputPort(output_port=self.oport)
             if routing == Routing.BROADCAST:
                 oport = op2.addOutputPort(width, schema=self.oport.schema, routing="BROADCAST")
             else:
@@ -1125,19 +1125,19 @@ class Stream(_placement._Placement, object):
                 hash_adder._op_def['hashAdder'] = True
                 hash_adder._layout(hidden=True)
                 hash_schema = self.oport.schema.extend(streamsx.topology.schema.StreamSchema("tuple<int64 __spl_hash>"))
-                hash_adder.addInputPort(outputPort=self.oport, name=self.name)
+                hash_adder.addInputPort(output_port=self.oport, name=self.name)
                 streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, hash_adder, 'pyStyle')
                 parallel_input = hash_adder.addOutputPort(schema=hash_schema)
 
             parallel_op = self.topology.graph.addOperator("$Parallel$", name=_name)
-            parallel_op.addInputPort(outputPort=parallel_input)
+            parallel_op.addInputPort(output_port=parallel_input)
             parallel_op_port = parallel_op.addOutputPort(oWidth=width, schema=parallel_input.schema, partitioned_keys=keys, routing="HASH_PARTITIONED")
 
             if func is not None:
                 # use the Functor passthru operator to remove the hash attribute by removing it from output port schema
                 hrop = self.topology.graph.addPassThruOperator()
                 hrop._layout(hidden=True)
-                hrop.addInputPort(outputPort=parallel_op_port)
+                hrop.addInputPort(output_port=parallel_op_port)
                 parallel_op_port = hrop.addOutputPort(schema=self.oport.schema)
 
             return Stream(self.topology, parallel_op_port)
@@ -1155,10 +1155,10 @@ class Stream(_placement._Placement, object):
         if isinstance(self.oport.operator, streamsx.topology.graph.Marker):
             if self.oport.operator.kind == "$Union$":
                 pto = self.topology.graph.addPassThruOperator()
-                pto.addInputPort(outputPort=self.oport)
+                pto.addInputPort(output_port=self.oport)
                 outport = pto.addOutputPort(schema=self.oport.schema)
         op = self.topology.graph.addOperator("$EndParallel$")
-        op.addInputPort(outputPort=outport)
+        op.addInputPort(output_port=outport)
         oport = op.addOutputPort(schema=self.oport.schema)
         endP = Stream(self.topology, oport)
         return endP
@@ -1270,9 +1270,9 @@ class Stream(_placement._Placement, object):
         if(len(streamSet) == 0):
             return self        
         op = self.topology.graph.addOperator("$Union$")
-        op.addInputPort(outputPort=self.oport)
+        op.addInputPort(output_port=self.oport)
         for stream in streamSet:
-            op.addInputPort(outputPort=stream.oport)
+            op.addInputPort(output_port=stream.oport)
         oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
@@ -1365,7 +1365,7 @@ class Stream(_placement._Placement, object):
         _name = self.topology.graph._requested_name(name, action="publish")
         # publish is never stateful
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl, name=_name, stateful=False)
-        op.addInputPort(outputPort=self.oport)
+        op.addInputPort(output_port=self.oport)
         op._layout_group('Publish', name if name else _name)
         sink = Sink(op)
 
@@ -1393,7 +1393,7 @@ class Stream(_placement._Placement, object):
             Stream: Stream whose subsequent downstream processing is in an autonomous region.
         """
         op = self.topology.graph.addOperator("$Autonomous$")
-        op.addInputPort(outputPort=self.oport)
+        op.addInputPort(output_port=self.oport)
         oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
@@ -1598,7 +1598,7 @@ class PendingStream(object):
                 stream(Stream): Stream that completes the connection.
             """
             assert not self.is_complete()
-            self._marker.addInputPort(outputPort=stream.oport)
+            self._marker.addInputPort(output_port=stream.oport)
             self.stream.oport.schema = stream.oport.schema
             # Update the pending schema to the actual schema
             # Any downstream filters that took the reference
@@ -1739,7 +1739,7 @@ class Window(object):
         _name = self.topology.graph._requested_name(name, action="aggregate", func=function)
         stateful = self.stream._determine_statefulness(function)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Aggregate", function, name=_name, sl=sl, stateful=stateful)
-        op.addInputPort(outputPort=self.stream.oport, name=self.stream.name, window_config=self._config)
+        op.addInputPort(output_port=self.stream.oport, name=self.stream.name, window_config=self._config)
         streamsx.topology.schema.StreamSchema._fnop_style(self.stream.oport.schema, op, 'pyStyle')
         oport = op.addOutputPort(schema=schema, name=_name)
         op._layout(kind='Aggregate', name=_name, orig_name=name)

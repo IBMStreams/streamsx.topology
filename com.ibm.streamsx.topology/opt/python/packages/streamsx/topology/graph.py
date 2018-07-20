@@ -87,6 +87,17 @@ class SPLGraph(object):
         self._used_names = {'list', 'tuple', 'int'}
         self._layout_group_id = 0
         self._colocate_tag_mapping = {}
+        self._id_gen = 0
+
+    def _unique_id(self, prefix):
+        """
+        Generate a unique (within the graph) identifer
+        internal to graph generation.
+        """
+        _id = self._id_gen
+        self._id_gen += 1
+        return prefix + str(_id)
+
 
     def get_views(self):
         return self._views
@@ -306,19 +317,16 @@ class _SPLInvocation(object):
     def addViewConfig(self, view_configs):
         self.view_configs.append(view_configs)
 
-    def addInputPort(self, name=None, outputPort=None, window_config=None):
+    def addInputPort(self, name=None, output_port=None, window_config=None):
         if name is None:
             name = self.name + "_IN"+ str(len(self.inputPorts))
-        iPortSchema = CommonSchema.Python    
-        if not outputPort is None :
-            iPortSchema = outputPort.schema        
-        iport = IPort(name, self, len(self.inputPorts),iPortSchema, window_config)
+        schema = output_port.schema if output_port else CommonSchema.Python
+        iport = IPort(name, self, len(self.inputPorts), schema, window_config)
         self.inputPorts.append(iport)
 
-        if not outputPort is None:
-            iport.connect(outputPort)
+        if output_port:
+            iport.connect(output_port)
         return iport
-
 
     def generateSPLOperator(self):
         _op = dict(self._op_def)
@@ -480,6 +488,7 @@ class _SPLInvocation(object):
 
 class IPort(object):
     def __init__(self, name, operator, index, schema, window_config):
+        self._id = operator.graph._unique_id('IP')
         self.name = name
         self.operator = operator
         self.index = index
@@ -496,6 +505,7 @@ class IPort(object):
 
     def getSPLInputPort(self):
         _iport = {}
+        _iport['id'] = self._id
         _iport["name"] = self.name
         _iport["connections"] = [port.name for port in self.outputPorts]
         _iport["type"] = self.schema.schema()
@@ -505,6 +515,7 @@ class IPort(object):
 
 class OPort(object):
     def __init__(self, name, operator, index, schema, width=None, partitioned_keys=None, routing=None):
+        self._id = operator.graph._unique_id('OP')
         self.name = name
         self.operator = operator
         self.schema = _stream_schema(schema)
@@ -525,6 +536,7 @@ class OPort(object):
 
     def getSPLOutputPort(self):
         _oport = {}
+        _oport['id'] = self._id
         _oport["type"] = self.schema.schema()
         _oport["name"] = self.name
         _oport["connections"] = [port.name for port in self.inputPorts]

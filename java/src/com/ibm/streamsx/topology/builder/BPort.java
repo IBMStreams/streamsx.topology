@@ -16,16 +16,18 @@ interface BPort {
    
     JsonObject _json();
     
-    default void addPortInfo(int index, String name, String schema) {
+    default void addPortInfo(String id, int index, String name, String schema) {
         
-        
+        _json().addProperty("id", id);
         _json().addProperty("name", name);
         _json().addProperty("type", schema);
         _json().addProperty("index", index);
         
         _json().add("connections", new JsonArray());
     }
-    
+    default String id() {
+        return jstring(_json(), "id");
+    }
     default String name() {
         return jstring(_json(), "name");
     }

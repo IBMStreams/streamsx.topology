@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -63,6 +64,8 @@ public class GraphBuilder extends BJSONObject {
     private final JsonObject config = new JsonObject();
     
     private String functionalNamespaceColon;
+    
+    private final AtomicInteger idGen = new AtomicInteger();
 
     /**
      * Submission parameters.
@@ -85,6 +88,14 @@ public class GraphBuilder extends BJSONObject {
     }
    
    private final Map<String,Integer> usedNames = new HashMap<>();
+   
+    /**
+     * Generate a unique (within the graph) identifer internal to
+     * graph generation.
+     */
+    public String uniqueId(String prefix) {
+        return prefix + Integer.toString(idGen.getAndIncrement());
+    }
    
     public BOperatorInvocation addOperator(String name, String kind, Map<String, ? extends Object> params) {
 
