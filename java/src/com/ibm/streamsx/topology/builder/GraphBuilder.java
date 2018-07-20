@@ -89,6 +89,10 @@ public class GraphBuilder extends BJSONObject {
    
    private final Map<String,Integer> usedNames = new HashMap<>();
    
+    /**
+     * Generate a unique (within the graph) identifer internal to
+     * graph generation.
+     */
     public String uniqueId(String prefix) {
         return prefix + Integer.toString(idGen.getAndIncrement());
     }
