@@ -35,7 +35,7 @@ class ExtensionOperator(object):
         if isinstance(_input, streamsx.topology.topology.Window):
             win_cfg = _input._config
             _input = _input.stream
-        self._op().addInputPort(outputPort=_input.oport, name=_input.name, window_config = win_cfg)
+        self._op().addInputPort(output_port=_input.oport, name=_input.name, window_config = win_cfg)
         self._inputs.append(_input)
 
     def __inputs(self, inputs):

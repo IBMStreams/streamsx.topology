@@ -167,7 +167,7 @@ class MqttStreams(object):
         # convert pub_stream outputport schema from spl po to spl rstring type
         forOp = pub_stream._map(streamsx.topology.functions.identity, schema.CommonSchema.String)
         op = self.topology.graph.addOperator(kind="com.ibm.streamsx.messaging.mqtt::MQTTSink")
-        op.addInputPort(outputPort=forOp.oport)
+        op.addInputPort(output_port=forOp.oport)
         op.setParameters(parms)
         return None
 
@@ -187,6 +187,6 @@ class MqttStreams(object):
         oport = op.addOutputPort(schema=schema.StreamSchema("tuple<rstring topic, rstring string>"))
         op.setParameters(parms)
         pop = self.topology.graph.addPassThruOperator()
-        pop.addInputPort(outputPort=oport)
+        pop.addInputPort(output_port=oport)
         pOport = pop.addOutputPort(schema=schema.CommonSchema.String)
         return Stream(self.topology, pOport)

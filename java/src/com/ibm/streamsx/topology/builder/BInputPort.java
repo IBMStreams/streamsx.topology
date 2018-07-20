@@ -24,7 +24,7 @@ public class BInputPort extends BInput implements BPort {
         super(op.builder());
         this.op = op;
         
-        addPortInfo(index, name, schema);
+        addPortInfo(op.builder().uniqueId("IP"), index, name, schema);
     }
 
     public BOperator operator() {
