@@ -15,6 +15,7 @@ import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLI
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_NOT_WINDOWED;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_SLIDING;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_TUMBLING;
+import static com.ibm.streamsx.topology.generator.port.PortProperties.inputPortRef;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.getSPLCompatibleName;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.stringLiteral;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_COLOCATE_IDS;
@@ -440,7 +441,7 @@ class OperatorGenerator {
                 sb.append("  window\n");
 
             sb.append("    ");
-            sb.append(getSPLCompatibleName(jstring(input, "name")));
+            sb.append(getSPLCompatibleName(inputPortRef(input)));
             sb.append(":");
             switch (type) {
             case TYPE_SLIDING:
