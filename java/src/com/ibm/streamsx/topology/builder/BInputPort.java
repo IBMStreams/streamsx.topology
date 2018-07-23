@@ -8,6 +8,11 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.gson.JsonObject;
 
+/**
+ * Input ports don't have a name in SPL but the code generation
+ * keys ports by their name so we create a unique internal identifier
+ * for the name.
+ */
 public class BInputPort extends BInput implements BPort {
     
     public interface Window {
@@ -20,11 +25,11 @@ public class BInputPort extends BInput implements BPort {
 
     private final BOperator op;
 
-    BInputPort(BOperatorInvocation op, int index, String name, String schema) {
+    BInputPort(BOperatorInvocation op, int index, String schema) {
         super(op.builder());
         this.op = op;
         
-        addPortInfo(index, name, schema);
+        addPortInfo(index, op.builder().uniqueId("$__spl_ip"), schema);
     }
 
     public BOperator operator() {

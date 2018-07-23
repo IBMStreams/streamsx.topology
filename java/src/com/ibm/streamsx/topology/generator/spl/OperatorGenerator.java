@@ -103,17 +103,24 @@ class OperatorGenerator {
                 for (int i = 0; i < outputs.size(); i++) {
                     JsonObject output = outputs.get(i).getAsJsonObject();
                     String name = jstring(output, "name");
-                    if (name != null)
-                        layoutMapName(layout, name);
+                    layoutMapName(layout, name);
                 }
             }
+
             if (op.has("inputs")) {
                 JsonArray inputs = array(op, "inputs");
                 for (int i = 0; i < inputs.size(); i++) {
-                    JsonObject output = inputs.get(i).getAsJsonObject();
-                    String name = jstring(output, "name");
-                    if (name != null)
-                        layoutMapName(layout, name);
+                    JsonObject input = inputs.get(i).getAsJsonObject();
+                    String alias = jstring(input, "alias");
+                    if (alias != null)
+                        layoutMapName(layout, alias);
+                    else {
+                        JsonArray conns = array(input, "connections");
+                        if (conns != null && conns.size() > 0) {
+                            String portName = conns.get(0).getAsString();
+                            layoutMapName(layout, portName  );
+                        }
+                    }
                 }
             }
 
@@ -398,31 +405,17 @@ class OperatorGenerator {
             if (!firstPort.getAndSet(false))
                 sb.append("; ");
 
-            final String portName = jstring(input, "name");
-
-            // If a single input stream and its name 
-            // is the same as the port name
-            // then don't use an 'as'. Allows better logical names
-            // where the user provided stream name is used consistently.
-            boolean singleName = false;
-            JsonArray connections = array(input, "connections");
-            if (connections.size() == 1) {
-                String connName = connections.get(0).getAsString();
-
-                if (portName.equals(connName))
-                    singleName = true;
-            }
-
             AtomicBoolean firstStream = new AtomicBoolean(true);
             stringArray(input, "connections", name -> {
                 if (!firstStream.getAndSet(false))
                     sb.append(", ");
                 sb.append(getSPLCompatibleName(name));
             });
-
-            if (!singleName) {
+            
+            String alias = jstring(input, "alias");
+            if (alias != null) {
                 sb.append(" as ");
-                sb.append(getSPLCompatibleName(portName));
+                sb.append(getSPLCompatibleName(alias));
             }
         });
 

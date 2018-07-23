@@ -239,15 +239,8 @@ public class BOperatorInvocation extends BOperator {
         if (inputs == null) {
             inputs = new ArrayList<>();
         }
-        
-        // The operator name is unique so most likely
-        // adding a port specific suffix creates a unique port name.
-        String portName = name() + "_IN" + inputs.size();
-        
-        // Just in case the resultant name does clash with an operator name.
-        portName = builder().userSuppliedName(portName);
 
-        input = new BInputPort(this, inputs.size(), portName, output._type());
+        input = new BInputPort(this, inputs.size(), output._type());
         inputs.add(input);
         output.connectTo(input);
 
