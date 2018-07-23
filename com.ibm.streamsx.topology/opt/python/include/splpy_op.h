@@ -251,6 +251,7 @@ class SplpyOp {
           SPLAPPTRC(L_TRACE, "consistent region enabled", "python");
         else 
           SPLAPPTRC(L_TRACE, "consistent region disabled", "python");
+        // TODO what if both are enabled?
 
         if (checkpointing || consistentRegion) {
           PyObject * pickledCallable = NULL;
