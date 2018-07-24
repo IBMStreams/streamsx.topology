@@ -11,6 +11,7 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_PYTHON;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
+import static com.ibm.streamsx.topology.generator.port.PortProperties.inputPortRef;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.kind;
@@ -401,12 +402,12 @@ public class SPLGenerator {
             
             
             if(jstring(outputPort, PortProperties.ROUTING).equals("BROADCAST")){
-                broadcastPorts.add(inputPort.get("name"));
+                broadcastPorts.add(new JsonPrimitive(inputPortRef(inputPort)));
             }       
             
             if(outputPort.has(PortProperties.PARTITIONED) && jboolean(outputPort, PortProperties.PARTITIONED)){
                 JsonObject partitionInfo = new JsonObject();
-                partitionInfo.add("name", inputPort.get("name"));
+                partitionInfo.addProperty("name", inputPortRef(inputPort));
                 partitionInfo.add(PortProperties.PARTITION_KEYS, outputPort.get(PortProperties.PARTITION_KEYS));
                 partitionedPorts.add(partitionInfo);
                 
