@@ -55,6 +55,14 @@ import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 import com.ibm.streamsx.topology.tuple.BeaconTuple;
 
+/**
+ * Parallel tests.
+ * testParallelNonPartitioned
+ * testParallelWidthSupplier
+ * testAdjacentParallel* - S -> [ R1 ] -> [ R1 ] > E
+ * 
+ *
+ */
 public class ParallelTest extends TestTopology {
     /**
      * Currently a fan-out before an endParallel
@@ -735,12 +743,16 @@ public class ParallelTest extends TestTopology {
         };
     }
 
+    /**
+     * Tests the input to a region also being consumed
+     * by a non-parallel operator.
+     */
     @Test
     public void testParallelPreFanOut() throws Exception {
         Topology topology = newTopology();
         
         TStream<String> strings = topology.strings("A", "B", "C", "D", "E");
-        strings.print();
+        TStream<String> pre = strings.modify(s -> s.concat("X"));
         TStream<String> stringsP = strings.parallel(3);
         stringsP = stringsP.filter(new AllowAll<String>());
         stringsP = stringsP.endParallel();
@@ -748,22 +760,23 @@ public class ParallelTest extends TestTopology {
         Tester tester = topology.getTester();
         
         Condition<Long> fiveTuples = tester.tupleCount(stringsP, 5);
-        
+        Condition<List<String>> preContents = tester.stringContents(pre, "AX", "BX", "CX", "DX", "EX");
         Condition<List<String>> contents = tester.stringContentsUnordered(stringsP, "A", "B", "C", "D", "E");
         
-        complete(tester, allConditions(fiveTuples, contents), 10, TimeUnit.SECONDS);
+        complete(tester, allConditions(fiveTuples, contents, preContents), 10, TimeUnit.SECONDS);
 
         assertTrue("contents: "+contents, contents.valid());
+        assertTrue(preContents.valid());
     }
     
     @Test
-    public void testUnionUnparallel() throws Exception {
+    public void testUnionEndparallel() throws Exception {
         Topology topology = newTopology();
         
         TStream<String> strings = topology.strings("A", "B", "C", "D", "E");
         TStream<String> stringsP = strings.parallel(3);
-        TStream<String> stringsP_AB = stringsP.filter(allowAB());
-        TStream<String> stringsP_CDE = stringsP.filter(allowCDE());
+        TStream<String> stringsP_AB = stringsP.filter(allowAB()).modify(s->s.concat("X"));
+        TStream<String> stringsP_CDE = stringsP.filter(allowCDE()).modify(s->s.concat("Y"));;
         
         stringsP = stringsP_AB.union(stringsP_CDE).endParallel();
         
@@ -771,7 +784,7 @@ public class ParallelTest extends TestTopology {
         
         Condition<Long> fiveTuples = tester.tupleCount(stringsP, 5);
         
-        Condition<List<String>> contents = tester.stringContentsUnordered(stringsP, "A", "B", "C", "D", "E");
+        Condition<List<String>> contents = tester.stringContentsUnordered(stringsP, "AX", "BX", "CY", "DY", "EY");
         
         complete(tester, allConditions(fiveTuples, contents), 10, TimeUnit.SECONDS);
 
