@@ -22,7 +22,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ibm.streams.operator.OperatorContext;
@@ -64,26 +63,35 @@ import com.ibm.streamsx.topology.tuple.BeaconTuple;
  *
  */
 public class ParallelTest extends TestTopology {
-    /**
-     * Currently a fan-out before an endParallel
-     * is not supported. This is a limitation purely on
-     * code generation.
-     */
-    @Test(expected=IllegalStateException.class)
-    public void fanoutEndParallelException() throws Exception {
-        checkUdpSupported();
+    @Test
+    public void testMultipleParallelUse() throws Exception {
         Topology topology = newTopology("testFanout");
-        TStream<String> fanOut = topology.strings("hello").parallel(5)
-                .filter(new AllowAll<String>());
-        fanOut.print();
-        fanOut.endParallel();
+        TStream<String> sp = topology.strings("A", "B", "C", "D", "E").parallel(2);
         
-        Tester tester = topology.getTester();
+        TStream<String> fanOut = sp.modify(v ->v.concat("Y"));
+        fanOut.forEach(v -> {});
+              
+        sp = sp.modify(v -> v.concat("X"));
+        sp = sp.union(fanOut);
         
-	Condition<Long> expectedCount = tester.tupleCount(fanOut, 1);
+        fanOut = fanOut.endParallel();
+        
+        sp.forEach(v -> {});
+        sp = sp.endParallel();
 
-	complete(tester, expectedCount, 60, TimeUnit.SECONDS);
-	assertTrue(expectedCount.valid());
+        Tester tester = topology.getTester();
+
+        Condition<Long> fanOutN = tester.tupleCount(fanOut, 5);
+        Condition<Long> spN = tester.tupleCount(sp, 10);
+        
+        Condition<List<String>> fanOutC = tester.stringContentsUnordered(fanOut, "AY", "BY", "CY", "DY", "EY");
+        Condition<List<String>> spC = tester.stringContentsUnordered(sp, "AY", "BY", "CY", "DY", "EY", "AX", "BX", "CX", "DX", "EX");     
+
+        complete(tester, Condition.all(fanOutN, spN, fanOutC, spC), 60, TimeUnit.SECONDS);
+        assertTrue(fanOutN.valid());
+        assertTrue(spN.valid());
+        assertTrue(fanOutC.valid());
+        assertTrue(spC.valid());
     }
 
     private void testAdjacentParallel(Routing routing1, Routing routing2) throws Exception {
@@ -789,6 +797,38 @@ public class ParallelTest extends TestTopology {
         complete(tester, allConditions(fiveTuples, contents), 10, TimeUnit.SECONDS);
 
         assertTrue("contents: "+contents, contents.valid());
+    }
+    
+    /**
+     * Test union->parallel
+     */
+    @Test
+    public void testUnionParallel() throws Exception {
+        Topology topology = newTopology();
+        
+        TStream<String> s1 = topology.strings("A", "B", "C", "D", "E");
+        TStream<String> s2 = topology.strings("W", "X", "Y", "Z");
+        TStream<String> s = s1.union(s2);
+        TStream<String> sp = s.parallel(3).modify(v->v.concat("P")).endParallel();
+        s = s.modify(v->v.concat("U"));
+        s.print();
+        
+        Tester tester = topology.getTester();
+        
+        Condition<Long> spn = tester.tupleCount(sp, 9);
+        Condition<Long> sn = tester.tupleCount(s, 9);
+        
+        Condition<List<String>> spc = tester.stringContentsUnordered(sp,
+                "AP", "BP", "CP", "DP", "EP", "WP", "XP", "YP", "ZP");
+        Condition<List<String>> sc = tester.stringContentsUnordered(s,
+                "AU", "BU", "CU", "DU", "EU", "WU", "XU", "YU", "ZU");
+        
+        complete(tester, allConditions(spn, sn, spc, sc), 10, TimeUnit.SECONDS);
+
+        assertTrue(spn.valid());
+        assertTrue(sn.valid());
+        assertTrue(spc.valid());
+        assertTrue(sc.valid());
     }
     
     @Test
