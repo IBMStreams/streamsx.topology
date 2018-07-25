@@ -7,8 +7,6 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 
-@include "../../opt/python/codegen/pysplenablecheckpointing.cgt"
-
 <% my $pywrapfunc='source_pickle'; %>
 
 // Constructor
@@ -58,7 +56,7 @@ void MY_OPERATOR::allPortsReady()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    AutoLock lock(funcop_);
+    OptionalAutoLock lock(this);
     funcop_->prepareToShutdown();
 }
 
@@ -73,7 +71,7 @@ void MY_OPERATOR::process(uint32_t idx)
 
     { // start lock
       AutoConsistentRegionPermit crp(crContext);
-      AutoLock stateLock(funcop_);
+      OptionalAutoLock stateLock(this);
       SplpyGIL lock;
       if (pyReturnVar != NULL) {
           Py_DECREF(pyReturnVar);

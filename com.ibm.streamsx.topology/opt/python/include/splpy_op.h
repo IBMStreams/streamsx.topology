@@ -20,12 +20,12 @@
 #include <SPL/Runtime/Operator/OperatorMetrics.h>
 #include <SPL/Runtime/Common/Metric.h>
 #include <SPL/Runtime/Operator/OptionalContext.h>
+#include <SPL/Runtime/Operator/State/ConsistentRegionContext.h>
 #include <SPL/Runtime/Operator/State/StateHandler.h>
 
 #include "splpy_ec_api.h"
 #include "splpy_general.h"
 #include "splpy_setup.h"
-#include "splpy_cr.h"
 
 namespace streamsx {
   namespace topology {
@@ -319,11 +319,31 @@ class SplpyOp {
             stateHandler = new SplpyOpStateHandler;
             stateHandlerMutex = NULL;
           }
+          // TODO this should be removed.
           SPLAPPTRC(L_DEBUG, "registerStateHandler", "python");
           op()->getContext().registerStateHandler(*stateHandler);
         }
       }
 
+      void checkpoint(SPL::Checkpoint & ckpt) {
+        if (stateHandler) {
+          stateHandler->checkpoint(ckpt);
+        }
+      }
+      
+      void reset(SPL::Checkpoint & ckpt) {
+        if (stateHandler) {
+          stateHandler->reset(ckpt);
+        }
+      }
+
+      void resetToInitialState() {
+        if (stateHandler) {
+          stateHandler->resetToInitialState();
+        }
+      }
+
+      // TODO this can go now.
       class RealAutoLock {
       public:
         RealAutoLock(SplpyOp * op) : op_(op) {

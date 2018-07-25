@@ -7,7 +7,6 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 
-@include "../../opt/python/codegen/pysplenablecheckpointing.cgt"
 @include "../pyspltuple.cgt"
 
 <%
@@ -33,9 +32,7 @@ MY_OPERATOR::MY_OPERATOR() :
    loads(NULL),
    occ_(-1),
    window_(<%=$windowCppInitializer%>),
-   crContext(this),
-   innerStateHandler(),
-   mutex()
+   crContext(this)
 {
 <% if ($window->isSliding()) {%>
     window_.registerOnWindowTriggerHandler(this);
@@ -88,8 +85,6 @@ MY_OPERATOR::MY_OPERATOR() :
     loads = SplpyGeneral::loadFunction("json", "loads");
     <% } %>
     }
-
-    innerStateHandler = getContext().getStateHandler();
 }
 
 // Destructor
@@ -110,8 +105,7 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    //AutoLock stateLock(funcop_);
-    OptionalAutoMutex stateLock(mutex);
+    OptionalAutoLock stateLock(this);
     funcop_->prepareToShutdown();
 }
 
@@ -121,8 +115,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 @include "../pyspltuple2value.cgt"
 
   SPLAPPTRC(L_DEBUG, "Acquire state lock if needed", SPL_OPER_DBG);
-  //AutoLock stateLock(funcop_);
-  OptionalAutoMutex stateLock(mutex);
+  OptionalAutoLock stateLock(this);
 
   PyObject *python_value;
 
@@ -181,8 +174,7 @@ void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
 {
 <% if ($window->isTumbling()) {%>
    SPLAPPTRC(L_DEBUG, "Acquire state lock if needed", SPL_OPER_DBG);
-//   AutoLock stateLock(funcop_);
-    OptionalAutoMutex stateLock(mutex);
+    OptionalAutoLock stateLock(this);
 
    // Aggregate the remaining contents if there are some.
    if (punct == Punctuation::FinalMarker) {
@@ -250,35 +242,25 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
 
 void MY_OPERATOR::checkpoint(SPL::Checkpoint & ckpt) {
     SPLAPPTRC(L_DEBUG, "checkpoint", SPL_OPER_DBG);
-//    AutoLock stateLock(funcop_);
-    OptionalAutoMutex stateLock(mutex);
+    OptionalAutoLock stateLock(this);
     SPLAPPTRC(L_TRACE, "window_.checkpoint", SPL_OPER_DBG);
     window_.checkpoint(ckpt);
-    if (innerStateHandler) {
-        SPLAPPTRC(L_TRACE, "innerStateHandler->checkpoint", SPL_OPER_DBG);
-        innerStateHandler->checkpoint(ckpt);
-    }
+    DelegatingStateHandler::checkpoint(ckpt);
     SPLAPPTRC(L_TRACE, "exit checkpoint", SPL_OPER_DBG);
 }
 
 void MY_OPERATOR::reset(SPL::Checkpoint & ckpt) {
     SPLAPPTRC(L_DEBUG, "reset", SPL_OPER_DBG);
-//    AutoLock stateLock(funcop_);
-    OptionalAutoMutex stateLock(mutex);
+    OptionalAutoLock stateLock(this);
     window_.reset(ckpt);
-    if (innerStateHandler) {
-        innerStateHandler->reset(ckpt);
-    }
+    DelegatingStateHandler::checkpoint(ckpt);
 }
 
 void MY_OPERATOR::resetToInitialState() {
     SPLAPPTRC(L_DEBUG, "resetToInitialState", SPL_OPER_DBG);
-//    AutoLock stateLock(funcop_);
-    OptionalAutoMutex stateLock(mutex);
+    OptionalAutoLock stateLock(this);
     window_.resetToInitialState();
-    if (innerStateHandler) {
-        innerStateHandler->resetToInitialState();
-    }
+    DelegatingStateHandler::resetToInitialState();
 }
 
 namespace SPL{

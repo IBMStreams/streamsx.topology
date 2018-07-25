@@ -13,7 +13,7 @@ using namespace streamsx::topology;
   my %h_tuple_types;
 %>
 
-class MY_OPERATOR : public MY_BASE_OPERATOR, public SplpyPrimitiveOp
+class MY_OPERATOR : public MY_BASE_OPERATOR, public SplpyPrimitiveOp, public DelegatingStateHandler
 {
 public:
   MY_OPERATOR();
@@ -59,6 +59,8 @@ private:
   void fromPyDictToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupleType()%> & otuple);
   <%}%>
 <%}%>
+
+@include "../../opt/.__splpy/common/pysplenablecr.cgt"
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

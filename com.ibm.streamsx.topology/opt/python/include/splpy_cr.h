@@ -2,28 +2,31 @@
 #define SPL_SPLPY_CR_H_
 
 #include <SPL/Runtime/Operator/State/ConsistentRegionContext.h>
+#include <SPL/Runtime/Operator/State/StateHandler.h>
 #include <SPL/Runtime/Utility/Mutex.h>
 
 // Support for consistent region in python operators
 
+namespace streamsx {
+  namespace topology {
+
 template<bool b>
-class OptionalConsistentRegionContext {
-};
+class OptionalConsistentRegionContextImpl;
 
 template<>
-class OptionalConsistentRegionContext<false> {
+class OptionalConsistentRegionContextImpl<false> {
  public:
-  OptionalConsistentRegionContext(SPL::Operator * op) {}
+  OptionalConsistentRegionContextImpl(SPL::Operator * op) {}
   class Permit {
   public:
-    Permit(OptionalConsistentRegionContext<false>){}
+    Permit(OptionalConsistentRegionContextImpl<false>){}
   };
 };
 
 template<>
-class OptionalConsistentRegionContext<true> {
+class OptionalConsistentRegionContextImpl<true> {
  public:
-  OptionalConsistentRegionContext(SPL::Operator *op) : crContext(NULL) {
+  OptionalConsistentRegionContextImpl(SPL::Operator *op) : crContext(NULL) {
     crContext = static_cast<SPL::ConsistentRegionContext *>(op->getContext().getOptionalContext(CONSISTENT_REGION));
   }
   operator SPL::ConsistentRegionContext *() {return crContext;}
@@ -33,6 +36,7 @@ private:
   SPL::ConsistentRegionContext * crContext;
 };
 
+#if 0
 // Template for an optional value, resolved at compile-time.  Instantiate
 // with b == true if the value is needed, b == false if not.
 template<bool b, typename T>
@@ -103,7 +107,82 @@ public:
 private:
   SPL::Mutex & mutex;
 };
+#endif
 
+class DelegatingStateHandler : public SPL::StateHandler {
+public:
+  DelegatingStateHandler():locked_(false) {}
 
+  virtual void checkpoint(SPL::Checkpoint & ckpt);
+  virtual void reset(SPL::Checkpoint & ckpt);
+  virtual void resetToInitialState();
+
+  template<bool b>
+  friend class OptionalAutoLockImpl;
+
+protected:
+  virtual SplpyOp * op() = 0;
+
+private:
+  void lock();
+  void unlock();
+
+  SPL::Mutex mutex_;
+  bool locked_;
+};
+
+template<bool b>
+class OptionalAutoLockImpl;
+
+template<>
+class OptionalAutoLockImpl<true> {
+public:
+  OptionalAutoLockImpl(DelegatingStateHandler* outer) : outer_(outer) {
+    outer->lock();
+  }
+  ~OptionalAutoLockImpl() {
+    outer_->unlock();
+  }
+private:
+  DelegatingStateHandler * outer_;
+};
+
+template<>
+class OptionalAutoLockImpl<false>
+{
+ public:
+  OptionalAutoLockImpl(DelegatingStateHandler*) {}
+};
+
+inline void DelegatingStateHandler::checkpoint(SPL::Checkpoint & ckpt) {
+  OptionalAutoLockImpl<true> lock(this);
+  op()->checkpoint(ckpt);
+}
+
+inline void DelegatingStateHandler::reset(SPL::Checkpoint & ckpt) {
+  OptionalAutoLockImpl<true> lock(this);
+  op()->reset(ckpt);
+}
+
+inline void DelegatingStateHandler::resetToInitialState() {
+  OptionalAutoLockImpl<true> lock(this);
+  op()->resetToInitialState();
+}
+
+inline void DelegatingStateHandler::lock() {
+  if (!locked_) {
+    mutex_.lock();
+    locked_ = true;
+  }
+}
+
+inline void DelegatingStateHandler::unlock() {
+  if (locked_) {
+    mutex_.unlock();
+    locked_ = false;
+  }
+}
+
+}} // end namspace
 
 #endif // SPL_SPLPY_CR_H_
