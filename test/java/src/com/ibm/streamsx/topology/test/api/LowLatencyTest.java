@@ -219,18 +219,6 @@ public class LowLatencyTest extends TestTopology {
                 .endLowLatency()
                 ;
         
-        // NOTE, this works in the sense that all end up in the same container,
-        // but currently only because of the default fuse-island behavior.
-        // There are two issues with the json:
-        // a) the 3rd modify is missing a lowLatencyTag
-        // b) the 2nd modify has a different tag than the first.
-        //    logically it must net out to being in the same container,
-        //    so its just easiest if they're the same tag.
-        //    It's not clear that having them be different is an absolute wrong,
-        //    it's just that it doesn't add any value and complicates things.
-        
-        // s2.print();
-        
         Condition<Long> uCount = tester.tupleCount(s2.filter(new AllowAll<String>()), 1);
         Condition<List<String>> contents = tester.stringContents(
                 s2.filter(new AllowAll<String>()));
