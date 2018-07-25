@@ -50,7 +50,6 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 try {
 @include "../pyspltuple2value.cgt"
 
-  AutoConsistentRegionPermit crp(crContext);
   AutoLock stateLock(funcop_);
 <%if ($pystyle_fn eq 'dict' || $pystyle_fn eq 'tuple') {%>
 

@@ -16,7 +16,8 @@ using namespace streamsx::topology;
 @include "../pyspltuple.cgt"
 
 class MY_OPERATOR : public MY_BASE_OPERATOR,
-      public WindowEvent<PyObject *>
+      public WindowEvent<PyObject *>,
+      public StateHandler
 {
 public:
   // Constructor
@@ -46,6 +47,10 @@ void afterTupleEvictionEvent(
      Window<PyObject *> & window,  Window<PyObject *>::TupleType & tuple,
      Window<PyObject *>::PartitionType const & partition);
 
+  virtual void checkpoint(SPL::Checkpoint & ckpt);
+  virtual void reset(SPL::Checkpoint & ckpt);
+  virtual void resetToInitialState();
+
 private:
     SplpyOp * op() { return funcop_; }
 
@@ -67,7 +72,9 @@ private:
 
     @include "../../opt/python/codegen/pysplenablecr.cgt"
     AutoConsistentRegionContext crContext;
+
+    OptionalStateHandler innerStateHandler; // only when checkpointing or CR
+    OptionalMutex mutex;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>
-
