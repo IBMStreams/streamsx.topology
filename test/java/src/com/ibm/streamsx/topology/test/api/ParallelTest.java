@@ -779,6 +779,8 @@ public class ParallelTest extends TestTopology {
     
     @Test
     public void testUnionEndparallel() throws Exception {
+        checkUdpSupported();
+        
         Topology topology = newTopology();
         
         TStream<String> strings = topology.strings("A", "B", "C", "D", "E");
@@ -790,11 +792,9 @@ public class ParallelTest extends TestTopology {
         
         Tester tester = topology.getTester();
         
-        Condition<Long> fiveTuples = tester.tupleCount(stringsP, 5);
-        
         Condition<List<String>> contents = tester.stringContentsUnordered(stringsP, "AX", "BX", "CY", "DY", "EY");
         
-        complete(tester, allConditions(fiveTuples, contents), 10, TimeUnit.SECONDS);
+        complete(tester, contents, 10, TimeUnit.SECONDS);
 
         assertTrue("contents: "+contents, contents.valid());
     }
@@ -804,6 +804,8 @@ public class ParallelTest extends TestTopology {
      */
     @Test
     public void testUnionParallel() throws Exception {
+        checkUdpSupported();
+        
         Topology topology = newTopology();
         
         TStream<String> s1 = topology.strings("A", "B", "C", "D", "E");
@@ -815,18 +817,13 @@ public class ParallelTest extends TestTopology {
         
         Tester tester = topology.getTester();
         
-        Condition<Long> spn = tester.tupleCount(sp, 9);
-        Condition<Long> sn = tester.tupleCount(s, 9);
-        
         Condition<List<String>> spc = tester.stringContentsUnordered(sp,
                 "AP", "BP", "CP", "DP", "EP", "WP", "XP", "YP", "ZP");
         Condition<List<String>> sc = tester.stringContentsUnordered(s,
                 "AU", "BU", "CU", "DU", "EU", "WU", "XU", "YU", "ZU");
         
-        complete(tester, allConditions(spn, sn, spc, sc), 10, TimeUnit.SECONDS);
+        complete(tester, allConditions(spc, sc), 10, TimeUnit.SECONDS);
 
-        assertTrue(spn.valid());
-        assertTrue(sn.valid());
         assertTrue(spc.valid());
         assertTrue(sc.valid());
     }
@@ -834,6 +831,7 @@ public class ParallelTest extends TestTopology {
     @Test
     public void testBroadcast() throws Exception {
         checkUdpSupported();
+        
         Topology topology = newTopology();
         
         TStream<String> strings = topology.strings("1", "7", "19", "23", "57");
