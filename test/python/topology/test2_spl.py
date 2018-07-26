@@ -131,7 +131,7 @@ class TestSPL(unittest.TestCase):
         test a stream alias to ensure the SPL expression
         is consistent with hand-coded SPL expression.
         """
-        topo = Topology('test_SPLBeaconFilter')
+        topo = Topology('test_stream_alias')
         s = op.Source(topo, "spl.utility::Beacon",
             'tuple<uint64 seq>',
             params = {'period': 0.02, 'iterations':27}, name='SomeName')
