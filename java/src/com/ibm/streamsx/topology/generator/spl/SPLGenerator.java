@@ -11,6 +11,7 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_PYTHON;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
+import static com.ibm.streamsx.topology.generator.port.PortProperties.inputPortRef;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.kind;
@@ -33,9 +34,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -76,6 +79,8 @@ public class SPLGenerator {
     
     // The kinds of the virtual operators that are the end of a region.
     List<String> compEnds = new ArrayList<>();
+    
+    private final Map<String,String> compositePortRemaps = new HashMap<>();
 
     public String generateSPL(JsonObject graph) throws IOException {
         JsonObject graphConfig = getGraphConfig(graph);
@@ -94,6 +99,8 @@ public class SPLGenerator {
         mainCompsiteDef.addProperty("__spl_mainComposite", true);
         mainCompsiteDef.add("operators", graph.get("operators"));
         composites.add(mainCompsiteDef);
+                
+        remapAllCompositePorts();
         
         preprocessor.compositeColocateIdUsage(composites);
         
@@ -121,7 +128,83 @@ public class SPLGenerator {
         // Find composites until there are no more to find.
         while(findAndCreateMostNestedComposite(graph)){
 
-        }     
+        }    
+    }
+    
+    private void remapAllCompositePorts() {
+        
+        
+        for (JsonObject composite : composites) {
+            // First remap the input and output port names
+            if (composite.has("inputNames")) {
+               
+                JsonArray names = array(composite, "inputNames");
+                for (int i = 0; i < names.size(); i++) {
+                    names.set(i, new JsonPrimitive(remapPortName(names.get(i).getAsString())));
+                }
+            }
+            if (composite.has("outputNames")) {
+                JsonArray names = array(composite, "outputNames");
+                for (int i = 0; i < names.size(); i++) {
+                    names.set(i, new JsonPrimitive(remapPortName(names.get(i).getAsString())));
+                }
+            }
+            
+
+            // Then we need to remap all connections to those ports
+            GraphUtilities.operators(composite,
+                    op -> {
+                        GraphUtilities.outputs(op,output -> {
+                            String name = jstring(output, "name");
+                            String remapped = remapPortName(name);
+                            if (!name.equals(remapped))
+                                 output.addProperty("name", remapped);
+                            
+                            JsonArray conns = array(output, "connections");
+                            for (int i = 0; i < conns.size(); i++) {
+                                String cn = conns.get(i).getAsString();
+                                String rmcn = remapPortName(cn);
+                                if (!cn.equals(rmcn))
+                                    conns.set(i, new JsonPrimitive(rmcn));
+                            }
+                         });
+                        
+                        GraphUtilities.inputs(op, input -> {
+                            JsonArray conns = array(input, "connections");
+                            for (int i = 0; i < conns.size(); i++) {
+                                String cn = conns.get(i).getAsString();
+                                String rmcn = remapPortName(cn);
+                                if (!cn.equals(rmcn))
+                                    conns.set(i, new JsonPrimitive(rmcn));
+                            }
+                        });
+                        
+                        // Fix up the port names in the parallel info.                     
+                        if (op.has("parallelInfo")) {
+                            JsonObject parallelInfo = object(op, "parallelInfo");
+                            JsonArray broadcasts = array(parallelInfo, "broadcastPorts");
+                            for (int i = 0; i < broadcasts.size(); i++) {
+                                String bn = broadcasts.get(i).getAsString();
+                                String rmbn = remapPortName(bn);
+                                if (!bn.equals(rmbn))
+                                    broadcasts.set(i, new JsonPrimitive(rmbn));
+                            }
+                            
+                            JsonArray partitioned = array(parallelInfo, "partitionedPorts");
+                            for (int i = 0; i < partitioned.size(); i++) {
+                                JsonObject pp = partitioned.get(i).getAsJsonObject();
+                                String pn = jstring(pp,  "name");
+                                String rmpn = remapPortName(pn);
+                                if (!pn.equals(rmpn))
+                                    pp.addProperty("name", rmpn);
+                            }
+                        }
+                    });
+            
+            // Now any parallel stuff
+        }
+        
+        
     }
     
     /**
@@ -182,8 +265,8 @@ public class SPLGenerator {
                 
                 // Fix the naming of the operators in the composite to read from the composite input ports
                 // and write to the composite output ports
-                fixCompositeInputNaming(graph, startsEndsAndOperators, compDefinition);
-                fixCompositeOutputNaming(graph, startsEndsAndOperators, compDefinition, compInvocation);
+                // fixCompositeInputNaming(graph, startsEndsAndOperators, compDefinition);
+                //fixCompositeOutputNaming(graph, startsEndsAndOperators, compDefinition, compInvocation);
                 
                 // Add the invocation to the graph
                 array(graph, "operators").add(compInvocation);
@@ -286,7 +369,8 @@ public class SPLGenerator {
         }
     }
 
-    private JsonObject createCompositeDefinition(List<List<JsonObject>> startsEndsAndOperators) {        
+    private JsonObject createCompositeDefinition(
+            List<List<JsonObject>> startsEndsAndOperators) {        
         // Create a composite with a kind, input names, and output names  
         JsonObject compositeDefinition = new JsonObject();
         String compositeKind = "Composite" + this.numComposites++;
@@ -310,27 +394,92 @@ public class SPLGenerator {
             
         compositeDefinition.add("operators", operators);
         
+        /*
+         * Create input and output port names based upon the port
+         * names of the start/end marker operators. Once all of the composites
+         * are created we remap (remapAllCompositePorts) them to the
+         * actual port names. For example:
+         * 
+         * (in examples letters are real ports, $N are names introduced with virtual
+         * ops (actual format of names is different))
+         * 
+         * A -> $Parallel$ -> $1 -> Map -> B -> $EndParallel$ -> $2 -> ForEach
+         * 
+         * we want to create with square braces indicating composite boundaries.
+         * 
+         * A  -> [  Map -> B -> ]  -> ForEach
+         * 
+         * Since port names are scoped by the composite definition we can use
+         * the port names as the actual output port and the input port name for
+         * the composite definition, and similar for output.
+         * 
+         * Initially we create the composite output ports using the marker operator
+         * port names (e.g. $1, $2) but also maintain a mapping from actual virtual
+         * port to the output port prior to the virtual. Note when nested parallism
+         * exists we can end up with multiple mappings, e.g. $3->$1 and $1->A.
+         * 
+         * Once all composites are created we then go through all the ports
+         * and remap as needed, including in that nested case $3 being remapped to A.
+         * 
+         * The remapping must act upon the composite definition input/output port
+         * names, connections of its operators and any parallel info specific to
+         * ports (broadcast/partitioning).
+         */
         // Create input names
         JsonArray inputNames = new JsonArray();
-        for(int i = 0; i < startsEndsAndOperators.get(0).size(); i++){
-            JsonObject start = startsEndsAndOperators.get(0).get(i);
+        for (JsonObject start : startsEndsAndOperators.get(0)) {
             // If it's not a source operator
             if(!isPhysicalStartOperator(start)){
-                inputNames.add(new JsonPrimitive("__In" + i));
+                JsonArray outputs = array(start, "outputs");
+                assert outputs != null && outputs.size() == 1;
+                JsonObject output = outputs.get(0).getAsJsonObject();
+                JsonPrimitive portName = output.getAsJsonPrimitive("name");
+                inputNames.add(portName);           
+                
+                JsonArray inputs = array(start, "inputs");
+                assert inputs != null && inputs.size() == 1;
+                JsonObject input = inputs.get(0).getAsJsonObject();
+                
+                compositePortRemaps.put(portName.getAsString(), inputPortRef(input));
             }
         }
         compositeDefinition.add("inputNames", inputNames);
         
         // Create output names
         JsonArray outputNames = new JsonArray();
-        for(int i = 0; i < startsEndsAndOperators.get(1).size(); ++i)
-            outputNames.add(new JsonPrimitive("__Out" + i));
+        for (JsonObject end : startsEndsAndOperators.get(1)) {
+            JsonArray outputs = array(end, "outputs");
+            assert outputs != null && outputs.size() == 1;
+            JsonObject output = outputs.get(0).getAsJsonObject();
+            
+            JsonPrimitive portName = output.getAsJsonPrimitive("name");
+            outputNames.add(portName);
+            
+            JsonArray inputs = array(end, "inputs");
+            assert inputs != null && inputs.size() == 1;
+            JsonObject input = inputs.get(0).getAsJsonObject();
+            assert input.get("connections").getAsJsonArray().size() == 1;
+            
+            String actualInput = input.get("connections").getAsJsonArray().get(0).getAsString();
+            compositePortRemaps.put(portName.getAsString(), actualInput);
+        }
+            
         compositeDefinition.add("outputNames", outputNames);
         
         // Tag composite def so it can be identified as created during comp generation
         compositeDefinition.add("generated", new JsonPrimitive(true));
         
         return compositeDefinition;
+    }
+    
+    /**
+     * Remap a port name through multiple
+     * mappings (which exist when nested regions  exist).
+     */
+    private String remapPortName(String name) {
+        while (compositePortRemaps.containsKey(name))
+            name = compositePortRemaps.get(name);
+        return name;
     }
     
     private JsonObject createCompositeInvocation(JsonObject opDefinition, List<List<JsonObject>> startsEndsAndOperators) {
@@ -401,12 +550,12 @@ public class SPLGenerator {
             
             
             if(jstring(outputPort, PortProperties.ROUTING).equals("BROADCAST")){
-                broadcastPorts.add(inputPort.get("name"));
+                broadcastPorts.add(new JsonPrimitive(inputPortRef(inputPort)));
             }       
             
             if(outputPort.has(PortProperties.PARTITIONED) && jboolean(outputPort, PortProperties.PARTITIONED)){
                 JsonObject partitionInfo = new JsonObject();
-                partitionInfo.add("name", inputPort.get("name"));
+                partitionInfo.addProperty("name", inputPortRef(inputPort));
                 partitionInfo.add(PortProperties.PARTITION_KEYS, outputPort.get(PortProperties.PARTITION_KEYS));
                 partitionedPorts.add(partitionInfo);
                 
