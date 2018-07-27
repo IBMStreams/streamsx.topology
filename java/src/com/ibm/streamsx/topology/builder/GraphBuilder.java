@@ -102,14 +102,7 @@ public class GraphBuilder extends BJSONObject {
         if (name.isEmpty())
             return;
 
-        String uniqueName = userSuppliedName(name);
-
-        if (!uniqueName.equals(name)) {
-            JsonObject nameMap = new JsonObject();
-            nameMap.addProperty(uniqueName, name);
-            op.layout().add("names", nameMap);
-        }
-        op._json().addProperty("name", uniqueName);
+        op.rename(name);
     }
    
    String userSuppliedName(String name) {
