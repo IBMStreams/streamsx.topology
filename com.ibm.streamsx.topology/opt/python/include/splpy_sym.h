@@ -22,7 +22,6 @@
 
 #include <stdexcept>
 #include "Python.h"
-#include "splpy_ec_api.h"
 
 /**
  * For a Python C API function symbol PyXXX we create
@@ -184,14 +183,12 @@ extern "C" {
 typedef PyObject* (*__splpy_ogas_fp)(PyObject *, const char *);
 typedef int (*__splpy_ohas_fp)(PyObject *, const char *);
 typedef int (*__splpy_rssf_fp)(const char *, PyCompilerFlags *);
-#if __SPLPY_EC_MODULE_OK
 #if PY_MAJOR_VERSION == 3
 typedef PyObject* (*__splpy_mc2_fp)(PyModuleDef *, int);
 typedef int (*__splpy_sam_fp)(PyObject *, PyModuleDef *);
 #endif
 #if PY_MAJOR_VERSION == 2
 typedef PyObject * (*__splpy_im4_fp)(const char *, PyMethodDef *, const char *doc, PyObject *self, int);
-#endif
 #endif
 
 extern "C" {
@@ -203,15 +200,12 @@ extern "C" {
   static __splpy_i_p_fp __spl_fp_PyCallable_Check;
   static __splpy_p_p_fp __spl_fp_PyImport_Import;
 
-#if __SPLPY_EC_MODULE_OK
 #if PY_MAJOR_VERSION == 3
   static __splpy_mc2_fp __spl_fp_PyModule_Create2;
   static __splpy_sam_fp __spl_fp_PyState_AddModule;
 #endif
 #if PY_MAJOR_VERSION == 2
   static __splpy_im4_fp __spl_fp_Py_InitModule4 ;
-#endif
-
 #endif
 
   static PyObject * __spl_fi_PyObject_GetAttrString(PyObject *o, const char * attr_name) {
@@ -236,7 +230,6 @@ extern "C" {
      return __spl_fp_PyImport_Import(name);
   }
 
-#if __SPLPY_EC_MODULE_OK
 #if PY_MAJOR_VERSION == 3
   static PyObject * __spl_fi_PyModule_Create2(PyModuleDef *module, int apivers) {
      return __spl_fp_PyModule_Create2(module, apivers);
@@ -250,7 +243,6 @@ extern "C" {
      return __spl_fp_Py_InitModule4(name, methods, doc, self, apiver);
   }
 #endif
-#endif
 }
 #pragma weak PyObject_GetAttrString = __spl_fi_PyObject_GetAttrString
 #pragma weak PyObject_HasAttrString = __spl_fi_PyObject_HasAttrString
@@ -260,7 +252,6 @@ extern "C" {
 #pragma weak PyCallable_Check = __spl_fi_PyCallable_Check
 #pragma weak PyImport_Import = __spl_fi_PyImport_Import
 
-#if __SPLPY_EC_MODULE_OK
 #if PY_MAJOR_VERSION == 3
 #pragma weak PyModule_Create2 = __spl_fi_PyModule_Create2
 #pragma weak PyState_AddModule = __spl_fi_PyState_AddModule
@@ -268,7 +259,6 @@ extern "C" {
 #if PY_MAJOR_VERSION == 2
 #pragma weak Py_InitModule4_64 = __spl_fi_Py_InitModule4
 #pragma weak Py_InitModule4TraceRefs_64 = __spl_fi_Py_InitModule4
-#endif
 #endif
 
 /*
@@ -522,14 +512,12 @@ class SplpySym {
      __SPLFIX(PyCallable_Check, __splpy_i_p_fp);
      __SPLFIX(PyImport_Import, __splpy_p_p_fp);
 
-#if __SPLPY_EC_MODULE_OK
 #if PY_MAJOR_VERSION == 3
      __SPLFIX(PyModule_Create2, __splpy_mc2_fp);
      __SPLFIX(PyState_AddModule, __splpy_sam_fp);
 #endif
 #if PY_MAJOR_VERSION == 2
      __SPLFIX_EX(__spl_fp_Py_InitModule4, __SPL_TOSTRING(Py_InitModule4), __splpy_im4_fp);
-#endif
 #endif
  
      __SPLFIX(PyTuple_New, __splpy_p_s_fp);
