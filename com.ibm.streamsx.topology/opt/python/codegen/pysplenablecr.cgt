@@ -5,6 +5,12 @@
  # or has checkpointing configured.  Also, the operator must be stateful,
  # otherwise no checkpointing is needed.
 
+ # This will generally be @included in the declaration of an SPL operator
+ # template.  It create static const values indicating whether the operator
+ # instance is in a consistent region, and whether it is checkpointing.
+ # It also provides some typedefs for types to be used by the operator
+ # to support checkpointing and consistent region.
+
  my $isInConsistentRegion = $model->getContext()->getOptionalContext("ConsistentRegion");
  my $ckptKind = $model->getContext()->getCheckpointingKind();
  my $pyStateful = $model->getParameterByName("pyStateful");
@@ -22,19 +28,14 @@
  my $isCheckpointing = $stateful && ($isInConsistentRegion or $ckptKind ne "none");
 %>
 
-  static const bool isInConsistentRegion = <%= $isInConsistentRegion ? "true" : "false" %>;
-  // True if checkpoint is enabled, whether directly or though consistent
+  // True if this operator is in a consistent region.
+  static const bool isInConsistentRegion = <%= $isInConsistentRegion ? "true" :" false" %>;
+  // True if checkpoint is enabled, whether directly or through consistent
   // region.
   static const bool isCheckpointing = <%=$isCheckpointing ? "true" : "false" %>;
 
   typedef OptionalConsistentRegionContextImpl<isInConsistentRegion> OptionalConsistentRegionContext;
   typedef OptionalConsistentRegionContext::Permit AutoConsistentRegionPermit;
-#if 0
-  typedef OptionalValue<isCheckpointing, StateHandler *> OptionalStateHandler;
-  // TODO remove
-  typedef OptionalValue<isCheckpointing, SPL::Mutex> OptionalMutex;
-  // TODO remove
-  typedef OptionalAutoMutexImpl<isCheckpointing> OptionalAutoMutex;
-#endif
   typedef OptionalAutoLockImpl<isCheckpointing> OptionalAutoLock;
+
 

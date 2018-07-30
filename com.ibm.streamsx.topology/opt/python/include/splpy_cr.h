@@ -5,13 +5,62 @@
 #include <SPL/Runtime/Operator/State/StateHandler.h>
 #include <SPL/Runtime/Utility/Mutex.h>
 
-// Support for consistent region in python operators
+// Support for consistent region and checkpointing in python operators
 
 namespace streamsx {
   namespace topology {
 
+/** 
+ * OptionalConsistentRegionContext<true> holds a pointer to a 
+ * ConsistentRegionContext,
+ * and ConsistentRegionContext::Permit is an RAII helper
+ * for acquiring and releasing a ConsistentRegionPermit.
+ * OptionalConsistentRgionContxt<false> does nothing.
+ */
 template<bool b>
 class OptionalConsistentRegionContextImpl;
+
+/**
+ * OptionalAutoLockImpl<bool> is intended to be used with an instance of
+ * DelegatingStateHandler.  OptionalAutoLockImpl<false> does nothing,
+ * while OptionalAutoLockImpl<true> provides an RAII helper for locking
+ * and unlocking, using the same mutex as a  DelegatingStateHandler  instance.
+ * This can be used to guard the regions of code that modify the state of the 
+ * operator that is saved and restored during checkpointing.  
+ */
+template<bool b>
+class OptionalAutoLockImpl;
+
+/**
+ * DelegatingStateHandler implements the StateHandler interface in support
+ * of checkpointing and consistent region.  The checkpointing and resetting
+ * is delegated to the SplpyOp instance owned by the operator extending
+ * this class.  For most operators, it is not necessary to override
+ * checkpoint, reset, and resetToInitialState, but if operators have state
+ * (such as a Window) that needs to be checkpointed and reset, they can
+ * override the methods, but they should be sure to call the base method.
+ *
+ */
+class DelegatingStateHandler : public SPL::StateHandler {
+public:
+  DelegatingStateHandler():locked_(false) {}
+
+  virtual void checkpoint(SPL::Checkpoint & ckpt);
+  virtual void reset(SPL::Checkpoint & ckpt);
+  virtual void resetToInitialState();
+
+  friend class OptionalAutoLockImpl<true>;
+
+protected:
+  virtual SplpyOp * op() = 0;
+
+private:
+  void lock();
+  void unlock();
+
+  SPL::Mutex mutex_;
+  bool locked_;
+};
 
 template<>
 class OptionalConsistentRegionContextImpl<false> {
@@ -35,104 +84,6 @@ class OptionalConsistentRegionContextImpl<true> {
 private:
   SPL::ConsistentRegionContext * crContext;
 };
-
-#if 0
-// Template for an optional value, resolved at compile-time.  Instantiate
-// with b == true if the value is needed, b == false if not.
-template<bool b, typename T>
-class OptionalValue;
-
-template<typename T>
-class OptionalValue<false,T>{
-public:
-  OptionalValue<false, T>() {}
-  OptionalValue<false, T>(T & t) {}
-  operator bool() { return false; }
-};
-
-template<typename T>
-class OptionalValue<false, T*> {
-public:
-  OptionalValue<false, T*>() {}
-  OptionalValue<false, T*>(T * t) {}
-  operator bool() { return false; }
-  T* operator ->() { return static_cast<T*>(0); }
-};
-
-template<typename T>
-class OptionalValue<true, T> {
-public:
-  OptionalValue<true, T>() : value() {}
-  OptionalValue<true, T>(T & t): value(t) {}
-  OptionalValue<true, T> & operator = (T & t) {value = t; return *this;}
-  operator bool() { return true; }
-  operator T & () { return value; }
-private:
-  T value;
-};
-
-template<typename T>
-class OptionalValue<true, T*> {
-public:
-  OptionalValue<true, T*>() : value() {}
-  OptionalValue<true, T*>(T * t): value(t) {}
-  OptionalValue<true, T*> & operator = (T & t) {value = t; return *this;}
-  operator bool() { return (value != NULL); }
-  operator T * () { return value; }
-  T * operator ->() { return value; }
-private:
-  T * value;
-};
-
-template<bool b>
-class OptionalAutoMutexImpl;
-
-template<>
-class OptionalAutoMutexImpl<false> {
-public:
-  OptionalAutoMutexImpl<false>(OptionalValue<false, SPL::Mutex> &){}
-};
-
-template<>
-class OptionalAutoMutexImpl<true> {
-public:
-  OptionalAutoMutexImpl<true>(OptionalValue<true, SPL::Mutex> & m) :
-    mutex(static_cast<SPL::Mutex &>(m))
-  {
-    mutex.lock();
-  }
-  ~OptionalAutoMutexImpl<true>() {
-    mutex.unlock();
-  }
-private:
-  SPL::Mutex & mutex;
-};
-#endif
-
-class DelegatingStateHandler : public SPL::StateHandler {
-public:
-  DelegatingStateHandler():locked_(false) {}
-
-  virtual void checkpoint(SPL::Checkpoint & ckpt);
-  virtual void reset(SPL::Checkpoint & ckpt);
-  virtual void resetToInitialState();
-
-  template<bool b>
-  friend class OptionalAutoLockImpl;
-
-protected:
-  virtual SplpyOp * op() = 0;
-
-private:
-  void lock();
-  void unlock();
-
-  SPL::Mutex mutex_;
-  bool locked_;
-};
-
-template<bool b>
-class OptionalAutoLockImpl;
 
 template<>
 class OptionalAutoLockImpl<true> {
@@ -182,6 +133,7 @@ inline void DelegatingStateHandler::unlock() {
     locked_ = false;
   }
 }
+
 
 }} // end namspace
 
