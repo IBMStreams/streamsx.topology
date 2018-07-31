@@ -624,8 +624,8 @@ public class GraphUtilities {
     }
 
     /**
-     * Finds the first occurrence of the {@code iportName} in all {@code oports}
-     * connections, and removes the connection.
+     * Find the first occurrence of the {@code iportName} in all {@code oports}
+     * connections, and remove the connection.
      *
      * @param oports    output ports of an operator
      * @param iportName the target input port name
@@ -637,7 +637,7 @@ public class GraphUtilities {
     }
 
     /**
-     * Finds the first occurrence of the {@code iportName} in all {@code oports}
+     * Find the first occurrence of the {@code iportName} in all {@code oports}
      * connections.
      *
      * @param oports    output ports of an operator
@@ -648,6 +648,13 @@ public class GraphUtilities {
 	    return findOutputPort(oports, iportName, false);
     }
 
+    /**
+     * 
+     * @param oports        output ports of an operator
+     * @param iportName     the target input port name
+     * @param shouldRemove  true if the target connection should be removed
+     * @return the first output port that is connected to the target input port
+     */
     static private JsonObject findOutputPort(
             JsonArray oports, String iportName, boolean shouldRemove) {
         for (JsonElement oport: oports) {
@@ -665,8 +672,8 @@ public class GraphUtilities {
     }
 
     /**
-     * Moves the operator upstream, i.e., detaches the operator from its
-     * parent and relocates the operator to be its grand parent's child.
+     * Move the operator upstream, i.e., detach the operator from its
+     * parent and relocate the operator to be its grand parent's child.
      * This method requires the operator has only one parent and one grand
      * parent.
      * <BR>
