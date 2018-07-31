@@ -649,7 +649,7 @@ public class GraphUtilities {
     }
 
     /**
-     * 
+     *
      * @param oports        output ports of an operator
      * @param iportName     the target input port name
      * @param shouldRemove  true if the target connection should be removed

@@ -100,15 +100,15 @@ public class ParallelTest extends TestTopology {
         List<String> stringList = getListOfUniqueStrings(800);
         String stringArray[] = new String[800];
         stringArray = stringList.toArray(stringArray);
-        Topology topology = newTopology("testAdj");
+        Topology topology = newTopology();
 
         TStream<String> out0 = topology.strings(stringArray).parallel(of(20),
                 routing1);
-        out0 = out0.transform(randomStringProducer("region1")).endParallel();
+        out0 = out0.map(randomStringProducer("region1")).endParallel();
 
         TStream<String> out2 = out0.parallel(of(5),
                 routing2);
-        out2 = out2.transform(randomStringProducer("region2")).endParallel();
+        out2 = out2.map(randomStringProducer("region2")).endParallel();
 
         TStream<String> numRegions = out2.flatMap(uniqueStringCounter(800,
                 "region"));
@@ -146,6 +146,24 @@ public class ParallelTest extends TestTopology {
         testAdjacentParallel(Routing.HASH_PARTITIONED, Routing.ROUND_ROBIN);
     }
 
+    @SuppressWarnings("serial")
+    private static class ChannelFilter implements Predicate<String>, Initializable {
+        int channel = -1;
+        int nChannels = -1;
+
+        @Override
+        public void initialize(FunctionContext functionContext)
+                throws Exception {
+            channel = functionContext.getChannel();
+            nChannels = functionContext.getMaxChannels();
+        }
+
+        @Override
+        public boolean test(String s) {
+            return s.hashCode() % nChannels == channel;
+        }
+    }
+
     @Test
     public void testAdjacentKeyPartitionedParallel() throws Exception {
         checkUdpSupported();
@@ -153,15 +171,15 @@ public class ParallelTest extends TestTopology {
         List<String> stringList = getListOfUniqueStrings(800);
         String stringArray[] = new String[800];
         stringArray = stringList.toArray(stringArray);
-        Topology topology = newTopology("testAdj");
+        Topology topology = newTopology();
 
-        TStream<String> out0 = topology.strings(stringArray).parallel(of(3),
-                (String s) -> s.hashCode() % 20);
-        out0 = out0.transform(randomStringProducer("region1")).endParallel();
+        TStream<String> out1 = topology.strings(stringArray)
+                                       .parallel(of(3), String::hashCode);
+        out1 = out1.map(randomStringProducer("region1")).endParallel();
 
-        TStream<String> out2 = out0.parallel(of(5),
-                (String s) -> s.hashCode() % 30);
-        out2 = out2.transform(randomStringProducer("region2")).endParallel();
+        TStream<String> out2 = out1.parallel(of(5), String::hashCode);
+        out2 = out2.filter(new ChannelFilter())
+                   .map(randomStringProducer("region2")).endParallel();
 
         TStream<String> numRegions = out2.flatMap(uniqueStringCounter(800,
                 "region"));
@@ -186,15 +204,15 @@ public class ParallelTest extends TestTopology {
         List<String> stringList = getListOfUniqueStrings(800);
         String stringArray[] = new String[800];
         stringArray = stringList.toArray(stringArray);
-        Topology topology = newTopology("testAdj");
+        Topology topology = newTopology();
 
         TStream<String> out0 = topology.strings(stringArray).parallel(of(20),
                 TStream.Routing.HASH_PARTITIONED);
-        out0 = out0.transform(randomStringProducer("region1")).endParallel();
+        out0 = out0.map(randomStringProducer("region1")).endParallel();
 	
         TStream<String> out2 = topology.strings(stringArray).union(out0).parallel(of(5),
                 TStream.Routing.HASH_PARTITIONED);
-        out2 = out2.transform(randomStringProducer("region2")).endParallel();
+        out2 = out2.map(randomStringProducer("region2")).endParallel();
 
         TStream<String> numRegions = out2.flatMap(uniqueStringCounter(1600,
                 "region"));
@@ -219,20 +237,20 @@ public class ParallelTest extends TestTopology {
         List<String> stringList = getListOfUniqueStrings(800);
         String stringArray[] = new String[800];
         stringArray = stringList.toArray(stringArray);
-        Topology topology = newTopology("testAdj");
+        Topology topology = newTopology();
 
 
-        TStream<String> out0 = topology.strings(stringArray).parallel(of(3),
-                (String s) -> s.hashCode() % 20);
-        out0 = out0.transform(randomStringProducer("region1")).endParallel();
+        TStream<String> out1 = topology.strings(stringArray)
+                                       .parallel(of(3), String::hashCode);
+        out1 = out1.map(randomStringProducer("region1")).endParallel();
 
-        TStream<String> out2 = out0.parallel(of(5),
-                (String s) -> s.hashCode() % 30);
-        out2 = out2.transform(randomStringProducer("region2")).endParallel();
+        TStream<String> out2 = out1.parallel(of(5), String::hashCode);
+        out2 = out2.filter(new ChannelFilter())
+                   .map(randomStringProducer("region2")).endParallel();
 
-        TStream<String> out3 = out0.parallel(of(2),
-                (String s) -> s.hashCode() % 40);
-        out3 = out3.transform(randomStringProducer("region3")).endParallel();
+        TStream<String> out3 = out1.parallel(of(2), String::hashCode);
+        out3 = out3.filter(new ChannelFilter())
+                   .map(randomStringProducer("region3")).endParallel();
 
         TStream<String> numRegions2 = out2.flatMap(uniqueStringCounter(800,
                 "region"));
@@ -267,22 +285,22 @@ public class ParallelTest extends TestTopology {
         List<String> stringList = getListOfUniqueStrings(800);
         String stringArray[] = new String[800];
         stringArray = stringList.toArray(stringArray);
-        Topology topology = newTopology("testAdj");
+        Topology topology = newTopology();
 
 
-        TStream<String> out0 = topology.strings(stringArray).parallel(of(3),
-                (String s) -> s.hashCode() % 20);
-        out0 = out0.transform(randomStringProducer("region1")).endParallel();
+        TStream<String> out1 = topology.strings(stringArray)
+                                       .parallel(of(3), String::hashCode);
+        out1 = out1.map(randomStringProducer("region1")).endParallel();
 
-        TStream<String> out2 = out0.parallel(of(5),
-                (String s) -> s.hashCode() % 30);
-        out2 = out2.transform(randomStringProducer("region2")).endParallel();
+        TStream<String> out2 = out1.parallel(of(5), String::hashCode);
+        out2 = out2.filter(new ChannelFilter())
+                   .map(randomStringProducer("region2")).endParallel();
 
-        TStream<String> out3 = out0.parallel(of(2),
-                (String s) -> s.hashCode() % 40);
-        out3 = out3.transform(randomStringProducer("region3")).endParallel();
+        TStream<String> out3 = out1.parallel(of(2), String::hashCode);
+        out3 = out3.filter(new ChannelFilter())
+                   .map(randomStringProducer("region3")).endParallel();
 
-        TStream<String> out4 = out0.transform(randomStringProducer("region4"));
+        TStream<String> out4 = out1.map(randomStringProducer("region4"));
 
         TStream<String> numRegions2 = out2.flatMap(uniqueStringCounter(800,
                 "region"));
@@ -322,23 +340,23 @@ public class ParallelTest extends TestTopology {
         List<String> stringList = getListOfUniqueStrings(800);
         String stringArray[] = new String[800];
         stringArray = stringList.toArray(stringArray);
-        Topology topology = newTopology("testAdj");
+        Topology topology = newTopology();
 
 
-        TStream<String> out0 = topology.strings(stringArray).parallel(of(3),
-                (String s) -> s.hashCode() % 20);
-        out0 = out0.transform(randomStringProducer("region1")).endParallel();
+        TStream<String> out1 = topology.strings(stringArray)
+                                       .parallel(of(3), String::hashCode);
+        out1 = out1.map(randomStringProducer("region1")).endParallel();
 
-        TStream<String> out2 = out0.parallel(of(5),
-                (String s) -> s.hashCode() % 30);
-        out2 = out2.transform(randomStringProducer("region2")).endParallel();
+        TStream<String> out2 = out1.parallel(of(5), String::hashCode);
+        out2 = out2.filter(new ChannelFilter())
+                   .map(randomStringProducer("region2")).endParallel();
 
-        TStream<String> out3 = out0.parallel(of(2),
-                (String s) -> s.hashCode() % 40);
-        out3 = out3.transform(randomStringProducer("region3")).endParallel();
+        TStream<String> out3 = out1.parallel(of(2), String::hashCode);
+        out3 = out3.filter(new ChannelFilter())
+                   .map(randomStringProducer("region3")).endParallel();
 
-        TStream<String> out4 = out0.transform(randomStringProducer("region4"));
-        TStream<String> out5 = out0.transform(randomStringProducer("region5"));
+        TStream<String> out4 = out1.map(randomStringProducer("region4"));
+        TStream<String> out5 = out1.map(randomStringProducer("region5"));
 
         TStream<String> numRegions2 = out2.flatMap(uniqueStringCounter(800,
                 "region"));

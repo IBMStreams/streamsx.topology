@@ -4,9 +4,9 @@
  */
 package com.ibm.streamsx.topology.generator.spl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -73,7 +73,7 @@ class Preprocessor {
 
     /**
      * This method relocates {@code HashAdder} to the front of its parent
-     * $Unparellel$ which enables cat's-cradle shuffle. There are four
+     * $Unparallel$ which enables cat's-cradle shuffle. There are four
      * scenarios.
      * <p>
      * Scenario 1 (optimized):
@@ -83,14 +83,14 @@ class Preprocessor {
      * </code></pre>
      * <BR>
      * The code above demonstrates the simplest case where HashAdder is
-     * $Unparellel$'s only child, and $Unparallel$ is HashAdder's only
+     * $Unparallel$'s only child, and $Unparallel$ is HashAdder's only
      * parent:
      * <pre><code>
      *  $Unparallel$ -> HashAdder -> $Parallel$ -> HashRemover
      * </code></pre>
      * <BR>
      * To enable cat's-cradle shuffle, this method moves {@code HashAdder}
-     * to the front of $Unparellel$.
+     * to the front of $Unparallel$.
      * </p>
      * <p>
      * Scenario 2 (not yet optimized):
@@ -98,36 +98,36 @@ class Preprocessor {
      *     TStream<T> u1 = stream1.endParallel();
      *     TStream<T> u2 = stream2.endParallel();
      *     TStream<T> d = stream3.sample(0.5);
-     *     TStream<T> u = u1.union(u2);
+     *     TStream<T> u = d.union(u1).union(u2);
      *     TStream<T> p = u.parallel(()->3, Routing.HASH_PARTITIONED);
      * </code></pre>
      * <BR>
      * This is slightly more complicated case where the {@code HashAdder}
      * has multiple parents and each parent has only one child.
      * <pre><code>
-     *           $Unparellel1$
+     *           $Unparallel1$
      *                |
      *                V
      *  sample -> HashAdder -> $Parallel$ -> HashRemover
      *                ^
      *                |
-     *           $Unparellel2$
+     *           $Unparallel2$
      *
      * </code></pre>
      * <BR>
      * To enable cat's-cradle shuffle, this method inserts one copy of
-     * {@code HashAdder} to the front of every $Unparellel$, inserts one copy
+     * {@code HashAdder} to the front of every $Unparallel$, inserts one copy
      * of {@code HashAdder} after every non-parallel parent, and removes the
      * original {@code HashAdder}. The original graph will be modified to the
      * following structure.
      * <pre><code>
-     *           HashAdder -> $Unparellel1$
+     *           HashAdder -> $Unparallel1$
      *                             |
      *                             V
      *  sample -> HashAdder -> $Parallel$ -> HashRemover
      *                             ^
      *                             |
-     *           HashAdder -> $Unparellel2$
+     *           HashAdder -> $Unparallel2$
      * </code></pre>
      * </p>
      * <p>
@@ -143,15 +143,15 @@ class Preprocessor {
      * {@code HashAdder} has only one parent. The example code above results
      * in the following graph structure.
      * <pre><code>
-     *           HashAdder1 -> $Parellel1$ -> HashRemover1
+     *           HashAdder1(p1) -> $Parallel1$ -> HashRemover1
      *               ^
-     *               |         ----> filter1
+     *               |         ----> filter1(f1)
      *               |        /
      * input -> $Unparallel$
      *               |       \
-     *               |        ----> filter 2
+     *               |        ----> filter2(f2)
      *               V
-     *           HashAdder2 -> $Parellel2$ -> HashRemover2
+     *           HashAdder2(p2) -> $Parallel2$ -> HashRemover2
      * </code></pre>
      * <BR>
      * To enable cat's-cradle shuffle, this method needs to move every
@@ -159,15 +159,15 @@ class Preprocessor {
      * $Unparallel$ after the {@code HashAdder}, resulting in the following
      * structure.
      * <pre><code>
-     * HashAdder1 -> $UnparallelCopy$ -> $Parellel1$ -> HashRemover1
+     * HashAdder1(p1) -> $UnparallelCopy$ -> $Parallel1$ -> HashRemover1
      *     ^
-     *     |               ----> filter1
+     *     |               ----> filter1(f1)
      *     |              /
      *   input -> $Unparallel$
      *     |              \
-     *     |               ----> filter 2
+     *     |               ----> filter2(f2)
      *     V
-     * HashAdder2 -> $UnparallelCopy$ -> $Parellel2$ -> HashRemover2
+     * HashAdder2(p2) -> $UnparallelCopy$ -> $Parallel2$ -> HashRemover2
      * </code></pre>
      * <BR>
      * If there is no non-parallel children, the original $Unparallel$ should
@@ -188,7 +188,7 @@ class Preprocessor {
             if (isHashAdder(op)) {
                 Set<JsonObject> parents = GraphUtilities.getUpstream(op, graph);
                 // Only consider HashAdders with exactly one parent and that
-                // parent is an $Unparellel$, i.e., ignore scenarios #2 and #4.
+                // parent is an $Unparallel$, i.e., ignore scenarios #2 and #4.
                 JsonObject parent = parents.iterator().next();
                 if (parents.size() == 1 && END_PARALLEL.isThis(kind(parent))) {
                     hashAdderParents.add(parent);
@@ -204,15 +204,15 @@ class Preprocessor {
 
     /**
      * @param parent parent $Unparallel$ operator of {@code HashAdder}s, where
-     *               the $Unparellel$ operator is the only parent of all its
-     *               children {@code HashAdders}. If the $Unparellel$ operator
+     *               the $Unparallel$ operator is the only parent of all its
+     *               children {@code HashAdders}. If the $Unparallel$ operator
      *               has non-parallel children operators, those non-parallel
      *               children may have multiple parents.
      */
     private void relocateChildrenHashAdders(JsonObject parent){
         Set<JsonObject> children = GraphUtilities.getDownstream(parent, graph);
         if (children.size() == 1) {
-            // Scenario #1: HashAdder is its parent $Unparellel$'s only child
+            // Scenario #1: HashAdder is its parent $Unparallel$'s only child
             JsonObject hashAdder = children.iterator().next();
             // retrieve HashAdder's output port schema
             String schema = GraphUtilities.getOutputPortType(hashAdder, 0);
@@ -228,12 +228,12 @@ class Preprocessor {
             // Scenario #3: the parent $Unparallel$ has multiple children
 
             // distinguish HashAdders from other children
-            LinkedList<JsonObject> HashAdders = new LinkedList<>();
-            LinkedList<JsonObject> others = new LinkedList<>();
+            ArrayList<JsonObject> hashAdders = new ArrayList<>();
+            ArrayList<JsonObject> others = new ArrayList<>();
             children.forEach(
                     (JsonObject parentChild) -> {
                         if (GraphUtilities.isHashAdder(parentChild)) {
-                            HashAdders.add(parentChild);
+                            hashAdders.add(parentChild);
                         } else {
                             others.add(parentChild);
                         }
@@ -243,15 +243,19 @@ class Preprocessor {
             // Please note that $Unparallel$ has at least one HashAdder child,
             // because it is discovered through a HashAdder.
             int nUnparallelCopy = 0;
-            for (JsonObject hashAdder: HashAdders) {
-                // 1. move the HashAdder upstream i.e.
+            for (JsonObject hashAdder: hashAdders) {
+                // The full transformation will first move the HashAdder upstream.
+                // Then, a copy of the $Unparallel$ will be inserted after the
+                // HashAdder.
+
+                // Step 1. move the HashAdder upstream i.e.
                 // input -> $Unparallel$ -> HashAdder -> $Parallel$
                 // becomes
                 // input -> HashAdder -> $Parallel$
                 //      \-> $Unparallel$
                 GraphUtilities.moveOperatorUpstream(hashAdder, graph);
 
-                // 2. insert an $Unparallel$ after the HashAdder, i.e.,
+                // Step 2. insert an $Unparallel$ after the HashAdder, i.e.,
                 // input -> HashAdder -> $Parallel$
                 //      \-> $Unparallel$
                 // becomes
