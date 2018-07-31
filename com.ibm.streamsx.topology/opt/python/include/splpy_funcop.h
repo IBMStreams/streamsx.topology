@@ -99,9 +99,7 @@ class SplpyFuncOp : public SplpyOp {
              appCallable = pyUnicode_FromUTF8(param("pyCallable").c_str());
              Py_DECREF(appClass);
 
-#if __SPLPY_EC_MODULE_OK
              setopc();
-#endif
           }
 
           PyObject *extraArg = NULL;
