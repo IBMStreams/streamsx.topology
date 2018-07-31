@@ -144,7 +144,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         topo = Topology("test")
         
         s = topo.source(TimeCounter(iterations=30, period=0.1))
-        s.set_consistent(ConsistentRegionConfig.periodic(1).drainTimeout(40).resetTimeout(40).maxConsecutiveAttempts(3))
+        s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
         self.add_resetter(topo)
 
         tester = Tester(topo)
@@ -162,7 +162,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         topo = Topology()
         # Generate integers from [0,30)
         s = topo.source(TimeCounter(iterations=30, period=0.1))
-        s.set_consistent(ConsistentRegionConfig.periodic(1).drainTimeout(40).resetTimeout(40).maxConsecutiveAttempts(3))
+        s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
         self.add_resetter(topo)
 
         # Filter the odd ones 
@@ -180,7 +180,8 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         topo = Topology();
 
         lines = topo.source(ListIterator(["mary had a little lamb", "its fleece was white as snow"]))
-        lines.set_consistent(ConsistentRegionConfig.periodic(1).drainTimeout(40).resetTimeout(40).maxConsecutiveAttempts(3))
+        lines.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+
         self.add_resetter(topo)
 
         # slow things down so checkpoints can be taken.
@@ -195,7 +196,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
     def test_hash_adder(self):
         topo = Topology("test_hash_adder")
         s = topo.source(TimeCounter(iterations=30, period=0.1))
-        s.set_consistent(ConsistentRegionConfig.periodic(1).drainTimeout(40).resetTimeout(40).maxConsecutiveAttempts(3))
+        s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
         self.add_resetter(topo)
 
         width =  3
@@ -215,7 +216,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
     def test_for_each(self):
         topo = Topology("test")
         s = topo.source(TimeCounter(iterations=30, period=0.1))
-        s.set_consistent(ConsistentRegionConfig.periodic(1).drainTimeout(40).resetTimeout(40).maxConsecutiveAttempts(3))
+        s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
         self.add_resetter(topo)
 
         s.for_each(StatefulNothing())
@@ -226,5 +227,4 @@ class TestDistributedConsistentRegion(unittest.TestCase):
 class TestSasConsistentRegion(TestDistributedConsistentRegion):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
-
 

@@ -1,47 +1,67 @@
 from enum import Enum
+from datetime import timedelta
 
+# TODO documentation
 class ConsistentRegionConfig(object):
     class Trigger(Enum):
         OPERATOR_DRIVEN = 1
         PERIODIC = 2
 
-    # def __init__(self, trigger, period):
-    #     self.trigger = trigger
-    #     self.period = period
-    #     self.drain = 180
-    #     self.reset = 180
-    #     self.attempts = 5
+    def __init__(self, trigger=None, period=None, drainTimeout=None, resetTimeout=None, maxConsecutiveAttempts=None):
 
-    def __init__(self, trigger=None, period=None, old=None, drain=None, reset=None, attempts=None):
-        assert (trigger is not None and old is None) or (trigger is None and old is not None)
-        
-        if trigger is not None:
-            # Initial construction
-            self.trigger = trigger
-            self.period = period
-            self.drain = drain if drain is not None else 180
-            self.reset = reset if reset is not None else 180
-            self.attempts = attepts if attempts is not None else 5
-        else:
-            self.trigger = old.trigger
-            self.period = old.period
-            self.drain = old.drain if drain is None else drain
-            self.reset = old.reset if reset is None else reset
-            self.attempts = old.attempts if attempts is None else attempts
+        # period cannot be specified for OPERATOR_DRIVEN
+        # (This can only happen if someone calls this constructor
+        # directly instead of using the periodic and operator_driven
+        # methods.
+        if trigger == ConsistentRegionConfig.Trigger.OPERATOR_DRIVEN and period is not None:
+            raise ValueError("period does not apply to an operator driven consistent region")
 
-    def operator_driven():
-        return ConsistentRegionConfig(trigger=ConsistentRegionConfig.Trigger.OPERATOR_DRIVEN)
-    
+        if trigger == ConsistentRegionConfig.Trigger.PERIODIC:
+            if period is None:
+                raise ValueError("period must be specified for a consistent region with periodic trigger.")
+            elif isinstance(period, timedelta):
+                if period.total_seconds() <= 0.0:
+                    raise ValueError("period must be greater than zero.")
+            elif float(period) <= 0.0:
+                raise ValueError("period must be greater than zero.")
 
-    def periodic(period):
-        return ConsistentRegionConfig(trigger=ConsistentRegionConfig.Trigger.PERIODIC, period=period)
 
-    def drainTimeout(self, drainTimeout):
-        return ConsistentRegionConfig(old=self, drain=drainTimeout)
+        # drainTimeout and resetTimeout must be timedelta values, or must be castable to
+        # float, and both must be greater than 0.
+        if drainTimeout is None:
+            pass
+        elif isinstance(drainTimeout, timedelta):
+            if drainTimeout.total_seconds() <= 0.0:
+                raise ValueError("drain timeout value must be greater than zero.")
+        elif float(drainTimeout) <= 0.0:
+            raise ValueError("drain timeout value must be greater than zero.")
 
-    def resetTimeout(self, resetTimeout):
-        return ConsistentRegionConfig(old=self, reset=resetTimeout)
 
-    def maxConsecutiveAttempts(self, attempts):
-        return ConsistentRegionConfig(old=self, attempts=attempts)
+        if resetTimeout is None:
+            pass
+        elif isinstance(resetTimeout, timedelta):
+            if resetTimeout.total_seconds() <= 0.0:
+                raise ValueError("reset timeout value must be greater than zero.")
+        elif float(resetTimeout) <= 0.0:
+            raise ValueError("reset timeout value must be greater than zero.")
 
+
+        # maxConsecutiveAttempts must be 1-0x7FFFFFFF.  It also must be an int.
+        if maxConsecutiveAttempts is None:
+            pass
+        elif int(maxConsecutiveAttempts) < 1 or int(maxConsecutiveAttempts) > 0x7FFFFFFF:
+            raise ValueError("maxConsecutiveAttempts must be between 1 and " + str(0x7FFFFFFF) + ", inclusive.")
+        elif not float(maxConsecutiveAttempts).is_integer():
+            raise ValueError("maxConsecutiveAttempts must be an integer value.")
+
+        self.trigger = trigger
+        self.period = period
+        self.drainTimeout = drainTimeout if drainTimeout is not None else 180
+        self.resetTimeout = resetTimeout if resetTimeout is not None else 180
+        self.maxConsecutiveAttempts = maxConsecutiveAttempts if maxConsecutiveAttempts is not None else 5
+
+    def operator_driven(drainTimeout=None, resetTimeout=None, maxConsecutiveAttempts=None):
+        return ConsistentRegionConfig(trigger=ConsistentRegionConfig.Trigger.OPERATOR_DRIVEN, drainTimeout=drainTimeout, resetTimeout=resetTimeout, maxConsecutiveAttempts=maxConsecutiveAttempts)
+
+    def periodic(period, drainTimeout=None, resetTimeout=None, maxConsecutiveAttempts=None):
+        return ConsistentRegionConfig(trigger=ConsistentRegionConfig.Trigger.PERIODIC, period=period, drainTimeout=drainTimeout, resetTimeout=resetTimeout, maxConsecutiveAttempts=maxConsecutiveAttempts)

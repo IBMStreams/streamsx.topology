@@ -393,10 +393,25 @@ class _SPLInvocation(object):
             consistent = _op['consistent']
             consistent['trigger'] = self._consistent.trigger.name
             if self._consistent.trigger == streamsx.topology.consistent.ConsistentRegionConfig.Trigger.PERIODIC:
-                consistent['period'] = '(float64)' + str(self._consistent.period)
-            consistent['drainTimeout'] = '(float64)' + str(self._consistent.drain)
-            consistent['resetTimeout'] = '(float64)' + str(self._consistent.reset)
-            consistent['maxConsecutiveResetAttempts'] = self._consistent.attempts            
+                if isinstance(self._consistent.period, datetime.timedelta):
+                    consistent_period = self._consistent.period.total_seconds()
+                else:
+                    consistent_period = float(self._consistent.period)
+                consistent['period'] = '(float64)' + str(consistent_period)
+
+            if isinstance(self._consistent.drainTimeout, datetime.timedelta):
+                consistent_drain = self._consistent.drainTimeout.total_seconds();
+            else:
+                consistent_drain = float(self._consistent.drainTimeout)
+            consistent['drainTimeout'] = '(float64)' + str(consistent_drain)
+
+            if isinstance(self._consistent.resetTimeout, datetime.timedelta):
+                consistent_reset = self._consistent.resetTimeout.total_seconds();
+            else:
+                consistent_reset = float(self._consistent.resetTimeout)
+            consistent['resetTimeout'] = '(float64)' + str(consistent_reset)
+
+            consistent['maxConsecutiveResetAttempts'] = int(self._consistent.maxConsecutiveAttempts)
 
         # Callout to allow a ExtensionOperator
         # to augment the JSON
