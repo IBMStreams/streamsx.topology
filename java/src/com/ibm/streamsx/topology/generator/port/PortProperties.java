@@ -1,5 +1,9 @@
 package com.ibm.streamsx.topology.generator.port;
 
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+
+import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
 
 public interface PortProperties {
@@ -24,4 +28,15 @@ public interface PortProperties {
 	 * parallel region is to be partitioned.
 	 */
 	String PARTITION_KEYS = "partitionedKeys";
+	
+	/**
+	 * Return how SPL code refers to an input port.
+	 */
+	static String inputPortRef(JsonObject input) {
+	    String ref = jstring(input, "alias");
+	    if (ref == null)
+	        ref = array(input, "connections").get(0).getAsString();
+	    
+	    return ref;	    
+	}
 }

@@ -24,7 +24,14 @@ class TestPubSub(unittest.TestCase):
 
     def _check_topics(self):
         ins = self.tester.streams_connection.get_instance(self.tester.submission_result['instanceId'])
-        topics = ins.get_published_topics()
+        # topics are created dynamically so give some time
+        # for them to be created
+        for _ in range(10):
+            topics = ins.get_published_topics()
+            if topics:
+                break
+            time.sleep(2)
+
         # Don't assume this is the only app running so
         # other topics may exist
         sts = 0

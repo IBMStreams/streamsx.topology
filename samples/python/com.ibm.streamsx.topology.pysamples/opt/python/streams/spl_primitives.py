@@ -13,7 +13,7 @@ def spl_namespace():
     return "com.ibm.streamsx.topology.pysamples.primitives"
 
 @spl.primitive_operator(output_ports=['MATCH', 'NEAR_MATCH'])
-class SelectCustomers(object):
+class SelectCustomers(spl.PrimitiveOperator):
     """Score customers using a model.
     Customers that are a good match are submitted to port 0 ('MATCH')
     while customers that are a near match are submitted to port 1 ('NEAR_MATCH').

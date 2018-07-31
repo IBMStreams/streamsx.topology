@@ -7,13 +7,13 @@ package com.ibm.streamsx.topology.builder;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,7 +44,7 @@ import com.ibm.streamsx.topology.internal.messages.Messages;
 public class BOperatorInvocation extends BOperator {
 
     private List<BInputPort> inputs;
-    private Map<String, BOutputPort> outputs;
+    private List<BOutputPort> outputs;
     private final JsonObject jparams = new JsonObject();
 
     public BOperatorInvocation(GraphBuilder bt,
@@ -74,6 +74,38 @@ public class BOperatorInvocation extends BOperator {
     
     public String name() {
         return jstring(_json(), "name");
+    }
+    
+    void rename(String newName) {
+        
+        String uniqueName = builder().userSuppliedName(newName);
+
+        if (!uniqueName.equals(newName)) {
+            JsonObject nameMap = new JsonObject();
+            nameMap.addProperty(uniqueName, newName);
+            layout().add("names", nameMap);
+        }   
+        
+        // With a single output port operator its
+        // stream (output port) and operator name can be the same.
+        if (outputs != null && outputs.size() == 1) {
+            BOutputPort singleOut = outputs.get(0);
+            if (singleOut.name().equals(name())) {
+                
+                // Currently renaming only when it has no connections
+                // as connections are made using simply the name (identifier) of
+                // of the output object, not the object. Thus to rename the
+                // port we would need to ensure existing connections
+                // are updated to use the new name.
+                if (array(singleOut._json(), "connections").size() == 0) {
+                    singleOut._json().addProperty("name", uniqueName);
+                } else {
+                    // TODO: Rename when it has connections.
+                }
+            }
+        }
+        
+        _json().addProperty("name", uniqueName);
     }
 
     public void setParameter(String name, Object value) {
@@ -201,22 +233,33 @@ public class BOperatorInvocation extends BOperator {
     public BOutputPort addOutput(String schema, Optional<String> name) {
     
         if (outputs == null)
-            outputs = new HashMap<>();
+            outputs = new ArrayList<>();
         
-        String _name;
+        String portName;
         if (name.isPresent())
-            _name = name.get();
-        else
-            _name = this.name() + "_OUT" + outputs.size();
+            portName = name.get();
+        else {
+            portName = this.name() + "_OUT" + outputs.size();
+            // Just in case the resultant name does clash with an operator name.
+            portName = builder().userSuppliedName(portName);
+        }
         
         final BOutputPort stream = new BOutputPort(this, outputs.size(),
-                _name,
+                portName,
                 schema);
-        assert !outputs.containsKey(stream.name());
-        outputs.put(stream.name(), stream);
+        assert !outputs.stream().anyMatch(output -> stream.name().equals(output.name()));
+        outputs.add(stream);
         return stream;
     }
 
+    /**
+     * Each input port has a unique generated name to ensure connections
+     * are tracked correctly. However the port is not assigned
+     * that name during SPL generation, instead taking the name
+     * from its connected output stream (and the first if there
+     * are multiple). The port may also have an alias which
+     * will be used as the port alias (local to the operator).
+     */
     public BInputPort inputFrom(BOutput output, BInputPort input) {
         if (input != null) {
             assert input.operator() == this;
@@ -229,7 +272,7 @@ public class BOperatorInvocation extends BOperator {
             inputs = new ArrayList<>();
         }
 
-        input = new BInputPort(this, inputs.size(), name() + "_IN" + inputs.size(), output._type());
+        input = new BInputPort(this, inputs.size(), output._type());
         inputs.add(input);
         output.connectTo(input);
 
@@ -250,7 +293,7 @@ public class BOperatorInvocation extends BOperator {
             // outputs array in java is in port order.
             for (int i = 0; i < outputs.size(); i++)
                 oa.add(JsonNull.INSTANCE); // will be overwritten with port info
-            for (BOutputPort output : outputs.values())
+            for (BOutputPort output : outputs)
                 oa.set(output.index(), output._complete());
             json.add("outputs", oa);
         }

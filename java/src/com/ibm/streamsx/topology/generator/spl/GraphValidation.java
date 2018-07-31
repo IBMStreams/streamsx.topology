@@ -37,10 +37,10 @@ public class GraphValidation {
                 endParallelParent = first(endParallelParents);
             } while (jstring(endParallelParent, "kind").startsWith("$"));
             
-            Set<JsonObject> endParallelParentChildren = getDownstream(endParallelParent, graph);
-            if (endParallelParentChildren.size() != 1) {
-                throw new IllegalStateException(Messages.getString("GENERATOR_CANNOT_FANOUT"));
-            }
+            //Set<JsonObject> endParallelParentChildren = getDownstream(endParallelParent, graph);
+            //if (endParallelParentChildren.size() != 1) {
+            //    throw new IllegalStateException(Messages.getString("GENERATOR_CANNOT_FANOUT"));
+            //}
         }
     }
 

@@ -55,6 +55,16 @@ def _as_spl_expr(value):
         value = streamsx.spl.op.Expression.expression(value.name)
     return value
 
+# Return a value suitable for use inthe JSON used to
+# create the SPL. Returns `value.spl_json() if value has it otherwise
+# fn(value) or value if fn is not supplied.
+def _as_spl_json(value, fn=None):
+    if hasattr(value, 'spl_json'):
+        return value.spl_json()
+    if fn:
+        return fn(value)
+    return value
+
 class SPLGraph(object):
 
     def __init__(self, topology, name=None, namespace=None):
@@ -77,6 +87,16 @@ class SPLGraph(object):
         self._used_names = {'list', 'tuple', 'int'}
         self._layout_group_id = 0
         self._colocate_tag_mapping = {}
+        self._id_gen = 0
+
+    def _unique_id(self, prefix):
+        """
+        Generate a unique (within the graph) identifer
+        internal to graph generation.
+        """
+        _id = self._id_gen
+        self._id_gen += 1
+        return prefix + str(_id)
 
     def get_views(self):
         return self._views
@@ -231,9 +251,6 @@ class SPLGraph(object):
         for name, sp in sps.items():
             params[name] = sp.spl_json()
 
-    def getLastOperator(self):
-        return self.operators[len(self.operators) -1]      
-        
 class _SPLInvocation(object):
 
     def __init__(self, index, kind, function, name, params, graph, view_configs = None, sl=None, stateful = False):
@@ -299,17 +316,17 @@ class _SPLInvocation(object):
     def addViewConfig(self, view_configs):
         self.view_configs.append(view_configs)
 
-    def addInputPort(self, name=None, outputPort=None, window_config=None):
-        if name is None:
-            name = self.name + "_IN"+ str(len(self.inputPorts))
+    def addInputPort(self, outputPort=None, window_config=None, alias=None):
         iPortSchema = CommonSchema.Python    
         if not outputPort is None :
             iPortSchema = outputPort.schema        
-        iport = IPort(name, self, len(self.inputPorts),iPortSchema, window_config)
+        iport = IPort(self, len(self.inputPorts),iPortSchema, window_config)
         self.inputPorts.append(iport)
 
         if not outputPort is None:
             iport.connect(outputPort)
+        if alias:
+            iport._alias = alias
         return iport
 
 
@@ -471,9 +488,14 @@ class _SPLInvocation(object):
         for port in self.outputPorts:
             print(port.name)
 
+# Input ports don't have a name in SPL but the code generation
+# keys ports by their name so we create a unique internal identifier
+# for the name.
+
 class IPort(object):
-    def __init__(self, name, operator, index, schema, window_config):
-        self.name = name
+    def __init__(self, operator, index, schema, window_config):
+        self.name = operator.graph._unique_id('$__spl_ip')
+        self._alias = None
         self.operator = operator
         self.index = index
         self.schema = schema
@@ -490,6 +512,8 @@ class IPort(object):
     def getSPLInputPort(self):
         _iport = {}
         _iport["name"] = self.name
+        if self._alias:
+            _iport['alias'] = self._alias
         _iport["connections"] = [port.name for port in self.outputPorts]
         _iport["type"] = self.schema.schema()
         if self.window_config is not None:
@@ -524,7 +548,7 @@ class OPort(object):
         _oport["routing"] = self.routing
 
         if not self.width is None:
-            _oport["width"] = int(self.width)
+            _oport['width'] = _as_spl_json(self.width, int)
         if not self.partitioned is None:
             _oport["partitioned"] = self.partitioned
         if self.partitioned_keys is not None:
@@ -537,6 +561,7 @@ class Marker(_SPLInvocation):
     def __init__(self, index, kind, name, params, graph):
         self.index = index
         self.kind = kind
+        self.model = 'virtual'
         self.name = name
         self.params = {}
         self.setParameters(params)
@@ -554,7 +579,7 @@ class Marker(_SPLInvocation):
         _op["partitioned"] = False
 
         _op["marker"] = True
-        _op["model"] = "virtual"
+        _op["model"] = self.model
         _op["language"] = "marker"
 
         _outputs = []
