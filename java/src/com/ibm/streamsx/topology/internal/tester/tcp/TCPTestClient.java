@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.tester.tcp;
 
 import java.net.InetSocketAddress;
+import java.util.logging.Logger;
 
 import org.apache.mina.core.RuntimeIoException;
 import org.apache.mina.core.filterchain.IoFilter;
@@ -20,6 +21,8 @@ public class TCPTestClient {
     private NioSocketConnector connector = new NioSocketConnector();
     private final InetSocketAddress addr;
     private IoSession session;
+    
+    private static final Logger TRACE = Logger.getLogger(TCPTestClient.class.getName());
 
     public TCPTestClient(InetSocketAddress addr) {
         this.addr = addr;
@@ -34,18 +37,26 @@ public class TCPTestClient {
     }
 
     public synchronized void connect() throws InterruptedException {
-        for (;;) {
+        for (int i = 0; i < 5; i++) {
             try {
+                TRACE.info("Attempting to connect to test collector: " + addr);
                 ConnectFuture future = connector.connect(addr);
                 future.awaitUninterruptibly();
                 session = future.getSession();
+                TRACE.info("Connected to test collector: " + addr);
                 return;
             } catch (RuntimeIoException e) {
-                System.err.println("Failed to connect.");
-                e.printStackTrace();
-                Thread.sleep(5000);
+                e.printStackTrace(System.err);
+                if (i < 4) {
+                    TRACE.warning("Failed to connect to test collector - retrying: " + addr);
+                    Thread.sleep(1000);
+                } else {
+                    TRACE.severe("Failed to connect to test collector: " + addr);
+                    throw e;
+                }
             }
         }
+        
     }
 
     public synchronized WriteFuture writeTuple(Object msg)
