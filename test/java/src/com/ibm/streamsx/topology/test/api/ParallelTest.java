@@ -160,7 +160,11 @@ public class ParallelTest extends TestTopology {
 
         @Override
         public boolean test(String s) {
-            return s.hashCode() % nChannels == channel;
+            if (s.hashCode() >= 0) {
+                return s.hashCode() % nChannels == channel;
+            } else {
+                return (s.hashCode() & 0x00000000FFFFFFFFL) % nChannels == channel;
+            }
         }
     }
 
