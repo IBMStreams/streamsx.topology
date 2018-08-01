@@ -15,5 +15,5 @@ then
     echo
 elif [ $action = "includePath" ]
 then
-    python-config --includes
+    python-config --includes | /bin/sed -e 's/-I//;s/[[space]]+-I/\n/'
 fi
