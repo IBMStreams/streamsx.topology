@@ -955,7 +955,6 @@ class Stream(_placement._Placement, object):
         """
         Equivalent to calling :py:meth:`map(func,name) <map>`.
 
-
         .. deprecated:: 1.7
             Replaced by :py:meth:`map`.
         """
