@@ -221,6 +221,27 @@ class TestUDP(unittest.TestCase):
               tester.test(self.test_ctxtype, self.test_config)
               print(tester.result)
 
+  def test_in_region_multi_use(self):
+        topo = Topology("test_TopologyMultiSetParallel")
+
+        N = 132
+
+        s = topo.source(range(0, N))
+        s = s.parallel(3)
+        s = s.map(lambda v : v+18)
+        eo = s.end_parallel()
+        # Use s multiple times in region
+        sm = s.map(lambda v : v-23)
+
+        # and just for graph generation a termination within region
+        s.for_each(lambda v : None)
+        em = sm.end_parallel()
+      
+        tester = Tester(topo)
+        tester.contents(eo, list(range(0+18, N+18)), ordered=False)
+        tester.contents(em, list(range(0+18-23, N+18-23)), ordered=False)
+        tester.test(self.test_ctxtype, self.test_config)
+
 class TestDistributedUDP(TestUDP):
   def setUp(self):
       Tester.setup_distributed(self)
