@@ -5,6 +5,7 @@
 
 package com.ibm.streamsx.rest;
 
+import static com.ibm.streamsx.rest.StreamsRestUtils.TRACE;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
@@ -28,7 +29,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.context.remote.RemoteContext;
 
 /**
  * Implementation of StreamingAnalyticsService for Version 1.
@@ -169,7 +169,7 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
 
         JsonObject jso = StreamsRestUtils.getGsonResponse(httpclient, httpput);
 
-        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + getName() + "): submit job response: " + jso.toString());
+        TRACE.info("Streaming Analytics service (" + getName() + "): submit job response: " + jso.toString());
         return jso;
     }
 
