@@ -24,6 +24,7 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameterFactory;
 import com.ibm.streamsx.topology.internal.functional.SPLTypes;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
@@ -281,6 +282,11 @@ public class BOperatorInvocation extends BOperator {
     
     public JsonObject layout() {
         return objectCreate(_json(), "layout");
+    }
+    
+    public BOperatorInvocation layoutKind(String kind) {
+        layout().addProperty(OpProperties.KIND, kind);
+        return this;
     }
 
 
