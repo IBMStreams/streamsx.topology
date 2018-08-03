@@ -733,7 +733,7 @@ class Topology(object):
         else:
              self._files['opt'].append(reqs_include)
 
-    def addJobControlPlane(self):
+    def _add_job_control_plane(self):
         """
         Add a JobControlPlane operator to the topology, if one has not already
         been added.  If a JobControlPlane operator has already been added,
@@ -1000,7 +1000,7 @@ class Stream(_placement._Placement, object):
 
     def transform(self, func, name=None):
         """
-        Equivalent to calling :py:meth:``map(func, name)``.
+        Equivalent to calling :py:meth:``map(func,name)``.
 
         .. deprecated:: 1.7
             Replaced by :py:meth:`map`.
@@ -1226,8 +1226,17 @@ class Stream(_placement._Placement, object):
         return self
 
     def set_consistent(self, consistent_config):
+        """ Indicates that the stream is the start of a consistent region.
+
+        Args:
+            consistent_config(consistent.ConsistentRegionConfig): the configuration of the consistent region.
+
+        Returns:
+            Stream: Returns this stream.
+        """
+
         # add job control plane if needed
-        self.topology.addJobControlPlane()
+        self.topology._add_job_control_plane()
         self.oport.operator.consistent(consistent_config)
         return self
 

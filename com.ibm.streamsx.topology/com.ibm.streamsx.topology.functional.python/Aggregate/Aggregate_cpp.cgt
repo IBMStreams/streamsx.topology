@@ -241,26 +241,33 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
 // ##################################
 
 void MY_OPERATOR::checkpoint(SPL::Checkpoint & ckpt) {
-    SPLAPPTRC(L_DEBUG, "checkpoint", SPL_OPER_DBG);
+    SPLAPPTRC(L_DEBUG, "checkpoint: enter", SPL_OPER_DBG);
     OptionalAutoLock stateLock(this);
     window_.checkpoint(ckpt);
     DelegatingStateHandler::checkpoint(ckpt);
+    SPLAPPTRC(L_DEBUG, "checkpoint: exit", SPL_OPER_DBG);
 }
 
 void MY_OPERATOR::reset(SPL::Checkpoint & ckpt) {
     SPLAPPTRC(L_DEBUG, "reset", SPL_OPER_DBG);
     OptionalAutoLock stateLock(this);
     window_.reset(ckpt);
-    DelegatingStateHandler::checkpoint(ckpt);
+    DelegatingStateHandler::reset(ckpt);
+    SPLAPPTRC(L_DEBUG, "reset: exit", SPL_OPER_DBG);
 }
 
 void MY_OPERATOR::resetToInitialState() {
-    SPLAPPTRC(L_DEBUG, "resetToInitialState", SPL_OPER_DBG);
+    SPLAPPTRC(L_DEBUG, "resetToInitialState: enter", SPL_OPER_DBG);
     OptionalAutoLock stateLock(this);
+    SPLAPPTRC(L_DEBUG, "resetToInitialState: resetting window", SPL_OPER_DBG);
     window_.resetToInitialState();
+    SPLAPPTRC(L_DEBUG, "resetToInitialState: resetting delegate", SPL_OPER_DBG);
     DelegatingStateHandler::resetToInitialState();
+    SPLAPPTRC(L_DEBUG, "resetToInitialState: exit", SPL_OPER_DBG);
 }
 
+#if 0
+// Why is this here?  At best it seems to be unnecessary.  At worst, wrong
 namespace SPL{
     Checkpoint & operator <<(Checkpoint &ostr, const PyObject  & obj){
         return ostr;
@@ -281,6 +288,7 @@ namespace SPL{
 
  }
 
+
 std::ostream & operator <<(std::ostream &ostr, const PyObject  & obj){
     return ostr;
 }
@@ -288,4 +296,5 @@ std::ostream & operator <<(std::ostream &ostr, const PyObject  & obj){
 std::ostream & operator >>(std::ostream &ostr, const PyObject  & obj){
     return ostr;
 }
+#endif
 <%SPL::CodeGen::implementationEpilogue($model);%>
