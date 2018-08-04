@@ -1,5 +1,5 @@
 pipeline {
-  agent { node { docker { label 'streamsx_public' } } }
+  agent { docker { } }
   options {
      disableConcurrentBuilds()
   }
