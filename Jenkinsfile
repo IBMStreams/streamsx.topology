@@ -1,5 +1,5 @@
 pipeline {
-  agent any
+  agent label 'streamsx_public'
   options {
      disableConcurrentBuilds()
   }
