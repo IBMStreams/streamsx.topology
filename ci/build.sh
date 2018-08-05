@@ -1,7 +1,5 @@
 # Requires $HOME/.ant/lib setup correctly - See README.md
 . ${WORKSPACE:?}/ci/setup
-export PYTHONHOME=${ANACONDA36_HOME:?}
-. ${WORKSPACE}/ci/pysetup
 echo 'Download JUnit 4.10'
 mkdir -p $HOME/.ant/lib
 cd $HOME/.ant/lib
