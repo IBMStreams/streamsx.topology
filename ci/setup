@@ -1,8 +1,6 @@
 echo 'WORKSPACE' ${WORKSPACE:?}
 echo 'STREAMS_INSTALL=' $STREAMS_INSTALL
 export JAVA_HOME=$STREAMS_INSTALL/java
-export PYTHONHOME=${ANACONDA36_HOME:?}
-. ${WORKSPACE}/ci/pysetup
 ant -version
 env
 set -x
