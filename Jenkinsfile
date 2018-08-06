@@ -19,21 +19,18 @@ pipeline {
     stage ('Python tests') {
       parallel {
     stage('Python 3.6 standalone') {
-      agent { label 'streamsx_public' }
        steps {
          sh 'ci/test_python36_standalone.sh'
        }
     }
     stage('Python 3.5 standalone') {
        when { anyOf { branch 'master'; branch 'feature/*' } }
-      agent { label 'streamsx_public' }
        steps {
          sh 'ci/test_python35_standalone.sh'
        }
     }
     stage('Python 2.7 standalone') {
        when { anyOf { branch 'master'; branch 'feature/*' } }
-      agent { label 'streamsx_public' }
        steps {
          sh 'ci/test_python27_standalone.sh'
        }
