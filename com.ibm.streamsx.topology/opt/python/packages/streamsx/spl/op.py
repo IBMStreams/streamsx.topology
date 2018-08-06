@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016,2017
+# Copyright IBM Corp. 2016,2018
 """
 Integration of SPL operators.
 
@@ -149,8 +149,10 @@ For example, invoking an SPL `Beacon` operator using an output function to set t
 
 from future.builtins import *
 
+import streamsx.spl.toolkit
 import streamsx.topology.exop as exop
 import streamsx.topology.runtime
+import streamsx.topology.topology
 import streamsx._streams._placement as _placement
 
 class Invoke(_placement._Placement, exop.ExtensionOperator):
@@ -264,6 +266,8 @@ class Invoke(_placement._Placement, exop.ExtensionOperator):
                     port['assigns'] = assigns
 
                 assigns[attr] = e.spl_json()
+
+
 
 class Source(Invoke):
     """
@@ -427,3 +431,42 @@ class Expression(object):
 
     def __str__(self):
         return str(self._value)
+
+def main_composite(kind, toolkits=None, name=None):
+    """Wrap a main composite invocation as a `Topology`.
+  
+    Provides a bridge between an SPL application (main composite)
+    and a `Topology`. Create a `Topology` that contains just
+    the invocation of the main composite defined by `kind`.
+
+    The returned `Topology` may be used like any other topology
+    instance including job configuration, tester or even addition
+    of SPL operator invocations or functional transformations.
+
+    .. note:: Since a main composite by definition has no input
+        or output ports any functionality added to the topology cannot
+        interact directly with its invocation.
+
+    Args:
+        kind(str): Kind of the main composite operator invocation.
+        toolkits(list[str]): Optional list of toolkits the main composite depends on.
+        name(str): Invocation name for the main composite.
+
+    Returns:
+        tuple: tuple containing:
+
+        - **Topology**: Topology with main composite invocation.
+        - **Invoke**: Invocation of the main composite
+
+    .. versionadded: 1.11
+    """
+    if '::' in kind:
+        ns, name = kind.rsplit('::', 1)
+        ns += '._spl'
+    else:
+        raise ValueError('Main composite requires a namespace qualified name: ' + str(kind))
+    topo = streamsx.topology.topology.Topology(name=name, namespace=ns)
+    if toolkits:
+        for tk_path in toolkits:
+            streamsx.spl.toolkit.add_toolkit(topo, tk_path)
+    return topo, Invoke(topo, kind, name=name)
