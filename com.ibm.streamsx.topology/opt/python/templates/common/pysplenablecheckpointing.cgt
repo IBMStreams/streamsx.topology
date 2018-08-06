@@ -1,0 +1,33 @@
+<% 
+ # Enable or disable checkpointing, including support for the necessary locking.
+
+ # Checkpointing should be enabled if the operator is in a consistent region,
+ # or has checkpointing configured.  Also, the operator must be stateful,
+ # otherwise no checkpointing is needed.
+
+ my $isInConsistentRegion = $model->getContext()->getOptionalContext("ConsistentRegion");
+ my $ckptKind = $model->getContext()->getCheckpointingKind();
+ my $pyStateful = $model->getParameterByName("pyStateful");
+ my $stateful = 0;
+ if (defined($pyStateful)) {
+   $stateful = $pyStateful->getValueAt(0)->getSPLExpression() eq "true";
+ }
+ else {
+   # no pyStateful parameter.  Try calling splpy_OperatorCallable().
+   if (defined &splpy_OperatorCallable) {
+     $stateful = splpy_OperatorCallable()
+   }
+ }
+
+ my $isCheckpointing = $stateful && ($isInConsistentRegion or $ckptKind ne "none");
+ if ($isCheckpointing) {
+ %>
+   typedef SplpyOp::RealAutoLock AutoLock;
+ <%
+ }
+ else {
+ %>
+   typedef SplpyOp::NoAutoLock AutoLock;
+ <%
+ }
+%>
