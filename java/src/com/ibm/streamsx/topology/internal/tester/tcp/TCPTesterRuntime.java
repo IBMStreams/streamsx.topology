@@ -112,7 +112,9 @@ public class TCPTesterRuntime extends HandlerTesterRuntime {
      */
     private void addTCPServerAndSink() throws Exception {
 
-        tcpServer = new TCPTestServer(0, new IoHandlerAdapter() {
+        tcpServer = new TCPTestServer(0,
+                this.contextType == StreamsContext.Type.STANDALONE_TESTER,
+                new IoHandlerAdapter() {
             @Override
             public void messageReceived(IoSession session, Object message)
                     throws Exception {
@@ -142,11 +144,10 @@ public class TCPTesterRuntime extends HandlerTesterRuntime {
         }
     }
 
-    private void addTesterSink(InetSocketAddress testAddr) {
-
+    private void addTesterSink(InetSocketAddress testAddr) {      
         Map<String, Object> hostInfo = new HashMap<>();
         hostInfo.put("host", testAddr.getHostString());
-        hostInfo.put("port", testAddr.getPort());
+        hostInfo.put("port", testAddr.getPort());        
         this.testerSinkOp = topology().builder().addOperator(
                 "TesterTCP" + testAddr.getPort(),
                 TesterSink.KIND,
