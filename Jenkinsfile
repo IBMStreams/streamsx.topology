@@ -41,14 +41,14 @@ pipeline {
   post {
     always {
       junit "test/**/TEST-*.xml"
-      publishHTML target: [
-          reportName: 'Java Coverage'
-          reportDir: 'test/java/report/coverage'
-          reportFiles: 'index.html'
-          keepAll: false
-          alwaysLinkToLastBuild: true
+      publishHTML (target: [
+          reportName: 'Java Coverage',
+          reportDir: 'test/java/report/coverage',
+          reportFiles: 'index.html',
+          keepAll: false,
+          alwaysLinkToLastBuild: true,
           allowMissing: true
-      ]
+      ])
     }
   }
 }
