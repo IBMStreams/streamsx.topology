@@ -93,6 +93,15 @@ public class InvokeSc {
         commands.add("--optimized-code-generation");
         if (standalone)
             commands.add("--standalone");
+        
+        String tnt = System.getenv("TOPOLOGY_NUM_MAKE_THREADS");
+        if (tnt != null && !tnt.isEmpty()) {
+            try {
+                int count = Integer.valueOf(tnt.trim());
+                if (count >= 1)
+                    commands.add("--num-make-threads="+Integer.toString(count));
+            } catch (NumberFormatException nfe) {}
+        }
 
         commands.add("-M");
         commands.add(mainCompositeName);
