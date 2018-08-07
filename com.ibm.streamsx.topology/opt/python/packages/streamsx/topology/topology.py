@@ -105,7 +105,7 @@ For example a stream ``words`` containing only string objects can be
 processed by a :py:meth:`~Stream.filter` using a lambda function::
 
     # Filter the stream so it only contains words starting with py
-    pywords = words.filter(lambda word : tuple.startswith('py'))
+    pywords = words.filter(lambda word : word.startswith('py'))
 
 Stateful operations
 ===================
