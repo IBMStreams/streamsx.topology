@@ -14,4 +14,11 @@ export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/test/python/topology
 
 wd="nose_runs/py${pyv}"
 mkdir ${wd}
-nosetests --where=${wd} --xunit-file ${xuf} --xunit-testsuite-name="py${pyv}" --config=nose.cfg ../../topology
+rc=nosetests --where=${wd} --xunit-file ${xuf} --xunit-testsuite-name="py${pyv}" --config=nose.cfg ../../topology
+
+if [ -z "${JENKINS_URL}" ]
+then
+    exit $rc
+fi
+# Let Jenkins handle failures marking build as unstable.
+exit 0
