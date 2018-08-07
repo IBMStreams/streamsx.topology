@@ -7,6 +7,8 @@ package com.ibm.streamsx.rest;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -228,6 +230,24 @@ public class Instance extends Element {
      */
     public String getStatus() {
         return status;
+    }
+    
+    /**
+     * Streams application console URL.
+     * Returns the Streams application console URL with
+     * a filter preset to this instance identifier.
+     * @return Streams application console URL
+     * 
+     * @since 1.11
+     */
+    private String appConsoleURL;
+    void setApplicationConsoleURL(String baseUrl) throws UnsupportedEncodingException {
+        appConsoleURL = baseUrl
+               +  "#application/dashboard/Application%20Dashboard?instance="
+               + URLEncoder.encode(getId(), "UTF-8");
+    }
+    public String getApplicationConsoleURL() {
+        return appConsoleURL;
     }
     
     private Domain _domain;

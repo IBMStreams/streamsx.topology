@@ -228,7 +228,6 @@ class SplpySetup {
           typedef PyThreadState * (*__splpy_est)(void);
 
 
-#if __SPLPY_EC_MODULE_OK
 {
 
 #if PY_MAJOR_VERSION == 3
@@ -240,7 +239,6 @@ class SplpySetup {
           _SPLPyImport_AppendInittab(__SPLPY_EC_MODULE_NAME, &init_streamsx_ec);
 #endif
 }
-#endif
 
           SPLAPPTRC(L_DEBUG, "Starting Python runtime", "python");
 
@@ -265,11 +263,9 @@ class SplpySetup {
           const char *argv[] = {""};
           _SPLPySys_SetArgvEx(1, (char **) argv, 0);
 #endif
-#if __SPLPY_EC_MODULE_OK
 #if PY_MAJOR_VERSION == 2
           SPLAPPTRC(L_DEBUG, "Including Python extension: _streamsx_ec", "python");
           init_streamsx_ec();
-#endif
 #endif
          
           _SPLPyEval_InitThreads();
@@ -308,9 +304,7 @@ class SplpySetup {
         }
         SPLAPPTRC(L_DEBUG, "Python script splpy_setup.py ran ok.", "python");
 
-#if __SPLPY_EC_MODULE_OK
         SplpyGeneral::callVoidFunction("streamsx.ec", "_setup", NULL, NULL);
-#endif
     }
 };
 

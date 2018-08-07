@@ -39,7 +39,7 @@ public class TCPTestServer {
     /**
      * Initialize the MINA server.
      */
-    public TCPTestServer(int port, IoHandler handler) throws Exception {
+    public TCPTestServer(int port, boolean loopback, IoHandler handler) throws Exception {
 
         acceptor = new NioSocketAcceptor();
 
@@ -52,7 +52,8 @@ public class TCPTestServer {
 
         // Get the bind address now so the majority of
         // errors are caught at initialization time.
-        bindAddress = new InetSocketAddress(InetAddress.getLocalHost(), port);
+        bindAddress = new InetSocketAddress(
+                loopback ? InetAddress.getLoopbackAddress() : InetAddress.getLocalHost(), port);
     }
 
     public InetSocketAddress start() throws Exception {

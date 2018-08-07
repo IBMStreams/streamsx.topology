@@ -127,7 +127,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
         String opName = LogicUtils.functionName(aggregator);
 
         BOperatorInvocation aggOp = JavaFunctional.addFunctionalOperator(this,
-                opName, JavaFunctionalOps.AGGREGATE_KIND, aggregator, getOperatorParams());
+                opName, JavaFunctionalOps.AGGREGATE_KIND, aggregator, getOperatorParams()).layoutKind("Aggregate");
         SourceInfo.setSourceInfo(aggOp, WindowDefinition.class);
 
         addInput(aggOp, triggerPolicy, triggerConfig, triggerTimeUnit);

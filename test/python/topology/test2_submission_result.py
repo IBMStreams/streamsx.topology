@@ -100,6 +100,8 @@ class TestSubmissionResultStreamingAnalytics(TestSubmissionResult):
 
         sr = tester.submission_result
         self.assertIn('submitMetrics', sr)
+        self.assertIn('console.application.url', sr)
+        self.assertIn('console.application.job.url', sr)
         m = sr['submitMetrics']
         self.assertIn('buildArchiveSize', m)
         self.assertIn('buildArchiveUploadTime_ms', m)

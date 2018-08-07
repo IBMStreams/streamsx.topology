@@ -21,7 +21,6 @@
 #include <SPL/Runtime/Common/Metric.h>
 #include <SPL/Runtime/Operator/State/StateHandler.h>
 
-#include "splpy_ec_api.h"
 #include "splpy_general.h"
 #include "splpy_setup.h"
 
@@ -71,9 +70,7 @@ class SplpyOp {
           callable_(NULL),
           pydl_(NULL),
           exc_suppresses(NULL),
-#if __SPLPY_EC_MODULE_OK
           opc_(NULL),
-#endif
           stateHandler(NULL),
           stateHandlerMutex(NULL)
       {
@@ -84,11 +81,9 @@ class SplpyOp {
           PyObject * pyOutDir = pySplValueToPyObject(outDir);
           SplpyGeneral::callVoidFunction(
                "streamsx.topology.runtime", "add_output_packages", pyOutDir, NULL);
-#if __SPLPY_EC_MODULE_OK
           opc_ = PyLong_FromVoidPtr((void*)op);
           if (opc_ == NULL)
               throw SplpyGeneral::pythonException("capsule");
-#endif
       }
 
       virtual ~SplpyOp()
@@ -99,10 +94,8 @@ class SplpyOp {
           if (callable_ != NULL)
               Py_DECREF(callable_);
 
-#if __SPLPY_EC_MODULE_OK
           if (opc_ != NULL)
               Py_DECREF(opc_);
-#endif
         }
         if (pydl_ != NULL)
           (void) dlclose(pydl_);
@@ -186,7 +179,6 @@ class SplpyOp {
           return 0;
       }
 
-#if __SPLPY_EC_MODULE_OK
       // Get the capture with a new ref
       PyObject * opc() {
          Py_INCREF(opc_);
@@ -207,7 +199,6 @@ class SplpyOp {
                "streamsx.ec", "_clear_opc",
                NULL, NULL);
       }
-#endif
 
       /**
        * Is this operator stateful for checkpointing?  Derived classes
@@ -345,10 +336,8 @@ class SplpyOp {
       // Number of exceptions suppressed by __exit__
       SPL::Metric *exc_suppresses;
 
-#if __SPLPY_EC_MODULE_OK
       // PyLong of op_
       PyObject *opc_;
-#endif
 
       SplpyOpStateHandler * stateHandler;
       Mutex * stateHandlerMutex;

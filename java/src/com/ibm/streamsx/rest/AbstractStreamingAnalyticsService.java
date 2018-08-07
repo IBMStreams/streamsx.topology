@@ -5,7 +5,10 @@
 
 package com.ibm.streamsx.rest;
 
+import static com.ibm.streamsx.rest.StreamsRestUtils.TRACE;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.getSPLCompatibleName;
+import static com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys.CONSOLE_APPLICATION_JOB_URL;
+import static com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys.CONSOLE_APPLICATION_URL;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
@@ -32,7 +35,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.StreamsRestUtils.StreamingAnalyticsServiceVersion;
-import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 import com.ibm.streamsx.topology.internal.streams.Util;
@@ -143,7 +145,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): submit job request:" + jco.toString());
 
             JsonObject response = postJob(httpClient, service, bundle, jco);
-            return jobResult(response);
+            return addConsoleURLs(jobResult(response));
             
         } finally {
             httpClient.close();
@@ -192,7 +194,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             buildName = getSPLCompatibleName(buildName) + "_" + randomHex(16);
             buildName = URLEncoder.encode(buildName, StandardCharsets.UTF_8.name());
             // Perform initial post of the archive
-            RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): submitting build " + buildName);
+            TRACE.info("Streaming Analytics service (" + serviceName + "): submitting build " + buildName);
             final long startUploadTime = System.currentTimeMillis();
             JsonObject build = submitBuild(httpclient, getAuthorization(), archive, buildName);
             final long endUploadTime = System.currentTimeMillis();
@@ -231,7 +233,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
                 } 
                 // The remaining possible states are 'failed', 'timeout', 'canceled', 'canceling', and 'unknown', none of which can lead to a state of 'built', so we throw an error.
                 else {
-                    RemoteContext.REMOTE_LOGGER.severe("Streaming Analytics service (" + serviceName + "): The submitted archive " + archive.getName() + " failed to build with status " + status + ".");
+                    TRACE.severe("Streaming Analytics service (" + serviceName + "): The submitted archive " + archive.getName() + " failed to build with status " + status + ".");
                     JsonObject output = getBuildOutput(buildId, outputId, httpclient, getAuthorization());
                     String strOutput = "";
                     if (output != null)
@@ -254,7 +256,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             JsonObject artifact = artifacts.get(0).getAsJsonObject();
             String submitUrl = getJobSubmitUrl(artifact);
 
-            RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + serviceName + "): submitting job request.");
+            TRACE.info("Streaming Analytics service (" + serviceName + "): submitting job request.");
             final long startSubmitTime = System.currentTimeMillis();
             JsonObject response = submitBuildArtifact(httpclient, jco,
                     getAuthorization(), submitUrl);
@@ -263,10 +265,27 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             
             Result<Job,JsonObject> result = jobResult(response);
             result.getRawResult().add(SubmissionResultsKeys.SUBMIT_METRICS, metrics);
-            return result;
+            return addConsoleURLs(result);
         } finally {
             httpclient.close();
         }
+    }
+    
+    /**
+     * Add any required Streams console URLs into the result.
+     */
+    private Result<Job,JsonObject> addConsoleURLs(final Result<Job,JsonObject> result) throws IOException {
+        
+        final JsonObject json = result.getRawResult();
+        
+        final String appUrl = getInstance().getApplicationConsoleURL();
+        json.addProperty(CONSOLE_APPLICATION_URL, appUrl);
+        
+        String jobUrl = appUrl + "&job=" +
+            URLEncoder.encode(json.getAsJsonPrimitive("name").getAsString(), "UTF-8");
+        json.addProperty(CONSOLE_APPLICATION_JOB_URL, jobUrl);
+               
+        return result;
     }
 
     private String prettyPrintOutput(JsonObject output) {
@@ -349,7 +368,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
 
         JsonObject jsonResponse = StreamsRestUtils.getGsonResponse(httpClient, postJobWithConfig);
 
-        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + getName() + "): submit job response:" + jsonResponse.toString());
+        TRACE.info("Streaming Analytics service (" + getName() + "): submit job response:" + jsonResponse.toString());
 
         return jsonResponse;
     }
