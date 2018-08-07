@@ -645,8 +645,8 @@ def _wrapforsplop(optype, wrapped, style, docpy):
         _valid_identifier(wrapped.__name__)
 
         class _op_class(wrapped):
-
             __doc__ = wrapped.__doc__
+
             _splpy_wrapped = wrapped
             _splpy_optype = optype
             _splpy_callable = 'class'

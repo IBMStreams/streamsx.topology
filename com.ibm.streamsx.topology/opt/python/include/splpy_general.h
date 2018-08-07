@@ -199,7 +199,36 @@ class SplpyGeneral {
       return ret;
     }
 
-    
+    /**
+     * Utility method to write a python exception to the application trace.
+     * The type and value are written, but not the traceback.
+     * If no python exception occurred, this does nothing.
+     * The caller must hold the GILState.
+     */
+    static void tracePythonError() {
+      if (PyErr_Occurred()) {
+        PyObject * type = NULL;
+        PyObject * value = NULL;
+        PyObject * traceback = NULL;
+
+        PyErr_Fetch(&type, &value, &traceback);
+        if (value) {
+          SPL::rstring valueString;
+          SPL::rstring typeString;
+          // note pyRStringFromPyObject returns zero on success
+          if (!pyRStringFromPyObject(typeString, type)) {
+            if (value) {
+              pyRStringFromPyObject(valueString, value);
+            }
+            SPLAPPTRC(L_ERROR, "A python error occurred: " << typeString << ": " << valueString, "python");
+          }
+        }
+
+        Py_XDECREF(type);
+        Py_XDECREF(value);
+        Py_XDECREF(traceback);
+      }
+    }
 
     /**
      * Class object for streamsx.spl.types.Timestamp.
@@ -395,14 +424,14 @@ class SplpyGeneral {
  * it into __exit__.
  */
 class SplpyExceptionInfo {
-    public:
-      SplpyExceptionInfo() {
+    private:
+      SplpyExceptionInfo() : et_(), location_() {
          PyErr_Fetch(&pyType_, &pyValue_, &pyTraceback_);
          PyErr_NormalizeException(&pyType_, &pyValue_, &pyTraceback_);
-         // At this point we hold refrences to the objects
+         // At this point we hold references to the objects
          // and the error indicator is cleared.
       }
-
+    public:
       /*
        * Returns a SplpyExceptionInfo instance that can be thrown
        * when a Python error is raised through the Python C-API,
@@ -430,7 +459,7 @@ class SplpyExceptionInfo {
       }
 
       PyObject * asTuple() const {
-          PyObject *info = PyTuple_New(pyValue_ ? (pyTraceback_ ? 3 : 2) : 1);
+          PyObject *info = PyTuple_New(pyTraceback_ ? 3 : pyValue_ ? 2 : 1);
           Py_INCREF(pyType_);
           PyTuple_SET_ITEM(info, 0, pyType_);
           if (pyValue_) {

@@ -21,6 +21,7 @@
 
 #include <SPL/Runtime/Operator/ParameterValue.h>
 
+
 namespace streamsx {
   namespace topology {
 
@@ -28,20 +29,14 @@ class SplpyFuncOp : public SplpyOp {
   public:
 
       SplpyFuncOp(SPL::Operator * op, const std::string & wrapfn) :
-         SplpyOp(op, "/opt/python/packages/streamsx/topology")
+        SplpyOp(op, "/opt/python/packages/streamsx/topology")
       {
          setSubmissionParameters();
          addAppPythonPackages();
          loadAndWrapCallable(wrapfn);
       }
-
-      virtual ~SplpyFuncOp() {
-      }
-
-
-
+      
   private:
-
       int hasParam(const char *name) {
           return op()->getParameterNames().count(name);
       }
@@ -112,7 +107,10 @@ class SplpyFuncOp : public SplpyOp {
                "streamsx.topology.runtime", wrapfn, appCallable, extraArg));
       }
 
-
+      virtual bool isStateful() {
+        return static_cast<SPL::boolean>(op()->getParameterValues("pyStateful")[0]->getValue());
+      }
+ 
       /*
        *  Add any packages in the application directory
        *  to the Python path. The application directory
@@ -129,6 +127,7 @@ class SplpyFuncOp : public SplpyOp {
           SplpyGeneral::callVoidFunction(
               "streamsx.topology.runtime", "setupOperator", tkDir, NULL);
       }
+
 };
 
 }}

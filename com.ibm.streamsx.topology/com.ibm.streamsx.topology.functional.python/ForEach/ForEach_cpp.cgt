@@ -7,6 +7,7 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 
+@include "../../opt/python/codegen/pysplenablecheckpointing.cgt"
 @include "../pyspltuple.cgt"
 <%
  # Select the Python wrapper function
@@ -37,6 +38,7 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
+    AutoLock stateLock(funcop_);
     funcop_->prepareToShutdown();
 }
 
@@ -46,6 +48,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 try {
 @include "../pyspltuple2value.cgt"
 
+  AutoLock stateLock(funcop_);
   streamsx::topology::Splpy::pyTupleForEach(funcop_->callable(), value);
 } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
   SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);

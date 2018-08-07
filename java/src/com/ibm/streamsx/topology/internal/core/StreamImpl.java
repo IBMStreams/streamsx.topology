@@ -69,6 +69,7 @@ import com.ibm.streamsx.topology.internal.logic.Throttle;
 import com.ibm.streamsx.topology.internal.messages.Messages;
 import com.ibm.streamsx.topology.logic.Logic;
 import com.ibm.streamsx.topology.spi.builder.Invoker;
+import com.ibm.streamsx.topology.spi.builder.LayoutInfo;
 
 public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
@@ -98,7 +99,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName,
-                FILTER_KIND, filter);
+                FILTER_KIND, filter).layoutKind("Filter");
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         connectTo(bop, true, null);
         
@@ -138,6 +139,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         
         JsonObject invokeInfo = new JsonObject();
         invokeInfo.addProperty("name", opName);
+        LayoutInfo.kind(invokeInfo, "ForEach");
         com.ibm.streamsx.topology.spi.builder.SourceInfo.addSourceInfo(invokeInfo, getClass());
               
         return Invoker.invokeForEach(this, FOR_EACH_KIND, invokeInfo,
@@ -161,7 +163,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName,
-                JavaFunctionalOps.MAP_KIND, transformer);
+                JavaFunctionalOps.MAP_KIND, transformer).layoutKind("Map");
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         BInputPort inputPort = connectTo(bop, true, null);
         // By default add a queue
@@ -175,7 +177,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName,
-                JavaFunctionalOps.MAP_KIND, transformer);
+                JavaFunctionalOps.MAP_KIND, transformer).layoutKind("Modify");
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         BInputPort inputPort = connectTo(bop, true, null);
         // By default add a queue
@@ -207,7 +209,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         String opName = LogicUtils.functionName(transformer);
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
-                opName, FLAT_MAP_KIND, transformer);
+                opName, FLAT_MAP_KIND, transformer).layoutKind("FlatMap");
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         BInputPort inputPort = connectTo(bop, true, null);
         // By default add a queue
@@ -289,14 +291,18 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
     @Override
     public TSink print() {
-        return forEach(new Print<T>());
+         final TSink print = forEach(new Print<T>());
+         print.operator().layoutKind("Print");
+         return print;
     }
 
     @Override
     public TStream<T> sample(final double fraction) {
         if (fraction < 0.0 || fraction > 1.0)
             throw new IllegalArgumentException();
-        return filter(new RandomSample<T>(fraction));
+        TStream<T> sample = filter(new RandomSample<T>(fraction));
+        sample.operator().layoutKind("Sample");
+        return sample.invocationName(String.format("Sample %.2f%%", fraction*100.0));
     }
 
     @Override
@@ -588,8 +594,10 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     public TStream<T> throttle(final long delay, final TimeUnit unit) {
 
         final long delayms = unit.toMillis(delay);
-
-        return modify(new Throttle<T>(delayms));
+        
+        TStream<T> throttle = modify(new Throttle<T>(delayms));
+        throttle.operator().layoutKind("Throttle");
+        return throttle;
     }
 
     /**
@@ -685,7 +693,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
 
         BOperatorInvocation bop = JavaFunctional.addFunctionalOperator(this,
                 opName,
-                JavaFunctionalOps.SPLIT_KIND, splitter);
+                JavaFunctionalOps.SPLIT_KIND, splitter).layoutKind("Split");
         SourceInfo.setSourceInfo(bop, StreamImpl.class);
         connectTo(bop, true, null);
         
