@@ -105,7 +105,7 @@ For example a stream ``words`` containing only string objects can be
 processed by a :py:meth:`~Stream.filter` using a lambda function::
 
     # Filter the stream so it only contains words starting with py
-    pywords = words.filter(lambda word : tuple.startswith('py'))
+    pywords = words.filter(lambda word : word.startswith('py'))
 
 Stateful operations
 ===================
@@ -987,7 +987,7 @@ class Stream(_placement._Placement, object):
 
     def transform(self, func, name=None):
         """
-        Equivalent to calling :py:meth:``map(func, name)``.
+        Equivalent to calling :py:meth:`map(func,name) <map>`.
 
         .. deprecated:: 1.7
             Replaced by :py:meth:`map`.

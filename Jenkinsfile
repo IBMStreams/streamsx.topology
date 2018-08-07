@@ -24,7 +24,7 @@ pipeline {
        }
     }
     stage('Python 3.5 standalone') {
-       when { anyOf { branch 'master'; branch 'feature/*' } }
+       when { anyOf { branch 'DISABLE_master'; branch 'DISABLE_feature/*' } }
        steps {
          sh 'ci/test_python35_standalone.sh'
        }
