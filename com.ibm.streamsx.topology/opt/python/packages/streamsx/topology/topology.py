@@ -987,7 +987,7 @@ class Stream(_placement._Placement, object):
 
     def transform(self, func, name=None):
         """
-        Equivalent to calling :py:meth:``map(func, name)``.
+        Equivalent to calling :py:meth:`map(func,name) <map>`.
 
         .. deprecated:: 1.7
             Replaced by :py:meth:`map`.
