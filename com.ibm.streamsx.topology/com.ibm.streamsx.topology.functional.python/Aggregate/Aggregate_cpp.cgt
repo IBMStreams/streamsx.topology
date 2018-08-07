@@ -259,42 +259,9 @@ void MY_OPERATOR::reset(SPL::Checkpoint & ckpt) {
 void MY_OPERATOR::resetToInitialState() {
     SPLAPPTRC(L_DEBUG, "resetToInitialState: enter", SPL_OPER_DBG);
     OptionalAutoLock stateLock(this);
-    SPLAPPTRC(L_DEBUG, "resetToInitialState: resetting window", SPL_OPER_DBG);
     window_.resetToInitialState();
-    SPLAPPTRC(L_DEBUG, "resetToInitialState: resetting delegate", SPL_OPER_DBG);
     DelegatingStateHandler::resetToInitialState();
     SPLAPPTRC(L_DEBUG, "resetToInitialState: exit", SPL_OPER_DBG);
 }
 
-#if 0
-// Why is this here?  At best it seems to be unnecessary.  At worst, wrong
-namespace SPL{
-    Checkpoint & operator <<(Checkpoint &ostr, const PyObject  & obj){
-        return ostr;
-    }
-
-    Checkpoint & operator >>(Checkpoint &ostr, const PyObject  & obj){
-        return ostr;
-    }
-
-    ByteBuffer<Checkpoint> & operator<<(ByteBuffer<Checkpoint> & ckpt, PyObject * obj){
-        return ckpt;
-    }
-
-
-    ByteBuffer<Checkpoint> & operator>>(ByteBuffer<Checkpoint> & ckpt, PyObject * obj){
-        return ckpt;
-    }
-
- }
-
-
-std::ostream & operator <<(std::ostream &ostr, const PyObject  & obj){
-    return ostr;
-}
-
-std::ostream & operator >>(std::ostream &ostr, const PyObject  & obj){
-    return ostr;
-}
-#endif
 <%SPL::CodeGen::implementationEpilogue($model);%>

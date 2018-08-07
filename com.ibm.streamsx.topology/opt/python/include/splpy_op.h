@@ -364,7 +364,7 @@ class SplpyOp {
    SPL::blob bytes;
    ckpt >> bytes;
    SplpyGIL lock;
-   PyObject * pickle = pySplValueToPyObject(bytes); // TODO probably need to decref pickle
+   PyObject * pickle = pySplValueToPyObject(bytes);
    PyObject * ret = call(loads, pickle);
    if (!ret) {
        SplpyGeneral::tracePythonError();
