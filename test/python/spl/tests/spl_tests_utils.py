@@ -6,8 +6,12 @@ import os
 import streamsx.scripts.extract
 
 def _spl_dir():
+    print('XXX-File', __file__)
     tests_dir = os.path.dirname(__file__)
-    return os.path.abspath(os.path.dirname(tests_dir))
+    print('XXX-test_dir', tests_dir)
+    r =  os.path.abspath(os.path.dirname(tests_dir))
+    print('XXX-SPL_TEST_dir', r)
+    return r
 
 def _tk_dir(tk):
     return os.path.join(_spl_dir(), tk)
