@@ -110,7 +110,7 @@ class TestTypes(unittest.TestCase):
     @unittest.skipIf(not vers_utils.optional_type_supported() , "Optional type not supported")
     def test_optional_blob_type(self):
         topo = Topology()
-        streamsx.spl.toolkit.add_toolkit(topo, '../testtkpy')
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         data = ['Hello', 'Blob', 'Did', 'you', 'reset' ]
         s = topo.source(data)
         s = s.as_string()
