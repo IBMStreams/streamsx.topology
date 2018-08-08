@@ -174,7 +174,7 @@ namespace SPL {
   template<>
   struct Allocator<PyObject *>
   {
-    // allocate: seems to be no good way.   Seems not to be needed anyway.
+    // allocate: seems to be no good way.   It seems not to be needed anyway.
 
     static void deallocate(PyObject * t) {
       // To deallocate PyObject * , DECREF it rather than deleting it.
@@ -201,7 +201,7 @@ namespace SPL {
   ByteBuffer<Checkpoint> & operator<<(ByteBuffer<Checkpoint> & ckpt, PyObject * obj){
     using namespace streamsx::topology;
 
-    SPLAPPTRC(L_DEBUG, "operator << (ByteBuffer<Checkpoint> &, PyObject *): enter", "python");
+    SPLAPPTRC(L_TRACE, "operator << (ByteBuffer<Checkpoint> &, PyObject *): enter", "python");
 
     SPL::blob bytes;
     {
@@ -213,25 +213,27 @@ namespace SPL {
       Py_INCREF(obj);
       PyTuple_SET_ITEM(args, 0, obj);
       PyObject * ret = PyObject_CallObject(dumps, args);
-      Py_DECREF(dumps);
-      Py_DECREF(args);
       if (ret == NULL) {
         SplpyGeneral::tracePythonError();
+        Py_DECREF(dumps);
+        Py_DECREF(args);
         throw SplpyGeneral::pythonException("dill.dumps");
       }
+      Py_DECREF(dumps);
+      Py_DECREF(args);
       // ret is the dilled object
       pySplValueFromPyObject(bytes, ret);
       Py_DECREF(ret);
     }
     ckpt << bytes;
 
-    SPLAPPTRC(L_DEBUG, "operator << (ByteBuffer<Checkpoint>&, PyObject *): exit", "python");
+    SPLAPPTRC(L_TRACE, "operator << (ByteBuffer<Checkpoint>&, PyObject *): exit", "python");
     return ckpt;
   }
 
   ByteBuffer<Checkpoint> & operator>>(ByteBuffer<Checkpoint> & ckpt, PyObject * &obj){
     using namespace streamsx::topology;
-    SPLAPPTRC(L_DEBUG, "operator >> (ByteBuffer<Checkpoint>&, PyObject *): enter", "python");
+    SPLAPPTRC(L_TRACE, "operator >> (ByteBuffer<Checkpoint>&, PyObject *&): enter", "python");
     SPL::blob bytes;
     ckpt >> bytes;
 
@@ -243,15 +245,17 @@ namespace SPL {
     PyObject * pickle = pySplValueToPyObject(bytes);
     PyTuple_SET_ITEM(args, 0, pickle);
     PyObject * ret = PyObject_CallObject(loads, args);
-    Py_DECREF(loads);
-    Py_DECREF(args);
     if (!ret) {
       SplpyGeneral::tracePythonError();
+      Py_DECREF(loads);
+      Py_DECREF(args);
       throw SplpyGeneral::pythonException("dill.loads");
     }
+    Py_DECREF(loads);
+    Py_DECREF(args);
     obj = ret;
 
-    SPLAPPTRC(L_DEBUG, "operator >> (ByteBuffer<Checkpoint>&, PyObject *): exit", "python");
+    SPLAPPTRC(L_TRACE, "operator >> (ByteBuffer<Checkpoint>&, PyObject *&): exit", "python");
 
     return ckpt;
   }

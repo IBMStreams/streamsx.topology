@@ -5,6 +5,8 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
+@include "../../opt/python/codegen/py_disallow_cr_trigger.cgt"
+
 class MY_OPERATOR : public MY_BASE_OPERATOR, public DelegatingStateHandler
 {
 public:
@@ -30,7 +32,7 @@ private:
     
     PyObject *pyInStyleObj_;
 
-    @include "../../opt/python/codegen/pysplenablecr.cgt"
+    @include "../../opt/python/codegen/py_enable_cr.cgt"
     OptionalConsistentRegionContext crContext;
 }; 
 

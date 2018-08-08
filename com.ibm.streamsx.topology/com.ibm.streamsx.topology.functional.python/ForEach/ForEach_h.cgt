@@ -29,7 +29,7 @@ private:
   
   PyObject *pyInStyleObj_;
 
-  @include "../../opt/python/codegen/pysplenablecr.cgt"
+  @include "../../opt/python/codegen/py_enable_cr.cgt"
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

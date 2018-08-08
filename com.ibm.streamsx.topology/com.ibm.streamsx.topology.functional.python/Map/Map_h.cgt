@@ -5,6 +5,8 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
+@include "../../opt/python/codegen/py_disallow_cr_trigger.cgt"
+
 @include "../pyspltuple.cgt"
 <%
  my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
@@ -50,7 +52,7 @@ if ($pyoutstyle eq 'dict') {
     // -1 when cannot pass by ref
     int32_t occ_;
 
-    @include "../../opt/python/codegen/pysplenablecr.cgt"
+    @include "../../opt/python/codegen/py_enable_cr.cgt"
     OptionalConsistentRegionContext crContext;
 }; 
 

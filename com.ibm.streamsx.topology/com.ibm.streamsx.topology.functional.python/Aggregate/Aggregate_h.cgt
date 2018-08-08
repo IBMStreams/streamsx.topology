@@ -6,6 +6,8 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
+@include "../../opt/python/codegen/py_disallow_cr_trigger.cgt"
+
 <%
 # Configure Windowing
  my $inputPort = $model->getInputPortAt(0); 
@@ -69,7 +71,7 @@ private:
     // Window definition
     <%=$windowCppType%>  window_;	       
 
-    @include "../../opt/python/codegen/pysplenablecr.cgt"
+    @include "../../opt/python/codegen/py_enable_cr.cgt"
     OptionalConsistentRegionContext crContext;
 }; 
 

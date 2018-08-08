@@ -31,7 +31,7 @@ private:
     SplpyPyOp *pyop_;
     PyObject *pyInNames_;
 
-@include "../../opt/.__splpy/common/pysplenablecr.cgt"
+@include "../../opt/.__splpy/common/py_enable_cr.cgt"
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

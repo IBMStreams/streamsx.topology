@@ -9,7 +9,7 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
-@include "../../opt/.__splpy/common/pyspl_nocheckpointsupport.cgt"
+@include "../../opt/.__splpy/common/py_no_checkpoint_support.cgt"
 
 <%
   my %h_tuple_types;

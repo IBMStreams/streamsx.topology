@@ -9,6 +9,8 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
+@include "../../opt/.__splpy/common/py_disallow_cr_trigger.cgt"
+
 <%
   my $oport = $model->getOutputPortAt(0);
 %>
@@ -44,7 +46,7 @@ private:
     void fromPyTupleToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleType()%> & otuple);
     void fromPyDictToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupleType()%> & otuple);
 
-@include "../../opt/.__splpy/common/pysplenablecr.cgt"
+@include "../../opt/.__splpy/common/py_enable_cr.cgt"
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

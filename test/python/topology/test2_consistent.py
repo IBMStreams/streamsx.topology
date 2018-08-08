@@ -228,3 +228,77 @@ class TestSasConsistentRegion(TestDistributedConsistentRegion):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
 
+# Python operators may not be the source of operator-driven consistent regions.
+class TestOperatorDriven(unittest.TestCase):
+    def setUp(self):
+        Tester.setup_distributed(self)
+
+    def test_aggregate(self):
+        topo = Topology()
+        # Generate integers from [0,30)
+        s = topo.source(TimeCounter(iterations=30, period=0.1))
+
+        # Filter the odd ones 
+        s = s.filter(StatefulEvenFilter())
+        # Halve the even ones and add one.  Now have integers [1,15)
+        s = s.map(StatefulHalfPlusOne())
+        s = s.last(10).trigger(2).aggregate(StatefulAverage())
+        s.set_consistent(ConsistentRegionConfig.operator_driven(drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        tester = Tester(topo)
+        self.assertFalse(tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False))
+
+    def test_filter(self):
+        topo = Topology()
+        # Generate integers from [0,30)
+        s = topo.source(TimeCounter(iterations=30, period=0.1))
+
+        # Filter the odd ones 
+        s = s.filter(StatefulEvenFilter())
+        s.set_consistent(ConsistentRegionConfig.operator_driven(drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        # Halve the even ones and add one.  Now have integers [1,15)
+        s = s.map(StatefulHalfPlusOne())
+        s = s.last(10).trigger(2).aggregate(StatefulAverage())
+        tester = Tester(topo)
+        self.assertFalse(tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False))
+
+    def test_flat_map(self):
+        topo = Topology();
+
+        lines = topo.source(ListIterator(["mary had a little lamb", "its fleece was white as snow"]))
+
+        # slow things down so checkpoints can be taken.
+        lines = lines.filter(StatefulDelay(0.5)) 
+        words = lines.flat_map(StatefulSplit())
+        words.set_consistent(ConsistentRegionConfig.operator_driven(drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        tester = Tester(topo)
+        self.assertFalse(tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False))
+
+    def test_for_each(self):
+        pass # There is no way to set consistent on a sink
+
+    def test_hash_adder(self):
+        pass # There is no way to set consistent on hash_adder
+
+    def test_map(self):
+        topo = Topology()
+        # Generate integers from [0,30)
+        s = topo.source(TimeCounter(iterations=30, period=0.1))
+
+        # Filter the odd ones 
+        s = s.filter(StatefulEvenFilter())
+        # Halve the even ones and add one.  Now have integers [1,15)
+        s = s.map(StatefulHalfPlusOne())
+        s.set_consistent(ConsistentRegionConfig.operator_driven(drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        s = s.last(10).trigger(2).aggregate(StatefulAverage())
+        tester = Tester(topo)
+        self.assertFalse(tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False))
+
+    # Source operator
+    def test_source(self):
+        topo = Topology("test")
+        
+        s = topo.source(TimeCounter(iterations=30, period=0.1))
+        s.set_consistent(ConsistentRegionConfig.operator_driven(drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        tester = Tester(topo)
+        self.assertFalse(tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False))
+
