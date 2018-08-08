@@ -39,6 +39,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.function.Consumer;
+import com.ibm.streamsx.topology.generator.spl.GraphUtilities.Direction;
+import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 class PEPlacement {
@@ -164,6 +166,14 @@ class PEPlacement {
         }
     }
     
+    /**
+     * We colocate between upon LOW_LATENCY and END_LOW_LATENCY markers.
+     * Given they can be nested we take the simple approch
+     * of work down from LOW_LATENCY and then up from LOW_LATENCY.
+     * 
+     * In addition assignLowLatency colocates operators immediately upstream
+     * of LOW_LATENCY as defined by the lowLatency() methods.
+     */
     void tagLowLatencyRegions() {
         List<JsonObject> lowLatencyStartOperators = GraphUtilities
                 .findOperatorByKind(LOW_LATENCY, graph);
@@ -173,32 +183,45 @@ class PEPlacement {
         
         // Assign isolation regions a colocation tag
         for (JsonObject llStart : lowLatencyStartOperators) {
-            assignLowLatency(llStart);
+            assignLowLatency(llStart, Direction.DOWNSTREAM);
         }
+        
+        List<JsonObject> lowLatencyEndOperators = GraphUtilities
+                .findOperatorByKind(END_LOW_LATENCY, graph);
+        
+        if (lowLatencyEndOperators.isEmpty())
+            return;
+        
+        for (JsonObject llStart : lowLatencyEndOperators)
+            assignLowLatency(llStart, Direction.UPSTREAM);
     }
 
-    private void assignLowLatency(JsonObject llStart) {
+    private void assignLowLatency(JsonObject llStart, Direction direction) {
         
         final JsonPrimitive lowLatencyTag =
-                new JsonPrimitive("__spl_lowLatency$" + lowLatencyRegionCount++);
+            new JsonPrimitive("__spl_lowLatency$" + lowLatencyRegionCount++);
 
         Set<JsonObject> llStartChildren = getDownstream(llStart, graph);
         
         Set<BVirtualMarker> boundaries = EnumSet.of(LOW_LATENCY, END_LOW_LATENCY);
 
-        GraphUtilities.visitOnce(llStartChildren, boundaries, graph,
+        GraphUtilities.visitOnce(
+                new VisitController(direction, boundaries),
+                llStartChildren, graph,
                 op -> addColocationTag(op, lowLatencyTag));
         
-        // Low latency merges with upstream.
-        for (JsonObject op : getUpstream(llStart, graph)) {
-            String kind = kind(op);
-            if (BVirtualMarker.PARALLEL.isThis(kind))
-                continue;
-            if (BVirtualMarker.END_PARALLEL.isThis(kind))
-                continue;
-            if (BVirtualMarker.UNION.isThis(kind))
-                continue;
-            addColocationTag(op, lowLatencyTag);
+        if (direction == Direction.DOWNSTREAM) {     
+            // Low latency merges with upstream.
+            for (JsonObject op : getUpstream(llStart, graph)) {
+                String kind = kind(op);
+                if (BVirtualMarker.PARALLEL.isThis(kind))
+                    continue;
+                if (BVirtualMarker.END_PARALLEL.isThis(kind))
+                    continue;
+                if (BVirtualMarker.UNION.isThis(kind))
+                    continue;
+                addColocationTag(op, lowLatencyTag);
+            }
         }
     }
     

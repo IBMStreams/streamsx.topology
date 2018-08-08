@@ -18,14 +18,7 @@
 #ifndef __SPL__SPLPY_EC_API_H
 #define __SPL__SPLPY_EC_API_H
 
-#if ((_IBM_STREAMS_VER_ > 4) || \
-      ((_IBM_STREAMS_VER_ == 4) && (_IBM_STREAMS_REL_ >= 2)))
-
-#define __SPLPY_EC_MODULE_OK 1
 #define __SPLPY_EC_MODULE_NAME "_streamsx_ec"
 
-#else
-#define __SPLPY_EC_MODULE_OK 0
-#endif
 #endif
 

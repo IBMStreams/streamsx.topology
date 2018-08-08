@@ -24,8 +24,6 @@
 #include "splpy_ec_api.h"
 #include "splpy_general.h"
 
-#if __SPLPY_EC_MODULE_OK
-
 #include <SPL/Runtime/ProcessingElement/ProcessingElement.h>
 #include <SPL/Runtime/Operator/OperatorMetrics.h>
 #include <SPL/Runtime/Common/Metric.h>
@@ -396,6 +394,5 @@ init_streamsx_ec(void)
 
 }
 
-#endif
 #endif
 

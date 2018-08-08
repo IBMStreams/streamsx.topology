@@ -13,16 +13,19 @@
     // Set the function the operator will call as a member field
     callable =
       SplpyGeneral::loadFunction("<%=$module%>", "<%=$functionName%>");   
+     
 <%
     if (splpy_OperatorCallable() eq 'class') {
 %>
    { 
-#if __SPLPY_EC_MODULE_OK
+     // The callable is a class, so there may be state that can be saved
+     // and restored for checkpointing.
+     this->pyop_->setStateful(true);
+
      // Set the operator capsule as a Python thread local
      // use streamsx.ec._set_opc so that it is availble
      // through the operator's class __init__ function.
      this->pyop_->setopc();
-#endif
  
      // Pass all the arguments by name in a dictionary
      // object, effectively as **kwargs. Python will
@@ -61,9 +64,7 @@
    
      callable = tmp_instance;
 
-#if __SPLPY_EC_MODULE_OK
      this->pyop_->clearopc();
-#endif
    }
 <%
     }

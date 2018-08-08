@@ -80,6 +80,7 @@ class StreamingAnalyticsConnectionV1 extends AbstractStreamingAnalyticsConnectio
         StreamingAnalyticsConnectionV1 connection =
                 new StreamingAnalyticsConnectionV1(userId, authToken,
                 streamsResourcesUrl, credentials, allowInsecure);
+        connection.baseConsoleURL = StreamsRestUtils.getRequiredMember(sasResources, "streams_console_url");
         connection.init();
         return connection;
     }

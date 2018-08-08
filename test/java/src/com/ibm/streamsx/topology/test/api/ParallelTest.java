@@ -22,7 +22,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ibm.streams.operator.OperatorContext;
@@ -55,27 +54,44 @@ import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 import com.ibm.streamsx.topology.tuple.BeaconTuple;
 
+/**
+ * Parallel tests.
+ * testParallelNonPartitioned
+ * testParallelWidthSupplier
+ * testAdjacentParallel* - S -> [ R1 ] -> [ R1 ] > E
+ * 
+ *
+ */
 public class ParallelTest extends TestTopology {
-    /**
-     * Currently a fan-out before an endParallel
-     * is not supported. This is a limitation purely on
-     * code generation.
-     */
-    @Test(expected=IllegalStateException.class)
-    public void fanoutEndParallelException() throws Exception {
-        checkUdpSupported();
+    @Test
+    public void testMultipleParallelUse() throws Exception {
         Topology topology = newTopology("testFanout");
-        TStream<String> fanOut = topology.strings("hello").parallel(5)
-                .filter(new AllowAll<String>());
-        fanOut.print();
-        fanOut.endParallel();
+        TStream<String> sp = topology.strings("A", "B", "C", "D", "E").parallel(2);
         
-        Tester tester = topology.getTester();
+        TStream<String> fanOut = sp.modify(v ->v.concat("Y"));
+        fanOut.forEach(v -> {});
+              
+        sp = sp.modify(v -> v.concat("X"));
+        sp = sp.union(fanOut);
         
-	Condition<Long> expectedCount = tester.tupleCount(fanOut, 1);
+        fanOut = fanOut.endParallel();
+        
+        sp.forEach(v -> {});
+        sp = sp.endParallel();
 
-	complete(tester, expectedCount, 60, TimeUnit.SECONDS);
-	assertTrue(expectedCount.valid());
+        Tester tester = topology.getTester();
+
+        Condition<Long> fanOutN = tester.tupleCount(fanOut, 5);
+        Condition<Long> spN = tester.tupleCount(sp, 10);
+        
+        Condition<List<String>> fanOutC = tester.stringContentsUnordered(fanOut, "AY", "BY", "CY", "DY", "EY");
+        Condition<List<String>> spC = tester.stringContentsUnordered(sp, "AY", "BY", "CY", "DY", "EY", "AX", "BX", "CX", "DX", "EX");     
+
+        complete(tester, Condition.all(fanOutN, spN, fanOutC, spC), 60, TimeUnit.SECONDS);
+        assertTrue(fanOutN.valid());
+        assertTrue(spN.valid());
+        assertTrue(fanOutC.valid());
+        assertTrue(spC.valid());
     }
 
     private void testAdjacentParallel(Routing routing1, Routing routing2) throws Exception {
@@ -84,15 +100,15 @@ public class ParallelTest extends TestTopology {
         List<String> stringList = getListOfUniqueStrings(800);
         String stringArray[] = new String[800];
         stringArray = stringList.toArray(stringArray);
-        Topology topology = newTopology("testAdj");
+        Topology topology = newTopology();
 
         TStream<String> out0 = topology.strings(stringArray).parallel(of(20),
                 routing1);
-        out0 = out0.transform(randomStringProducer("region1")).endParallel();
+        out0 = out0.map(randomStringProducer("region1")).endParallel();
 
         TStream<String> out2 = out0.parallel(of(5),
                 routing2);
-        out2 = out2.transform(randomStringProducer("region2")).endParallel();
+        out2 = out2.map(randomStringProducer("region2")).endParallel();
 
         TStream<String> numRegions = out2.flatMap(uniqueStringCounter(800,
                 "region"));
@@ -130,6 +146,28 @@ public class ParallelTest extends TestTopology {
         testAdjacentParallel(Routing.HASH_PARTITIONED, Routing.ROUND_ROBIN);
     }
 
+    @SuppressWarnings("serial")
+    private static class ChannelFilter implements Predicate<String>, Initializable {
+        int channel = -1;
+        int nChannels = -1;
+
+        @Override
+        public void initialize(FunctionContext functionContext)
+                throws Exception {
+            channel = functionContext.getChannel();
+            nChannels = functionContext.getMaxChannels();
+        }
+
+        @Override
+        public boolean test(String s) {
+            if (s.hashCode() >= 0) {
+                return s.hashCode() % nChannels == channel;
+            } else {
+                return (s.hashCode() & 0x00000000FFFFFFFFL) % nChannels == channel;
+            }
+        }
+    }
+
     @Test
     public void testAdjacentKeyPartitionedParallel() throws Exception {
         checkUdpSupported();
@@ -137,15 +175,15 @@ public class ParallelTest extends TestTopology {
         List<String> stringList = getListOfUniqueStrings(800);
         String stringArray[] = new String[800];
         stringArray = stringList.toArray(stringArray);
-        Topology topology = newTopology("testAdj");
+        Topology topology = newTopology();
 
-        TStream<String> out0 = topology.strings(stringArray).parallel(of(3),
-                (String s) -> s.hashCode() % 20);
-        out0 = out0.transform(randomStringProducer("region1")).endParallel();
+        TStream<String> out1 = topology.strings(stringArray)
+                                       .parallel(of(3), String::hashCode);
+        out1 = out1.map(randomStringProducer("region1")).endParallel();
 
-        TStream<String> out2 = out0.parallel(of(5),
-                (String s) -> s.hashCode() % 30);
-        out2 = out2.transform(randomStringProducer("region2")).endParallel();
+        TStream<String> out2 = out1.parallel(of(5), String::hashCode);
+        out2 = out2.filter(new ChannelFilter())
+                   .map(randomStringProducer("region2")).endParallel();
 
         TStream<String> numRegions = out2.flatMap(uniqueStringCounter(800,
                 "region"));
@@ -170,15 +208,15 @@ public class ParallelTest extends TestTopology {
         List<String> stringList = getListOfUniqueStrings(800);
         String stringArray[] = new String[800];
         stringArray = stringList.toArray(stringArray);
-        Topology topology = newTopology("testAdj");
+        Topology topology = newTopology();
 
         TStream<String> out0 = topology.strings(stringArray).parallel(of(20),
                 TStream.Routing.HASH_PARTITIONED);
-        out0 = out0.transform(randomStringProducer("region1")).endParallel();
+        out0 = out0.map(randomStringProducer("region1")).endParallel();
 	
         TStream<String> out2 = topology.strings(stringArray).union(out0).parallel(of(5),
                 TStream.Routing.HASH_PARTITIONED);
-        out2 = out2.transform(randomStringProducer("region2")).endParallel();
+        out2 = out2.map(randomStringProducer("region2")).endParallel();
 
         TStream<String> numRegions = out2.flatMap(uniqueStringCounter(1600,
                 "region"));
@@ -195,6 +233,167 @@ public class ParallelTest extends TestTopology {
         assertTrue(expectedCount.getResult().toString(), expectedCount.valid());
 	assertTrue(assertFinished.getResult().toString(), assertFinished.valid());
     }
+
+    @Test
+    public void testMultiAdjacentPartitionedParallelChildren() throws Exception {
+        checkUdpSupported();
+
+        List<String> stringList = getListOfUniqueStrings(800);
+        String stringArray[] = new String[800];
+        stringArray = stringList.toArray(stringArray);
+        Topology topology = newTopology();
+
+
+        TStream<String> out1 = topology.strings(stringArray)
+                                       .parallel(of(3), String::hashCode);
+        out1 = out1.map(randomStringProducer("region1")).endParallel();
+
+        TStream<String> out2 = out1.parallel(of(5), String::hashCode);
+        out2 = out2.filter(new ChannelFilter())
+                   .map(randomStringProducer("region2")).endParallel();
+
+        TStream<String> out3 = out1.parallel(of(2), String::hashCode);
+        out3 = out3.filter(new ChannelFilter())
+                   .map(randomStringProducer("region3")).endParallel();
+
+        TStream<String> numRegions2 = out2.flatMap(uniqueStringCounter(800,
+                "region"));
+
+        TStream<String> numRegions3 = out3.flatMap(uniqueStringCounter(800,
+                "region"));
+
+        Tester tester = topology.getTester();
+
+        Condition<List<String>> assertFinished2 = tester.stringContentsUnordered(numRegions2, "3", "5");
+        Condition<List<String>> assertFinished3 = tester.stringContentsUnordered(numRegions3, "3", "2");
+
+        Condition<Long> expectedCount2 = tester.tupleCount(out2, 800);
+        Condition<Long> expectedCount3 = tester.tupleCount(out3, 800);
+
+        complete(tester,
+                allConditions(assertFinished2, expectedCount2,
+                        assertFinished3, expectedCount3),
+                60,
+                TimeUnit.SECONDS);
+
+        assertTrue(expectedCount2.valid());
+        assertTrue(expectedCount3.valid());
+        assertTrue(assertFinished2.valid());
+        assertTrue(assertFinished3.valid());
+    }
+
+    @Test
+    public void testMultiAdjacentMixedParallelChildren1() throws Exception {
+        checkUdpSupported();
+
+        List<String> stringList = getListOfUniqueStrings(800);
+        String stringArray[] = new String[800];
+        stringArray = stringList.toArray(stringArray);
+        Topology topology = newTopology();
+
+
+        TStream<String> out1 = topology.strings(stringArray)
+                                       .parallel(of(3), String::hashCode);
+        out1 = out1.map(randomStringProducer("region1")).endParallel();
+
+        TStream<String> out2 = out1.parallel(of(5), String::hashCode);
+        out2 = out2.filter(new ChannelFilter())
+                   .map(randomStringProducer("region2")).endParallel();
+
+        TStream<String> out3 = out1.parallel(of(2), String::hashCode);
+        out3 = out3.filter(new ChannelFilter())
+                   .map(randomStringProducer("region3")).endParallel();
+
+        TStream<String> out4 = out1.map(randomStringProducer("region4"));
+
+        TStream<String> numRegions2 = out2.flatMap(uniqueStringCounter(800,
+                "region"));
+
+        TStream<String> numRegions3 = out3.flatMap(uniqueStringCounter(800,
+                "region"));
+
+        Tester tester = topology.getTester();
+
+        Condition<List<String>> assertFinished2 = tester.stringContentsUnordered(numRegions2, "3", "5");
+        Condition<List<String>> assertFinished3 = tester.stringContentsUnordered(numRegions3, "3", "2");
+
+        Condition<Long> expectedCount2 = tester.tupleCount(out2, 800);
+        Condition<Long> expectedCount3 = tester.tupleCount(out3, 800);
+        Condition<Long> expectedCount4 = tester.tupleCount(out4, 800);
+
+
+        complete(tester,
+                allConditions(assertFinished2, expectedCount2,
+                        assertFinished3, expectedCount3,
+                        expectedCount4),
+                60,
+                TimeUnit.SECONDS);
+
+        assertTrue(expectedCount2.valid());
+        assertTrue(expectedCount3.valid());
+        assertTrue(expectedCount4.valid());
+        assertTrue(assertFinished2.valid());
+        assertTrue(assertFinished3.valid());
+    }
+
+
+    @Test
+    public void testMultiAdjacentMixedParallelChildren2() throws Exception {
+        checkUdpSupported();
+
+        List<String> stringList = getListOfUniqueStrings(800);
+        String stringArray[] = new String[800];
+        stringArray = stringList.toArray(stringArray);
+        Topology topology = newTopology();
+
+
+        TStream<String> out1 = topology.strings(stringArray)
+                                       .parallel(of(3), String::hashCode);
+        out1 = out1.map(randomStringProducer("region1")).endParallel();
+
+        TStream<String> out2 = out1.parallel(of(5), String::hashCode);
+        out2 = out2.filter(new ChannelFilter())
+                   .map(randomStringProducer("region2")).endParallel();
+
+        TStream<String> out3 = out1.parallel(of(2), String::hashCode);
+        out3 = out3.filter(new ChannelFilter())
+                   .map(randomStringProducer("region3")).endParallel();
+
+        TStream<String> out4 = out1.map(randomStringProducer("region4"));
+        TStream<String> out5 = out1.map(randomStringProducer("region5"));
+
+        TStream<String> numRegions2 = out2.flatMap(uniqueStringCounter(800,
+                "region"));
+
+        TStream<String> numRegions3 = out3.flatMap(uniqueStringCounter(800,
+                "region"));
+
+        Tester tester = topology.getTester();
+
+        Condition<List<String>> assertFinished2 = tester.stringContentsUnordered(numRegions2, "3", "5");
+        Condition<List<String>> assertFinished3 = tester.stringContentsUnordered(numRegions3, "3", "2");
+
+        Condition<Long> expectedCount2 = tester.tupleCount(out2, 800);
+        Condition<Long> expectedCount3 = tester.tupleCount(out3, 800);
+        Condition<Long> expectedCount4 = tester.tupleCount(out4, 800);
+        Condition<Long> expectedCount5 = tester.tupleCount(out5, 800);
+
+        complete(tester,
+                allConditions(assertFinished2, expectedCount2,
+                        assertFinished3, expectedCount3,
+                        expectedCount4,
+                        expectedCount5),
+                60,
+                TimeUnit.SECONDS);
+
+        assertTrue(expectedCount2.valid());
+        assertTrue(expectedCount3.valid());
+        assertTrue(expectedCount4.valid());
+        assertTrue(expectedCount5.valid());
+        assertTrue(assertFinished2.valid());
+        assertTrue(assertFinished3.valid());
+    }
+
 
     @Test
     public void testParallelNonPartitioned() throws Exception {
@@ -735,12 +934,16 @@ public class ParallelTest extends TestTopology {
         };
     }
 
+    /**
+     * Tests the input to a region also being consumed
+     * by a non-parallel operator.
+     */
     @Test
     public void testParallelPreFanOut() throws Exception {
         Topology topology = newTopology();
         
         TStream<String> strings = topology.strings("A", "B", "C", "D", "E");
-        strings.print();
+        TStream<String> pre = strings.modify(s -> s.concat("X"));
         TStream<String> stringsP = strings.parallel(3);
         stringsP = stringsP.filter(new AllowAll<String>());
         stringsP = stringsP.endParallel();
@@ -748,39 +951,70 @@ public class ParallelTest extends TestTopology {
         Tester tester = topology.getTester();
         
         Condition<Long> fiveTuples = tester.tupleCount(stringsP, 5);
-        
+        Condition<List<String>> preContents = tester.stringContents(pre, "AX", "BX", "CX", "DX", "EX");
         Condition<List<String>> contents = tester.stringContentsUnordered(stringsP, "A", "B", "C", "D", "E");
         
-        complete(tester, allConditions(fiveTuples, contents), 10, TimeUnit.SECONDS);
+        complete(tester, allConditions(fiveTuples, contents, preContents), 10, TimeUnit.SECONDS);
 
         assertTrue("contents: "+contents, contents.valid());
+        assertTrue(preContents.valid());
     }
     
     @Test
-    public void testUnionUnparallel() throws Exception {
+    public void testUnionEndparallel() throws Exception {
+        checkUdpSupported();
+        
         Topology topology = newTopology();
         
         TStream<String> strings = topology.strings("A", "B", "C", "D", "E");
         TStream<String> stringsP = strings.parallel(3);
-        TStream<String> stringsP_AB = stringsP.filter(allowAB());
-        TStream<String> stringsP_CDE = stringsP.filter(allowCDE());
+        TStream<String> stringsP_AB = stringsP.filter(allowAB()).modify(s->s.concat("X"));
+        TStream<String> stringsP_CDE = stringsP.filter(allowCDE()).modify(s->s.concat("Y"));;
         
         stringsP = stringsP_AB.union(stringsP_CDE).endParallel();
         
         Tester tester = topology.getTester();
         
-        Condition<Long> fiveTuples = tester.tupleCount(stringsP, 5);
+        Condition<List<String>> contents = tester.stringContentsUnordered(stringsP, "AX", "BX", "CY", "DY", "EY");
         
-        Condition<List<String>> contents = tester.stringContentsUnordered(stringsP, "A", "B", "C", "D", "E");
-        
-        complete(tester, allConditions(fiveTuples, contents), 10, TimeUnit.SECONDS);
+        complete(tester, contents, 10, TimeUnit.SECONDS);
 
         assertTrue("contents: "+contents, contents.valid());
+    }
+    
+    /**
+     * Test union->parallel
+     */
+    @Test
+    public void testUnionParallel() throws Exception {
+        checkUdpSupported();
+        
+        Topology topology = newTopology();
+        
+        TStream<String> s1 = topology.strings("A", "B", "C", "D", "E");
+        TStream<String> s2 = topology.strings("W", "X", "Y", "Z");
+        TStream<String> s = s1.union(s2);
+        TStream<String> sp = s.parallel(3).modify(v->v.concat("P")).endParallel();
+        s = s.modify(v->v.concat("U"));
+        s.print();
+        
+        Tester tester = topology.getTester();
+        
+        Condition<List<String>> spc = tester.stringContentsUnordered(sp,
+                "AP", "BP", "CP", "DP", "EP", "WP", "XP", "YP", "ZP");
+        Condition<List<String>> sc = tester.stringContentsUnordered(s,
+                "AU", "BU", "CU", "DU", "EU", "WU", "XU", "YU", "ZU");
+        
+        complete(tester, allConditions(spc, sc), 10, TimeUnit.SECONDS);
+
+        assertTrue(spc.valid());
+        assertTrue(sc.valid());
     }
     
     @Test
     public void testBroadcast() throws Exception {
         checkUdpSupported();
+        
         Topology topology = newTopology();
         
         TStream<String> strings = topology.strings("1", "7", "19", "23", "57");

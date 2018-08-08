@@ -5,6 +5,7 @@
 
 package com.ibm.streamsx.rest;
 
+import static com.ibm.streamsx.rest.StreamsRestUtils.TRACE;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.io.File;
@@ -13,7 +14,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.http.HttpEntity;
-import org.apache.http.auth.AUTH;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -23,7 +23,6 @@ import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.context.remote.RemoteContext;
 
 class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
 
@@ -188,7 +187,7 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
         postArtifact.setEntity(reqEntity);
 
         JsonObject jso = StreamsRestUtils.getGsonResponse(httpclient, postArtifact);
-        RemoteContext.REMOTE_LOGGER.info("Streaming Analytics service (" + getName() + "): submit job response: " + jso.toString());
+        TRACE.info("Streaming Analytics service (" + getName() + "): submit job response: " + jso.toString());
         return jso;
     }
 
