@@ -1,0 +1,6 @@
+namespace app;
+public composite MyMain
+{
+graph
+   stream<int32 a> M = Beacon() {}
+}
