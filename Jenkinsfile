@@ -49,6 +49,22 @@ pipeline {
           alwaysLinkToLastBuild: true,
           allowMissing: true
       ])
+      publishHTML (target: [
+          reportName: 'Python 2.7 Coverage',
+          reportDir: 'test/python/nose_runs/py27/coverage',
+          reportFiles: 'index.html',
+          keepAll: false,
+          alwaysLinkToLastBuild: true,
+          allowMissing: true
+      ])
+      publishHTML (target: [
+          reportName: 'Python 3.6 Coverage',
+          reportDir: 'test/python/nose_runs/py36/coverage',
+          reportFiles: 'index.html',
+          keepAll: false,
+          alwaysLinkToLastBuild: true,
+          allowMissing: true
+      ])
     }
   }
 }
