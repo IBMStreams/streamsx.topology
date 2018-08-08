@@ -240,28 +240,22 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
 // End Window Event Handler Overrides
 // ##################################
 
-void MY_OPERATOR::checkpoint(SPL::Checkpoint & ckpt) {
-    SPLAPPTRC(L_DEBUG, "checkpoint: enter", SPL_OPER_DBG);
-    OptionalAutoLock stateLock(this);
+void MY_OPERATOR::checkpointExtra(SPL::Checkpoint & ckpt) {
+    SPLAPPTRC(L_TRACE, "checkpointExtra: enter", SPL_OPER_DBG);
     window_.checkpoint(ckpt);
-    DelegatingStateHandler::checkpoint(ckpt);
-    SPLAPPTRC(L_DEBUG, "checkpoint: exit", SPL_OPER_DBG);
+    SPLAPPTRC(L_TRACE, "checkpointExtra: exit", SPL_OPER_DBG);
 }
 
-void MY_OPERATOR::reset(SPL::Checkpoint & ckpt) {
-    SPLAPPTRC(L_DEBUG, "reset", SPL_OPER_DBG);
-    OptionalAutoLock stateLock(this);
+void MY_OPERATOR::resetExtra(SPL::Checkpoint & ckpt) {
+    SPLAPPTRC(L_TRACE, "resetExtra", SPL_OPER_DBG);
     window_.reset(ckpt);
-    DelegatingStateHandler::reset(ckpt);
-    SPLAPPTRC(L_DEBUG, "reset: exit", SPL_OPER_DBG);
+    SPLAPPTRC(L_TRACE, "resetExtra: exit", SPL_OPER_DBG);
 }
 
-void MY_OPERATOR::resetToInitialState() {
-    SPLAPPTRC(L_DEBUG, "resetToInitialState: enter", SPL_OPER_DBG);
-    OptionalAutoLock stateLock(this);
+void MY_OPERATOR::resetToInitialStateExtra() {
+    SPLAPPTRC(L_TRACE, "resetToInitialStateExtra: enter", SPL_OPER_DBG);
     window_.resetToInitialState();
-    DelegatingStateHandler::resetToInitialState();
-    SPLAPPTRC(L_DEBUG, "resetToInitialState: exit", SPL_OPER_DBG);
+    SPLAPPTRC(L_TRACE, "resetToInitialStateExtra: exit", SPL_OPER_DBG);
 }
 
 <%SPL::CodeGen::implementationEpilogue($model);%>

@@ -38,30 +38,46 @@ class OptionalAutoLockImpl;
  * of checkpointing and consistent region.  The checkpointing and resetting
  * is delegated to the SplpyOp instance owned by the operator extending
  * this class.  For most operators, it is not necessary to override
- * checkpoint, reset, and resetToInitialState, but if operators have state
- * (such as a Window) that needs to be checkpointed and reset, they can
- * override the methods, but they should be sure to call the base method.
+ * checkpointExtra, resetExtra, and resetToInitialStateExtra, but if operators 
+ * have state (such as a Window) that needs to be checkpointed and reset, 
+ * they can override the methods.  The lock will be held when these methods 
+ * are called.
  */
 class DelegatingStateHandler : public SPL::StateHandler {
 public:
-  DelegatingStateHandler() : locked_(false) {}
+  DelegatingStateHandler() {}
   virtual ~DelegatingStateHandler() {}
 
   virtual void checkpoint(SPL::Checkpoint & ckpt);
   virtual void reset(SPL::Checkpoint & ckpt);
   virtual void resetToInitialState();
 
-  friend class OptionalAutoLockImpl<true>;
-
 protected:
+  /**
+   * Save extra state during checkpointing.  The base class will
+   * hold the lock when this is called.
+   */
+  virtual void checkpointExtra(SPL::Checkpoint & ckpt) {}
+  /**
+   * Reset extra state when resetting to a checkpoint.  The base class will
+   * hold the lock when this is called.
+   */
+  virtual void resetExtra(SPL::Checkpoint & ckpt) {}
+  /**
+   * Reset extra state when resetting to initial state.  The base class will
+   * hold the lock when this is called.
+   */
+  virtual void resetToInitialStateExtra() {} 
+
   virtual SplpyOp * op() = 0;
 
 private:
-  void lock();
-  void unlock();
+  friend class OptionalAutoLockImpl<true>;
+
+  void lock() { mutex_.lock(); }
+  void unlock() { mutex_.unlock(); }
 
   SPL::Mutex mutex_;
-  bool locked_;
 };
 
 template<>
@@ -111,6 +127,7 @@ inline void DelegatingStateHandler::checkpoint(SPL::Checkpoint & ckpt) {
   SPLAPPTRC(L_TRACE, "checkpoint: enter", "python");
   OptionalAutoLockImpl<true> lock(this);
   op()->checkpoint(ckpt);
+  checkpointExtra(ckpt);
   SPLAPPTRC(L_TRACE, "checkpoint: exit", "python");
 }
 
@@ -118,6 +135,7 @@ inline void DelegatingStateHandler::reset(SPL::Checkpoint & ckpt) {
   SPLAPPTRC(L_TRACE, "reset: enter", "python");
   OptionalAutoLockImpl<true> lock(this);
   op()->reset(ckpt);
+  resetExtra(ckpt);
   SPLAPPTRC(L_TRACE, "reset: exit", "python");
 }
 
@@ -125,23 +143,9 @@ inline void DelegatingStateHandler::resetToInitialState() {
   SPLAPPTRC(L_TRACE, "resetToInitialState: enter", "python");
   OptionalAutoLockImpl<true> lock(this);
   op()->resetToInitialState();
+  resetToInitialStateExtra();
   SPLAPPTRC(L_TRACE, "resetToInitialState: exit", "python");
 }
-
-inline void DelegatingStateHandler::lock() {
-  if (!locked_) {
-    mutex_.lock();
-    locked_ = true;
-  }
-}
-
-inline void DelegatingStateHandler::unlock() {
-  if (locked_) {
-    mutex_.unlock();
-    locked_ = false;
-  }
-}
-
 
 }} // end namspace
 
