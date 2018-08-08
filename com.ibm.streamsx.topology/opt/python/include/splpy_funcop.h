@@ -18,6 +18,7 @@
 #define __SPL__SPLPY_FUNCOP_H
 
 #include "splpy_op.h"
+#include "splpy_cr.h"
 
 #include <SPL/Runtime/Operator/ParameterValue.h>
 

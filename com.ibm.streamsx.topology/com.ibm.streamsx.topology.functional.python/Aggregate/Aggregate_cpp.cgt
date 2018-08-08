@@ -7,7 +7,6 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 
-@include "../../opt/python/codegen/pysplenablecheckpointing.cgt"
 @include "../pyspltuple.cgt"
 
 <%
@@ -32,7 +31,8 @@ MY_OPERATOR::MY_OPERATOR() :
    pyInStyleObj_(NULL),
    loads(NULL),
    occ_(-1),
-   window_(<%=$windowCppInitializer%>)
+   window_(<%=$windowCppInitializer%>),
+   crContext(this)
 {
 <% if ($window->isSliding()) {%>
     window_.registerOnWindowTriggerHandler(this);
@@ -67,6 +67,8 @@ MY_OPERATOR::MY_OPERATOR() :
     }
 <%
     } 
+
+    
  }
 %>
 
@@ -83,7 +85,6 @@ MY_OPERATOR::MY_OPERATOR() :
     loads = SplpyGeneral::loadFunction("json", "loads");
     <% } %>
     }
-
 }
 
 // Destructor
@@ -104,7 +105,7 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    AutoLock stateLock(funcop_);
+    OptionalAutoLock stateLock(this);
     funcop_->prepareToShutdown();
 }
 
@@ -113,7 +114,8 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
 @include "../pyspltuple2value.cgt"
 
-  AutoLock stateLock(funcop_);
+  SPLAPPTRC(L_DEBUG, "Acquire state lock if needed", SPL_OPER_DBG);
+  OptionalAutoLock stateLock(this);
 
   PyObject *python_value;
 
@@ -171,6 +173,9 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
 {
 <% if ($window->isTumbling()) {%>
+   SPLAPPTRC(L_DEBUG, "Acquire state lock if needed", SPL_OPER_DBG);
+    OptionalAutoLock stateLock(this);
+
    // Aggregate the remaining contents if there are some.
    if (punct == Punctuation::FinalMarker) {
        SPL::AutoWindowDataAcquirer<PyObject *> awd(window_);
@@ -215,49 +220,42 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
     }
   OPort0Type otuple;
 
-  try {
+  {
+    try {
   
-  if (SPLPY_AGGREGATE(funcop_->callable(), items,
-       otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_)){  
-     submit(otuple, 0);
+      SPLAPPTRC(L_DEBUG, "Call python callable and submit", SPL_OPER_DBG);
+      if (SPLPY_AGGREGATE(funcop_->callable(), items,
+        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_)){  
+        submit(otuple, 0);
+      }  
+    } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+      SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+      return;
+    }
+    submit(Punctuation::WindowMarker, 0);
   }
-  } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
-     SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
-     return;
-  }
-  submit(Punctuation::WindowMarker, 0);
 }
 
 // ##################################
 // End Window Event Handler Overrides
 // ##################################
 
-
-namespace SPL{
-    Checkpoint & operator <<(Checkpoint &ostr, const PyObject  & obj){
-        return ostr;
-    }
-
-    Checkpoint & operator >>(Checkpoint &ostr, const PyObject  & obj){
-        return ostr;
-    }
-
-    ByteBuffer<Checkpoint> & operator<<(ByteBuffer<Checkpoint> & ckpt, PyObject * obj){
-        return ckpt;
-    }
-
-
-    ByteBuffer<Checkpoint> & operator>>(ByteBuffer<Checkpoint> & ckpt, PyObject * obj){
-        return ckpt;
-    }
-
- }
-
-std::ostream & operator <<(std::ostream &ostr, const PyObject  & obj){
-    return ostr;
+void MY_OPERATOR::checkpointExtra(SPL::Checkpoint & ckpt) {
+    SPLAPPTRC(L_TRACE, "checkpointExtra: enter", SPL_OPER_DBG);
+    window_.checkpoint(ckpt);
+    SPLAPPTRC(L_TRACE, "checkpointExtra: exit", SPL_OPER_DBG);
 }
 
-std::ostream & operator >>(std::ostream &ostr, const PyObject  & obj){
-    return ostr;
+void MY_OPERATOR::resetExtra(SPL::Checkpoint & ckpt) {
+    SPLAPPTRC(L_TRACE, "resetExtra", SPL_OPER_DBG);
+    window_.reset(ckpt);
+    SPLAPPTRC(L_TRACE, "resetExtra: exit", SPL_OPER_DBG);
 }
+
+void MY_OPERATOR::resetToInitialStateExtra() {
+    SPLAPPTRC(L_TRACE, "resetToInitialStateExtra: enter", SPL_OPER_DBG);
+    window_.resetToInitialState();
+    SPLAPPTRC(L_TRACE, "resetToInitialStateExtra: exit", SPL_OPER_DBG);
+}
+
 <%SPL::CodeGen::implementationEpilogue($model);%>

@@ -9,12 +9,13 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
+@include "../../opt/.__splpy/common/py_no_checkpoint_support.cgt"
+
 <%
   my %h_tuple_types;
 %>
 
-class MY_OPERATOR : public MY_BASE_OPERATOR, public SplpyPrimitiveOp
-{
+class MY_OPERATOR : public MY_BASE_OPERATOR, public SplpyPrimitiveOp {
 public:
   MY_OPERATOR();
 
@@ -62,4 +63,3 @@ private:
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>
-

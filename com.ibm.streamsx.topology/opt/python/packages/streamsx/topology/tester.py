@@ -533,7 +533,7 @@ class Tester(object):
         else:
             raise NotImplementedError("Tester context type not implemented:", ctxtype)
 
-        if self.result.get('conditions'):
+        if hasattr(self, 'result') and self.result.get('conditions'):
             for cn,cnr in self.result['conditions'].items():
                 c = self._conditions[cn][1]
                 cdesc = cn

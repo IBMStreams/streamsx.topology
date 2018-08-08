@@ -208,6 +208,7 @@ import random
 import streamsx._streams._placement as _placement
 import streamsx.spl.op
 import streamsx.spl.types
+import streamsx.topology.consistent
 import streamsx.topology.graph
 import streamsx.topology.schema
 import streamsx.topology.functions
@@ -393,6 +394,8 @@ class Topology(object):
         self.graph = streamsx.topology.graph.SPLGraph(self, name, namespace)
         self._submission_parameters = dict()
         self._checkpoint_period = None
+        self._consistent_region_config = None
+        self._has_jcp = False
 
     @property
     def name(self):
@@ -730,6 +733,17 @@ class Topology(object):
         else:
              self._files['opt'].append(reqs_include)
 
+    def _add_job_control_plane(self):
+        """
+        Add a JobControlPlane operator to the topology, if one has not already
+        been added.  If a JobControlPlane operator has already been added,
+        this has no effect.
+        """
+        if not self._has_jcp:
+            jcp = self.graph.addOperator(kind="spl.control::JobControlPlane", name="JobControlPlane")
+            jcp.viewable = False
+            has_jcp = True
+
 
 class Stream(_placement._Placement, object):
     """
@@ -987,7 +1001,7 @@ class Stream(_placement._Placement, object):
 
     def transform(self, func, name=None):
         """
-        Equivalent to calling :py:meth:``map(func, name)``.
+        Equivalent to calling :py:meth:``map(func,name)``.
 
         .. deprecated:: 1.7
             Replaced by :py:meth:`map`.
@@ -1210,6 +1224,21 @@ class Stream(_placement._Placement, object):
         """
         self.oport.operator.config['parallel'] = True
         self.oport.operator.config['width'] = streamsx.topology.graph._as_spl_json(width, int)
+        return self
+
+    def set_consistent(self, consistent_config):
+        """ Indicates that the stream is the start of a consistent region.
+
+        Args:
+            consistent_config(consistent.ConsistentRegionConfig): the configuration of the consistent region.
+
+        Returns:
+            Stream: Returns this stream.
+        """
+
+        # add job control plane if needed
+        self.topology._add_job_control_plane()
+        self.oport.operator.consistent(consistent_config)
         return self
 
     def last(self, size=1):
