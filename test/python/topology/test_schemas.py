@@ -26,38 +26,38 @@ _PRIMITIVES = ['boolean', 'blob', 'int8', 'int16', 'int32', 'int64',
 
 _COLLECTIONS = ['list', 'set']
 
-def random_type(depth):
+def _random_type(depth):
     r = random.random()
     if r < 0.10 and depth < 3:
-        return random_schema(depth=depth)
+        return _random_schema(depth=depth)
     elif r < 0.2:
          c = 'map<'
-         c += random_type(depth)
+         c += _random_type(depth)
          c += ','
-         c += random_type(depth)
+         c += _random_type(depth)
          c += '>'
          return c
     elif r < 0.35:
          c = random.choice(_COLLECTIONS)
          c += '<'
-         c += random_type(depth)
+         c += _random_type(depth)
          c += '>'
          return c
     elif vers_utils.optional_type_supported() and r < 0.45:
          c = 'optional<'
-         c += random_type(depth)
+         c += _random_type(depth)
          c += '>'
          return c
     else:
         return random.choice(_PRIMITIVES)
 
-def random_schema(depth=0):
+def _random_schema(depth=0):
     depth += 1
     s = 'tuple<'
     for an in range(random.randint(1, 30)):
         if an != 0:
             s += ','
-        s += random_type(depth)
+        s += _random_type(depth)
         s += " A_" + str(an)
     s += '>'
     return s
@@ -78,7 +78,6 @@ class TestSchema(unittest.TestCase):
       self.assertEqual('int64', p._type[1][0])
       self.assertEqual('b', p._type[1][1])
 
-    @unittest.skipIf(sys.version_info.major == 2, "subTest requires 3.5")
     def test_primitives(self):
       for typ in _PRIMITIVES:
           with self.subTest(typ = typ):
@@ -88,7 +87,6 @@ class TestSchema(unittest.TestCase):
               self.assertEqual(typ, p._type[0][0])
               self.assertEqual('p', p._type[0][1])
 
-    @unittest.skipIf(sys.version_info.major == 2, "subTest requires 3.5")
     def test_collections(self):
       for ctyp in _COLLECTIONS:
           for etyp in _PRIMITIVES:
@@ -115,7 +113,6 @@ class TestSchema(unittest.TestCase):
         self.assertEqual('m', p._type[0][1])
 
     def test_optional(self):
-        Tester.require_streams_version(self, '4.3')
         for typ in _PRIMITIVES:
             otyp = 'optional<' + typ + '>'
             with self.subTest(otyp = otyp):
@@ -153,7 +150,7 @@ class TestSchema(unittest.TestCase):
     def test_random_schemas(self):
         """Just verify random schemas can be parsed"""
         for r in range(200):
-            schema = random_schema()
+            schema = _random_schema()
             p = _SchemaParser(schema)
             p._parse()
 
