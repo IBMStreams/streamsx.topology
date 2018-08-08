@@ -16,8 +16,6 @@ pipeline {
          sh 'ci/test_java_standalone.sh'
        }
     }
-    stage ('Python tests') {
-      parallel {
     stage('Python 3.6 standalone') {
        steps {
          sh 'ci/test_python36_standalone.sh'
@@ -35,8 +33,6 @@ pipeline {
          sh 'ci/test_python27_standalone.sh'
        }
     }
-      }
-    }
   }
   post {
     always {
@@ -44,6 +40,22 @@ pipeline {
       publishHTML (target: [
           reportName: 'Java Coverage',
           reportDir: 'test/java/report/coverage',
+          reportFiles: 'index.html',
+          keepAll: false,
+          alwaysLinkToLastBuild: true,
+          allowMissing: true
+      ])
+      publishHTML (target: [
+          reportName: 'Python 2.7 Coverage',
+          reportDir: 'test/python/nose_runs/py27/coverage',
+          reportFiles: 'index.html',
+          keepAll: false,
+          alwaysLinkToLastBuild: true,
+          allowMissing: true
+      ])
+      publishHTML (target: [
+          reportName: 'Python 3.6 Coverage',
+          reportDir: 'test/python/nose_runs/py36/coverage',
           reportFiles: 'index.html',
           keepAll: false,
           alwaysLinkToLastBuild: true,
