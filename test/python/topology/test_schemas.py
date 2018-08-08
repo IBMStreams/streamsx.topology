@@ -113,8 +113,8 @@ class TestSchema(unittest.TestCase):
         self.assertEqual(p._type[0][0][1][1], 'complex64')
         self.assertEqual('m', p._type[0][1])
 
-    @unittest.skipIf(not vers_utils.optional_type_supported() , "Optional type not supported")
     def test_optional(self):
+        Tester.require_streams_version(self, '4.3')
         for typ in _PRIMITIVES:
             otyp = 'optional<' + typ + '>'
             with self.subTest(otyp = otyp):
