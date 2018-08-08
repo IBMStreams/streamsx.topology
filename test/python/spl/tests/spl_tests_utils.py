@@ -14,7 +14,10 @@ def _spl_dir():
     return r
 
 def _tk_dir(tk):
-    return os.path.join(_spl_dir(), tk)
+    print('XXX-TK', tk)
+    r =  os.path.join(_spl_dir(), tk)
+    print('XXX-TK-DIR', r)
+    return r
 
 def _extract_tk(tk):
     streamsx.scripts.extract.main(['-i', _tk_dir(tk), '--make-toolkit'])
