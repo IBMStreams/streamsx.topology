@@ -45,6 +45,7 @@ import com.ibm.streamsx.topology.internal.logic.LogicUtils;
 import com.ibm.streamsx.topology.internal.logic.SingleToIterableSupplier;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.json.JSONSchemas;
+import com.ibm.streamsx.topology.spi.builder.LayoutInfo;
 import com.ibm.streamsx.topology.tester.Tester;
 import com.ibm.streamsx.topology.internal.messages.Messages;
 
@@ -204,7 +205,7 @@ public class Topology implements TopologyElement {
      * @return Stream containing {@code tuples}.
      */
     public TStream<String> strings(String... tuples) {
-        return _source(new Constants<String>(Arrays.asList(tuples)), String.class);
+        return _source(new Constants<String>(Arrays.asList(tuples)), String.class, "Strings");
     }
 
     /**
@@ -214,7 +215,7 @@ public class Topology implements TopologyElement {
      * @return Stream containing {@code tuples}.
      */
     public TStream<Number> numbers(Number... tuples) {
-        return _source(new Constants<Number>(Arrays.asList(tuples)), Number.class);
+        return _source(new Constants<Number>(Arrays.asList(tuples)), Number.class, "Numbers");
     }
     
     /**
@@ -230,7 +231,7 @@ public class Topology implements TopologyElement {
         
         Type constantType = TypeDiscoverer.determineStreamTypeFromFunctionArg(List.class, 0, data);
         
-        return _source(new Constants<T>(data), constantType);
+        return _source(new Constants<T>(data), constantType, "Constants");
     }
 
     /**
@@ -247,11 +248,11 @@ public class Topology implements TopologyElement {
      */
     public <T> TStream<T> source(Supplier<Iterable<T>> data) {
         Type tupleType = TypeDiscoverer.determineStreamTypeNested(Supplier.class, 0, Iterable.class, data);
-        return _source(data, tupleType);
+        return _source(data, tupleType, "Source");
     }
     
     private <T> TStream<T> _source(Supplier<Iterable<T>> data,
-            Type tupleType) {
+            Type tupleType, String layoutKind) {
                 
         String opName = LogicUtils.functionName(data);
         if (data instanceof Constants) {
@@ -261,6 +262,7 @@ public class Topology implements TopologyElement {
         JsonObject invokeInfo = new JsonObject();
         com.ibm.streamsx.topology.spi.builder.SourceInfo.addSourceInfo(invokeInfo, getClass());
         invokeInfo.addProperty("name", opName);
+        LayoutInfo.kind(invokeInfo, layoutKind);
         
         return invokeSource(this, JavaFunctionalOps.SOURCE_KIND, invokeInfo,
                 data, tupleType, null, null);
@@ -346,7 +348,7 @@ public class Topology implements TopologyElement {
     public <T> TStream<T> endlessSource(Supplier<T> data) {
         
         Type tupleType = TypeDiscoverer.determineStreamType(data, null);
-        return _source(EndlessSupplier.supplier(data), tupleType);
+        return _source(EndlessSupplier.supplier(data), tupleType, "Source");
     }
     
     /**
@@ -364,7 +366,7 @@ public class Topology implements TopologyElement {
         
         Type tupleType = TypeDiscoverer.determineStreamType(data, null);
         
-        return _source(EndlessSupplier.supplierN(data), tupleType);
+        return _source(EndlessSupplier.supplierN(data), tupleType, "Source");
     }
 
     /**
@@ -386,7 +388,7 @@ public class Topology implements TopologyElement {
         
         Type tupleType = TypeDiscoverer.determineStreamType(data, null);
         
-        return _source(LimitedSupplier.supplier(data, count), tupleType);
+        return _source(LimitedSupplier.supplier(data, count), tupleType, "Source");
     }
 
     /**
@@ -409,7 +411,7 @@ public class Topology implements TopologyElement {
         
         Type tupleType = TypeDiscoverer.determineStreamType(data, null);
         
-        return _source(LimitedSupplier.supplierN(data, count), tupleType);
+        return _source(LimitedSupplier.supplierN(data, count), tupleType, "Source");
     }
 
     /**

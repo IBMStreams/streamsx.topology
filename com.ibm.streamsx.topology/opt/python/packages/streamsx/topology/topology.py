@@ -105,7 +105,7 @@ For example a stream ``words`` containing only string objects can be
 processed by a :py:meth:`~Stream.filter` using a lambda function::
 
     # Filter the stream so it only contains words starting with py
-    pywords = words.filter(lambda word : tuple.startswith('py'))
+    pywords = words.filter(lambda word : word.startswith('py'))
 
 Stateful operations
 ===================
@@ -392,6 +392,7 @@ class Topology(object):
         
         self.graph = streamsx.topology.graph.SPLGraph(self, name, namespace)
         self._submission_parameters = dict()
+        self._checkpoint_period = None
 
     @property
     def name(self):
@@ -674,6 +675,39 @@ class Topology(object):
         self._submission_parameters[name] = sp
         return sp
 
+    @property
+    def checkpoint_period(self):
+        """Enable checkpointing for the topology, and define the checkpoint
+        period.
+
+        When checkpointing is enabled, the state of all stateful operators
+        is saved periodically.  If the operator restarts, its state is
+        restored from the most recent checkpoint.
+
+        The checkpoint period is the frequency at which checkpoints will
+        be taken.  It can either be a :py:class:`~datetime.timedelta` value
+        or a floating point value in seconds.  It must be at 0.001
+        seconds or greater.
+
+        A stateful operator is an operator whose callable is an instance of a
+        Python callable class.
+
+        Returns:
+            The checkpoint period.
+        """
+        return self._checkpoint_period
+
+    @checkpoint_period.setter
+    def checkpoint_period(self, period):
+        if (isinstance(period, datetime.timedelta)):
+            self._checkpoint_period = period.total_seconds()
+        else:
+            self._checkpoint_period = float (period)
+
+        # checkpoint period must be greater or equal to 0.001
+        if self._checkpoint_period < 0.001:
+            raise ValueError("checkpoint_period must be 0.001 or greater")
+
     def _prepare(self):
         """Prepare object prior to SPL generation."""
         self._generate_requirements()
@@ -953,7 +987,7 @@ class Stream(_placement._Placement, object):
 
     def transform(self, func, name=None):
         """
-        Equivalent to calling :py:meth:``map(func, name)``.
+        Equivalent to calling :py:meth:`map(func,name) <map>`.
 
         .. deprecated:: 1.7
             Replaced by :py:meth:`map`.
