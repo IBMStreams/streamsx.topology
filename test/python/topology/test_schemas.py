@@ -14,8 +14,6 @@ from streamsx.topology.tester import Tester
 import streamsx.topology.schema as _sch
 import streamsx.topology.runtime as _str
 
-import vers_utils
-
 _PRIMITIVES = ['boolean', 'blob', 'int8', 'int16', 'int32', 'int64',
                  'uint8', 'uint16', 'uint32', 'uint64',
                  'float32', 'float64',
@@ -29,7 +27,7 @@ _COLLECTIONS = ['list', 'set']
 def _random_type(depth):
     r = random.random()
     if r < 0.10 and depth < 3:
-        return _random_schema(depth=depth)
+        return _random_schema(depth=depth+1)
     elif r < 0.2:
          c = 'map<'
          c += _random_type(depth)
@@ -43,7 +41,7 @@ def _random_type(depth):
          c += _random_type(depth)
          c += '>'
          return c
-    elif vers_utils.optional_type_supported() and r < 0.45:
+    elif r < 0.45:
          c = 'optional<'
          c += _random_type(depth)
          c += '>'
