@@ -16,8 +16,6 @@ pipeline {
          sh 'ci/test_java_standalone.sh'
        }
     }
-    stage ('Python tests') {
-      parallel {
     stage('Python 3.6 standalone') {
        steps {
          sh 'ci/test_python36_standalone.sh'
@@ -34,8 +32,6 @@ pipeline {
        steps {
          sh 'ci/test_python27_standalone.sh'
        }
-    }
-      }
     }
   }
   post {
