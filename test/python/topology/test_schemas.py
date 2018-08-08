@@ -10,6 +10,7 @@ import threading
 
 from streamsx.topology.topology import Topology, Routing
 from streamsx.topology.schema import _SchemaParser
+from streamsx.topology.tester import Tester
 import streamsx.topology.schema as _sch
 import streamsx.topology.runtime as _str
 
