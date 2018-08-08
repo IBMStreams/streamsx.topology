@@ -317,7 +317,8 @@ class TestMainComposite(unittest.TestCase):
     def test_main_composite(self):
         si = os.environ['STREAMS_INSTALL']
         tkl = 'tkl_mc_' + str(uuid.uuid4().hex)
-        shutil.copytree('spl_mc', tkl)
+        this_dir = os.path.dirname(os.path.realpath(__file__))
+        shutil.copytree(os.path.join(this_dir, 'spl_mc'), tkl)
         ri = subprocess.call([os.path.join(si, 'bin', 'spl-make-toolkit'), '-i', tkl])
         self.assertEqual(0, ri)
         r = op.main_composite(kind='app::MyMain', toolkits=[tkl])
