@@ -193,7 +193,8 @@ class Tester(object):
         pvf = os.path.join(os.environ['STREAMS_INSTALL'], '.product')
         vers={}
         with open(pvf, "r") as cf:
-            reader = csv.reader(cf, delimiter='=', quoting=csv.QUOTE_NONE)
+            eqc = b'=' if sys.version_info.major == 2 else '='
+            reader = csv.reader(cf, delimiter=eqc, quoting=csv.QUOTE_NONE)
             for row in reader:
                 vers[row[0]] = row[1]
         return vers['Version']
