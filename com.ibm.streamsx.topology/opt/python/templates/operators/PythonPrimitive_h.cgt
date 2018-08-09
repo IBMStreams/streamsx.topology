@@ -15,7 +15,8 @@ using namespace streamsx::topology;
   my %h_tuple_types;
 %>
 
-class MY_OPERATOR : public MY_BASE_OPERATOR, public SplpyPrimitiveOp {
+class MY_OPERATOR : public MY_BASE_OPERATOR, public SplpyPrimitiveOp
+{
 public:
   MY_OPERATOR();
 
