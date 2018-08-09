@@ -153,7 +153,6 @@ inline void DelegatingStateHandler::resetToInitialState() {
 namespace SPL {
 
   // Template specializations to support checkpoint/reset of PyObject *
-
   template<typename T> struct WTDereferencer;
   template<>
   struct WTDereferencer<PyObject *>
@@ -200,7 +199,6 @@ namespace SPL {
     static PyObject * reference(PyObject * t) { return t; }
     static PyObject const * reference(PyObject const * t) { return t; }
   };
-
 
   ByteBuffer<Checkpoint> & operator<<(ByteBuffer<Checkpoint> & ckpt, PyObject * obj){
     using namespace streamsx::topology;
@@ -265,7 +263,13 @@ namespace SPL {
   }
 }
 
-std::ostream & operator <<(std::ostream &ostr, PyObject * obj){
+// In the SPL window library, there are some cases in which diagnostic 
+// messages with the contents of a window are produced.  For these messages,
+// the window library depends on an implementation of operator << for
+// the type of object contained in the window.  This method is included
+// to support those diagnostic messages.  Because this is not critical,
+// errors are intentionally ignored.
+std::ostream & operator << (std::ostream &ostr, PyObject * obj){
   using namespace streamsx::topology;
   SplpyGIL gil;
   Py_INCREF(obj);
@@ -277,5 +281,6 @@ std::ostream & operator <<(std::ostream &ostr, PyObject * obj){
   Py_XDECREF(str);
   return ostr;
 }
+
 
 #endif // SPL_SPLPY_CR_H_

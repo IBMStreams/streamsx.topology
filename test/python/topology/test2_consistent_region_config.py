@@ -4,39 +4,39 @@ from streamsx.topology.consistent import ConsistentRegionConfig
 import unittest
 from datetime import timedelta
 
-# Test the ConsistentRegionConfig class. 
+# Test the ConsistentRegionConfig class.
 class TestConsistentRegionConfig(unittest.TestCase):
-    defaultDrainTimeout = 180.0
-    defaultResetTimeout = 180.0
-    defaultAttempts = 5
+    _DEFAULT_DRAIN_TIMEOUT = 180.0
+    _DEFAULT_RESET_TIMEOUT = 180.0
+    _DEFAULT_ATTEMPTS = 5
 
     def test_op_driven(self):
         config = ConsistentRegionConfig.operator_driven();
         self.assertEqual(config.trigger, ConsistentRegionConfig.Trigger.OPERATOR_DRIVEN)
         # verify the correct defaults have been applied
-        self.assertEqual(config.drainTimeout, self.defaultDrainTimeout)
-        self.assertEqual(config.resetTimeout, self.defaultResetTimeout)
-        self.assertEqual(config.maxConsecutiveAttempts, self.defaultAttempts)
+        self.assertEqual(config.drainTimeout, self._DEFAULT_DRAIN_TIMEOUT)
+        self.assertEqual(config.resetTimeout, self._DEFAULT_RESET_TIMEOUT)
+        self.assertEqual(config.maxConsecutiveAttempts, self._DEFAULT_ATTEMPTS)
 
     def test_op_driven_simple_drainTimeout(self):
         config = ConsistentRegionConfig.operator_driven(drainTimeout=14)
         self.assertEqual(config.trigger, ConsistentRegionConfig.Trigger.OPERATOR_DRIVEN)
         self.assertEqual(config.drainTimeout, 14)
-        self.assertEqual(config.resetTimeout, self.defaultResetTimeout)
-        self.assertEqual(config.maxConsecutiveAttempts, self.defaultAttempts)
+        self.assertEqual(config.resetTimeout, self._DEFAULT_RESET_TIMEOUT)
+        self.assertEqual(config.maxConsecutiveAttempts, self._DEFAULT_ATTEMPTS)
 
     def test_op_driven_simple_resetTimeout(self):
         config = ConsistentRegionConfig.operator_driven(resetTimeout=14)
         self.assertEqual(config.trigger, ConsistentRegionConfig.Trigger.OPERATOR_DRIVEN)
-        self.assertEqual(config.drainTimeout, self.defaultDrainTimeout)
+        self.assertEqual(config.drainTimeout, self._DEFAULT_DRAIN_TIMEOUT)
         self.assertEqual(config.resetTimeout, 14)
-        self.assertEqual(config.maxConsecutiveAttempts, self.defaultAttempts)
+        self.assertEqual(config.maxConsecutiveAttempts, self._DEFAULT_ATTEMPTS)
 
     def test_op_driven_simple_attempts(self):
         config = ConsistentRegionConfig.operator_driven(maxConsecutiveAttempts=14)
         self.assertEqual(config.trigger, ConsistentRegionConfig.Trigger.OPERATOR_DRIVEN)
-        self.assertEqual(config.drainTimeout, self.defaultDrainTimeout)
-        self.assertEqual(config.resetTimeout, self.defaultResetTimeout)
+        self.assertEqual(config.drainTimeout, self._DEFAULT_DRAIN_TIMEOUT)
+        self.assertEqual(config.resetTimeout, self._DEFAULT_RESET_TIMEOUT)
         self.assertEqual(config.maxConsecutiveAttempts, 14)
 
     def test_op_driven_all(self):
@@ -138,13 +138,13 @@ class TestConsistentRegionConfig(unittest.TestCase):
         self.assertEqual(config.period, 14.0)
 
         # verify the correct defaults have been applied
-        self.assertEqual(config.drainTimeout, self.defaultDrainTimeout)
-        self.assertEqual(config.resetTimeout, self.defaultResetTimeout)
-        self.assertEqual(config.maxConsecutiveAttempts, self.defaultAttempts)
+        self.assertEqual(config.drainTimeout, self._DEFAULT_DRAIN_TIMEOUT)
+        self.assertEqual(config.resetTimeout, self._DEFAULT_RESET_TIMEOUT)
+        self.assertEqual(config.maxConsecutiveAttempts, self._DEFAULT_ATTEMPTS)
 
     def test_periodic_period(self):
-        
-        # No period 
+
+        # No period
         with self.assertRaises(ValueError):
             config = ConsistentRegionConfig(ConsistentRegionConfig.Trigger.PERIODIC)
 
@@ -156,14 +156,14 @@ class TestConsistentRegionConfig(unittest.TestCase):
         with self.assertRaises(ValueError):
             config = ConsistentRegionConfig.periodic(-1.0)
 
-        # timedelta         
+        # timedelta
         config = ConsistentRegionConfig.periodic(timedelta(seconds=41))
         self.assertEqual(config.period, timedelta(seconds=41))
 
         # zero (timedelta)
         with self.assertRaises(ValueError):
             config = ConsistentRegionConfig.periodic(timedelta(seconds=0))
-        
+
         # negative (timedelta)
         with self.assertRaises(ValueError):
             config = ConsistentRegionConfig.periodic(timedelta(seconds=-8))
@@ -176,5 +176,6 @@ class TestConsistentRegionConfig(unittest.TestCase):
         with self.assertRaises(ValueError):
             config = ConsistentRegionConfig.periodic("table")
 
-        
-        
+    def test_no_trigger(self):
+        with self.assertRaises(ValueError):
+            config = ConsistentRegionConfig()

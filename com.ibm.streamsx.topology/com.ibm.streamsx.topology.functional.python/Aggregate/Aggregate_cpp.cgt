@@ -223,7 +223,6 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
   {
     try {
   
-      SPLAPPTRC(L_DEBUG, "Call python callable and submit", SPL_OPER_DBG);
       if (SPLPY_AGGREGATE(funcop_->callable(), items,
         otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_)){  
         submit(otuple, 0);

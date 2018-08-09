@@ -59,6 +59,10 @@ class ConsistentRegionConfig(object):
     .. seealso:: :py:meth:`~streamsx.topology.topology.Stream.set_consistent`
 
     """
+    
+    _DEFAULT_DRAIN=180
+    _DEFAULT_RESET=180
+    _DEFAULT_ATTEMPTS=5
 
     class Trigger(Enum):
         """
@@ -73,7 +77,10 @@ class ConsistentRegionConfig(object):
         Region is triggered periodically.
         """
 
-    def __init__(self, trigger=None, period=None, drainTimeout=None, resetTimeout=None, maxConsecutiveAttempts=None):
+    def __init__(self, trigger=None, period=None, drainTimeout=_DEFAULT_DRAIN, resetTimeout=_DEFAULT_RESET, maxConsecutiveAttempts=_DEFAULT_ATTEMPTS):
+
+        if trigger is None:
+            raise ValueError("trigger must be specified for a consistent region.")
 
         # period cannot be specified for OPERATOR_DRIVEN
         # (This can only happen if someone creates an instance 
@@ -94,18 +101,14 @@ class ConsistentRegionConfig(object):
 
         # drainTimeout and resetTimeout must be timedelta values, or must be castable to
         # float, and both must be greater than 0.
-        if drainTimeout is None:
-            pass
-        elif isinstance(drainTimeout, timedelta):
+        if isinstance(drainTimeout, timedelta):
             if drainTimeout.total_seconds() <= 0.0:
                 raise ValueError("drain timeout value must be greater than zero.")
         elif float(drainTimeout) <= 0.0:
             raise ValueError("drain timeout value must be greater than zero.")
 
 
-        if resetTimeout is None:
-            pass
-        elif isinstance(resetTimeout, timedelta):
+        if isinstance(resetTimeout, timedelta):
             if resetTimeout.total_seconds() <= 0.0:
                 raise ValueError("reset timeout value must be greater than zero.")
         elif float(resetTimeout) <= 0.0:
@@ -113,20 +116,18 @@ class ConsistentRegionConfig(object):
 
 
         # maxConsecutiveAttempts must be 1-0x7FFFFFFF.  It also must be an int.
-        if maxConsecutiveAttempts is None:
-            pass
-        elif int(maxConsecutiveAttempts) < 1 or int(maxConsecutiveAttempts) > 0x7FFFFFFF:
+        if int(maxConsecutiveAttempts) < 1 or int(maxConsecutiveAttempts) > 0x7FFFFFFF:
             raise ValueError("maxConsecutiveAttempts must be between 1 and " + str(0x7FFFFFFF) + ", inclusive.")
         elif not float(maxConsecutiveAttempts).is_integer():
             raise ValueError("maxConsecutiveAttempts must be an integer value.")
 
         self.trigger = trigger
         self.period = period
-        self.drainTimeout = drainTimeout if drainTimeout is not None else 180
-        self.resetTimeout = resetTimeout if resetTimeout is not None else 180
-        self.maxConsecutiveAttempts = maxConsecutiveAttempts if maxConsecutiveAttempts is not None else 5
+        self.drainTimeout = drainTimeout 
+        self.resetTimeout = resetTimeout 
+        self.maxConsecutiveAttempts = maxConsecutiveAttempts 
 
-    def operator_driven(drainTimeout=None, resetTimeout=None, maxConsecutiveAttempts=None):
+    def operator_driven(drainTimeout=_DEFAULT_DRAIN, resetTimeout=_DEFAULT_RESET, maxConsecutiveAttempts=_DEFAULT_ATTEMPTS):
         """Define an operator-driven consistent region configuration.  
         The source operator triggers drain and checkpoint cycles for the region.
 
@@ -141,7 +142,7 @@ class ConsistentRegionConfig(object):
 
         return ConsistentRegionConfig(trigger=ConsistentRegionConfig.Trigger.OPERATOR_DRIVEN, drainTimeout=drainTimeout, resetTimeout=resetTimeout, maxConsecutiveAttempts=maxConsecutiveAttempts)
 
-    def periodic(period, drainTimeout=None, resetTimeout=None, maxConsecutiveAttempts=None):
+    def periodic(period, drainTimeout=_DEFAULT_DRAIN, resetTimeout=_DEFAULT_RESET, maxConsecutiveAttempts=_DEFAULT_ATTEMPTS):
         """Create a periodic consistent region configuration.
         The IBM Streams runtime will trigger a drain and checkpoint
         the region periodically at the time interval specified by `period`.

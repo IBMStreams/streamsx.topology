@@ -742,7 +742,7 @@ class Topology(object):
         if not self._has_jcp:
             jcp = self.graph.addOperator(kind="spl.control::JobControlPlane", name="JobControlPlane")
             jcp.viewable = False
-            has_jcp = True
+            self.has_jcp = True
 
 
 class Stream(_placement._Placement, object):
@@ -1239,7 +1239,7 @@ class Stream(_placement._Placement, object):
         # add job control plane if needed
         self.topology._add_job_control_plane()
         self.oport.operator.consistent(consistent_config)
-        return self
+        return self._make_placeable()
 
     def last(self, size=1):
         """ Declares a slding window containing most recent tuples
