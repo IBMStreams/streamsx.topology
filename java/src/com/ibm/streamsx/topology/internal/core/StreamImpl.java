@@ -6,7 +6,10 @@ package com.ibm.streamsx.topology.internal.core;
 
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONSISTENT;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.HASH_ADDER;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FILTER_KIND;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FLAT_MAP_KIND;
@@ -59,6 +62,7 @@ import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.port.PortProperties;
 import com.ibm.streamsx.topology.internal.functional.ObjectSchemas;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
 import com.ibm.streamsx.topology.internal.logic.FirstOfSecondParameterIterator;
 import com.ibm.streamsx.topology.internal.logic.KeyFunctionHasher;
@@ -519,16 +523,21 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                     HASH_ADDER_KIND, hasher);
 
             hashAdder._json().addProperty(HASH_ADDER, true);
-
+            
+            BOperatorInvocation op = null;         
             if (isPlaceable()) {
-                BOperatorInvocation op = operator();
                 
-                JsonObject serializer = op.getRawParameter("outputSerializer");
-                if (serializer != null) {              
-                    hashAdder.setParameter("inputSerializer", serializer);
-                    JavaFunctional.copyDependencies(this, op, hashAdder);
+                BOperatorInvocation op_ = operator();
+                if (MODEL_FUNCTIONAL.equals(jstring(op_._json(), MODEL))
+                        && LANGUAGE.equals(jstring(op_._json(), LANGUAGE_JAVA))) {
+                    op = op_;
                 }
-            }           
+            }    
+            if (op != null) {
+                JsonObject serializer = op.getRawParameter("outputSerializer");
+                hashAdder.setParameter("inputSerializer", serializer);
+                JavaFunctional.copyDependencies(this, op, hashAdder);
+            }
             
             hashAdder.layout().addProperty("hidden", true);
             BInputPort ip = connectTo(hashAdder, true, null);
