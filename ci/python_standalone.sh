@@ -13,4 +13,4 @@ export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/test/python/topology:${WORKSPACE}/t
 
 wd="$WORKSPACE/test/python/nose_runs/py${pyv}"
 mkdir -p ${wd}
-nosetests --where=${wd} --xunit-file ${xuf} --xunit-testsuite-name="py${pyv}" --config=nose.cfg ../../topology ../../spl/tests
+nosetests --processes=-1 --process-timeout=600 --where=${wd} --xunit-file ${xuf} --xunit-testsuite-name="py${pyv}" --config=nose.cfg ../../topology ../../spl/tests
