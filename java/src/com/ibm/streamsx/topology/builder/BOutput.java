@@ -4,7 +4,7 @@
  */
 package com.ibm.streamsx.topology.builder;
 
-public abstract class BOutput extends BJSONObject {
+public abstract class BOutput extends BJSONObject implements BPort {
     
     public abstract String _type();
 

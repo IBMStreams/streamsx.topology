@@ -13,7 +13,7 @@ import com.google.gson.JsonObject;
  * keys ports by their name so we create a unique internal identifier
  * for the name.
  */
-public class BInputPort extends BInput implements BPort {
+public class BInputPort extends BInput {
     
     public interface Window {
         String SLIDING = "SLIDING";

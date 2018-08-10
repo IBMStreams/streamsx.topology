@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.internal.tester.embedded;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -50,6 +51,25 @@ public final class EmbeddedTesterRuntime extends HandlerTesterRuntime {
     
     private void setupEmbeddedTestHandlers(EmbeddedGraph eg) throws Exception {
         
+        // Embedded does not support a StreamHandler against
+        // a connected stream. In that case add a no-op intermediate stream.
+        Set<TStream<?>> adds = new HashSet<>();    
+        
+        // Find all that are connected.
+        for (TStream<?> stream : handlers.keySet()) {
+            if (stream.output().isConnected())
+                adds.add(stream);
+        }
+        
+        // Insert a filter for the handler.
+        for (TStream<?> stream : adds) {
+            TStream<?> filter = stream.filter(t->true);
+            Set<StreamHandler<Tuple>> handler = handlers.get(stream);
+            handlers.remove(stream);
+            handlers.put(filter, handler);
+        }
+        
+        
         final JavaTestableGraph tg = eg.getExecutionGraph();
 
         for (TStream<?> stream : handlers.keySet()) {
@@ -60,7 +80,6 @@ public final class EmbeddedTesterRuntime extends HandlerTesterRuntime {
                 final BOutputPort outputPort = (BOutputPort) output;
                 final OutputPortDeclaration portDecl = eg.getOutputPort(outputPort.name());
                 
-                // final OutputPortDeclaration portDecl = outputPort.port();
                 for (StreamHandler<Tuple> streamHandler : streamHandlers) {
                     tg.registerStreamHandler(portDecl, streamHandler);
                 }
