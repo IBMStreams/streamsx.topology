@@ -252,12 +252,6 @@ public class GraphBuilder extends BJSONObject {
         return op.addOutput(input._schema());
     }
 
-    public BOperator addVirtualMarkerOperator(BVirtualMarker kind) {
-        final BMarkerOperator op = new BMarkerOperator(this, kind);
-        ops.add(op);
-        return op;
-    }
-
     public BOperatorInvocation addSPLOperator(String name, String kind,
             Map<String, ? extends Object> params) {
         final BOperatorInvocation op = new BOperatorInvocation(this, kind, params);      
