@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
+import static com.ibm.streamsx.topology.builder.BVirtualMarker.UNION;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONSISTENT;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.HASH_ADDER;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
@@ -11,6 +12,7 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.kind;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FILTER_KIND;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FLAT_MAP_KIND;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FOR_EACH_KIND;
@@ -46,7 +48,6 @@ import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
-import com.ibm.streamsx.topology.builder.BUnionOutput;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.consistent.ConsistentRegionConfig;
 import com.ibm.streamsx.topology.consistent.ConsistentRegionConfig.Trigger;
@@ -62,7 +63,6 @@ import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.generator.port.PortProperties;
 import com.ibm.streamsx.topology.internal.functional.ObjectSchemas;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.gson.JSON4JBridge;
 import com.ibm.streamsx.topology.internal.logic.FirstOfSecondParameterIterator;
 import com.ibm.streamsx.topology.internal.logic.KeyFunctionHasher;
@@ -592,9 +592,11 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public TStream<T> endParallel() {
         BOutput end = output();
-        if(end instanceof BUnionOutput){
+        
+        // SPL requires a single stream connected
+        // to a composite output port
+        if (UNION.isThis(kind(end.operator()._json())))
             end = builder().addPassThroughOperator(end);
-        }
 
         return addMatchingStream(builder().unparallel(end));
     }
@@ -683,9 +685,12 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public TStream<T> endLowLatency() {
         BOutput toEndLowLatency = output();
-        if(toEndLowLatency instanceof BUnionOutput){
+        
+        // SPL requires a single stream connected
+        // to a composite output port
+        if (UNION.isThis(kind(toEndLowLatency.operator()._json())))
             toEndLowLatency = builder().addPassThroughOperator(toEndLowLatency);
-        }
+        
         BOutput endedLowLatency = builder().endLowLatency(toEndLowLatency);
         return addMatchingStream(endedLowLatency);
 

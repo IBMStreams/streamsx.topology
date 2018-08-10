@@ -64,7 +64,7 @@ public class GraphUtilities {
     /**
      * Get the kind of an operator.
      */
-    static String kind(JsonObject op) {
+    public static String kind(JsonObject op) {
         String kind = jstring(op, KIND);
         assert kind != null;
         return kind;
