@@ -535,7 +535,8 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             }    
             if (op != null) {
                 JsonObject serializer = op.getRawParameter("outputSerializer");
-                hashAdder.setParameter("inputSerializer", serializer);
+                if (serializer != null)
+                     hashAdder.setParameter("inputSerializer", serializer);
                 JavaFunctional.copyDependencies(this, op, hashAdder);
             }
             
