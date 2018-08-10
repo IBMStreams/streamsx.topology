@@ -6,7 +6,7 @@ package com.ibm.streamsx.topology.builder;
 
 import java.lang.reflect.Type;
 
-public class BOutputPort extends BOutput implements BPort {
+public class BOutputPort extends BOutput {
 
     private final BOperatorInvocation op;
 
