@@ -5,7 +5,7 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
-class MY_OPERATOR : public MY_BASE_OPERATOR 
+class MY_OPERATOR : public MY_BASE_OPERATOR, public DelegatingStateHandler
 {
 public:
   // Constructor
@@ -28,6 +28,8 @@ private:
   SplpyFuncOp *funcop_;
   
   PyObject *pyInStyleObj_;
+
+  @include "../../opt/python/codegen/py_enable_cr.cgt"
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

@@ -59,7 +59,7 @@ class StatefulHalfPlusOne(object):
 # 'fizz', 'buzz', 'fizzbuzz', or '', depending on whether the integer
 # is a multiple of 3, 5, both, or neither.
 @spl.primitive_operator(output_ports=['FIZZBUZZ'])
-class FizzBuzz(spl.PrimitiveOperator):
+class FizzBuzzPrimitive(spl.PrimitiveOperator):
     # This must be present, or sc will fail because of missing required
     # parameters args and kwargs.
     def __init__(self): pass
@@ -73,6 +73,25 @@ class FizzBuzz(spl.PrimitiveOperator):
             classification = classification + 'buzz'
 
         self.submit('FIZZBUZZ', (value, classification))
+
+# Receive tuples containing integers, and add an rstring attribute
+# 'fizz', 'buzz', 'fizzbuzz', or '', depending on whether the integer
+# is a multiple of 3, 5, both, or neither.
+@spl.map(style='position')
+class FizzBuzzMap(object):
+    # This must be present, or sc will fail because of missing required
+    # parameters args and kwargs.
+    def __init__(self): pass
+
+    def __call__(self, value):
+        classification = ''
+        if (value % 3 == 0):
+            classification = classification + "fizz"
+        if (value % 5 == 0):
+            classification = classification + 'buzz'
+
+        return (value, classification)
+
 
 # Receive a streams of tuples <int32, rstring>.  The rstring value
 # is the fizzbuzz classification of the int32.  This verifies
