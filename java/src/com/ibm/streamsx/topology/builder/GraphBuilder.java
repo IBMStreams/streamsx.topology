@@ -135,8 +135,7 @@ public class GraphBuilder extends BJSONObject {
     }
 
     public boolean isInLowLatencyRegion(BOutput output) {
-        BOperator op = ((BOutputPort) output).operator();
-        return isInLowLatencyRegion(op);
+        return isInLowLatencyRegion(output.operator());
     }
     
     public boolean isInLowLatencyRegion(BOperator... operators) {

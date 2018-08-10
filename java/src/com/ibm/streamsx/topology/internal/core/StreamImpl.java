@@ -596,7 +596,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         
         // SPL requires a single stream connected
         // to a composite output port
-        if (UNION.isThis(kind(end.operator()._json())))
+        if (UNION.isThis(end.operator().kind()))
             end = builder().addPassThroughOperator(end);
 
         return addMatchingStream(builder().unparallel(end));
@@ -649,7 +649,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public TStream<T> setConsistent(ConsistentRegionConfig config) {
 
-        if (!(output() instanceof BOutputPort))
+        if (!isPlaceable())
             throw new IllegalStateException();
 
         topology().addJobControlPlane();
@@ -665,9 +665,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         crann.addProperty("resetTimeout", toSeconds(config.getTimeUnit(), config.getResetTimeout()));
         crann.addProperty("maxConsecutiveResetAttempts", config.getMaxConsecutiveResetAttempts());
 
-        BOutputPort out = (BOutputPort) output();
-
-        out.operator()._json().add(CONSISTENT, crann);
+        output().operator()._json().add(CONSISTENT, crann);
 
         return this;
     }
@@ -689,7 +687,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         
         // SPL requires a single stream connected
         // to a composite output port
-        if (UNION.isThis(kind(toEndLowLatency.operator()._json())))
+        if (UNION.isThis(toEndLowLatency.operator().kind()))
             toEndLowLatency = builder().addPassThroughOperator(toEndLowLatency);
         
         BOutput endedLowLatency = builder().endLowLatency(toEndLowLatency);
@@ -737,12 +735,13 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             if (newStream != null)
                 return newStream;
         }
-
-        if (output() instanceof BOutputPort) {
-            BOutputPort boutput = (BOutputPort) output();
-            BOperatorInvocation bop = (BOperatorInvocation) boutput.operator();
         
-            return JavaFunctional.getJavaTStream(this, bop, boutput, tupleClass);
+        if (MODEL_FUNCTIONAL.equals(output().operator().model()) &&
+                LANGUAGE_JAVA.equals(output().operator().language())) {
+            BOperatorInvocation bop = (BOperatorInvocation) output().operator();
+            
+            return JavaFunctional.getJavaTStream(this, bop, (BOutputPort) output(), tupleClass);
+
         }
         
         // TODO
@@ -750,14 +749,14 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
     
     private TStream<T> fixDirectSchema(Class<T> tupleClass) {
-        if (output() instanceof BOutputPort) {
+        if (MODEL_FUNCTIONAL.equals(output().operator().model())) {
             
             String schema = output()._type();
             if (schema.equals(ObjectSchemas.JAVA_OBJECT_SCHEMA)) {
                 
                 
                 // If no connections can just change the schema directly.
-                if (jisEmpty(array(output()._json(), "connections"))) {
+                if (!output().isConnected()) {
                 
                     String directSchema = ObjectSchemas.getMappingSchema(tupleClass);                   
                     output()._json().addProperty("type", directSchema);
@@ -775,19 +774,14 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
     
     @Override
-    public boolean isPlaceable() {
-        if (output() instanceof BOutputPort) {
-            BOutputPort port = (BOutputPort) output();
-            return !BVirtualMarker.isVirtualMarker(
-                    jstring(port.operator()._json(), OpProperties.KIND));
-        }
-        return false;
+    public boolean isPlaceable() {       
+        return !output().operator().isVirtual();
     }
     
     @Override
     public BOperatorInvocation operator() {
         if (isPlaceable())
-            return ((BOutputPort) output()).operator();
+            return (BOperatorInvocation) (output().operator());
         throw new IllegalStateException(Messages.getString("CORE_ILLEGAL_OPERATION_PLACEABLE"));
     }
 

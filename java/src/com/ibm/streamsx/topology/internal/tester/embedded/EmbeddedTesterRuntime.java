@@ -76,13 +76,10 @@ public final class EmbeddedTesterRuntime extends HandlerTesterRuntime {
             Set<StreamHandler<Tuple>> streamHandlers = handlers.get(stream);
 
             final BOutput output = stream.output();
-            if (output instanceof BOutputPort) {
-                final BOutputPort outputPort = (BOutputPort) output;
-                final OutputPortDeclaration portDecl = eg.getOutputPort(outputPort.name());
-                
-                for (StreamHandler<Tuple> streamHandler : streamHandlers) {
-                    tg.registerStreamHandler(portDecl, streamHandler);
-                }
+            final OutputPortDeclaration portDecl = eg.getOutputPort(output.name());
+
+            for (StreamHandler<Tuple> streamHandler : streamHandlers) {
+                tg.registerStreamHandler(portDecl, streamHandler);
             }
         }
     }
