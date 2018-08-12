@@ -91,6 +91,7 @@ from future.builtins import *
 
 import streamsx.ec as ec
 import streamsx.topology.context as stc
+import csv
 import os
 import unittest
 import logging
@@ -165,6 +166,84 @@ class Tester(object):
             raise unittest.SkipTest("Skipped due to no local IBM Streams install")
         test.test_ctxtype = stc.ContextTypes.STANDALONE
         test.test_config = {}
+
+    @staticmethod
+    def get_streams_version(test):
+        """ Returns IBM Streams product version string for a test.
+
+        Returns the product version corresponding to the test's setup.
+        For ``STANDALONE`` and ``DISTRIBUTED`` the product version
+        corresponds to the version defined by the environment variable
+        ``STREAMS_INSTALL``.
+
+        Args:
+            test(unittest.TestCase): Test case setup to run IBM Streams tests.
+      
+        .. versionadded: 1.11
+        """
+        if hasattr(test, 'test_ctxtype'):
+            if test.test_ctxtype == stc.ContextTypes.STANDALONE or test.test_ctxtype == stc.ContextTypes.DISTRIBUTED:
+                return Tester._get_streams_product_version()
+            if test.test_ctxtype == stc.ContextTypes.STREAMING_ANALYTICS_SERVICE:
+                return '4.2.0.0'
+        raise ValueError('Tester has not been setup.')
+
+    @staticmethod
+    def _get_streams_product_version():
+        pvf = os.path.join(os.environ['STREAMS_INSTALL'], '.product')
+        vers={}
+        with open(pvf, "r") as cf:
+            eqc = b'=' if sys.version_info.major == 2 else '='
+            reader = csv.reader(cf, delimiter=eqc, quoting=csv.QUOTE_NONE)
+            for row in reader:
+                vers[row[0]] = row[1]
+        return vers['Version']
+
+    @staticmethod
+    def _minimum_streams_version(product_version, required_version):
+        rvrmf = required_version.split('.')
+        pvrmf = product_version.split('.')
+        for i in range(len(rvrmf)):
+            if i >= len(pvrmf):
+                return False
+            pi = int(pvrmf[i])
+            ri = int(rvrmf[i])
+            if pi < ri:
+                return False
+            if pi > ri:
+                return True
+        return True
+
+    @staticmethod
+    def minimum_streams_version(test, required_version):
+        """ Checks test setup matches a minimum required IBM Streams version.
+
+        Args:
+            test(unittest.TestCase): Test case setup to run IBM Streams tests.
+            required_version(str): VRMF of the minimum version the test requires. Examples are ``'4.3'``, ``4.2.4``.
+
+        Returns:
+            bool: True if the setup fulfills the minimum required version, false otherwise.
+
+        .. versionadded: 1.11
+        """
+        return Tester._minimum_streams_version(Tester.get_streams_version(test), required_version)
+
+    @staticmethod
+    def require_streams_version(test, required_version):
+        """Require a test has minimum IBM Streams version.
+ 
+        Skips the test if the test's setup is not at the required
+        minimum IBM Streams version.
+
+        Args:
+            test(unittest.TestCase): Test case setup to run IBM Streams tests.
+            required_version(str): VRMF of the minimum version the test requires. Examples are ``'4.3'``, ``4.2.4``.
+
+        .. versionadded: 1.11
+        """
+        if not Tester.minimum_streams_version(test, required_version):
+            raise unittest.SkipTest("Skipped as test requires IBM Streams {0} but {1} is setup for {2}.".format(required_version, Tester.get_streams_version(test), test.test_ctxtype))
 
     @staticmethod
     def setup_distributed(test):

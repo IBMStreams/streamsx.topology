@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.builder;
 
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jint;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jisEmpty;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import com.google.gson.JsonArray;
@@ -40,5 +41,9 @@ interface BPort {
         JsonPrimitive on = new JsonPrimitive(other.name());
         assert !array(_json(), "connections").contains(on);
         array(_json(), "connections").add(on);    
+    }
+    
+    default boolean isConnected() {
+        return !jisEmpty(array(_json(), "connections"));
     }
 }

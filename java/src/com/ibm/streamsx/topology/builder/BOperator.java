@@ -4,7 +4,10 @@
  */
 package com.ibm.streamsx.topology.builder;
 
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.addToObject;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -12,6 +15,9 @@ import java.util.Set;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.builder.JOperator.JOperatorConfig;
+import com.ibm.streamsx.topology.generator.operator.OpProperties;
+import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
  * JSON representation.
@@ -37,6 +43,19 @@ public class BOperator extends BJSONObject {
 
     public GraphBuilder builder() {
         return bt;
+    }
+    
+    public final String kind() {
+        return GraphUtilities.kind(_json());
+    }
+    public final String model() {
+        return jstring(_json(), MODEL);
+    }
+    public final String language() {
+        return jstring(_json(), LANGUAGE);
+    }
+    public boolean isVirtual() {
+        return BVirtualMarker.isVirtualMarker(kind());
     }
 
     public boolean addRegion(String name) {

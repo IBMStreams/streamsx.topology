@@ -4,10 +4,15 @@
  */
 package com.ibm.streamsx.topology.internal.core;
 
+import static com.ibm.streamsx.topology.builder.BVirtualMarker.UNION;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONSISTENT;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.HASH_ADDER;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
+import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.kind;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FILTER_KIND;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FLAT_MAP_KIND;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.FOR_EACH_KIND;
@@ -43,7 +48,6 @@ import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.builder.BOutput;
 import com.ibm.streamsx.topology.builder.BOutputPort;
-import com.ibm.streamsx.topology.builder.BUnionOutput;
 import com.ibm.streamsx.topology.builder.BVirtualMarker;
 import com.ibm.streamsx.topology.consistent.ConsistentRegionConfig;
 import com.ibm.streamsx.topology.consistent.ConsistentRegionConfig.Trigger;
@@ -519,16 +523,22 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
                     HASH_ADDER_KIND, hasher);
 
             hashAdder._json().addProperty(HASH_ADDER, true);
-
+            
+            BOperatorInvocation op = null;         
             if (isPlaceable()) {
-                BOperatorInvocation op = operator();
                 
-                JsonObject serializer = op.getRawParameter("outputSerializer");
-                if (serializer != null) {              
-                    hashAdder.setParameter("inputSerializer", serializer);
-                    JavaFunctional.copyDependencies(this, op, hashAdder);
+                BOperatorInvocation op_ = operator();
+                if (MODEL_FUNCTIONAL.equals(jstring(op_._json(), MODEL))
+                        && LANGUAGE.equals(jstring(op_._json(), LANGUAGE_JAVA))) {
+                    op = op_;
                 }
-            }           
+            }    
+            if (op != null) {
+                JsonObject serializer = op.getRawParameter("outputSerializer");
+                if (serializer != null)
+                     hashAdder.setParameter("inputSerializer", serializer);
+                JavaFunctional.copyDependencies(this, op, hashAdder);
+            }
             
             hashAdder.layout().addProperty("hidden", true);
             BInputPort ip = connectTo(hashAdder, true, null);
@@ -583,9 +593,11 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public TStream<T> endParallel() {
         BOutput end = output();
-        if(end instanceof BUnionOutput){
+        
+        // SPL requires a single stream connected
+        // to a composite output port
+        if (UNION.isThis(end.operator().kind()))
             end = builder().addPassThroughOperator(end);
-        }
 
         return addMatchingStream(builder().unparallel(end));
     }
@@ -637,7 +649,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public TStream<T> setConsistent(ConsistentRegionConfig config) {
 
-        if (!(output() instanceof BOutputPort))
+        if (!isPlaceable())
             throw new IllegalStateException();
 
         topology().addJobControlPlane();
@@ -653,9 +665,7 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
         crann.addProperty("resetTimeout", toSeconds(config.getTimeUnit(), config.getResetTimeout()));
         crann.addProperty("maxConsecutiveResetAttempts", config.getMaxConsecutiveResetAttempts());
 
-        BOutputPort out = (BOutputPort) output();
-
-        out.operator()._json().add(CONSISTENT, crann);
+        output().operator()._json().add(CONSISTENT, crann);
 
         return this;
     }
@@ -674,9 +684,12 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     @Override
     public TStream<T> endLowLatency() {
         BOutput toEndLowLatency = output();
-        if(toEndLowLatency instanceof BUnionOutput){
+        
+        // SPL requires a single stream connected
+        // to a composite output port
+        if (UNION.isThis(toEndLowLatency.operator().kind()))
             toEndLowLatency = builder().addPassThroughOperator(toEndLowLatency);
-        }
+        
         BOutput endedLowLatency = builder().endLowLatency(toEndLowLatency);
         return addMatchingStream(endedLowLatency);
 
@@ -722,12 +735,13 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
             if (newStream != null)
                 return newStream;
         }
-
-        if (output() instanceof BOutputPort) {
-            BOutputPort boutput = (BOutputPort) output();
-            BOperatorInvocation bop = (BOperatorInvocation) boutput.operator();
         
-            return JavaFunctional.getJavaTStream(this, bop, boutput, tupleClass);
+        if (MODEL_FUNCTIONAL.equals(output().operator().model()) &&
+                LANGUAGE_JAVA.equals(output().operator().language())) {
+            BOperatorInvocation bop = (BOperatorInvocation) output().operator();
+            
+            return JavaFunctional.getJavaTStream(this, bop, (BOutputPort) output(), tupleClass);
+
         }
         
         // TODO
@@ -735,14 +749,14 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
     
     private TStream<T> fixDirectSchema(Class<T> tupleClass) {
-        if (output() instanceof BOutputPort) {
+        if (MODEL_FUNCTIONAL.equals(output().operator().model())) {
             
             String schema = output()._type();
             if (schema.equals(ObjectSchemas.JAVA_OBJECT_SCHEMA)) {
                 
                 
                 // If no connections can just change the schema directly.
-                if (jisEmpty(array(output()._json(), "connections"))) {
+                if (!output().isConnected()) {
                 
                     String directSchema = ObjectSchemas.getMappingSchema(tupleClass);                   
                     output()._json().addProperty("type", directSchema);
@@ -760,19 +774,14 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
     
     @Override
-    public boolean isPlaceable() {
-        if (output() instanceof BOutputPort) {
-            BOutputPort port = (BOutputPort) output();
-            return !BVirtualMarker.isVirtualMarker(
-                    jstring(port.operator()._json(), OpProperties.KIND));
-        }
-        return false;
+    public boolean isPlaceable() {       
+        return !output().operator().isVirtual();
     }
     
     @Override
     public BOperatorInvocation operator() {
         if (isPlaceable())
-            return ((BOutputPort) output()).operator();
+            return (BOperatorInvocation) (output().operator());
         throw new IllegalStateException(Messages.getString("CORE_ILLEGAL_OPERATION_PLACEABLE"));
     }
 

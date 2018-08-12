@@ -279,6 +279,9 @@ class StreamSchema(object) :
     ``tuple<type name [, ...]>``  Nested tuple                    Not supported                              Not supported
     ============================  ==============================  =========================================  =======================================
 
+    .. note::
+        Type `optional<T>` requires IBM Streams 4.3 or later.
+
     Python representation is how an attribute value in a structured schema is passed into a Python function. 
 
     Conversion from Python indicates how a value from Python is converted to an attribute value in a structured schema.
