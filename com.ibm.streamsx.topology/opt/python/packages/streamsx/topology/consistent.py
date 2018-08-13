@@ -127,6 +127,7 @@ class ConsistentRegionConfig(object):
         self.resetTimeout = resetTimeout 
         self.maxConsecutiveAttempts = maxConsecutiveAttempts 
 
+    @staticmethod
     def operator_driven(drainTimeout=_DEFAULT_DRAIN, resetTimeout=_DEFAULT_RESET, maxConsecutiveAttempts=_DEFAULT_ATTEMPTS):
         """Define an operator-driven consistent region configuration.  
         The source operator triggers drain and checkpoint cycles for the region.
@@ -142,6 +143,7 @@ class ConsistentRegionConfig(object):
 
         return ConsistentRegionConfig(trigger=ConsistentRegionConfig.Trigger.OPERATOR_DRIVEN, drainTimeout=drainTimeout, resetTimeout=resetTimeout, maxConsecutiveAttempts=maxConsecutiveAttempts)
 
+    @staticmethod
     def periodic(period, drainTimeout=_DEFAULT_DRAIN, resetTimeout=_DEFAULT_RESET, maxConsecutiveAttempts=_DEFAULT_ATTEMPTS):
         """Create a periodic consistent region configuration.
         The IBM Streams runtime will trigger a drain and checkpoint

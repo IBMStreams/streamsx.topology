@@ -11,7 +11,7 @@ class TestConsistentRegionConfig(unittest.TestCase):
     _DEFAULT_ATTEMPTS = 5
 
     def test_op_driven(self):
-        config = ConsistentRegionConfig.operator_driven();
+        config = ConsistentRegionConfig.operator_driven()
         self.assertEqual(config.trigger, ConsistentRegionConfig.Trigger.OPERATOR_DRIVEN)
         # verify the correct defaults have been applied
         self.assertEqual(config.drainTimeout, self._DEFAULT_DRAIN_TIMEOUT)
