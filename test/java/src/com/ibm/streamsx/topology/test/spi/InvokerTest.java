@@ -94,7 +94,7 @@ public class InvokerTest extends TestTopology {
         }      
     }
        
-    //@Test
+    @Test
     public void testSource2PipeSerializers() throws Exception {
 
         Topology topology = newTopology();
