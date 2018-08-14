@@ -96,6 +96,8 @@ public class InvokerTest extends TestTopology {
        
     @Test
     public void testSource2PipeSerializers() throws Exception {
+        
+        assumeSPLOk();
 
         Topology topology = newTopology();
         SPL.addToolkit(topology, new File(getTestRoot(), "spl/testtk"));
