@@ -99,7 +99,7 @@ class OptionalConsistentRegionContextImpl<false> {
   OptionalConsistentRegionContextImpl(SPL::Operator * op) {}
   class Permit {
   public:
-    Permit(OptionalConsistentRegionContextImpl<false>){}
+    Permit(OptionalConsistentRegionContextImpl<false> &){}
   };
 };
 

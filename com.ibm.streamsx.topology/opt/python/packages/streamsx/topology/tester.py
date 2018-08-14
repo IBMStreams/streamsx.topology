@@ -133,7 +133,7 @@ class Tester(object):
     def __init__(self, topology):
         self.topology = topology
         topology.tester = self
-        self._conditions = {}
+        self._conditions = {} # TODO maybe a different data structure?
         self.local_check = None
         self._run_for = 0
 
@@ -328,6 +328,7 @@ class Tester(object):
         return self.add_condition(stream, cond)
 
     def resets(self, minimumResets=None):
+<<<<<<< HEAD
         """Add a consistent region resetter to the test topology, and
         verify that the consistent region is reset at least ``minimumResets``
         times.
@@ -335,6 +336,9 @@ class Tester(object):
         The resets are performed at arbitrary intervals scaled to the
         period of the region (if it is periodically triggered).
         """
+=======
+        # TODO docs
+>>>>>>> 62d6d51... Consistent region resetter integrated with tester (needs cleanup)
         resetter = sttrt._Resetter(self.topology, minimumResets=minimumResets)
         ret = self.add_condition(None, resetter)
         return ret
@@ -518,6 +522,7 @@ class Tester(object):
             condition = ct[1]
             stream = ct[0]
             condition.attach(stream)
+            condition.create(stream)
 
         # Standalone uses --kill-after parameter.
         if self._run_for and stc.ContextTypes.STANDALONE != ctxtype:
