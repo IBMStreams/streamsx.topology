@@ -7,6 +7,7 @@ from future.builtins import *
 import os
 import sys
 import pickle
+import logging
 from past.builtins import basestring
 
 import streamsx.ec as ec
@@ -28,19 +29,38 @@ import json
 from pkgutil import extend_path
 import streamsx
 
+TRACE = logging.getLogger('streamsx.topology.runtime')
 
 # Simple identity function used by map, flat_map as default function.
 def _identity(tuple_):
     return tuple_
 
+_TRACED_PKGS = False
 
-def __splpy_addDirToPath(dir):
-    if os.path.isdir(dir):
-        if dir not in sys.path:
-            sys.path.insert(0, dir)
+def _trace_packages(bundle_site_dir):
+    if _TRACED_PKGS or not TRACE.isEnabledFor(logging.INFO):
+        return
+    setattr(sys.modules[__name__], '_TRACED_PKGS', True)
+    from pip.utils import get_installed_distributions
+    if os.path.isdir(bundle_site_dir):
+        TRACE.info('*** Streams application bundle Python packages: %s', bundle_site_dir)
+        TRACE.info('*** End Streams application bundle Python packages')
+
+    TRACE.info('*** Installed Python packages')
+    for pkg in get_installed_distributions():
+        TRACE.info(repr(pkg))
+    TRACE.info('*** End installed Python packages')
+
+def __splpy_addDirToPath(dir_):
+    if TRACE.isEnabledFor(logging.DEBUG):
+        TRACE.debug('Potential addition to sys.path: %s EXISTS %s', dir_, str(os.path.isdir(dir_)))
+    if os.path.isdir(dir_):
+        if dir_ not in sys.path:
+            TRACE.debug('Inserting as first entry to sys.path: %s', dir_)
+            sys.path.insert(0, dir_)
             # In case a streamsx module (e.g. streamsx.bm) 
             # is included in the additional code
-            if os.path.isdir(os.path.join(dir, 'streamsx')):
+            if os.path.isdir(os.path.join(dir_, 'streamsx')):
                 streamsx.__path__ = extend_path(streamsx.__path__, streamsx.__name__)
                 
 def add_output_packages(out_dir):
@@ -48,12 +68,15 @@ def add_output_packages(out_dir):
     vdir = 'python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor)
     site_pkg = os.path.join(py_dir, 'lib', vdir, 'site-packages')
     __splpy_addDirToPath(site_pkg)
+    _trace_packages(site_pkg)
 
 def setupOperator(dir):
     pydir = os.path.join(dir, 'opt', 'python')
     __splpy_addDirToPath(os.path.join(pydir, 'modules'))
     __splpy_addDirToPath(os.path.join(pydir, 'packages'))
-    #print("sys.path", sys.path)
+
+    if TRACE.isEnabledFor(logging.DEBUG):
+        TRACE.debug('sys.path: %s', str(sys.path))
 
 def _json_object_out(v):
     """Return a serialized JSON object for a value."""
