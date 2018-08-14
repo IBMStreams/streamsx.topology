@@ -133,7 +133,7 @@ class Tester(object):
     def __init__(self, topology):
         self.topology = topology
         topology.tester = self
-        self._conditions = {}
+        self._conditions = {} # TODO maybe a different data structure?
         self.local_check = None
         self._run_for = 0
 
@@ -327,6 +327,12 @@ class Tester(object):
             cond._desc = "'{0}' stream expects tuple unordered contents: {1}.".format(stream.name, expected)
         return self.add_condition(stream, cond)
 
+    def resets(self, minimumResets=None):
+        # TODO docs
+        resetter = sttrt._Resetter(self.topology, minimumResets=minimumResets)
+        ret = self.add_condition(None, resetter)
+        return ret
+
     def tuple_check(self, stream, checker):
         """Check each tuple on a stream.
 
@@ -505,10 +511,12 @@ class Tester(object):
         for ct in self._conditions.values():
             condition = ct[1]
             stream = ct[0]
-            cond_sink = stream.for_each(condition, name=condition.name)
-            cond_sink.colocate(stream)
-            cond_sink.category = 'Tester'
-            cond_sink._op()._layout(hidden=True)
+            # TODO remove these
+            #cond_sink = stream.for_each(condition, name=condition.name)
+            #cond_sink.colocate(stream)
+            #cond_sink.category = 'Tester'
+            #cond_sink._op()._layout(hidden=True)
+            condition.create(stream)
 
         # Standalone uses --kill-after parameter.
         if self._run_for and stc.ContextTypes.STANDALONE != ctxtype:

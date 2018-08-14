@@ -24,6 +24,7 @@ from future.builtins import *
 
 import streamsx.ec as ec
 import streamsx.topology.context as stc
+import streamsx.spl.op
 import os
 import unittest
 import logging
@@ -31,7 +32,12 @@ import collections
 import threading
 import time
 
-class Condition(object):
+# the base class of Condition
+class BaseCondition(object):
+    def __init__(self, name=None):
+        self.name = name
+
+class Condition(BaseCondition):
     """A condition for testing.
 
     Args:
@@ -44,10 +50,16 @@ class Condition(object):
         return Condition._METRIC_PREFIX + mt + ":" + name
 
     def __init__(self, name=None):
-        self.name = name
+        super(Condition, self).__init__(name)
         self._starts_valid = False
         self._valid = False
         self._fail = False
+
+    def create(self, stream):
+        cond_sink = stream.for_each(self, self.name)
+        cond_sink.colocate(stream)
+        cond_sink.category = 'Tester'
+        cond_sink._op()._layout(hidden=True)
 
     @property
     def valid(self):
@@ -194,6 +206,19 @@ class _TupleCheck(Condition):
     def __str__(self):
         return "Tuple checker:" + str(self.checker)
 
+
+class _Resetter(BaseCondition):
+    CONDITION_NAME = "ConditionRegionResetter"
+
+    def __init__(self, topology, minimumResets=10):
+        super(_Resetter, self).__init__(self.CONDITION_NAME)
+        self.topology = topology
+        self.minimumResets = minimumResets
+        
+    def create(self, stream):
+        params = {'minimumResets': self.minimumResets, 'conditionName': self.CONDITION_NAME}
+        resetter = streamsx.spl.op.Invoke(self.topology, "com.ibm.streamsx.topology.testing.consistent::Resetter", inputs=None, schemas=None, params=params, name="ConsistentRegionResetter")
+        
 
 class _RunFor(Condition):
     def __init__(self, duration):
