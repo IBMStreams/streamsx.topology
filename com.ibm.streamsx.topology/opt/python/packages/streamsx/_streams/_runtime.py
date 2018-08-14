@@ -5,6 +5,7 @@ from future.builtins import *
 
 import logging
 import os
+import pkg_resources
 import sys
 import streamsx
 from pkgutil import extend_path
@@ -14,21 +15,23 @@ _TRACE = logging.getLogger('streamsx.runtime')
 def _add_to_sys_path(dir_):
     if _TRACE.isEnabledFor(logging.DEBUG):
         _TRACE.debug('Potential addition to sys.path: %s EXISTS %s', dir_, str(os.path.isdir(dir_)))
-    if os.path.isdir(dir_) and dir_ not in sys.path:
+    if os.path.isdir(dir_) and dir_ not in sys.path and os.listdir(dir_):
         _TRACE.debug('Inserting as first entry to sys.path: %s', dir_)
         sys.path.insert(0, dir_)
         # In case a streamsx module (e.g. streamsx.bm) 
         # is included in the additional code
         if os.path.isdir(os.path.join(dir_, 'streamsx')):
             streamsx.__path__ = extend_path(streamsx.__path__, streamsx.__name__)
+        return True
+    return False
 
 def _setup_operator(tk_dir):
     pydir = os.path.join(tk_dir, 'opt', 'python')
-    _add_to_sys_path(os.path.join(pydir, 'modules'))
-    _add_to_sys_path(os.path.join(pydir, 'packages'))
+    changed = _add_to_sys_path(os.path.join(pydir, 'modules'))
+    changed = _add_to_sys_path(os.path.join(pydir, 'packages')) or changed
 
-    if _TRACE.isEnabledFor(logging.INFO):
-        _TRACE.info('sys.path: %s', str(sys.path))
+    if changed and _TRACE.isEnabledFor(logging.INFO):
+        _TRACE.info('Updated sys.path: %s', str(sys.path))
 
                 
 class _Setup(object):
@@ -55,15 +58,15 @@ class _Setup(object):
         if not _TRACE.isEnabledFor(logging.INFO):
             return
 
-        from pip.utils import get_installed_distributions
-        if os.path.isdir(bundle_site_dir):
-            _TRACE.info('*** Streams application bundle Python packages: %s', bundle_site_dir)
-            _TRACE.info('*** End Streams application bundle Python packages')
-
-        _TRACE.info('*** Installed Python packages')
-        for pkg in get_installed_distributions():
-            _TRACE.info(repr(pkg))
-        _TRACE.info('*** End installed Python packages')
+        _TRACE.info('sys.path: %s', str(sys.path))
+        dists = pkg_resources.AvailableDistributions()
+        ids = list(dists)
+        ids.sort()
+        _TRACE.info('*** Python packages ***')
+        for id_ in ids:
+            for pkg in dists[id_]:
+                _TRACE.info(repr(pkg))
+        _TRACE.info('*** End Python packages ***')
 
 
 def _setup(out_dir):
