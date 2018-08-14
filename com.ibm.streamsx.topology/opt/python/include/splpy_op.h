@@ -80,7 +80,7 @@ class SplpyOp {
           SPL::rstring outDir(op->getPE().getOutputDirectory());
           PyObject * pyOutDir = pySplValueToPyObject(outDir);
           SplpyGeneral::callVoidFunction(
-               "streamsx.topology.runtime", "add_output_packages", pyOutDir, NULL);
+               "streamsx._streams._runtime", "_setup", pyOutDir, NULL);
           opc_ = PyLong_FromVoidPtr((void*)op);
           if (opc_ == NULL)
               throw SplpyGeneral::pythonException("capsule");
