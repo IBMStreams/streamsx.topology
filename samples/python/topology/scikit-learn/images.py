@@ -56,7 +56,7 @@ def main():
     # and it will be pickled (using dill) to allow it to
     # be used on the service (which runs in IBM Cloud).
     # 
-    images_digits = images.map(lambda image : {'image':image, 'digit':clf.predict(image.reshape(1,-1))}, name='Predict Digit')
+    images_digits = images.map(lambda image : {'image':image, 'digit':clf.predict(image.reshape(1,-1))[0]}, name='Predict Digit')
 
     images_digits.for_each(lambda x : None, name='Noop')
 
