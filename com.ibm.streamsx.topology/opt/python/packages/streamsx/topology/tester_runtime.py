@@ -24,12 +24,14 @@ from future.builtins import *
 
 import streamsx.ec as ec
 import streamsx.topology.context as stc
+import streamsx.spl.op
 import os
 import unittest
 import logging
 import collections
 import threading
 import time
+
 
 class Condition(object):
     """A condition for testing.
@@ -45,9 +47,32 @@ class Condition(object):
 
     def __init__(self, name=None):
         self.name = name
+
+    def attach(self, stream):
+        """Attach the condition to the ``stream``.  
+        
+        Args:
+          stream(streamsx.topology.topology.Stream): The stream to which the conditions 
+            applies.  If the condition applies to the topology as a whole 
+            rather than to a specific stream, ``stream`` can be ``None``.
+        """
+        raise NotImplementedException("attach must be defined in the derived class.")
+
+class PythonCondition(Condition):
+    """A condition for testing based on a python callable.
+    """
+    
+    def __init__(self, name=None):
+        super(PythonCondition, self).__init__(name)
         self._starts_valid = False
         self._valid = False
         self._fail = False
+
+    def attach(self, stream):
+        cond_sink = stream.for_each(self, self.name)
+        cond_sink.colocate(stream)
+        cond_sink.category = 'Tester'
+        cond_sink._op()._layout(hidden=True)
 
     @property
     def valid(self):
@@ -78,7 +103,7 @@ class Condition(object):
         self.valid = False
         self._fail = True
         if (ec.is_standalone()):
-            raise AssertionError("Condition failed:" + str(self))
+            raise AssertionError("PythonCondition failed:" + str(self))
 
     def __getstate__(self):
         # Remove metrics from saved state.
@@ -104,12 +129,12 @@ class Condition(object):
     def __exit__(self, exc_type, exc_value, traceback):
         if (ec.is_standalone()):
             if not self._fail and not self.valid:
-                raise AssertionError("Condition failed:" + str(self))
+                raise AssertionError("PythonCondition failed:" + str(self))
 
     def _create_metric(self, mt, kind=None):
         return ec.CustomMetric(self, name=Condition._mn(mt, self.name), kind=kind)
 
-class _TupleExactCount(Condition):
+class _TupleExactCount(PythonCondition):
     def __init__(self, target, name=None):
         super(_TupleExactCount, self).__init__(name)
         self.target = target
@@ -125,7 +150,7 @@ class _TupleExactCount(Condition):
     def __str__(self):
         return "Exact tuple count: expected:" + str(self.target) + " received:" + str(self.count)
 
-class _TupleAtLeastCount(Condition):
+class _TupleAtLeastCount(PythonCondition):
     def __init__(self, target, name=None):
         super(_TupleAtLeastCount, self).__init__(name)
         self.target = target
@@ -139,7 +164,7 @@ class _TupleAtLeastCount(Condition):
     def __str__(self):
         return "At least tuple count: expected:" + str(self.target) + " received:" + str(self.count)
 
-class _StreamContents(Condition):
+class _StreamContents(PythonCondition):
     def __init__(self, expected, name=None):
         super(_StreamContents, self).__init__(name)
         self.expected = expected
@@ -179,7 +204,7 @@ class _UnorderedStreamContents(_StreamContents):
                 return True
         return False
 
-class _TupleCheck(Condition):
+class _TupleCheck(PythonCondition):
     def __init__(self, checker, name=None):
         super(_TupleCheck, self).__init__(name)
         self.checker = checker
@@ -195,7 +220,20 @@ class _TupleCheck(Condition):
         return "Tuple checker:" + str(self.checker)
 
 
-class _RunFor(Condition):
+class _Resetter(Condition):
+    CONDITION_NAME = "ConditionRegionResetter"
+
+    def __init__(self, topology, minimumResets=10):
+        super(_Resetter, self).__init__(self.CONDITION_NAME)
+        self.topology = topology
+        self.minimumResets = minimumResets
+        
+    def attach(self, stream):
+        params = {'minimumResets': self.minimumResets, 'conditionName': self.CONDITION_NAME}
+        resetter = streamsx.spl.op.Invoke(self.topology, "com.ibm.streamsx.topology.testing.consistent::Resetter", inputs=None, schemas=None, params=params, name="ConsistentRegionResetter")
+        
+
+class _RunFor(PythonCondition):
     def __init__(self, duration):
         super(_RunFor, self).__init__("TestRunTime")
         self.duration = duration
