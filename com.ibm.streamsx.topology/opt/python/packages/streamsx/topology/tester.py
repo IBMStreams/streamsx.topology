@@ -327,6 +327,18 @@ class Tester(object):
             cond._desc = "'{0}' stream expects tuple unordered contents: {1}.".format(stream.name, expected)
         return self.add_condition(stream, cond)
 
+    def resets(self, minimumResets=None):
+        """Add a consistent region resetter to the test topology, and
+        verify that the consistent region is reset at least ``minimumResets``
+        times.
+
+        The resets are performed at arbitrary intervals scaled to the
+        period of the region (if it is periodically triggered).
+        """
+        resetter = sttrt._Resetter(self.topology, minimumResets=minimumResets)
+        ret = self.add_condition(None, resetter)
+        return ret
+
     def tuple_check(self, stream, checker):
         """Check each tuple on a stream.
 
@@ -505,10 +517,7 @@ class Tester(object):
         for ct in self._conditions.values():
             condition = ct[1]
             stream = ct[0]
-            cond_sink = stream.for_each(condition, name=condition.name)
-            cond_sink.colocate(stream)
-            cond_sink.category = 'Tester'
-            cond_sink._op()._layout(hidden=True)
+            condition.attach(stream)
 
         # Standalone uses --kill-after parameter.
         if self._run_for and stc.ContextTypes.STANDALONE != ctxtype:
