@@ -25,6 +25,10 @@ class TestJobConfig(unittest.TestCase):
      topo = Topology()
      jc = JobConfig(job_name=job_name)
 
+     # When tracing is info some extra code is invoked
+     # to trace all Python packages. Ensure it is exercised.
+     jc.tracing = 'info'
+
      hw = topo.source(["Hello", "Tester"])
      tester = Tester(topo)
      tester.contents(hw, ["Hello", "Tester"])
