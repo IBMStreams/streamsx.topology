@@ -336,8 +336,7 @@ class Tester(object):
         period of the region (if it is periodically triggered).
         """
         resetter = sttrt._Resetter(self.topology, minimumResets=minimumResets)
-        ret = self.add_condition(None, resetter)
-        return ret
+        return self.add_condition(None, resetter)
 
     def tuple_check(self, stream, checker):
         """Check each tuple on a stream.
