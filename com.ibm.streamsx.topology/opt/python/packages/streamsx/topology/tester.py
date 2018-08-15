@@ -327,7 +327,7 @@ class Tester(object):
             cond._desc = "'{0}' stream expects tuple unordered contents: {1}.".format(stream.name, expected)
         return self.add_condition(stream, cond)
 
-    def resets(self, minimumResets=None):
+    def resets(self, minimumResets=10):
         """Add a consistent region resetter to the test topology, and 
         verify that the consistent region is reset at least ``minimumResets``
         times.
