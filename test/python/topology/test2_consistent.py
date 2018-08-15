@@ -143,7 +143,6 @@ class TestDistributedConsistentRegion(unittest.TestCase):
 
         tester = Tester(topo)
         tester.contents(s, range(0,30))
-        print ("calling tester.resets")
         tester.resets(3)
 
         cfg={}
