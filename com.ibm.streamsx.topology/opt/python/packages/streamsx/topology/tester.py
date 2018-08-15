@@ -133,7 +133,7 @@ class Tester(object):
     def __init__(self, topology):
         self.topology = topology
         topology.tester = self
-        self._conditions = {} 
+        self._conditions = {}
         self.local_check = None
         self._run_for = 0
 
