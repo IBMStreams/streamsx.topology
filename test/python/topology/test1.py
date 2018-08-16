@@ -13,9 +13,6 @@ import streamsx.topology.context
 
 class TestTopologyMethods(unittest.TestCase):
 
-  def test_temp_ci_fail(self):
-     self.assertTrue(0)
-
   def test_TopologyName(self):
      topo = Topology("test_TopologyNameExplicit")
      self.assertEqual("test_TopologyNameExplicit", topo.name)
