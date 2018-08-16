@@ -213,9 +213,9 @@ class TestDistributedConsistentRegion(unittest.TestCase):
             
     # Test for_each.  This is a sink. 
     def test_for_each(self):
-        N = 300
+        N = 3000
         topo = Topology("test")
-        s = topo.source(TimeCounter(iterations=N, period=0.1))
+        s = topo.source(TimeCounter(iterations=N, period=0.01))
         s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
 
         s.for_each(StatefulNothing())
