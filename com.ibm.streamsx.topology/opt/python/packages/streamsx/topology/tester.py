@@ -406,16 +406,26 @@ class Tester(object):
             cond._desc = "'{0}' stream expects tuple unordered contents: {1}.".format(stream.name, expected)
         return self.add_condition(stream, cond)
 
-    def resets(self, minimumResets=10):
-        """Add a consistent region resetter to the test topology, and 
-        verify that the consistent region is reset at least ``minimumResets``
-        times.
+    def resets(self, minimum_resets=10):
+        """Create a condition that randomly resets consistent regions.
+        The condition becomes valid when each consistent region in the
+        application under test has been reset `minimum_resets` times
+        by the tester.
+
 
         The resets are performed at arbitrary intervals scaled to the 
         period of the region (if it is periodically triggered).
+
+        .. note::
+             A region is reset by initiating a request though the Job Control Plane. The reset is not driven by any injected failure, such as a PE restart.
+
+        Args:
+            minimum_resets(int): Minimum number of resets for each region.
+
+        .. versionadded:: 1.11
         """
-        resetter = sttrt._Resetter(self.topology, minimumResets=minimumResets)
-        return self.add_condition(None, resetter)
+        resetter = sttrt._Resetter(self.topology, minimum_resets=minimum_resets)
+        self.add_condition(None, resetter)
 
     def tuple_check(self, stream, checker):
         """Check each tuple on a stream.

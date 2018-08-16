@@ -223,14 +223,14 @@ class _TupleCheck(PythonCondition):
 class _Resetter(Condition):
     CONDITION_NAME = "ConditionRegionResetter"
 
-    def __init__(self, topology, minimumResets=10):
+    def __init__(self, topology, minimum_resets):
         super(_Resetter, self).__init__(self.CONDITION_NAME)
         self.topology = topology
-        self.minimumResets = minimumResets
+        self.minimum_resets = minimum_resets
         
     def attach(self, stream):
-        params = {'minimumResets': self.minimumResets, 'conditionName': self.CONDITION_NAME}
-        resetter = streamsx.spl.op.Invoke(self.topology, "com.ibm.streamsx.topology.testing.consistent::Resetter", inputs=None, schemas=None, params=params, name="ConsistentRegionResetter")
+        params = {'minimumResets': self.minimum_resets, 'conditionName': self.CONDITION_NAME}
+        resetter = streamsx.spl.op.Invoke(self.topology, "com.ibm.streamsx.topology.testing.consistent::Resetter", params=params, name="ConsistentRegionResetter")
         
 
 class _RunFor(PythonCondition):
