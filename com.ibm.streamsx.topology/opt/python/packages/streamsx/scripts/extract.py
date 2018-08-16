@@ -11,6 +11,7 @@ if sys.version_info.major == 2:
   import funcsigs
 import imp
 import glob
+import fnmatch
 import os
 import shutil
 import argparse
@@ -491,7 +492,7 @@ def _extract_from_toolkit(args):
     tk_dir = extractor._tk_dir
 
     tk_streams = os.path.join(tk_dir, 'opt', 'python', 'streams')
-    if not os.path.isdir(tk_streams):
+    if not os.path.isdir(tk_streams) or not fnmatch.filter(os.listdir(tk_streams), '*.py'):
         # Nothing to do for Python extraction
         extractor._make_toolkit()
         return

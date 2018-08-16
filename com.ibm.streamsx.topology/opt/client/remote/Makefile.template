@@ -3,12 +3,12 @@ OUT_PY=${OUT}/etc/streamsx.topology/python
 all:
 	@/bin/rm -fr ${OUT}
 	@/bin/mkdir -p ${OUT_PY}
-	@for toolkit in `/bin/cat manifest_tk.txt`; do \
+	@set -e; for toolkit in `/bin/cat manifest_tk.txt`; do \
 		if [ -f $${toolkit}/opt/python/streams/requirements.txt ]; then \
 			PYTHONUSERBASE=${OUT_PY} pip install --disable-pip-version-check --user --upgrade --requirement $${toolkit}/opt/python/streams/requirements.txt ; \
 		fi; \
 	done;
-	@for toolkit in `/bin/cat manifest_tk.txt`; do \
+	@set -e; for toolkit in `/bin/cat manifest_tk.txt`; do \
 		if [ -d $${toolkit}/opt/python/streams ]; then \
 			PYTHONUSERBASE=${OUT_PY} python3 com.ibm.streamsx.topology/bin/spl-python-extract.py -i $${toolkit};\
             	fi; \
