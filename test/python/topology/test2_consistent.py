@@ -87,8 +87,13 @@ class StatefulDelay(object):
 # Do nothing, statefully.  This is used with for_each.  It seems not so
 # easy to test for_each.
 class StatefulNothing(object):
+    def __init__(self):
+        self._expected = 0
     def __call__(self, x):
-        pass
+        if x == self._expected:
+             self._expected += 1
+        else:
+            raise ValueError("Expected " + str(self._expected) + " got " + x)
 
 # Compute a hash code, statefully.  Again the state is not meaningful
 class StatefulStupidHash(object):
@@ -208,13 +213,14 @@ class TestDistributedConsistentRegion(unittest.TestCase):
             
     # Test for_each.  This is a sink. 
     def test_for_each(self):
+        N = 300
         topo = Topology("test")
-        s = topo.source(TimeCounter(iterations=30, period=0.1))
+        s = topo.source(TimeCounter(iterations=N, period=0.1))
         s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
 
         s.for_each(StatefulNothing())
         tester = Tester(topo)
-        tester.resets(3)
+        tester.resets()
         tester.test(self.test_ctxtype, self.test_config)
 
 
