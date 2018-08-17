@@ -496,14 +496,8 @@ def _extract_from_toolkit(args):
         # Nothing to do for Python extraction
         extractor._make_toolkit()
         return
-    sys.path.insert(1, tk_streams)
 
-    tk_packages = os.path.join(tk_dir, 'opt', 'python', 'packages')
-    if os.path.isdir(tk_packages):
-        sys.path.insert(1, tk_packages)
-    tk_modules = os.path.join(tk_dir, 'opt', 'python', 'modules')
-    if os.path.isdir(tk_modules):
-        sys.path.insert(1, tk_modules)
+    path_items = _setup_path(tk_dir, tk_streams)
 
     for mf in glob.glob(os.path.join(tk_streams, '*.py')):
         print('Checking ', mf, 'for operators')
@@ -519,6 +513,25 @@ def _extract_from_toolkit(args):
     extractor._setup_info_xml(langList)
 
     extractor._make_toolkit()
+
+    _reset_path(path_items)
+
+def _setup_path(tk_dir, tk_streams):
+    sys.path.insert(1, tk_streams)
+    items = [tk_streams]
+    tk_packages = os.path.join(tk_dir, 'opt', 'python', 'packages')
+    if os.path.isdir(tk_packages):
+        sys.path.insert(1, tk_packages)
+        items.append(tk_packages)
+    tk_modules = os.path.join(tk_dir, 'opt', 'python', 'modules')
+    if os.path.isdir(tk_modules):
+        sys.path.insert(1, tk_modules)
+        items.append(tk_modules)
+    return items
+
+def _reset_path(items):
+    for p in items:
+        sys.path.remove(p)
 
 def main(args=None):
     _extract_from_toolkit(args)
