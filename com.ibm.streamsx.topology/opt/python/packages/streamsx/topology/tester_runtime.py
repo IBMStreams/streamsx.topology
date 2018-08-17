@@ -48,7 +48,7 @@ class Condition(object):
     def __init__(self, name=None):
         self.name = name
 
-    def attach(self, stream):
+    def _attach(self, stream):
         """Attach the condition to the ``stream``.  
         
         Args:
@@ -56,19 +56,19 @@ class Condition(object):
             applies.  If the condition applies to the topology as a whole 
             rather than to a specific stream, ``stream`` can be ``None``.
         """
-        raise NotImplementedException("attach must be defined in the derived class.")
+        raise NotImplementedException("_attach must be defined in the derived class.")
 
-class PythonCondition(Condition):
+class _PythonCondition(Condition):
     """A condition for testing based on a python callable.
     """
     
     def __init__(self, name=None):
-        super(PythonCondition, self).__init__(name)
+        super(_PythonCondition, self).__init__(name)
         self._starts_valid = False
         self._valid = False
         self._fail = False
 
-    def attach(self, stream):
+    def _attach(self, stream):
         cond_sink = stream.for_each(self, self.name)
         cond_sink.colocate(stream)
         cond_sink.category = 'Tester'
@@ -103,7 +103,7 @@ class PythonCondition(Condition):
         self.valid = False
         self._fail = True
         if (ec.is_standalone()):
-            raise AssertionError("PythonCondition failed:" + str(self))
+            raise AssertionError("Condition failed:" + str(self))
 
     def __getstate__(self):
         # Remove metrics from saved state.
@@ -129,12 +129,12 @@ class PythonCondition(Condition):
     def __exit__(self, exc_type, exc_value, traceback):
         if (ec.is_standalone()):
             if not self._fail and not self.valid:
-                raise AssertionError("PythonCondition failed:" + str(self))
+                raise AssertionError("Condition failed:" + str(self))
 
     def _create_metric(self, mt, kind=None):
         return ec.CustomMetric(self, name=Condition._mn(mt, self.name), kind=kind)
 
-class _TupleExactCount(PythonCondition):
+class _TupleExactCount(_PythonCondition):
     def __init__(self, target, name=None):
         super(_TupleExactCount, self).__init__(name)
         self.target = target
@@ -150,7 +150,7 @@ class _TupleExactCount(PythonCondition):
     def __str__(self):
         return "Exact tuple count: expected:" + str(self.target) + " received:" + str(self.count)
 
-class _TupleAtLeastCount(PythonCondition):
+class _TupleAtLeastCount(_PythonCondition):
     def __init__(self, target, name=None):
         super(_TupleAtLeastCount, self).__init__(name)
         self.target = target
@@ -164,7 +164,7 @@ class _TupleAtLeastCount(PythonCondition):
     def __str__(self):
         return "At least tuple count: expected:" + str(self.target) + " received:" + str(self.count)
 
-class _StreamContents(PythonCondition):
+class _StreamContents(_PythonCondition):
     def __init__(self, expected, name=None):
         super(_StreamContents, self).__init__(name)
         self.expected = expected
@@ -204,7 +204,7 @@ class _UnorderedStreamContents(_StreamContents):
                 return True
         return False
 
-class _TupleCheck(PythonCondition):
+class _TupleCheck(_PythonCondition):
     def __init__(self, checker, name=None):
         super(_TupleCheck, self).__init__(name)
         self.checker = checker
@@ -228,12 +228,12 @@ class _Resetter(Condition):
         self.topology = topology
         self.minimum_resets = minimum_resets
         
-    def attach(self, stream):
+    def _attach(self, stream):
         params = {'minimumResets': self.minimum_resets, 'conditionName': self.CONDITION_NAME}
         resetter = streamsx.spl.op.Invoke(self.topology, "com.ibm.streamsx.topology.testing.consistent::Resetter", params=params, name="ConsistentRegionResetter")
         
 
-class _RunFor(PythonCondition):
+class _RunFor(_PythonCondition):
     def __init__(self, duration):
         super(_RunFor, self).__init__("TestRunTime")
         self.duration = duration
