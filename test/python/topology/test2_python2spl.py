@@ -16,6 +16,8 @@ Test that we can covert Python streams to SPL tuples.
 class TestPython2SPL(unittest.TestCase):
     """ Test invocations handling of SPL schemas in Python ops.
     """
+    _multiprocess_can_split_ = True
+
     def setUp(self):
         Tester.setup_standalone(self)
 

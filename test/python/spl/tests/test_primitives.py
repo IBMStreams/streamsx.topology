@@ -20,6 +20,9 @@ class TestPrimitives(unittest.TestCase):
     """ 
     Test @spl.primitive_operator decorated operators
     """
+
+    _multiprocess_can_split_ = True
+
     @classmethod
     def setUpClass(cls):
         """Extract Python operators in toolkit"""
@@ -145,6 +148,8 @@ class TestPrimitives(unittest.TestCase):
 # With output ports it's easier to test thus can use standalone.
 #
 class TestPrimitivesOutputs(unittest.TestCase):
+    _multiprocess_can_split_ = True
+
     @classmethod
     def setUpClass(cls):
         """Extract Python operators in toolkit"""

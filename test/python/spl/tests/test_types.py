@@ -20,6 +20,8 @@ import streamsx.scripts.extract
 import spl_tests_utils as stu
 
 class TestTypes(unittest.TestCase):
+    _multiprocess_can_split_ = True
+
     """ Type tests.
     """
     @classmethod

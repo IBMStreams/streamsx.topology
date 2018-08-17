@@ -29,6 +29,8 @@ class AddIt(object):
 class TestSubmissionParams(unittest.TestCase):
     """ Test submission params (distributed).
     """
+    _multiprocess_can_split_ = True
+
     def setUp(self):
         Tester.setup_standalone(self)
 
