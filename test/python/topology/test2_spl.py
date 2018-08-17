@@ -37,6 +37,8 @@ class TestParseOption(IntEnum):
 class TestSPL(unittest.TestCase):
     """ Test invocations of SPL operators from Python topology.
     """
+    _multiprocess_can_split_ = True
+
     def setUp(self):
         Tester.setup_standalone(self)
 
@@ -256,6 +258,8 @@ GOOD_DATA = {
 class TestConversion(unittest.TestCase):
     """ Test conversions of Python values to SPL attributes/types.
     """
+    _multiprocess_can_split_ = True
+
     def setUp(self):
         Tester.setup_standalone(self)
 

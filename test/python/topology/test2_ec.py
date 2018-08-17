@@ -112,6 +112,7 @@ def get_sys_argv():
     return sys_ec_test.argv
 
 class TestEc(unittest.TestCase):
+  _multiprocess_can_split_ = True
 
   def setUp(self):
       Tester.setup_standalone(self)
