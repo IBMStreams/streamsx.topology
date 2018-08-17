@@ -63,6 +63,7 @@ class Timestamp(streamsx.spl.runtime._Timestamp):
     def from_datetime(dt, machine_id=0):
         """
         Convert a datetime to an SPL `Timestamp`.
+        
         Args:
            dt(datetime.datetime): Datetime to be converted.
            machine_id(int): Machine identifier.

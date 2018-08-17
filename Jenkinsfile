@@ -16,15 +16,13 @@ pipeline {
          sh 'ci/test_java_standalone.sh'
        }
     }
-    stage ('Python tests') {
-      parallel {
     stage('Python 3.6 standalone') {
        steps {
          sh 'ci/test_python36_standalone.sh'
        }
     }
     stage('Python 3.5 standalone') {
-       when { anyOf { branch 'master'; branch 'feature/*' } }
+       when { anyOf { branch 'DISABLE_master'; branch 'DISABLE_feature/*' } }
        steps {
          sh 'ci/test_python35_standalone.sh'
        }
@@ -35,12 +33,43 @@ pipeline {
          sh 'ci/test_python27_standalone.sh'
        }
     }
-      }
-    }
   }
   post {
     always {
       junit "test/**/TEST-*.xml"
+      publishHTML (target: [
+          reportName: 'Java Coverage',
+          reportDir: 'test/java/report/coverage',
+          reportFiles: 'index.html',
+          keepAll: false,
+          alwaysLinkToLastBuild: true,
+          allowMissing: true
+      ])
+      publishHTML (target: [
+          reportName: 'Python 2.7 Coverage',
+          reportDir: 'test/python/nose_runs/py27/coverage',
+          reportFiles: 'index.html',
+          keepAll: false,
+          alwaysLinkToLastBuild: true,
+          allowMissing: true
+      ])
+      publishHTML (target: [
+          reportName: 'Python 3.6 Coverage',
+          reportDir: 'test/python/nose_runs/py36/coverage',
+          reportFiles: 'index.html',
+          keepAll: false,
+          alwaysLinkToLastBuild: true,
+          allowMissing: true
+      ])
+    }
+    fixed {
+      slackSend (color: 'good', message: "FIXED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+    }
+    unstable {
+      slackSend (color: 'warning', message: "UNSTABLE: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
+    }
+    failure {
+      slackSend (color: 'danger', message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})")
     }
   }
 }

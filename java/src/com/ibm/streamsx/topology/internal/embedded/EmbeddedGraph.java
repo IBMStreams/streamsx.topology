@@ -120,6 +120,8 @@ public class EmbeddedGraph {
     }
     
     public OperatorGraph declareGraph() throws Exception {
+        assert graphDecl == null;
+        
         graphDecl = OperatorGraphFactory.newGraph();
         
         declareOps();

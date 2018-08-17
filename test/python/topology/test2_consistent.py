@@ -87,8 +87,13 @@ class StatefulDelay(object):
 # Do nothing, statefully.  This is used with for_each.  It seems not so
 # easy to test for_each.
 class StatefulNothing(object):
+    def __init__(self):
+        self._expected = 0
     def __call__(self, x):
-        pass
+        if x == self._expected:
+             self._expected += 1
+        else:
+            raise ValueError("Expected " + str(self._expected) + " got " + x)
 
 # Compute a hash code, statefully.  Again the state is not meaningful
 class StatefulStupidHash(object):
@@ -134,27 +139,22 @@ class TestDistributedConsistentRegion(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)
 
-    def add_resetter(self, topo, minimumResets=3): 
-        params = {'minimumResets': minimumResets, 'conditionName': 'resetter'}
-        resetter = op.Invoke(topo, "com.ibm.streamsx.topology.testing.consistent::Resetter", inputs=None, schemas=None, params=params, name="ConsistentRegionResetter")
-        return resetter
-
     # Source operator
     def test_source(self):
         topo = Topology("test")
         
         s = topo.source(TimeCounter(iterations=30, period=0.1))
         s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
-        self.add_resetter(topo)
 
         tester = Tester(topo)
         tester.contents(s, range(0,30))
+        tester.resets(3)
 
         cfg={}
         job_config = streamsx.topology.context.JobConfig(tracing='debug')
         job_config.add(self.test_config)
 
-        tester.test(self.test_ctxtype, self.test_config, always_collect_logs=True)
+        tester.test(self.test_ctxtype, self.test_config)
 
     # Source, ForEach, Filter, Aggregate operators
     # (based on test2_python_window.TestPythonWindowing.test_basicCountCountWindow)
@@ -163,7 +163,6 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         # Generate integers from [0,30)
         s = topo.source(TimeCounter(iterations=30, period=0.1))
         s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
-        self.add_resetter(topo)
 
         # Filter the odd ones 
         s = s.filter(StatefulEvenFilter())
@@ -171,6 +170,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         s = s.map(StatefulHalfPlusOne())
         s = s.last(10).trigger(2).aggregate(StatefulAverage())
         tester = Tester(topo)
+        tester.resets(3)
         tester.contents(s, [1.5,2.5,3.5,4.5,5.5,7.5,9.5])
         tester.test(self.test_ctxtype, self.test_config)
         
@@ -182,12 +182,11 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         lines = topo.source(ListIterator(["mary had a little lamb", "its fleece was white as snow"]))
         lines.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
 
-        self.add_resetter(topo)
-
         # slow things down so checkpoints can be taken.
         lines = lines.filter(StatefulDelay(0.5)) 
         words = lines.flat_map(StatefulSplit())
         tester = Tester(topo)
+        tester.resets(3)
         tester.contents(words, ["mary","had","a","little","lamb","its","fleece","was","white","as","snow"])
         tester.test(self.test_ctxtype, self.test_config)
 
@@ -197,7 +196,6 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         topo = Topology("test_hash_adder")
         s = topo.source(TimeCounter(iterations=30, period=0.1))
         s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
-        self.add_resetter(topo)
 
         width =  3
         s = s.parallel(width, Routing.HASH_PARTITIONED, StatefulStupidHash())
@@ -209,18 +207,20 @@ class TestDistributedConsistentRegion(unittest.TestCase):
             expected.append((v + 23))
 
         tester = Tester(topo)
+        tester.resets(3)
         tester.contents(s, expected, ordered=width==1)
         tester.test(self.test_ctxtype, self.test_config)
             
     # Test for_each.  This is a sink. 
     def test_for_each(self):
+        N = 3000
         topo = Topology("test")
-        s = topo.source(TimeCounter(iterations=30, period=0.1))
+        s = topo.source(TimeCounter(iterations=N, period=0.01))
         s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
-        self.add_resetter(topo)
 
         s.for_each(StatefulNothing())
         tester = Tester(topo)
+        tester.resets()
         tester.test(self.test_ctxtype, self.test_config)
 
 

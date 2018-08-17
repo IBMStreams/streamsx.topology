@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016
+# Copyright IBM Corp. 2016,2018
 from __future__ import print_function
 import unittest
 import sys
@@ -8,8 +8,7 @@ import itertools
 from enum import IntEnum
 import datetime
 import decimal
-
-import vers_utils
+import os
 
 from streamsx.topology.schema import StreamSchema
 from streamsx.topology.topology import *
@@ -80,11 +79,11 @@ class TestSPL(unittest.TestCase):
         tester.contents(s, [0, 4, 8, 12, 16, 20, 24])
         tester.test(self.test_ctxtype, self.test_config)
 
-    @unittest.skipIf(not vers_utils.optional_type_supported() , "Optional type not supported")
     def test_map_attr_opt(self):
         """Test a Source and a Map operator with optional types.
            Including with operator parameters and output clauses.
         """
+        Tester.require_streams_version(self, '4.3')
         topo = Topology('test_map_attr_opt')
         this_dir = os.path.dirname(os.path.realpath(__file__))
         spl_dir = os.path.join(os.path.dirname(os.path.dirname(this_dir)), 'spl')
@@ -307,3 +306,25 @@ class TestConversion(unittest.TestCase):
                 tester.tuple_count(c, len(data))
                 tester.contents(c, expected)
                 tester.test(self.test_ctxtype, self.test_config)
+
+import shutil
+import uuid
+import subprocess
+@unittest.skipIf('STREAMS_INSTALL' not in os.environ, 'STREAMS_INSTALL not set')
+class TestMainComposite(unittest.TestCase):
+    def test_main_composite(self):
+        si = os.environ['STREAMS_INSTALL']
+        tkl = 'tkl_mc_' + str(uuid.uuid4().hex)
+        this_dir = os.path.dirname(os.path.realpath(__file__))
+        shutil.copytree(os.path.join(this_dir, 'spl_mc'), tkl)
+        ri = subprocess.call([os.path.join(si, 'bin', 'spl-make-toolkit'), '-i', tkl])
+        self.assertEqual(0, ri)
+        r = op.main_composite(kind='app::MyMain', toolkits=[tkl])
+        self.assertIsInstance(r, tuple)
+        self.assertIsInstance(r[0], Topology)
+        self.assertIsInstance(r[1], op.Invoke)
+        rc = streamsx.topology.context.submit('BUNDLE', r[0])
+        self.assertEqual(0, rc['return_code'])
+        shutil.rmtree(tkl)
+        os.remove(rc['bundlePath'])
+        os.remove(rc['jobConfigPath'])
