@@ -20,6 +20,9 @@ class TestSources(unittest.TestCase):
     """ 
     Test @spl.source decorated operators
     """
+
+    _multiprocess_can_split_ = True
+
     @classmethod
     def setUpClass(cls):
         """Extract Python operators in toolkit"""

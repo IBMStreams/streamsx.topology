@@ -16,6 +16,8 @@ import test_package.test_subpackage.test_module
 import test2_pkg_helpers
 
 class TestPackages(unittest.TestCase):
+  _multiprocess_can_split_ = True
+
   def setUp(self):
       Tester.setup_standalone(self)
 

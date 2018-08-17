@@ -51,6 +51,7 @@ def s2_hash(t):
     return hash(t['s2'])
 
 class TestUDP(unittest.TestCase):
+  _multiprocess_can_split_ = True
 
   # Fake out subTest
   if sys.version_info.major == 2:

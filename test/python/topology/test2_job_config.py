@@ -14,6 +14,8 @@ from streamsx import rest
 from streamsx.rest_primitives import _IAMConstants
 
 class TestJobConfig(unittest.TestCase):
+  _multiprocess_can_split_ = True
+
   def setUp(self):
       Tester.setup_streaming_analytics(self, force_remote_build=True)
       sc = rest.StreamingAnalyticsConnection()
