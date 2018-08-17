@@ -11,6 +11,7 @@ if sys.version_info.major == 2:
   import funcsigs
 import imp
 import glob
+import fcntl
 import fnmatch
 import os
 import shutil
@@ -496,29 +497,56 @@ def _extract_from_toolkit(args):
         # Nothing to do for Python extraction
         extractor._make_toolkit()
         return
-    sys.path.insert(1, tk_streams)
 
+    lf = os.path.join(tk_streams, '.lockfile')
+    with  open(lf, 'w') as lfno:
+        fcntl.flock(lfno, fcntl.LOCK_EX)
+
+        tk_idx = os.path.join(tk_dir, 'toolkit.xml')
+        tk_time = os.path.getmtime(tk_idx) if os.path.exists(tk_idx) else None
+        changed = False if tk_time else True
+        if tk_time:
+            for mf in glob.glob(os.path.join(tk_streams, '*.py')):
+               if os.path.getmtime(mf) >= tk_time:
+                   changed = True
+
+        if changed:
+            path_items = _setup_path(tk_dir, tk_streams)
+
+            for mf in glob.glob(os.path.join(tk_streams, '*.py')):
+                print('Checking ', mf, 'for operators')
+                name  = inspect.getmodulename(mf)
+                dynm = imp.load_source(name, mf)
+                streams_python_file = inspect.getsourcefile(dynm)
+                extractor._process_operators(dynm, name, streams_python_file, inspect.getmembers(dynm, inspect.isfunction))
+                extractor._process_operators(dynm, name, streams_python_file, inspect.getmembers(dynm, inspect.isclass))
+
+            langList = extractor._copy_globalization_resources()
+            if extractor._cmd_args.verbose:
+                print("Available languages for TopologySplpy resource:", langList)
+            extractor._setup_info_xml(langList)
+
+            extractor._make_toolkit()
+
+            _reset_path(path_items)
+            fcntl.flock(lfno, fcntl.LOCK_UN)
+
+def _setup_path(tk_dir, tk_streams):
+    sys.path.insert(1, tk_streams)
+    items = [tk_streams]
     tk_packages = os.path.join(tk_dir, 'opt', 'python', 'packages')
     if os.path.isdir(tk_packages):
         sys.path.insert(1, tk_packages)
+        items.append(tk_packages)
     tk_modules = os.path.join(tk_dir, 'opt', 'python', 'modules')
     if os.path.isdir(tk_modules):
         sys.path.insert(1, tk_modules)
+        items.append(tk_modules)
+    return items
 
-    for mf in glob.glob(os.path.join(tk_streams, '*.py')):
-        print('Checking ', mf, 'for operators')
-        name  = inspect.getmodulename(mf)
-        dynm = imp.load_source(name, mf)
-        streams_python_file = inspect.getsourcefile(dynm)
-        extractor._process_operators(dynm, name, streams_python_file, inspect.getmembers(dynm, inspect.isfunction))
-        extractor._process_operators(dynm, name, streams_python_file, inspect.getmembers(dynm, inspect.isclass))
-
-    langList = extractor._copy_globalization_resources()
-    if extractor._cmd_args.verbose:
-        print("Available languages for TopologySplpy resource:", langList)
-    extractor._setup_info_xml(langList)
-
-    extractor._make_toolkit()
+def _reset_path(items):
+    for p in items:
+        sys.path.remove(p)
 
 def main(args=None):
     _extract_from_toolkit(args)
