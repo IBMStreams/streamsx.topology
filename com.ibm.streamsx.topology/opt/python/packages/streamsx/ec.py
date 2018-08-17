@@ -323,6 +323,17 @@ class CustomMetric(object):
 
     Custom metrics are exposed through the IBM Streams monitoring APIs.
 
+    Metric ``name`` is unique within the execution context of the
+    callable ``obj``. Attempts to create multiple metrics with the
+    same name but different kinds will raise an exception. Multiple
+    creations of a metric of the same name and kind all refer to
+    the same metric, the first creation is the only one that will
+    set the initial value.
+
+    The metric's value is assigned through the ``value`` property
+    and can be modified through ``+=`` and ``-=``. ``CustomMetric``
+    can also be converted to an ``int``.
+    
     Args:
         obj: Instance of a class executing within Streams.
         name(str): Name of the custom metric.
@@ -398,12 +409,12 @@ class CustomMetric(object):
         return "{0}({1}):{2}".format(self.name, self.kind.name,self.value)
 
     def __iadd__(self, other):
-        """
-        Increment the current value of the metric.
-        """
         args = (self.__ptr, int(other))
         _ec.metric_inc(args)
         return self
+
+    def __isub__(self, other):
+        return self.__iadd__(-int(other))
 
     def __int__(self):
         return self.value
