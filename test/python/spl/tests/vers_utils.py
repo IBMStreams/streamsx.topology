@@ -1,1 +1,0 @@
-../../topology/vers_utils.py

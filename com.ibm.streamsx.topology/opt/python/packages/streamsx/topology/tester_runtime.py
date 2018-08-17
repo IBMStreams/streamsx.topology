@@ -32,12 +32,8 @@ import collections
 import threading
 import time
 
-# the base class of Condition
-class BaseCondition(object):
-    def __init__(self, name=None):
-        self.name = name
 
-class Condition(BaseCondition):
+class Condition(object):
     """A condition for testing.
 
     Args:
@@ -50,9 +46,29 @@ class Condition(BaseCondition):
         return Condition._METRIC_PREFIX + mt + ":" + name
 
     def __init__(self, name=None):
-        super(Condition, self).__init__(name)
+        self.name = name
 
-    def create(self, stream):
+    def attach(self, stream):
+        """Attach the condition to the ``stream``.  
+        
+        Args:
+          stream(streamsx.topology.topology.Stream): The stream to which the conditions 
+            applies.  If the condition applies to the topology as a whole 
+            rather than to a specific stream, ``stream`` can be ``None``.
+        """
+        raise NotImplementedException("attach must be defined in the derived class.")
+
+class PythonCondition(Condition):
+    """A condition for testing based on a python callable.
+    """
+    
+    def __init__(self, name=None):
+        super(PythonCondition, self).__init__(name)
+        self._starts_valid = False
+        self._valid = False
+        self._fail = False
+
+    def attach(self, stream):
         cond_sink = stream.for_each(self, self.name)
         cond_sink.colocate(stream)
         cond_sink.category = 'Tester'
@@ -204,32 +220,20 @@ class _TupleCheck(PythonCondition):
         return "Tuple checker:" + str(self.checker)
 
 
-<<<<<<< HEAD
 class _Resetter(Condition):
-=======
-class _Resetter(BaseCondition):
->>>>>>> 62d6d51... Consistent region resetter integrated with tester (needs cleanup)
     CONDITION_NAME = "ConditionRegionResetter"
 
-    def __init__(self, topology, minimumResets=10):
+    def __init__(self, topology, minimum_resets):
         super(_Resetter, self).__init__(self.CONDITION_NAME)
         self.topology = topology
-        self.minimumResets = minimumResets
+        self.minimum_resets = minimum_resets
         
-<<<<<<< HEAD
     def attach(self, stream):
-=======
-    def create(self, stream):
->>>>>>> 62d6d51... Consistent region resetter integrated with tester (needs cleanup)
-        params = {'minimumResets': self.minimumResets, 'conditionName': self.CONDITION_NAME}
-        resetter = streamsx.spl.op.Invoke(self.topology, "com.ibm.streamsx.topology.testing.consistent::Resetter", inputs=None, schemas=None, params=params, name="ConsistentRegionResetter")
+        params = {'minimumResets': self.minimum_resets, 'conditionName': self.CONDITION_NAME}
+        resetter = streamsx.spl.op.Invoke(self.topology, "com.ibm.streamsx.topology.testing.consistent::Resetter", params=params, name="ConsistentRegionResetter")
         
 
-<<<<<<< HEAD
 class _RunFor(PythonCondition):
-=======
-class _RunFor(Condition):
->>>>>>> 62d6d51... Consistent region resetter integrated with tester (needs cleanup)
     def __init__(self, duration):
         super(_RunFor, self).__init__("TestRunTime")
         self.duration = duration

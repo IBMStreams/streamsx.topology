@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.builder;
 
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.END_LOW_LATENCY;
 import static com.ibm.streamsx.topology.builder.BVirtualMarker.LOW_LATENCY;
+import static com.ibm.streamsx.topology.builder.BVirtualMarker.UNION;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND_CLASS;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
@@ -134,12 +135,7 @@ public class GraphBuilder extends BJSONObject {
     }
 
     public boolean isInLowLatencyRegion(BOutput output) {
-        BOperator op;
-        if (output instanceof BUnionOutput)
-            op = ((BUnionOutput) output).operator();
-        else
-            op = ((BOutputPort) output).operator();
-        return isInLowLatencyRegion(op);
+        return isInLowLatencyRegion(output.operator());
     }
     
     public boolean isInLowLatencyRegion(BOperator... operators) {
@@ -181,8 +177,24 @@ public class GraphBuilder extends BJSONObject {
     }
 
     public BOutput addUnion(Set<BOutput> outputs) {
-        BOperator op = addVirtualMarkerOperator(BVirtualMarker.UNION);
-        return new BUnionOutput(op, outputs);
+        
+        assert outputs.size() >= 2;
+        BOutput[] outs = new BOutput[outputs.size()];
+        outputs.toArray(outs);
+        
+        BOperatorInvocation op = addOperator(UNION.name(), UNION.kind(), null);
+        op._json().addProperty("marker", true);
+        op._json().addProperty(KIND_CLASS, JavaFunctionalOps.PASS_CLASS);
+        op.setModel(MODEL_VIRTUAL, LANGUAGE_JAVA);
+
+        // Create the input port that consumes the output
+        final BInputPort input = op.inputFrom(outs[0], null);
+        
+        for (int i = 1; i < outs.length; i++)
+            op.inputFrom(outs[i], input);
+
+        // Create the output port.
+        return op.addOutput(input._schema());
     }
 
     /**
@@ -237,12 +249,6 @@ public class GraphBuilder extends BJSONObject {
         BInputPort input = op.inputFrom(output, null);
         // Create the output port.
         return op.addOutput(input._schema());
-    }
-
-    public BOperator addVirtualMarkerOperator(BVirtualMarker kind) {
-        final BMarkerOperator op = new BMarkerOperator(this, kind);
-        ops.add(op);
-        return op;
     }
 
     public BOperatorInvocation addSPLOperator(String name, String kind,

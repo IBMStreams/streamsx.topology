@@ -5,8 +5,6 @@ import sys
 import itertools
 import threading
 
-import vers_utils
-
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology.schema import CommonSchema as cs
@@ -110,10 +108,10 @@ class TestSPL2Python(unittest.TestCase):
                 tester.tuple_count(b, 100)
                 tester.test(self.test_ctxtype, self.test_config)
 
-    @unittest.skipIf(not vers_utils.optional_type_supported() , "Optional type not supported")
     def test_map_opt(self):
         """Test optional type value and no value are passed correctly
         """
+        Tester.require_streams_version(self, '4.3')
         topo = Topology('test_map_opt')
         schema='tuple<optional<uint64> i>'
         b = op.Source(topo, "spl.utility::Beacon", schema,

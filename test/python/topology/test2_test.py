@@ -127,3 +127,53 @@ class TestCloudTester(TestTester):
     def setUp(self):
         Tester.setup_streaming_analytics(self)
 
+class TestVersioning(unittest.TestCase):
+    def test_minimum_check(self):
+         self.assertTrue(Tester._minimum_streams_version('4.2.0.0', '4.2.0.0'))
+         self.assertTrue(Tester._minimum_streams_version('4.2.0.0', '4.2.0'))
+         self.assertTrue(Tester._minimum_streams_version('4.2.0.0', '4.2'))
+
+         self.assertTrue(Tester._minimum_streams_version('4.2.0.0', '4.1.7.2'))
+         self.assertTrue(Tester._minimum_streams_version('4.2.0.0', '4.1.8'))
+         self.assertTrue(Tester._minimum_streams_version('4.2.0.0', '4.1'))
+
+         self.assertFalse(Tester._minimum_streams_version('4.2.0.0', '4.2.0.4'))
+         self.assertFalse(Tester._minimum_streams_version('4.2.0.0', '4.2.1.0'))
+         self.assertFalse(Tester._minimum_streams_version('4.2.0.0', '4.2.5'))
+         self.assertFalse(Tester._minimum_streams_version('4.2.0.0', '4.3'))
+
+    # assumes we only test against 4.2 or later
+    def test_product_check_standalone(self):
+         Tester.setup_standalone(self)
+         self.assertTrue(Tester.minimum_streams_version(self, '4.2.0.0'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.2.0'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.2'))
+
+         self.assertTrue(Tester.minimum_streams_version(self, '4.1.3.0'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.1.8'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.1'))
+
+    # assumes we only test against 4.2 or later
+    def test_product_check_distributed(self):
+         Tester.setup_distributed(self)
+         self.assertTrue(Tester.minimum_streams_version(self, '4.2.0.0'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.2.0'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.2'))
+
+         self.assertTrue(Tester.minimum_streams_version(self, '4.1.3.0'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.1.8'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.1'))
+
+    # assumes we only test against 4.2 or later
+    def test_product_check_service(self):
+         Tester.setup_streaming_analytics(self)
+         self.assertTrue(Tester.minimum_streams_version(self, '4.2.0.0'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.2.0'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.2'))
+
+         self.assertTrue(Tester.minimum_streams_version(self, '4.1.3.0'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.1.8'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.1'))
+
+    def test_product_check_no_setup(self):
+        self.assertRaises(ValueError, Tester.minimum_streams_version, self, '4.2.0.0')
