@@ -8,7 +8,7 @@ set -x
 # Clean the extracted toolkits to avoid artifacts from
 # previous runs with different Python versions.
 cd $WORKSPACE/test/python/spl
-find . -name 'toolkit.xml' | xargs rm
+find testtkpy* -name 'toolkit.xml' | xargs rm
 
 cd $WORKSPACE/test/python
 pyv=`$PYTHONHOME/bin/python -c 'import sys; print(str(sys.version_info.major)+str(sys.version_info.minor))'`
