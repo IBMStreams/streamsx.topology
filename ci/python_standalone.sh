@@ -19,3 +19,6 @@ export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/test/python/topology:${WORKSPACE}/t
 wd="$WORKSPACE/test/python/nose_runs/py${pyv}"
 mkdir -p ${wd}
 nosetests --where=${wd} --xunit-file ${xuf} --xunit-testsuite-name="py${pyv}" --config=nose.cfg ../../topology ../../spl/tests
+nrc=$?
+# Ensure only test failures just cause an unstable build.
+if [ ${nrc} -eq 1 ] && [ -e  ${xuf} ]; then exit 0; else exit ${nrc}; fi
