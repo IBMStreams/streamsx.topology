@@ -15,6 +15,8 @@ import streamsx.spl.op as op
 
 
 class TestPending(unittest.TestCase):
+    _multiprocess_can_split_ = True
+
     """ Test pending connections.
     """
     def setUp(self):

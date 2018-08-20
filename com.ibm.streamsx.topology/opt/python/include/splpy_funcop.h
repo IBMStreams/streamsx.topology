@@ -126,7 +126,7 @@ class SplpyFuncOp : public SplpyOp {
             streamsx::topology::pyUnicode_FromUTF8(param("toolkitDir"));
 
           SplpyGeneral::callVoidFunction(
-              "streamsx.topology.runtime", "setupOperator", tkDir, NULL);
+              "streamsx._streams._runtime", "_setup_operator", tkDir, NULL);
       }
 
 };

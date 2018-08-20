@@ -13,6 +13,8 @@ import streamsx.ec as ec
 
 
 class TestUnicode(unittest.TestCase):
+    _multiprocess_can_split_ = True
+
     def setUp(self):
         Tester.setup_standalone(self)
 

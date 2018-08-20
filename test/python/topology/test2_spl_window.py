@@ -15,6 +15,8 @@ import streamsx.spl.op as op
 class TestSPLWindow(unittest.TestCase):
     """ Test invocations of SPL operators from Python topology.
     """
+    _multiprocess_can_split_ = True
+
     # Fake out subTest
     if sys.version_info.major == 2:
         def subTest(self, **args): return threading.Lock()

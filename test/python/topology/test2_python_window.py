@@ -115,6 +115,8 @@ class TupleTimespanCheck(object):
 within_tolerance = lambda val, tol, exp: val < exp + (tol*exp) and val > exp - (tol*exp)
 
 class TestPythonWindowing(unittest.TestCase):
+    _multiprocess_can_split_ = True
+
     def setUp(self):
         Tester.setup_standalone(self)
 

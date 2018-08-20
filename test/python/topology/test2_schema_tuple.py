@@ -79,6 +79,8 @@ class check_is_tuple_map_to_json(check_for_tuple_type):
 class TestSchemaTuple(unittest.TestCase):
     """ Test invocations handling of SPL schemas in Python ops.
     """
+    _multiprocess_can_split_ = True
+
     def setUp(self):
         Tester.setup_standalone(self)
 

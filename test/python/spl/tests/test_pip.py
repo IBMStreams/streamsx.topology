@@ -32,6 +32,9 @@ class TestLocal(unittest.TestCase):
 class TestPipInstalls(unittest.TestCase):
     """ Test remote pip install of packages.
     """
+
+    _multiprocess_can_split_ = True
+
     @classmethod
     def setUpClass(cls):
         """Extract Python operators in toolkit"""

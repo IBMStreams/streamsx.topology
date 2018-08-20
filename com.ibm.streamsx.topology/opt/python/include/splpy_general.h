@@ -359,7 +359,7 @@ class SplpyGeneral {
          msg << "Fatal error: function " << fn << " in module " << mn << " not callable.";
          throw SplpyGeneral::generalException("setup", msg.str());
         }
-        SPLAPPTRC(L_INFO, "Callable function: " << fn, "python");
+        SPLAPPTRC(L_DEBUG, "Callable function: " << fn, "python");
         return function;
       }
     static PyObject * loadFunctionGIL(const std::string & mn, const std::string & fn)
@@ -381,7 +381,7 @@ class SplpyGeneral {
         SPLAPPLOG(L_ERROR, TOPOLOGY_IMPORT_MODULE_ERROR(mn), "python");
         throw SplpyGeneral::pythonException(mn);
       }
-      SPLAPPLOG(L_INFO, TOPOLOGY_IMPORT_MODULE(mn), "python");
+      SPLAPPLOG(L_DEBUG, TOPOLOGY_IMPORT_MODULE(mn), "python");
       return module;
     }
 
