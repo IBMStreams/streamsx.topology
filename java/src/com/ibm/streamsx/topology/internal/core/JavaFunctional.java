@@ -27,6 +27,7 @@ import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.internal.functional.FunctionalOpProperties;
 import com.ibm.streamsx.topology.internal.functional.ObjectSchemas;
 import com.ibm.streamsx.topology.internal.logic.ObjectUtils;
+import com.ibm.streamsx.topology.spi.runtime.TupleSerializer;
 
 /**
  * Maintains the core core for building a topology of Java streams.
@@ -85,13 +86,18 @@ public class JavaFunctional {
      * type.
      */
     public static <T> TStream<T> addJavaOutput(TopologyElement te,
-            BOperatorInvocation bop, Type tupleType, boolean singlePort)  {
+            BOperatorInvocation bop, Type tupleType, boolean singlePort) {
+        return addJavaOutput(te, bop, tupleType, Optional.empty(), singlePort);
+    }
+    public static <T> TStream<T> addJavaOutput(TopologyElement te,
+            BOperatorInvocation bop, Type tupleType, 
+            Optional<TupleSerializer> serializer, boolean singlePort)  {
         
         String mappingSchema = ObjectSchemas.getMappingSchema(tupleType);
         BOutputPort bstream = bop.addOutput(mappingSchema,
                 singlePort ? Optional.of(bop.name()) : Optional.empty());
         
-        return getJavaTStream(te, bop, bstream, tupleType);
+        return getJavaTStream(te, bop, bstream, tupleType, serializer);
     }
     
     /**
@@ -99,18 +105,20 @@ public class JavaFunctional {
      * Multiple streams can be added to an output port.
      */
     public static <T> TStream<T> getJavaTStream(TopologyElement te,
-            BOperatorInvocation bop, BOutputPort bstream, Type tupleType) {
+            BOperatorInvocation bop, BOutputPort bstream, Type tupleType,
+            Optional<TupleSerializer> serializer) {
         if (tupleType != null)
             bstream.setNativeType(tupleType);
         addDependency(te, bop, tupleType);
+        if (serializer.isPresent())
+            addDependency(te, bop, serializer.get());
         
         // If the stream is just a Java object as a blob
         // then don't allow them to be viewed.
         if (!VIEWABLE_TYPES.contains(tupleType)) {
             bop.addConfig("streamViewability", false);
         }
-        return new StreamImpl<T>(te, bstream, tupleType);
-
+        return new StreamImpl<T>(te, bstream, tupleType, serializer);
     }
 
     /**

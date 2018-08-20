@@ -19,6 +19,8 @@ import uuid
 class TestPubSub(unittest.TestCase):
     """ Test publish/subscribe
     """
+    _multiprocess_can_split_ = True
+
     def setUp(self):
         Tester.setup_distributed(self)
 

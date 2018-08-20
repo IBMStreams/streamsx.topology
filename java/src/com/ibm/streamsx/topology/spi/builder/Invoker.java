@@ -7,6 +7,8 @@ package com.ibm.streamsx.topology.spi.builder;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.logic.ObjectUtils.serializeLogic;
 import static com.ibm.streamsx.topology.spi.builder.Utils.copyParameters;
+import static java.util.Optional.empty;
+import static java.util.Optional.ofNullable;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -66,15 +68,11 @@ public interface Invoker {
                 jstring(invokeInfo, "name"),
                 kind,
                 logic, parameters);
-        
-        if (outputSerializer != null) {
-            JavaFunctional.addDependency(topology, source, outputSerializer.getClass());
-        }
 
         // Extract any source location information from the config.
         SourceInfo.setInvocationInfo(source, invokeInfo);
 
-        return JavaFunctional.addJavaOutput(topology, source, tupleType, true);
+        return JavaFunctional.addJavaOutput(topology, source, tupleType, ofNullable(outputSerializer), true);
     }
     
     /**
@@ -94,6 +92,11 @@ public interface Invoker {
             Consumer<T> logic,
             TupleSerializer tupleSerializer,
             Map<String,Object> parameters) {
+        
+        parameters = copyParameters(parameters);
+        
+        if (tupleSerializer != null)          
+            parameters.put("inputSerializer", serializeLogic(tupleSerializer));
         
         BOperatorInvocation forEach = JavaFunctional.addFunctionalOperator(
                 stream,
@@ -151,16 +154,14 @@ public interface Invoker {
         if (inputSerializer != null) {
             JavaFunctional.addDependency(stream, pipe, inputSerializer.getClass());
         }
-        if (outputSerializer != null) {
-            JavaFunctional.addDependency(stream, pipe, outputSerializer.getClass());
-        }
 
         // Extract any source location information from the config.
         SourceInfo.setInvocationInfo(pipe, invokeInfo);
         
         stream.connectTo(pipe, true, null);
         
-        return JavaFunctional.addJavaOutput(stream, pipe, tupleType, true);
+        return JavaFunctional.addJavaOutput(stream, pipe,
+                tupleType, ofNullable(outputSerializer), true);
     }
     
     /**
@@ -194,6 +195,9 @@ public interface Invoker {
         parameters = copyParameters(parameters);
         
         if (inputSerializers != null && !inputSerializers.isEmpty()) {
+            
+            assert streams.size() == inputSerializers.size();
+                      
             String[] serializers = new String[inputSerializers.size()];
             for (int i = 0; i < serializers.length; i++) {
                 TupleSerializer serializer = inputSerializers.get(i);
@@ -207,6 +211,9 @@ public interface Invoker {
         }
         
         if (outputSerializers != null && !outputSerializers.isEmpty()) {
+            
+            assert tupleTypes.size() == outputSerializers.size();
+            
             String[] serializers = new String[outputSerializers.size()];
             for (int i = 0; i < serializers.length; i++) {
                 TupleSerializer serializer = outputSerializers.get(i);
@@ -229,11 +236,6 @@ public interface Invoker {
                 if (serializer != null)
                     JavaFunctional.addDependency(te, primitive, serializer.getClass());
         }
-        if (outputSerializers != null) {
-            for (TupleSerializer serializer : outputSerializers)
-                if (serializer != null)
-                    JavaFunctional.addDependency(te, primitive, serializer.getClass());
-        }
 
         // Extract any source location information from the config.
         SourceInfo.setInvocationInfo(primitive, invokeInfo);
@@ -245,8 +247,10 @@ public interface Invoker {
         
         if (tupleTypes != null) {       
             outputs = new ArrayList<>(tupleTypes.size());
-            for (Type tupleType : tupleTypes) {
+            for (int i = 0; i < tupleTypes.size(); i++) {
+                    Type tupleType = tupleTypes.get(i);
                 outputs.add(JavaFunctional.addJavaOutput(te, primitive, tupleType,
+                        outputSerializers == null ? empty() : ofNullable(outputSerializers.get(i)),
                         tupleTypes.size() == 1));
             }
         }

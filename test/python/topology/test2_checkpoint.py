@@ -120,6 +120,8 @@ class ListIterator(object):
     
 
 class TestCheckpointing(unittest.TestCase):
+    _multiprocess_can_split_ = True
+
     def setUp(self):
         Tester.setup_standalone(self)
 

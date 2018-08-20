@@ -106,6 +106,7 @@ def EEMSFunc(x):
     return None
 
 class TestSuppressMetricDistributed(unittest.TestCase):
+    _multiprocess_can_split_ = True
     def setUp(self):
         Tester.setup_distributed(self)
 

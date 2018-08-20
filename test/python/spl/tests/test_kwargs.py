@@ -18,6 +18,8 @@ import streamsx.scripts.extract
 import spl_tests_utils as stu
 
 class TestKWArgs(unittest.TestCase):
+    _multiprocess_can_split_ = True
+
     """ 
     Test decorated operators with **kwargs
     """

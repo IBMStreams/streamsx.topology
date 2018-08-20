@@ -174,13 +174,13 @@ class SplpySetup {
  
 #if PY_MAJOR_VERSION == 3
         // When SPL compile is optimized disable Python
-        // assertions, equivalent to -OO
+        // assertions, equivalent to -O
         // Seems to cause module loading issues from pyc files
         // on Python 2.7 so only optmize on Python 3
         if (SPL::ProcessingElement::pe().isOptimized()) {
            if (getenv("PYTHONOPTIMIZE") == NULL) {
-               SPLAPPTRC(L_DEBUG, "Setting optimized Python runtime (-OO)", "python");
-               setenv("PYTHONOPTIMIZE", "2", 1);
+               SPLAPPTRC(L_DEBUG, "Setting optimized Python runtime (-O)", "python");
+               setenv("PYTHONOPTIMIZE", "1", 1);
           }
         }
 #endif
