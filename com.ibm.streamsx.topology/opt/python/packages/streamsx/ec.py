@@ -462,6 +462,10 @@ def _shutdown_op(callable_, exc_info=None):
         return callable_._splpy_shutdown(exc_type, exc_value, traceback)
     return False
 
+def _startup_op(callable_):
+    if (hasattr(callable_, '_splpy_startup')):
+        callable_._splpy_startup()
+
 def _callable_enter(callable_):
     """Called at initialization time.
     """
@@ -483,7 +487,35 @@ def _callable_exit(callable_, exc_type, exc_value, traceback):
             callable_._splpy_entered = False
         return ignore
     return False
-        
+
+def _callable_after_reset(callable_):
+    logger = logging.getLogger('streamsx.topology.ec')
+    logger.info("_callable_after_reset: enter")
+    if hasattr(callable_, '_splpy_after_reset'):
+        logger.info("_callable_after_reset: _splpy_after_reset")
+        callable_._splpy_after_reset()
+    elif hasattr(callable_, '__enter__') and hasattr(callable_, '__exit__'):
+        logger.info("_callable_after_reset: callable_.__enter__")
+        callable_.__enter__()
+    else:
+        logger.info("_callable_after_reset: no recursion for " + callable_.__class__.__name__)
+
+    logger.info("_callable_after_reset: exit")
+
+def _callable_before_reset(callable_):
+    logger = logging.getLogger('streamsx.topology.ec')
+    logger.info("_callable_before_reset: enter")
+    if hasattr(callable_, '_splpy_before_reset'):
+        logger.info("_callable_before_reset: _splpy_before_reset")
+        callable_._splpy_before_reset()
+    elif hasattr(callable_, '__enter__') and hasattr(callable_, '__exit__'):
+        logger.info("_callable_before_reset: callable_.__exit__")
+        callable_.__exit__(None, None, None)
+    else:
+        logger.info("_callable_before_reset: no recursion for " + callable_.__class__.__name__)
+
+    logger.info("_callable_before_reset: exit")
+    
 def _submit(primitive, port_index, tuple_):
     """Internal method to submit a tuple"""
     args = (_get_opc(primitive), port_index, tuple_)

@@ -23,6 +23,7 @@ the runtime execution code from the test definition module
 from future.builtins import *
 
 import streamsx.ec as ec
+import streamsx.spl.op
 import streamsx.topology.context as stc
 import streamsx.spl.op
 import os

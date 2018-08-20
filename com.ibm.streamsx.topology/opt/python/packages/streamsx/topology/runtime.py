@@ -4,8 +4,10 @@
 from __future__ import unicode_literals
 from future.builtins import *
 
+import logging
 import os
 import sys
+import types
 import pickle
 from past.builtins import basestring
 
@@ -114,6 +116,16 @@ class _FunctionalCallable(object):
     def _splpy_shutdown(self, exc_type=None, exc_value=None, traceback=None):
         if self._cls:
             return ec._callable_exit(self._callable, exc_type, exc_value, traceback)
+
+    def _splpy_before_reset(self):
+        logger = logging.getLogger("streamsx.topology.runtime")
+        logger.info("_splpy_before_reset: enter " + self.__class__.__name__)
+        ec._callable_before_reset(self._callable)
+
+    def _splpy_after_reset(self):
+        logger = logging.getLogger("streamsx.topology.runtime")
+        logger.info("_splpy_after_reset: enter " + self.__class__.__name__)
+        ec._callable_after_reset(self._callable)
 
 class _PickleInObjectOut(_FunctionalCallable):
     def __call__(self, tuple_, pm=None):
@@ -465,6 +477,16 @@ class _WrappedInstance(object):
     
     def __exit__(self, exc_type, exc_value, traceback):
         return self._callable.__exit__(exc_type, exc_value, traceback)
+
+    def _splpy_before_reset(self):
+        logger = logging.getLogger("streamsx.topology.runtime")
+        logger.info("_splpy_before_reset: " + self.__class__.__name__)
+        ec._callable_before_reset(self._callable)
+
+    def _splpy_after_reset(self):
+        logger = logging.getLogger("streamsx.topology.runtime")
+        logger.info("_splpy_after_reset: " + self.__class__.__name__)
+        ec._callable_after_reset(self._callable);
 
 # Wraps an iterable instance returning
 # it when called. Allows an iterable
