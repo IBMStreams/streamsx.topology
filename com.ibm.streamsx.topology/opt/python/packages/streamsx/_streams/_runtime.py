@@ -18,6 +18,7 @@ def _add_to_sys_path(dir_):
     if os.path.isdir(dir_) and dir_ not in sys.path and os.listdir(dir_):
         _TRACE.debug('Inserting as first entry to sys.path: %s', dir_)
         sys.path.insert(0, dir_)
+        pkg_resources.working_set.add_entry(dir_)
         # In case a streamsx module (e.g. streamsx.bm) 
         # is included in the additional code
         if os.path.isdir(os.path.join(dir_, 'streamsx')):
@@ -47,11 +48,16 @@ class _Setup(object):
 
     @staticmethod
     def _add_output_packages(out_dir):
-        py_dir = os.path.join(out_dir, 'etc', 'streamsx.topology', 'python')
+        py_dir = _Setup._pip_base_dir(out_dir)
         vdir = 'python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor)
         site_pkg = os.path.join(py_dir, 'lib', vdir, 'site-packages')
         _add_to_sys_path(site_pkg)
         return site_pkg
+
+    @staticmethod
+    def _pip_base_dir(out_dir):
+        """Base Python directory for pip within the output directory"""
+        return os.path.join(out_dir, 'etc', 'streamsx.topology', 'python')
 
     @staticmethod
     def _trace_packages(bundle_site_dir):
@@ -59,13 +65,11 @@ class _Setup(object):
             return
 
         _TRACE.info('sys.path: %s', str(sys.path))
-        dists = pkg_resources.AvailableDistributions()
-        ids = list(dists)
-        ids.sort()
+        dists = list(pkg_resources.working_set)
+        dists.sort(key=lambda d : d.key)
         _TRACE.info('*** Python packages ***')
-        for id_ in ids:
-            for pkg in dists[id_]:
-                _TRACE.info(repr(pkg))
+        for pkg_ in dists:
+            _TRACE.info(repr(pkg_))
         _TRACE.info('*** End Python packages ***')
 
 
