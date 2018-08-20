@@ -87,6 +87,8 @@ class BadSourceNext(EnterExit):
 class TestBaseExceptions(unittest.TestCase):
     """ Test exceptions in callables
     """
+    _multiprocess_can_split_ = True
+
     def setUp(self):
         self.tf = _create_tf()
         Tester.setup_standalone(self)

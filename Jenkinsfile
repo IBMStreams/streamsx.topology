@@ -1,5 +1,9 @@
 pipeline {
   agent { label 'streamsx_public' }
+  environment {
+     VCAP_SERVICES = credentials('VCAP_SERVICES')
+     STREAMING_ANALYTICS_SERVICE_NAME = credentials('STREAMING_ANALYTICS_SERVICE_NAME')
+  }
   stages {
     stage('Build') {
       steps {
@@ -22,7 +26,7 @@ pipeline {
        }
     }
     stage('Python 3.5 standalone') {
-       when { anyOf { branch 'DISABLE_master'; branch 'DISABLE_feature/*' } }
+       when { anyOf { branch 'master'; branch 'feature/*' } }
        steps {
          sh 'ci/test_python35_standalone.sh'
        }

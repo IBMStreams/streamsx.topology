@@ -23,6 +23,7 @@ class CheckForEach(object):
         self.count += 1
 
 class TestJson(unittest.TestCase):
+    _multiprocess_can_split_ = True
 
     def setUp(self):
         Tester.setup_standalone(self)

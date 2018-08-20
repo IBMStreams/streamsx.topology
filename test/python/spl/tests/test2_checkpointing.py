@@ -18,6 +18,8 @@ import spl_tests_utils as stu
 # operators: source, map, filter, for_each, primitive_operator
 
 class TestCheckpointing(unittest.TestCase):
+    _multiprocess_can_split_ = True
+
     @classmethod
     def setUpClass(cls):
         """Extract Python operators in toolkit"""

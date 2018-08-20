@@ -7,6 +7,8 @@ import os
 import fnmatch
 
 class TestSubmissionResult(unittest.TestCase):
+    _multiprocess_can_split_ = True
+
     def setUp(self):
         Tester.setup_distributed(self)
         self.username = os.getenv("STREAMS_USERNAME", "streamsadmin")

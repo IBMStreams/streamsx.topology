@@ -94,8 +94,10 @@ public class InvokerTest extends TestTopology {
         }      
     }
        
-    //@Test
+    @Test
     public void testSource2PipeSerializers() throws Exception {
+        
+        assumeSPLOk();
 
         Topology topology = newTopology();
         SPL.addToolkit(topology, new File(getTestRoot(), "spl/testtk"));
@@ -122,7 +124,6 @@ public class InvokerTest extends TestTopology {
         sp = sp.isolate();
          
         TStream<String> ss = StringStreams.toString(sp);
-        sp.print();
         
         Tester tester = topology.getTester();
         
@@ -188,5 +189,140 @@ public class InvokerTest extends TestTopology {
         assertTrue(count.valid());
         assertTrue(contents.valid());
     }
+    
+    @Test
+    public void testParallelHashSerializersWithVirtuals() throws Exception {
+        
+        checkUdpSupported();
 
+        Topology topology = newTopology();
+        SPL.addToolkit(topology, new File(getTestRoot(), "spl/testtk"));
+        
+        JsonObject sname = new JsonObject();
+        sname.addProperty("name", "S1");
+        TStream<Byte> s = Invoker.invokeSource(topology, JavaFunctionalOps.SOURCE_KIND,
+                sname,
+                new ByteData(), Byte.class, new ByteSerializer(), null);
+        
+        JsonObject sname2 = new JsonObject();
+        sname2.addProperty("name", "S2");
+        TStream<Byte> s2 = Invoker.invokeSource(topology, JavaFunctionalOps.SOURCE_KIND,
+                sname2,
+                new ByteData(), Byte.class, new ByteSerializer(), null);
+        
+        s = s.union(s2);     
+        s = s.isolate();       
+        s = s.autonomous();
+        
+        s = s.lowLatency();
+        
+        JsonObject llname = new JsonObject();
+        llname.addProperty("name", "LL");
+        @SuppressWarnings("unchecked")
+        TStream<Byte> ll = (TStream<Byte>) Invoker.invokePipe(
+                "testjava::MyPipe",
+                s,
+                llname,
+                new ByteAdder(3), Byte.class,
+                new ByteSerializer(), new ByteSerializer(),
+                null);
+        s = ll.endLowLatency();
+             
+        s = s.parallel(() -> 3, Routing.HASH_PARTITIONED);
+        
+        JsonObject pname = new JsonObject();
+        pname.addProperty("name", "P");
+        @SuppressWarnings("unchecked")
+        TStream<Byte> sp = (TStream<Byte>) Invoker.invokePipe(
+                "testjava::MyPipe",
+                s,
+                pname,
+                new ByteAdder(29), Byte.class,
+                new ByteSerializer(), new ByteSerializer(),
+                null);
+         
+        
+        sp = sp.endParallel();
+        JsonObject fname = new JsonObject();
+        fname.addProperty("name", "F");
+        
+        @SuppressWarnings("unchecked")
+        TStream<Byte> fsp = (TStream<Byte>) Invoker.invokePipe(
+                "testjava::MyPipe",
+                sp,
+                pname,
+                new ByteAdder(0), Byte.class,
+                new ByteSerializer(), null,
+                null);
+        
+        TStream<String> ss = StringStreams.toString(fsp);
+        
+        Tester tester = topology.getTester();
+        
+        Condition<List<String>> contents = tester.stringContentsUnordered(ss,
+                "33", "49", "125", "-11", "33", "49", "125", "-11");
+        
+        Condition<Long> count = tester.tupleCount(ss, 8);
+
+        complete(topology.getTester(), count, 10, TimeUnit.SECONDS);
+        assertTrue(count.valid());
+        assertTrue(contents.valid());
+    }
+    
+    @Test
+    public void testParallelHashSerializersWithAdjcentUDP() throws Exception {
+        
+        checkUdpSupported();
+
+        Topology topology = newTopology();
+        SPL.addToolkit(topology, new File(getTestRoot(), "spl/testtk"));
+        
+        JsonObject sname = new JsonObject();
+        sname.addProperty("name", "S");
+        TStream<Byte> s = Invoker.invokeSource(topology, JavaFunctionalOps.SOURCE_KIND,
+                sname,
+                new ByteData(), Byte.class, new ByteSerializer(), null);
+        
+        s = s.setParallel(()->2);
+        s = s.endParallel();
+             
+        s = s.parallel(() -> 3, Routing.HASH_PARTITIONED);
+        
+        JsonObject pname = new JsonObject();
+        pname.addProperty("name", "P");
+        @SuppressWarnings("unchecked")
+        TStream<Byte> sp = (TStream<Byte>) Invoker.invokePipe(
+                "testjava::MyPipe",
+                s,
+                pname,
+                new ByteAdder(32), Byte.class,
+                new ByteSerializer(), new ByteSerializer(),
+                null);
+         
+        
+        sp = sp.endParallel();
+        JsonObject fname = new JsonObject();
+        fname.addProperty("name", "F");
+        
+        @SuppressWarnings("unchecked")
+        TStream<Byte> fsp = (TStream<Byte>) Invoker.invokePipe(
+                "testjava::MyPipe",
+                sp,
+                pname,
+                new ByteAdder(0), Byte.class,
+                new ByteSerializer(), null,
+                null);
+        
+        TStream<String> ss = StringStreams.toString(fsp);
+        
+        Tester tester = topology.getTester();
+        
+        // Note the source is in a parallel region of width 2 wo we get twice as many tuples.
+        Condition<List<String>> contents = tester.stringContentsUnordered(ss, "33", "49", "125", "-11", "33", "49", "125", "-11");       
+        Condition<Long> count = tester.tupleCount(ss, 8);
+
+        complete(topology.getTester(), count, 10, TimeUnit.SECONDS);
+        assertTrue(count.valid());
+        assertTrue(contents.valid());
+    }
 }

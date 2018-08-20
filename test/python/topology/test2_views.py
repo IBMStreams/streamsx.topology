@@ -18,6 +18,8 @@ def rands():
        yield r.random()
 
 class TestViews(unittest.TestCase):
+    _multiprocess_can_split_ = True
+
     def setUp(self):
         Tester.setup_distributed(self)
 

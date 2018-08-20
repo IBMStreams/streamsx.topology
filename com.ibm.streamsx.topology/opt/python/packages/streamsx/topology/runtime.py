@@ -9,6 +9,7 @@ import os
 import sys
 import types
 import pickle
+import logging
 from past.builtins import basestring
 
 import streamsx.ec as ec
@@ -30,32 +31,19 @@ import json
 from pkgutil import extend_path
 import streamsx
 
-
 # Simple identity function used by map, flat_map as default function.
 def _identity(tuple_):
     return tuple_
 
-
-def __splpy_addDirToPath(dir):
-    if os.path.isdir(dir):
-        if dir not in sys.path:
-            sys.path.insert(0, dir)
+def __splpy_addDirToPath(dir_):
+    if os.path.isdir(dir_):
+        if dir_ not in sys.path:
+            sys.path.insert(0, dir_)
             # In case a streamsx module (e.g. streamsx.bm) 
             # is included in the additional code
-            if os.path.isdir(os.path.join(dir, 'streamsx')):
+            if os.path.isdir(os.path.join(dir_, 'streamsx')):
                 streamsx.__path__ = extend_path(streamsx.__path__, streamsx.__name__)
                 
-def add_output_packages(out_dir):
-    py_dir = os.path.join(out_dir, 'etc', 'streamsx.topology', 'python')
-    vdir = 'python' + str(sys.version_info.major) + '.' + str(sys.version_info.minor)
-    site_pkg = os.path.join(py_dir, 'lib', vdir, 'site-packages')
-    __splpy_addDirToPath(site_pkg)
-
-def setupOperator(dir):
-    pydir = os.path.join(dir, 'opt', 'python')
-    __splpy_addDirToPath(os.path.join(pydir, 'modules'))
-    __splpy_addDirToPath(os.path.join(pydir, 'packages'))
-    #print("sys.path", sys.path)
 
 def _json_object_out(v):
     """Return a serialized JSON object for a value."""

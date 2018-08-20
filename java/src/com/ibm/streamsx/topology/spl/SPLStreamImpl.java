@@ -46,7 +46,7 @@ class SPLStreamImpl extends StreamImpl<Tuple> implements SPLStream {
     }
     
     private SPLStreamImpl(TopologyElement te, StreamSchema schema, BOutput stream) {
-        super(te, stream, Tuple.class);
+        super(te, stream, Tuple.class, Optional.empty());
         this.schema = schema;
     }
 

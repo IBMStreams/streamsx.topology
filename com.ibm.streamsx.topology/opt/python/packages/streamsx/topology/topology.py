@@ -598,6 +598,11 @@ class Topology(object):
         resolver. Thus the package should be added before
         it is used in any stream transformation.
 
+        When an application is run with trace level ``info``
+        the available Python packages on the running system
+        are listed to application trace. This includes
+        any packages added by this method.
+
         Example::
 
             topo = Topology()

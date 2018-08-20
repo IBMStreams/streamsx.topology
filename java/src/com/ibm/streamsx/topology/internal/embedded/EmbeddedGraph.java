@@ -166,7 +166,8 @@ public class EmbeddedGraph {
         
         String opClassName = jstring(json, KIND_CLASS);
         if (opClassName == null) {
-            opClassName = requireNonNull(jstring(kind2Class, jstring(json, OpProperties.KIND)));
+            opClassName = requireNonNull(
+                    jstring(kind2Class, op.kind()), op.kind());
         }
         Class<? extends Operator> opClass = (Class<? extends Operator>) Class.forName(opClassName);
         OperatorInvocation<? extends Operator> opDecl = graphDecl.addOperator(opClass);

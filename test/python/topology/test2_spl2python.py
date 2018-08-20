@@ -28,6 +28,8 @@ schemas = [
 class TestSPL2Python(unittest.TestCase):
     """ Test invocations handling of SPL schemas in Python ops.
     """
+    _multiprocess_can_split_ = True
+
     # Fake out subTest
     if sys.version_info.major == 2:
         def subTest(self, **args): return threading.Lock()
