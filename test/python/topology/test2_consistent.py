@@ -244,6 +244,7 @@ class TestOperatorDriven(unittest.TestCase):
         s = s.map(StatefulHalfPlusOne())
         s = s.last(10).trigger(2).aggregate(StatefulAverage())
         s.set_consistent(ConsistentRegionConfig.operator_driven(drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        tester = Tester(topo)
         self.assertFalse(tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False))
 
     def test_filter(self):
