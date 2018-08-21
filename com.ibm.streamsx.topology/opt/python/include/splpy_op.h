@@ -46,8 +46,8 @@ class SplpyOp;
   SplpyOp * op;
   PyObject * loads;
   PyObject * dumps;
-  PyObject * enter;
-  PyObject * exit;
+  PyObject * afterLoad;
+  PyObject * beforeDiscard;
   PyObject * pickledInitialCallable;
 };
 
@@ -318,21 +318,21 @@ class SplpyOp {
 };
 
  // Steals reference to pickledCallable
- SplpyOpStateHandlerImpl::SplpyOpStateHandlerImpl(SplpyOp * pyop, PyObject * pickledCallable) : op(pyop), loads(), dumps(), enter(), exit(), pickledInitialCallable(pickledCallable) {
+ SplpyOpStateHandlerImpl::SplpyOpStateHandlerImpl(SplpyOp * pyop, PyObject * pickledCallable) : op(pyop), loads(), dumps(), afterLoad(), beforeDiscard(), pickledInitialCallable(pickledCallable) {
   // Load pickle.loads and pickle.dumps
   SplpyGIL lock;
   loads = SplpyGeneral::loadFunction("dill", "loads");
   dumps = SplpyGeneral::loadFunction("dill", "dumps");
-  enter = SplpyGeneral::loadFunction("streamsx.ec", "_callable_after_reset");
-  exit = SplpyGeneral::loadFunction("streamsx.ec", "_callable_before_reset");
+  afterLoad = SplpyGeneral::loadFunction("streamsx.ec", "_callable_after_load");
+  beforeDiscard = SplpyGeneral::loadFunction("streamsx.ec", "_callable_before_discard");
  }
 
  SplpyOpStateHandlerImpl::~SplpyOpStateHandlerImpl() {
    SplpyGIL lock;
    Py_CLEAR(loads);
    Py_CLEAR(dumps);
-   Py_CLEAR(enter);
-   Py_CLEAR(exit);
+   Py_CLEAR(afterLoad);
+   Py_CLEAR(beforeDiscard);
    Py_CLEAR(pickledInitialCallable);
  }
 
@@ -361,12 +361,12 @@ class SplpyOp {
    ckpt >> bytes;
    SplpyGIL lock;
    
-   // Call __exit__ on old callable
-   SPLAPPTRC(L_DEBUG, "calling __exit__ on old callable", "python");
-   PyObject * ret = call(exit, op->callable());
+   // Call ec._callable_before_discard on old callable
+   SPLAPPTRC(L_DEBUG, "calling ec._callable_before_discard on old callable", "python");
+   PyObject * ret = call(beforeDiscard, op->callable());
    if (!ret) {
      SplpyGeneral::tracePythonError();
-     throw SplpyGeneral::pythonException("ec._callable_after_reset");
+     throw SplpyGeneral::pythonException("ec._callable_before_discard");
    }
    Py_DECREF(ret);
 
@@ -377,12 +377,12 @@ class SplpyOp {
        throw SplpyGeneral::pythonException("dill.loads");
    }
 
-   // Call __enter__ on new callable
-   SPLAPPTRC(L_DEBUG, "calling __enter__ on new callable", "python");
-   ret = call(enter, callable);
+   // Call ec.callable_after_load on new callable
+   SPLAPPTRC(L_DEBUG, "calling ec._callable_after_load on new callable", "python");
+   ret = call(afterLoad, callable);
    if (!ret) {
      SplpyGeneral::tracePythonError();
-     throw SplpyGeneral::pythonException("ec._callable_after_reset");
+     throw SplpyGeneral::pythonException("ec._callable_after_load");
    }
    Py_DECREF(ret);
 
@@ -396,12 +396,12 @@ class SplpyOp {
    SPLAPPTRC(L_DEBUG, "resetToInitialState", "python");
    SplpyGIL lock;
 
-   // Call __exit__ on old callable
-   SPLAPPTRC(L_DEBUG, "calling __exit__ on old callable", "python");
-   PyObject * ret = call(exit, op->callable());
+   // Call _splpy_before_discard on old callable
+   SPLAPPTRC(L_DEBUG, "calling ec._callable_before_discard on old callable", "python");
+   PyObject * ret = call(beforeDiscard, op->callable());
    if (!ret) {
      SplpyGeneral::tracePythonError();
-     throw SplpyGeneral::pythonException("ec._callable_after_reset");
+     throw SplpyGeneral::pythonException("ec._callable_before_discard");
    }
    Py_DECREF(ret);
 
@@ -411,12 +411,12 @@ class SplpyOp {
      throw SplpyGeneral::pythonException("dill.loads");
    }
 
-   // Call __enter__ on new callable
-   SPLAPPTRC(L_DEBUG, "calling __enter__ on new callable", "python");
-   ret = call(enter, initialCallable);
+   // Call afterLoad on new callable
+   SPLAPPTRC(L_DEBUG, "calling ec._callable_after_load on new callable", "python");
+   ret = call(afterLoad, initialCallable);
    if (!ret) {
      SplpyGeneral::tracePythonError();
-     throw SplpyGeneral::pythonException("ec._callable_after_reset");
+     throw SplpyGeneral::pythonException("ec._callable_after_load");
    }
    Py_DECREF(ret);
 
