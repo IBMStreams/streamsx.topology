@@ -2,6 +2,7 @@
 # Copyright IBM Corp. 2018
 import unittest
 import unittest.mock
+import os
 
 import streamsx.scripts.service
 
