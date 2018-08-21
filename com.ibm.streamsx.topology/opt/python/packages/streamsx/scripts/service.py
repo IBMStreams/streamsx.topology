@@ -40,12 +40,11 @@ def main(args=None):
     """ Performs an action against a Streaming Analytics service.
     """
     try:
-        json = run_cmd(args)
-        print(json)
-        return 0
+        sr = run_cmd(args)
+        sr['return_code'] = 0
     except:
-        print(sys.exc_info()[1], file=sys.stderr)
-        return 1
+        sr = {'return_code':1, 'error': sys.exc_info()}
+    return sr
 
 def _parse_args(args):
     """ Argument parsing
@@ -61,9 +60,14 @@ def _parse_args(args):
     parser_stop = subparsers.add_parser('stop', help='Stop the instance for the service.')
     parser_stop.add_argument('--force', action='store_true', help='Stop the service even if jobs are running.')
 
-    #cmd_parser.add_argument('subcmd', choices=['start', 'stop', 'status'])
-
     return cmd_parser.parse_args(args)
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sr = main()
+    rc = sr['return_code']
+    del sr['return_code']
+    if rc == 0:
+        print(sr)
+    else:
+        print(sr['error'][1], file=sys.stderr)
+    sys.exit(rc)
