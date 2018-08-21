@@ -6,6 +6,8 @@ import os
 
 import streamsx.scripts.service
 
+@unittest.skipUnless('VCAP_SERVICES' in os.environ, "requires VCAP_SERVICES")
+@unittest.skipUnless('STREAMING_ANALYTICS_SERVICE_NAME' in os.environ, "requires STREAMING_ANALYTICS_SERVICE_NAME")
 class TestSasServiceScript(unittest.TestCase):
 
     def _service_args(self, add_name=False):

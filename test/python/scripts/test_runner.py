@@ -14,6 +14,12 @@ from streamsx.topology.context import JobConfig
 import streamsx.scripts.runner
 import streamsx.rest
 
+def _service_ok():
+    return 'VCAP_SERVICES' in os.environ and 'STREAMING_ANALYTICS_SERVICE_NAME' in os.environ
+
+def _spl_ok():
+    return 'STREAMS_INSTALL' in os.environ
+
 def app_topology():
     topo = Topology()
     topo.source(['Hello', 'World']).print()
@@ -25,9 +31,6 @@ def random_job_name(prefix='RJN_'):
 def app_with_job_config():
     jc = JobConfig(random_job_name())
     return (app_topology(), jc)
-
-
- 
 
 class TestRunnerService(unittest.TestCase):
 
@@ -68,12 +71,14 @@ class TestRunnerService(unittest.TestCase):
                      sas.cancel_job(job_id)
              return sr
  
+    @unittest.skipIf(not _service_ok(), "Service not defined")
     def test_topo_submit(self):
         args = self._service_args()
         args.append('--topology')
         args.append('test_runner.app_topology')
         self._run(args)
   
+    @unittest.skipIf(not _service_ok(), "Service not defined")
     def test_topo_submit_with_config(self):
         args = self._service_args()
         args.append('--topology')
@@ -81,6 +86,7 @@ class TestRunnerService(unittest.TestCase):
         sr = self._run(args)
         self.assertTrue(sr.name.startswith('RJN_'))
 
+    @unittest.skipIf(not _service_ok(), "Service not defined")
     def test_topo_submit_job_name(self):
         args = self._service_args()
         args.append('--topology')
@@ -92,10 +98,12 @@ class TestRunnerService(unittest.TestCase):
         sr = self._run(args)
         self.assertEqual(jn, sr.name)
 
+    @unittest.skipIf(not _service_ok(), "Service not defined")
     def test_spl_app(self):
         args = self._spl_app_args()
         self._run(args)
 
+    @unittest.skipIf(not _service_ok(), "Service not defined")
     def test_spl_app_with_job_name(self):
         args = self._spl_app_args()
         args.append('--job-name')
@@ -104,12 +112,14 @@ class TestRunnerService(unittest.TestCase):
         sr = self._run(args)
         self.assertEqual(jn, sr.name)
 
+    @unittest.skipIf(not _service_ok(), "Service not defined")
     def test_spl_app_with_trace(self):
         args = self._spl_app_args()
         args.append('--trace')
         args.append('debug')
         self._run(args)
 
+    @unittest.skipIf(not _service_ok(), "Service not defined")
     def test_spl_app_with_params(self):
         args = self._spl_app_args(name='ns1::SPApp')
         args.append('--submission-parameters')
@@ -139,11 +149,13 @@ class TestRunnerService(unittest.TestCase):
         self.assertTrue(sr['jobConfigPath'].endswith('.json'))
         return sr
 
+    @unittest.skipIf(not _spl_ok(), 'STREAMS_INSTALL not set')
     def test_create_bundle(self):
         sr = self._create_bundle()
         os.remove(sr['bundlePath'])
         os.remove(sr['jobConfigPath'])
         
+    @unittest.skipIf(not _spl_ok() or not _service_ok(), "Service & STREAMS_INSTALL not defined")
     def test_submit_bundle(self):
         sr = self._create_bundle()
         args = self._service_args()
