@@ -16,19 +16,17 @@ pipeline {
        }
     }
     stage('Java/Scala standalone') {
-       when { anyOf { branch 'XXX'; branch 'YYY' } }
        steps {
          sh 'ci/test_java_standalone.sh'
        }
     }
     stage('Python 3.6 standalone') {
-       when { anyOf { branch 'XXX'; branch 'YYY' } }
        steps {
          sh 'ci/test_python36_standalone.sh'
        }
     }
     stage('Python 3.5 standalone') {
-       when { anyOf { branch 'XXXmaster'; branch 'YYYfeature/*' } }
+       when { anyOf { branch 'master'; branch 'feature/*' } }
        steps {
          sh 'ci/test_python35_standalone.sh'
        }
@@ -40,7 +38,7 @@ pipeline {
        }
     }
     stage('Python 2.7 standalone') {
-       when { anyOf { branch 'XXXmaster'; branch 'YYYfeature/*' } }
+       when { anyOf { branch 'master'; branch 'feature/*' } }
        steps {
          sh 'ci/test_python27_standalone.sh'
        }
