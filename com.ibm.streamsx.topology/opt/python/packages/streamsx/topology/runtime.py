@@ -7,6 +7,7 @@ from future.builtins import *
 import os
 import sys
 import pickle
+import logging
 from past.builtins import basestring
 
 import streamsx.ec as ec
@@ -470,8 +471,6 @@ class _WrappedInstance(object):
 # instance to be passed directly to Topology.source
 class _IterableInstance(_WrappedInstance):
     def __call__(self):
-
-
         return self._callable
 
 # Wraps an callable instance 
