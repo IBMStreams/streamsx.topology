@@ -360,19 +360,6 @@ class SplpyOp {
    SPL::blob bytes;
    ckpt >> bytes;
    SplpyGIL lock;
-
-   SPLAPPTRC(L_DEBUG, "calling __exit__ on old callable", "python");
-   /* PyObject * args = PyTuple_New(1); */
-   /* Py_INCREF(op->callable()); */
-   /* PyTuple_SET_ITEM(args, 0, op->callable()); */
-   /* PyObject * ret = PyObject_CallObject(exit, args); */
-   /* if (!ret) { */
-   /*   SplpyGeneral::tracePythonError(); */
-   /*   Py_DECREF(args); */
-   /*   throw SplpyGeneral::pythonException("ec._callable_after_reset"); */
-   /* } */
-   /* Py_DECREF(args); */
-   /* Py_DECREF(ret); */
    
    // Call __exit__ on old callable
    SPLAPPTRC(L_DEBUG, "calling __exit__ on old callable", "python");

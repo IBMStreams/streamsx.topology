@@ -25,7 +25,6 @@ from future.builtins import *
 import streamsx.ec as ec
 import streamsx.spl.op
 import streamsx.topology.context as stc
-import streamsx.spl.op
 import os
 import unittest
 import logging
@@ -232,6 +231,8 @@ class _Resetter(Condition):
     def _attach(self, stream):
         params = {'minimumResets': self.minimum_resets, 'conditionName': self.CONDITION_NAME}
         resetter = streamsx.spl.op.Invoke(self.topology, "com.ibm.streamsx.topology.testing.consistent::Resetter", params=params, name="ConsistentRegionResetter")
+        resetter.category = 'Tester'
+        resetter._op()._layout(hidden=True)
         
 
 class _RunFor(_PythonCondition):

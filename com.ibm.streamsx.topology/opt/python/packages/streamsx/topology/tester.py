@@ -134,7 +134,7 @@ class Tester(object):
     def __init__(self, topology):
         self.topology = topology
         topology.tester = self
-        self._conditions = {} # TODO maybe a different data structure?
+        self._conditions = {}
         self.local_check = None
         self._run_for = 0
 

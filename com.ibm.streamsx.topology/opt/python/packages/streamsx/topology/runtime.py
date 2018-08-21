@@ -7,7 +7,6 @@ from future.builtins import *
 import logging
 import os
 import sys
-import types
 import pickle
 import logging
 from past.builtins import basestring

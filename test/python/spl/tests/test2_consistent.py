@@ -43,7 +43,6 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         tester.resets(3)
         tester.tuple_count(s, 30)
         tester.contents(s, list(zip(range(0,30))))
- 
         tester.test(self.test_ctxtype, self.test_config)
 
     # Source, filter, and map operators

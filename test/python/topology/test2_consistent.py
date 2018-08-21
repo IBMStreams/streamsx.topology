@@ -149,7 +149,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         tester = Tester(topo)
         tester.contents(s, range(0,30))
         tester.resets(3)
- 
+
 #        cfg={}
 #        job_config = streamsx.topology.context.JobConfig(tracing='debug')
 #        job_config.add(self.test_config)

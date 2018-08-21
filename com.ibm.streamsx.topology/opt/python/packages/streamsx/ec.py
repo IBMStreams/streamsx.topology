@@ -473,10 +473,6 @@ def _shutdown_op(callable_, exc_info=None):
         return callable_._splpy_shutdown(exc_type, exc_value, traceback)
     return False
 
-def _startup_op(callable_):
-    if (hasattr(callable_, '_splpy_startup')):
-        callable_._splpy_startup()
-
 def _callable_enter(callable_):
     """Called at initialization time.
     """
