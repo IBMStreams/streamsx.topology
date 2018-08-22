@@ -31,6 +31,12 @@ pipeline {
          sh 'ci/test_python35_standalone.sh'
        }
     }
+    stage('Python 3.5 Streaming Analytics') {
+       when { anyOf { branch 'master'; branch 'feature/*' } }
+       steps {
+         sh 'ci/test_python35_service.sh'
+       }
+    }
     stage('Python 2.7 standalone') {
        when { anyOf { branch 'master'; branch 'feature/*' } }
        steps {
