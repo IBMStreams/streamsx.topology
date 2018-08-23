@@ -22,7 +22,14 @@ pipeline {
     }
     stage('Python 3.6 standalone') {
        steps {
-         sh 'ci/test_python36_standalone.sh'
+         script {
+           try {
+             sh 'ci/test_python36_standalone.sh'
+           }
+           catch (exc) {
+             currentBuild.result = 'UNSTABLE'
+           }
+         }
        }
     }
     stage('Python 3.5 standalone') {
