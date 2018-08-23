@@ -32,7 +32,6 @@ import collections
 import threading
 import time
 
-
 class Condition(object):
     """A condition for testing.
 

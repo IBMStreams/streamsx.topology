@@ -506,8 +506,8 @@ def _callable_after_load(callable_):
     # _splpy_after_load method.  If the callable passed to this method
     # contains _splpy_after_load, we call it.  Otherwise, it may be the
     # user's callable, so if it contains __enter__ and __exit__, we call
-    # __enter__.  
-    if hasattr(callable_, '_splpy_after_reset'):
+    # __enter__.
+    if hasattr(callable_, '_splpy_after_load'):
         callable_._splpy_after_load()
     elif hasattr(callable_, '__enter__') and hasattr(callable_, '__exit__'):
         callable_.__enter__()
