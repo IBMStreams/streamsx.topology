@@ -21,4 +21,7 @@ mkdir -p ${wd}
 nosetests --where=${wd} --xunit-file ${xuf} --xunit-testsuite-name="py${pyv}" --config=nose.cfg ../../topology ../../spl/tests
 nrc=$?
 # Ensure only test failures just cause an unstable build.
-if [ ${nrc} -eq 1 ] && [ -e  ${xuf} ]; then exit 0; else exit ${nrc}; fi
+# Disabled for now since with multiple processes xunit does not
+# collect results correctly
+#if [ ${nrc} -eq 1 ] && [ -e  ${xuf} ]; then exit 0; else exit ${nrc}; fi
+exit ${nrc}
