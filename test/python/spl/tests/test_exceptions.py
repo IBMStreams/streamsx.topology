@@ -27,7 +27,7 @@ def _create_tf():
 class TestBaseExceptions(unittest.TestCase):
     """ Test exceptions in callables
     """
-    _multiprocess_can_split_ = True
+    _multiprocess_can_split_ = False
 
     @classmethod
     def setUpClass(cls):
@@ -53,7 +53,7 @@ class TestBaseExceptions(unittest.TestCase):
         return content
 
 class TestExceptions(TestBaseExceptions):
-    _multiprocess_can_split_ = True
+    _multiprocess_can_split_ = False
 
     def _run_app(self, kind, opi='M'):
         schema = 'tuple<rstring a, int32 b>'
@@ -155,7 +155,7 @@ class TestExceptions(TestBaseExceptions):
         self.assertEqual('KeyError\n', content[4])
 
 class TestSuppressExceptions(TestBaseExceptions):
-    _multiprocess_can_split_ = True
+    _multiprocess_can_split_ = False
 
     def _run_app(self, kind, e, opi='M'):
         schema = 'tuple<rstring a, int32 b>'
