@@ -15,13 +15,6 @@ import sys
 def spl_namespace():
     return "com.ibm.streamsx.topology.pytest.pyexceptions"
 
-def _create_tf():
-    with tempfile.NamedTemporaryFile(delete=False) as fp:
-        fp.write("CREATE\n".encode('utf-8'))
-        fp.flush()
-        return fp.name
-
-
 class EnterExit(object):
     def __init__(self, tf=None):
         self.tf = tf
