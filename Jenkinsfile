@@ -35,33 +35,39 @@ pipeline {
     stage('Python 3.5 standalone') {
        when { anyOf { branch 'master'; branch 'feature/*' } }
        steps {
-         try {
-           sh 'ci/test_python35_standalone.sh'
-         }
-         catch (exc) {
-           currentBuild.result = 'UNSTABLE'
+         script {
+           try {
+             sh 'ci/test_python35_standalone.sh'
+           }
+           catch (exc) {
+             currentBuild.result = 'UNSTABLE'
+           }
          }
        }
     }
     stage('Python 3.5 Streaming Analytics') {
        when { anyOf { branch 'master'; branch 'feature/*' } }
        steps {
-         try {
-           sh 'ci/test_python35_service.sh'
-         }
-         catch (exc) {
-           currentBuild.result = 'UNSTABLE'
+         script {
+           try {
+             sh 'ci/test_python35_service.sh'
+           }
+           catch (exc) {
+             currentBuild.result = 'UNSTABLE'
+           }
          }
        }
     }
     stage('Python 2.7 standalone') {
        when { anyOf { branch 'master'; branch 'feature/*' } }
        steps {
-         try {
-             sh 'ci/test_python27_standalone.sh'
-         }
-         catch (exc) {
-           currentBuild.result = 'UNSTABLE'
+         script {
+           try {
+               sh 'ci/test_python27_standalone.sh'
+           }
+           catch (exc) {
+             currentBuild.result = 'UNSTABLE'
+           }
          }
        }
     }
