@@ -61,7 +61,7 @@ class TestUDP(unittest.TestCase):
       Tester.setup_standalone(self)
 
   def test_TopologyNestedParallel(self):
-      topo = Topology("test_TopologySetParallel")
+      topo = Topology()
       s = topo.source([1])
       s = s.parallel(5, routing=Routing.BROADCAST)
       s = s.parallel(5, routing=Routing.BROADCAST)
