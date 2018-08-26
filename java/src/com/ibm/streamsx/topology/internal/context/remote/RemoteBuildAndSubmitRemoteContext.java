@@ -42,14 +42,16 @@ public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContex
         // that any strange characters in the name provided by
         // the user are not rejected by the build service.
         String buildName = GraphKeys.splAppName(graph);
-        JsonObject jco = DeployKeys.copyJobConfigOverlays(deploy);
-
         
+      
         final StreamingAnalyticsService sas = streamingAnalyticServiceFromDeploy(deploy);      
 	    
 	    Future<File> archive = super._submit(submission);
-	    
+	    	    
 	    File buildArchive =  archive.get();
+	    
+	    // SPL generation submission can modify the job config overlay
+        JsonObject jco = DeployKeys.copyJobConfigOverlays(deploy);
 		
 	    try {
 	        
