@@ -42,7 +42,7 @@ class EnterExit(object):
 class ExcOnEnter(EnterExit):
     def __enter__(self):
         super(ExcOnEnter,self).__enter__()
-        raise ValueError('__enter__ has failed!')
+        raise ValueError('INTENTIONAL ERROR: __enter__ has failed!')
 
 
 class BadData(EnterExit):
@@ -72,7 +72,7 @@ class BadSourceIter(EnterExit):
         return self
 
     def __iter__(self):
-        raise UnicodeError("Bad source __iter__")
+        raise UnicodeError("INTENTIONAL ERROR: Bad source __iter__")
 
 class BadSourceNext(EnterExit):
     def __call__(self):
@@ -82,7 +82,7 @@ class BadSourceNext(EnterExit):
         return self
 
     def __next__(self):
-        raise IndexError("Bad source __next__")
+        raise IndexError("INTENTIONAL ERROR: Bad source __next__")
 
 class TestBaseExceptions(unittest.TestCase):
     """ Test exceptions in callables
@@ -314,7 +314,7 @@ class TestExceptions(TestBaseExceptions):
 
 class SuppressSourceCall(EnterExit):
     def __call__(self):
-        raise ValueError("Error setting up iterable")
+        raise ValueError("INTENTIONAL ERROR: Error setting up iterable")
 
     def __exit__(self, exc_type, exc_value, traceback):
         super(SuppressSourceCall, self).__exit__(exc_type, exc_value, traceback)
@@ -324,7 +324,7 @@ class SuppressSourceIter(EnterExit):
     def __call__(self):
         return self
     def __iter__(self):
-        raise ValueError("Error setting up iterable")
+        raise ValueError("INTENTIONAL ERROR: Error setting up iterable")
 
     def __exit__(self, exc_type, exc_value, traceback):
         super(SuppressSourceIter, self).__exit__(exc_type, exc_value, traceback)
@@ -339,7 +339,7 @@ class SuppressSourceNext(EnterExit):
     def __next__(self):
         self.count += 1
         if self.count == 5:
-            raise ValueError("Skip 5!")
+            raise ValueError("INTENTIONAL ERROR: Skip 5!")
         if self.count == 7:
             raise StopIteration()
         return self.count
@@ -351,7 +351,7 @@ class SuppressSourceNext(EnterExit):
 class SuppressMapCall(EnterExit):
     def __call__(self, t):
         if t == 2:
-            raise ValueError("Skip 2")
+            raise ValueError("INTENTIONAL ERROR: Skip 2")
         return t
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -361,7 +361,7 @@ class SuppressMapCall(EnterExit):
 class SuppressFlatMapCall(EnterExit):
     def __call__(self, t):
         if t == 2:
-            raise ValueError("Skip 2")
+            raise ValueError("INTENTIONAL ERROR: Skip 2")
         return [t, t]
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -372,7 +372,7 @@ class SuppressFlatMapCall(EnterExit):
 class SuppressFilterCall(EnterExit):
     def __call__(self, t):
         if t != 2:
-            raise ValueError("Skip everything but 2")
+            raise ValueError("INTENTIONAL ERROR: Skip everything but 2")
         return t
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -383,7 +383,7 @@ class SuppressFilterCall(EnterExit):
 class SuppressForEach(EnterExit):
     def __call__(self, t):
         if t == 1:
-            raise ValueError("Skip 1")
+            raise ValueError("INTENTIONAL ERROR: Skip 1")
         return t
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -393,7 +393,7 @@ class SuppressForEach(EnterExit):
 class SuppressHash(EnterExit):
     def __call__(self, t):
         if t == 3:
-            raise ValueError("Skip 3")
+            raise ValueError("INTENTIONAL ERROR: Skip 3")
         return hash(t)
 
     def __exit__(self, exc_type, exc_value, traceback):
