@@ -59,8 +59,6 @@ class TestExceptions(TestBaseExceptions):
         schema = 'tuple<rstring a, int32 b>'
         topo = Topology()
         streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
-        s = topo.source(range(13))
-
         if opi == 'M':
             data = [1,2,3]
             se = topo.source(data)
@@ -86,9 +84,7 @@ class TestExceptions(TestBaseExceptions):
             res = None
 
         tester = Tester(topo)
-        tester.tuple_count(s, 13)
-        if res is not None:
-            tester.tuple_count(res, 0)
+        tester.run_for(3)
         ok = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
         self.assertFalse(ok)
 
@@ -250,6 +246,11 @@ class TestSuppressExceptions(TestBaseExceptions):
         self.assertEqual('__exit__\n', content[5])
 
 class TestSuppressMetric(TestBaseExceptions):
+    @classmethod
+    def setUpClass(cls):
+        """Extract Python operators in toolkit"""
+        stu._extract_tk('testtkpy')
+
     def setUp(self):
         self.tf = None
         Tester.setup_distributed(self)

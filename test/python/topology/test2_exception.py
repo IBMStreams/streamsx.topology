@@ -60,12 +60,12 @@ class BadDataFlatMap(EnterExit):
 class BadCall(EnterExit):
     def __call__(self, t):
         d = {}
-        return d['notthere']
+        return d['INTENTIONAL ERROR: notthere']
 
 class BadSource(EnterExit):
     def __call__(self):
         d = {}
-        return d['notthere']
+        return d['INTENTIONAL ERROR: notthere']
 
 class BadSourceIter(EnterExit):
     def __call__(self):
@@ -87,7 +87,7 @@ class BadSourceNext(EnterExit):
 class TestBaseExceptions(unittest.TestCase):
     """ Test exceptions in callables
     """
-    _multiprocess_can_split_ = True
+    _multiprocess_can_split_ = False
 
     def setUp(self):
         self.tf = _create_tf()
@@ -100,7 +100,7 @@ class TestBaseExceptions(unittest.TestCase):
     def _result(self, n):
         with open(self.tf) as fp:
             content = fp.readlines()
-        self.assertTrue(len(content) >=3)
+        self.assertTrue(len(content) >=3, msg=str(content))
         self.assertEqual('CREATE\n', content[0])
         self.assertEqual('__init__\n', content[1])
         self.assertEqual('__enter__\n', content[2])
@@ -138,7 +138,6 @@ class TestExceptions(TestBaseExceptions):
 
     def _run_app(self, fn=None, data=None):
         topo = Topology()
-        s = topo.source(range(57))
         if data is None:
             data = [1,2,3]
         se = topo.source(data)
@@ -147,9 +146,7 @@ class TestExceptions(TestBaseExceptions):
             se = fn(se)
 
         tester = Tester(topo)
-        tester.tuple_count(s, 57)
-        if isinstance(se, Stream):
-            tester.tuple_count(se, 0)
+        tester.run_for(3)
         ok = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
         self.assertFalse(ok)
 
@@ -405,7 +402,6 @@ class TestSuppressExceptions(TestBaseExceptions):
     """
     def _run_app(self, fn=None, data=None, n=None, e=None):
         topo = Topology()
-        s = topo.source(range(93))
         if data is None:
             data = [1,2,3]
         se = topo.source(data)
@@ -414,11 +410,11 @@ class TestSuppressExceptions(TestBaseExceptions):
             se = fn(se)
 
         tester = Tester(topo)
-        tester.tuple_count(s, 93)
         if n is not None:
             tester.tuple_count(se, n)
         if e is not None:
             tester.contents(se, e)
+        tester.run_for(3)
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_exc_on_call_source(self):
