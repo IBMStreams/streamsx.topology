@@ -777,7 +777,7 @@ class _ConditionChecker(object):
                 # making progress so don't move towards
                 # the timeout
                 self.waits = 0
-                ok_pes = ok
+                ok_pes = ok_
             time.sleep(self.delay)
         return self._check_job_health(verbose=True)
 
