@@ -509,6 +509,7 @@ def _extract_from_toolkit(args):
             for mf in glob.glob(os.path.join(tk_streams, '*.py')):
                if os.path.getmtime(mf) >= tk_time:
                    changed = True
+                   break
 
         if changed:
             path_items = _setup_path(tk_dir, tk_streams)
