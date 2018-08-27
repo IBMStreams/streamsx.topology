@@ -85,9 +85,7 @@ class StatefulDelay(object):
         time.sleep(self.period)
         return True
 
-# Verify that tuples are received in strict numeric order.  This probably
-# works, but since Streams does not guarantee tuple order nor exactly
-# once processing this test might not always pass.
+# Verify that tuples are received in strict numeric order.
 class VerifyNumericOrder(object):
     def __init__(self):
         self._expected = 0
