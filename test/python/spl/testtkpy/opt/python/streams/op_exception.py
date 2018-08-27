@@ -38,12 +38,12 @@ class EnterExit(object):
 class ExcOnEnter(EnterExit):
     def __enter__(self):
         super(ExcOnEnter,self).__enter__()
-        raise ValueError('__enter__ has failed!')
+        raise ValueError('INTENTIONAL_ERROR: __enter__ has failed!')
 
 class ExcOnCall(EnterExit):
     def __call__(self, *t):
         d = {}
-        return d['notthere']
+        return d['INTENTIONAL_ERROR: notthere']
 
 
 @spl.filter()
@@ -59,7 +59,7 @@ class ExcCallFilter(ExcOnCall):
 class SuppressFilter(EnterExit):
     def __call__(self, *t):
         if t[1] == 2:
-            raise ValueError('Skip 2')
+            raise ValueError('INTENTIONAL_ERROR: Skip 2')
         return True
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -79,7 +79,7 @@ class ExcCallMap(ExcOnCall):
 class SuppressMap(EnterExit):
     def __call__(self, *t):
         if t[1] == 2:
-            raise ValueError('Skip 2')
+            raise ValueError('INTENTIONAL_ERROR: Skip 2')
         return t[0]+'SM', t[1]+7
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -100,7 +100,7 @@ class ExcCallForEach(ExcOnCall):
 class SuppressForEach(EnterExit):
     def __call__(self, *t):
         if t[1] == 2:
-            raise ValueError('Skip 2')
+            raise ValueError('INTENTIONAL_ERROR: Skip 2')
         return None
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -124,7 +124,7 @@ class ExcNextSource(EnterExit):
         return self
 
     def __next__(self):
-        raise KeyError()
+        raise KeyError('INTENTIONAL_ERROR:')
 
     # For Python 2
     def next(self):
@@ -139,7 +139,7 @@ class SuppressNextSource(EnterExit):
     def __next__(self):
         self.count += 1
         if self.count == 2:
-           raise ValueError('Skip 2!')
+           raise ValueError('INTENTIONAL_ERROR: Skip 2!')
         if self.count == 4:
            raise StopIteration()
         return 'helloSS', self.count
@@ -155,7 +155,7 @@ class SuppressNextSource(EnterExit):
 @spl.source()
 class SuppressIterSource(EnterExit):
     def __iter__(self):
-        raise KeyError('Bad Iter')
+        raise KeyError('INTENTIONAL_ERROR: Bad Iter')
 
     def __exit__(self, exc_type, exc_value, traceback):
         EnterExit.__exit__(self, exc_type, exc_value, traceback)
@@ -168,20 +168,20 @@ class ExcEnterPrimitive(ExcOnEnter):
 @spl.primitive_operator(output_ports=['A'])
 class ExcAllPortsReadyPrimitive(spl.PrimitiveOperator, EnterExit):
     def all_ports_ready(self):
-        raise KeyError('not so ready!!')
+        raise KeyError('INTENTIONAL_ERROR: not so ready!!')
 
 
 @spl.primitive_operator(output_ports=['A'])
 class ExcInputPrimitive(spl.PrimitiveOperator, EnterExit):
     @spl.input_port()
     def p1e(self):
-        raise KeyError('Can not process tuple')
+        raise KeyError('INTENTIONAL_ERROR: Can not process tuple')
 
 
 @spl.primitive_operator(output_ports=['A'])
 class SuppressAllPortsReadyPrimitive(spl.PrimitiveOperator, EnterExit):
     def all_ports_ready(self):
-        raise KeyError('not so ready!!')
+        raise KeyError('INTENTIONAL_ERROR: not so ready!!')
 
     @spl.input_port()
     def p1(self, *t):
@@ -196,7 +196,7 @@ class SuppressInputPrimitive(spl.PrimitiveOperator, EnterExit):
     @spl.input_port()
     def p1(self, *t):
         if t[1] == 2:
-            raise ValueError('Skip 2!!')
+            raise ValueError('INTENTIONAL_ERROR: Skip 2!!')
         self.submit('A', (t[0] + 'APR', t[1] + 4))
 
     def __exit__(self, exc_type, exc_value, traceback):

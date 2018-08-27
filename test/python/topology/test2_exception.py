@@ -42,7 +42,7 @@ class EnterExit(object):
 class ExcOnEnter(EnterExit):
     def __enter__(self):
         super(ExcOnEnter,self).__enter__()
-        raise ValueError('__enter__ has failed!')
+        raise ValueError('INTENTIONAL ERROR: __enter__ has failed!')
 
 
 class BadData(EnterExit):
@@ -60,19 +60,19 @@ class BadDataFlatMap(EnterExit):
 class BadCall(EnterExit):
     def __call__(self, t):
         d = {}
-        return d['notthere']
+        return d['INTENTIONAL ERROR: notthere']
 
 class BadSource(EnterExit):
     def __call__(self):
         d = {}
-        return d['notthere']
+        return d['INTENTIONAL ERROR: notthere']
 
 class BadSourceIter(EnterExit):
     def __call__(self):
         return self
 
     def __iter__(self):
-        raise UnicodeError("Bad source __iter__")
+        raise UnicodeError("INTENTIONAL ERROR: Bad source __iter__")
 
 class BadSourceNext(EnterExit):
     def __call__(self):
@@ -82,12 +82,12 @@ class BadSourceNext(EnterExit):
         return self
 
     def __next__(self):
-        raise IndexError("Bad source __next__")
+        raise IndexError("INTENTIONAL ERROR: Bad source __next__")
 
 class TestBaseExceptions(unittest.TestCase):
     """ Test exceptions in callables
     """
-    _multiprocess_can_split_ = True
+    _multiprocess_can_split_ = False
 
     def setUp(self):
         self.tf = _create_tf()
@@ -100,7 +100,7 @@ class TestBaseExceptions(unittest.TestCase):
     def _result(self, n):
         with open(self.tf) as fp:
             content = fp.readlines()
-        self.assertTrue(len(content) >=3)
+        self.assertTrue(len(content) >=3, msg=str(content))
         self.assertEqual('CREATE\n', content[0])
         self.assertEqual('__init__\n', content[1])
         self.assertEqual('__enter__\n', content[2])
@@ -138,7 +138,6 @@ class TestExceptions(TestBaseExceptions):
 
     def _run_app(self, fn=None, data=None):
         topo = Topology()
-        s = topo.source(range(57))
         if data is None:
             data = [1,2,3]
         se = topo.source(data)
@@ -147,9 +146,7 @@ class TestExceptions(TestBaseExceptions):
             se = fn(se)
 
         tester = Tester(topo)
-        tester.tuple_count(s, 57)
-        if isinstance(se, Stream):
-            tester.tuple_count(se, 0)
+        tester.run_for(3)
         ok = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
         self.assertFalse(ok)
 
@@ -314,7 +311,7 @@ class TestExceptions(TestBaseExceptions):
 
 class SuppressSourceCall(EnterExit):
     def __call__(self):
-        raise ValueError("Error setting up iterable")
+        raise ValueError("INTENTIONAL ERROR: Error setting up iterable")
 
     def __exit__(self, exc_type, exc_value, traceback):
         super(SuppressSourceCall, self).__exit__(exc_type, exc_value, traceback)
@@ -324,7 +321,7 @@ class SuppressSourceIter(EnterExit):
     def __call__(self):
         return self
     def __iter__(self):
-        raise ValueError("Error setting up iterable")
+        raise ValueError("INTENTIONAL ERROR: Error setting up iterable")
 
     def __exit__(self, exc_type, exc_value, traceback):
         super(SuppressSourceIter, self).__exit__(exc_type, exc_value, traceback)
@@ -339,7 +336,7 @@ class SuppressSourceNext(EnterExit):
     def __next__(self):
         self.count += 1
         if self.count == 5:
-            raise ValueError("Skip 5!")
+            raise ValueError("INTENTIONAL ERROR: Skip 5!")
         if self.count == 7:
             raise StopIteration()
         return self.count
@@ -351,7 +348,7 @@ class SuppressSourceNext(EnterExit):
 class SuppressMapCall(EnterExit):
     def __call__(self, t):
         if t == 2:
-            raise ValueError("Skip 2")
+            raise ValueError("INTENTIONAL ERROR: Skip 2")
         return t
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -361,7 +358,7 @@ class SuppressMapCall(EnterExit):
 class SuppressFlatMapCall(EnterExit):
     def __call__(self, t):
         if t == 2:
-            raise ValueError("Skip 2")
+            raise ValueError("INTENTIONAL ERROR: Skip 2")
         return [t, t]
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -372,7 +369,7 @@ class SuppressFlatMapCall(EnterExit):
 class SuppressFilterCall(EnterExit):
     def __call__(self, t):
         if t != 2:
-            raise ValueError("Skip everything but 2")
+            raise ValueError("INTENTIONAL ERROR: Skip everything but 2")
         return t
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -383,7 +380,7 @@ class SuppressFilterCall(EnterExit):
 class SuppressForEach(EnterExit):
     def __call__(self, t):
         if t == 1:
-            raise ValueError("Skip 1")
+            raise ValueError("INTENTIONAL ERROR: Skip 1")
         return t
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -393,7 +390,7 @@ class SuppressForEach(EnterExit):
 class SuppressHash(EnterExit):
     def __call__(self, t):
         if t == 3:
-            raise ValueError("Skip 3")
+            raise ValueError("INTENTIONAL ERROR: Skip 3")
         return hash(t)
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -405,7 +402,6 @@ class TestSuppressExceptions(TestBaseExceptions):
     """
     def _run_app(self, fn=None, data=None, n=None, e=None):
         topo = Topology()
-        s = topo.source(range(93))
         if data is None:
             data = [1,2,3]
         se = topo.source(data)
@@ -414,11 +410,11 @@ class TestSuppressExceptions(TestBaseExceptions):
             se = fn(se)
 
         tester = Tester(topo)
-        tester.tuple_count(s, 93)
         if n is not None:
             tester.tuple_count(se, n)
         if e is not None:
             tester.contents(se, e)
+        tester.run_for(3)
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_exc_on_call_source(self):

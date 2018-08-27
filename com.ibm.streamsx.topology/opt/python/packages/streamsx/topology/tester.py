@@ -751,8 +751,8 @@ class _ConditionChecker(object):
         self._sequences = {}
         for cn in tester._conditions:
             self._sequences[cn] = -1
-        self.delay = 0.5
-        self.timeout = 10.0
+        self.delay = 1.0 
+        self.timeout = 20.0
         self.waits = 0
         self.additional_checks = 2
 
@@ -761,14 +761,25 @@ class _ConditionChecker(object):
     # Wait for job to be healthy. Returns True
     # if the job became healthy, False if not.
     def _wait_for_healthy(self):
+        ok_pes = 0
         while (self.waits * self.delay) < self.timeout:
-            if self._check_job_health():
+            ok_ = self._check_job_health(start=True)
+            if ok_ is True:
                 self.waits = 0
                 return True
+            if ok_ is False: # actually failed
+                return False
+
+            # ok_ is number of ok PEs
+            if ok_ <= ok_pes:
+                self.waits += 1
+            else:
+                # making progress so don't move towards
+                # the timeout
+                self.waits = 0
+                ok_pes = ok_
             time.sleep(self.delay)
-            self.waits += 1
-        self._check_job_health(verbose=True)
-        return False
+        return self._check_job_health(verbose=True)
 
     def _complete(self):
         while (self.waits * self.delay) < self.timeout:
@@ -842,12 +853,15 @@ class _ConditionChecker(object):
 
         return (valid, fail, progress, condition_states)
 
-    def _check_job_health(self, verbose=False):
+    def _check_job_health(self, start=False, verbose=False):
         self.job.refresh()
-        if self.job.health != 'healthy':
+        ok_ = self.job.health == 'healthy'
+        if not ok_:
             if verbose:
                 _logger.error("Job %s health:%s", self.job.name, self.job.health)
-            return False
+            if not start:
+                return False
+        ok_pes = 0
         for pe in self.job.get_pes():
             if pe.launchCount != 1:
                 if verbose:
@@ -856,8 +870,11 @@ class _ConditionChecker(object):
             if pe.health != 'healthy':
                 if verbose:
                     _logger.error("PE %s health: %s", pe.id, pe.health)
-                return False
-        return True
+                if not start:
+                    return False
+            else:
+                ok_pes += 1
+        return True if ok_ else ok_pes
 
     def _find_job(self):
         instance = self._sc.get_instance(id=self._instance_id)
