@@ -7,6 +7,7 @@ import sys
 import itertools
 import tempfile
 import os
+import uuid
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
@@ -27,7 +28,7 @@ def _create_tf():
 class TestBaseExceptions(unittest.TestCase):
     """ Test exceptions in callables
     """
-    _multiprocess_can_split_ = False
+    _multiprocess_can_split_ = True
 
     @classmethod
     def setUpClass(cls):
@@ -57,7 +58,7 @@ class TestExceptions(TestBaseExceptions):
 
     def _run_app(self, kind, opi='M'):
         schema = 'tuple<rstring a, int32 b>'
-        topo = Topology()
+        topo = Topology('TESPL' + str(uuid.uuid4().hex))
         streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         if opi == 'M':
             data = [1,2,3]
@@ -155,7 +156,7 @@ class TestSuppressExceptions(TestBaseExceptions):
 
     def _run_app(self, kind, e, opi='M'):
         schema = 'tuple<rstring a, int32 b>'
-        topo = Topology()
+        topo = Topology('TSESPL' + str(uuid.uuid4().hex))
         streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
 
         if opi == 'M':
