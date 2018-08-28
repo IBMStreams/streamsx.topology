@@ -99,8 +99,8 @@ class ConsistentRegionConfig(object):
                 raise ValueError("period must be greater than zero.")
 
 
-        # drain_timeout and reset_timeout must be timedelta values, or must be castable to
-        # float, and both must be greater than 0.
+        # drain_timeout and reset_timeout must be timedelta values, or must be 
+        # castable to float, and both must be greater than 0.
         if isinstance(drain_timeout, timedelta):
             if drain_timeout.total_seconds() <= 0.0:
                 raise ValueError("drain timeout value must be greater than zero.")

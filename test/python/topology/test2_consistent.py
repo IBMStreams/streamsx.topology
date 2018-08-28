@@ -269,7 +269,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         reset_count = 10
         topo = Topology("test")
         s = topo.source(TimeCounter(iterations=iterations, period=0.01))
-        s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=6))
+        s.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
         
         v = VerifyEnterExit(reset_count + 1, "VerifyEnterExit")
         tester = Tester(topo)
