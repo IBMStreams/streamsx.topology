@@ -7,6 +7,7 @@ import sys
 import itertools
 import tempfile
 import os
+import uuid
 
 if sys.version_info.major == 3:
     unicode = str
@@ -87,7 +88,7 @@ class BadSourceNext(EnterExit):
 class TestBaseExceptions(unittest.TestCase):
     """ Test exceptions in callables
     """
-    _multiprocess_can_split_ = False
+    _multiprocess_can_split_ = True
 
     def setUp(self):
         self.tf = _create_tf()
@@ -137,7 +138,7 @@ class TestExceptions(TestBaseExceptions):
         self.assertEqual('TypeError\n', content[4])
 
     def _run_app(self, fn=None, data=None):
-        topo = Topology()
+        topo = Topology('TE' + str(uuid.uuid4().hex))
         if data is None:
             data = [1,2,3]
         se = topo.source(data)
@@ -401,7 +402,7 @@ class TestSuppressExceptions(TestBaseExceptions):
     """ Test exception suppression in callables
     """
     def _run_app(self, fn=None, data=None, n=None, e=None):
-        topo = Topology()
+        topo = Topology('TSE' + str(uuid.uuid4().hex))
         if data is None:
             data = [1,2,3]
         se = topo.source(data)
