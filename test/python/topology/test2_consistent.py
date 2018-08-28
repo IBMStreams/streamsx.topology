@@ -144,7 +144,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         topo = Topology("test")
         
         s = topo.source(TimeCounter(iterations=30, period=0.1))
-        s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        s.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
 
         tester = Tester(topo)
         tester.contents(s, range(0,30))
@@ -162,7 +162,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         topo = Topology()
         # Generate integers from [0,30)
         s = topo.source(TimeCounter(iterations=30, period=0.1))
-        s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        s.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
 
         # Filter the odd ones 
         s = s.filter(StatefulEvenFilter())
@@ -180,7 +180,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         topo = Topology();
 
         lines = topo.source(ListIterator(["mary had a little lamb", "its fleece was white as snow"]))
-        lines.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        lines.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
 
         # slow things down so checkpoints can be taken.
         lines = lines.filter(StatefulDelay(0.5)) 
@@ -195,7 +195,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
     def test_hash_adder(self):
         topo = Topology("test_hash_adder")
         s = topo.source(TimeCounter(iterations=30, period=0.1))
-        s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        s.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
 
         width =  3
         s = s.parallel(width, Routing.HASH_PARTITIONED, StatefulStupidHash())
@@ -216,7 +216,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         N = 3000
         topo = Topology("test")
         s = topo.source(TimeCounter(iterations=N, period=0.01))
-        s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        s.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
 
         s.for_each(StatefulNothing())
         tester = Tester(topo)
@@ -243,7 +243,7 @@ class TestOperatorDriven(unittest.TestCase):
         # Halve the even ones and add one.  Now have integers [1,15)
         s = s.map(StatefulHalfPlusOne())
         s = s.last(10).trigger(2).aggregate(StatefulAverage())
-        s.set_consistent(ConsistentRegionConfig.operator_driven(drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        s.set_consistent(ConsistentRegionConfig.operator_driven(drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
         tester = Tester(topo)
         self.assertFalse(tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False))
 
@@ -254,7 +254,7 @@ class TestOperatorDriven(unittest.TestCase):
 
         # Filter the odd ones 
         s = s.filter(StatefulEvenFilter())
-        s.set_consistent(ConsistentRegionConfig.operator_driven(drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        s.set_consistent(ConsistentRegionConfig.operator_driven(drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
         # Halve the even ones and add one.  Now have integers [1,15)
         s = s.map(StatefulHalfPlusOne())
         s = s.last(10).trigger(2).aggregate(StatefulAverage())
@@ -269,7 +269,7 @@ class TestOperatorDriven(unittest.TestCase):
         # slow things down so checkpoints can be taken.
         lines = lines.filter(StatefulDelay(0.5)) 
         words = lines.flat_map(StatefulSplit())
-        words.set_consistent(ConsistentRegionConfig.operator_driven(drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        words.set_consistent(ConsistentRegionConfig.operator_driven(drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
         tester = Tester(topo)
         self.assertFalse(tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False))
 
@@ -288,7 +288,7 @@ class TestOperatorDriven(unittest.TestCase):
         s = s.filter(StatefulEvenFilter())
         # Halve the even ones and add one.  Now have integers [1,15)
         s = s.map(StatefulHalfPlusOne())
-        s.set_consistent(ConsistentRegionConfig.operator_driven(drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        s.set_consistent(ConsistentRegionConfig.operator_driven(drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
         s = s.last(10).trigger(2).aggregate(StatefulAverage())
         tester = Tester(topo)
         self.assertFalse(tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False))
@@ -298,7 +298,7 @@ class TestOperatorDriven(unittest.TestCase):
         topo = Topology("test")
         
         s = topo.source(TimeCounter(iterations=30, period=0.1))
-        s.set_consistent(ConsistentRegionConfig.operator_driven(drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        s.set_consistent(ConsistentRegionConfig.operator_driven(drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
         tester = Tester(topo)
         self.assertFalse(tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False))
 

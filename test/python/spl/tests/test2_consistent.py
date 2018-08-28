@@ -37,7 +37,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         bop = op.Source(topo, "com.ibm.streamsx.topology.pytest.checkpoint::TimeCounter", schema.StreamSchema('tuple<int32 f>').as_tuple(), params={'iterations':30,'period':0.1})
 
         s = bop.stream
-        s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        s.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
          
         tester = Tester(topo)
         tester.resets(3)
@@ -52,7 +52,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
 
         streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         timeCounter = op.Source(topo, "com.ibm.streamsx.topology.pytest.checkpoint::TimeCounter", schema.StreamSchema('tuple<int32 f>').as_tuple(), params={'iterations':30,'period':0.1})
-        timeCounter.stream.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        timeCounter.stream.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
  
         evenFilter = op.Map("com.ibm.streamsx.topology.pytest.checkpoint::StatefulEvenFilter", timeCounter.stream, None, params={})
         hpo = op.Map("com.ibm.streamsx.topology.pytest.checkpoint::StatefulHalfPlusOne", evenFilter.stream, None, params={})
@@ -74,7 +74,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         topo.checkpoint_period = timedelta(seconds=1)
         streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         timeCounter = op.Source(topo, "com.ibm.streamsx.topology.pytest.checkpoint::TimeCounter", schema.StreamSchema('tuple<int32 f>').as_tuple(), params={'iterations':30,'period':0.1})
-        timeCounter.stream.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        timeCounter.stream.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
 
         fizzbuzz = op.Map("com.ibm.streamsx.topology.pytest.checkpoint::FizzBuzzPrimitive", timeCounter.stream, schema.StreamSchema('tuple<int32 f, rstring c>').as_tuple())
         verify = op.Sink("com.ibm.streamsx.topology.pytest.checkpoint::Verify", fizzbuzz.stream)
@@ -90,7 +90,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
 
         streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         timeCounter = op.Source(topo, "com.ibm.streamsx.topology.pytest.checkpoint::TimeCounter", schema.StreamSchema('tuple<int32 f>').as_tuple(), params={'iterations':30,'period':0.1})
-        timeCounter.stream.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        timeCounter.stream.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
 
         fizzbuzz = op.Map("com.ibm.streamsx.topology.pytest.checkpoint::FizzBuzzMap", timeCounter.stream, schema.StreamSchema('tuple<int32 f, rstring c>').as_tuple())
         verify = op.Sink("com.ibm.streamsx.topology.pytest.checkpoint::Verify", fizzbuzz.stream)
@@ -122,7 +122,7 @@ class TestOperatorDriven(unittest.TestCase):
         timeCounter = op.Source(topo, "com.ibm.streamsx.topology.pytest.checkpoint::TimeCounter", schema.StreamSchema('tuple<int32 f>').as_tuple(), params={'iterations':30,'period':0.1})
  
         evenFilter = op.Map("com.ibm.streamsx.topology.pytest.checkpoint::StatefulEvenFilter", timeCounter.stream, None, params={})
-        evenFilter.stream.set_consistent(ConsistentRegionConfig.operator_driven(drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        evenFilter.stream.set_consistent(ConsistentRegionConfig.operator_driven(drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
         
         hpo = op.Map("com.ibm.streamsx.topology.pytest.checkpoint::StatefulHalfPlusOne", evenFilter.stream, None, params={})
         s = hpo.stream
@@ -139,7 +139,7 @@ class TestOperatorDriven(unittest.TestCase):
         evenFilter = op.Map("com.ibm.streamsx.topology.pytest.checkpoint::StatefulEvenFilter", timeCounter.stream, None, params={})
         
         hpo = op.Map("com.ibm.streamsx.topology.pytest.checkpoint::StatefulHalfPlusOne", evenFilter.stream, None, params={})
-        hpo.stream.set_consistent(ConsistentRegionConfig.operator_driven(drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        hpo.stream.set_consistent(ConsistentRegionConfig.operator_driven(drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
         s = hpo.stream
         tester = Tester(topo)
 
@@ -156,7 +156,7 @@ class TestOperatorDriven(unittest.TestCase):
         bop = op.Source(topo, "com.ibm.streamsx.topology.pytest.checkpoint::TimeCounter", schema.StreamSchema('tuple<int32 f>').as_tuple(), params={'iterations':30,'period':0.1})
 
         s = bop.stream
-        s.set_consistent(ConsistentRegionConfig.operator_driven(drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
+        s.set_consistent(ConsistentRegionConfig.operator_driven(drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
          
         tester = Tester(topo)
 
@@ -176,7 +176,7 @@ class TestOperatorDriven(unittest.TestCase):
         bop = op.Source(topo, "spl.utility::Beacon", schema.StreamSchema('tuple<int32 f>').as_tuple(), params={'iterations':30,'period':0.1,'triggerCount':streamsx.spl.types.uint32(5)})
 
         s = bop.stream
-        s.set_consistent(ConsistentRegionConfig.operator_driven(drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=6))
+        s.set_consistent(ConsistentRegionConfig.operator_driven(drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
          
         tester = Tester(topo)
         tester.tuple_count(s, 30)
