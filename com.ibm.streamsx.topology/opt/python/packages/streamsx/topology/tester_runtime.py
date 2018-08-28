@@ -32,7 +32,6 @@ import collections
 import threading
 import time
 
-
 class Condition(object):
     """A condition for testing.
 
@@ -231,6 +230,8 @@ class _Resetter(Condition):
     def _attach(self, stream):
         params = {'minimumResets': self.minimum_resets, 'conditionName': self.CONDITION_NAME}
         resetter = streamsx.spl.op.Invoke(self.topology, "com.ibm.streamsx.topology.testing.consistent::Resetter", params=params, name="ConsistentRegionResetter")
+        resetter.category = 'Tester'
+        resetter._op()._layout(hidden=True)
         
 
 class _RunFor(_PythonCondition):
