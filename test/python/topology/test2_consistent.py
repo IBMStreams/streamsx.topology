@@ -271,14 +271,14 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         s = topo.source(TimeCounter(iterations=iterations, period=0.01))
         s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=6))
         
-        v = VerifyEnterExit(reset_count, "VerifyEnterExit")
+        v = VerifyEnterExit(reset_count + 1, "VerifyEnterExit")
         tester = Tester(topo)
         tester.resets(reset_count)
         tester.add_condition(s, v)
 
-        cfg={}
-        job_config = streamsx.topology.context.JobConfig(tracing='debug')
-        job_config.add(self.test_config)
+        # cfg={}
+        # job_config = streamsx.topology.context.JobConfig(tracing='debug')
+        # job_config.add(self.test_config)
 
         tester.test(self.test_ctxtype, self.test_config)
 
