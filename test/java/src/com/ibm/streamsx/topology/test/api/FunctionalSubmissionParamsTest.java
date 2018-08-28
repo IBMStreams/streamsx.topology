@@ -52,9 +52,8 @@ import com.ibm.streamsx.topology.tester.Tester;
 public class FunctionalSubmissionParamsTest extends TestTopology {
 
     @Test
-    public void FilterTest() throws Exception {
-        Topology topology = newTopology("FilterTest");
-        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
+    public void testFilterWithSubmissionParams() throws Exception {
+        Topology topology = newTopology();
         
         Supplier<Integer> threshold = topology.createSubmissionParameter("threshold", Integer.class);
         Supplier<Integer> defaultedThreshold = topology.createSubmissionParameter("defaultedThreshold", 2);
@@ -85,9 +84,8 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
     }
 
     @Test
-    public void SourceTest() throws Exception {
-        Topology topology = newTopology("SourceTest");
-        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
+    public void testSourceWithSubmissionParams() throws Exception {
+        Topology topology = newTopology();
         
         Supplier<Integer> someInt = topology.createSubmissionParameter("someInt", Integer.class);
         Supplier<Integer> someIntD = topology.createSubmissionParameter("someIntD", 20);
@@ -117,9 +115,8 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
     }
 
     @Test
-    public void PeriodicSourceTest() throws Exception {
-        Topology topology = newTopology("PeriodicSourceTest");
-        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
+    public void testPeriodicSourceWithSubmissionParams() throws Exception {
+        Topology topology = newTopology();
         
         Supplier<Integer> someInt = topology.createSubmissionParameter("someInt", Integer.class);
         Supplier<Integer> someIntD = topology.createSubmissionParameter("someIntD", 20);
@@ -164,10 +161,9 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
     
 
     @Test
-    @Ignore("Suddenly started failing on jenkins streamsx.topology - but only there (expected 100 got 0). Get the build working again.")
-    public void OthersTest() throws Exception {
-        Topology topology = newTopology("OthersTest");
-        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
+    //@Ignore("Suddenly started failing on jenkins streamsx.topology - but only there (expected 100 got 0). Get the build working again.")
+    public void testFunctionsWithSubmissionParams() throws Exception {
+        Topology topology = newTopology();
         
         // FunctionFilter op is based on FunctionFunctor and the
         // latter is what knows about submission params.
@@ -265,9 +261,8 @@ public class FunctionalSubmissionParamsTest extends TestTopology {
 
 
     @Test
-    public void AllTypesTest() throws Exception {
-        Topology topology = newTopology("AllTypesTest");
-        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
+    public void testSubmissionParamsTypes() throws Exception {
+        Topology topology = newTopology();
         
         // verify functional with all SP types
         
