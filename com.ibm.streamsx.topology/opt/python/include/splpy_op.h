@@ -46,6 +46,8 @@ class SplpyOp;
   SplpyOp * op;
   PyObject * loads;
   PyObject * dumps;
+  PyObject * afterLoad;
+  PyObject * beforeDiscard;
   PyObject * pickledInitialCallable;
 };
 
@@ -316,17 +318,21 @@ class SplpyOp {
 };
 
  // Steals reference to pickledCallable
- SplpyOpStateHandlerImpl::SplpyOpStateHandlerImpl(SplpyOp * pyop, PyObject * pickledCallable) : op(pyop), loads(), dumps(), pickledInitialCallable(pickledCallable) {
+ SplpyOpStateHandlerImpl::SplpyOpStateHandlerImpl(SplpyOp * pyop, PyObject * pickledCallable) : op(pyop), loads(), dumps(), afterLoad(), beforeDiscard(), pickledInitialCallable(pickledCallable) {
   // Load pickle.loads and pickle.dumps
   SplpyGIL lock;
   loads = SplpyGeneral::loadFunction("dill", "loads");
   dumps = SplpyGeneral::loadFunction("dill", "dumps");
+  afterLoad = SplpyGeneral::loadFunction("streamsx.ec", "_callable_after_load");
+  beforeDiscard = SplpyGeneral::loadFunction("streamsx.ec", "_callable_before_discard");
  }
 
  SplpyOpStateHandlerImpl::~SplpyOpStateHandlerImpl() {
    SplpyGIL lock;
    Py_CLEAR(loads);
    Py_CLEAR(dumps);
+   Py_CLEAR(afterLoad);
+   Py_CLEAR(beforeDiscard);
    Py_CLEAR(pickledInitialCallable);
  }
 
@@ -349,30 +355,71 @@ class SplpyOp {
 
  void SplpyOpStateHandlerImpl::reset(SPL::Checkpoint & ckpt) {
    SPLAPPTRC(L_DEBUG, "reset", "python");
+
    // Restore the callable from an spl blob
    SPL::blob bytes;
    ckpt >> bytes;
    SplpyGIL lock;
-   PyObject * pickle = pySplValueToPyObject(bytes);
-   PyObject * ret = call(loads, pickle);
+   
+   // Call ec._callable_before_discard on old callable
+   SPLAPPTRC(L_DEBUG, "calling ec._callable_before_discard on old callable", "python");
+   PyObject * ret = call(beforeDiscard, op->callable());
    if (!ret) {
+     SplpyGeneral::tracePythonError();
+     throw SplpyGeneral::pythonException("ec._callable_before_discard");
+   }
+   Py_DECREF(ret);
+
+   PyObject * pickle = pySplValueToPyObject(bytes);
+   PyObject * callable = call(loads, pickle);
+   if (!callable) {
        SplpyGeneral::tracePythonError();
        throw SplpyGeneral::pythonException("dill.loads");
    }
+
+   // Call ec.callable_after_load on new callable
+   SPLAPPTRC(L_DEBUG, "calling ec._callable_after_load on new callable", "python");
+   ret = call(afterLoad, callable);
+   if (!ret) {
+     SplpyGeneral::tracePythonError();
+     throw SplpyGeneral::pythonException("ec._callable_after_load");
+   }
+   Py_DECREF(ret);
+
    // discard the old callable, replace with the newly
    // unpickled one.
    Py_DECREF(op->callable());
-   op->setCallable(ret); // reference to ret stolen by op
+   op->setCallable(callable); // reference to ret stolen by op
  }
 
  void SplpyOpStateHandlerImpl::resetToInitialState() {
    SPLAPPTRC(L_DEBUG, "resetToInitialState", "python");
    SplpyGIL lock;
+
+   // Call _splpy_before_discard on old callable
+   SPLAPPTRC(L_DEBUG, "calling ec._callable_before_discard on old callable", "python");
+   PyObject * ret = call(beforeDiscard, op->callable());
+   if (!ret) {
+     SplpyGeneral::tracePythonError();
+     throw SplpyGeneral::pythonException("ec._callable_before_discard");
+   }
+   Py_DECREF(ret);
+
    PyObject * initialCallable = call(loads, pickledInitialCallable);
    if (!initialCallable) {
      SplpyGeneral::tracePythonError();
      throw SplpyGeneral::pythonException("dill.loads");
    }
+
+   // Call afterLoad on new callable
+   SPLAPPTRC(L_DEBUG, "calling ec._callable_after_load on new callable", "python");
+   ret = call(afterLoad, initialCallable);
+   if (!ret) {
+     SplpyGeneral::tracePythonError();
+     throw SplpyGeneral::pythonException("ec._callable_after_load");
+   }
+   Py_DECREF(ret);
+
    Py_DECREF(op->callable());
    op->setCallable(initialCallable);
  }

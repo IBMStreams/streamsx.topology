@@ -63,7 +63,7 @@ Submitting to Streaming Analytics service
 
 An application is submitted to a Streaming Analytics service using
 ``--service-name SERVICE_NAME``. The named service must exist in the
-VCAP services defintion pointed to by the ``VCAP_SERVICES`` environment
+VCAP services definition pointed to by the ``VCAP_SERVICES`` environment
 variable.
 
 The application is submitted as source (except ``--bundle``)  and compiled into
