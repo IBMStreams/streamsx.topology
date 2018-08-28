@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
@@ -33,6 +34,14 @@ public interface DeployKeys {
      * Key for deploy information in top-level submission object.
      */
     String DEPLOY = "deploy";
+    
+    /**
+     * Optional time in milliseconds since epoch that the last time
+     * it was known the service was running.
+     */
+    String SERVICE_RUNNING_TIME = "serviceRunningTime";
+    
+    long SERVICE_NO_CHECK_PERIOD = TimeUnit.MINUTES.toMillis(15);
     
     /**
      * Get deploy object from submission,
