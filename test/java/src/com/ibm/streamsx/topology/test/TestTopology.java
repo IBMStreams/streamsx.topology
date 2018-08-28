@@ -373,7 +373,7 @@ public class TestTopology {
                 seconds, TimeUnit.SECONDS,
                 contents);
 
-        assertTrue(expectedContents.toString(), expectedContents.valid());
+        assertTrue("Expected:" + contents, expectedContents.valid());
     }
     
     /**

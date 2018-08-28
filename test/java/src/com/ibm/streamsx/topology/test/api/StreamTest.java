@@ -170,7 +170,6 @@ public class StreamTest extends TestTopology {
         assertEquals(String.class, su.getTupleClass());
         assertEquals(String.class, su.getTupleType());
         
-        // TODO - testing doesn't work against union streams in embedded.
         su = su.filter(new AllowAll<String>());
 
         Tester tester = topology.getTester();
@@ -181,8 +180,8 @@ public class StreamTest extends TestTopology {
         //assertTrue(complete(tester, suCount, 10, TimeUnit.SECONDS));
         complete(tester, suCount, 10, TimeUnit.SECONDS);
 
-        assertTrue("SU:" + suContents, suContents.valid());
-        assertTrue("SU:" + suCount, suCount.valid());
+        assertTrue("SU Contents", suContents.valid());
+        assertTrue("SU Count", suCount.valid());
 
     }
 

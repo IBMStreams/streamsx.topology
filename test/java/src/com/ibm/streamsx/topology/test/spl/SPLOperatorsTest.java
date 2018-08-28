@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.test.spl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.util.Collections;
@@ -241,6 +242,8 @@ public class SPLOperatorsTest extends TestTopology {
     private void testOpParamsOptionalTypes(String testName, OpParamAdder opParamAdder)
         throws Exception {
         
+        assumeTrue(!isStreamingAnalyticsRun()); // TODO: Uses Stream handler
+        
         Topology topology = new Topology(testName); 
         opParamAdder.init(topology, getConfig());
         // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
@@ -307,6 +310,8 @@ public class SPLOperatorsTest extends TestTopology {
 
     @Test
     public void testSubmissionParamsWithDefault() throws Exception {
+        assumeTrue(!isStreamingAnalyticsRun()); // TODO: Uses Stream handler
+        
         // Test operator parameters with submission time values with defaults
         testOpParams("testSubmissionParamsWithDefault", new OpParamAdder() {
             void put(String opParamName, Object opParamValue) {
@@ -322,6 +327,7 @@ public class SPLOperatorsTest extends TestTopology {
 
     @Test
     public void testSubmissionParamsWithoutDefault() throws Exception {
+        assumeTrue(!isStreamingAnalyticsRun()); // TODO: Uses Stream handler
            
         // Test operator parameters with submission time values without defaults
         testOpParams("testSubmissionParamsWithoutDefault", new OpParamAdder() {
