@@ -182,14 +182,15 @@ class TestDistributedConsistentRegion(unittest.TestCase):
 
     # Source operator
     def test_source(self):
-        topo = Topology("test")
+        N = 3000
+        topo = Topology()
         
-        s = topo.source(TimeCounter(iterations=30, period=0.1))
+        s = topo.source(TimeCounter(iterations=N, period=0.01))
         s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=3))
 
         tester = Tester(topo)
-        tester.contents(s, range(0,30))
-        tester.resets(3)
+        tester.contents(s, range(0,N))
+        tester.resets(5)
 
 #        cfg={}
 #        job_config = streamsx.topology.context.JobConfig(tracing='debug')
