@@ -27,9 +27,13 @@ export PYTHONPATH=${PYTHONPATH}:${WORKSPACE}/test/python/topology:${WORKSPACE}/t
 
 wd="$WORKSPACE/test/python/nose_runs/service-py${pyv}"
 mkdir -p ${wd}
-nosetests --where=${wd} --xunit-file ${xuf} --xunit-testsuite-name="py${pyv}" --config=nose.cfg ../../topology ../../spl/tests
+# xunit not working with processes
+# --xunit-file ${xuf} --xunit-testsuite-name="pysvc${pyv}"
+nosetests --where=${wd} --config=nose.cfg ../../topology ../../spl/tests ../../scripts
 nrc=$?
-# Ensure only test failures just cause an unstable build.
-if [ ${nrc} -eq 1 ] && [ -e  ${xuf} ]; then exit 0; else exit ${nrc}; fi
 source ${ANACONDA36_HOME:?}/bin/deactivate `basename ${ANACONDA35_HOME}`
+# Ensure only test failures just cause an unstable build.
+# Disabled for now since with multiple processes xunit does not
+# collect results correctly
+#if [ ${nrc} -eq 1 ] && [ -e  ${xuf} ]; then exit 0; else exit ${nrc}; fi
 exit ${nrc}

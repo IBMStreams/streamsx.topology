@@ -1,5 +1,6 @@
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
+from streamsx.topology.tester_runtime import _PythonCondition
 from streamsx.topology.consistent import ConsistentRegionConfig
 import streamsx.spl.op as op
 import streamsx.ec as ec
@@ -84,9 +85,8 @@ class StatefulDelay(object):
         time.sleep(self.period)
         return True
 
-# Do nothing, statefully.  This is used with for_each.  It seems not so
-# easy to test for_each.
-class StatefulNothing(object):
+# Verify that tuples are received in strict numeric order.
+class VerifyNumericOrder(object):
     def __init__(self):
         self._expected = 0
     def __call__(self, x):
@@ -94,6 +94,47 @@ class StatefulNothing(object):
              self._expected += 1
         else:
             raise ValueError("Expected " + str(self._expected) + " got " + x)
+
+# Verify that __enter__ and __exit__ are called, alternately, a specified 
+# number of times.
+class VerifyEnterExit(_PythonCondition):
+    def __init__(self, expected_minimum, name):
+        super(VerifyEnterExit, self).__init__(name)
+        self.expected_minimum = expected_minimum
+
+    def __call__(self, _):
+        pass
+
+    def __enter__(self):
+        super(VerifyEnterExit, self).__enter__()
+
+        self._metric_enter_count = self._create_metric("enterCount", ec.MetricKind.Counter)
+        self._metric_exit_count = self._create_metric("exitCount", ec.MetricKind.Counter)
+
+        self._metric_enter_count += 1
+        enter_count = self._metric_enter_count.value
+        exit_count = self._metric_exit_count.value
+        # enter count should be exactly one more than exit count
+        if enter_count != exit_count + 1:
+            self.fail()
+        if enter_count >= self.expected_minimum:
+            self.valid = True
+            # This verifies that the number of enter calls is at least
+            # the expected number, and that the number of exit calls is
+            # exactly one less than the number of enter calls.  The
+            # remaining exit call should happen on shutdown.  The test 
+            # really should verify that the final exit call happens, but
+            # I don't see a way to do that.
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        ret = super(VerifyEnterExit, self).__exit__(exc_type, exc_value, traceback)
+        self._metric_exit_count += 1
+        return ret
+
+    def __str__(self):
+        enter_count = self._metric_enter_count.value
+        exit_count = self._metric_exit_count.value
+        return "Verify enter and exit: expected:" + str(self.expected_minimum) + " received: " + str(enter_count) + " enter and " + str(exit_count) + " exit."
 
 # Compute a hash code, statefully.  Again the state is not meaningful
 class StatefulStupidHash(object):
@@ -124,7 +165,7 @@ class ListIterator(object):
         return __next__(self)
     
 
-# Consisent region is not supported in standalone.  Note that neither
+# Consistent region is not supported in standalone.  Note that neither
 # checkpointing nor consistent region can be used in standalone, but 
 # if checkpointing is enabled in standalone, there is a warning message
 # but the application runs, while if consistent region is enabled, there
@@ -150,9 +191,9 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         tester.contents(s, range(0,30))
         tester.resets(3)
 
-        cfg={}
-        job_config = streamsx.topology.context.JobConfig(tracing='debug')
-        job_config.add(self.test_config)
+#        cfg={}
+#        job_config = streamsx.topology.context.JobConfig(tracing='debug')
+#        job_config.add(self.test_config)
 
         tester.test(self.test_ctxtype, self.test_config)
 
@@ -218,11 +259,28 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         s = topo.source(TimeCounter(iterations=N, period=0.01))
         s.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
 
-        s.for_each(StatefulNothing())
+        s.for_each(VerifyNumericOrder())
         tester = Tester(topo)
         tester.resets()
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_enter_exit(self):
+        iterations = 3000
+        reset_count = 10
+        topo = Topology("test")
+        s = topo.source(TimeCounter(iterations=iterations, period=0.01))
+        s.set_consistent(ConsistentRegionConfig.periodic(1, drainTimeout=40, resetTimeout=40, maxConsecutiveAttempts=6))
+        
+        v = VerifyEnterExit(reset_count + 1, "VerifyEnterExit")
+        tester = Tester(topo)
+        tester.resets(reset_count)
+        tester.add_condition(s, v)
+
+        # cfg={}
+        # job_config = streamsx.topology.context.JobConfig(tracing='debug')
+        # job_config.add(self.test_config)
+
+        tester.test(self.test_ctxtype, self.test_config)
 
 class TestSasConsistentRegion(TestDistributedConsistentRegion):
     def setUp(self):

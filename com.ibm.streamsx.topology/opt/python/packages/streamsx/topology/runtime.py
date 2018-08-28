@@ -103,6 +103,12 @@ class _FunctionalCallable(object):
         if self._cls:
             return ec._callable_exit(self._callable, exc_type, exc_value, traceback)
 
+    def _splpy_before_discard(self):
+        ec._callable_before_discard(self._callable)
+
+    def _splpy_after_load(self):
+        ec._callable_after_load(self._callable)
+
 class _PickleInObjectOut(_FunctionalCallable):
     def __call__(self, tuple_, pm=None):
         if pm is not None:
@@ -453,6 +459,12 @@ class _WrappedInstance(object):
     
     def __exit__(self, exc_type, exc_value, traceback):
         return self._callable.__exit__(exc_type, exc_value, traceback)
+
+    def _splpy_before_discard(self):
+        ec._callable_before_discard(self._callable)
+
+    def _splpy_after_load(self):
+        ec._callable_after_load(self._callable);
 
 # Wraps an iterable instance returning
 # it when called. Allows an iterable

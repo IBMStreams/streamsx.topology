@@ -43,8 +43,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         tester.resets(3)
         tester.tuple_count(s, 30)
         tester.contents(s, list(zip(range(0,30))))
-
-        tester.test(self.test_ctxtype, self.test_config, always_collect_logs=True)
+        tester.test(self.test_ctxtype, self.test_config)
 
     # Source, filter, and map operators
     def test_filter_map(self):
@@ -59,10 +58,15 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         s = hpo.stream
         tester = Tester(topo)
         tester.resets(3)
+
+#        cfg={}
+#        job_config = streamsx.topology.context.JobConfig(tracing='debug')
+#        job_config.add(self.test_config)
+
         tester.tuple_count(s, 15)
         tester.contents(s, list(zip(range(1,16))))
 
-        tester.test(self.test_ctxtype, self.test_config, always_collect_logs=True)
+        tester.test(self.test_ctxtype, self.test_config)
 
     # source, primitive, and for_each operators
     # this will fail to compile because checkpointing is not supported
@@ -160,7 +164,7 @@ class TestOperatorDriven(unittest.TestCase):
          
         tester = Tester(topo)
 
-        self.assertFalse(tester.test(self.test_ctxtype, self.test_config, always_collect_logs=True, assert_on_fail=False))
+        self.assertFalse(tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False))
 
 
     def test_primitive(self):

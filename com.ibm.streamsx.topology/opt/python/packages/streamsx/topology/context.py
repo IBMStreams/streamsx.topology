@@ -37,6 +37,7 @@ import sys
 import codecs
 import tempfile
 import copy
+import time
 
 logger = logging.getLogger('streamsx.topology.context')
 
@@ -274,11 +275,17 @@ class _BaseSubmitter(object):
         tk_root = os.path.dirname(dir)
         return tk_root
 
-
 class _StreamingAnalyticsSubmitter(_BaseSubmitter):
     """
     A submitter supports the ANALYTICS_SERVICE (Streaming Analytics service) context.
     """
+
+    # Maintains the last time by service in ms since epoch the last
+    # time a thread saw the service running. Allows avoidance of
+    # status checks when we are somewhat confident the service
+    # is running, eg. during test runs or repeated submissions.
+    _SERVICE_ACTIVE = threading.local()
+
     def __init__(self, ctxtype, config, graph):
         super(_StreamingAnalyticsSubmitter, self).__init__(ctxtype, config, graph)
         self._streams_connection = self._config().get(ConfigParams.STREAMS_CONNECTION)
@@ -313,6 +320,15 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
 
         self._setup_views()
 
+    def _create_full_json(self):
+        fj = super(_StreamingAnalyticsSubmitter, self)._create_full_json()
+        if hasattr(_StreamingAnalyticsSubmitter._SERVICE_ACTIVE, 'running'):
+            rts = _StreamingAnalyticsSubmitter._SERVICE_ACTIVE.running
+            if self._service_name in rts:
+                sn = self._service_name if self._service_name else os.environ['STREAMING_ANALYTICS_SERVICE_NAME']
+                fj['deploy']['serviceRunningTime'] = rts[sn]
+        return fj
+
     def streams_connection(self):
         if self._streams_connection is None:
             self._streams_connection = rest.StreamingAnalyticsConnection(self._vcap_services, self._service_name)
@@ -328,6 +344,11 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
             instance_id = credentials['jobs_path'].split('/service_instances/', 1)[1].split('/', 1)[0]
         submission_result['instanceId'] = instance_id
         submission_result['streamsConnection'] = self.streams_connection()
+        if 'jobId' in submission_result:
+            if not hasattr(_StreamingAnalyticsSubmitter._SERVICE_ACTIVE, 'running'):
+                _StreamingAnalyticsSubmitter._SERVICE_ACTIVE.running = dict()
+            sn = self._service_name if self._service_name else os.environ['STREAMING_ANALYTICS_SERVICE_NAME']
+            _StreamingAnalyticsSubmitter._SERVICE_ACTIVE.running[sn] = int(time.time() * 1000.0)
 
     def _get_java_env(self):
         "Pass the VCAP through the environment to the java submission"

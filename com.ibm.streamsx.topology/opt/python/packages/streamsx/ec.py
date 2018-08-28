@@ -494,7 +494,41 @@ def _callable_exit(callable_, exc_type, exc_value, traceback):
             callable_._splpy_entered = False
         return ignore
     return False
-        
+
+def _callable_after_load(callable_):
+    # When restoring a checkpoint, the current state of an operator
+    # is discarded, and previous state is loaded from the checkpoint.
+    # This method is called after loading the state from the checkpoint.
+    # If the callable has __enter__ and __exit__, it is appropriate
+    # to call __enter__ at this time.  The user's callable may be wrapped
+    # in one or more wrappers, so we need to keep opening the wrappers until
+    # we find the innermost callable.  Each wrapper contains a 
+    # _splpy_after_load method.  If the callable passed to this method
+    # contains _splpy_after_load, we call it.  Otherwise, it may be the
+    # user's callable, so if it contains __enter__ and __exit__, we call
+    # __enter__.
+    if hasattr(callable_, '_splpy_after_load'):
+        callable_._splpy_after_load()
+    elif hasattr(callable_, '__enter__') and hasattr(callable_, '__exit__'):
+        callable_.__enter__()
+
+def _callable_before_discard(callable_):
+    # When restoring a checkpoint, the current state of an operator
+    # is discarded, and previous state is loaded from the checkpoint.
+    # This method is called before discarding the current state.
+    # If the callable has __enter__ and __exit__, it is appropriate
+    # to call __exit__ at this time.  The user's callable may be wrapped
+    # in one or more wrappers, so we need to keep opening the wrappers until
+    # we find the innermost callable.  Each wrapper contains a 
+    # _splpy_before_discard method.  If the callable passed to this method
+    # contains _splpy_before_discard, we call it.  Otherwise, it may be the
+    # user's callable, so if it contains __enter__ and __exit__, we call
+    # __exit__.  
+    if hasattr(callable_, '_splpy_before_discard'):
+        callable_._splpy_before_discard()
+    elif hasattr(callable_, '__enter__') and hasattr(callable_, '__exit__'):
+        callable_.__exit__(None, None, None)
+    
 def _submit(primitive, port_index, tuple_):
     """Internal method to submit a tuple"""
     args = (_get_opc(primitive), port_index, tuple_)
