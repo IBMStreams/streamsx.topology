@@ -702,6 +702,8 @@ class Topology(object):
 
         Returns:
             The checkpoint period.
+
+        .. versionadded:: 1.11
         """
         return self._checkpoint_period
 
@@ -1239,6 +1241,8 @@ class Stream(_placement._Placement, object):
 
         Returns:
             Stream: Returns this stream.
+
+        .. versionadded:: 1.11
         """
 
         # add job control plane if needed

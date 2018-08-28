@@ -118,8 +118,8 @@ and its ``__exit__`` method called when the processing element is stopped. To ta
 the class must define both ``__enter__`` and ``__exit__`` methods.
 
 .. note::
-    For future compatibility operator initialization such as opening files should be in ``__enter__``
-    in order to support stateful operator restart & checkpointing in the future.
+    Initialization such as opening files should be in ``__enter__``
+    in order to support stateful operator restart & checkpointing.
 
 Example of using ``__enter__`` and ``__exit__`` to open and close a file::
 
