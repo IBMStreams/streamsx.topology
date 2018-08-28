@@ -419,19 +419,19 @@ class _SPLInvocation(object):
                     consistent_period = float(self._consistent.period)
                 consistent['period'] = str(consistent_period)
 
-            if isinstance(self._consistent.drainTimeout, datetime.timedelta):
-                consistent_drain = self._consistent.drainTimeout.total_seconds();
+            if isinstance(self._consistent.drain_timeout, datetime.timedelta):
+                consistent_drain = self._consistent.drain_timeout.total_seconds();
             else:
-                consistent_drain = float(self._consistent.drainTimeout)
+                consistent_drain = float(self._consistent.drain_timeout)
             consistent['drainTimeout'] = str(consistent_drain)
 
-            if isinstance(self._consistent.resetTimeout, datetime.timedelta):
-                consistent_reset = self._consistent.resetTimeout.total_seconds();
+            if isinstance(self._consistent.reset_timeout, datetime.timedelta):
+                consistent_reset = self._consistent.reset_timeout.total_seconds();
             else:
-                consistent_reset = float(self._consistent.resetTimeout)
+                consistent_reset = float(self._consistent.reset_timeout)
             consistent['resetTimeout'] = str(consistent_reset)
 
-            consistent['maxConsecutiveResetAttempts'] = int(self._consistent.maxConsecutiveAttempts)
+            consistent['maxConsecutiveResetAttempts'] = int(self._consistent.max_consecutive_attempts)
 
         # Callout to allow a ExtensionOperator
         # to augment the JSON
