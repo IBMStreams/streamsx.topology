@@ -262,6 +262,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
 
         s.for_each(VerifyNumericOrder())
         tester = Tester(topo)
+        tester.tuple_count(s, N)
         tester.resets()
         tester.test(self.test_ctxtype, self.test_config)
 
