@@ -370,6 +370,9 @@ class SplpyOp {
    }
    Py_DECREF(ret);
 
+   // discard the old callable
+   Py_DECREF(op->callable());
+
    PyObject * pickle = pySplValueToPyObject(bytes);
    PyObject * callable = call(loads, pickle);
    if (!callable) {
@@ -386,9 +389,7 @@ class SplpyOp {
    }
    Py_DECREF(ret);
 
-   // discard the old callable, replace with the newly
-   // unpickled one.
-   Py_DECREF(op->callable());
+   // Switch to newly unpickled callable.
    op->setCallable(callable); // reference to ret stolen by op
  }
 
@@ -404,6 +405,7 @@ class SplpyOp {
      throw SplpyGeneral::pythonException("ec._callable_before_discard");
    }
    Py_DECREF(ret);
+   Py_DECREF(op->callable());
 
    PyObject * initialCallable = call(loads, pickledInitialCallable);
    if (!initialCallable) {
@@ -420,7 +422,6 @@ class SplpyOp {
    }
    Py_DECREF(ret);
 
-   Py_DECREF(op->callable());
    op->setCallable(initialCallable);
  }
 
