@@ -8,6 +8,9 @@
 using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
+<%
+  require "splpy_operator.pm";
+%>
 
 class MY_OPERATOR : public MY_BASE_OPERATOR, public DelegatingStateHandler
 {
