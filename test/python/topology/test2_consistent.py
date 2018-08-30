@@ -5,6 +5,7 @@ from streamsx.topology.consistent import ConsistentRegionConfig
 import streamsx.spl.op as op
 import streamsx.ec as ec
 
+import itertools
 import unittest
 from datetime import timedelta
 
@@ -144,20 +145,21 @@ class StatefulStupidHash(object):
 # listiterater objects cannot be pickled in python 2.7, so here is a
 # list iterator class
 class ListIterator(object):
-    def __init__(self, listToIterate, period=None):
+    def __init__(self, listToIterate, period=None, count=1):
         self.listToIterate = listToIterate
-        if period is None:
-            self.period=0.1
+        self.period = period
         self.index = 0
+        self.count = count
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        if self.index >= len(self.listToIterate):
+        if self.index >= len(self.listToIterate) * self.count:
             raise StopIteration
-        time.sleep(self.period);
-        ret = self.listToIterate[self.index];
+        if self.period is not None:
+            time.sleep(self.period)
+        ret = self.listToIterate[self.index % len(self.listToIterate)];
         self.index += 1
         return ret
 
@@ -172,25 +174,21 @@ class ListIterator(object):
 # is an error and the application stops.  There is an inconsistency about
 # how we handle the unsupported configuration.
 
-#class TestConsistentRegion(unittest.TestCase): 
-#    def setUp(self):
-#        Tester.setup_standalone(self)
-
 class TestDistributedConsistentRegion(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)
 
     # Source operator
     def test_source(self):
-        N = 3000
+        iterations=3000
         topo = Topology()
         
-        s = topo.source(TimeCounter(iterations=N, period=0.01))
-        s.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
+        s = topo.source(TimeCounter(iterations=iterations, period=0.01))
+        s.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
 
         tester = Tester(topo)
-        tester.contents(s, range(0,N))
-        tester.resets(5)
+        tester.contents(s, range(0,iterations))
+        tester.resets()
 
 #        cfg={}
 #        job_config = streamsx.topology.context.JobConfig(tracing='debug')
@@ -201,86 +199,106 @@ class TestDistributedConsistentRegion(unittest.TestCase):
     # Source, ForEach, Filter, Aggregate operators
     # (based on test2_python_window.TestPythonWindowing.test_basicCountCountWindow)
     def test_aggregate(self):
+        # If the number of iterations is changed, keep it a multiple of six,
+        # or improve the expected results generation below.
+        iterations = 3000
         topo = Topology()
-        # Generate integers from [0,30)
-        s = topo.source(TimeCounter(iterations=30, period=0.1))
-        s.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
+        # Generate integers from [0,3000)
+        s = topo.source(TimeCounter(iterations=iterations, period=0.01))
+        s.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
 
         # Filter the odd ones 
         s = s.filter(StatefulEvenFilter())
-        # Halve the even ones and add one.  Now have integers [1,15)
+        # Halve the even ones and add one.  Now have integers [1,(iterations/2))
         s = s.map(StatefulHalfPlusOne())
-        s = s.last(10).trigger(2).aggregate(StatefulAverage())
+        s = s.last(10).trigger(3).aggregate(StatefulAverage())
+
         tester = Tester(topo)
-        tester.resets(3)
-        tester.contents(s, [1.5,2.5,3.5,4.5,5.5,7.5,9.5])
+        tester.resets()
+
+        # Find the expected results.
+        # The first three values (until the window fills) are special.
+        expected = [2.0, 3.5, 5.0]
+        # The rest start at 7.5 and increase by three until 1495.5.
+        # Assuming that the number of iterations is a multiple of six,
+        # the final trigger happens at the last tuple.  There will be
+        # ten values in the window, from (iterations/2 - 9) to (iterations/2).
+        # The average is then ((iterations/2 - 9) + (iterations/2))/2.
+        # For 3000 iterations, that works out to 1495.5
+        end = float(iterations)/2.0 - 4.5
+        expected.extend(itertools.takewhile(lambda x: x <= end, itertools.count(7.5,3)))
+        tester.contents(s, expected)
         tester.test(self.test_ctxtype, self.test_config)
-        
+
 
     # Test flat map (based on a sample)
     def test_flat_map(self):
+        count = 1000
         topo = Topology();
 
-        lines = topo.source(ListIterator(["mary had a little lamb", "its fleece was white as snow"]))
-        lines.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
+        lines = topo.source(ListIterator(["All work","and no play","makes Jack","a dull boy"], period=0.01, count=count))
 
-        # slow things down so checkpoints can be taken.
-        lines = lines.filter(StatefulDelay(0.5)) 
+        lines.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
+
         words = lines.flat_map(StatefulSplit())
         tester = Tester(topo)
-        tester.resets(3)
-        tester.contents(words, ["mary","had","a","little","lamb","its","fleece","was","white","as","snow"])
+        tester.resets()
+
+        # Find the expected results.
+        flat_contents = ["All","work","and","no","play","makes","Jack","a","dull","boy"]
+        # repeat the contents 1000 times.
+        expected = []
+        for i in range(count):
+            expected.extend(flat_contents)
+        tester.contents(words, expected)
         tester.test(self.test_ctxtype, self.test_config)
 
     # Test hash adder.  This requires parallel with a hash router.
     # (based on test2_udp.TestUDP.test_TopologyParallelHash)
     def test_hash_adder(self):
-        topo = Topology("test_hash_adder")
-        s = topo.source(TimeCounter(iterations=30, period=0.1))
-        s.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
+        iterations=3000
+        topo = Topology()
+        s = topo.source(TimeCounter(iterations=iterations, period=0.01))
+        s.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
 
-        width =  3
+        width = 3
         s = s.parallel(width, Routing.HASH_PARTITIONED, StatefulStupidHash())
         s = s.map(lambda x: x + 23)
         s = s.end_parallel()
 
-        expected = []
-        for v in range (0,30):
-            expected.append((v + 23))
+        expected = [v + 23 for v in range(iterations)]
 
         tester = Tester(topo)
-        tester.resets(3)
+        tester.resets()
         tester.contents(s, expected, ordered=width==1)
         tester.test(self.test_ctxtype, self.test_config)
-            
+
     # Test for_each.  This is a sink. 
     def test_for_each(self):
-        N = 3000
-        topo = Topology("test")
-        s = topo.source(TimeCounter(iterations=N, period=0.01))
-        s.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
+        iterations = 3000
+        topo = Topology()
+        s = topo.source(TimeCounter(iterations=iterations, period=0.01))
+        s.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
 
         s.for_each(VerifyNumericOrder())
+
         tester = Tester(topo)
-        tester.tuple_count(s, N)
+        tester.contents(s, range(0,iterations))
         tester.resets()
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_enter_exit(self):
         iterations = 3000
         reset_count = 10
-        topo = Topology("test")
+        topo = Topology()
         s = topo.source(TimeCounter(iterations=iterations, period=0.01))
         s.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
         
         v = VerifyEnterExit(reset_count + 1, "VerifyEnterExit")
         tester = Tester(topo)
+        tester.contents(s, range(0,iterations))
         tester.resets(reset_count)
         tester.add_condition(s, v)
-
-        # cfg={}
-        # job_config = streamsx.topology.context.JobConfig(tracing='debug')
-        # job_config.add(self.test_config)
 
         tester.test(self.test_ctxtype, self.test_config)
 
@@ -355,10 +373,9 @@ class TestOperatorDriven(unittest.TestCase):
 
     # Source operator
     def test_source(self):
-        topo = Topology("test")
+        topo = Topology()
         
         s = topo.source(TimeCounter(iterations=30, period=0.1))
         s.set_consistent(ConsistentRegionConfig.operator_driven(drain_timeout=40, reset_timeout=40, max_consecutive_attempts=3))
         tester = Tester(topo)
         self.assertFalse(tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False))
-

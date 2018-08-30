@@ -797,6 +797,9 @@ class _ConditionChecker(object):
                 self.waits = 0
                 ok_pes = ok_
             time.sleep(self.delay)
+        else:
+            _logger.error ("timed out waiting for healthy")
+
         return self._check_job_health(verbose=True)
 
     def _complete(self):
@@ -814,6 +817,9 @@ class _ConditionChecker(object):
             else:
                 self.waits += 1
             time.sleep(self.delay)
+        else:
+            _logger.error("timed out waiting for test to complete")
+
         return self._end(False, check)
 
     def _end(self, passed, check):

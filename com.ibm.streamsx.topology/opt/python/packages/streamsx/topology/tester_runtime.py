@@ -32,6 +32,8 @@ import collections
 import threading
 import time
 
+_logger = logging.getLogger('streamsx.topology.test')
+
 class Condition(object):
     """A condition for testing.
 
@@ -184,6 +186,7 @@ class _StreamContents(_PythonCondition):
         """Check for failure.
         """
         if self.expected[len(self.received) - 1] != self.received[-1]:
+            _logger.error("expected %s, received %s" , str(self.expected[len(self.received) - 1]), str(self.received[-1]))
             self.fail()
             return True
         return False
