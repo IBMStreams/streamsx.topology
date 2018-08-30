@@ -21,17 +21,16 @@
  else {
    # no pyStateful parameter.  Try calling splpy_OperatorCallable().
    if (defined &splpy_OperatorCallable) {
-     $stateful = splpy_OperatorCallable()
+     $stateful = splpy_OperatorCallable() eq 'class'
    }
  }
 
  my $isCheckpointing = $stateful && ($isInConsistentRegion or $ckptKind ne "none");
 %>
-
   // True if this operator is in a consistent region.
   static const bool isInConsistentRegion = <%= $isInConsistentRegion ? "true" :" false" %>;
-  // True if checkpoint is enabled, whether directly or through consistent
-  // region.
+  // True if operator is stateful and checkpoint is enabled, 
+  // whether directly or through consistent region.
   static const bool isCheckpointing = <%=$isCheckpointing ? "true" : "false" %>;
 
   typedef OptionalConsistentRegionContextImpl<isInConsistentRegion> OptionalConsistentRegionContext;
