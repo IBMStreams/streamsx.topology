@@ -46,7 +46,7 @@ pipeline {
        }
     }
     stage('Python 3.5 Streaming Analytics') {
-       when { anyOf { branch 'master'; branch 'feature/*' } }
+       when { anyOf { branch 'Xmaster'; branch 'feature/ci*' } }
        steps {
          script {
            try {

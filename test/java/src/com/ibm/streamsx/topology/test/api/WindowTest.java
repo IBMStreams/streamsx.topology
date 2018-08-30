@@ -226,6 +226,7 @@ public class WindowTest extends TestTopology {
     public void testContinuousAggregateLastSeconds() throws Exception {
         // Uses JSON4J
         assumeTrue(hasStreamsInstall());
+        assumeTrue(!isStreamingAnalyticsRun()); // TODO: Uses Condition.getResult()
         
         final Topology t = newTopology();
         TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS);

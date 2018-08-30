@@ -1,3 +1,7 @@
+# coding=utf-8
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2018
+
 from enum import Enum
 from datetime import timedelta
 
@@ -58,6 +62,7 @@ class ConsistentRegionConfig(object):
 
     .. seealso:: :py:meth:`~streamsx.topology.topology.Stream.set_consistent`
 
+    .. versionadded:: 1.11
     """
     
     _DEFAULT_DRAIN=180
@@ -67,6 +72,7 @@ class ConsistentRegionConfig(object):
     class Trigger(Enum):
         """
         Defines how the drain-checkpoint cycle of a consistent region is triggered.
+        .. versionadded:: 1.11
         """
         OPERATOR_DRIVEN = 1
         """
