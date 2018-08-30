@@ -356,9 +356,6 @@ class SplpyOp {
  void SplpyOpStateHandlerImpl::reset(SPL::Checkpoint & ckpt) {
    SPLAPPTRC(L_DEBUG, "reset", "python");
 
-   // Restore the callable from an spl blob
-   SPL::blob bytes;
-   ckpt >> bytes;
    SplpyGIL lock;
    
    // Call ec._callable_before_discard on old callable
@@ -372,6 +369,12 @@ class SplpyOp {
 
    // discard the old callable
    Py_DECREF(op->callable());
+ 
+   SPL::blob bytes;
+   Py_BEGIN_ALLOW_THREADS
+   // Restore the callable from  an spl blob
+   ckpt >> bytes;
+   Py_END_ALLOW_THREADS
 
    PyObject * pickle = pySplValueToPyObject(bytes);
    PyObject * callable = call(loads, pickle);
@@ -379,6 +382,7 @@ class SplpyOp {
        SplpyGeneral::tracePythonError();
        throw SplpyGeneral::pythonException("dill.loads");
    }
+   bytes.clear();
 
    // Call ec.callable_after_load on new callable
    SPLAPPTRC(L_DEBUG, "calling ec._callable_after_load on new callable", "python");
