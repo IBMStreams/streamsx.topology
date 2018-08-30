@@ -8,6 +8,9 @@
 using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
+<%
+  require "splpy_operator.pm";
+%>
 
 @include "../../opt/.__splpy/common/py_disallow_cr_trigger.cgt"
 
@@ -47,6 +50,7 @@ private:
     void fromPyDictToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupleType()%> & otuple);
 
 @include "../../opt/.__splpy/common/py_enable_cr.cgt"
+    OptionalConsistentRegionContext crContext;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

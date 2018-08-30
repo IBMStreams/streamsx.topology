@@ -35,7 +35,8 @@ using namespace streamsx::topology;
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
    pyop_(NULL),
-   pyOutNames_0(NULL)
+   pyOutNames_0(NULL),
+   crContext(this)
 {
    PyObject * callable;
 @include  "../../opt/.__splpy/common/py_constructor.cgt"
@@ -87,7 +88,7 @@ void MY_OPERATOR::process(uint32_t idx)
   while(!getPE().getShutdownRequested()) {
 
     try {
-
+      AutoConsistentRegionPermit permit(crContext);
       OptionalAutoLock stateLock(this);
 
       // GIL is released across submission
