@@ -285,6 +285,7 @@ class _SPLInvocation(object):
         self._placement = {}
         self._start_op = False
         self.config = {}
+        self._consistent = None
         # Arbitrary JSON for operator
         self._op_def = {}
 
@@ -407,6 +408,31 @@ class _SPLInvocation(object):
         if self._layout_hints:
             _op['layout'] = self._layout_hints
 
+        if self._consistent is not None:
+            _op['consistent'] = {}
+            consistent = _op['consistent']
+            consistent['trigger'] = self._consistent.trigger.name
+            if self._consistent.trigger == streamsx.topology.consistent.ConsistentRegionConfig.Trigger.PERIODIC:
+                if isinstance(self._consistent.period, datetime.timedelta):
+                    consistent_period = self._consistent.period.total_seconds()
+                else:
+                    consistent_period = float(self._consistent.period)
+                consistent['period'] = str(consistent_period)
+
+            if isinstance(self._consistent.drain_timeout, datetime.timedelta):
+                consistent_drain = self._consistent.drain_timeout.total_seconds();
+            else:
+                consistent_drain = float(self._consistent.drain_timeout)
+            consistent['drainTimeout'] = str(consistent_drain)
+
+            if isinstance(self._consistent.reset_timeout, datetime.timedelta):
+                consistent_reset = self._consistent.reset_timeout.total_seconds();
+            else:
+                consistent_reset = float(self._consistent.reset_timeout)
+            consistent['resetTimeout'] = str(consistent_reset)
+
+            consistent['maxConsecutiveResetAttempts'] = int(self._consistent.max_consecutive_attempts)
+
         # Callout to allow a ExtensionOperator
         # to augment the JSON
         if hasattr(self, '_ex_op'):
@@ -468,6 +494,9 @@ class _SPLInvocation(object):
 
         colocate_tag = '__spl_' + why + '$' + str(self.index)
         self._placement['colocateTags'].append(colocate_tag)
+
+    def consistent(self, consistent_config):
+        self._consistent = consistent_config
 
     def _layout(self, kind=None, hidden=None, name=None, orig_name=None):
         if kind:

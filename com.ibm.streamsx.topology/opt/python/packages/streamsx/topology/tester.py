@@ -406,6 +406,27 @@ class Tester(object):
             cond._desc = "'{0}' stream expects tuple unordered contents: {1}.".format(stream.name, expected)
         return self.add_condition(stream, cond)
 
+    def resets(self, minimum_resets=10):
+        """Create a condition that randomly resets consistent regions.
+        The condition becomes valid when each consistent region in the
+        application under test has been reset `minimum_resets` times
+        by the tester.
+
+
+        The resets are performed at arbitrary intervals scaled to the 
+        period of the region (if it is periodically triggered).
+
+        .. note::
+             A region is reset by initiating a request though the Job Control Plane. The reset is not driven by any injected failure, such as a PE restart.
+
+        Args:
+            minimum_resets(int): Minimum number of resets for each region.
+
+        .. versionadded:: 1.11
+        """
+        resetter = sttrt._Resetter(self.topology, minimum_resets=minimum_resets)
+        self.add_condition(None, resetter)
+
     def tuple_check(self, stream, checker):
         """Check each tuple on a stream.
 
@@ -584,10 +605,7 @@ class Tester(object):
         for ct in self._conditions.values():
             condition = ct[1]
             stream = ct[0]
-            cond_sink = stream.for_each(condition, name=condition.name)
-            cond_sink.colocate(stream)
-            cond_sink.category = 'Tester'
-            cond_sink._op()._layout(hidden=True)
+            condition._attach(stream)
 
         # Standalone uses --kill-after parameter.
         if self._run_for and stc.ContextTypes.STANDALONE != ctxtype:
@@ -612,7 +630,7 @@ class Tester(object):
         else:
             raise NotImplementedError("Tester context type not implemented:", ctxtype)
 
-        if self.result.get('conditions'):
+        if hasattr(self, 'result') and self.result.get('conditions'):
             for cn,cnr in self.result['conditions'].items():
                 c = self._conditions[cn][1]
                 cdesc = cn
@@ -779,6 +797,9 @@ class _ConditionChecker(object):
                 self.waits = 0
                 ok_pes = ok_
             time.sleep(self.delay)
+        else:
+            _logger.error ("timed out waiting for healthy")
+
         return self._check_job_health(verbose=True)
 
     def _complete(self):
@@ -796,6 +817,9 @@ class _ConditionChecker(object):
             else:
                 self.waits += 1
             time.sleep(self.delay)
+        else:
+            _logger.error("timed out waiting for test to complete")
+
         return self._end(False, check)
 
     def _end(self, passed, check):

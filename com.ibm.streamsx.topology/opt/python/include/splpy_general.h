@@ -401,12 +401,15 @@ class SplpyGeneral {
         if (arg2)
             PyTuple_SET_ITEM(funcArg, 1, arg2);
         PyObject *ret = PyObject_CallObject(function, funcArg);
-        Py_DECREF(funcArg);
-        Py_DECREF(function);
         if (ret == NULL) {
+            tracePythonError();
+            Py_DECREF(funcArg);
+            Py_DECREF(function);
             SPLAPPTRC(L_ERROR, "Failed function execution " << mn << "." << fn, "python");
             throw SplpyGeneral::pythonException(mn+"."+fn);
         }
+        Py_DECREF(funcArg);
+        Py_DECREF(function);
         SPLAPPTRC(L_DEBUG, "Executed function " << mn << "." << fn , "python");
         return ret;
     }

@@ -6,6 +6,8 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
+@include "../../opt/python/codegen/py_disallow_cr_trigger.cgt"
+
 <%
 # Configure Windowing
  my $inputPort = $model->getInputPortAt(0); 
@@ -14,9 +16,9 @@ using namespace streamsx::topology;
 %>
 
 @include "../pyspltuple.cgt"
-
 class MY_OPERATOR : public MY_BASE_OPERATOR,
-      public WindowEvent<PyObject *>
+      public WindowEvent<PyObject *>,
+      public DelegatingStateHandler
 {
 public:
   // Constructor
@@ -46,6 +48,11 @@ void afterTupleEvictionEvent(
      Window<PyObject *> & window,  Window<PyObject *>::TupleType & tuple,
      Window<PyObject *>::PartitionType const & partition);
 
+protected:
+  virtual void checkpointExtra(SPL::Checkpoint & ckpt);
+  virtual void resetExtra(SPL::Checkpoint & ckpt);
+  virtual void resetToInitialStateExtra();
+
 private:
     SplpyOp * op() { return funcop_; }
 
@@ -65,7 +72,8 @@ private:
     // Window definition
     <%=$windowCppType%>  window_;	       
 
+    @include "../../opt/python/codegen/py_enable_cr.cgt"
+    OptionalConsistentRegionContext crContext;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>
-

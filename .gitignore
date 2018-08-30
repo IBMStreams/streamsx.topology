@@ -490,6 +490,9 @@ com.ibm.streamsx.topology/opt/python/packages/streamsx/topology/graph.py.save
 com.ibm.streamsx.topology/opt/python/packages/streamsx/topology/topology.py.save
 com.ibm.streamsx.topology/opt/python/templates/common/py_pyTupleTosplTuple.cgt
 com.ibm.streamsx.topology/opt/python/templates/common/py_splTupleCheckForBlobs.cgt
+com.ibm.streamsx.topology/opt/python/templates/common/py_disallow_cr_trigger.cgt
+com.ibm.streamsx.topology/opt/python/templates/common/py_enable_cr.cgt
+com.ibm.streamsx.topology/opt/python/templates/common/py_no_checkpoint_support.cgt
 com.ibm.streamsx.topology/opt/python/templates/common/pyversion2.sh
 com.ibm.streamsx.topology/opt/python/templates/common/pyversion3.sh
 com.ibm.streamsx.topology/opt/python/templates/common/splpy.pm
