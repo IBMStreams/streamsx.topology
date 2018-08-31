@@ -7,6 +7,7 @@ from future.builtins import *
 import os
 import sys
 import pickle
+import inspect
 import logging
 from past.builtins import basestring
 
@@ -71,7 +72,11 @@ def _get_callable(f):
             return ci
     raise TypeError("Class is not callable" + str(type(ci)))
 
-import inspect
+# Base class used at runtime by all functional operators
+# to manage the application's callable.
+# For functional operators all of the logic is seen as a callable.
+# Specific sub-classes perform conversion on the input and or output values.
+#
 class _FunctionalCallable(object):
     def __init__(self, callable_, attributes=None):
         self._callable = _get_callable(callable_)
@@ -307,6 +312,8 @@ class _IterableObjectOut(_IterableAnyOut):
 
 # Iterator that wraps another iterator
 # to discard any values that are None
+# This is created at runtime to wrap
+# iterators returned by an iterable.
 class _ObjectIterator(object):
    def __init__(self, it):
        self.it = iter(it)
@@ -445,6 +452,12 @@ tuple_in = object_in
 def _get_namedtuple_cls(schema, name):
     return StreamSchema(schema).as_tuple(named=name).style
 
+# A _WrappedInstance is used to wrap the functional logic
+# passed into a functiona like map when declaring the graph.
+# The wrapping occurs at topology declaration time and the
+# instance of _WrappedInstance becomes the "users" logic
+# that is passed in as the functional operator's parameter.
+#
 class _WrappedInstance(object):
     def __init__(self, callable_):
         self._callable = callable_
@@ -469,6 +482,8 @@ class _WrappedInstance(object):
 # Wraps an iterable instance returning
 # it when called. Allows an iterable
 # instance to be passed directly to Topology.source
+# (such as a list)
+# Instance of _WrappedInstance so used at declaration time
 class _IterableInstance(_WrappedInstance):
     def __call__(self):
         return self._callable
@@ -477,6 +492,7 @@ class _IterableInstance(_WrappedInstance):
 # When this is called, the callable is called.
 # Used to wrap a lambda object or a function/class
 # defined in __main__
+# Instance of _WrappedInstance so used at declaration time
 class _Callable(_WrappedInstance):
     def __call__(self, *args, **kwargs):
         return self._callable.__call__(*args, **kwargs)
