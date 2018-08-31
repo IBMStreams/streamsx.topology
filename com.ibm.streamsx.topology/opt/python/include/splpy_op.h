@@ -46,8 +46,6 @@ class SplpyOp;
   SplpyOp * op;
   PyObject * loads;
   PyObject * dumps;
-  PyObject * afterLoad;
-  PyObject * beforeDiscard;
   PyObject * pickledInitialCallable;
 };
 
@@ -96,11 +94,7 @@ class SplpyOp {
       }
 
       void setCallable(PyObject * callable) {
-        bool firstTime = (callable_ == NULL);
         callable_ = callable;
-        if (firstTime) {
-          setup();
-        }
       }
       PyObject * callable() {
           return callable_;
@@ -115,9 +109,9 @@ class SplpyOp {
        *   by __exit__
        */
       void setup() {
-          if (PyObject_HasAttrString(callable_, "_splpy_entered")) {
-              PyObject *entered = PyObject_GetAttrString(callable_, "_splpy_entered");
-              if (PyObject_IsTrue(entered)) {
+          if (PyObject_HasAttrString(callable_, "_splpy_context")) {
+              PyObject *hasContext = PyObject_GetAttrString(callable_, "_splpy_context");
+              if (PyObject_IsTrue(hasContext)) {
                   SPL::OperatorMetrics & metrics = op_->getContext().getMetrics();
                   SPL::Metric &cm = metrics.createCustomMetric(
                       "nExceptionsSuppressed",
@@ -125,7 +119,7 @@ class SplpyOp {
                       SPL::Metric::Counter);
                   exc_suppresses = &cm;
               }
-              Py_DECREF(entered);
+              Py_DECREF(hasContext);
           }
 
           setupStateHandler();
@@ -138,14 +132,13 @@ class SplpyOp {
       void prepareToShutdown() {
           SplpyGIL lock;
           if (callable_) {
-             // Call _shutdown_op which will invoke
-             // __exit__ on the users object if
+             // invoke __exit__ on the users object if
              // it's a class instance and has
              // __enter__ and __exit__
              // callVoid steals the reference to callable_
              Py_INCREF(callable_);
              SplpyGeneral::callVoidFunction(
-               "streamsx.ec", "_shutdown_op", callable_, NULL);
+               "streamsx._streams._runtime", "_call_exit", callable_, NULL);
           }
           SplpyGeneral::flush_PyErrPyOut();
       }
@@ -155,7 +148,7 @@ class SplpyOp {
              // callFunction steals the reference to callable_
              Py_INCREF(callable_);
              PyObject *ignore = SplpyGeneral::callFunction(
-               "streamsx.ec", "_shutdown_op", callable_, exInfo.asTuple());
+               "streamsx._streams._runtime", "_call_exit", callable_, exInfo.asTuple());
              int ignoreException = PyObject_IsTrue(ignore);
              Py_DECREF(ignore);
              if (ignoreException && exc_suppresses)
@@ -318,21 +311,17 @@ class SplpyOp {
 };
 
  // Steals reference to pickledCallable
- SplpyOpStateHandlerImpl::SplpyOpStateHandlerImpl(SplpyOp * pyop, PyObject * pickledCallable) : op(pyop), loads(), dumps(), afterLoad(), beforeDiscard(), pickledInitialCallable(pickledCallable) {
+ SplpyOpStateHandlerImpl::SplpyOpStateHandlerImpl(SplpyOp * pyop, PyObject * pickledCallable) : op(pyop), loads(), dumps(), pickledInitialCallable(pickledCallable) {
   // Load pickle.loads and pickle.dumps
   SplpyGIL lock;
   loads = SplpyGeneral::loadFunction("dill", "loads");
   dumps = SplpyGeneral::loadFunction("dill", "dumps");
-  afterLoad = SplpyGeneral::loadFunction("streamsx.ec", "_callable_after_load");
-  beforeDiscard = SplpyGeneral::loadFunction("streamsx.ec", "_callable_before_discard");
  }
 
  SplpyOpStateHandlerImpl::~SplpyOpStateHandlerImpl() {
    SplpyGIL lock;
    Py_CLEAR(loads);
    Py_CLEAR(dumps);
-   Py_CLEAR(afterLoad);
-   Py_CLEAR(beforeDiscard);
    Py_CLEAR(pickledInitialCallable);
  }
 
@@ -357,19 +346,14 @@ class SplpyOp {
    SPLAPPTRC(L_DEBUG, "reset", "python");
 
    SplpyGIL lock;
-   
-   // Call ec._callable_before_discard on old callable
-   SPLAPPTRC(L_DEBUG, "calling ec._callable_before_discard on old callable", "python");
-   PyObject * ret = call(beforeDiscard, op->callable());
-   if (!ret) {
-     SplpyGeneral::tracePythonError();
-     throw SplpyGeneral::pythonException("ec._callable_before_discard");
-   }
-   Py_DECREF(ret);
 
-   // discard the old callable
-   Py_DECREF(op->callable());
- 
+   // Exit the context manger for the callable to be discarded
+   // Call steals the reference to op->callable() which
+   // will discard the object as we don't need it any more.
+   SplpyGeneral::callVoidFunction(
+               "streamsx._streams._runtime", "_call_exit", op->callable(), NULL);
+   op->setCallable(NULL);
+   
    SPL::blob bytes;
    Py_BEGIN_ALLOW_THREADS
    // Restore the callable from  an spl blob
@@ -383,33 +367,26 @@ class SplpyOp {
        throw SplpyGeneral::pythonException("dill.loads");
    }
    bytes.clear();
-
-   // Call ec.callable_after_load on new callable
-   SPLAPPTRC(L_DEBUG, "calling ec._callable_after_load on new callable", "python");
-   ret = call(afterLoad, callable);
-   if (!ret) {
-     SplpyGeneral::tracePythonError();
-     throw SplpyGeneral::pythonException("ec._callable_after_load");
-   }
-   Py_DECREF(ret);
-
+ 
    // Switch to newly unpickled callable.
    op->setCallable(callable); // reference to ret stolen by op
+
+   // Enter the context manager for the new callable.
+   Py_INCREF(op->callable());
+   SplpyGeneral::callVoidFunction(
+               "streamsx._streams._runtime", "_call_enter", op->callable(), NULL);
  }
 
  void SplpyOpStateHandlerImpl::resetToInitialState() {
    SPLAPPTRC(L_DEBUG, "resetToInitialState", "python");
    SplpyGIL lock;
 
-   // Call _splpy_before_discard on old callable
-   SPLAPPTRC(L_DEBUG, "calling ec._callable_before_discard on old callable", "python");
-   PyObject * ret = call(beforeDiscard, op->callable());
-   if (!ret) {
-     SplpyGeneral::tracePythonError();
-     throw SplpyGeneral::pythonException("ec._callable_before_discard");
-   }
-   Py_DECREF(ret);
-   Py_DECREF(op->callable());
+   // Exit the context manger for the callable to be discarded
+   // Call steals the reference to op->callable() which
+   // will discard the object as we don't need it any more.
+   SplpyGeneral::callVoidFunction(
+               "streamsx._streams._runtime", "_call_exit", op->callable(), NULL);
+   op->setCallable(NULL);
 
    PyObject * initialCallable = call(loads, pickledInitialCallable);
    if (!initialCallable) {
@@ -417,16 +394,12 @@ class SplpyOp {
      throw SplpyGeneral::pythonException("dill.loads");
    }
 
-   // Call afterLoad on new callable
-   SPLAPPTRC(L_DEBUG, "calling ec._callable_after_load on new callable", "python");
-   ret = call(afterLoad, initialCallable);
-   if (!ret) {
-     SplpyGeneral::tracePythonError();
-     throw SplpyGeneral::pythonException("ec._callable_after_load");
-   }
-   Py_DECREF(ret);
-
    op->setCallable(initialCallable);
+ 
+   // Enter the context manager for the new callable.
+   Py_INCREF(op->callable());
+   SplpyGeneral::callVoidFunction(
+               "streamsx._streams._runtime", "_call_enter", op->callable(), NULL);
  }
 
  // Call a python callable with a single argument

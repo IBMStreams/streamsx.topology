@@ -106,6 +106,7 @@ class SplpyFuncOp : public SplpyOp {
 
           setCallable(SplpyGeneral::callFunction(
                "streamsx.topology.runtime", wrapfn, appCallable, extraArg));
+          setup();
       }
 
       virtual bool isStateful() {

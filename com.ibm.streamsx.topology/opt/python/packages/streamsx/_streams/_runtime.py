@@ -75,3 +75,71 @@ class _Setup(object):
 
 def _setup(out_dir):
     _Setup._setup(out_dir)
+
+# Application logic runs within an operator within a
+# statement context, effectively a with statement.
+# This means that for logic that has __enter__ and __exit__  methods
+# (technically its type has the methods)
+#
+# This allows the logic to create and dispose of objects that
+# cannot be pickled such as open files, custom metrics etc.
+# 
+# __enter__ is called:
+#   a) when the operator starts up before tuple processing
+#   b) when the operator resets, to inital state or from a checkpoint
+#      enter is called on the new instance.
+#
+# __exit__ is called:
+#   a) when the operator shuts down
+#   b) when an exception occurs in tuple processing
+#   c) when the operator resets (on the current instance)
+#
+#  Note: __exit__ is only called if __enter__ was called previously 
+#  Note: in b) if __exit__ returns a true value then the exception is suppressed
+#
+# Two attributes are set in the object being wrapped to manage context:
+#
+# _splpy_context : Boolean indicating if the object has context methods
+# _splpy__enter  : Has __enter__ been called on this instance.
+#
+# Note that the top-level Python object seen by the C++ primitive operator
+# maintains these attributes and is responsible for calling __enter__
+# on any wrapped logic.
+#
+# For topology: The top-level object is an instance of _FunctionCallable
+# For SPL primitives:
+#
+# The C++ operator calls
+#   _call_enter() - to enter the object into the context
+#   _call_exit() - to exit the object from the context.
+#
+#   These methods are responsible for seeing if the underlying
+#   application logic's methods are called.
+
+def _has_context_methods(cls):
+    return hasattr(cls, '__enter__') and hasattr(cls, '__exit__')
+
+def _call_enter(obj):
+    if obj._splpy_context:
+        obj.__enter__()
+        obj._splpy_entered = True
+
+def _call_exit(obj, exc_info=None):
+    if obj._splpy_context and obj._splpy_entered:
+        try:
+            if exc_info is None:
+                ev = obj.__exit__(None,None,None)
+            else:
+                exc_type = exc_info[0]
+                exc_value = exc_info[1] if len(exc_info) >=2 else None
+                traceback = exc_info[2] if len(exc_info) >=3 else None
+
+                ev = obj.__exit__(exc_type, exc_value, traceback)
+                if ev and exc_type is not None:
+                    # Remain in the context
+                    return ev
+            obj._splpy_entered = False
+            return ev
+        except:
+            obj._splpy_entered = False
+            raise

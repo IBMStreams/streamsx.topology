@@ -13,6 +13,7 @@ from past.builtins import basestring
 
 import streamsx.ec as ec
 from streamsx.topology.schema import StreamSchema
+import streamsx._streams._runtime
 
 import dill
 # Importing cloudpickle break dill's deserialization.
@@ -83,19 +84,21 @@ class _FunctionalCallable(object):
         self._cls = False
         self._attributes = attributes
 
-        if callable_ is not self._callable:
-            is_cls = not inspect.isfunction(self._callable)
-            is_cls = is_cls and ( not inspect.isbuiltin(self._callable) )
-            is_cls = is_cls and (not inspect.isclass(self._callable))
+        self._splpy_context = False
+        self._splpy_entered = False
+        is_cls = not inspect.isfunction(self._callable)
+        is_cls = is_cls and not inspect.isbuiltin(self._callable)
+        is_cls = is_cls and not inspect.isclass(self._callable)
             
-            if is_cls:
-                if ec._is_supported():
-                    self._callable._streamsx_ec_op = ec._get_opc(self._callable)
-                self._cls = True
-                ec._callable_enter(self._callable)
-                if hasattr(self._callable, '_splpy_entered'):
-                    self._splpy_entered = self._callable._splpy_entered
-
+        if is_cls:
+            self._callable._streamsx_ec_op = ec._get_opc(self._callable)
+            self._cls = True
+            if hasattr(self._callable, '_splpy_context'):
+                self._splpy_context = self._callable._splpy_context
+            else:
+                self._splpy_context = streamsx._streams._runtime._has_context_methods(type(self._callable))
+        
+        streamsx._streams._runtime._call_enter(self)
         ec._clear_opc()
 
     def __call__(self, tuple_):
@@ -104,15 +107,11 @@ class _FunctionalCallable(object):
         """
         return self._callable(tuple_)
 
-    def _splpy_shutdown(self, exc_type=None, exc_value=None, traceback=None):
-        if self._cls:
-            return ec._callable_exit(self._callable, exc_type, exc_value, traceback)
+    def __enter__(self):
+        self._callable.__enter__()
 
-    def _splpy_before_discard(self):
-        ec._callable_before_discard(self._callable)
-
-    def _splpy_after_load(self):
-        ec._callable_after_load(self._callable)
+    def __exit__(self, exc_type, exc_value, traceback):
+        return self._callable.__exit__(exc_type, exc_value, traceback)
 
 class _PickleInObjectOut(_FunctionalCallable):
     def __call__(self, tuple_, pm=None):
@@ -281,7 +280,7 @@ class _IterableAnyOut(_FunctionalCallable):
             self._it = iter(self._callable())
         except:
             ei = sys.exc_info()
-            ignore = ec._callable_exit(self._callable, ei[0], ei[1], ei[2])
+            ignore = streamsx._streams._runtime._call_exit(self, ei)
             if not ignore:
                 raise ei[1]
             # Ignored by nothing to do so use empty iterator
@@ -457,27 +456,25 @@ def _get_namedtuple_cls(schema, name):
 # The wrapping occurs at topology declaration time and the
 # instance of _WrappedInstance becomes the "users" logic
 # that is passed in as the functional operator's parameter.
-#
+# 
+# If no_context is true then it's guarantteed that
+# callable_ does not have __enter__, __exit__ methods
 class _WrappedInstance(object):
-    def __init__(self, callable_):
+    def __init__(self, callable_, no_context=None):
         self._callable = callable_
-        if not self._hasee():
-            self._splpy_entered = False
-
-    def _hasee(self):
-        return hasattr(type(self._callable), '__enter__') and hasattr(type(self._callable), '__exit__')
+        if no_context:
+            self._splpy_context = False
+        else:
+            self._splpy_context = streamsx._streams._runtime._has_context_methods(type(callable_))
 
     def __enter__(self):
-        self._callable.__enter__()
+        if self._splpy_context:
+            self._callable.__enter__()
     
     def __exit__(self, exc_type, exc_value, traceback):
-        return self._callable.__exit__(exc_type, exc_value, traceback)
-
-    def _splpy_before_discard(self):
-        ec._callable_before_discard(self._callable)
-
-    def _splpy_after_load(self):
-        ec._callable_after_load(self._callable);
+        #print("WI-EXIT", type(self), type(self._callable), exc_type, flush=True)
+        if self._splpy_context:
+            return self._callable.__exit__(exc_type, exc_value, traceback)
 
 # Wraps an iterable instance returning
 # it when called. Allows an iterable
@@ -485,6 +482,9 @@ class _WrappedInstance(object):
 # (such as a list)
 # Instance of _WrappedInstance so used at declaration time
 class _IterableInstance(_WrappedInstance):
+    def __init__(self, callable_):
+        super(_IterableInstance, self).__init__(callable_)
+
     def __call__(self):
         return self._callable
 
@@ -494,6 +494,9 @@ class _IterableInstance(_WrappedInstance):
 # defined in __main__
 # Instance of _WrappedInstance so used at declaration time
 class _Callable(_WrappedInstance):
+    def __init__(self, callable_, no_context=None):
+        super(_Callable, self).__init__(callable_, no_context)
+
     def __call__(self, *args, **kwargs):
         return self._callable.__call__(*args, **kwargs)
 
