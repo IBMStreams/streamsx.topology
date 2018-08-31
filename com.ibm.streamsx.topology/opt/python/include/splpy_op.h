@@ -94,7 +94,21 @@ class SplpyOp {
       }
 
       void setCallable(PyObject * callable) {
-        callable_ = callable;
+        if (callable) {
+            callable_ = callable;
+            // Enter the context manager for the callable.
+            Py_INCREF(callable);
+                SplpyGeneral::callVoidFunction(
+               "streamsx._streams._runtime", "_call_enter", callable, NULL);
+        } else if (callable_) {
+             // Exit the context manager and release it
+             // Maintain a reference across the call.
+             Py_INCREF(callable_);
+             SplpyGeneral::callVoidFunction(
+               "streamsx._streams._runtime", "_call_exit", callable_, NULL);
+             Py_DECREF(callable_);
+             callable_ = NULL;
+        }
       }
       PyObject * callable() {
           return callable_;
@@ -131,15 +145,7 @@ class SplpyOp {
       */
       void prepareToShutdown() {
           SplpyGIL lock;
-          if (callable_) {
-             // invoke __exit__ on the users object if
-             // it's a class instance and has
-             // __enter__ and __exit__
-             // callVoid steals the reference to callable_
-             Py_INCREF(callable_);
-             SplpyGeneral::callVoidFunction(
-               "streamsx._streams._runtime", "_call_exit", callable_, NULL);
-          }
+          setCallable(NULL);
           SplpyGeneral::flush_PyErrPyOut();
       }
 
@@ -347,13 +353,9 @@ class SplpyOp {
 
    SplpyGIL lock;
 
-   // Exit the context manger for the callable to be discarded
-   // Call steals the reference to op->callable() which
-   // will discard the object as we don't need it any more.
-   SplpyGeneral::callVoidFunction(
-               "streamsx._streams._runtime", "_call_exit", op->callable(), NULL);
+   // Release the old callable
    op->setCallable(NULL);
-   
+
    SPL::blob bytes;
    Py_BEGIN_ALLOW_THREADS
    // Restore the callable from  an spl blob
@@ -371,21 +373,13 @@ class SplpyOp {
    // Switch to newly unpickled callable.
    op->setCallable(callable); // reference to ret stolen by op
 
-   // Enter the context manager for the new callable.
-   Py_INCREF(op->callable());
-   SplpyGeneral::callVoidFunction(
-               "streamsx._streams._runtime", "_call_enter", op->callable(), NULL);
  }
 
  void SplpyOpStateHandlerImpl::resetToInitialState() {
    SPLAPPTRC(L_DEBUG, "resetToInitialState", "python");
    SplpyGIL lock;
 
-   // Exit the context manger for the callable to be discarded
-   // Call steals the reference to op->callable() which
-   // will discard the object as we don't need it any more.
-   SplpyGeneral::callVoidFunction(
-               "streamsx._streams._runtime", "_call_exit", op->callable(), NULL);
+   // Release the old callable
    op->setCallable(NULL);
 
    PyObject * initialCallable = call(loads, pickledInitialCallable);
@@ -395,11 +389,6 @@ class SplpyOp {
    }
 
    op->setCallable(initialCallable);
- 
-   // Enter the context manager for the new callable.
-   Py_INCREF(op->callable());
-   SplpyGeneral::callVoidFunction(
-               "streamsx._streams._runtime", "_call_enter", op->callable(), NULL);
  }
 
  // Call a python callable with a single argument

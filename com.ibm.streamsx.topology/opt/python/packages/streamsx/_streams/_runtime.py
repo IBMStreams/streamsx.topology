@@ -120,10 +120,6 @@ def _setup(out_dir):
 #
 # The C++ operator calls
 #
-#   Note the first call to _call_enter is from Python code
-#   the C++ operator calls. Subsequent calls (for reset) 
-#   are from the C++ operator.
-#
 #   _call_enter() - to enter the object into the context
 #   _call_exit() - to exit the object from the context.
 #

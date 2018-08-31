@@ -660,7 +660,6 @@ def _wrapforsplop(optype, wrapped, style, docpy):
  
                 self._splpy_context = streamsx._streams._runtime._has_context_methods(wrapped)
                 self._splpy_entered = False
-                streamsx._streams._runtime._call_enter(self)
 
             # Use reduce to save the state of the class and its
             # module and operator name.
@@ -704,6 +703,7 @@ def _wrapforsplop(optype, wrapped, style, docpy):
     _op_fn._splpy_fixed_count = _define_fixed(_op_fn, _op_fn)
     _op_fn._splpy_file = inspect.getsourcefile(wrapped)
     _op_fn._splpy_docpy = docpy
+    _op_fn._splpy_context = False
     return _op_fn
 
 # define the SPL tuple passing style based

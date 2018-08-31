@@ -98,7 +98,6 @@ class _FunctionalCallable(object):
             else:
                 self._splpy_context = streamsx._streams._runtime._has_context_methods(type(self._callable))
         
-        streamsx._streams._runtime._call_enter(self)
         ec._clear_opc()
 
     def __call__(self, tuple_):
