@@ -19,42 +19,41 @@ from future.builtins import *
 import collections
 import sys
 import streamsx.spl.types
+import streamsx._streams._runtime
 
-def _exc_shutdown(callable_):
-    if hasattr(callable_, '_splpy_shutdown'):
-        ei = sys.exc_info()
-        return callable_._splpy_shutdown(ei[0], ei[1], ei[2])
-    return False
+class _SourceIterable(object):
+    def __init__(self, callable_):
+        self._callable = callable_
+        self._splpy_context = streamsx._streams._runtime._has_context_methods(type(self._callable))
+        self._splpy_entered = False
 
-def _splpy_iter_source(iterable) :
-  try:
-      it = iter(iterable)
-  except TypeError:
-      it = iterable()
-  except:
-      if _exc_shutdown(iterable):
-          it = iter([])
-      else:
-          raise
-  def _wf():
-     try:
-        while True:
-            tv = next(it)
-            if tv is not None:
-                return tv
-     except StopIteration:
-       return None
-  if hasattr(iterable, '_splpy_entered'):
-      _wf._splpy_entered = iterable._splpy_entered
-  
-  _add_shutdown_hook(iterable, _wf)
-  return _wf
+        try:
+            self._it = iter(self._callable)
+        except TypeError:
+            self._it = self._callable()
+        except:
+            ei = sys.exc_info()
+            if streamsx._streams._runtime._call_exit(iterable, ei[0], ei[1], ei[2]):
+                self._it = iter([])
+            else:
+                raise ei[1]
 
-def _add_shutdown_hook(fn, wrapper):
-    if hasattr(fn, '_splpy_shutdown'):
-        def _splpy_shutdown(exc_type=None, exc_value=None, traceback=None):
-            return fn._splpy_shutdown(exc_type, exc_value, traceback)
-        wrapper._splpy_shutdown = _splpy_shutdown
+    def __call__(self):
+        try:
+            while True:
+                tuple_ = next(self._it)
+                if tuple_ is not None:
+                     return tuple_
+        except StopIteration:
+            self._it = None
+            return None
+
+    def __enter__(self):
+        self._callable.__enter__()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return self._callable.__exit__(exc_type, exc_value, traceback)
+
 
 # The decorated operators only support converting
 # Python tuples or a list of Python tuples to
@@ -126,7 +125,7 @@ def _splpy_all_ports_ready(callable_):
         try:
             return callable_.all_ports_ready()
         except:
-            if _exc_shutdown(callable_):
+            if streamsx._streams._runtime._call_exit(callable_):
                 return None
             raise
     return None

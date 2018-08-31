@@ -569,6 +569,7 @@ import inspect
 import re
 import sys
 import streamsx.ec as ec
+import streamsx._streams._runtime
 import importlib
 
 ############################################
@@ -656,7 +657,10 @@ def _wrapforsplop(optype, wrapped, style, docpy):
                 super(_op_class, self).__init__(*args,**kwargs)
                 if ec._is_supported():
                     ec._save_opc(self)
-                ec._callable_enter(self)
+ 
+                self._splpy_context = streamsx._streams._runtime._has_context_methods(wrapped)
+                self._splpy_entered = False
+                streamsx._streams._runtime._call_enter(self)
 
             # Use reduce to save the state of the class and its
             # module and operator name.
@@ -666,9 +670,6 @@ def _wrapforsplop(optype, wrapped, style, docpy):
                 else:
                     state = self.__dict__
                 return _recreate_op, (wrapped.__module__, wrapped.__name__), state
-
-            def _splpy_shutdown(self, exc_type=None, exc_value=None, traceback=None):
-                return ec._callable_exit(self, exc_type, exc_value, traceback)
 
         if optype in (_OperatorType.Sink, _OperatorType.Pipe, _OperatorType.Filter):
             _op_class._splpy_style = _define_style(wrapped, wrapped.__call__, style)

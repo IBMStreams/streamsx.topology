@@ -106,10 +106,24 @@ def _setup(out_dir):
 # maintains these attributes and is responsible for calling __enter__
 # on any wrapped logic.
 #
-# For topology: The top-level object is an instance of _FunctionCallable
+# For topology:
+#     The top-level object is an instance of
+#     streamsx.topology.runtime._FunctionCallable wrapping the
+#     application logic.
+#
 # For SPL primitives:
+#     Source operator uses streamsx.spl.runtime._SourceIterator
+#     that wraps the iterable maintains a reference to the iterator.
+#
+#     Otherwise the top-level object is an instance of sub-class
+#     of the application logic.
 #
 # The C++ operator calls
+#
+#   Note the first call to _call_enter is from Python code
+#   the C++ operator calls. Subsequent calls (for reset) 
+#   are from the C++ operator.
+#
 #   _call_enter() - to enter the object into the context
 #   _call_exit() - to exit the object from the context.
 #
