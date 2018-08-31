@@ -21,24 +21,34 @@ import sys
 import streamsx.spl.types
 import streamsx._streams._runtime
 
+# This is used as the runtime callable for @spl.source
+# Each call returns the next item in the iteration.
+# The instance of the class maintains references to the
+# iterable and the iterator.
 class _SourceIterable(object):
     def __init__(self, callable_):
         self._callable = callable_
         self._splpy_context = streamsx._streams._runtime._has_context_methods(type(self._callable))
         self._splpy_entered = False
+        self._it = None
 
+    # Ensure we start once we are in the operator context manager
+    # (__enter__) has been called.
+    def _start(self):
         try:
             self._it = iter(self._callable)
         except TypeError:
             self._it = self._callable()
         except:
             ei = sys.exc_info()
-            if streamsx._streams._runtime._call_exit(iterable, ei[0], ei[1], ei[2]):
+            if streamsx._streams._runtime._call_exit(self, ei):
                 self._it = iter([])
             else:
                 raise ei[1]
 
     def __call__(self):
+        if self._it is None:
+           self._start()
         try:
             while True:
                 tuple_ = next(self._it)
