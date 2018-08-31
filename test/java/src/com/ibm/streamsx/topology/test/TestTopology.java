@@ -189,13 +189,13 @@ public class TestTopology {
      */
     public <T,S> TStream<T> addStartupDelay(TStream<T> stream) {
          
-        if (getTesterType() == Type.DISTRIBUTED_TESTER) {
+        if (getTesterType() == Type.DISTRIBUTED_TESTER || getTesterType() == Type.STREAMING_ANALYTICS_SERVICE_TESTER) {
             return stream.modify(new InitialDelay<T>(getStartupDelay()*1000L));
         }
         return stream;
     }
     public SPLStream addStartupDelay(SPLStream stream) {
-        if (getTesterType() == Type.DISTRIBUTED_TESTER) {
+        if (getTesterType() == Type.DISTRIBUTED_TESTER  || getTesterType() == Type.STREAMING_ANALYTICS_SERVICE_TESTER) {
             return stream.modify(new InitialDelay<Tuple>(getStartupDelay()*1000L));
         }
         return stream;
