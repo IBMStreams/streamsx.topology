@@ -275,6 +275,9 @@ class _JSONInJSONOut(_FunctionalCallable):
 class _IterableAnyOut(_FunctionalCallable):
     def __init__(self, callable_, attributes=None):
         super(_IterableAnyOut, self).__init__(callable_, attributes)
+        self._it = None
+
+    def _start(self):
         try:
             self._it = iter(self._callable())
         except:
@@ -286,6 +289,8 @@ class _IterableAnyOut(_FunctionalCallable):
             self._it = iter([])
 
     def __call__(self):
+        if self._it is None:
+            self._start()
         while True:
             try:
                 tuple_ = next(self._it)
@@ -471,7 +476,6 @@ class _WrappedInstance(object):
             self._callable.__enter__()
     
     def __exit__(self, exc_type, exc_value, traceback):
-        #print("WI-EXIT", type(self), type(self._callable), exc_type, flush=True)
         if self._splpy_context:
             return self._callable.__exit__(exc_type, exc_value, traceback)
 
