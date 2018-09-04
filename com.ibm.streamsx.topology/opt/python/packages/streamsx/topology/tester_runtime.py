@@ -68,6 +68,9 @@ class Condition(object):
             self._valid = v
         self._metric_seq += 1
 
+    def __call__(self, tuple_):
+        self._metric_seq += 1
+
     def fail(self):
         """Fail the condition.
 
@@ -116,7 +119,8 @@ class _TupleExactCount(Condition):
         self.count = 0
         self._starts_valid = target == 0
 
-    def __call__(self, tuple):
+    def __call__(self, tuple_):
+        super(_TupleExactCount, self).__call__(tuple_)
         self.count += 1
         self.valid = self.target == self.count
         if self.count > self.target:
@@ -132,7 +136,8 @@ class _TupleAtLeastCount(Condition):
         self.count = 0
         self._starts_valid = target == 0
 
-    def __call__(self, tuple):
+    def __call__(self, tuple_):
+        super(_TupleAtLeastCount, self).__call__(tuple_)
         self.count += 1
         self.valid = self.count >= self.target
 
@@ -145,8 +150,9 @@ class _StreamContents(Condition):
         self.expected = list(expected)
         self.received = []
 
-    def __call__(self, tuple):
-        self.received.append(tuple)
+    def __call__(self, tuple_):
+        super(_StreamContents, self).__call__(tuple_)
+        self.received.append(tuple_)
         if len(self.received) > len(self.expected):
             self.fail()
             return
@@ -184,8 +190,9 @@ class _TupleCheck(Condition):
         super(_TupleCheck, self).__init__(name)
         self.checker = checker
 
-    def __call__(self, tuple):
-        if not self.checker(tuple):
+    def __call__(self, tuple_):
+        super(_TupleCheck, self).__call__(tuple_)
+        if not self.checker(tuple_):
             self.fail()
         else:
             # Will not override if already failed
