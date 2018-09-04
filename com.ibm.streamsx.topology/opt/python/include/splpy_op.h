@@ -76,11 +76,11 @@ class SplpyOp {
         {
           SplpyGIL lock;
 
-          if (callable_ != NULL)
-              Py_DECREF(callable_);
+          clearCallable();
 
-          if (opc_ != NULL)
-              Py_DECREF(opc_);
+          Py_CLEAR(opc_);
+
+          SplpyGeneral::flush_PyErrPyOut();
         }
         if (pydl_ != NULL)
           (void) dlclose(pydl_);
@@ -93,23 +93,27 @@ class SplpyOp {
          return op_;
       }
 
+      /**
+       * Set or clear the callable for this operator. 
+       *
+      */
       void setCallable(PyObject * callable) {
-        if (callable) {
-            callable_ = callable;
-            // Enter the context manager for the callable.
-            Py_INCREF(callable);
-                SplpyGeneral::callVoidFunction(
-               "streamsx._streams._runtime", "_call_enter", callable, opc());
-        } else if (callable_) {
+          callable_ = callable;
+          // Enter the context manager for the callable.
+          Py_INCREF(callable);
+          SplpyGeneral::callVoidFunction(
+             "streamsx._streams._runtime", "_call_enter", callable, opc());
+      }
+      void clearCallable() {
+        if (callable_) {
              // Exit the context manager and release it
-             // Maintain a reference across the call.
-             Py_INCREF(callable_);
+             // THe function call steals the operator's reference
              SplpyGeneral::callVoidFunction(
                "streamsx._streams._runtime", "_call_exit", callable_, NULL);
-             Py_DECREF(callable_);
              callable_ = NULL;
         }
       }
+
       PyObject * callable() {
           return callable_;
       }
@@ -145,7 +149,6 @@ class SplpyOp {
       */
       void prepareToShutdown() {
           SplpyGIL lock;
-          setCallable(NULL);
           SplpyGeneral::flush_PyErrPyOut();
       }
 
@@ -339,7 +342,7 @@ class SplpyOp {
    SplpyGIL lock;
 
    // Release the old callable
-   op->setCallable(NULL);
+   op->clearCallable();
 
    SPL::blob bytes;
    Py_BEGIN_ALLOW_THREADS
@@ -365,7 +368,7 @@ class SplpyOp {
    SplpyGIL lock;
 
    // Release the old callable
-   op->setCallable(NULL);
+   op->clearCallable();
 
    PyObject * initialCallable = call(loads, pickledInitialCallable);
    if (!initialCallable) {
