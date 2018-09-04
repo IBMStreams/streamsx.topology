@@ -1,5 +1,5 @@
-    // Common code for the constructor of SPL Python operators
-    // that are created from Python functions
+    // Common code for the constructor of SPL Python primitive operators
+    // that are created from Python functions/callables
     // Loads the Python runtime and initializes the function and module variables.
 <%
     # Initialize splpy.pm
@@ -50,12 +50,22 @@
      // At this point callable is the callable class object
      // we call it to create an instance of the class
      // (which itself is callable)
+
+     // Make the operator pointer (opc) available to
+     // the __init__ method.
+     SplpyGeneral::callVoidFunction(
+         "streamsx.ec", "_set_tl_opc", this->pyop_->opc(), NULL);
+
      PyObject *tmp_instance = SplpyGeneral::pyObject_Call(callable, empty_tuple, param_dict);
      Py_DECREF(callable);
      if (tmp_instance == NULL) {
          SPLAPPTRC(L_ERROR, "Fatal error: cannot create instance of class " << "<%=$functionName%>" << " in module " << "<%=$module%>", "python");
+        SplpyGeneral::callVoidFunction(
+            "streamsx.ec", "_clear_tl_opc", NULL, NULL);
          throw SplpyGeneral::pythonException("<%=$module%>");
      }
+     SplpyGeneral::callVoidFunction(
+         "streamsx.ec", "_clear_tl_opc", NULL, NULL);
    
      callable = tmp_instance;
    }

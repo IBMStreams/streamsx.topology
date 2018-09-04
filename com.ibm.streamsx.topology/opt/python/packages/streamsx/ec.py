@@ -426,9 +426,22 @@ class CustomMetric(object):
 # internal functions
 ####################
 
+# For decorated operators the application logic is
+# tied to the C++ operator during __init__ in addition
+# to __enter__. This is handled through a thread local
+def _set_tl_opc(opc):
+    _check()
+    _State._state._opptrs._opc = opc
+
+def _clear_tl_opc():
+    _check()
+    _State._state._opptrs._opc = None
+
 def _get_opc(obj):
     _check()
-    return obj._streamsx_ec_opc
+    if hasattr(obj, '_streamsx_ec_opc') and obj._streamsx_ec_opc:
+        return obj._streamsx_ec_opc
+    return _State._state._opptrs._opc
 
 def _submit(primitive, port_index, tuple_):
     """Internal method to submit a tuple"""
