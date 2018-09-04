@@ -3,6 +3,7 @@
 # Copyright IBM Corp. 2017,2018
 from future.builtins import *
 
+import inspect
 import logging
 import os
 import pkg_resources
@@ -129,10 +130,12 @@ def _setup(out_dir):
 def _has_context_methods(cls):
     return hasattr(cls, '__enter__') and hasattr(cls, '__exit__')
 
-def _call_enter(obj):
-    if obj._splpy_context:
-        obj.__enter__()
-        obj._splpy_entered = True
+def _call_enter(obj, opc):
+    if obj._splpy_context or obj._streamsx_ec_cls:
+        obj._streamsx_ec_opc = opc
+        if obj._splpy_context:
+            obj.__enter__()
+            obj._splpy_entered = True
 
 def _call_exit(obj, exc_info=None):
     if obj._splpy_context and obj._splpy_entered:
@@ -149,7 +152,53 @@ def _call_exit(obj, exc_info=None):
                     # Remain in the context
                     return ev
             obj._splpy_entered = False
+            obj._streamsx_ec_opc = None
             return ev
         except:
             obj._splpy_entered = False
+            obj._streamsx_ec_opc = None
             raise
+    obj._streamsx_ec_opc = None
+
+# A _WrappedInstance is used to wrap the functional logic
+# passed into a function like map when declaring the graph.
+# The wrapping occurs at topology declaration time and the
+# instance of _WrappedInstance becomes the "users" logic
+# that is passed in as the functional operator's parameter.
+# 
+# If no_context is true then it's guaranteed that
+# callable_ does not have __enter__, __exit__ methods
+class _WrapOpLogic(object):
+    def __init__(self, callable_, no_context=None):
+        self._callable = callable_
+
+        is_cls = not inspect.isfunction(callable_)
+        is_cls = is_cls and not inspect.isbuiltin(callable_)
+        is_cls = is_cls and not inspect.isclass(callable_)
+        self._streamsx_ec_cls = is_cls
+
+        if is_cls and not no_context:
+            if hasattr(callable_, '_splpy_context'):
+                self._splpy_context = callable_._splpy_context
+            else:
+                self._splpy_context = streamsx._streams._runtime._has_context_methods(type(callable_))
+        else:
+            self._splpy_context = False
+
+        self._splpy_entered = False
+
+    def __enter__(self):
+        #print('WI-ENTER', type(self), type(self._callable), self._splpy_context, self._streamsx_ec_opc,  flush=True)
+        if self._splpy_context or self._streamsx_ec_cls:
+            self._callable._streamsx_ec_opc = self._streamsx_ec_opc
+            if self._splpy_context:
+                #print('WI-ENTER-2', type(self._callable), self._callable._streamsx_ec_opc, flush=True)
+                self._callable.__enter__()
+                #print('WI-ENTER-DONE', type(self), type(self._callable), self._splpy_context, self._streamsx_ec_opc,  flush=True)
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self._splpy_context:
+            ev = self._callable.__exit__(exc_type, exc_value, traceback)
+            if not ev:
+                self._streamsx_ec_opc = None
+            return ev

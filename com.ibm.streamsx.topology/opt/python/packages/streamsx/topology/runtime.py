@@ -78,39 +78,17 @@ def _get_callable(f):
 # For functional operators all of the logic is seen as a callable.
 # Specific sub-classes perform conversion on the input and or output values.
 #
-class _FunctionalCallable(object):
+class _FunctionalCallable(streamsx._streams._runtime._WrapOpLogic):
     def __init__(self, callable_, attributes=None):
-        self._callable = _get_callable(callable_)
-        self._cls = False
+        callable_ = _get_callable(callable_)
+        super(_FunctionalCallable,  self).__init__(callable_)
         self._attributes = attributes
-
-        self._splpy_context = False
-        self._splpy_entered = False
-        is_cls = not inspect.isfunction(self._callable)
-        is_cls = is_cls and not inspect.isbuiltin(self._callable)
-        is_cls = is_cls and not inspect.isclass(self._callable)
-            
-        if is_cls:
-            self._callable._streamsx_ec_op = ec._get_opc(self._callable)
-            self._cls = True
-            if hasattr(self._callable, '_splpy_context'):
-                self._splpy_context = self._callable._splpy_context
-            else:
-                self._splpy_context = streamsx._streams._runtime._has_context_methods(type(self._callable))
-        
-        ec._clear_opc()
 
     def __call__(self, tuple_):
         """Default callable implementation
         Just calls the callable directly.
         """
         return self._callable(tuple_)
-
-    def __enter__(self):
-        self._callable.__enter__()
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        return self._callable.__exit__(exc_type, exc_value, traceback)
 
 class _PickleInObjectOut(_FunctionalCallable):
     def __call__(self, tuple_, pm=None):
@@ -300,8 +278,8 @@ class _IterableAnyOut(_FunctionalCallable):
                 return None
 
 class _IterablePickleOut(_IterableAnyOut):
-    def __init__(self, callable, attributes=None):
-        super(_IterablePickleOut, self).__init__(callable, attributes)
+    def __init__(self, callable_, attributes=None):
+        super(_IterablePickleOut, self).__init__(callable_, attributes)
         self.pdfn = pickle.dumps
 
     def __call__(self):
@@ -455,39 +433,13 @@ tuple_in = object_in
 def _get_namedtuple_cls(schema, name):
     return StreamSchema(schema).as_tuple(named=name).style
 
-# A _WrappedInstance is used to wrap the functional logic
-# passed into a functiona like map when declaring the graph.
-# The wrapping occurs at topology declaration time and the
-# instance of _WrappedInstance becomes the "users" logic
-# that is passed in as the functional operator's parameter.
-# 
-# If no_context is true then it's guarantteed that
-# callable_ does not have __enter__, __exit__ methods
-class _WrappedInstance(object):
-    def __init__(self, callable_, no_context=None):
-        self._callable = callable_
-        if no_context:
-            self._splpy_context = False
-        else:
-            self._splpy_context = streamsx._streams._runtime._has_context_methods(type(callable_))
-
-    def __enter__(self):
-        if self._splpy_context:
-            self._callable.__enter__()
-    
-    def __exit__(self, exc_type, exc_value, traceback):
-        if self._splpy_context:
-            return self._callable.__exit__(exc_type, exc_value, traceback)
 
 # Wraps an iterable instance returning
 # it when called. Allows an iterable
 # instance to be passed directly to Topology.source
 # (such as a list)
-# Instance of _WrappedInstance so used at declaration time
-class _IterableInstance(_WrappedInstance):
-    def __init__(self, callable_):
-        super(_IterableInstance, self).__init__(callable_)
-
+# Instance of _WrapOpLogic so used at declaration time
+class _IterableInstance(streamsx._streams._runtime._WrapOpLogic):
     def __call__(self):
         return self._callable
 
@@ -495,8 +447,8 @@ class _IterableInstance(_WrappedInstance):
 # When this is called, the callable is called.
 # Used to wrap a lambda object or a function/class
 # defined in __main__
-# Instance of _WrappedInstance so used at declaration time
-class _Callable(_WrappedInstance):
+# Instance of _WrapInstance so used at declaration time
+class _Callable(streamsx._streams._runtime._WrapOpLogic):
     def __init__(self, callable_, no_context=None):
         super(_Callable, self).__init__(callable_, no_context)
 

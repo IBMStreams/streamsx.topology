@@ -651,14 +651,12 @@ def _wrapforsplop(optype, wrapped, style, docpy):
             _splpy_wrapped = wrapped
             _splpy_optype = optype
             _splpy_callable = 'class'
+            _streamsx_ec_cls = True
+            _splpy_context = streamsx._streams._runtime._has_context_methods(wrapped)
 
             @functools.wraps(wrapped.__init__)
             def __init__(self,*args,**kwargs):
                 super(_op_class, self).__init__(*args,**kwargs)
-                if ec._is_supported():
-                    ec._save_opc(self)
- 
-                self._splpy_context = streamsx._streams._runtime._has_context_methods(wrapped)
                 self._splpy_entered = False
 
             # Use reduce to save the state of the class and its
@@ -703,6 +701,7 @@ def _wrapforsplop(optype, wrapped, style, docpy):
     _op_fn._splpy_fixed_count = _define_fixed(_op_fn, _op_fn)
     _op_fn._splpy_file = inspect.getsourcefile(wrapped)
     _op_fn._splpy_docpy = docpy
+    _op_fn._streamsx_ec_cls = False
     _op_fn._splpy_context = False
     return _op_fn
 

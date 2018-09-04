@@ -159,7 +159,7 @@ class SPLGraph(object):
         self.operators.append(op)
         if not function is None:
             dep_instance = function
-            if isinstance(function, streamsx.topology.runtime._WrappedInstance):
+            if isinstance(function, streamsx._streams._runtime._WrapOpLogic):
                 dep_instance = type(function._callable)
 
             if not inspect.isbuiltin(dep_instance):

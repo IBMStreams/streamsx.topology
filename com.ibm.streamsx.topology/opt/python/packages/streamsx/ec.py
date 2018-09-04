@@ -426,42 +426,9 @@ class CustomMetric(object):
 # internal functions
 ####################
 
-
-# Sets the operator pointer as a thread
-# local to allow access from an operator's
-# class __init__ method.
-def _set_opc(opc):
-    _check()
-    _State._state._opptrs._opc = opc
-
-# Clear the operator pointer from the
-# thread local
-def _clear_opc():
-    if _is_supported():
-        _State._state._opptrs._opc = None
-
-# Save the opc in the operator class
-# (getting it from the thread local)
-def _save_opc(obj):
-    _check()
-    _State._state._opptrs.obj = obj
-    if hasattr(_State._state._opptrs, '_opc'):
-       opc = _State._state._opptrs._opc
-       if opc is not None:
-           obj._streamsx_ec_op = opc
-
 def _get_opc(obj):
     _check()
-    try:
-        return obj._streamsx_ec_op
-    except AttributeError:
-        try:
-            opc = _State._state._opptrs._opc
-            if opc is not None:
-                return opc
-        except AttributeError:
-             pass
-        raise AssertionError("InternalError")
+    return obj._streamsx_ec_opc
 
 def _submit(primitive, port_index, tuple_):
     """Internal method to submit a tuple"""

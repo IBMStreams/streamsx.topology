@@ -22,11 +22,6 @@
      // and restored for checkpointing.
      this->pyop_->setStateful(true);
 
-     // Set the operator capsule as a Python thread local
-     // use streamsx.ec._set_opc so that it is availble
-     // through the operator's class __init__ function.
-     this->pyop_->setopc();
- 
      // Pass all the arguments by name in a dictionary
      // object, effectively as **kwargs. Python will
      // unpack correctly to the actual __init__ args
@@ -63,8 +58,6 @@
      }
    
      callable = tmp_instance;
-
-     this->pyop_->clearopc();
    }
 <%
     }

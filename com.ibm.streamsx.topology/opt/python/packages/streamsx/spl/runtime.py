@@ -25,11 +25,9 @@ import streamsx._streams._runtime
 # Each call returns the next item in the iteration.
 # The instance of the class maintains references to the
 # iterable and the iterator.
-class _SourceIterable(object):
+class _SourceIterable(streamsx._streams._runtime._WrapOpLogic):
     def __init__(self, callable_):
-        self._callable = callable_
-        self._splpy_context = streamsx._streams._runtime._has_context_methods(type(self._callable))
-        self._splpy_entered = False
+        super(_SourceIterable, self).__init__(callable_)
         self._it = None
 
     # Ensure we start once we are in the operator context manager
@@ -59,10 +57,14 @@ class _SourceIterable(object):
             return None
 
     def __enter__(self):
+        self._callable._streamsx_ec_opc = self._streamsx_ec_opc
         self._callable.__enter__()
 
     def __exit__(self, exc_type, exc_value, traceback):
-        return self._callable.__exit__(exc_type, exc_value, traceback)
+        ev = self._callable.__exit__(exc_type, exc_value, traceback)
+        if not ev and exc_type:
+            self._callable._streamsx_ec_opc = None
+        return ev
 
 
 # The decorated operators only support converting

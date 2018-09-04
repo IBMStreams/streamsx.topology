@@ -99,7 +99,7 @@ class SplpyOp {
             // Enter the context manager for the callable.
             Py_INCREF(callable);
                 SplpyGeneral::callVoidFunction(
-               "streamsx._streams._runtime", "_call_enter", callable, NULL);
+               "streamsx._streams._runtime", "_call_enter", callable, opc());
         } else if (callable_) {
              // Exit the context manager and release it
              // Maintain a reference across the call.
@@ -170,21 +170,6 @@ class SplpyOp {
          return opc_;
       }
      
-      // Set the operator capsule as a Python thread local
-      // use streamsx.ec._set_opc so that it is availble
-      // through the operator's class __init__ function.
-      void setopc() {
-         SplpyGeneral::callVoidFunction(
-               "streamsx.ec", "_set_opc", opc(), NULL);
-      }
-
-      // Clear the thread local for the operator capsule
-      void clearopc() {
-          SplpyGeneral::callVoidFunction(
-               "streamsx.ec", "_clear_opc",
-               NULL, NULL);
-      }
-
       /**
        * Is this operator stateful for checkpointing?  Derived classes
        * must override this to support checkpointing.
