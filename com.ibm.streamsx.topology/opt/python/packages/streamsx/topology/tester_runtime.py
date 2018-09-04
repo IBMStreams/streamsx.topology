@@ -142,7 +142,7 @@ class _TupleAtLeastCount(Condition):
 class _StreamContents(Condition):
     def __init__(self, expected, name=None):
         super(_StreamContents, self).__init__(name)
-        self.expected = expected
+        self.expected = list(expected)
         self.received = []
 
     def __call__(self, tuple):
