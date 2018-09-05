@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.test.distributed;
 
+import static com.ibm.streamsx.topology.test.distributed.PublishSubscribeTest.uniqueTopic;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
@@ -52,7 +53,7 @@ public class PublishSubscribeSPLTest extends TestTopology {
                 
         source = addStartupDelay(source);
         
-        final String topic = "testSPLPublishNoFilterSFilteredSubscribe/" + System.currentTimeMillis();
+        final String topic = uniqueTopic("SPLNoFilter");
         
         source.publish(topic, false);
         
@@ -70,7 +71,7 @@ public class PublishSubscribeSPLTest extends TestTopology {
                 
         source = addStartupDelay(source);
         
-        final String topic = "testSPLPublishNoFilterSFilteredSubscribe/" + System.currentTimeMillis();
+        final String topic = uniqueTopic("SPLNoFilterSubmissionParams");
         
         Supplier<String> pubParam = t.createSubmissionParameter("PPSPL", String.class);
         source.publish(pubParam);
@@ -97,7 +98,7 @@ public class PublishSubscribeSPLTest extends TestTopology {
         
         SPLStream source = SPLStreamsTest.testTupleStream(t);
         
-        final String topic = "testSPLPublishAllowFilterWithSubscribe/" + System.currentTimeMillis();
+        final String topic = uniqueTopic("SPLPublishAllowFilterWithSubscribe");
                 
         source = addStartupDelay(source);
         
@@ -132,7 +133,7 @@ public class PublishSubscribeSPLTest extends TestTopology {
   private void _testSPLPublishFilteredSubscribe(String topic, boolean allowFilters, boolean useParams) throws Exception {
         final Topology t = new Topology();
         
-        topic = topic + "/" + System.currentTimeMillis();
+        topic = uniqueTopic(topic);
         
         SPL.addToolkit(t, new File(getTestRoot(), "spl/testtk"));
         
