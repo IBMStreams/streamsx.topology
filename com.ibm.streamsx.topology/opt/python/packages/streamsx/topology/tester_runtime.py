@@ -59,12 +59,12 @@ class Condition(object):
         """
         raise NotImplementedException("_attach must be defined in the derived class.")
 
-class _PythonCondition(Condition):
-    """A condition for testing based on a python callable.
+class _FunctionalCondition(Condition):
+    """A condition for testing based on a functional callable.
     """
     
     def __init__(self, name=None):
-        super(_PythonCondition, self).__init__(name)
+        super(_FunctionalCondition, self).__init__(name)
         self._starts_valid = False
         self._valid = False
         self._fail = False
@@ -94,7 +94,7 @@ class _PythonCondition(Condition):
             self._valid = v
         self._metric_seq += 1
 
-    def __call__(self, tuple_):
+    def _show_progress(self):
         self._metric_seq += 1
 
     def fail(self):
@@ -138,7 +138,12 @@ class _PythonCondition(Condition):
     def _create_metric(self, mt, kind=None):
         return ec.CustomMetric(self, name=Condition._mn(mt, self.name), kind=kind)
 
-class _TupleExactCount(_PythonCondition):
+class _StreamCondition(_FunctionalCondition):
+    # Each tuple shows the flow is still active
+    def __call__(self, tuple_):
+        self._show_progress()
+
+class _TupleExactCount(_StreamCondition):
     def __init__(self, target, name=None):
         super(_TupleExactCount, self).__init__(name)
         self.target = target
@@ -155,7 +160,7 @@ class _TupleExactCount(_PythonCondition):
     def __str__(self):
         return "Exact tuple count: expected:" + str(self.target) + " received:" + str(self.count)
 
-class _TupleAtLeastCount(_PythonCondition):
+class _TupleAtLeastCount(_StreamCondition):
     def __init__(self, target, name=None):
         super(_TupleAtLeastCount, self).__init__(name)
         self.target = target
@@ -170,7 +175,7 @@ class _TupleAtLeastCount(_PythonCondition):
     def __str__(self):
         return "At least tuple count: expected:" + str(self.target) + " received:" + str(self.count)
 
-class _StreamContents(_PythonCondition):
+class _StreamContents(_StreamCondition):
     def __init__(self, expected, name=None):
         super(_StreamContents, self).__init__(name)
         self.expected = list(expected)
@@ -212,7 +217,7 @@ class _UnorderedStreamContents(_StreamContents):
                 return True
         return False
 
-class _TupleCheck(_PythonCondition):
+class _TupleCheck(_StreamCondition):
     def __init__(self, checker, name=None):
         super(_TupleCheck, self).__init__(name)
         self.checker = checker
@@ -244,7 +249,7 @@ class _Resetter(Condition):
         resetter._op()._layout(hidden=True)
         
 
-class _RunFor(_PythonCondition):
+class _RunFor(_FunctionalCondition):
     def __init__(self, duration):
         super(_RunFor, self).__init__("TestRunTime")
         self.duration = duration
@@ -256,8 +261,8 @@ class _RunFor(_PythonCondition):
             if (time.time() - start) >= self.duration:
                 self.valid = True
                 return
-            self.valid = False
+            self._show_progress()
             yield None
 
     def __str__(self):
-        return "Tuple run time:" + str(self.duration)
+        return "Test run time:" + str(self.duration)
