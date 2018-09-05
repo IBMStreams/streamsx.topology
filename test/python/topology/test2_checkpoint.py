@@ -127,7 +127,7 @@ class TestCheckpointing(unittest.TestCase):
 
     # Source operator
     def test_source(self):
-        topo = Topology("test")
+        topo = Topology()
         topo.checkpoint_period = timedelta(seconds=1)
         s = topo.source(TimeCounter(iterations=30, period=0.1))
         tester = Tester(topo)
@@ -186,7 +186,7 @@ class TestCheckpointing(unittest.TestCase):
             
     # Test for_each.  This is a sink. 
     def test_for_each(self):
-        topo = Topology("test")
+        topo = Topology()
         topo.checkpoint_period = timedelta(seconds=1)
         s = topo.source(TimeCounter(iterations=30, period=0.1))
         s.for_each(StatefulNothing())
