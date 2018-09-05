@@ -103,9 +103,6 @@ class VerifyEnterExit(_PythonCondition):
         super(VerifyEnterExit, self).__init__(name)
         self.expected_minimum = expected_minimum
 
-    def __call__(self, _):
-        pass
-
     def __enter__(self):
         super(VerifyEnterExit, self).__enter__()
 
