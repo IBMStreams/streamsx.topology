@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 
 /**
  * Condition that becomes valid after all consistent regions in
@@ -44,7 +45,8 @@ public final class ResetterUserCondition extends UserCondition<Void>
         params.put("conditionName", conditionName);
         if (minimumResets != null)
             params.put("minimumResets", minimumResets);
-        topology.builder().addSPLOperator("ConsistentRegionResetter",
-                "com.ibm.streamsx.topology.testing.consistent::Resetter", params);        
+        BOperatorInvocation op = topology.builder().addSPLOperator("ConsistentRegionResetter",
+                "com.ibm.streamsx.topology.testing.consistent::Resetter", params);
+        op.layout().addProperty("hidden", true);
     }
 }

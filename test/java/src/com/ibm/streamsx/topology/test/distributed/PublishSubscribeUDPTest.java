@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.test.distributed;
 
+import static com.ibm.streamsx.topology.test.distributed.PublishSubscribeTest.uniqueTopic;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -61,7 +62,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
     
     private void testPublishUDPSubscribeNonUDP(int width) throws Exception {
         
-        String topic = "testPublishUDPSubscribeNonUDP/" + width;
+        String topic = uniqueTopic("testPublishUDPSubscribeNonUDP/" + width);
     
         final Topology t = new Topology();
         TStream<String> source = t.strings("325", "457", "9325", "hello", "udp");
@@ -130,7 +131,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
     @Test
     public void testPublishBothSubscribeNonUDP() throws Exception {
         
-        String topic = "testPublishBothSubscribeNonUDP";
+        String topic = uniqueTopic("testPublishBothSubscribeNonUDP");
     
         final Topology t = new Topology();
         TStream<String> source = t.strings("325", "457", "9325", "hello", "udp");   
@@ -165,7 +166,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
     
     private void testObjectPublishUDPSubscribeNonUDP(int width) throws Exception {
         
-        String topic = "testObjectPublishUDPSubscribeNonUDP/" + width;
+        String topic = uniqueTopic("testObjectPublishUDPSubscribeNonUDP/" + width);
         
         Random r = new Random();
         List<BigDecimal> data = new ArrayList<>(20);
@@ -175,12 +176,12 @@ public class PublishSubscribeUDPTest extends TestTopology {
         final Topology t = new Topology();
         TStream<BigDecimal> source = t.constants(data);
               
-        source = addStartupDelay(source);
+        source = addStartupDelay(source).asType(BigDecimal.class);
         
         if (width > 0)
             source = source.parallel(width);
-    
-        source.asType(BigDecimal.class).publish(topic);
+
+        source.publish(topic);
         
         TStream<BigDecimal> subscribe = t.subscribe(topic, BigDecimal.class);
         TStream<String> strings = StringStreams.toString(subscribe);
@@ -195,7 +196,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
     @Test
     public void testObjectPublishBothSubscribeNonUDP() throws Exception {
         
-        String topic = "testObjectPublishBothSubscribeNonUDP";
+        String topic = uniqueTopic("testObjectPublishBothSubscribeNonUDP");
         
         Random r = new Random();
         List<BigDecimal> data = new ArrayList<>(20);
@@ -204,9 +205,9 @@ public class PublishSubscribeUDPTest extends TestTopology {
  
         final Topology t = new Topology();
         TStream<BigDecimal> source = t.constants(data);        
-        source = addStartupDelay(source);     
+        source = addStartupDelay(source).asType(BigDecimal.class);     
         source = source.parallel(4);  
-        source.asType(BigDecimal.class).publish(topic);
+        source.publish(topic);
         
         List<BigDecimal> data2 = new ArrayList<>(10);
         for (int i = 0; i < 10; i++)
@@ -243,7 +244,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
                 expectedContents,
                 seconds + getStartupDelay(), TimeUnit.SECONDS);
 
-        assertTrue(expectedContents.toString(), expectedContents.valid());
+        assertTrue(expectedContents.valid());
     }
  
 }
