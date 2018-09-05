@@ -69,9 +69,9 @@ void MY_OPERATOR::process(uint32_t idx)
    try {
     OPort0Type otuple;
 
+    AutoConsistentRegionPermit crp(crContext);
+    OptionalAutoLock stateLock(this);
     { // start lock
-      AutoConsistentRegionPermit crp(crContext);
-      OptionalAutoLock stateLock(this);
       SplpyGIL lock;
       if (pyReturnVar != NULL) {
           Py_DECREF(pyReturnVar);
@@ -110,6 +110,7 @@ void MY_OPERATOR::process(uint32_t idx)
     } // end lock
 
     submit(otuple, 0);
+
    } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
      SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
    }
