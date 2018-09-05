@@ -127,8 +127,8 @@ class SplpyOp {
        *   by __exit__
        */
       void setup() {
-          if (PyObject_HasAttrString(callable_, "_splpy_context")) {
-              PyObject *hasContext = PyObject_GetAttrString(callable_, "_splpy_context");
+          if (PyObject_HasAttrString(callable_, "_streamsx_ec_context")) {
+              PyObject *hasContext = PyObject_GetAttrString(callable_, "_streamsx_ec_context");
               if (PyObject_IsTrue(hasContext)) {
                   SPL::OperatorMetrics & metrics = op_->getContext().getMetrics();
                   SPL::Metric &cm = metrics.createCustomMetric(

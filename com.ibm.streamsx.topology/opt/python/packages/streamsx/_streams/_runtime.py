@@ -100,8 +100,8 @@ def _setup(out_dir):
 #
 # Two attributes are set in the object being wrapped to manage context:
 #
-# _splpy_context : Boolean indicating if the object has context methods
-# _splpy__enter  : Has __enter__ been called on this instance.
+# _streamsx_ec_context : Boolean indicating if the object has context methods
+# _streamsx_ec_entered  : Has __enter__ been called on this instance.
 #
 # Note that the top-level Python object seen by the C++ primitive operator
 # maintains these attributes and is responsible for calling __enter__
@@ -131,14 +131,14 @@ def _has_context_methods(cls):
     return hasattr(cls, '__enter__') and hasattr(cls, '__exit__')
 
 def _call_enter(obj, opc):
-    if obj._splpy_context or obj._streamsx_ec_cls:
+    if obj._streamsx_ec_context or obj._streamsx_ec_cls:
         obj._streamsx_ec_opc = opc
-        if obj._splpy_context:
+        if obj._streamsx_ec_context:
             obj.__enter__()
-            obj._splpy_entered = True
+            obj._streamsx_ec_entered = True
 
 def _call_exit(obj, exc_info=None):
-    if obj._splpy_context and obj._splpy_entered:
+    if obj._streamsx_ec_context and obj._streamsx_ec_entered:
         try:
             if exc_info is None:
                 ev = obj.__exit__(None,None,None)
@@ -151,11 +151,11 @@ def _call_exit(obj, exc_info=None):
                 if ev and exc_type is not None:
                     # Remain in the context
                     return ev
-            obj._splpy_entered = False
+            obj._streamsx_ec_entered = False
             obj._streamsx_ec_opc = None
             return ev
         except:
-            obj._splpy_entered = False
+            obj._streamsx_ec_entered = False
             obj._streamsx_ec_opc = None
             raise
     obj._streamsx_ec_opc = None
@@ -178,26 +178,23 @@ class _WrapOpLogic(object):
         self._streamsx_ec_cls = is_cls
 
         if is_cls and not no_context:
-            if hasattr(callable_, '_splpy_context'):
-                self._splpy_context = callable_._splpy_context
+            if hasattr(callable_, '_streamsx_ec_context'):
+                self._streamsx_ec_context = callable_._streamsx_ec_context
             else:
-                self._splpy_context = streamsx._streams._runtime._has_context_methods(type(callable_))
+                self._streamsx_ec_context = streamsx._streams._runtime._has_context_methods(type(callable_))
         else:
-            self._splpy_context = False
+            self._streamsx_ec_context = False
 
-        self._splpy_entered = False
+        self._streamsx_ec_entered = False
 
     def __enter__(self):
-        #print('WI-ENTER', type(self), type(self._callable), self._splpy_context, self._streamsx_ec_opc,  flush=True)
-        if self._splpy_context or self._streamsx_ec_cls:
+        if self._streamsx_ec_context or self._streamsx_ec_cls:
             self._callable._streamsx_ec_opc = self._streamsx_ec_opc
-            if self._splpy_context:
-                #print('WI-ENTER-2', type(self._callable), self._callable._streamsx_ec_opc, flush=True)
+            if self._streamsx_ec_context:
                 self._callable.__enter__()
-                #print('WI-ENTER-DONE', type(self), type(self._callable), self._splpy_context, self._streamsx_ec_opc,  flush=True)
     
     def __exit__(self, exc_type, exc_value, traceback):
-        if self._splpy_context:
+        if self._streamsx_ec_context:
             ev = self._callable.__exit__(exc_type, exc_value, traceback)
             if not ev:
                 self._streamsx_ec_opc = None

@@ -652,12 +652,12 @@ def _wrapforsplop(optype, wrapped, style, docpy):
             _splpy_optype = optype
             _splpy_callable = 'class'
             _streamsx_ec_cls = True
-            _splpy_context = streamsx._streams._runtime._has_context_methods(wrapped)
+            _streamsx_ec_context = streamsx._streams._runtime._has_context_methods(wrapped)
 
             @functools.wraps(wrapped.__init__)
             def __init__(self,*args,**kwargs):
                 super(_op_class, self).__init__(*args,**kwargs)
-                self._splpy_entered = False
+                self._streamsx_ec_entered = False
 
             # Use reduce to save the state of the class and its
             # module and operator name.
@@ -702,7 +702,7 @@ def _wrapforsplop(optype, wrapped, style, docpy):
     _op_fn._splpy_file = inspect.getsourcefile(wrapped)
     _op_fn._splpy_docpy = docpy
     _op_fn._streamsx_ec_cls = False
-    _op_fn._splpy_context = False
+    _op_fn._streamsx_ec_context = False
     return _op_fn
 
 # define the SPL tuple passing style based
