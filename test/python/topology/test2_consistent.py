@@ -1,6 +1,6 @@
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
-from streamsx.topology.tester_runtime import _FunctionalCondition
+from streamsx.topology.tester_runtime import _StreamCondition
 from streamsx.topology.consistent import ConsistentRegionConfig
 import streamsx.spl.op as op
 import streamsx.ec as ec
@@ -98,7 +98,7 @@ class VerifyNumericOrder(object):
 
 # Verify that __enter__ and __exit__ are called, alternately, a specified 
 # number of times.
-class VerifyEnterExit(_FunctionalCondition):
+class VerifyEnterExit(_StreamCondition):
     def __init__(self, expected_minimum, name):
         super(VerifyEnterExit, self).__init__(name)
         self.expected_minimum = expected_minimum
