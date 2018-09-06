@@ -47,9 +47,10 @@ MY_OPERATOR::MY_OPERATOR() :
       // callable is an instance of the callable class
       // then when called returns an iterable
      callable = SplpyGeneral::callFunction(
-             "streamsx.spl.runtime", "_splpy_iter_source",
+             "streamsx.spl.runtime", "_SourceIterable",
              callable, NULL);   
      this->pyop_->setCallable(callable);
+     this->pyop_->setup();
 
      pyOutNames_0 = Splpy::pyAttributeNames(getOutputPortAt(0));
    }

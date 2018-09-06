@@ -30,7 +30,7 @@ class TestCheckpointing(unittest.TestCase):
 
     # Source operator
     def test_source(self):
-        topo = Topology("test")
+        topo = Topology()
         topo.checkpoint_period = timedelta(seconds=1)
         streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         bop = op.Source(topo, "com.ibm.streamsx.topology.pytest.checkpoint::TimeCounter", schema.StreamSchema('tuple<int32 f>').as_tuple(), params={'iterations':30,'period':0.1})
@@ -44,7 +44,7 @@ class TestCheckpointing(unittest.TestCase):
 
     # Source, filter, and map operators
     def test_filter_map(self):
-        topo = Topology("test")
+        topo = Topology()
         topo.checkpoint_period = timedelta(seconds=1)
         streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         timeCounter = op.Source(topo, "com.ibm.streamsx.topology.pytest.checkpoint::TimeCounter", schema.StreamSchema('tuple<int32 f>').as_tuple(), params={'iterations':30,'period':0.1})
@@ -62,7 +62,7 @@ class TestCheckpointing(unittest.TestCase):
     # for python primitive operators.
     @unittest.expectedFailure
     def test_primitive_foreach(self):
-        topo = Topology("test")
+        topo = Topology()
         topo.checkpoint_period = timedelta(seconds=1)
         streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         timeCounter = op.Source(topo, "com.ibm.streamsx.topology.pytest.checkpoint::TimeCounter", schema.StreamSchema('tuple<int32 f>').as_tuple(), params={'iterations':30,'period':0.1})
@@ -75,7 +75,7 @@ class TestCheckpointing(unittest.TestCase):
 
     # source, map, and for_each operators
     def test_map_foreach(self):
-        topo = Topology("test")
+        topo = Topology()
         topo.checkpoint_period = timedelta(seconds=1)
         streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         timeCounter = op.Source(topo, "com.ibm.streamsx.topology.pytest.checkpoint::TimeCounter", schema.StreamSchema('tuple<int32 f>').as_tuple(), params={'iterations':30,'period':0.1})

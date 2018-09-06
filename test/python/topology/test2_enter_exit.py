@@ -119,17 +119,17 @@ class TestSuppressMetricDistributed(unittest.TestCase):
         s3 = topo.source(range(0), name='NOMETRIC_SB')
         s = s1.union({s2,s3})
 
-        s = s.filter(EESMClass(), name='NOMETIC_FA')
-        s = s.filter(lambda x : False, name='NOMETIC_FA')
-        s = s.filter(ascii, name='NOMETIC_FA')
+        s = s.filter(EESMClass(), name='NOMETRIC_FA')
+        s = s.filter(lambda x : False, name='NOMETRIC_FA')
+        s = s.filter(ascii, name='NOMETRIC_FA')
 
-        s = s.map(EESMClass(), name='NOMETIC_MA')
-        s = s.map(lambda x : False, name='NOMETIC_MB')
-        s = s.map(ascii, name='NOMETIC_MC')
+        s = s.map(EESMClass(), name='NOMETRIC_MA')
+        s = s.map(lambda x : False, name='NOMETRIC_MB')
+        s = s.map(ascii, name='NOMETRIC_MC')
 
-        s.for_each(EESMClass(), name='NOMETIC_EA')
-        s.for_each(lambda x : False, name='NOMETIC_EB')
-        s.for_each(ascii, name='NOMETIC_EC')
+        s.for_each(EESMClass(), name='NOMETRIC_EA')
+        s.for_each(lambda x : False, name='NOMETRIC_EB')
+        s.for_each(ascii, name='NOMETRIC_EC')
 
         # Has metric
         m = topo.source(EESMSourceM(), name='HASMETRIC_S_7')

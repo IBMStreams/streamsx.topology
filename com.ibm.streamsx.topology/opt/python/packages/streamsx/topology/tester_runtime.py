@@ -65,7 +65,6 @@ class _FunctionalCondition(Condition):
     
     def __init__(self, name=None):
         super(_FunctionalCondition, self).__init__(name)
-        self._starts_valid = False
         self._valid = False
         self._fail = False
 
@@ -127,8 +126,11 @@ class _FunctionalCondition(Condition):
         self._metric_valid = self._create_metric("valid", kind='Gauge')
         self._metric_seq = self._create_metric("seq")
         self._metric_fail = self._create_metric("fail", kind='Gauge')
-        if self._starts_valid:
+        if self._fail:
+            self._metric_fail.value = 1
+        elif self._valid:
             self.valid = True
+         
 
     def __exit__(self, exc_type, exc_value, traceback):
         if (ec.is_standalone()):
@@ -148,7 +150,7 @@ class _TupleExactCount(_StreamCondition):
         super(_TupleExactCount, self).__init__(name)
         self.target = target
         self.count = 0
-        self._starts_valid = target == 0
+        self._valid = target == 0
 
     def __call__(self, tuple_):
         super(_TupleExactCount, self).__call__(tuple_)
@@ -165,7 +167,7 @@ class _TupleAtLeastCount(_StreamCondition):
         super(_TupleAtLeastCount, self).__init__(name)
         self.target = target
         self.count = 0
-        self._starts_valid = target == 0
+        self._valid = target == 0
 
     def __call__(self, tuple_):
         super(_TupleAtLeastCount, self).__call__(tuple_)
@@ -196,8 +198,9 @@ class _StreamContents(_StreamCondition):
     def _check_for_failure(self):
         """Check for failure.
         """
-        if self.expected[len(self.received) - 1] != self.received[-1]:
-            _logger.error("expected %s, received %s" , str(self.expected[len(self.received) - 1]), str(self.received[-1]))
+        tc = len(self.received) - 1
+        if self.expected[tc] != self.received[tc]:
+            _logger.error("Tuple %d: expected %s, received %s" , tc, str(self.expected[tc]), str(self.received[tc]))
             self.fail()
             return True
         return False
