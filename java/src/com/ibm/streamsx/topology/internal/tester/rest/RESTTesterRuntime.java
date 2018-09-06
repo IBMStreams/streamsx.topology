@@ -130,6 +130,7 @@ public class RESTTesterRuntime extends TesterRuntime {
         
         TStream<Object> os = (TStream<Object>) stream;
         TSink end = os.forEach(fn);
+        end.operator().layout().addProperty("hidden", true);
         if (os.isPlaceable())
             end.colocate(os);
         
