@@ -127,13 +127,19 @@ class TestCheckpointing(unittest.TestCase):
 
     # Source operator
     def test_source(self):
-        topo = Topology("test")
+        topo = Topology()
         topo.checkpoint_period = timedelta(seconds=1)
         s = topo.source(TimeCounter(iterations=30, period=0.1))
         tester = Tester(topo)
         tester.contents(s, range(0,30))
 
-        tester.test(self.test_ctxtype, self.test_config, always_collect_logs=True)
+        # streamsx.topology.context.submit('TOOLKIT', topo)
+
+#        cfg={}
+#        job_config = streamsx.topology.context.JobConfig(tracing='debug')
+#        job_config.add(self.test_config)
+
+        tester.test(self.test_ctxtype, self.test_config)
 
     # Source, ForEach, Filter, Aggregate operators
     # (based on test2_python_window.TestPythonWindowing.test_basicCountCountWindow)
@@ -161,14 +167,16 @@ class TestCheckpointing(unittest.TestCase):
         # slow things down so checkpoints can be taken.
         lines = lines.filter(StatefulDelay(0.5)) 
         words = lines.flat_map(StatefulSplit())
+
         tester = Tester(topo)
         tester.contents(words, ["mary","had","a","little","lamb","its","fleece","was","white","as","snow"])
+
         tester.test(self.test_ctxtype, self.test_config)
 
     # Test hash adder.  This requires parallel with a hash router.
     # (based on test2_udp.TestUDP.test_TopologyParallelHash)
     def test_hash_adder(self):
-        topo = Topology("test_hash_adder")
+        topo = Topology()
         topo.checkpoint_period = timedelta(seconds=1)
         s = topo.source(TimeCounter(iterations=30, period=0.1))
         width =  3
@@ -186,11 +194,12 @@ class TestCheckpointing(unittest.TestCase):
             
     # Test for_each.  This is a sink. 
     def test_for_each(self):
-        topo = Topology("test")
+        topo = Topology()
         topo.checkpoint_period = timedelta(seconds=1)
         s = topo.source(TimeCounter(iterations=30, period=0.1))
         s.for_each(StatefulNothing())
         tester = Tester(topo)
+
         tester.test(self.test_ctxtype, self.test_config)
 
 class TestDistributedCheckpointing(TestCheckpointing):
