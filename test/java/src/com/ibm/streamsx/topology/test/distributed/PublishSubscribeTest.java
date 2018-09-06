@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
@@ -48,15 +49,22 @@ public class PublishSubscribeTest extends TestTopology {
     public void checkIsDistributed() {
         assumeTrue(isDistributedOrService());
     }
+    
+    // Avoid clashes with concurrent runs.
+    public static String uniqueTopic(String key) {
+        return key + "/test/R" + Math.abs(ThreadLocalRandom.current().nextLong());
+    }
 
     @Test
     public void testPublishString() throws Exception {
         
         TStream<String> source = source();
-       
-        source.publish("testPublishString");
         
-        TStream<String> subscribe = source.topology().subscribe("testPublishString", String.class);
+        String topic = uniqueTopic("string");
+       
+        source.publish(topic);
+        
+        TStream<String> subscribe = source.topology().subscribe(topic, String.class);
         
         checkSubscribedAsStrings(subscribe);
     }
@@ -66,8 +74,8 @@ public class PublishSubscribeTest extends TestTopology {
         
         TStream<String> source = source();
         
-        String topic = "testPublishStringParams/" + System.currentTimeMillis();
-       
+        String topic = uniqueTopic("stringParams");
+               
         Supplier<String> pubParam = source.topology().createSubmissionParameter("PP", String.class);
         source.publish(pubParam);
         
@@ -90,7 +98,7 @@ public class PublishSubscribeTest extends TestTopology {
         final Topology t = new Topology();
         int[] sv = new int[1];
         TStream<String> source = t.periodicSource(() -> prefix + sv[0]++,
-                50, TimeUnit.MILLISECONDS);
+                10, TimeUnit.MILLISECONDS);
  
         return source.asType(String.class);
     }
@@ -98,14 +106,16 @@ public class PublishSubscribeTest extends TestTopology {
     @Test
     public void testPublishStringMultipleTopics() throws Exception {
 
-        TStream<String> source = source();       
-        source.publish("testPublishString");
+        TStream<String> source = source();  
+        String topic = uniqueTopic("string1");
+        source.publish(topic);
         
         // A stream that should not be subscribed to!
+        String topicX = uniqueTopic("stringX");
         TStream<String> source2 = source("X");         
-        source2.publish("testPublishString2");
+        source2.publish(topicX);
        
-        TStream<String> subscribe = source.topology().subscribe("testPublishString", String.class);
+        TStream<String> subscribe = source.topology().subscribe(topic, String.class);
 
         checkSubscribedAsStrings(subscribe);
     }
@@ -120,12 +130,15 @@ public class PublishSubscribeTest extends TestTopology {
         assertEquals(String.class, source.getTupleClass());
         assertEquals(String.class, source.getTupleType());
         
-        source.publish("testPublishStringSPL");
+        String topic = uniqueTopic("string2SPL");
+        source.publish(topic);
         
-        SPLStream subscribe = SPLStreams.subscribe(source.topology(), "testPublishStringSPL", SPLSchemas.STRING);        
+        SPLStream subscribe = SPLStreams.subscribe(source.topology(), topic, SPLSchemas.STRING);        
 
         checkSubscribedAsStrings(subscribe.toStringStream());
-    }    
+    }  
+    
+
     
     @Test
     public void testPublishBlob() throws Exception {
@@ -135,9 +148,10 @@ public class PublishSubscribeTest extends TestTopology {
         TStream<Blob> blobs = source().transform(
                 v -> ValueFactory.newBlob(v.getBytes(StandardCharsets.UTF_8))).asType(Blob.class);
         
-        blobs.publish("testPublishBlob");
+        String topic = uniqueTopic("blob");
+        blobs.publish(topic);
         
-        TStream<Blob> subscribe = blobs.topology().subscribe("testPublishBlob", Blob.class);
+        TStream<Blob> subscribe = blobs.topology().subscribe(topic, Blob.class);
         
         TStream<String> strings = subscribe.transform(v -> new String(v.getData(), StandardCharsets.UTF_8));
 
@@ -148,10 +162,11 @@ public class PublishSubscribeTest extends TestTopology {
         
         Topology t = strings.topology();
                 
-        Condition<Long> atLeast = t.getTester().atLeastTupleCount(strings, 100);
-        Condition<List<String>> subTuples = t.getTester().stringContents(strings);
+        Condition<Long> atLeast = t.getTester().atLeastTupleCount(strings, 1000);
+        Condition<List<String>> subTuples = isStreamingAnalyticsRun() ? null :
+                t.getTester().stringContents(strings);
         
-        complete(t.getTester(), atLeast, 30, TimeUnit.SECONDS);
+        complete(t.getTester(), atLeast, 60, TimeUnit.SECONDS);
         
         assertTrue(atLeast.valid());
         
@@ -188,9 +203,10 @@ public class PublishSubscribeTest extends TestTopology {
                 }
             }).asType(XML.class);
         
-        xml.publish("testPublishXML");
+        String topic = uniqueTopic("xml");
+        xml.publish(topic);
         
-        TStream<XML> subscribe = source.topology().subscribe("testPublishXML", XML.class);
+        TStream<XML> subscribe = source.topology().subscribe(topic, XML.class);
         
         TStream<String> strings = subscribe.transform(v-> {
                 byte[] data = new byte[100];
@@ -215,9 +231,10 @@ public class PublishSubscribeTest extends TestTopology {
         
         TStream<SimpleString> objects = source.transform(SimpleString::new).asType(SimpleString.class);
         
-        objects.publish("testPublishJavaObject");
+        String topic = uniqueTopic("javaobjects");
+        objects.publish(topic);
         
-        TStream<SimpleString> subscribe = source.topology().subscribe("testPublishJavaObject", SimpleString.class);
+        TStream<SimpleString> subscribe = source.topology().subscribe(topic, SimpleString.class);
         
         TStream<String> strings = StringStreams.toString(subscribe);  
         
