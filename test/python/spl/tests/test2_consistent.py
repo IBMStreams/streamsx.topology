@@ -35,12 +35,16 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         bop = op.Source(topo, "com.ibm.streamsx.topology.pytest.checkpoint::TimeCounter", schema.StreamSchema('tuple<int32 f>').as_tuple(), params={'iterations':iterations,'period':0.01})
 
         s = bop.stream
-        s.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
+        s.set_consistent(ConsistentRegionConfig.periodic(5, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
         
         tester = Tester(topo)
         tester.resets()
         tester.tuple_count(s, iterations)
         tester.contents(s, list(zip(range(0,iterations))))
+
+        # cfg={}
+        # job_config = streamsx.topology.context.JobConfig(tracing='debug')
+        # job_config.add(self.test_config)
 
         tester.test(self.test_ctxtype, self.test_config)
 
@@ -51,18 +55,13 @@ class TestDistributedConsistentRegion(unittest.TestCase):
 
         streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         timeCounter = op.Source(topo, "com.ibm.streamsx.topology.pytest.checkpoint::TimeCounter", schema.StreamSchema('tuple<int32 f>').as_tuple(), params={'iterations':iterations,'period':0.01})
-        timeCounter.stream.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
+        timeCounter.stream.set_consistent(ConsistentRegionConfig.periodic(5, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
  
         evenFilter = op.Map("com.ibm.streamsx.topology.pytest.checkpoint::StatefulEvenFilter", timeCounter.stream, None, params={})
         hpo = op.Map("com.ibm.streamsx.topology.pytest.checkpoint::StatefulHalfPlusOne", evenFilter.stream, None, params={})
         s = hpo.stream
         tester = Tester(topo)
         tester.resets()
-
-#        cfg={}
-#        job_config = streamsx.topology.context.JobConfig(tracing='debug')
-#        job_config.add(self.test_config)
-
         tester.tuple_count(s, iterations/2)
         tester.contents(s, list(zip(range(1,int((iterations/2)+1)))))
 
@@ -79,7 +78,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         topo.checkpoint_period = timedelta(seconds=1)
         streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         timeCounter = op.Source(topo, "com.ibm.streamsx.topology.pytest.checkpoint::TimeCounter", schema.StreamSchema('tuple<int32 f>').as_tuple(), params={'iterations':iterations,'period':0.01})
-        timeCounter.stream.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
+        timeCounter.stream.set_consistent(ConsistentRegionConfig.periodic(5, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
 
         fizzbuzz = op.Map("com.ibm.streamsx.topology.pytest.checkpoint::FizzBuzzPrimitive", timeCounter.stream, schema.StreamSchema('tuple<int32 f, rstring c>').as_tuple())
         verify = op.Sink("com.ibm.streamsx.topology.pytest.checkpoint::Verify", fizzbuzz.stream)
@@ -87,6 +86,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         tester = Tester(topo)
         tester.resets()
         tester.tuple_count(s, iterations)
+
         tester.test(self.test_ctxtype, self.test_config)
 
     # source, map, and for_each operators
@@ -96,7 +96,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
 
         streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         timeCounter = op.Source(topo, "com.ibm.streamsx.topology.pytest.checkpoint::TimeCounter", schema.StreamSchema('tuple<int32 f>').as_tuple(), params={'iterations':iterations,'period':0.01})
-        timeCounter.stream.set_consistent(ConsistentRegionConfig.periodic(1, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
+        timeCounter.stream.set_consistent(ConsistentRegionConfig.periodic(5 , drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
 
         fizzbuzz = op.Map("com.ibm.streamsx.topology.pytest.checkpoint::FizzBuzzMap", timeCounter.stream, schema.StreamSchema('tuple<int32 f, rstring c>').as_tuple())
         verify = op.Sink("com.ibm.streamsx.topology.pytest.checkpoint::Verify", fizzbuzz.stream)
@@ -110,8 +110,8 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         buzz=lambda x: (x[0], x[1]+'buzz' if x[0] % 5 == 0 else x[1])
         expected = list (map (buzz, (map (fizz, (map (lambda x: (x,''), range(iterations)))))))
         tester.contents(s, expected)
-        tester.test(self.test_ctxtype, self.test_config)
 
+        tester.test(self.test_ctxtype, self.test_config)
 
 class TestSasConsistentRegion(TestDistributedConsistentRegion):
     def setUp(self):

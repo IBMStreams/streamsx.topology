@@ -704,6 +704,7 @@ class Tester(object):
             if self.local_check is not None:
                 self._local_thread.join()
         else:
+            _logger.error ("wait for healthy failed")
             self.result = cc._end(False, _ConditionChecker._UNHEALTHY)
 
         self.result['submission_result'] = self.submission_result
@@ -770,7 +771,7 @@ class _ConditionChecker(object):
         for cn in tester._conditions:
             self._sequences[cn] = -1
         self.delay = 1.0 
-        self.timeout = 20.0
+        self.timeout = 30.0
         self.waits = 0
         self.additional_checks = 2
 
@@ -786,6 +787,7 @@ class _ConditionChecker(object):
                 self.waits = 0
                 return True
             if ok_ is False: # actually failed
+                _logger.error ("wait for healthy actually failed")
                 return False
 
             # ok_ is number of ok PEs
@@ -887,8 +889,10 @@ class _ConditionChecker(object):
                 return False
         ok_pes = 0
         for pe in self.job.get_pes():
-            if pe.launchCount != 1:
-                if verbose:
+            if pe.launchCount == 0:
+                continue # not a test failure, but not an ok_pe either
+            if pe.launchCount > 1:
+                if verbose or start:
                     _logger.error("PE %s launch count > 1: %s", pe.id, pe.launchCount)
                 return False
             if pe.health != 'healthy':

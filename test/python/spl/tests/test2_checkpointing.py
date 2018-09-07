@@ -34,13 +34,13 @@ class TestCheckpointing(unittest.TestCase):
         topo.checkpoint_period = timedelta(seconds=1)
         streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
         bop = op.Source(topo, "com.ibm.streamsx.topology.pytest.checkpoint::TimeCounter", schema.StreamSchema('tuple<int32 f>').as_tuple(), params={'iterations':30,'period':0.1})
+#        streamsx.topology.context.submit('TOOLKIT', topo)
         s = bop.stream
         tester = Tester(topo)
         tester.tuple_count(s, 30)
-        #tester.contents(s, range(0,30))  # why doesn't this work?
         tester.contents(s, list(zip(range(0,30))))
 
-        tester.test(self.test_ctxtype, self.test_config, always_collect_logs=True)
+        tester.test(self.test_ctxtype, self.test_config)
 
     # Source, filter, and map operators
     def test_filter_map(self):
@@ -55,7 +55,7 @@ class TestCheckpointing(unittest.TestCase):
         tester.tuple_count(s, 15)
         tester.contents(s, list(zip(range(1,16))))
 
-        tester.test(self.test_ctxtype, self.test_config, always_collect_logs=True)
+        tester.test(self.test_ctxtype, self.test_config)
 
     # source, primitive, and for_each operators
     # this will fail to compile because checkpointing is not supported
