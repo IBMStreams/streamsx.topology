@@ -114,7 +114,6 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
 @include "../pyspltuple2value.cgt"
 
-  SPLAPPTRC(L_DEBUG, "Acquire state lock if needed", SPL_OPER_DBG);
   OptionalAutoLock stateLock(this);
 
   PyObject *python_value;
