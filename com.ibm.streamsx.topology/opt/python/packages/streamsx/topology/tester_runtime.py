@@ -85,13 +85,8 @@ class _FunctionalCondition(Condition):
     def valid(self, v):
         if self._fail:
            return
-        if self._valid != v:
-            if v:
-                self._metric_valid.value = 1
-            else:
-                self._metric_valid.value = 0
-            self._valid = v
-        self._metric_seq += 1
+        self._metric_valid.value = 1 if v else 0
+        self._show_progress()
 
     def _show_progress(self):
         self._metric_seq += 1
