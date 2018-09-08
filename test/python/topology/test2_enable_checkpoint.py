@@ -112,7 +112,7 @@ class test_undillable_class_suppress(unittest.TestCase):
     def setUp(self):
         Tester.setup_standalone(self)
 
-    def test_setup_checkpoint(self):
+    def test_setup_checkpoint_suppress(self):
         topo = Topology()
         topo.checkpoint_period = timedelta(seconds=1)
         s = topo.source(undillable_source(3, True))

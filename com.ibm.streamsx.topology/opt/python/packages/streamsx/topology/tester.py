@@ -406,6 +406,27 @@ class Tester(object):
             cond._desc = "'{0}' stream expects tuple unordered contents: {1}.".format(stream.name, expected)
         return self.add_condition(stream, cond)
 
+    def resets(self, minimum_resets=10):
+        """Create a condition that randomly resets consistent regions.
+        The condition becomes valid when each consistent region in the
+        application under test has been reset `minimum_resets` times
+        by the tester.
+
+
+        The resets are performed at arbitrary intervals scaled to the 
+        period of the region (if it is periodically triggered).
+
+        .. note::
+             A region is reset by initiating a request though the Job Control Plane. The reset is not driven by any injected failure, such as a PE restart.
+
+        Args:
+            minimum_resets(int): Minimum number of resets for each region.
+
+        .. versionadded:: 1.11
+        """
+        resetter = sttrt._Resetter(self.topology, minimum_resets=minimum_resets)
+        self.add_condition(None, resetter)
+
     def tuple_check(self, stream, checker):
         """Check each tuple on a stream.
 
@@ -584,10 +605,7 @@ class Tester(object):
         for ct in self._conditions.values():
             condition = ct[1]
             stream = ct[0]
-            cond_sink = stream.for_each(condition, name=condition.name)
-            cond_sink.colocate(stream)
-            cond_sink.category = 'Tester'
-            cond_sink._op()._layout(hidden=True)
+            condition._attach(stream)
 
         # Standalone uses --kill-after parameter.
         if self._run_for and stc.ContextTypes.STANDALONE != ctxtype:
@@ -612,7 +630,7 @@ class Tester(object):
         else:
             raise NotImplementedError("Tester context type not implemented:", ctxtype)
 
-        if self.result.get('conditions'):
+        if hasattr(self, 'result') and self.result.get('conditions'):
             for cn,cnr in self.result['conditions'].items():
                 c = self._conditions[cn][1]
                 cdesc = cn
@@ -686,6 +704,7 @@ class Tester(object):
             if self.local_check is not None:
                 self._local_thread.join()
         else:
+            _logger.error ("wait for healthy failed")
             self.result = cc._end(False, _ConditionChecker._UNHEALTHY)
 
         self.result['submission_result'] = self.submission_result
@@ -752,7 +771,7 @@ class _ConditionChecker(object):
         for cn in tester._conditions:
             self._sequences[cn] = -1
         self.delay = 1.0 
-        self.timeout = 20.0
+        self.timeout = 30.0
         self.waits = 0
         self.additional_checks = 2
 
@@ -768,6 +787,7 @@ class _ConditionChecker(object):
                 self.waits = 0
                 return True
             if ok_ is False: # actually failed
+                _logger.error ("wait for healthy actually failed")
                 return False
 
             # ok_ is number of ok PEs
@@ -779,6 +799,9 @@ class _ConditionChecker(object):
                 self.waits = 0
                 ok_pes = ok_
             time.sleep(self.delay)
+        else:
+            _logger.error ("timed out waiting for healthy")
+
         return self._check_job_health(verbose=True)
 
     def _complete(self):
@@ -796,6 +819,9 @@ class _ConditionChecker(object):
             else:
                 self.waits += 1
             time.sleep(self.delay)
+        else:
+            _logger.error("timed out waiting for test to complete")
+
         return self._end(False, check)
 
     def _end(self, passed, check):
@@ -863,8 +889,10 @@ class _ConditionChecker(object):
                 return False
         ok_pes = 0
         for pe in self.job.get_pes():
-            if pe.launchCount != 1:
-                if verbose:
+            if pe.launchCount == 0:
+                continue # not a test failure, but not an ok_pe either
+            if pe.launchCount > 1:
+                if verbose or start:
                     _logger.error("PE %s launch count > 1: %s", pe.id, pe.launchCount)
                 return False
             if pe.health != 'healthy':

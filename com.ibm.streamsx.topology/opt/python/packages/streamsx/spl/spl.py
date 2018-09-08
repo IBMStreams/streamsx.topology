@@ -118,8 +118,8 @@ and its ``__exit__`` method called when the processing element is stopped. To ta
 the class must define both ``__enter__`` and ``__exit__`` methods.
 
 .. note::
-    For future compatibility operator initialization such as opening files should be in ``__enter__``
-    in order to support stateful operator restart & checkpointing in the future.
+    Initialization such as opening files should be in ``__enter__``
+    in order to support stateful operator restart & checkpointing.
 
 Example of using ``__enter__`` and ``__exit__`` to open and close a file::
 
@@ -569,6 +569,7 @@ import inspect
 import re
 import sys
 import streamsx.ec as ec
+import streamsx._streams._runtime
 import importlib
 
 ############################################
@@ -650,13 +651,13 @@ def _wrapforsplop(optype, wrapped, style, docpy):
             _splpy_wrapped = wrapped
             _splpy_optype = optype
             _splpy_callable = 'class'
+            _streamsx_ec_cls = True
+            _streamsx_ec_context = streamsx._streams._runtime._has_context_methods(wrapped)
 
             @functools.wraps(wrapped.__init__)
             def __init__(self,*args,**kwargs):
                 super(_op_class, self).__init__(*args,**kwargs)
-                if ec._is_supported():
-                    ec._save_opc(self)
-                ec._callable_enter(self)
+                self._streamsx_ec_entered = False
 
             # Use reduce to save the state of the class and its
             # module and operator name.
@@ -666,9 +667,6 @@ def _wrapforsplop(optype, wrapped, style, docpy):
                 else:
                     state = self.__dict__
                 return _recreate_op, (wrapped.__module__, wrapped.__name__), state
-
-            def _splpy_shutdown(self, exc_type=None, exc_value=None, traceback=None):
-                return ec._callable_exit(self, exc_type, exc_value, traceback)
 
         if optype in (_OperatorType.Sink, _OperatorType.Pipe, _OperatorType.Filter):
             _op_class._splpy_style = _define_style(wrapped, wrapped.__call__, style)
@@ -703,6 +701,8 @@ def _wrapforsplop(optype, wrapped, style, docpy):
     _op_fn._splpy_fixed_count = _define_fixed(_op_fn, _op_fn)
     _op_fn._splpy_file = inspect.getsourcefile(wrapped)
     _op_fn._splpy_docpy = docpy
+    _op_fn._streamsx_ec_cls = False
+    _op_fn._streamsx_ec_context = False
     return _op_fn
 
 # define the SPL tuple passing style based

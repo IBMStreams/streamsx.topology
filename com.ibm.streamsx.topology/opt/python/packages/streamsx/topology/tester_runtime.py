@@ -24,12 +24,15 @@ from future.builtins import *
 
 import streamsx.ec as ec
 import streamsx.topology.context as stc
+import streamsx.spl.op
 import os
 import unittest
 import logging
 import collections
 import threading
 import time
+
+_logger = logging.getLogger('streamsx.topology.test')
 
 class Condition(object):
     """A condition for testing.
@@ -45,9 +48,31 @@ class Condition(object):
 
     def __init__(self, name=None):
         self.name = name
-        self._starts_valid = False
+
+    def _attach(self, stream):
+        """Attach the condition to the ``stream``.  
+        
+        Args:
+          stream(streamsx.topology.topology.Stream): The stream to which the conditions 
+            applies.  If the condition applies to the topology as a whole 
+            rather than to a specific stream, ``stream`` can be ``None``.
+        """
+        raise NotImplementedException("_attach must be defined in the derived class.")
+
+class _FunctionalCondition(Condition):
+    """A condition for testing based on a functional callable.
+    """
+    
+    def __init__(self, name=None):
+        super(_FunctionalCondition, self).__init__(name)
         self._valid = False
         self._fail = False
+
+    def _attach(self, stream):
+        cond_sink = stream.for_each(self, self.name)
+        cond_sink.colocate(stream)
+        cond_sink.category = 'Tester'
+        cond_sink._op()._layout(hidden=True)
 
     @property
     def valid(self):
@@ -68,7 +93,7 @@ class Condition(object):
             self._valid = v
         self._metric_seq += 1
 
-    def __call__(self, tuple_):
+    def _show_progress(self):
         self._metric_seq += 1
 
     def fail(self):
@@ -101,8 +126,11 @@ class Condition(object):
         self._metric_valid = self._create_metric("valid", kind='Gauge')
         self._metric_seq = self._create_metric("seq")
         self._metric_fail = self._create_metric("fail", kind='Gauge')
-        if self._starts_valid:
+        if self._fail:
+            self._metric_fail.value = 1
+        elif self._valid:
             self.valid = True
+         
 
     def __exit__(self, exc_type, exc_value, traceback):
         if (ec.is_standalone()):
@@ -112,12 +140,17 @@ class Condition(object):
     def _create_metric(self, mt, kind=None):
         return ec.CustomMetric(self, name=Condition._mn(mt, self.name), kind=kind)
 
-class _TupleExactCount(Condition):
+class _StreamCondition(_FunctionalCondition):
+    # Each tuple shows the flow is still active
+    def __call__(self, tuple_):
+        self._show_progress()
+
+class _TupleExactCount(_StreamCondition):
     def __init__(self, target, name=None):
         super(_TupleExactCount, self).__init__(name)
         self.target = target
         self.count = 0
-        self._starts_valid = target == 0
+        self._valid = target == 0
 
     def __call__(self, tuple_):
         super(_TupleExactCount, self).__call__(tuple_)
@@ -129,12 +162,12 @@ class _TupleExactCount(Condition):
     def __str__(self):
         return "Exact tuple count: expected:" + str(self.target) + " received:" + str(self.count)
 
-class _TupleAtLeastCount(Condition):
+class _TupleAtLeastCount(_StreamCondition):
     def __init__(self, target, name=None):
         super(_TupleAtLeastCount, self).__init__(name)
         self.target = target
         self.count = 0
-        self._starts_valid = target == 0
+        self._valid = target == 0
 
     def __call__(self, tuple_):
         super(_TupleAtLeastCount, self).__call__(tuple_)
@@ -144,7 +177,7 @@ class _TupleAtLeastCount(Condition):
     def __str__(self):
         return "At least tuple count: expected:" + str(self.target) + " received:" + str(self.count)
 
-class _StreamContents(Condition):
+class _StreamContents(_StreamCondition):
     def __init__(self, expected, name=None):
         super(_StreamContents, self).__init__(name)
         self.expected = list(expected)
@@ -165,7 +198,9 @@ class _StreamContents(Condition):
     def _check_for_failure(self):
         """Check for failure.
         """
-        if self.expected[len(self.received) - 1] != self.received[-1]:
+        tc = len(self.received) - 1
+        if self.expected[tc] != self.received[tc]:
+            _logger.error("Tuple %d: expected %s, received %s" , tc, str(self.expected[tc]), str(self.received[tc]))
             self.fail()
             return True
         return False
@@ -185,7 +220,7 @@ class _UnorderedStreamContents(_StreamContents):
                 return True
         return False
 
-class _TupleCheck(Condition):
+class _TupleCheck(_StreamCondition):
     def __init__(self, checker, name=None):
         super(_TupleCheck, self).__init__(name)
         self.checker = checker
@@ -202,7 +237,22 @@ class _TupleCheck(Condition):
         return "Tuple checker:" + str(self.checker)
 
 
-class _RunFor(Condition):
+class _Resetter(Condition):
+    CONDITION_NAME = "ConditionRegionResetter"
+
+    def __init__(self, topology, minimum_resets):
+        super(_Resetter, self).__init__(self.CONDITION_NAME)
+        self.topology = topology
+        self.minimum_resets = minimum_resets
+        
+    def _attach(self, stream):
+        params = {'minimumResets': self.minimum_resets, 'conditionName': self.CONDITION_NAME}
+        resetter = streamsx.spl.op.Invoke(self.topology, "com.ibm.streamsx.topology.testing.consistent::Resetter", params=params, name="ConsistentRegionResetter")
+        resetter.category = 'Tester'
+        resetter._op()._layout(hidden=True)
+        
+
+class _RunFor(_FunctionalCondition):
     def __init__(self, duration):
         super(_RunFor, self).__init__("TestRunTime")
         self.duration = duration
@@ -214,8 +264,8 @@ class _RunFor(Condition):
             if (time.time() - start) >= self.duration:
                 self.valid = True
                 return
-            self.valid = False
+            self._show_progress()
             yield None
 
     def __str__(self):
-        return "Tuple run time:" + str(self.duration)
+        return "Test run time:" + str(self.duration)

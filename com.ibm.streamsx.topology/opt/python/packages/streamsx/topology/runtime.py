@@ -7,11 +7,13 @@ from future.builtins import *
 import os
 import sys
 import pickle
+import inspect
 import logging
 from past.builtins import basestring
 
 import streamsx.ec as ec
 from streamsx.topology.schema import StreamSchema
+import streamsx._streams._runtime
 
 import dill
 # Importing cloudpickle break dill's deserialization.
@@ -71,37 +73,22 @@ def _get_callable(f):
             return ci
     raise TypeError("Class is not callable" + str(type(ci)))
 
-import inspect
-class _FunctionalCallable(object):
+# Base class used at runtime by all functional operators
+# to manage the application's callable.
+# For functional operators all of the logic is seen as a callable.
+# Specific sub-classes perform conversion on the input and or output values.
+#
+class _FunctionalCallable(streamsx._streams._runtime._WrapOpLogic):
     def __init__(self, callable_, attributes=None):
-        self._callable = _get_callable(callable_)
-        self._cls = False
+        callable_ = _get_callable(callable_)
+        super(_FunctionalCallable,  self).__init__(callable_)
         self._attributes = attributes
-
-        if callable_ is not self._callable:
-            is_cls = not inspect.isfunction(self._callable)
-            is_cls = is_cls and ( not inspect.isbuiltin(self._callable) )
-            is_cls = is_cls and (not inspect.isclass(self._callable))
-            
-            if is_cls:
-                if ec._is_supported():
-                    self._callable._streamsx_ec_op = ec._get_opc(self._callable)
-                self._cls = True
-                ec._callable_enter(self._callable)
-                if hasattr(self._callable, '_splpy_entered'):
-                    self._splpy_entered = self._callable._splpy_entered
-
-        ec._clear_opc()
 
     def __call__(self, tuple_):
         """Default callable implementation
         Just calls the callable directly.
         """
         return self._callable(tuple_)
-
-    def _splpy_shutdown(self, exc_type=None, exc_value=None, traceback=None):
-        if self._cls:
-            return ec._callable_exit(self._callable, exc_type, exc_value, traceback)
 
 class _PickleInObjectOut(_FunctionalCallable):
     def __call__(self, tuple_, pm=None):
@@ -266,17 +253,22 @@ class _JSONInJSONOut(_FunctionalCallable):
 class _IterableAnyOut(_FunctionalCallable):
     def __init__(self, callable_, attributes=None):
         super(_IterableAnyOut, self).__init__(callable_, attributes)
+        self._it = None
+
+    def _start(self):
         try:
             self._it = iter(self._callable())
         except:
             ei = sys.exc_info()
-            ignore = ec._callable_exit(self._callable, ei[0], ei[1], ei[2])
+            ignore = streamsx._streams._runtime._call_exit(self, ei)
             if not ignore:
                 raise ei[1]
             # Ignored by nothing to do so use empty iterator
             self._it = iter([])
 
     def __call__(self):
+        if self._it is None:
+            self._start()
         while True:
             try:
                 tuple_ = next(self._it)
@@ -286,8 +278,8 @@ class _IterableAnyOut(_FunctionalCallable):
                 return None
 
 class _IterablePickleOut(_IterableAnyOut):
-    def __init__(self, callable, attributes=None):
-        super(_IterablePickleOut, self).__init__(callable, attributes)
+    def __init__(self, callable_, attributes=None):
+        super(_IterablePickleOut, self).__init__(callable_, attributes)
         self.pdfn = pickle.dumps
 
     def __call__(self):
@@ -301,6 +293,8 @@ class _IterableObjectOut(_IterableAnyOut):
 
 # Iterator that wraps another iterator
 # to discard any values that are None
+# This is created at runtime to wrap
+# iterators returned by an iterable.
 class _ObjectIterator(object):
    def __init__(self, it):
        self.it = iter(it)
@@ -439,25 +433,13 @@ tuple_in = object_in
 def _get_namedtuple_cls(schema, name):
     return StreamSchema(schema).as_tuple(named=name).style
 
-class _WrappedInstance(object):
-    def __init__(self, callable_):
-        self._callable = callable_
-        if not self._hasee():
-            self._splpy_entered = False
-
-    def _hasee(self):
-        return hasattr(type(self._callable), '__enter__') and hasattr(type(self._callable), '__exit__')
-
-    def __enter__(self):
-        self._callable.__enter__()
-    
-    def __exit__(self, exc_type, exc_value, traceback):
-        return self._callable.__exit__(exc_type, exc_value, traceback)
 
 # Wraps an iterable instance returning
 # it when called. Allows an iterable
 # instance to be passed directly to Topology.source
-class _IterableInstance(_WrappedInstance):
+# (such as a list)
+# Instance of _WrapOpLogic so used at declaration time
+class _IterableInstance(streamsx._streams._runtime._WrapOpLogic):
     def __call__(self):
         return self._callable
 
@@ -465,7 +447,11 @@ class _IterableInstance(_WrappedInstance):
 # When this is called, the callable is called.
 # Used to wrap a lambda object or a function/class
 # defined in __main__
-class _Callable(_WrappedInstance):
+# Instance of _WrapInstance so used at declaration time
+class _Callable(streamsx._streams._runtime._WrapOpLogic):
+    def __init__(self, callable_, no_context=None):
+        super(_Callable, self).__init__(callable_, no_context)
+
     def __call__(self, *args, **kwargs):
         return self._callable.__call__(*args, **kwargs)
 

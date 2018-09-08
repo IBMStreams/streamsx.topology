@@ -81,6 +81,7 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
+    OptionalAutoLock stateLock(this);
     pyop_->prepareToShutdown();
 }
 
@@ -93,6 +94,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
  @include  "../../opt/.__splpy/common/py_splTupleCheckForBlobs.cgt"
 
+ OptionalAutoLock stateLock(this);
  try {
  // GIL is released across submission
  SplpyGIL lock;
@@ -112,6 +114,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 // Punctuation processing
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
 {
+    OptionalAutoLock stateLock(this);
     forwardWindowPunctuation(punct);
 }
 

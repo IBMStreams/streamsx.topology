@@ -204,6 +204,7 @@ class SplpyGeneral {
      * The type and value are written, but not the traceback.
      * If no python exception occurred, this does nothing.
      * The caller must hold the GILState.
+     * The full error and trace is also printed to stderr.
      */
     static void tracePythonError() {
       if (PyErr_Occurred()) {
@@ -220,13 +221,14 @@ class SplpyGeneral {
             if (value) {
               pyRStringFromPyObject(valueString, value);
             }
-            SPLAPPTRC(L_ERROR, "A python error occurred: " << typeString << ": " << valueString, "python");
+            SPLAPPTRC(L_ERROR, "A Python error occurred: " << typeString << ": " << valueString, "python");
+
           }
         }
 
-        Py_XDECREF(type);
-        Py_XDECREF(value);
-        Py_XDECREF(traceback);
+        // Print the error and trace to system.out
+        PyErr_Restore(type, value, traceback);
+        SplpyGeneral::flush_PyErrPyOut();
       }
     }
 
@@ -401,12 +403,15 @@ class SplpyGeneral {
         if (arg2)
             PyTuple_SET_ITEM(funcArg, 1, arg2);
         PyObject *ret = PyObject_CallObject(function, funcArg);
-        Py_DECREF(funcArg);
-        Py_DECREF(function);
         if (ret == NULL) {
+            tracePythonError();
+            Py_DECREF(funcArg);
+            Py_DECREF(function);
             SPLAPPTRC(L_ERROR, "Failed function execution " << mn << "." << fn, "python");
             throw SplpyGeneral::pythonException(mn+"."+fn);
         }
+        Py_DECREF(funcArg);
+        Py_DECREF(function);
         SPLAPPTRC(L_DEBUG, "Executed function " << mn << "." << fn , "python");
         return ret;
     }

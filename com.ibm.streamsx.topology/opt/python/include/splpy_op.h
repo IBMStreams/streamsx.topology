@@ -19,6 +19,7 @@
 
 #include <SPL/Runtime/Operator/OperatorMetrics.h>
 #include <SPL/Runtime/Common/Metric.h>
+#include <SPL/Runtime/Operator/OptionalContext.h>
 #include <SPL/Runtime/Operator/State/StateHandler.h>
 
 #include "splpy_general.h"
@@ -27,26 +28,13 @@
 namespace streamsx {
   namespace topology {
 
-using UTILS_NAMESPACE_QUALIFIER AutoMutex;
-using UTILS_NAMESPACE_QUALIFIER Mutex;
-
 class SplpyOp;
-
-/**
- * State handler interface definition, and do-nothing
- * base class.
- */
-class SplpyOpStateHandler : public SPL::StateHandler {
-private:
-  virtual Mutex * getMutex() { return NULL; }
-  friend class SplpyOp;
-};
 
 /**
  * Support for saving an operator's state to checkpoints, and restoring
  * the state from checkpoints.
  */
-class SplpyOpStateHandlerImpl : public SplpyOpStateHandler {
+ class SplpyOpStateHandlerImpl : public SPL::StateHandler {
  public:
   SplpyOpStateHandlerImpl(SplpyOp * pyop, PyObject * pickledCallable);
   virtual ~SplpyOpStateHandlerImpl();
@@ -54,13 +42,11 @@ class SplpyOpStateHandlerImpl : public SplpyOpStateHandler {
   virtual void reset(SPL::Checkpoint & ckpt);
   virtual void resetToInitialState();
  private:
-  virtual Mutex* getMutex();
   static PyObject * call(PyObject * callable, PyObject * arg);
   SplpyOp * op;
   PyObject * loads;
   PyObject * dumps;
   PyObject * pickledInitialCallable;
-  Mutex mutex_;
 };
 
 class SplpyOp {
@@ -71,8 +57,7 @@ class SplpyOp {
           pydl_(NULL),
           exc_suppresses(NULL),
           opc_(NULL),
-          stateHandler(NULL),
-          stateHandlerMutex(NULL)
+          stateHandler(NULL)
       {
           pydl_ = SplpySetup::loadCPython(spl_setup_py);
 
@@ -91,31 +76,44 @@ class SplpyOp {
         {
           SplpyGIL lock;
 
-          if (callable_ != NULL)
-              Py_DECREF(callable_);
+          clearCallable();
 
-          if (opc_ != NULL)
-              Py_DECREF(opc_);
+          Py_CLEAR(opc_);
+
+          SplpyGeneral::flush_PyErrPyOut();
         }
         if (pydl_ != NULL)
           (void) dlclose(pydl_);
 
         delete stateHandler;
         stateHandler = NULL;
-        stateHandlerMutex = NULL; // not owned by this class
       }
 
       SPL::Operator * op() {
          return op_;
       }
 
+      /**
+       * Set or clear the callable for this operator. 
+       *
+      */
       void setCallable(PyObject * callable) {
-        bool firstTime = (callable_ == NULL);
-        callable_ = callable;
-        if (firstTime) {
-          setup();
+          callable_ = callable;
+          // Enter the context manager for the callable.
+          Py_INCREF(callable);
+          SplpyGeneral::callVoidFunction(
+             "streamsx._streams._runtime", "_call_enter", callable, opc());
+      }
+      void clearCallable() {
+        if (callable_) {
+             // Exit the context manager and release it
+             // THe function call steals the operator's reference
+             SplpyGeneral::callVoidFunction(
+               "streamsx._streams._runtime", "_call_exit", callable_, NULL);
+             callable_ = NULL;
         }
       }
+
       PyObject * callable() {
           return callable_;
       }
@@ -129,9 +127,9 @@ class SplpyOp {
        *   by __exit__
        */
       void setup() {
-          if (PyObject_HasAttrString(callable_, "_splpy_entered")) {
-              PyObject *entered = PyObject_GetAttrString(callable_, "_splpy_entered");
-              if (PyObject_IsTrue(entered)) {
+          if (PyObject_HasAttrString(callable_, "_streamsx_ec_context")) {
+              PyObject *hasContext = PyObject_GetAttrString(callable_, "_streamsx_ec_context");
+              if (PyObject_IsTrue(hasContext)) {
                   SPL::OperatorMetrics & metrics = op_->getContext().getMetrics();
                   SPL::Metric &cm = metrics.createCustomMetric(
                       "nExceptionsSuppressed",
@@ -139,7 +137,7 @@ class SplpyOp {
                       SPL::Metric::Counter);
                   exc_suppresses = &cm;
               }
-              Py_DECREF(entered);
+              Py_DECREF(hasContext);
           }
 
           setupStateHandler();
@@ -151,16 +149,6 @@ class SplpyOp {
       */
       void prepareToShutdown() {
           SplpyGIL lock;
-          if (callable_) {
-             // Call _shutdown_op which will invoke
-             // __exit__ on the users object if
-             // it's a class instance and has
-             // __enter__ and __exit__
-             // callVoid steals the reference to callable_
-             Py_INCREF(callable_);
-             SplpyGeneral::callVoidFunction(
-               "streamsx.ec", "_shutdown_op", callable_, NULL);
-          }
           SplpyGeneral::flush_PyErrPyOut();
       }
 
@@ -169,7 +157,7 @@ class SplpyOp {
              // callFunction steals the reference to callable_
              Py_INCREF(callable_);
              PyObject *ignore = SplpyGeneral::callFunction(
-               "streamsx.ec", "_shutdown_op", callable_, exInfo.asTuple());
+               "streamsx._streams._runtime", "_call_exit", callable_, exInfo.asTuple());
              int ignoreException = PyObject_IsTrue(ignore);
              Py_DECREF(ignore);
              if (ignoreException && exc_suppresses)
@@ -185,21 +173,6 @@ class SplpyOp {
          return opc_;
       }
      
-      // Set the operator capsule as a Python thread local
-      // use streamsx.ec._set_opc so that it is availble
-      // through the operator's class __init__ function.
-      void setopc() {
-         SplpyGeneral::callVoidFunction(
-               "streamsx.ec", "_set_opc", opc(), NULL);
-      }
-
-      // Clear the thread local for the operator capsule
-      void clearopc() {
-          SplpyGeneral::callVoidFunction(
-               "streamsx.ec", "_clear_opc",
-               NULL, NULL);
-      }
-
       /**
        * Is this operator stateful for checkpointing?  Derived classes
        * must override this to support checkpointing.
@@ -214,13 +187,22 @@ class SplpyOp {
        * restored using dill.
        */
       virtual void setupStateHandler() {
-        // If the checkpointing is enabled and the 
-        // operator is stateful, create and register a state handler instance. 
-        // Otherwise, register a do-nothing state handler.
+        // If the checkpointing or consistent region is enabled and the
+        // operator is stateful, create a state handler instance.
         bool stateful = isStateful();
         bool checkpointing = op()->getContext().isCheckpointingOn();
+        if (checkpointing)
+          SPLAPPTRC(L_TRACE, "checkpointing enabled", "python");
+        else
+          SPLAPPTRC(L_TRACE, "checkpointing disabled", "python");
 
-        if (checkpointing) {
+        bool consistentRegion = (NULL != op()->getContext().getOptionalContext(CONSISTENT_REGION));
+        if (consistentRegion)
+          SPLAPPTRC(L_TRACE, "consistent region enabled", "python");
+        else
+          SPLAPPTRC(L_TRACE, "consistent region disabled", "python");
+
+        if (checkpointing || consistentRegion) {
           PyObject * pickledCallable = NULL;
           if (stateful) {
 
@@ -260,9 +242,9 @@ class SplpyOp {
                   }
                   exceptionInfo.clear();
                   // The exception was suppressed.  Continue with
-                  // pickledCallable == NULL, which will cause a do-nothing
+                  // pickledCallable == NULL, which will cause no
                   // state handler to be created.
-                  // Effectively, checkpointing will not be enabled for
+                  // Checkpointing will not be enabled for
                   // this operator even though it is stateful.
                   SPLAPPTRC(L_WARN, "Proceeding with no checkpointing for the " << op()->getContext().getName() << " operator", "python");
                 }
@@ -276,53 +258,33 @@ class SplpyOp {
           }
           assert(!stateHandler);
           if (stateful && pickledCallable) {
-            SPLAPPTRC(L_DEBUG, "Creating functional state handler", "python");
+            SPLAPPTRC(L_DEBUG, "Creating state handler", "python");
             // pickledCallable reference stolen here.
             stateHandler = new SplpyOpStateHandlerImpl(this, pickledCallable);
-            stateHandlerMutex = stateHandler->getMutex();
           }
           else {
-            SPLAPPTRC(L_DEBUG, "Creating nonfunctional state handler", "python");
-            stateHandler = new SplpyOpStateHandler;
-            stateHandlerMutex = NULL;
+            SPLAPPTRC(L_DEBUG, "Not state handler", "python");
           }
-          SPLAPPTRC(L_DEBUG, "registerStateHandler", "python");
-          op()->getContext().registerStateHandler(*stateHandler);
         }
       }
 
-      class RealAutoLock {
-      public:
-        RealAutoLock(SplpyOp * op) : op_(op) {
-          locked_ = (op->stateHandlerMutex != NULL);
-          if (locked_){
-            op->stateHandlerMutex->lock();
-          }
+      void checkpoint(SPL::Checkpoint & ckpt) {
+        if (stateHandler) {
+          stateHandler->checkpoint(ckpt);
         }
-        ~RealAutoLock() {
-          unlock();
+      }
+
+      void reset(SPL::Checkpoint & ckpt) {
+        if (stateHandler) {
+          stateHandler->reset(ckpt);
         }
-        void unlock() {
-          if (locked_) {
-            op_->stateHandlerMutex->unlock();
-            locked_ = false;
-          }
+      }
+
+      void resetToInitialState() {
+        if (stateHandler) {
+          stateHandler->resetToInitialState();
         }
-
-      private:
-        RealAutoLock(RealAutoLock const & other);
-        RealAutoLock();
-
-        bool locked_;
-        SplpyOp * op_;
-      };
-      friend class RealAutoLock;
-
-      class NoAutoLock {
-      public:
-        NoAutoLock(SplpyOp *) {}
-        void unlock() {}
-      };
+      }
 
    private:
       SPL::Operator *op_;
@@ -339,12 +301,11 @@ class SplpyOp {
       // PyLong of op_
       PyObject *opc_;
 
-      SplpyOpStateHandler * stateHandler;
-      Mutex * stateHandlerMutex;
+      SPL::StateHandler * stateHandler;
 };
 
  // Steals reference to pickledCallable
- SplpyOpStateHandlerImpl::SplpyOpStateHandlerImpl(SplpyOp * pyop, PyObject * pickledCallable) : op(pyop), loads(), dumps(), pickledInitialCallable(pickledCallable), mutex_() {
+ SplpyOpStateHandlerImpl::SplpyOpStateHandlerImpl(SplpyOp * pyop, PyObject * pickledCallable) : op(pyop), loads(), dumps(), pickledInitialCallable(pickledCallable) {
   // Load pickle.loads and pickle.dumps
   SplpyGIL lock;
   loads = SplpyGeneral::loadFunction("dill", "loads");
@@ -360,7 +321,6 @@ class SplpyOp {
 
  void SplpyOpStateHandlerImpl::checkpoint(SPL::Checkpoint & ckpt) {
    SPLAPPTRC(L_DEBUG, "checkpoint", "python");
-   AutoMutex am(mutex_);
    SPL::blob bytes;
    {
      SplpyGIL lock;
@@ -378,38 +338,45 @@ class SplpyOp {
 
  void SplpyOpStateHandlerImpl::reset(SPL::Checkpoint & ckpt) {
    SPLAPPTRC(L_DEBUG, "reset", "python");
-   AutoMutex am(mutex_);
-   // Restore the callable from an spl blob
-   SPL::blob bytes;
-   ckpt >> bytes;
+
    SplpyGIL lock;
+
+   // Release the old callable
+   op->clearCallable();
+
+   SPL::blob bytes;
+   Py_BEGIN_ALLOW_THREADS
+   // Restore the callable from  an spl blob
+   ckpt >> bytes;
+   Py_END_ALLOW_THREADS
+
    PyObject * pickle = pySplValueToPyObject(bytes);
-   PyObject * ret = call(loads, pickle);
-   if (!ret) {
+   PyObject * callable = call(loads, pickle);
+   if (!callable) {
        SplpyGeneral::tracePythonError();
        throw SplpyGeneral::pythonException("dill.loads");
    }
-   // discard the old callable, replace with the newly
-   // unpickled one.
-   Py_DECREF(op->callable());
-   op->setCallable(ret); // reference to ret stolen by op
+   bytes.clear();
+ 
+   // Switch to newly unpickled callable.
+   op->setCallable(callable); // reference to ret stolen by op
+
  }
 
  void SplpyOpStateHandlerImpl::resetToInitialState() {
-   AutoMutex am(mutex_);
    SPLAPPTRC(L_DEBUG, "resetToInitialState", "python");
    SplpyGIL lock;
+
+   // Release the old callable
+   op->clearCallable();
+
    PyObject * initialCallable = call(loads, pickledInitialCallable);
    if (!initialCallable) {
      SplpyGeneral::tracePythonError();
      throw SplpyGeneral::pythonException("dill.loads");
    }
-   Py_DECREF(op->callable());
-   op->setCallable(initialCallable);
- }
 
- Mutex* SplpyOpStateHandlerImpl::getMutex() {
-   return &mutex_;
+   op->setCallable(initialCallable);
  }
 
  // Call a python callable with a single argument

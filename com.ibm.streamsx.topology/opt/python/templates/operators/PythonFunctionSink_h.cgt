@@ -8,8 +8,11 @@
 using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
+<%
+  require "splpy_operator.pm";
+%>
 
-class MY_OPERATOR : public MY_BASE_OPERATOR 
+class MY_OPERATOR : public MY_BASE_OPERATOR, public DelegatingStateHandler
 {
 public:
   // Constructor
@@ -30,6 +33,8 @@ private:
   // Members
     SplpyPyOp *pyop_;
     PyObject *pyInNames_;
+
+@include "../../opt/.__splpy/common/py_enable_cr.cgt"
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

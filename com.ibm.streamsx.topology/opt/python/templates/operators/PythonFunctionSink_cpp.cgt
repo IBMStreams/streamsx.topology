@@ -10,6 +10,8 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 
+@include "../../opt/.__splpy/common/py_disallow_cr_trigger.cgt"
+
 <%
  my $cmnDir = $model->getContext()->getToolkitDirectory()."/opt/.__splpy/common/";
 
@@ -71,6 +73,7 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
+    OptionalAutoLock stateLock(this);
     pyop_->prepareToShutdown();
 }
 
@@ -79,6 +82,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
  @include  "../../opt/.__splpy/common/py_splTupleCheckForBlobs.cgt"
 
+    OptionalAutoLock stateLock(this);
 try {
    SplpyGIL lock;
 

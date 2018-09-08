@@ -18,6 +18,7 @@
 #define __SPL__SPLPY_FUNCOP_H
 
 #include "splpy_op.h"
+#include "splpy_cr.h"
 
 #include <SPL/Runtime/Operator/ParameterValue.h>
 
@@ -93,8 +94,6 @@ class SplpyFuncOp : public SplpyOp {
              PyObject * appClass = appCallable;
              appCallable = pyUnicode_FromUTF8(param("pyCallable").c_str());
              Py_DECREF(appClass);
-
-             setopc();
           }
 
           PyObject *extraArg = NULL;
@@ -105,6 +104,7 @@ class SplpyFuncOp : public SplpyOp {
 
           setCallable(SplpyGeneral::callFunction(
                "streamsx.topology.runtime", wrapfn, appCallable, extraArg));
+          setup();
       }
 
       virtual bool isStateful() {

@@ -426,75 +426,23 @@ class CustomMetric(object):
 # internal functions
 ####################
 
-
-# Sets the operator pointer as a thread
-# local to allow access from an operator's
-# class __init__ method.
-def _set_opc(opc):
+# For decorated operators the application logic is
+# tied to the C++ operator during __init__ in addition
+# to __enter__. This is handled through a thread local
+def _set_tl_opc(opc):
     _check()
     _State._state._opptrs._opc = opc
 
-# Clear the operator pointer from the
-# thread local
-def _clear_opc():
-    if _is_supported():
-        _State._state._opptrs._opc = None
-
-# Save the opc in the operator class
-# (getting it from the thread local)
-def _save_opc(obj):
+def _clear_tl_opc():
     _check()
-    _State._state._opptrs.obj = obj
-    if hasattr(_State._state._opptrs, '_opc'):
-       opc = _State._state._opptrs._opc
-       if opc is not None:
-           obj._streamsx_ec_op = opc
+    _State._state._opptrs._opc = None
 
 def _get_opc(obj):
     _check()
-    try:
-        return obj._streamsx_ec_op
-    except AttributeError:
-        try:
-            opc = _State._state._opptrs._opc
-            if opc is not None:
-                return opc
-        except AttributeError:
-             pass
-        raise AssertionError("InternalError")
+    if hasattr(obj, '_streamsx_ec_opc') and obj._streamsx_ec_opc:
+        return obj._streamsx_ec_opc
+    return _State._state._opptrs._opc
 
-def _shutdown_op(callable_, exc_info=None):
-    if hasattr(callable_, '_splpy_shutdown'):
-        if exc_info is None:
-            return callable_._splpy_shutdown()
-        exc_type = exc_info[0]
-        exc_value = exc_info[1] if len(exc_info) >=2 else None
-        traceback = exc_info[2] if len(exc_info) >=3 else None
-        return callable_._splpy_shutdown(exc_type, exc_value, traceback)
-    return False
-
-def _callable_enter(callable_):
-    """Called at initialization time.
-    """
-    if hasattr(callable_, '_splpy_entered') and callable_._splpy_entered == False:
-        return
-    if hasattr(callable_, '__enter__') and hasattr(callable_, '__exit__'):
-        callable_.__enter__()
-        callable_._splpy_entered = True
-
-def _callable_exit(callable_, exc_type, exc_value, traceback):
-    """Called at shutdown time.
-    Call the callable's __exit__ returning its return.
-    If no callable then return False to indicate the error should
-    be acted upon.
-    """
-    if hasattr(callable_, '_splpy_entered') and callable_._splpy_entered:
-        ignore = callable_.__exit__(exc_type, exc_value, traceback)
-        if (not ignore) or exc_type is None:
-            callable_._splpy_entered = False
-        return ignore
-    return False
-        
 def _submit(primitive, port_index, tuple_):
     """Internal method to submit a tuple"""
     args = (_get_opc(primitive), port_index, tuple_)
