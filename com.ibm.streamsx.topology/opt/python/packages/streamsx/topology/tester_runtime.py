@@ -85,13 +85,9 @@ class _FunctionalCondition(Condition):
     def valid(self, v):
         if self._fail:
            return
-        if self._valid != v:
-            if v:
-                self._metric_valid.value = 1
-            else:
-                self._metric_valid.value = 0
-            self._valid = v
-        self._metric_seq += 1
+        self._metric_valid.value = 1 if v else 0
+        self._valid = v
+        self._show_progress()
 
     def _show_progress(self):
         self._metric_seq += 1
@@ -126,16 +122,17 @@ class _FunctionalCondition(Condition):
         self._metric_valid = self._create_metric("valid", kind='Gauge')
         self._metric_seq = self._create_metric("seq")
         self._metric_fail = self._create_metric("fail", kind='Gauge')
-        if self._fail:
-            self._metric_fail.value = 1
-        elif self._valid:
-            self.valid = True
-         
 
+        # Reset the state correctly.
+        if self._fail:
+            self.fail()
+        else:
+            self.valid = self._valid
+         
     def __exit__(self, exc_type, exc_value, traceback):
         if (ec.is_standalone()):
-            if not self._fail and not self.valid:
-                raise AssertionError("Condition failed:" + str(self))
+            if exc_type is None and not self._valid:
+                raise AssertionError("Condition did not become valid:" + str(self))
 
     def _create_metric(self, mt, kind=None):
         return ec.CustomMetric(self, name=Condition._mn(mt, self.name), kind=kind)
