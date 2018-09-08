@@ -121,12 +121,13 @@ class _FunctionalCondition(Condition):
         self._metric_valid = self._create_metric("valid", kind='Gauge')
         self._metric_seq = self._create_metric("seq")
         self._metric_fail = self._create_metric("fail", kind='Gauge')
-        if self._fail:
-            self._metric_fail.value = 1
-        elif self._valid:
-            self.valid = True
-         
 
+        # Reset the state correctly.
+        if self._fail:
+            self.fail()
+        else:
+            self.valid = self._valid
+         
     def __exit__(self, exc_type, exc_value, traceback):
         if (ec.is_standalone()):
             if not self._fail and not self.valid:
