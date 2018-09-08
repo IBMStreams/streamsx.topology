@@ -86,6 +86,7 @@ class _FunctionalCondition(Condition):
         if self._fail:
            return
         self._metric_valid.value = 1 if v else 0
+        self._valid = v
         self._show_progress()
 
     def _show_progress(self):
@@ -130,8 +131,8 @@ class _FunctionalCondition(Condition):
          
     def __exit__(self, exc_type, exc_value, traceback):
         if (ec.is_standalone()):
-            if not self._fail and not self.valid:
-                raise AssertionError("Condition failed:" + str(self))
+            if exc_type is None and not self._valid:
+                raise AssertionError("Condition did not become valid:" + str(self))
 
     def _create_metric(self, mt, kind=None):
         return ec.CustomMetric(self, name=Condition._mn(mt, self.name), kind=kind)
