@@ -489,11 +489,14 @@ class _SPLInvocation(object):
         """
         if isinstance(self, Marker):
             return
+        colocate_tag = '__spl_' + why + '$' + str(self.index)
+        self._colocate_tag(colocate_tag)
+        for op in others:
+            op._colocate_tag(colocate_tag)
 
+    def _colocate_tag(self, colocate_tag):
         if 'colocateTags' not in self._placement:
             self._placement['colocateTags'] = []
-
-        colocate_tag = '__spl_' + why + '$' + str(self.index)
         self._placement['colocateTags'].append(colocate_tag)
 
     def consistent(self, consistent_config):
