@@ -641,7 +641,7 @@ class Job(_ResourceElement):
             >>> job = instances[0].get_jobs()[0]
             >>> operators = job.get_operators(name="*temperatureSensor*")
 
-        .. versionsince:: 1.9 `name` parameter
+        .. versionchanged:: 1.9 `name` parameter added.
         """
         return self._get_elements(self.operators, 'operators', Operator, name=name)
 
@@ -1254,7 +1254,7 @@ class Instance(_ResourceElement):
             >>> instance = sc.get_instances()[0]
             >>> operators = instance.get_operators(name="*temperatureSensor*")
 
-        .. versionsince:: 1.9 `name` parameter
+        .. versionchanged:: 1.9 `name` parameter added.
         """
         return self._get_elements(self.operators, 'operators', Operator, name=name)
 
@@ -1583,7 +1583,7 @@ class RestResource(_ResourceElement):
         name(str): Resource name.
         resource(str): A string that identifies the URI for the resource.
 
-    .. versionsince:: 1.9 Changed to `RestResource` from `Resource`.
+    .. versionchanged:: 1.9 Changed to `RestResource` from `Resource`.
     """
     def get_resource(self):
         """Make a request against this REST resource.

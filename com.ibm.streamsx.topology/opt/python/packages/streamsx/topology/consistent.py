@@ -24,41 +24,45 @@ class ConsistentRegionConfig(object):
     Args:
         trigger(ConsistentRegionConfig.Trigger): Determines how the 
             drain/checkpoint cycle of the consistent region is triggered.
+
         period: The trigger period.  If the trigger is :py:const:`~ConsistentRegionConfig.Trigger.PERIODIC`, this must 
             be specified, otherwise it may not be specfied.  This may be 
             either a :py:class:`datetime.timedelta` value or the number of 
             seconds as a `float`.
-        drain_timeout: Indicates the maximum time in seconds that the drain 
-            and checkpoint of the region is allotted to finish processing. 
-            If the process takes longer than the specified time, a failure 
-            is reported and the region is reset to the point of the 
+
+        drain_timeout: Indicates the maximum time in seconds that the drain
+            and checkpoint of the region is allotted to finish processing.
+            If the process takes longer than the specified time, a failure
+            is reported and the region is reset to the point of the
             previously successfully established consistent state. The value
-            must be specified as either a 
-            :py:class:`datetime.timedelta` value or the number of seconds 
-            as a `float`.  If not specified, the default value is 180 
+            must be specified as either a
+            :py:class:`datetime.timedelta` value or the number of seconds
+            as a `float`.  If not specified, the default value is 180
             seconds.
+
         reset_timeout: Indicates the maximum time in seconds that the reset
             of the region is allotted to finish processing. If the process
             takes longer than the specified time, a failure is reported and
             another reset of the region is attempted.  The value must be
-            specified  as either a :py:class:`datetime.timedelta` value or 
-            the number of seconds as a `float`.  If not specified, the 
+            specified  as either a :py:class:`datetime.timedelta` value or
+            the number of seconds as a `float`.  If not specified, the
             default value is 180 seconds.
-        max_consecutive_attempts(int): Indicates the maximum number of 
-            consecutive attempts to reset a consistent region. After a 
-            failure, if the maximum number of attempts is reached, the 
-            region stops processing new tuples. After the maximum number 
-            of consecutive attempts is reached, a region can be reset only 
-            with manual intervention or with a program with a call to a 
-            method in the consistent region controller.  This must be an 
-            integer value between 1 and 2147483647, inclusive.  If not 
+
+        max_consecutive_attempts(int): Indicates the maximum number of
+            consecutive attempts to reset a consistent region. After a
+            failure, if the maximum number of attempts is reached, the
+            region stops processing new tuples. After the maximum number
+            of consecutive attempts is reached, a region can be reset only
+            with manual intervention or with a program with a call to a
+            method in the consistent region controller.  This must be an
+            integer value between 1 and 2147483647, inclusive.  If not
             specified, the default value is 5.
 
-    Example:
-    ::
+    Example::
+
         # set source to be a the start of an operator driven consistent region
         # with a drain timeout of five seconds and a reset timeout of twenty seconds.
-        source.set_consistent(ConsistentRegionConfig.operatorDriven(drain_timeout=5, reset_timeout=20)
+        source.set_consistent(ConsistentRegionConfig.operatorDriven(drain_timeout=5, reset_timeout=20))
 
     .. seealso:: :py:meth:`~streamsx.topology.topology.Stream.set_consistent`
 
