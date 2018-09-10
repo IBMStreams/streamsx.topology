@@ -354,6 +354,11 @@ class Topology(object):
                When compiling the application using Anaconda this set is pre-loaded with Python packages from the Anaconda pre-loaded set.
 
                Package names in `include_packages` take precedence over package names in `exclude_packages`.
+
+    All declared streams in a `Topology` are available through their name
+    using ``topology[name]``. The stream's name is defined by :py:meth:`Stream.name` and will differ from the name parameter passed when creating the stream if the application uses duplicate names.
+
+    .. versionchanged:: 1.11 Declared streams available through ``topology[name]``.
     """  
 
     def __init__(self, name=None, namespace=None, files=None):
@@ -381,6 +386,7 @@ class Topology(object):
           self.opnamespace = "com.ibm.streamsx.topology.functional.python2"
         else:
           raise ValueError("Python version not supported.")
+        self._streams = dict()
         self.include_packages = set() 
         self.exclude_packages = set() 
         self._pip_packages = list() 
@@ -415,6 +421,9 @@ class Topology(object):
             str:Namespace of the topology.
         """
         return self.graph.namespace
+
+    def __getitem__(self, name):
+        return self._streams[name]
 
     def source(self, func, name=None):
         """
@@ -763,6 +772,7 @@ class Stream(_placement._Placement, object):
         self.oport = oport
         self._placeable = False
         self._alias = None
+        topology._streams[self.oport.name] = self
 
     def _op(self):
         if not self._placeable:
@@ -772,7 +782,15 @@ class Stream(_placement._Placement, object):
     @property
     def name(self):
         """
-        Name of the stream.
+        Unique name of the stream.
+
+        When declaring a stream a `name` parameter can be provided.
+        If the supplied name is unique within its topology then
+        it will be used as-is, otherwise a variant will be provided
+        that is unique within the topology.
+
+        If a `name` parameter was not provided when declaring a stream
+        then the stream is assigned a unique generated name.
 
         Returns:
             str: Name of the stream.
