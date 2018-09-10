@@ -26,12 +26,15 @@ class TestNames(unittest.TestCase):
 
      s1 = topo.source([], name="CoolSource")
      self.assertEqual(s1.name, "CoolSource")
+     self.assertIs(s1, topo['CoolSource'])
 
      s1.category = 'Ingest'
      self.assertEqual(s1.category, 'Ingest')
 
      s1a = topo.source([], name="CoolSource")
      self.assertEqual(s1a.name, "CoolSource_2")
+     self.assertIs(s1, topo['CoolSource'])
+     self.assertIs(s1a, topo['CoolSource_2'])
 
      s1b = topo.source([], name="CoolSource")
      self.assertEqual(s1b.name, "CoolSource_3")
@@ -66,25 +69,38 @@ class TestNames(unittest.TestCase):
 
      s7 = s6.filter(cool_filter(), name="mYF")
      self.assertEqual(s7.name, "mYF")
+     self.assertIs(s7, topo['mYF'])
      s8 = s6.filter(cool_filter())
      self.assertEqual(s8.name, "cool_filter")
 
      s9 = s6.map(cool_class, name="mYM")
      self.assertEqual(s9.name, "mYM")
+     self.assertIs(s9, topo['mYM'])
      s9.category = 'Analytics'
      self.assertEqual(s9.category, 'Analytics')
 
      s10 = s6.map(cool_class)
+     self.assertIs(s10, topo['cool_class_3'])
      self.assertEqual(s10.name, "cool_class_3")
 
      s11 = s6.flat_map(cool_class, name="mYFM")
      self.assertEqual(s11.name, "mYFM")
+     self.assertIs(s11, topo['mYFM'])
      s12 = s6.flat_map(cool_class)
      self.assertEqual(s12.name, "cool_class_4")
      
      s12.for_each(lambda x : None)
      s12.category = 'DB'
      self.assertEqual(s12.category, 'DB')
+
+  def test_missing_stream(self):
+     topo = Topology()
+
+     s1 = topo.source([], name='S1')
+     self.assertIs(s1, topo['S1'])
+
+     self.assertRaises(KeyError, topo.__getitem__, 'NoSuchStream')
+     
 
   def test_non_placable_names(self):
      topo = Topology()
