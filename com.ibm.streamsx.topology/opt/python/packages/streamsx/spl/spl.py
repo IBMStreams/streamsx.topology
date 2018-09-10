@@ -539,11 +539,9 @@ name. The value is used to set the attribute, unless the value is
 
 If the value in the dictionary is ``None``, or no matching key exists,
 then the attribute value is set to its SPL default or copied from
-a matching attribute in the input tuple
-(same name and type,
+a matching attribute in the input tuple (same name and type,
 or same name and same type as the underlying type of an output attribute
-with an optional type),
-depending on the operator kind::
+with an optional type), depending on the operator kind.
 
 Any keys in the dictionary that do not map to SPL attribute names are ignored.
     
