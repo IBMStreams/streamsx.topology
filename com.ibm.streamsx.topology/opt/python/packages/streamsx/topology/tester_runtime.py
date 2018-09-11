@@ -266,24 +266,3 @@ class _RunFor(_FunctionalCondition):
 
     def __str__(self):
         return "Test run time:" + str(self.duration)
-
-class ExpectTuple(_StreamCondition):
-    """Expect a tuple matching a specified tuple on a stream.
-    Any other tuples are ignored.  The condition becomes valid
-    if a tuple matching the expected one is received, and never
-    fails.
-
-    Args:
-        expected_tuple(tuple): The tuple for which to expect a match.
-    """
-    def __init__(self, name, expected_tuple):
-        super(ExpectTuple, self).__init__(name)
-        self._expected_tuple = expected_tuple
-        self._seen_expected = False
-
-    def __call__(self, actual_tuple):
-        super(ExpectTuple, self).__call__(actual_tuple)
-        if not self._seen_expected:
-            self._seen_expected = (self._expected_tuple == actual_tuple)
-            if self._seen_expected:
-                self.valid = True

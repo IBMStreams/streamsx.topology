@@ -1,7 +1,6 @@
 from streamsx.topology.topology import *
 from streamsx.topology import schema
 from streamsx.topology.tester import Tester
-from streamsx.topology.tester_runtime import ExpectTuple
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
 from streamsx.topology.consistent import ConsistentRegionConfig
@@ -137,8 +136,8 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         # of times __enter__ and __exit__ have been called. 
         # We are looking for two specific tuples:
         # ('source', 6, 5) and ('transit', 6, 5)
-        tester.add_condition(source.stream, ExpectTuple('expected_source_tuple', ('source', 6, 5)))
-        tester.add_condition(transit.stream, ExpectTuple('expected_transit_tuple', ('transit', 6, 5)))
+        tester.eventual_result(source.stream, _ExpectTuple(('source', 6, 5)))
+        tester.eventual_result(transit.stream, _ExpectTuple(('transit', 6, 5)))
 
         # cfg={}
         # job_config = streamsx.topology.context.JobConfig(tracing='debug')
@@ -146,6 +145,27 @@ class TestDistributedConsistentRegion(unittest.TestCase):
 
         tester.test(self.test_ctxtype, self.test_config)
 
+class _ExpectTuple(object):
+    """Expect a tuple matching a specified tuple on a stream.
+    Any other tuples are ignored.  The condition becomes valid
+    if a tuple matching the expected one is received, and never
+    fails.
+
+    Args:
+        expected_tuple(tuple): The tuple for which to expect a match.
+    """
+    def __init__(self, expected_tuple):
+        self._expected_tuple = expected_tuple
+        self._seen_expected = False
+
+    def __call__(self, actual_tuple):
+        super(ExpectTuple, self).__call__(actual_tuple)
+        if not self._seen_expected:
+            self._seen_expected = (self._expected_tuple == actual_tuple)
+            if self._seen_expected:
+                return True
+            return None
+        return True
 
 
 class TestSasConsistentRegion(TestDistributedConsistentRegion):
