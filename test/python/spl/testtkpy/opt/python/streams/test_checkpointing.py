@@ -3,6 +3,7 @@ import time
 # Import the SPL decorators
 from streamsx.spl import spl
 from streamsx.spl.types import Timestamp
+import streamsx.ec as ec
 
 def spl_namespace():
     return "com.ibm.streamsx.topology.pytest.checkpoint"
@@ -109,3 +110,69 @@ class Verify(object):
             assert classification == 'buzz'
         else:
             assert classification == ''
+
+class EnterExitSupport(object):
+    def __enter__(self):
+        self._metric_enter_count = self._create_metric("enterCount", ec.MetricKind.Counter)
+        self._metric_exit_count = self._create_metric("exitCount", ec.MetricKind.Counter)
+        self._metric_enter_count += 1
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._metric_exit_count += 1
+
+    def _create_metric(self, name, kind=None):
+        return ec.CustomMetric(self, name=name, kind=kind)
+
+    def __getstate__(self):
+        # Remove metrics from saved state.
+        state = self.__dict__.copy()
+        to_be_deleted = []
+        for key in state:
+            if key.startswith('_metric'):
+                to_be_deleted.append(key)
+        for key in to_be_deleted:
+            del state[key]
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+@spl.source()
+class EnterExitSource(EnterExitSupport):
+    """Create metrics for the number of times __enter__ and __exit__ have
+    been called.  Increment the metric values every time __enter__ or
+    __exit__ is called.
+    Periodically submit a tuple containing the current values of the
+    enter and exit count metrics.
+    """
+    def __init__(self, period):
+        self.period = period
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        time.sleep(self.period)
+        enter_count = self._metric_enter_count.value
+        exit_count = self._metric_exit_count.value
+        return ('source', enter_count, exit_count)
+
+    def next(self):
+        return self.__next__()
+
+@spl.map(style='position')
+class EnterExitMap(EnterExitSupport):
+    """Create metrics for the number of times __enter__ and __exit__ have
+    been called.  Increment the metric values every time __enter__ or
+    __exit__ is called.
+    For each tuple received, discard it and submit a tuple containing
+    the values of the enter and exit count metrics.
+    """
+    def __init__(self):
+        pass
+
+    def __call__(self, other_from, other_enter_count, other_exit_count):
+        enter_count = self._metric_enter_count.value
+        exit_count = self._metric_exit_count.value
+        return ('transit', enter_count, exit_count)
+

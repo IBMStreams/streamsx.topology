@@ -1,6 +1,7 @@
 from streamsx.topology.topology import *
 from streamsx.topology import schema
 from streamsx.topology.tester import Tester
+from streamsx.topology.tester_runtime import ExpectTuple
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
 from streamsx.topology.consistent import ConsistentRegionConfig
@@ -112,6 +113,40 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         tester.contents(s, expected)
 
         tester.test(self.test_ctxtype, self.test_config)
+
+    def test_enter_exit(self):
+        topo = Topology()
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
+        source = op.Source(topo, 'com.ibm.streamsx.topology.pytest.checkpoint::EnterExitSource', schema.StreamSchema('tuple<rstring from, int32 enter, int32 exit>').as_tuple(), params={'period':0.1})
+        source.stream.set_consistent(ConsistentRegionConfig.periodic(5, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
+
+        transit = op.Map('com.ibm.streamsx.topology.pytest.checkpoint::EnterExitMap', source.stream, schema.StreamSchema('tuple<rstring from, int32 enter, int32 exit>').as_tuple())
+
+#        streamsx.topology.context.submit('TOOLKIT', topo)
+
+        tester = Tester(topo)
+        tester.resets(5)
+
+        # On each operator, __enter__ and __exit__ should be called once for 
+        # each reset.  Also __enter__ should be called at startup and __exit__
+        # at shutdown.  It is hard to verify the final __exit__ call (and that
+        # is handled by python rather than our code), so 
+        # the test is valid if the number of __enter__ calls is one more than
+        # the number of resets, and the number of __exit__ calls is equal to
+        # number of resets.  The tuples on the two streams indicate the number
+        # of times __enter__ and __exit__ have been called. 
+        # We are looking for two specific tuples:
+        # ('source', 6, 5) and ('transit', 6, 5)
+        tester.add_condition(source.stream, ExpectTuple('expected_source_tuple', ('source', 6, 5)))
+        tester.add_condition(transit.stream, ExpectTuple('expected_transit_tuple', ('transit', 6, 5)))
+
+        # cfg={}
+        # job_config = streamsx.topology.context.JobConfig(tracing='debug')
+        # job_config.add(self.test_config)
+
+        tester.test(self.test_ctxtype, self.test_config)
+
+
 
 class TestSasConsistentRegion(TestDistributedConsistentRegion):
     def setUp(self):
