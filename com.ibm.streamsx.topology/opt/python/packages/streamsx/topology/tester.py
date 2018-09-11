@@ -479,6 +479,38 @@ class Tester(object):
         cond = sttrt._TupleCheck(checker, name)
         return self.add_condition(stream, cond)
 
+    def eventual_result(self, stream, checker):
+        """Test a stream reaches a known result or state.
+
+        Creates a test condition that the tuples on a stream
+        eventually reach a known result or state. Each tuple
+        on `stream` results in a call to ``checker(tuple_)``.
+
+        The return from `checker` is handled as:
+            * ``None`` - The condition requires more tuples to become valid.
+            * `true value` - The condition has become valid.
+            * `false value` - The condition has failed.
+
+        Thus `checker` is typically stateful and allows ensuring that
+        condition becomes valid from a set of input tuples. For example
+        in a financial application the application under test may need
+        to achieve a final known balance, but due to timings of windows the
+        number of tuples required to set the final balance may be variable.
+
+        Once the condition becomes valid any false value,
+        including ``None``, returned by processing of subsequent
+        tuples will cause the condition to fail.
+
+        Args:
+            stream(Stream): Stream to be tested.
+            checker(callable): Callable that returns evaluates the state of the stream with result to the result.
+       
+        .. versionadded:: 1.11
+        """
+        name = "EventualResult" + str(len(self._conditions))
+        cond = sttrt._EventualResult(checker, name)
+        return self.add_condition(stream, cond)
+
     def local_check(self, callable):
         """Perform local check while the application is being tested.
 
