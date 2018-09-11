@@ -233,6 +233,27 @@ class _TupleCheck(_StreamCondition):
     def __str__(self):
         return "Tuple checker:" + str(self.checker)
 
+class _EventualResult(_StreamCondition):
+    def __init__(self, checker, name):
+        super(_EventualResult, self).__init__(name)
+        self.checker = checker
+
+    def __call__(self, tuple_):
+        super(_EventualResult, self).__call__(tuple_)
+        result_ok = self.checker(tuple_)
+        if self._fail:
+            return
+        if result_ok is None and not self._valid:
+            return
+
+        if result_ok:
+            self.valid = True
+        else:
+            self.fail()
+
+    def __str__(self):
+        return "Eventual Result:" + str(self.checker)
+
 
 class _Resetter(Condition):
     CONDITION_NAME = "ConditionRegionResetter"
