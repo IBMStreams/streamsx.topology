@@ -240,10 +240,10 @@ class _EventualResult(_StreamCondition):
 
     def __call__(self, tuple_):
         super(_EventualResult, self).__call__(tuple_)
-        result_ok = self.checker(tuple_)
         if self._fail:
             return
-        if result_ok is None and not self._valid:
+        result_ok = self.checker(tuple_)
+        if result_ok is None:
             return
 
         if result_ok:
