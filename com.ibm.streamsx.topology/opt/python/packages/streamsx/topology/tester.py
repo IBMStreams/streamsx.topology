@@ -489,7 +489,8 @@ class Tester(object):
         The return from `checker` is handled as:
             * ``None`` - The condition requires more tuples to become valid.
             * `true value` - The condition has become valid.
-            * `false value` - The condition has failed.
+            * `false value` - The condition has failed. Once a condition has
+                failed it can never become valid.
 
         Thus `checker` is typically stateful and allows ensuring that
         condition becomes valid from a set of input tuples. For example
@@ -498,8 +499,10 @@ class Tester(object):
         number of tuples required to set the final balance may be variable.
 
         Once the condition becomes valid any false value,
-        including ``None``, returned by processing of subsequent
+        except ``None``, returned by processing of subsequent
         tuples will cause the condition to fail.
+
+        Returning ``None`` effectively never changes the state of the condition.
 
         Args:
             stream(Stream): Stream to be tested.
@@ -507,7 +510,7 @@ class Tester(object):
        
         .. versionadded:: 1.11
         """
-        name = "EventualResult" + str(len(self._conditions))
+        name = 'EventualResult' + str(len(self._conditions))
         cond = sttrt._EventualResult(checker, name)
         return self.add_condition(stream, cond)
 
