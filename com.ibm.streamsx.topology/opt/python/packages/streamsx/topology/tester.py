@@ -477,6 +477,7 @@ class Tester(object):
         """
         name = "TupleCheck" + str(len(self._conditions))
         cond = sttrt._TupleCheck(checker, name)
+        self.topology.graph.add_dependency(checker)
         return self.add_condition(stream, cond)
 
     def eventual_result(self, stream, checker):
@@ -512,6 +513,7 @@ class Tester(object):
         """
         name = 'EventualResult' + str(len(self._conditions))
         cond = sttrt._EventualResult(checker, name)
+        self.topology.graph.add_dependency(checker)
         return self.add_condition(stream, cond)
 
     def local_check(self, callable):

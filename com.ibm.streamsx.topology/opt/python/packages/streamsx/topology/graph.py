@@ -162,9 +162,13 @@ class SPLGraph(object):
             if isinstance(function, streamsx._streams._runtime._WrapOpLogic):
                 dep_instance = type(function._callable)
 
-            if not inspect.isbuiltin(dep_instance):
-                self.resolver.add_dependencies(inspect.getmodule(dep_instance))
+            self.add_dependency(dep_instance)
+
         return op
+
+    def add_dependency(self, obj_):
+        if not inspect.isbuiltin(obj_):
+            self.resolver.add_dependencies(inspect.getmodule(obj_))
     
     def addPassThruOperator(self):
         name = self.name + "_OP"+str(len(self.operators))
