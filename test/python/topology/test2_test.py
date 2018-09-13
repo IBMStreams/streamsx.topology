@@ -17,6 +17,9 @@ def rands():
     while True:
        yield r.random()
 
+def tc_dep(tuple_):
+    return True
+
 class TestTester(unittest.TestCase):
     _multiprocess_can_split_ = True
 
@@ -69,6 +72,9 @@ class TestTester(unittest.TestCase):
         if self.test_ctxtype == context.ContextTypes.STANDALONE:
             tester.run_for(20)
         tester.tuple_check(s, lambda r : r > 7.8)
+        # Ensure we perform dependency checking for the check function
+        import fns_test2_test
+        tester.tuple_check(s, fns_test2_test.tc_dep)
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_local_check(self):
@@ -126,6 +132,9 @@ class TestTester(unittest.TestCase):
         tester = Tester(topo)
         tester.tuple_count(s, N)
         tester.eventual_result(a, _EROK(N))
+        # Ensure we perform dependency checking for the check function
+        import fns_test2_test
+        tester.eventual_result(s, fns_test2_test.tc_dep)
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_eventual_result_bad(self):
