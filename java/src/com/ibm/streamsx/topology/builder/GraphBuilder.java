@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -223,7 +224,9 @@ public class GraphBuilder extends BJSONObject {
 
     public BOutput addPassThroughMarker(BOutput output, BVirtualMarker virtualMarker,
             boolean createRegion) {
-        BOperatorInvocation op = addOperator(virtualMarker.name(), virtualMarker.kind(), null);
+        
+        String invocationName = output.name() + "_" + virtualMarker.name().toLowerCase(Locale.US);
+        BOperatorInvocation op = addOperator(invocationName, virtualMarker.kind(), null);
         op._json().addProperty("marker", true);
         op._json().addProperty(KIND_CLASS, JavaFunctionalOps.PASS_CLASS);
         op.setModel(MODEL_VIRTUAL, LANGUAGE_JAVA);
