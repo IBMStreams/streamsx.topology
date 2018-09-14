@@ -6,6 +6,8 @@ package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONSISTENT;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.PLACEMENT;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_COUNT;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLICY_DELTA;
@@ -31,7 +33,6 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.stringArray;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -535,8 +536,7 @@ class OperatorGenerator {
         boolean addSPInfo = false;
         ParamsInfo stvOpParamInfo = stvHelper.getSplInfo();
         if (stvOpParamInfo != null) {
-            Map<String, JsonObject> functionalOps = stvHelper.getFunctionalOps();
-            if (functionalOps.containsKey(op.get("name").getAsString()))
+            if (MODEL_FUNCTIONAL.equals(jstring(op, MODEL)))
                 addSPInfo = true;
         }
 

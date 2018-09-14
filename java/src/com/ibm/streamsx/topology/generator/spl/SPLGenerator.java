@@ -10,8 +10,10 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONFIG;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_PYTHON;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_SPL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 import static com.ibm.streamsx.topology.generator.port.PortProperties.inputPortRef;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
@@ -505,6 +507,9 @@ public class SPLGenerator {
         
         compositeInvocation.add(KIND, opDefinition.get(KIND));
         compositeInvocation.addProperty("name", invocationName);
+        // This is an invocation of an SPL (generated) composite
+        compositeInvocation.addProperty(MODEL, MODEL_SPL);
+        compositeInvocation.addProperty(LANGUAGE, LANGUAGE_SPL);
         
         // Create the inputs of the invocation -- what streams it consumes
         JsonArray inputs = new JsonArray();
