@@ -376,12 +376,11 @@ class Tester(object):
             Stream: stream
         """
         _logger.debug("Adding tuple count (%d) condition to stream %s.", count, stream)
+        name = stream.name + '_count'
         if exact:
-            name = "ExactCount" + str(len(self._conditions))
             cond = sttrt._TupleExactCount(count, name)
             cond._desc = "{0} stream expects tuple count equal to {1}.".format(stream.name, count)
         else:
-            name = "AtLeastCount" + str(len(self._conditions))
             cond = sttrt._TupleAtLeastCount(count, name)
             cond._desc = "'{0}' stream expects tuple count of at least {1}.".format(stream.name, count)
         return self.add_condition(stream, cond)
@@ -397,7 +396,7 @@ class Tester(object):
         Returns:
             Stream: stream
         """
-        name = "StreamContents" + str(len(self._conditions))
+        name = stream.name + '_contents'
         if ordered:
             cond = sttrt._StreamContents(expected, name)
             cond._desc = "'{0}' stream expects tuple ordered contents: {1}.".format(stream.name, expected)
@@ -475,7 +474,7 @@ class Tester(object):
             checker(callable): Callable that must evaluate to True for each tuple.
 
         """
-        name = "TupleCheck" + str(len(self._conditions))
+        name = stream.name + '_check'
         cond = sttrt._TupleCheck(checker, name)
         self.topology.graph.add_dependency(checker)
         return self.add_condition(stream, cond)
@@ -511,7 +510,7 @@ class Tester(object):
        
         .. versionadded:: 1.11
         """
-        name = 'EventualResult' + str(len(self._conditions))
+        name = stream.name + '_eventual'
         cond = sttrt._EventualResult(checker, name)
         self.topology.graph.add_dependency(checker)
         return self.add_condition(stream, cond)
