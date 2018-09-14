@@ -143,10 +143,11 @@ class _StreamCondition(_FunctionalCondition):
         self._show_progress()
 
 class _TupleCount(_StreamCondition):
-    def __init__(self, target, name=None):
+    def __init__(self, target, name, exact=None):
         super(_TupleCount, self).__init__(name)
         self.target = target
         self.count = 0
+        self.exact = exact
         self._valid = target == 0
 
     def __call__(self, tuple_):
@@ -158,6 +159,10 @@ class _TupleCount(_StreamCondition):
         super(_TupleCount, self).__enter__()
         self._metric_target = ec.CustomMetric(self, name='expectedTupleCount',  kind='Counter')
         self._metric_count = ec.CustomMetric(self, name='currentTupleCount',  kind='Counter')
+        if self.exact is not None:
+            self._metric_exact = ec.CustomMetric(self, name='exactCount',  kind='Gauge')
+            self._metric_exact.value = self.exact
+
         self._metric_target.value = self.target
         self._metric_count.value = self.count
 
@@ -165,6 +170,9 @@ class _TupleCount(_StreamCondition):
         super(_TupleCount, self).__exit__(exc_type, exc_value, traceback)
 
 class _TupleExactCount(_TupleCount):
+    def __init__(self, target, name):
+        super(_TupleExactCount, self).__init__(target, name, exact=1)
+
     def __call__(self, tuple_):
         super(_TupleExactCount, self).__call__(tuple_)
         if self.target == self.count:
@@ -176,6 +184,9 @@ class _TupleExactCount(_TupleCount):
         return "Exact tuple count: expected:" + str(self.target) + " received:" + str(self.count)
 
 class _TupleAtLeastCount(_TupleCount):
+    def __init__(self, target, name):
+        super(_TupleAtLeastCount, self).__init__(target, name, exact=0)
+
     def __call__(self, tuple_):
         super(_TupleAtLeastCount, self).__call__(tuple_)
         if self.target >= self.count:
