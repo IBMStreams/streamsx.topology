@@ -110,7 +110,7 @@
        <name>pyStateful</name>
         <description>Whether the operator has state to be saved in checkpointing.</description>
         <optional>false</optional>
-        <rewriteAllowed>true</rewriteAllowed>
+        <rewriteAllowed>false</rewriteAllowed>
         <expressionMode>Constant</expressionMode>
         <type>boolean</type>
         <cardinality>1</cardinality>
