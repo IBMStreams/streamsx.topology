@@ -37,17 +37,17 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    OptionalAutoLock stateLock(this);
+    SPLPY_AUTO_OP_LOCK();
     funcop_->prepareToShutdown();
 }
 
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
+SPLPY_AUTO_OP_LOCK();
 try {
 @include "../pyspltuple2value.cgt"
 
-  OptionalAutoLock stateLock(this);
   streamsx::topology::Splpy::pyTupleForEach(funcop_->callable(), value);
 } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
   SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);

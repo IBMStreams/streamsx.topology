@@ -35,31 +35,31 @@ MY_OPERATOR::~MY_OPERATOR()
     delete funcop_;
 }
 
-// Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    OptionalAutoLock stateLock(this);
+    SPLPY_AUTO_OP_LOCK();
     funcop_->prepareToShutdown();
 }
 
-// Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
-try {
+    bool passed = false;
+    SPLPY_AUTO_OP_LOCK();
+    try {
+
 @include "../pyspltuple2value.cgt"
 
-  OptionalAutoLock stateLock(this);
-  if (streamsx::topology::Splpy::pyTupleFilter(funcop_->callable(), value)) {
-      submit(tuple, 0);
-  }
-} catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
-    SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
-}
+        passed = streamsx::topology::Splpy::pyTupleFilter(funcop_->callable(), value);
+    } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+        SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+        return;
+    }
+    if (passed)
+         submit(tuple, 0);
 }
 
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
 {
-   OptionalAutoLock stateLock(this);
    forwardWindowPunctuation(punct);
 }
 
