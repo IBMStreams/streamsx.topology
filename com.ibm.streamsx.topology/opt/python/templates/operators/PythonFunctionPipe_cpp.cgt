@@ -81,7 +81,6 @@ MY_OPERATOR::~MY_OPERATOR()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    OptionalAutoLock stateLock(this);
     pyop_->prepareToShutdown();
 }
 
@@ -114,7 +113,6 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 // Punctuation processing
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
 {
-    OptionalAutoLock stateLock(this);
     forwardWindowPunctuation(punct);
 }
 

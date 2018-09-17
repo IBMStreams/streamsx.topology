@@ -56,7 +56,6 @@ void MY_OPERATOR::allPortsReady()
 // Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    OptionalAutoLock lock(this);
     funcop_->prepareToShutdown();
 }
 

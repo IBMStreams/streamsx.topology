@@ -75,21 +75,19 @@ MY_OPERATOR::~MY_OPERATOR()
   delete funcop_;
 }
 
-// Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    OptionalAutoLock stateLock(this);
     funcop_->prepareToShutdown();
 }
 
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
-@include "../pyspltuple2value.cgt"
-  
   std::vector<OPort0Type> output_tuples; 
   
+ {
   OptionalAutoLock stateLock(this);
+@include "../pyspltuple2value.cgt"
   try {
     SplpyGIL lock;
 
@@ -121,7 +119,9 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
     Py_DECREF(pyIterator);
   } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
     SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+    return;
   }
+ }
 
   // submit tuples
   for(int i = 0; i < output_tuples.size() && !getPE().getShutdownRequested(); i++) {
@@ -131,7 +131,6 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
 {
-   OptionalAutoLock lock(this);
    forwardWindowPunctuation(punct);
 }
 

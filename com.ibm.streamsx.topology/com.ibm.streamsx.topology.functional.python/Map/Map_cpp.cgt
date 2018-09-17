@@ -80,10 +80,8 @@ MY_OPERATOR::~MY_OPERATOR()
   delete funcop_;
 }
 
-// Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    OptionalAutoLock stateLock(this);
     funcop_->prepareToShutdown();
 }
 
@@ -128,7 +126,6 @@ try {
 
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
 {
-   OptionalAutoLock stateLock(this);
    forwardWindowPunctuation(punct);
 }
 

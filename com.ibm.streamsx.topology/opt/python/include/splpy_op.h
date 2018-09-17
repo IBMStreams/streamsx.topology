@@ -146,6 +146,12 @@ class SplpyOp {
       /**
        * Actions for a Python operator on prepareToShutdown
        * Flush any pending output.
+       * Note we do not interact with the callable here
+       * as it may still be needed for concurrent tuple
+       * processing. The callable is shutdown and its __exit__
+       * method called when this object's destructor is called.
+       * This means the mutex in the operator is not required
+       * when calling this function.
       */
       void prepareToShutdown() {
           SplpyGIL lock;

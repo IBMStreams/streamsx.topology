@@ -57,7 +57,6 @@ using namespace streamsx::topology;
   my $skip_set_callable = 0;
 %>
 
-// Constructor
 MY_OPERATOR::MY_OPERATOR() :
    pyop_(NULL),
    pyInNames_(NULL)
@@ -74,7 +73,6 @@ MY_OPERATOR::MY_OPERATOR() :
 <% } %>
 }
 
-// Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
    {
@@ -85,20 +83,18 @@ MY_OPERATOR::~MY_OPERATOR()
    delete pyop_;
 }
 
-// Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    OptionalAutoLock stateLock(this);
     pyop_->prepareToShutdown();
 }
 
-// Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
  @include  "../../opt/.__splpy/common/py_splTupleCheckForBlobs.cgt"
 
-   OptionalAutoLock stateLock(this);
    int ret = 0;
+ {
+   OptionalAutoLock stateLock(this);
    try {
      SplpyGIL lock;
 
@@ -116,6 +112,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
        SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
        return;
    }
+ }
 
    if (ret)
        submit(tuple, 0);   
@@ -125,10 +122,8 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 <%}%>
 }
 
-// Punctuation processing
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
 {
-    OptionalAutoLock stateLock(this);
     forwardWindowPunctuation(punct);
 }
 
