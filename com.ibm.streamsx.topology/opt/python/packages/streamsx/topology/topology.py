@@ -1167,18 +1167,21 @@ class Stream(_placement._Placement, object):
         """
         _name = name
         if _name is None:
-            _name = self.name
+            _name = self.name + '_parallel'
             
-        _name = self.topology.graph._requested_name(name, action='parallel', func=func)
+        _name = self.topology.graph._requested_name(_name, action='parallel', func=func)
 
         if routing is None or routing == Routing.ROUND_ROBIN or routing == Routing.BROADCAST:
             op2 = self.topology.graph.addOperator("$Parallel$", name=_name)
+            if name is not None:
+                op2.config['regionName'] = _name
             op2.addInputPort(outputPort=self.oport)
             if routing == Routing.BROADCAST:
-                oport = op2.addOutputPort(width, schema=self.oport.schema, routing="BROADCAST")
+                oport = op2.addOutputPort(width, schema=self.oport.schema, routing="BROADCAST", name=_name)
             else:
-                oport = op2.addOutputPort(width, schema=self.oport.schema, routing="ROUND_ROBIN")
+                oport = op2.addOutputPort(width, schema=self.oport.schema, routing="ROUND_ROBIN", name=_name)
 
+                
             return Stream(self.topology, oport)
         elif routing == Routing.HASH_PARTITIONED:
 
@@ -1203,6 +1206,8 @@ class Stream(_placement._Placement, object):
                 parallel_input = hash_adder.addOutputPort(schema=hash_schema)
 
             parallel_op = self.topology.graph.addOperator("$Parallel$", name=_name)
+            if name is not None:
+                parallel_op.config['regionName'] = _name
             parallel_op.addInputPort(outputPort=parallel_input)
             parallel_op_port = parallel_op.addOutputPort(oWidth=width, schema=parallel_input.schema, partitioned_keys=keys, routing="HASH_PARTITIONED")
 
@@ -1236,19 +1241,24 @@ class Stream(_placement._Placement, object):
         endP = Stream(self.topology, oport)
         return endP
 
-    def set_parallel(self, width):
+    def set_parallel(self, width, name=None):
         """
         Indicates that the stream is the start of a parallel region. Should only be invoked on source operators.
         Args:
             width: The degree of parallelism for the parallel region.
+            name(str): Name of the parallel region. Defaults to the name of this stream.
 
         Returns:
             Stream: Returns this stream.
 
         .. versionadded:: 1.9
+        .. versionchanged:: 1.11 `name` parameter added.
         """
         self.oport.operator.config['parallel'] = True
         self.oport.operator.config['width'] = streamsx.topology.graph._as_spl_json(width, int)
+        if name:
+            name = self.topology.graph._requested_name(str(name), action='set_parallel')
+            self.oport.operator.config['regionName'] = name
         return self
 
     def set_consistent(self, consistent_config):

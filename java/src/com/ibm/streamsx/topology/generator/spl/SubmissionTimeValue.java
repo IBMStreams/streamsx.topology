@@ -6,10 +6,8 @@ package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_COMPOSITE_PARAMETER;
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
-import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
-import static com.ibm.streamsx.topology.internal.functional.FunctionalOpProperties.FUNCTIONAL_LOGIC_PARAM;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
@@ -23,7 +21,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.topology.builder.JParamTypes;
-import com.ibm.streamsx.topology.generator.operator.OpProperties;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
@@ -41,9 +38,6 @@ public class SubmissionTimeValue {
      */
     private final Map<String,JsonObject> submissionMainCompositeParams = new HashMap<>();
     
-    
-    /** map<opName,opJsonObject> */
-    private Map<String,JsonObject> functionalOps = new HashMap<>();
     private ParamsInfo paramsInfo;
     
     /**
@@ -234,8 +228,6 @@ public class SubmissionTimeValue {
      * <p>
      * If the composite has any functional operator children, enrich
      * the composite to have declarations for all submission parameters.
-     * Also accumulate the functional children and make them available via
-     * {@link #getFunctionalOps()}.
      * 
      * @param composite the composite definition
      */
@@ -256,7 +248,7 @@ public class SubmissionTimeValue {
             
             boolean addAll = false;
             if (MODEL_FUNCTIONAL.equals(jstring(op, MODEL))) {
-                functionalOps.put(jstring(op, "name"), op);
+                // functionalOps.put(jstring(op, "name"), op);
                 addAll = true;
             } else {
                 JsonObject params = jobject(op, "parameters");
@@ -373,13 +365,6 @@ public class SubmissionTimeValue {
      */
     ParamsInfo getSplInfo() {
         return paramsInfo;
-    }
-    
-    /** Get the list of functional ops learned by {@link #addJsonParamDefs(JSONObject)}.
-     * @return the collection of functional ops map<opName, opJsonObject>
-     */
-    Map<String,JsonObject> getFunctionalOps() {
-        return functionalOps;
     }
     
     /**

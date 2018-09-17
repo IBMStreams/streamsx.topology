@@ -6,11 +6,14 @@ package com.ibm.streamsx.topology.generator.spl;
 
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_COMPOSITE_PARAMETER;
 import static com.ibm.streamsx.topology.builder.JParamTypes.TYPE_SUBMISSION_PARAMETER;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.CONFIG;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.KIND;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_PYTHON;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_SPL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 import static com.ibm.streamsx.topology.generator.port.PortProperties.inputPortRef;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getDownstream;
 import static com.ibm.streamsx.topology.generator.spl.GraphUtilities.getUpstream;
@@ -482,13 +485,31 @@ public class SPLGenerator {
         return name;
     }
     
-    private JsonObject createCompositeInvocation(JsonObject opDefinition, List<List<JsonObject>> startsEndsAndOperators) {
+    private JsonObject createCompositeInvocation(JsonObject opDefinition, List<List<JsonObject>> startsEndsAndOperators) {       
         JsonObject compositeInvocation = new JsonObject();
 
         // Create name and kind
-        compositeInvocation.addProperty(KIND, jstring(opDefinition, KIND));
-        String parallelCompositeName = jstring(opDefinition, KIND) + "Invocation";
-        compositeInvocation.addProperty("name", parallelCompositeName);
+        
+        // Just take the name of the first operator
+        // unless a region name is found.
+        String invocationName = null;
+        for (JsonObject op : startsEndsAndOperators.get(0)) {
+            if (op.has(CONFIG)) {
+                JsonObject config = GsonUtilities.object(op, CONFIG);
+                if (config.has("regionName")) {
+                    invocationName = jstring(config, "regionName");
+                    break;
+                }               
+            }
+            if (invocationName == null)
+                invocationName = jstring(op, "name");
+        }
+        
+        compositeInvocation.add(KIND, opDefinition.get(KIND));
+        compositeInvocation.addProperty("name", invocationName);
+        // This is an invocation of an SPL (generated) composite
+        compositeInvocation.addProperty(MODEL, MODEL_SPL);
+        compositeInvocation.addProperty(LANGUAGE, LANGUAGE_SPL);
         
         // Create the inputs of the invocation -- what streams it consumes
         JsonArray inputs = new JsonArray();
@@ -507,7 +528,7 @@ public class SPLGenerator {
         return compositeInvocation;
     }
 
-    private JsonObject createParallelCompositeInvocation(JsonObject opDefinition, List<List<JsonObject>> startsEndsAndOperators) {
+    private JsonObject createParallelCompositeInvocation(JsonObject opDefinition, List<List<JsonObject>> startsEndsAndOperators) {              
         JsonObject compositeInvocation = createCompositeInvocation(opDefinition, startsEndsAndOperators);
         
         // Create object with parallel information of input ports
