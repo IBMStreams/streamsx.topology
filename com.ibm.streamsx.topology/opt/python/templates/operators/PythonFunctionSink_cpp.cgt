@@ -70,10 +70,8 @@ MY_OPERATOR::~MY_OPERATOR()
    delete pyop_;
 }
 
-// Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
-    OptionalAutoLock stateLock(this);
     pyop_->prepareToShutdown();
 }
 

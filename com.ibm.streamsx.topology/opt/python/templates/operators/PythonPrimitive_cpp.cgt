@@ -166,7 +166,6 @@ MY_OPERATOR::~MY_OPERATOR()
 <%}%>
 }
 
-// Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
     pyop_->prepareToShutdown();
