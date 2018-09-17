@@ -37,22 +37,23 @@ MY_OPERATOR::~MY_OPERATOR()
 
 void MY_OPERATOR::prepareToShutdown() 
 {
-    SPLPY_AUTO_OP_LOCK();
     funcop_->prepareToShutdown();
 }
 
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
     bool passed = false;
-    SPLPY_AUTO_OP_LOCK();
-    try {
+    {
+         OptionalAutoLock stateLock(this);
+         try {
 
 @include "../pyspltuple2value.cgt"
 
-        passed = streamsx::topology::Splpy::pyTupleFilter(funcop_->callable(), value);
-    } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
-        SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
-        return;
+             passed = streamsx::topology::Splpy::pyTupleFilter(funcop_->callable(), value);
+         } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+             SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+             return;
+         }
     }
     if (passed)
          submit(tuple, 0);

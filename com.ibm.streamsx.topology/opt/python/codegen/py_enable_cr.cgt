@@ -26,12 +26,6 @@
  }
 
  my $isCheckpointing = $stateful && ($isInConsistentRegion or $ckptKind ne "none");
-
- if ($isCheckpointing) {
-%>
-#define SPLPYOP_STATE_HANDLER
-<%
-}
 %>
   // True if this operator is in a consistent region.
   static const bool isInConsistentRegion = <%= $isInConsistentRegion ? "true" :" false" %>;
@@ -42,11 +36,5 @@
   typedef OptionalConsistentRegionContextImpl<isInConsistentRegion> OptionalConsistentRegionContext;
   typedef OptionalConsistentRegionContext::Permit AutoConsistentRegionPermit;
   typedef OptionalAutoLockImpl<isCheckpointing> OptionalAutoLock;
-
-#ifdef SPLPYOP_STATE_HANDLER
-#define SPLPY_AUTO_OP_LOCK() OptionalAutoLock stateLock(this)
-#else
-#define SPLPY_AUTO_OP_LOCK()
-#endif
 
 
