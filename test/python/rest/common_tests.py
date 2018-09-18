@@ -111,10 +111,10 @@ class CommonTests(unittest.TestCase):
         self.assertIsInstance(domain, Domain)
         primitives_caller.check_domain(self, domain)
 
-        nops = job.get_operators(name='.*BASIC.')
+        nops = job.get_operators(name='.*BASIC.$')
         self.assertEqual(2, len(nops))
 
-        nops = job.get_operators(name='.*BASICD')
+        nops = job.get_operators(name='.*BASICD$')
         self.assertEqual(1, len(nops))
         self.assertTrue(nops[0].name.endswith('BASICD'))
         
