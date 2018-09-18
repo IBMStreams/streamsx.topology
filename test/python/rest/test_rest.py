@@ -210,7 +210,7 @@ class TestSasRestFeatures(TestDistributedRestFeatures):
     # python3 -m unittest test_rest_bluemix.TestRestFeaturesBluemix._test_submit_sab
     def _test_submit_sab(self):
         sab_name = 'Sab_'+uuid.uuid4().hex
-        topo = Topology(sab_name, namespace='mynamespace')
+        topo = topology.Topology(sab_name, namespace='mynamespace')
         s = topo.source([1,2])
         es = s.for_each(lambda x : None)
         bb = streamsx.topology.context.submit('BUNDLE', topo, {})
