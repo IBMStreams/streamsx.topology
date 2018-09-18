@@ -171,7 +171,6 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
 {
 <% if ($window->isTumbling()) {%>
-   SPLAPPTRC(L_DEBUG, "Acquire state lock if needed", SPL_OPER_DBG);
     OptionalAutoLock stateLock(this);
 
    // Aggregate the remaining contents if there are some.
