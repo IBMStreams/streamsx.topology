@@ -1967,3 +1967,19 @@ class _FileBundle(ApplicationBundle):
     def __init__(self, _delegator, instance, bundle, json_rep, rest_client):
         super(_FileBundle, self).__init__(_delegator, instance, json_rep, rest_client)
         self._bundle_path = os.path.abspath(bundle)
+
+
+class _StreamsV4Delegator(object):
+    """Delegator for a IBM Streams 4.2/4.3 instance.
+    """
+    def __init__(self, rest_client):
+        self.rest_client = rest_client
+
+    def _upload_bundle(self, instance, bundle):
+        return _FileBundle(self, instance, bundle, {'self':None}, self.rest_client)
+
+    def _submit_bundle(self, bundle, job_config):
+        job_id = streamsx.st._submit_bundle(bundle._bundle_path, job_config)
+        print('JOB_ID', job_id)
+        return job_id
+  
