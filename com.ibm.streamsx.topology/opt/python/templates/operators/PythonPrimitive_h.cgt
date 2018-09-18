@@ -49,8 +49,8 @@ private:
 %>
   PyObject *pyOutNames_<%=$oport->getIndex()%>;
   void pySubmitTuplesPort<%=$oport->getIndex()%>(PyObject * value);
-  void fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple);
-  void fromPythonDictToPort<%=$oport->getIndex()%>(PyObject *pyDict);
+  void fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=$oport->getCppTupleType()%> &otuple);
+  void fromPythonDictToPort<%=$oport->getIndex()%>(PyObject *pyDict, <%=$oport->getCppTupleType()%> &otuple);
 
   <%
      my $otype = $oport->getCppTupleType();

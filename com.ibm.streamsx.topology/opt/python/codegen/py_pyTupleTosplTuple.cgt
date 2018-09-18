@@ -15,9 +15,8 @@
 %>
  
 // Python tuple to SPL tuple with submission to a port
-void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple <%=$itypeparam%>) {
+void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=$oport->getCppTupleType()%> & otuple <%=$itypeparam%>) {
 
-  <%=$oport->getCppTupleType()%> otuple;
   try {
     MY_OPERATOR::fromPyTupleToSPLTuple(pyTuple, otuple <%=$itypearg%>);
   } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
@@ -29,9 +28,7 @@ void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple <%=$
 }
 
 // Python dict to SPL tuple with submission to a port.
-void MY_OPERATOR::fromPythonDictToPort<%=$oport->getIndex()%>(PyObject *pyDict <%=$itypeparam%>) {
-
-  <%=$oport->getCppTupleType()%> otuple;
+void MY_OPERATOR::fromPythonDictToPort<%=$oport->getIndex()%>(PyObject *pyDict, <%=$oport->getCppTupleType()%> & otuple <%=$itypeparam%>) {
 
   try {
     MY_OPERATOR::fromPyDictToSPLTuple(pyDict, otuple <%=$itypearg%>);

@@ -19,12 +19,15 @@
 
 void MY_OPERATOR::pySubmitTuplesPort<%=$oport->getIndex()%>(PyObject *value <%=$itypeparam%>) {
 
+
   if (PyTuple_Check(value))
   {
-    fromPythonToPort<%=$oport->getIndex()%>(value <%=$ituplearg%>);
+    <%=$oport->getCppTupleType()%> otuple;
+    fromPythonToPort<%=$oport->getIndex()%>(value, otuple <%=$ituplearg%>);
   }
   else if (PyDict_Check(value)) {
-    fromPythonDictToPort<%=$oport->getIndex()%>(value <%=$ituplearg%>);
+    <%=$oport->getCppTupleType()%> otuple;
+    fromPythonDictToPort<%=$oport->getIndex()%>(value, otuple <%=$ituplearg%>);
   }
   else if (PyList_Check(value))
   {
@@ -35,10 +38,11 @@ void MY_OPERATOR::pySubmitTuplesPort<%=$oport->getIndex()%>(PyObject *value <%=$
        PyObject *ltuple = PyList_GET_ITEM(value, k);
        if (SplpyGeneral::isNone(ltuple))
            continue;
+       <%=$oport->getCppTupleType()%> otuple;
        if (PyTuple_Check(ltuple)) {    
-           fromPythonToPort<%=$oport->getIndex()%>(ltuple <%=$ituplearg%>);
+           fromPythonToPort<%=$oport->getIndex()%>(ltuple, otuple <%=$ituplearg%>);
        } else if (PyDict_Check(ltuple)) {
-           fromPythonDictToPort<%=$oport->getIndex()%>(ltuple <%=$ituplearg%>);
+           fromPythonDictToPort<%=$oport->getIndex()%>(ltuple, otuple <%=$ituplearg%>);
        } else {
           throw SplpyGeneral::generalException("submit",
              "Fatal error: Value submitted must be a Python tuple, dict or list of tuples or dicts: Port <%=$oport->getIndex()%>");
