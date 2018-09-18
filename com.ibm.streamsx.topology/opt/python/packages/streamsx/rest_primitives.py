@@ -679,18 +679,7 @@ class Job(_ResourceElement):
         Returns:
             bool: True if the job was cancelled, otherwise False if an error occurred.
         """
-        if not self.rest_client._sc._analytics_service:
-            import streamsx.st as st
-            if st._has_local_install:
-                if not st._cancel_job(self.id, force):
-                    if force:
-                        return False
-                    return st._cancel_job(self.id, force=True)
-                return True
-        else:
-            self.rest_client._sc.get_streaming_analytics().cancel_job(self.id)
-            return True
-        raise NotImplementedError('Job.cancel()')
+        return self.rest_client._sc._delegator._cancel_job(self, force)
 
 
 class Operator(_ResourceElement):
@@ -1740,6 +1729,9 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         sr = self._submit_job(bundle._bundle_path, job_config)
         return sr['id']
 
+    def _cancel_job(self, job, force):
+        return self.cancel_job(job_id=job.id)
+
     def _submit_job(self, bundle, job_config):
         sab_name = os.path.basename(bundle)
 
@@ -1755,6 +1747,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
                 files=files)
             self.rest_client.handle_http_errors(res)
             return res.json()
+
 
     def cancel_job(self, job_id=None, job_name=None):
         if job_id is None and job_name is None:
@@ -1822,6 +1815,9 @@ class _StreamingAnalyticsServiceV1Delegator(object):
     def _submit_bundle(self, bundle, job_config):
         sr = self._submit_job(bundle._bundle_path, job_config)
         return sr['id']
+
+    def _cancel_job(self, job, force):
+        return self.cancel_job(job_id=job.id)
 
     def _submit_job(self, bundle, job_config):
         sab_name = os.path.basename(bundle)
@@ -1968,6 +1964,17 @@ class _FileBundle(ApplicationBundle):
         super(_FileBundle, self).__init__(_delegator, instance, json_rep, rest_client)
         self._bundle_path = os.path.abspath(bundle)
 
+# As of 1.11 several methods are always driven through delegators
+# to allow the same API vary the underlying implementation.
+# A delegator has at least these methods:
+#
+# _upload_bundle - Uploads a bundle to the instance, or if that's
+#                  not supported return an ApplicationBundle that
+#                  represents the local file
+#
+# _submit_bundle - Submit an ApplicationBundle as a running job
+#
+# _cancel_job - Cancel a running job
 
 class _StreamsV4Delegator(object):
     """Delegator for a IBM Streams 4.2/4.3 instance.
@@ -1979,7 +1986,11 @@ class _StreamsV4Delegator(object):
         return _FileBundle(self, instance, bundle, {'self':None}, self.rest_client)
 
     def _submit_bundle(self, bundle, job_config):
-        job_id = streamsx.st._submit_bundle(bundle._bundle_path, job_config)
-        print('JOB_ID', job_id)
-        return job_id
-  
+        return streamsx.st._submit_bundle(bundle._bundle_path, job_config)
+
+    def _cancel_job(self, job, force):
+        """Cancel job using streamtool."""
+        import streamsx.st as st
+        if st._has_local_install:
+            return st._cancel_job(job.id, force)
+        return False
