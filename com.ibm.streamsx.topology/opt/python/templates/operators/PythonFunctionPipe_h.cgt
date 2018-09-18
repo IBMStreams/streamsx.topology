@@ -45,10 +45,10 @@ private:
     PyObject *pyOutNames_0;
 
     void pySubmitTuplesPort0(PyObject * value, <%=$iport->getCppTupleType()%> const & ituple);
-    void fromPythonToPort0(PyObject * pyTuple, <%=$iport->getCppTupleType()%> const & ituple);
-    void fromPythonDictToPort0(PyObject * pyDict, <%=$iport->getCppTupleType()%> const & ituple);
-    void fromPyTupleToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleType()%> & otuple, <%=$iport->getCppTupleType()%> const & ituple);
-    void fromPyDictToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupleType()%> & otuple, <%=$iport->getCppTupleType()%> const & ituple);
+    void fromPythonToPort0(PyObject * pyTuple, OPort0Type & otuple, IPort0Type const & ituple);
+    void fromPythonDictToPort0(PyObject * pyDict, OPort0Type & otuple, IPort0Type const & ituple);
+    void fromPyTupleToSPLTuple(PyObject *pyDict, OPort0Type & otuple, IPort0Type const & ituple);
+    void fromPyDictToSPLTuple(PyObject *pyTuple, OPort0Type & otuple, IPort0Type const & ituple);
 
 @include "../../opt/.__splpy/common/py_enable_cr.cgt"
 }; 

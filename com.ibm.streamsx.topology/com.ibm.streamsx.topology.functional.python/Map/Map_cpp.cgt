@@ -88,6 +88,7 @@ void MY_OPERATOR::prepareToShutdown()
 // Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
+  OPort0Type otuple;
 try {
 @include "../pyspltuple2value.cgt"
 
@@ -100,10 +101,10 @@ try {
   if (ret == NULL)
      return;
   if (PyTuple_Check(ret)) {
-      fromPythonToPort0(ret);
+      fromPythonToPort0(ret, otuple);
       Py_DECREF(ret);
   } else if (PyDict_Check(ret)) {
-      fromPythonDictToPort0(ret);
+      fromPythonDictToPort0(ret, otuple);
       Py_DECREF(ret);
   } else {
           throw SplpyGeneral::generalException("submit",
@@ -112,7 +113,6 @@ try {
   }
   
 <% } else { %>
-  OPort0Type otuple;
 
   if (SPLPY_TUPLE_MAP(funcop_->callable(), value,
        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_))

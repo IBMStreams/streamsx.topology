@@ -33,10 +33,10 @@ private:
 <%
 if ($pyoutstyle eq 'dict') {
 %>
-    void fromPythonToPort0(PyObject * pyTuple);
-    void fromPythonDictToPort0(PyObject * pyDict);
-    void fromPyTupleToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleType()%> & otuple);
-    void fromPyDictToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupleType()%> & otuple);
+    void fromPythonToPort0(PyObject * pyTuple, OPort0Type & otuple);
+    void fromPythonDictToPort0(PyObject * pyDict, OPort0Type & otuple);
+    void fromPyTupleToSPLTuple(PyObject *pyDict, OPort0Type & otuple);
+    void fromPyDictToSPLTuple(PyObject *pyTuple, OPort0Type & otuple);
 <%}%>
 
     SplpyOp * op() { return funcop_; }
