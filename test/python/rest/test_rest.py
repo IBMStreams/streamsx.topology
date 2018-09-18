@@ -1,6 +1,7 @@
 import logging
 import unittest
 import time
+import uuid
 from operators import DelayedTupleSourceWithLastTuple
 from requests import exceptions
 
@@ -208,7 +209,8 @@ class TestSasRestFeatures(TestDistributedRestFeatures):
     # the service and has a local Streams Install.
     # python3 -m unittest test_rest_bluemix.TestRestFeaturesBluemix._test_submit_sab
     def _test_submit_sab(self):
-        topo = Topology('SabTest', namespace='mynamespace')
+        sab_name = 'Sab_'+uuid.uuid4().hex
+        topo = Topology(sab_name, namespace='mynamespace')
         s = topo.source([1,2])
         es = s.for_each(lambda x : None)
         bb = streamsx.topology.context.submit('BUNDLE', topo, {})
@@ -222,16 +224,16 @@ class TestSasRestFeatures(TestDistributedRestFeatures):
         self.assertIsNotNone(job_id)
         self.assertIn('name', sr)
         self.assertIn('application', sr)
-        self.assertEqual('mynamespace::SabTest', sr['application'])
+        self.assertEqual('mynamespace::' + sab_name, sr['application'])
         cr = sas.cancel_job(job_id=job_id)
 
-        jn = 'SABTEST:' + str(time.time())
+        jn = 'SABTEST:' + uuid.uuid4().hex
         jc = streamsx.topology.context.JobConfig(job_name=jn)
         sr = sas.submit_job(bundle=bb['bundlePath'], job_config=jc)
         job_id = sr.get('id', sr.get('jobId'))
         self.assertIsNotNone(job_id)
         self.assertIn('application', sr)
-        self.assertEqual('mynamespace::SabTest', sr['application'])
+        self.assertEqual('mynamespace::'+sab_name, sr['application'])
         self.assertIn('name', sr)
         self.assertEqual(jn, sr['name'])
         cr = sas.cancel_job(job_id=job_id)
