@@ -101,6 +101,7 @@ class StreamsConnection:
         self.rest_client._sc = self
         self.session = self.rest_client.session
         self._analytics_service = False
+        self._delegator = None
 
     @property
     def resource_url(self):
@@ -227,6 +228,8 @@ class StreamingAnalyticsConnection(StreamsConnection):
         self.rest_client._sc = self
         self.session = self.rest_client.session
         self._analytics_service = True
+        self._sas = StreamingAnalyticsService(self.rest_client, self.credentials)
+        self._delegator = self._sas._delegator
 
     @staticmethod
     def of_definition(service_def):
@@ -264,7 +267,7 @@ class StreamingAnalyticsConnection(StreamsConnection):
             :py:class:`~.rest_primitives.StreamingAnalyticsService`:
                 Object for interacting with the Streaming Analytics service.
         """
-        return StreamingAnalyticsService(self.rest_client, self.credentials)
+        return self._sas
 
 
 def _get_vcap_services(vcap_services=None):

@@ -1,4 +1,5 @@
 import logging
+import json
 import unittest
 import time
 import uuid
@@ -7,8 +8,12 @@ from requests import exceptions
 
 from streamsx.topology.tester import Tester
 from streamsx.topology import topology, schema
-from streamsx.topology.context import ConfigParams
+from streamsx.topology.context import ConfigParams, JobConfig
 from streamsx.rest import StreamsConnection
+
+import streamsx.spl.op as op
+import streamsx.spl.toolkit
+import streamsx.spl.types
 
 from streamsx.rest_primitives import *
 import primitives_caller
@@ -141,6 +146,66 @@ class TestDistributedRestFeatures(unittest.TestCase):
         self.tester.tuple_count(src, 2)
         self.tester.local_check = self._call_rest_apis
         self.tester.test(self.test_ctxtype, self.test_config)
+
+    # Underscore as the local evironment must match the remote environment
+    # such as OS version and architecture type.
+    def _test_instance_submit(self):
+        """ Test submitting a bundle from an Instance.
+        Tests all four mechanisms.
+        """
+        sab_name = 'ISJ_'+uuid.uuid4().hex
+        topo = topology.Topology(sab_name, namespace='myinstancens')
+        s = op.Source(topo, "spl.utility::Beacon",
+            'tuple<uint64 seq>',
+            params = {'period': 0.02, 'iterations':100})
+        s.seq = s.output('IterationCount()')
+        f = op.Map('spl.relational::Filter', s.stream,
+            params = {'filter': op.Expression.expression('seq % 2ul == 0ul')})
+
+        bb = streamsx.topology.context.submit('BUNDLE', topo, {})
+        self.assertIn('bundlePath', bb)
+        self.assertIn('jobConfigPath', bb)
+
+        sc = self.sc
+        instances = sc.get_instances()
+        if len(instances) == 1:
+             instance = instances[0]
+        else:
+             instance = sc.get_instance(os.environ['STREAMS_INSTANCE_ID'])
+
+        job = instance.submit_job(bb['bundlePath'])
+        self.assertIsInstance(job, Job)
+        self.assertEqual('myinstancens::'+sab_name, job.applicationName)
+        job.cancel()
+
+        with open(bb['jobConfigPath']) as fp:
+             jc = JobConfig.from_overlays(json.load(fp))
+        jn = 'JN_'+uuid.uuid4().hex
+        jc.job_name = jn
+        job = instance.submit_job(bb['bundlePath'], jc)
+        self.assertIsInstance(job, Job)
+        self.assertEqual('myinstancens::'+sab_name, job.applicationName)
+        self.assertEqual(jn, job.name)
+        job.cancel()
+
+        ab = instance.upload_bundle(bb['bundlePath'])
+        self.assertIsInstance(ab, ApplicationBundle)
+
+        job = ab.submit_job()
+        self.assertIsInstance(job, Job)
+        self.assertEqual('myinstancens::'+sab_name, job.applicationName)
+        job.cancel()
+
+        jn = 'JN_'+uuid.uuid4().hex
+        jc.job_name = jn
+        job = ab.submit_job(jc)
+        self.assertIsInstance(job, Job)
+        self.assertEqual('myinstancens::'+sab_name, job.applicationName)
+        self.assertEqual(jn, job.name)
+        job.cancel()
+
+        os.remove(bb['bundlePath'])
+        os.remove(bb['jobConfigPath'])
 
 
 instance_response_keys = [

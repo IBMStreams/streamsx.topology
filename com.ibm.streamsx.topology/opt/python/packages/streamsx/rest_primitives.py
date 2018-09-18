@@ -1237,6 +1237,11 @@ class Instance(_ResourceElement):
         >>> print (instances[0].resourceType)
         instance
     """
+
+    def __init__(self, json_rep, rest_client):
+        super(Instance, self).__init__(json_rep, rest_client)
+        self._delegator = rest_client._sc._delegator
+
     def get_operators(self, name=None):
         """Get the list of :py:class:`Operator` elements associated with this instance.
 
@@ -1421,6 +1426,45 @@ class Instance(_ResourceElement):
 
         return published_topics
 
+    def upload_bundle(self, bundle):
+        """Upload a Streams application bundle (sab) to the instance.
+
+        Uploading a bundle allows job submission from the returned
+        :py:class:`ApplicationBundle`.
+
+        Args:
+            bundle(str): path to a Streams application bundle (sab file)
+                containing the application to be uploaded.
+
+        Returns:
+            ApplicationBundle: Application bundle representing the
+            uploaded bundle. 
+
+        .. note::
+            When an instance does not support uploading a bundle the
+            returned `ApplicationBundle` represents the local file
+            ``bundle`` tied to this instance. The returned object
+            may still be used for job submission.
+         
+        .. versionadded:: 1.11
+        """
+        return self._delegator._upload_bundle(self, bundle)
+
+    def submit_job(self, bundle, job_config=None):
+        """Submit a application to be run in this instance.
+
+        Args:
+            bundle(str): path to a Streams application bundle (sab file)
+                containing the application to be submitted
+            job_config(JobConfig): a job configuration overlay
+
+        
+        Returns:
+            Job: Resulting job instance.
+
+        .. versionadded:: 1.11
+        """
+        return self.upload_bundle(bundle).submit_job(job_config)
 
 class ResourceTag(object):
     """Resource tag defined in a Streams domain
@@ -1689,6 +1733,13 @@ class _StreamingAnalyticsServiceV2Delegator(object):
                 raise ValueError("Cannot obtain jobs URL")
         return self._jobs_url
 
+    def _upload_bundle(self, instance, bundle):
+        return _FileBundle(self, instance, bundle, {'self':None}, self.rest_client)
+
+    def _submit_bundle(self, bundle, job_config):
+        sr = self._submit_job(bundle._bundle_path, job_config)
+        return sr['id']
+
     def _submit_job(self, bundle, job_config):
         sab_name = os.path.basename(bundle)
 
@@ -1764,6 +1815,13 @@ class _StreamingAnalyticsServiceV1Delegator(object):
 
     def _get_url(self, req_name):
         return self._credentials['rest_url'] + self._credentials[req_name]
+
+    def _upload_bundle(self, instance, bundle):
+        return _FileBundle(self, instance, bundle, {'self':None}, self.rest_client)
+
+    def _submit_bundle(self, bundle, job_config):
+        sr = self._submit_job(bundle._bundle_path, job_config)
+        return sr['id']
 
     def _submit_job(self, bundle, job_config):
         sab_name = os.path.basename(bundle)
@@ -1879,3 +1937,33 @@ class _IAMConstants(object):
     """Padding to ensure that a new IAM token is retrieved when the current token is due to expire
     in less than five minutes.
     """
+
+class ApplicationBundle(_ResourceElement):
+    """Application bundle tied to an instance.
+
+    .. versionadded:: 1.11
+    """
+    def __init__(self, _delegator, instance, json_rep, rest_client):
+        super(ApplicationBundle, self).__init__(json_rep, rest_client)
+        self._instance = instance
+        self._delegator = _delegator
+
+    def submit_job(self, job_config=None):
+        """Submit this Streams Application Bundle (sab file) to
+        its associated instance.
+        
+        Args:
+            job_config(JobConfig): a job configuration overlay
+        
+        Returns:
+            Job: Resulting job instance.
+        """
+        job_id = self._delegator._submit_bundle(self, job_config)
+        return self._instance.get_job(job_id)
+
+# An ApplicationBundle for cases when we cannot upload the
+# sab file (e.g. Streaming Analytics, Streams 4.2/4.3
+class _FileBundle(ApplicationBundle):
+    def __init__(self, _delegator, instance, bundle, json_rep, rest_client):
+        super(_FileBundle, self).__init__(_delegator, instance, json_rep, rest_client)
+        self._bundle_path = os.path.abspath(bundle)
