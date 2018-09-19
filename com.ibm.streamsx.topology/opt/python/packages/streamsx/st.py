@@ -39,7 +39,6 @@ def _submit_bundle(bundle, job_config=None):
 
     jo = tempfile.NamedTemporaryFile(delete=False)
     jo.close()
-    print(jo.name)
 
     args = ['submitjob']
     args.append('--outfile')
