@@ -2,6 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
 from typing import Any, List, Union
+import streamsx.topology.context
 
 class _ResourceElement(object): ...
 
@@ -85,6 +86,12 @@ class Instance(_ResourceElement):
     def get_active_services(self) -> Any: ...
     def get_resource_allocations(self) -> Any: ...
     def get_published_topics(self) -> List[PublishedTopic]: ...
+    def upload_bundle(self, bundle:str): -> 'ApplicationBundle'
+    def submit_job(self, bundle:str, job_config: streamsx.topology.context.JobConfig=None): -> Job
+
+
+class ApplicationBundle(_ResourceElement):
+    def submit_job(self, job_config: streamsx.topology.context.JobConfig=None): -> Job
 
 
 class ResourceTag(object): ...
