@@ -11,6 +11,7 @@ import java.util.List;
 import org.apache.http.client.fluent.Executor;
 
 import com.ibm.streamsx.topology.internal.streams.InvokeCancel;
+import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
  * Connection to IBM Streams.
@@ -63,6 +64,18 @@ public class StreamsConnection {
      */
     public static StreamsConnection createInstance(String userName,
             String authToken, String url) {
+    	if (userName == null) {
+    		userName = System.getenv(Util.STREAMS_USERNAME);
+    		if (userName == null)
+    			userName = System.getProperty("user.name");
+    	}
+    	
+    	if (authToken == null)
+    		authToken = System.getenv(Util.STREAMS_PASSWORD);
+    	
+    	if (url == null)
+    		authToken = System.getenv(Util.STREAMS_REST_URL);
+    	
         IStreamsConnection delegate = createDelegate(userName, authToken, url);
         StreamsConnection sc = new StreamsConnection(delegate, false);
         sc.userName = userName;

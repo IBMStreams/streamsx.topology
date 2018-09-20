@@ -11,7 +11,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeNotNull;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.IOException;
@@ -54,15 +53,6 @@ public class StreamsConnectionTest {
     public StreamsConnectionTest() {
     }
 
-    private String getUserName() {
-        // allow the user to specify a different user name for this test
-        String userName = System.getenv("STREAMS_INSTANCE_USERID");
-        if ((userName == null) || (userName.isEmpty())) {
-            userName = System.getenv("USER");
-        }
-        return userName;
-    }
-
     private String getStreamsPort() {
         String streamsPort = System.getenv("STREAMS_INSTANCE_PORT");
         if ((streamsPort == null) || streamsPort.isEmpty()) {
@@ -72,17 +62,6 @@ public class StreamsConnectionTest {
         return streamsPort;
     }
 
-    private String getUserPassword() {
-        String instancePassword = System.getenv("STREAMS_INSTANCE_PASSWORD");
-        // Default password for the QSE
-        if ("streamsadmin".equals(getUserName()) && instancePassword == null) {
-            instancePassword = "passw0rd";
-        }
-        // don't print this out unless you need it
-        // System.out.println("InstancePWD: " + instancePassword);
-        return instancePassword;
-    }
-
     public void setupConnection() throws Exception {
         if (connection == null) {
             testType = "DISTRIBUTED";
@@ -90,17 +69,12 @@ public class StreamsConnectionTest {
             instanceName = System.getenv("STREAMS_INSTANCE_ID");
             System.out.println("InstanceName: " + instanceName);
 
-            String userName = getUserName();
-            System.out.println("UserName: " + userName);
             String streamsPort = getStreamsPort();
             System.out.println("streamsPort: " + streamsPort);
-            String instancePassword = getUserPassword();
 
-            // if the instance name and password are not set, bail
-            assumeNotNull(instanceName, instancePassword);
 
             String restUrl = "https://localhost:" + streamsPort + "/streams/rest/resources";
-            connection = StreamsConnection.createInstance(userName, instancePassword, restUrl);
+            connection = StreamsConnection.createInstance(null, null, restUrl);
 
             // for localhost, need to disable security
             connection.allowInsecureHosts(true);
@@ -113,7 +87,6 @@ public class StreamsConnectionTest {
         if (instance == null) {
             instance = connection.getInstance(instanceName);
             // don't continue if the instance isn't started
-            System.out.println("Instance: " + instance.getStatus());
             assumeTrue(instance.getStatus().equals("running"));
         }
     }
@@ -123,13 +96,11 @@ public class StreamsConnectionTest {
         // only run this test if this is a Streams Connection
         assumeTrue(getClass() == StreamsConnectionTest.class);
 
-        String iName = getUserName();
         String sPort = getStreamsPort();
-        String iPassword = getUserPassword();
 
         // send in wrong url
         String badUrl = "https://localhost:" + sPort + "/streams/re";
-        StreamsConnection badConn = StreamsConnection.createInstance(iName, iPassword, badUrl);
+        StreamsConnection badConn = StreamsConnection.createInstance(null, null, badUrl);
         badConn.allowInsecureHosts(true);
         try {
             badConn.getInstances();
@@ -139,7 +110,7 @@ public class StreamsConnectionTest {
 
         // send in url too long
         String badURL = "https://localhost:" + sPort + "/streams/rest/resourcesTooLong";
-        badConn = StreamsConnection.createInstance(iName, iPassword, badURL);
+        badConn = StreamsConnection.createInstance(null, null, badURL);
         badConn.allowInsecureHosts(true);
         try {
             badConn.getInstances();
@@ -149,7 +120,7 @@ public class StreamsConnectionTest {
 
         // send in bad iName
         String restUrl = "https://localhost:" + sPort + "/streams/rest/resources";
-        badConn = StreamsConnection.createInstance("fakeName", iPassword, restUrl);
+        badConn = StreamsConnection.createInstance("fakeName", null, restUrl);
         badConn.allowInsecureHosts(true);
         try {
             badConn.getInstances();
@@ -158,7 +129,7 @@ public class StreamsConnectionTest {
         }
 
         // send in wrong password
-        badConn = StreamsConnection.createInstance(iName, "badPassword", restUrl);
+        badConn = StreamsConnection.createInstance(null, "badPassword", restUrl);
         badConn.allowInsecureHosts(true);
         try {
             badConn.getInstances();
@@ -202,9 +173,7 @@ public class StreamsConnectionTest {
     static void checkDomainFromInstance(Instance instance)  throws Exception {
         instance.refresh();
         
-        System.err.println("DDDDD" + " GET DOMAIN");
         Domain domain = instance.getDomain();
-        System.err.println("DDDDD" + " GOT DOMAIN:" + domain.getId());
         assertNotNull(domain);
         assertNotNull(domain.getId());
         assertNotNull(domain.getZooKeeperConnectionString());
@@ -226,6 +195,7 @@ public class StreamsConnectionTest {
             source.invocationName("IntegerPeriodicMultiSource");
             TStream<Integer> sourceDouble = source.map(doubleNumber());
             sourceDouble.invocationName("IntegerTransformInteger");
+            sourceDouble.colocate(source);
             @SuppressWarnings("unused")
             TStream<Integer> sourceDoubleAgain = sourceDouble.isolate().map(doubleNumber());
             sourceDoubleAgain.invocationName("ZIntegerTransformInteger");
