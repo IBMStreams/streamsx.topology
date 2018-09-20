@@ -1976,6 +1976,9 @@ class _FileBundle(ApplicationBundle):
 #
 # _cancel_job - Cancel a running job
 
+def _streams_delegator(sc):
+    return _StreamsV4Delegator(sc.rest_client)
+
 class _StreamsV4Delegator(object):
     """Delegator for a IBM Streams 4.2/4.3 instance.
     """
