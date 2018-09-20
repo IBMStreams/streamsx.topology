@@ -59,15 +59,11 @@ class StreamsConnection:
     retrieve that information.
 
     Args:
-        username (str): Username of an authorized Streams user. If None, the username is taken from the 
-        STREAMS_USERNAME environment variable. If the STREAMS_USERNAME environment variable is not set,
-        the default `streamsadmin` is used.
+        username (str): Username of an authorized Streams user. If ``None``, the username is taken from the ``STREAMS_USERNAME`` environment variable. If the ``STREAMS_USERNAME`` environment variable is not set, the default `streamsadmin` is used.
 
-        password (str): Password for `username`
-        If None, the password is taken from the STREAMS_PASSWORD environment variable. If the 
-        STREAMS_PASSWORD environment variable is not set, the default `passw0rd` is used.
+        password(str): Password for `username` If ``None``, the password is taken from the ``STREAMS_PASSWORD`` environment variable. If the ``STREAMS_PASSWORD`` environment variable is not set, the default `passw0rd` is used to match the Streams Quick Start edition setup.
 
-        resource_url (str, optional): Root URL for IBM Streams REST API.
+        resource_url(str): Root URL for IBM Streams REST API. If ``None``, the URL is taken from the ``STREAMS_REST_URL`` environment variable. If the ``REST_URL`` environment variable is not set, then ``streamtool geturl --api`` is used to obtain the URL.
 
     Example:
         >>> resource_url = "https://streamsqse.localdomain:8443/streams/rest/resources"
@@ -96,6 +92,9 @@ class StreamsConnection:
             raise ValueError("Must supply either a IBM Cloud VCAP Services or a username, password"
                              " to the StreamsConnection constructor.")
 
+        if not resource_url and 'STREAMS_REST_URL' in os.environ:
+            resource_url = os.environ['STREAMS_REST_URL']
+        
         self._resource_url = resource_url
         self.rest_client = _StreamsRestClient(username, password)
         self.rest_client._sc = self
