@@ -79,43 +79,46 @@ public class ParallelOperatorsTest {
         /*
          * Note: the order of the operators is
          * 
-         * Composite1Invocation[0].Composite0Invocation[0].Inner
-         * Composite1Invocation[0].Composite0Invocation[1].Inner
-         * Composite1Invocation[0].Outer
-         * Composite1Invocation[1].Composite0Invocation[2].Inner
-         * Composite1Invocation[1].Composite0Invocation[3].Inner
-         * Composite1Invocation[1].Outer
-         * Composite1Invocation[2].Composite0Invocation[4].Inner
-         * Composite1Invocation[2].Composite0Invocation[5].Inner
-         * Composite1Invocation[2].Outer
          * IntegerPeriodicMultiSource
+         * IntegerPeriodicMultiSource_parallel.Outer
+         * IntegerPeriodicMultiSource_parallel.Outer_parallel.Inner
+         * IntegerPeriodicMultiSource_parallel.Outer_parallel.Inner
+         * IntegerPeriodicMultiSource_parallel.Outer
+         * IntegerPeriodicMultiSource_parallel.Outer_parallel.Inner
+         * IntegerPeriodicMultiSource_parallel.Outer_parallel.Inner
+         * IntegerPeriodicMultiSource_parallel.Outer
+         * IntegerPeriodicMultiSource_parallel.Outer_parallel.Inner
+         * IntegerPeriodicMultiSource_parallel.Outer_parallel.Inner
          * ZIntegerTransformInteger
+
          * 
          */
         List<Operator> operators = helper.job.getOperators();
         Iterator<Operator> curr = operators.iterator();
         Operator op = null;
-        for (int outer = 0; outer < 3; ++outer) {
-            for (int inner = 0; inner < 2; ++inner) {
-                String id = "[" + outer + "," + inner + "]";
-                assertTrue("Missing expected inner parallel operator " + id, curr.hasNext());
-                op = curr.next();
-                assertEquals("Composite1Invocation.Composite0Invocation.Inner", op.getLogicalName());
-                assertFalse("Logical name should not match name for inner parallel operator " + id,
-                        op.getName().equals(op.getLogicalName()));
-                
-            }
-            assertTrue("Missing expected outer parallel operator " + outer, curr.hasNext());
-            op = curr.next();
-            assertEquals("Composite1Invocation.Outer", op.getLogicalName());
-            assertFalse("Logical name should not match name for outer parallel operator " + outer,
-                    op.getName().equals(op.getLogicalName()));
-        }
-
+        
         assertTrue("Missing source operator", curr.hasNext());
         op = curr.next();
         assertEquals("IntegerPeriodicMultiSource", op.getLogicalName());
         
+        for (int outer = 0; outer < 3; ++outer) {
+            assertTrue("Missing expected outer parallel operator " + outer, curr.hasNext());
+            op = curr.next();
+            assertEquals("IntegerPeriodicMultiSource_parallel.Outer", op.getLogicalName());
+            assertFalse("Logical name should not match name for outer parallel operator " + outer,
+                    op.getName().equals(op.getLogicalName()));
+
+            for (int inner = 0; inner < 2; ++inner) {
+                String id = "[" + outer + "," + inner + "]";
+                assertTrue("Missing expected inner parallel operator " + id, curr.hasNext());
+                op = curr.next();
+                assertEquals("IntegerPeriodicMultiSource_parallel.Outer_parallel.Inner", op.getLogicalName());
+                assertFalse("Logical name should not match name for inner parallel operator " + id,
+                        op.getName().equals(op.getLogicalName()));
+                
+            }
+        }
+       
         assertTrue("Missing final operator", curr.hasNext());
         op = curr.next();
         assertEquals("ZIntegerTransformInteger", op.getLogicalName());
