@@ -5,7 +5,9 @@ from future.builtins import *
 
 import subprocess
 import io
+import json
 import os
+import tempfile
 """
 IBM Streams utilities using `streamtool`.
 
@@ -32,10 +34,37 @@ def get_rest_api():
         raise ChildProcessError('streamtool geturl')
     return url[0]
 
-def _cancel_job(job_id, force):
+def _submit_bundle(bundle, job_config=None):
     assert _has_local_install
 
-    get_rest_api()
+    jo = tempfile.NamedTemporaryFile(delete=False)
+    jo.close()
+
+    args = ['submitjob']
+    args.append('--outfile')
+    args.append(jo.name)
+    jcf = None
+    if job_config:
+        with tempfile.NamedTemporaryFile(mode='w+t', delete=False) as fp:
+            json.dump(job_config.as_overlays(), fp)
+            jcf = fp.name
+        args.append('--jobConfig')
+        args.append(jcf)
+
+    args.append(bundle)
+    rc = _run_st(args)
+    if jcf:
+        os.remove(jcf)
+    if rc:
+        with open(jo.name, 'r') as fp:
+            job_id = str(fp.read()).strip()
+        os.remove(jo.name)
+        return job_id
+    os.remove(jo.name)
+    raise RuntimeError('streamtool submitjob failed for: ' + bundle)
+
+def _cancel_job(job_id, force):
+    assert _has_local_install
 
     args = ['canceljob']
     if force:
