@@ -52,14 +52,22 @@ public class StreamsConnection {
     }
 
     /**
-     * Connection to IBM Streams
+     * Create a connection to IBM Streams REST API.
      *
      * @param userName
-     *            String representing the userName to connect to the instance
+     *            String representing the user name to connect to the instance.
+     *            If {@code null} user name defaults to value of the environment
+     *            variable {@code STREAMS_USERNAME} if set, else the value of
+     *            the Java system property {@code user.name}.
      * @param authToken
-     *            String representing the password to connect to the instance
+     *            String representing the password to connect to the instance.
+     *            If {@code null} password defaults to value of the environment
+     *            variable {@code STREAMS_PASSWORD} if set.
      * @param url
-     *            String representing the root url to the REST API
+     *            String representing the root url to the REST API.
+     *            If {@code null} password defaults to value of the environment
+     *            variable {@code STREAMS_REST_URL} if set.
+     *
      * @return a connection to IBM Streams
      */
     public static StreamsConnection createInstance(String userName,
