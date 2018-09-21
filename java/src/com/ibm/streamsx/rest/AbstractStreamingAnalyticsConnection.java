@@ -119,4 +119,8 @@ abstract class AbstractStreamingAnalyticsConnection
         }
     }
 
+    @Override
+    Result<Job, JsonObject> submitJob(ApplicationBundle bundle, JsonObject jco) throws IOException {
+    	throw new UnsupportedOperationException();
+    }
 }

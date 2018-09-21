@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.rest;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
 import org.apache.http.client.fluent.Executor;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
@@ -26,7 +28,7 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
     protected Executor executor;
     protected String authorization;
     protected String instancesUrl;
-
+    
     /**
      * Cancel a job.
      * domainInstance will only be called for distributed where we cancel using
@@ -38,6 +40,12 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
      * @throws IOException
      */
     abstract boolean cancelJob(Instance instance, String jobId) throws IOException;
+    
+    ApplicationBundle uploadBundle(Instance instance, File bundle) throws IOException {
+    	return new FileBundle(instance, bundle);
+    }
+    
+    abstract Result<Job,JsonObject> submitJob(ApplicationBundle bundle, JsonObject jco) throws IOException;
 
     abstract String getAuthorization();
 

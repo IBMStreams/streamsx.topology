@@ -6,12 +6,14 @@ package com.ibm.streamsx.rest;
 
 import static java.util.Objects.requireNonNull;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 
 /**
@@ -232,6 +234,13 @@ public class Instance extends Element {
         return status;
     }
     
+
+    private String appConsoleURL;
+    void setApplicationConsoleURL(String baseUrl) throws UnsupportedEncodingException {
+        appConsoleURL = baseUrl
+               +  "#application/dashboard/Application%20Dashboard?instance="
+               + URLEncoder.encode(getId(), "UTF-8");
+    }
     /**
      * Streams application console URL.
      * Returns the Streams application console URL with
@@ -240,12 +249,6 @@ public class Instance extends Element {
      * 
      * @since 1.11
      */
-    private String appConsoleURL;
-    void setApplicationConsoleURL(String baseUrl) throws UnsupportedEncodingException {
-        appConsoleURL = baseUrl
-               +  "#application/dashboard/Application%20Dashboard?instance="
-               + URLEncoder.encode(getId(), "UTF-8");
-    }
     public String getApplicationConsoleURL() {
         return appConsoleURL;
     }
@@ -265,6 +268,51 @@ public class Instance extends Element {
             _domain = create(connection(), domain, Domain.class);
         }
         return _domain;
+    }
+    
+    /**
+     *  Upload a Streams application bundle (sab) to the instance.
+     *  
+     *  Uploading a bundle allows job submission from the returned {@link ApplicationBundle}.
+     *  
+     *  <BR>
+     *  Note: When an instance does not support uploading a bundle the returned
+     *  {@code ApplicationBundle} represents the local file {@code bundle} tied to this
+     *  instance. The returned object  may still be used for job submission.
+     *  
+     * @param bundle path to a Streams application bundle (sab file) containing
+     *     the application to be uploaded
+     * @return  Application bundle representing the uploaded bundle.
+     * 
+     * @throws IOException Error uploading the bundle.
+     * 
+     * @since 1.11
+     */
+    public ApplicationBundle uploadBundle(File bundle) throws IOException {
+    	return connection().uploadBundle(this, bundle);
+    }
+    
+    /**
+     * Submit a Streams bundle to run on the Streaming Analytics Service.
+     * <P>
+     * The returned {@link Result} instance has:
+     * <UL>
+     * <LI>{@link Result#getId()} returning the job identifier or {@code null} if
+     * a job was not created..</LI>
+     * <LI>{@link Result#getElement()} returning a {@link Job} instance for the submitted job or {@code null} if
+     * a job was not created.</LI>
+     * <LI>{@link Result#getRawResult()} return the raw JSON response.</LI>
+     * </UL>
+     * </P>
+     * @param bundle A streams application bundle
+     * @param jco Job configuration overlay in JSON format.
+     * @return Result of the job submission.
+     * @throws IOException Error communicating with the service.
+     * 
+     * @since 1.11
+     */
+    public Result<Job,JsonObject> submitJob(File bundle, JsonObject jco) throws IOException {
+    	return uploadBundle(bundle).submitJob(jco);
     }
 
     /**
