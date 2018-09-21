@@ -44,7 +44,7 @@ from pprint import pformat
 import streamsx.topology.context
 
 from streamsx import st
-from .rest_primitives import (Domain, Instance, Installation, RestResource, _StreamsRestClient, StreamingAnalyticsService, _StreamsV4Delegator,
+from .rest_primitives import (Domain, Instance, Installation, RestResource, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
     _exact_resource, _IAMStreamsRestClient, _IAMConstants)
 
 logger = logging.getLogger('streamsx.rest')
@@ -100,7 +100,7 @@ class StreamsConnection:
         self.rest_client._sc = self
         self.session = self.rest_client.session
         self._analytics_service = False
-        self._delegator = _StreamsV4Delegator(self.rest_client)
+        self._delegator = _streams_delegator(self)
 
     @property
     def resource_url(self):
