@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import com.ibm.streamsx.rest.Domain;
@@ -105,38 +104,35 @@ public class StreamsConnectionTest {
         checkResourceAllocations(instance.getResourceAllocations(), false);
     }
 
-    @Before
     public void setupJob() throws Exception {
         setupInstance();
-        if (jobId == null) {
-            // avoid clashes with sub-class tests
-            Topology topology = new Topology(getClass().getSimpleName(), 
-                    "JobForRESTApiTest");
+		// avoid clashes with sub-class tests
+		Topology topology = new Topology(getClass().getSimpleName(), "JobForRESTApiTest");
 
-            TStream<Integer> source = topology.periodicSource(() -> (int) (Math.random() * 5000 + 1), 200, TimeUnit.MILLISECONDS);
-            source.invocationName("IntegerPeriodicMultiSource");
-            TStream<Integer> sourceDouble = source.map(doubleNumber());
-            sourceDouble.invocationName("IntegerTransformInteger");
-            sourceDouble.colocate(source);
-            @SuppressWarnings("unused")
-            TStream<Integer> sourceDoubleAgain = sourceDouble.isolate().map(doubleNumber());
-            sourceDoubleAgain.invocationName("ZIntegerTransformInteger");
+		TStream<Integer> source = topology.periodicSource(() -> (int) (Math.random() * 5000 + 1), 200,
+				TimeUnit.MILLISECONDS);
+		source.invocationName("IntegerPeriodicMultiSource");
+		TStream<Integer> sourceDouble = source.map(doubleNumber());
+		sourceDouble.invocationName("IntegerTransformInteger");
+		sourceDouble.colocate(source);
+		@SuppressWarnings("unused")
+		TStream<Integer> sourceDoubleAgain = sourceDouble.isolate().map(doubleNumber());
+		sourceDoubleAgain.invocationName("ZIntegerTransformInteger");
 
-            if (testType.equals("DISTRIBUTED")) {
-                jobId = StreamsContextFactory.getStreamsContext(StreamsContext.Type.DISTRIBUTED).submit(topology).get()
-                        .toString();
-            } else if (testType.equals("STREAMING_ANALYTICS_SERVICE")) {
-                jobId = StreamsContextFactory.getStreamsContext(StreamsContext.Type.STREAMING_ANALYTICS_SERVICE)
-                        .submit(topology).get().toString();
-            } else {
-                fail("This test should be skipped");
-            }
+		if (testType.equals("DISTRIBUTED")) {
+			jobId = StreamsContextFactory.getStreamsContext(StreamsContext.Type.DISTRIBUTED).submit(topology).get()
+					.toString();
+		} else if (testType.equals("STREAMING_ANALYTICS_SERVICE")) {
+			jobId = StreamsContextFactory.getStreamsContext(StreamsContext.Type.STREAMING_ANALYTICS_SERVICE)
+					.submit(topology).get().toString();
+		} else {
+			fail("This test should be skipped");
+		}
 
-            job = instance.getJob(jobId);
-            job.waitForHealthy(60, TimeUnit.SECONDS);
+		job = instance.getJob(jobId);
+		job.waitForHealthy(60, TimeUnit.SECONDS);
 
-            assertEquals("healthy", job.getHealth());
-        }
+		assertEquals("healthy", job.getHealth());
         System.out.println("jobId: " + jobId + " is setup.");
     }
 
@@ -154,6 +150,8 @@ public class StreamsConnectionTest {
 
     @Test
     public void testJobObject() throws Exception {
+    	setupJob();
+    	
         List<Job> jobs = instance.getJobs();
         // we should have at least one job
         assertTrue(jobs.size() > 0);
@@ -195,26 +193,28 @@ public class StreamsConnectionTest {
         assertEquals(2, pes.size());
         
         checkResourceAllocations(job.getResourceAllocations(), true);
+        
+        validateOperators();
+        validateProcessingElements();
     }
 
     @Test
     public void testCancelSpecificJob() throws Exception {
-        if (job != null) {
-            // cancel the job
-            boolean cancel = job.cancel();
-            assertTrue(cancel == true);
-            // remove these so @After doesn't fail
-            job = null;
-            jobId = null;
-        }
+    	setupJob();
+		// cancel the job
+		boolean cancel = job.cancel();
+		assertTrue(cancel == true);
+		// remove these so @After doesn't fail
+		job = null;
+		jobId = null;
     }
 
     @Test
     public void testNonExistantJob() throws Exception {
+    	setupInstance();
         try {
             // get a non-existant job
-            @SuppressWarnings("unused")
-            Job nonExistantJob = instance.getJob("9999999");
+            instance.getJob("9999999");
             fail("this job number should not exist");
         } catch (RESTException r) {
             assertEquals(r.toString(), 404, r.getStatusCode());
@@ -222,8 +222,8 @@ public class StreamsConnectionTest {
         }
     }
 
-    @Test
-    public void testOperators() throws Exception {
+    private void validateOperators() throws Exception {
+    	setupJob();
 
         List<Operator> operators = job.getOperators();
 
@@ -323,8 +323,8 @@ public class StreamsConnectionTest {
         
     }
 
-    @Test
-    public void testProcessingElements() throws Exception {
+    private void validateProcessingElements() throws Exception {
+    	
 
         final List<ProcessingElement> pes = job.getPes();
 
