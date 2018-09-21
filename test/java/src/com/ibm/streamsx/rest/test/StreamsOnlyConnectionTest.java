@@ -6,40 +6,18 @@
 package com.ibm.streamsx.rest.test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
-import com.ibm.streamsx.rest.Domain;
-import com.ibm.streamsx.rest.InputPort;
 import com.ibm.streamsx.rest.Instance;
-import com.ibm.streamsx.rest.Job;
-import com.ibm.streamsx.rest.Metric;
-import com.ibm.streamsx.rest.Operator;
-import com.ibm.streamsx.rest.OutputPort;
-import com.ibm.streamsx.rest.PEInputPort;
-import com.ibm.streamsx.rest.PEOutputPort;
 import com.ibm.streamsx.rest.ProcessingElement;
 import com.ibm.streamsx.rest.RESTException;
-import com.ibm.streamsx.rest.Resource;
-import com.ibm.streamsx.rest.ResourceAllocation;
 import com.ibm.streamsx.rest.StreamsConnection;
-import com.ibm.streamsx.topology.TStream;
-import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.context.StreamsContext;
-import com.ibm.streamsx.topology.context.StreamsContextFactory;
-import com.ibm.streamsx.topology.function.Function;
 
 /**
  * Tests that only make sense with an on-prem streams.
