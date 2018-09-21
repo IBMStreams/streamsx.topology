@@ -104,7 +104,7 @@ public class AppBundleTest {
 		
 		final ApplicationBundle appBundle = instance.uploadBundle(bundle);
 		assertNotNull(appBundle);
-		verifyJob(appBundle.submitJob(null), namespace + "::" + name, jobName);
+		verifyJob(appBundle.submitJob(null), namespace + "::" + name, null);
 		verifyJob(appBundle.submitJob(jco), namespace + "::" + name, jobName);
 	}
 	
