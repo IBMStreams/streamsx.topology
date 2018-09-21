@@ -76,13 +76,14 @@ public class AppBundleTest {
 	public void testAppBundles() throws Exception {
 		String namespace = "App.NS_"  + (int) (Math.random() * 10000.0);
 		String name = "AppBundleTest" + System.currentTimeMillis();
+		final String appName = namespace + "::" + name;
 		
 		File bundle = createBundle(namespace, name);
 		
 		Instance instance = getInstance();
 		
 		Result<Job, JsonObject> result = instance.submitJob(bundle, null);		
-		verifyJob(result, namespace + "::" + name, null);
+		verifyJob(result, appName, null);
 		
 		
 		String jobName = "ABJN_"+ (int) (Math.random() * 10000.0) + "_" + System.currentTimeMillis();
@@ -99,13 +100,13 @@ public class AppBundleTest {
 		jco.add("jobConfigOverlays", a);		
 		
 		result = instance.submitJob(bundle, jco);		
-		verifyJob(result, namespace + "::" + name, jobName);
+		verifyJob(result, appName, jobName);
 
 		
 		final ApplicationBundle appBundle = instance.uploadBundle(bundle);
 		assertNotNull(appBundle);
-		verifyJob(appBundle.submitJob(null), namespace + "::" + name, null);
-		verifyJob(appBundle.submitJob(jco), namespace + "::" + name, jobName);
+		verifyJob(appBundle.submitJob(null), appName, null);
+		verifyJob(appBundle.submitJob(jco), appName, jobName);
 	}
 	
 	private void verifyJob(Result<Job, JsonObject> result, String appName, String jobName) throws Exception {
