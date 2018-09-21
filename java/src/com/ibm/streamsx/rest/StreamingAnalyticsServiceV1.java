@@ -95,12 +95,11 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
     }
 
     @Override
-    protected JsonObject getBuild(String buildId, CloseableHttpClient httpclient,
-            String authorization) throws IOException {
+    protected JsonObject getBuild(String buildId, CloseableHttpClient httpclient) throws IOException {
         String buildURL = getBuildsUrl(httpclient) + "?build_id="
             + URLEncoder.encode(buildId, StandardCharsets.UTF_8.name());
         HttpGet httpget = new HttpGet(buildURL);
-        httpget.addHeader("Authorization", authorization);
+        httpget.addHeader("Authorization", getAuthorization());
 
         JsonObject response = StreamsRestUtils.getGsonResponse(httpclient, httpget);
         // Get the correct build
@@ -116,14 +115,14 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
 
     @Override
     protected JsonObject getBuildOutput(String buildId, String outputId,
-            CloseableHttpClient httpclient, String authorization)
+            CloseableHttpClient httpclient)
             throws IOException {
         String buildOutputURL = getBuildsUrl(httpclient) + "?build_id="
                 + URLEncoder.encode(buildId, StandardCharsets.UTF_8.name())
                 + "&output_id="
                 + URLEncoder.encode(outputId, StandardCharsets.UTF_8.name());
         HttpGet httpget = new HttpGet(buildOutputURL);
-        httpget.addHeader("Authorization", authorization);
+        httpget.addHeader("Authorization", getAuthorization());
 
         JsonObject response = StreamsRestUtils.getGsonResponse(httpclient, httpget);
         for(JsonElement outputElem : array(response, "builds")){
@@ -137,12 +136,12 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
 
     @Override
     protected JsonObject submitBuild(CloseableHttpClient httpclient,
-            String authorization, File archive, String buildName)
+            File archive, String buildName)
             throws IOException {
         String newBuildURL = getBuildsUrl(httpclient) + "?build_name=" +
                 URLEncoder.encode(buildName, StandardCharsets.UTF_8.name());
         HttpPost httppost = new HttpPost(newBuildURL);
-        httppost.addHeader("Authorization", authorization);
+        httppost.addHeader("Authorization", getAuthorization());
 
         FileBody archiveBody = new FileBody(archive,
                 ContentType.create("application/zip"));
@@ -159,11 +158,12 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
     /**
      * Submit the job from the built artifact.
      */
+    @Override
     protected JsonObject submitBuildArtifact(CloseableHttpClient httpclient,
-            JsonObject jobConfigOverlays, String authorization, String submitUrl)
+            JsonObject jobConfigOverlays, String submitUrl)
             throws IOException {
         HttpPut httpput = new HttpPut(submitUrl);
-        httpput.addHeader("Authorization", authorization);
+        httpput.addHeader("Authorization", getAuthorization());
         httpput.addHeader("content-type", ContentType.APPLICATION_JSON.getMimeType());
 
         StringEntity params = new StringEntity(jobConfigOverlays.toString(),

@@ -123,37 +123,36 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
     }
 
     @Override
-    protected JsonObject getBuild(String buildId, CloseableHttpClient httpclient,
-            String authorization) throws IOException {
+    protected JsonObject getBuild(String buildId, CloseableHttpClient httpclient) throws IOException {
         String buildURL = getBuildsUrl(httpclient) + "/"
             + URLEncoder.encode(buildId, StandardCharsets.UTF_8.name());
         HttpGet httpget = new HttpGet(buildURL);
-        httpget.addHeader("Authorization", authorization);
+        httpget.addHeader("Authorization", getAuthorization());
 
         return StreamsRestUtils.getGsonResponse(httpclient, httpget);
     }
 
     @Override
     protected JsonObject getBuildOutput(String buildId, String outputId,
-            CloseableHttpClient httpclient, String authorization)
+            CloseableHttpClient httpclient)
             throws IOException {
         String buildOutputURL = getBuildsUrl(httpclient) + "/"
                 + URLEncoder.encode(buildId, StandardCharsets.UTF_8.name())
                 + "?output_id="
                 + URLEncoder.encode(outputId, StandardCharsets.UTF_8.name());
         HttpGet httpget = new HttpGet(buildOutputURL);
-        httpget.addHeader("Authorization", authorization);
+        httpget.addHeader("Authorization", getAuthorization());
 
         return StreamsRestUtils.getGsonResponse(httpclient, httpget);
     }
 
     @Override
     protected JsonObject submitBuild(CloseableHttpClient httpclient,
-            String authorization, File archive, String buildName)
+            File archive, String buildName)
             throws IOException {
         String newBuildURL = getBuildsUrl(httpclient);
         HttpPost httppost = new HttpPost(newBuildURL);
-        httppost.addHeader("Authorization", authorization);
+        httppost.addHeader("Authorization", getAuthorization());
 
         JsonObject buildParams = new JsonObject();
         buildParams.addProperty("buildName", buildName);
@@ -176,11 +175,12 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
     /**
      * Submit the job from the built artifact.
      */
+    @Override
     protected JsonObject submitBuildArtifact(CloseableHttpClient httpclient,
-            JsonObject jobConfigOverlays, String authorization, String submitUrl)
+            JsonObject jobConfigOverlays, String submitUrl)
             throws IOException {
         HttpPost postArtifact = new HttpPost(submitUrl);
-        postArtifact.addHeader("Authorization", authorization);
+        postArtifact.addHeader("Authorization", getAuthorization());
 
         StringBody paramsBody = new StringBody(jobConfigOverlays.toString(),
                 ContentType.APPLICATION_JSON);

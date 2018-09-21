@@ -107,19 +107,17 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             throws IOException;
     /** Version-specific to submit a build. */
     protected abstract JsonObject submitBuild(CloseableHttpClient httpclient,
-            String authorization, File archive, String buildName) throws IOException;
+            File archive, String buildName) throws IOException;
     /** Version-specific to get build info. */
     protected abstract JsonObject getBuild(String buildId,
-            CloseableHttpClient httpclient,
-            String authorization) throws IOException;
+            CloseableHttpClient httpclient) throws IOException;
     /** Version-specific to submit build artifact as job. */
     protected abstract JsonObject submitBuildArtifact(CloseableHttpClient httpclient,
-            JsonObject deploy, String authorization, String submitUrl)
+            JsonObject deploy, String submitUrl)
             throws IOException;
     /** Version-specific to get build info that includes output. */
     protected abstract JsonObject getBuildOutput(String buildId, String outputId,
-            CloseableHttpClient httpclient,
-            String authorization) throws IOException;
+            CloseableHttpClient httpclient) throws IOException;
     /** Version-specific mechanism to get AbstractStreamsConnection. */
     abstract AbstractStreamingAnalyticsConnection createStreamsConnection()
             throws IOException;
@@ -189,7 +187,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             // Perform initial post of the archive
             TRACE.info("Streaming Analytics service (" + serviceName + "): submitting build " + buildName);
             final long startUploadTime = System.currentTimeMillis();
-            JsonObject buildSubmission = submitBuild(httpclient, getAuthorization(), archive, buildName);
+            JsonObject buildSubmission = submitBuild(httpclient, archive, buildName);
             final long endUploadTime = System.currentTimeMillis();
             metrics.addProperty(SubmissionResultsKeys.SUBMIT_UPLOAD_TIME, (endUploadTime - startUploadTime));
             
@@ -199,7 +197,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             // Loop until built
             final long startBuildTime = endUploadTime;
             long lastCheckTime = endUploadTime;
-            JsonObject buildStatus = getBuild(buildId, httpclient, getAuthorization());  
+            JsonObject buildStatus = getBuild(buildId, httpclient);  
             String status = jstring(buildStatus, "status");
             while (!"built".equals(status)) {
                 String mkey = SubmissionResultsKeys.buildStateMetricKey(status);
@@ -222,14 +220,14 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }
-                    buildStatus = getBuild(buildId, httpclient, getAuthorization()); 
+                    buildStatus = getBuild(buildId, httpclient); 
                     status = jstring(buildStatus, "status");
                     continue;
                 } 
                 // The remaining possible states are 'failed', 'timeout', 'canceled', 'canceling', and 'unknown', none of which can lead to a state of 'built', so we throw an error.
                 else {
                     TRACE.severe("Streaming Analytics service (" + serviceName + "): The submitted archive " + archive.getName() + " failed to build with status " + status + ".");
-                    JsonObject output = getBuildOutput(buildId, outputId, httpclient, getAuthorization());
+                    JsonObject output = getBuildOutput(buildId, outputId, httpclient);
                     String strOutput = "";
                     if (output != null)
                         strOutput = prettyPrintOutput(output);
@@ -251,8 +249,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
 
             TRACE.info("Streaming Analytics service (" + serviceName + "): submitting job request.");
             final long startSubmitTime = System.currentTimeMillis();
-            JsonObject response = submitBuildArtifact(httpclient, jco,
-                    getAuthorization(), submitUrl);
+            JsonObject response = submitBuildArtifact(httpclient, jco, submitUrl);
             final long endSubmitTime = System.currentTimeMillis();
             metrics.addProperty(SubmissionResultsKeys.SUBMIT_JOB_TIME, (endSubmitTime - startSubmitTime));
             
