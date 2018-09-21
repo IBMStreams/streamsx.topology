@@ -5,80 +5,56 @@
 
 package com.ibm.streamsx.rest.test;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeNotNull;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 
 import org.junit.Test;
 
+import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.rest.Instance;
-import com.ibm.streamsx.rest.RESTException;
-import com.ibm.streamsx.rest.StreamingAnalyticsConnection;
+import com.ibm.streamsx.rest.StreamingAnalyticsService;
 
-@SuppressWarnings("deprecation")
 public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
+	
+	static StreamingAnalyticsService getTestService() throws IOException {
+        String serviceName = System.getenv("STREAMING_ANALYTICS_SERVICE_NAME");
+        String vcapServices = System.getenv("VCAP_SERVICES");
+        
+        // if we don't have serviceName or vcapServices, skip the test
+        assumeNotNull(serviceName, vcapServices);
+        
+
+        StreamingAnalyticsService service = StreamingAnalyticsService.of(null, null);
+    	
+        Instance instance = service.getInstance();
+        
+        // bail if streaming analytics instance isn't up & running
+        assumeTrue(instance.getStatus().equals("running"));
+        
+        return service;
+	}
 
     @Override
-    public void setupConnection() throws Exception {
-        if (connection == null) {
-            String serviceName = System.getenv("STREAMING_ANALYTICS_SERVICE_NAME");
-            String vcapServices = System.getenv("VCAP_SERVICES");
-
-            // if we don't have serviceName or vcapServices, skip the test
-            assumeNotNull(serviceName, vcapServices);
-
-            testType = "STREAMING_ANALYTICS_SERVICE";
-            connection = StreamingAnalyticsConnection.createInstance(vcapServices, serviceName);
-        }
+    protected void setupConnection() throws Exception {
+    	fail("Should not be called!");
     }
 
     @Override
     public void setupInstance() throws Exception {
-        setupConnection();
         if (instance == null) {
-            instance = ((StreamingAnalyticsConnection) connection).getInstance();
-            // bail if streaming analytics instance isn't up & running
-            System.out.println("Checking the instance is running ...");
-            assumeTrue(instance.getStatus().equals("running"));
+        	
+            testType = "STREAMING_ANALYTICS_SERVICE";
+            
+            instance = getTestService().getInstance();
         }
-    }
-
-    @Override
-    @Test
-    public void testGetInstances() throws Exception {
-        setupConnection();
-
-        // get all instances in the domain
-        List<Instance> instances = connection.getInstances();
-        // there should be at least one instance
-        assertEquals(1, instances.size());
-
-        String instanceName = instances.get(0).getId();
-        Instance i2 = connection.getInstance(instanceName);
-        assertEquals(instanceName, i2.getId());
-        
-        checkDomainFromInstance(instances.get(0));
-
-        try {
-            // try a fake instance name
-            connection.getInstance("fakeName");
-            fail("the connection.getInstance() call should have thrown an exception");
-        } catch (RESTException r) {
-            assertEquals(r.toString(), 404, r.getStatusCode());
-        }
-    }
-
-    @Override
-    public void testBadConnections() throws Exception {
-        // leave this empty as it shouldn't run in streaming analytics
     }
 
     @Test
@@ -86,7 +62,6 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
         String serviceName = System.getenv("STREAMING_ANALYTICS_SERVICE_NAME");
         String existingVCAP = System.getenv("VCAP_SERVICES");
         String vcapString;
-        List<Instance> instances;
 
         // VCAP_SERVICES can be either a string representing a json object, a
         // string representing a file or a JSON object
@@ -103,10 +78,9 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
             // we have a file, let's convert to a String and re-try
             vcapString = new String(Files.readAllBytes(Paths.get(existingVCAP)), StandardCharsets.UTF_8);
 
-            StreamingAnalyticsConnection stringConn = StreamingAnalyticsConnection.createInstance(vcapString,
+            StreamingAnalyticsService stringService = StreamingAnalyticsService.of(new JsonPrimitive(vcapString),
                     serviceName);
-            instances = stringConn.getInstances();
-            assertEquals(1, instances.size());
+            stringService.getInstance().refresh();
 
         } else {
             // let's convert to a file and try that
@@ -117,11 +91,10 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
             Files.write(tempPath, existingVCAP.getBytes(StandardCharsets.UTF_8));
             tempFile.deleteOnExit();
 
-            StreamingAnalyticsConnection fileConn = StreamingAnalyticsConnection.createInstance(tempPath.toString(),
+            StreamingAnalyticsService fileService = StreamingAnalyticsService.of(new JsonPrimitive(tempPath.toString()),
                     serviceName);
 
-            instances = fileConn.getInstances();
-            assertEquals(1, instances.size());
+            fileService.getInstance().refresh();
 
             vcapString = existingVCAP; // need this setup later
         }
@@ -129,14 +102,13 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
         // let's try a fake service name
         System.out.println("Try a non-existant service name ...");
         try {
-            @SuppressWarnings("unused")
-            StreamingAnalyticsConnection stringConn = StreamingAnalyticsConnection.createInstance(vcapString,
+            StreamingAnalyticsService.of(new JsonPrimitive(vcapString),
                     "FakeServiceName");
             fail("Worked with non-existant service name!");
         } catch (IllegalStateException e) {
             // should trigger an IllegalStateException exception here
-            System.err.println("Expecting an exception here - FakeServiceName");
-            e.printStackTrace();
+            //System.err.println("Expecting an exception here - FakeServiceName");
+            //e.printStackTrace();
         }
 
         // let's try a non-existant file
@@ -150,15 +122,12 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
         }
 
         try {
-            @SuppressWarnings("unused")
-            StreamingAnalyticsConnection fileConn = StreamingAnalyticsConnection.createInstance(tempPath.toString(),
+            StreamingAnalyticsService.of(new JsonPrimitive(tempPath.toString()),
                     serviceName);
             fail("Worked with non-existant file!");
         } catch (IllegalStateException e) {
             // should trigger an IllegalStateException exception here
             // as the file isn't a file, and we'll throw when trying to act on a json string
-            System.err.println("Expecting an exception here - Non-existant file");
-            e.printStackTrace();
         }
 
         // let's try bad json
@@ -173,29 +142,18 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
         }
 
         try {
-            @SuppressWarnings("unused")
-            StreamingAnalyticsConnection fileConn = StreamingAnalyticsConnection.createInstance(tempPath.toString(),
-                    serviceName);
+            StreamingAnalyticsService.of(new JsonPrimitive(tempPath.toString()), serviceName);
             fail("Worked with bad json!");
         } catch (com.google.gson.JsonSyntaxException e) {
             // should trigger an exception here
-            System.err.println("Expecting an exception here - Junk filled file");
-            e.printStackTrace();
         }
 
         // use bad json as a string
         try {
-            @SuppressWarnings("unused")
-            StreamingAnalyticsConnection fileConn = StreamingAnalyticsConnection.createInstance(badJson, serviceName);
+        	StreamingAnalyticsService.of(new JsonPrimitive(badJson), serviceName);
             fail("Worked with bad json as string!");
         } catch (com.google.gson.JsonSyntaxException e) {
             // should trigger an exception here
-            System.err.println("Expecting an exception here - Bad Json");
-            e.printStackTrace();
         }
-
-        // currently we don't test for a JSON object to create the
-        // StreamingAnalyticsConnection object as that's not supported yet.
-
     }
 }
