@@ -5,7 +5,6 @@
 
 package com.ibm.streamsx.rest.test;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeNotNull;
 import static org.junit.Assume.assumeTrue;
@@ -16,17 +15,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 
 import org.junit.Test;
 
 import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.rest.Instance;
-import com.ibm.streamsx.rest.RESTException;
-import com.ibm.streamsx.rest.StreamingAnalyticsConnection;
 import com.ibm.streamsx.rest.StreamingAnalyticsService;
 
-@SuppressWarnings("deprecation")
 public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
 	
 	static StreamingAnalyticsService getTestService() throws IOException {
