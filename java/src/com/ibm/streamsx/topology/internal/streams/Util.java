@@ -23,6 +23,7 @@ public class Util {
     private static final String STREAMS_INSTALL = "STREAMS_INSTALL";
     public static final String STREAMS_USERNAME = "STREAMS_USERNAME";
     public static final String STREAMS_PASSWORD = "STREAMS_PASSWORD";
+    public static final String STREAMS_REST_URL = "STREAMS_REST_URL";
     private static String streamsInstall;
     
     /**
