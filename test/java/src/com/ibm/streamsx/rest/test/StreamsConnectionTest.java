@@ -43,7 +43,7 @@ import com.ibm.streamsx.topology.function.Function;
 
 public class StreamsConnectionTest {
 
-    StreamsConnection connection;
+    protected StreamsConnection connection;
     String instanceName;
     Instance instance;
     Job job;
@@ -53,7 +53,7 @@ public class StreamsConnectionTest {
     public StreamsConnectionTest() {
     }
 
-    private String getStreamsPort() {
+    protected String getStreamsPort() {
         String streamsPort = System.getenv("STREAMS_INSTANCE_PORT");
         if ((streamsPort == null) || streamsPort.isEmpty()) {
             // if port not specified, assume default one
@@ -62,7 +62,7 @@ public class StreamsConnectionTest {
         return streamsPort;
     }
 
-    public void setupConnection() throws Exception {
+    protected void setupConnection() throws Exception {
         if (connection == null) {
             testType = "DISTRIBUTED";
 
@@ -81,7 +81,7 @@ public class StreamsConnectionTest {
         }
     }
 
-    public void setupInstance() throws Exception {
+    protected void setupInstance() throws Exception {
         setupConnection();
 
         if (instance == null) {
@@ -91,85 +91,7 @@ public class StreamsConnectionTest {
         }
     }
 
-    @Test
-    public void testBadConnections() throws Exception {
-        // only run this test if this is a Streams Connection
-        assumeTrue(getClass() == StreamsConnectionTest.class);
 
-        String sPort = getStreamsPort();
-
-        // send in wrong url
-        String badUrl = "https://localhost:" + sPort + "/streams/re";
-        StreamsConnection badConn = StreamsConnection.createInstance(null, null, badUrl);
-        badConn.allowInsecureHosts(true);
-        try {
-            badConn.getInstances();
-        } catch (RESTException r) {
-            assertEquals(r.toString(), 404, r.getStatusCode());
-        }
-
-        // send in url too long
-        String badURL = "https://localhost:" + sPort + "/streams/rest/resourcesTooLong";
-        badConn = StreamsConnection.createInstance(null, null, badURL);
-        badConn.allowInsecureHosts(true);
-        try {
-            badConn.getInstances();
-        } catch (RESTException r) {
-            assertEquals(r.toString(), 404, r.getStatusCode());
-        }
-
-        // send in bad iName
-        String restUrl = "https://localhost:" + sPort + "/streams/rest/resources";
-        badConn = StreamsConnection.createInstance("fakeName", null, restUrl);
-        badConn.allowInsecureHosts(true);
-        try {
-            badConn.getInstances();
-        } catch (RESTException r) {
-            assertEquals(r.toString(), 401, r.getStatusCode());
-        }
-
-        // send in wrong password
-        badConn = StreamsConnection.createInstance(null, "badPassword", restUrl);
-        badConn.allowInsecureHosts(true);
-        try {
-            badConn.getInstances();
-        } catch (RESTException r) {
-            assertEquals(r.toString(), 401, r.getStatusCode());
-        }
-    }
-
-    @Test
-    public void testGetInstances() throws Exception {
-        setupConnection();
-        // get all instances in the domain
-        List<Instance> instances = connection.getInstances();
-        // there should be at least one instance
-        assertTrue(instances.size() > 0);
-
-        Instance i2 = connection.getInstance(instanceName);
-        assertEquals(instanceName, i2.getId());
-
-        i2.refresh();
-        assertEquals(instanceName, i2.getId());
-        
-        List<ProcessingElement> instancePes = i2.getPes();
-        for (ProcessingElement pe : instancePes) {
-            assertNotNull(pe);
-        }
-        
-        for (Instance instance : instances)
-            checkDomainFromInstance(instance);
-
-        try {
-            // try a fake instance name
-            connection.getInstance("fakeName");
-            fail("the connection.getInstance call should have thrown an exception");
-        } catch (RESTException r) {
-            // not a failure, this is the expected result
-            assertEquals(r.toString(), 404, r.getStatusCode());
-        }
-    }
-    
     static void checkDomainFromInstance(Instance instance)  throws Exception {
         instance.refresh();
         
@@ -287,7 +209,6 @@ public class StreamsConnectionTest {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testNonExistantJob() throws Exception {
         try {
@@ -299,13 +220,6 @@ public class StreamsConnectionTest {
             assertEquals(r.toString(), 404, r.getStatusCode());
             assertEquals("CDISW5000E", r.getStreamsErrorMessageId());
         }
-
-        // cancel a non-existant jobid
-        // API does not specify if this fails or throws, accept both
-        try {
-            boolean failCancel = connection.cancelJob("9999999");
-            assertTrue(failCancel == false);
-        } catch (RESTException ok) {}
     }
 
     @Test

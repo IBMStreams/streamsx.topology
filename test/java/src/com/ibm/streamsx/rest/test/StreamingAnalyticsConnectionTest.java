@@ -11,6 +11,7 @@ import static org.junit.Assume.assumeNotNull;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,63 +23,42 @@ import org.junit.Test;
 import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.RESTException;
 import com.ibm.streamsx.rest.StreamingAnalyticsConnection;
+import com.ibm.streamsx.rest.StreamingAnalyticsService;
 
 @SuppressWarnings("deprecation")
 public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
+	
+	static StreamingAnalyticsService getTestService() throws IOException {
+        String serviceName = System.getenv("STREAMING_ANALYTICS_SERVICE_NAME");
+        String vcapServices = System.getenv("VCAP_SERVICES");
+        
+        // if we don't have serviceName or vcapServices, skip the test
+        assumeNotNull(serviceName, vcapServices);
+        
+
+        StreamingAnalyticsService service = StreamingAnalyticsService.of(null, null);
+    	
+        Instance instance = service.getInstance();
+        
+        // bail if streaming analytics instance isn't up & running
+        assumeTrue(instance.getStatus().equals("running"));
+        
+        return service;
+	}
 
     @Override
-    public void setupConnection() throws Exception {
-        if (connection == null) {
-            String serviceName = System.getenv("STREAMING_ANALYTICS_SERVICE_NAME");
-            String vcapServices = System.getenv("VCAP_SERVICES");
-
-            // if we don't have serviceName or vcapServices, skip the test
-            assumeNotNull(serviceName, vcapServices);
-
-            testType = "STREAMING_ANALYTICS_SERVICE";
-            connection = StreamingAnalyticsConnection.createInstance(vcapServices, serviceName);
-        }
+    protected void setupConnection() throws Exception {
+    	fail("Should not be called!");
     }
 
     @Override
     public void setupInstance() throws Exception {
-        setupConnection();
         if (instance == null) {
-            instance = ((StreamingAnalyticsConnection) connection).getInstance();
-            // bail if streaming analytics instance isn't up & running
-            System.out.println("Checking the instance is running ...");
-            assumeTrue(instance.getStatus().equals("running"));
+        	
+            testType = "STREAMING_ANALYTICS_SERVICE";
+            
+            instance = getTestService().getInstance();
         }
-    }
-
-    @Override
-    @Test
-    public void testGetInstances() throws Exception {
-        setupConnection();
-
-        // get all instances in the domain
-        List<Instance> instances = connection.getInstances();
-        // there should be at least one instance
-        assertEquals(1, instances.size());
-
-        String instanceName = instances.get(0).getId();
-        Instance i2 = connection.getInstance(instanceName);
-        assertEquals(instanceName, i2.getId());
-        
-        checkDomainFromInstance(instances.get(0));
-
-        try {
-            // try a fake instance name
-            connection.getInstance("fakeName");
-            fail("the connection.getInstance() call should have thrown an exception");
-        } catch (RESTException r) {
-            assertEquals(r.toString(), 404, r.getStatusCode());
-        }
-    }
-
-    @Override
-    public void testBadConnections() throws Exception {
-        // leave this empty as it shouldn't run in streaming analytics
     }
 
     @Test
