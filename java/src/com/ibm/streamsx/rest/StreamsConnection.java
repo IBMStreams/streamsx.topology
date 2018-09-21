@@ -82,7 +82,7 @@ public class StreamsConnection {
     		authToken = System.getenv(Util.STREAMS_PASSWORD);
     	
     	if (url == null)
-    		authToken = System.getenv(Util.STREAMS_REST_URL);
+    		url = System.getenv(Util.STREAMS_REST_URL);
     	
         IStreamsConnection delegate = createDelegate(userName, authToken, url);
         StreamsConnection sc = new StreamsConnection(delegate, false);
