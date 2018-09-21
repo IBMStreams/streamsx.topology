@@ -49,12 +49,9 @@ import com.ibm.streamsx.topology.internal.streams.Util;
  */
 abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsService {
 
-    final protected JsonObject credentials;
+    private final JsonObject credentials;
     final protected JsonObject service;
     private final String serviceName;
-
-    // Current value for the authorization header
-    protected String authorization;
 
     // Connection to Streams REST API
     AbstractStreamingAnalyticsConnection streamsConnection;
@@ -64,6 +61,10 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         this.credentials = credentials;
         this.service = service;
         this.serviceName = jstring(service, "name");
+    }
+    
+    final JsonObject credentials() {
+    	return credentials;
     }
     
     @Override
@@ -122,13 +123,6 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     /** Version-specific mechanism to get AbstractStreamsConnection. */
     abstract AbstractStreamingAnalyticsConnection createStreamsConnection()
             throws IOException;
-
-    /**
-     * Set the current authorization header contents.
-     */
-    protected void setAuthorization(String authorization) {
-        this.authorization = authorization;
-    }
 
     @Override
     public Result<Job, JsonObject> submitJob(File bundle, JsonObject jco) throws IOException {

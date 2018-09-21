@@ -26,7 +26,6 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
     private final String resourcesUrl;
 
     protected Executor executor;
-    protected String authorization;
     protected String instancesUrl;
     
     /**
@@ -61,9 +60,8 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
      *            String representing the root url to the REST API resources,
      *            for example: https://server:port/streams/rest/resources
      */
-    AbstractStreamsConnection(String authorization, String resourcesUrl,
+    AbstractStreamsConnection(String resourcesUrl,
             boolean allowInsecure) throws IOException {
-        this.authorization = authorization;
         this.resourcesUrl = resourcesUrl;
         this.executor = StreamsRestUtils.createExecutor(allowInsecure);
     }
@@ -96,13 +94,6 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
      */
     Executor getExecutor() {
         return executor;
-    }
-
-    /**
-     * Set the contents of the authorization header
-     */
-    protected void setAuthorization(String authorization) {
-        this.authorization = authorization;
     }
 
     /**

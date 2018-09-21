@@ -33,12 +33,14 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
     private final String tokenUrl;
     private final String apiKey;
     private final String statusUrl;
+    
+    private String authorization;
 
     StreamingAnalyticsServiceV2(JsonObject service) {
         super(service);
-        tokenUrl = StreamsRestUtils.getTokenUrl(credentials);
-        apiKey = StreamsRestUtils.getServiceApiKey(credentials);
-        statusUrl = jstring(credentials, "v2_rest_url");
+        tokenUrl = StreamsRestUtils.getTokenUrl(credentials());
+        apiKey = StreamsRestUtils.getServiceApiKey(credentials());
+        statusUrl = jstring(credentials(), "v2_rest_url");
     }
 
     // Synchronized because it needs to read and possibly write two members
@@ -59,7 +61,7 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
         if (null != response) {
             String accessToken = StreamsRestUtils.getToken(response);
             if (null != accessToken) {
-                setAuthorization(StreamsRestUtils.createBearerAuth(accessToken));
+            	authorization = StreamsRestUtils.createBearerAuth(accessToken);
                 authExpiryTime = StreamsRestUtils.getTokenExpiryMillis(response);
             }
         }
@@ -193,8 +195,7 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
 
     @Override
     AbstractStreamingAnalyticsConnection createStreamsConnection() throws IOException {
-        return StreamingAnalyticsConnectionV2.of(service, getAuthorization(),
-                authExpiryTime, false);
+        return StreamingAnalyticsConnectionV2.of(this, service, false);
     }
 
 }
