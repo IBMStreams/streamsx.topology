@@ -14,43 +14,13 @@ import com.google.gson.JsonObject;
 
 class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsConnection {
 
-    private long authExpiryTime;
     private String jobsUrl;
-    private final String tokenUrl;
-    private final String apiKey;
 
-    StreamingAnalyticsConnectionV2(String authorization, long authExpiryTime,
-            String resourcesUrl, JsonObject credentials, boolean allowInsecure)
-            throws IOException {
-        super(authorization, resourcesUrl, credentials, allowInsecure);
-        this.authExpiryTime = authExpiryTime;
-        this.tokenUrl = StreamsRestUtils.getTokenUrl(credentials);
-        this.apiKey = StreamsRestUtils.getServiceApiKey(credentials);
-    }
-
-    // Synchronized because it needs to read and possibly write two members
-    // that are interdependent: authExpiryTime and authorization. Should be
-    // fast enough without getting tricky: contention should be rare because
-    // of the way we use this, and this should be fast compared to the network
-    // I/O that typically follows using the returned authorization.
-    @Override
-    synchronized String getAuthorization() {
-        if (authorization == null ||
-                System.currentTimeMillis() > authExpiryTime) {
-            refreshAuthorization();
-        }
-        return authorization;
-    }
-
-    private void refreshAuthorization() {
-        JsonObject response = StreamsRestUtils.getTokenResponse(tokenUrl, apiKey);
-        if (null != response) {
-            String accessToken = StreamsRestUtils.getToken(response);
-            if (null != accessToken) {
-                setAuthorization(StreamsRestUtils.createBearerAuth(accessToken));
-                authExpiryTime = StreamsRestUtils.getTokenExpiryMillis(response);
-            }
-        }
+    StreamingAnalyticsConnectionV2(
+    		StreamingAnalyticsServiceV2 service,
+            String resourcesUrl, boolean allowInsecure)
+            {
+        super(service, resourcesUrl, allowInsecure);
     }
 
     /**
@@ -70,7 +40,7 @@ class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsConnectio
     @Override
     boolean cancelJob(Instance instance, String jobId) throws IOException {
         if (null == jobsUrl) {
-            String restUrl = jstring(credentials, "v2_rest_url");
+            String restUrl = jstring(credentials(), "v2_rest_url");
             JsonObject response = StreamsRestUtils.getGsonResponse(executor,
                     getAuthorization(), restUrl);
             JsonElement element = response.get("jobs");
@@ -84,13 +54,15 @@ class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsConnectio
         return delete(jobsUrl + "/" + jobId);
     }
 
-    static StreamingAnalyticsConnectionV2 of(JsonObject service,
-            String authorization, long authExpiryMillis, boolean allowInsecure)
+    static StreamingAnalyticsConnectionV2 of(
+    		StreamingAnalyticsServiceV2 actualService,
+    		JsonObject service,
+            boolean allowInsecure)
             throws IOException {
         JsonObject credentials = service.get("credentials").getAsJsonObject();
         String sasResourcesUrl = StreamsRestUtils.getRequiredMember(credentials,
                 StreamsRestUtils.MEMBER_V2_REST_URL);
-        JsonObject sasResources = StreamsRestUtils.getServiceResources(authorization, sasResourcesUrl);
+        JsonObject sasResources = StreamsRestUtils.getServiceResources(actualService.getAuthorization(), sasResourcesUrl);
         String instanceUrl = StreamsRestUtils.getRequiredMember(sasResources,
                 "streams_self");
         // Find root URL. V2 starts at the instance, we want resources
@@ -98,11 +70,10 @@ class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsConnectio
         String streamsResourcesUrl = StreamsRestUtils.fixStreamsRestUrl(baseUrl);
 
         StreamingAnalyticsConnectionV2 connection =
-                new StreamingAnalyticsConnectionV2(authorization,
-                        authExpiryMillis, streamsResourcesUrl, credentials,
+                new StreamingAnalyticsConnectionV2(actualService, 
+                        streamsResourcesUrl,
                         allowInsecure);
         connection.baseConsoleURL = StreamsRestUtils.getRequiredMember(sasResources, "streams_console");
-        connection.init();
         return connection;
     }
 

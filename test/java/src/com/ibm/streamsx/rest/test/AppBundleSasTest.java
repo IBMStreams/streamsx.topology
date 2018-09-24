@@ -1,6 +1,6 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2017
+# Copyright IBM Corp. 2018
  */
 
 package com.ibm.streamsx.rest.test;
@@ -19,11 +19,5 @@ public class AppBundleSasTest extends AppBundleTest {
 	@Override
 	protected Instance getInstance() throws IOException {
 		return StreamingAnalyticsConnectionTest.getTestService().getInstance();
-	}
-	
-	@Override
-	public void testAppBundles() throws Exception {
-		// TODO Add test in when implemented.
-		//super.testAppBundles();
 	}
 }

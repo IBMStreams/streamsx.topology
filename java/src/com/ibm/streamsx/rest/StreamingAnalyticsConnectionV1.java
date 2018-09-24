@@ -4,7 +4,6 @@
  */
 package com.ibm.streamsx.rest;
 
-import static com.ibm.streamsx.rest.StreamsRestUtils.MEMBER_PASSWORD;
 import static com.ibm.streamsx.rest.StreamsRestUtils.MEMBER_USERID;
 
 import java.io.IOException;
@@ -16,7 +15,7 @@ import com.google.gson.JsonObject;
  *
  */
 class StreamingAnalyticsConnectionV1 extends AbstractStreamingAnalyticsConnection {
-
+	
     /**
      * Connection to IBM Streaming Analytics service
      *
@@ -33,11 +32,11 @@ class StreamingAnalyticsConnectionV1 extends AbstractStreamingAnalyticsConnectio
      *            Service jobs REST API.
      * @throws IOException
      */
-    StreamingAnalyticsConnectionV1(String userName, String authToken,
-            String resourcesUrl, JsonObject credentials, boolean allowInsecure)
-            throws IOException {
-        super(StreamsRestUtils.createBasicAuth(userName, authToken),
-                resourcesUrl, credentials, allowInsecure);
+    StreamingAnalyticsConnectionV1(
+    		StreamingAnalyticsServiceV1 service,
+            String resourcesUrl, boolean allowInsecure)
+             {
+        super(service, resourcesUrl, allowInsecure);
     }
 
     /**
@@ -54,34 +53,28 @@ class StreamingAnalyticsConnectionV1 extends AbstractStreamingAnalyticsConnectio
      */
     @Override
     boolean cancelJob(Instance instance, String jobId) throws IOException {
-        String restUrl = StreamsRestUtils.getRequiredMember(credentials, "rest_url");
-        String jobsUrl = restUrl + StreamsRestUtils.getRequiredMember(credentials, "jobs_path");
+        String restUrl = StreamsRestUtils.getRequiredMember(credentials(), "rest_url");
+        String jobsUrl = restUrl + StreamsRestUtils.getRequiredMember(credentials(), "jobs_path");
         return delete(jobsUrl + "?job_id=" + jobId);
     }
 
-    @Override
-    String getAuthorization() {
-        return authorization;
-    }
-
-    static StreamingAnalyticsConnectionV1 of(JsonObject service,
+    static StreamingAnalyticsConnectionV1 of(
+    		StreamingAnalyticsServiceV1 actualService,
+    		JsonObject service,
             boolean allowInsecure) throws IOException {
         JsonObject credentials = service.get("credentials").getAsJsonObject();
         String userId = StreamsRestUtils.getRequiredMember(credentials, MEMBER_USERID);
-        String authToken = StreamsRestUtils.getRequiredMember(credentials, MEMBER_PASSWORD);
-        String authorization = StreamsRestUtils.createBasicAuth(userId, authToken);
         String restUrl = StreamsRestUtils.getRequiredMember(credentials, "rest_url");
         String sasResourcesUrl = restUrl + StreamsRestUtils.getRequiredMember(credentials, "resources_path");
-        JsonObject sasResources = StreamsRestUtils.getServiceResources(authorization, sasResourcesUrl);
+        JsonObject sasResources = StreamsRestUtils.getServiceResources(actualService.getAuthorization(), sasResourcesUrl);
         String streamsBaseUrl = StreamsRestUtils.getRequiredMember(sasResources, "streams_rest_url");
         // In V1, streams_rest_url is missing /resources
         String streamsResourcesUrl = StreamsRestUtils.fixStreamsRestUrl(streamsBaseUrl);
 
         StreamingAnalyticsConnectionV1 connection =
-                new StreamingAnalyticsConnectionV1(userId, authToken,
-                streamsResourcesUrl, credentials, allowInsecure);
+                new StreamingAnalyticsConnectionV1(actualService,
+                streamsResourcesUrl, allowInsecure);
         connection.baseConsoleURL = StreamsRestUtils.getRequiredMember(sasResources, "streams_console_url");
-        connection.init();
         return connection;
     }
 }

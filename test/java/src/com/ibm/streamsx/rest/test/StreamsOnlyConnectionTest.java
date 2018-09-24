@@ -23,12 +23,12 @@ import com.ibm.streamsx.rest.StreamsConnection;
  * Tests that only make sense with an on-prem streams.
  *
  */
-public class StreamsOnlyConnectionTest extends StreamsConnectionTest{
+public class StreamsOnlyConnectionTest {
 
     @Test
     public void testBadConnections() throws Exception {
 
-        String sPort = getStreamsPort();
+        String sPort = StreamsConnectionTest.getStreamsPort();
 
         // send in wrong url
         String badUrl = "https://localhost:" + sPort + "/streams/re";
@@ -72,11 +72,14 @@ public class StreamsOnlyConnectionTest extends StreamsConnectionTest{
 
     @Test
     public void testGetInstances() throws Exception {
-        setupConnection();
+        StreamsConnection connection = StreamsConnection.createInstance(null, null, null);
+        connection.allowInsecureHosts(true);
         // get all instances in the domain
         List<Instance> instances = connection.getInstances();
         // there should be at least one instance
         assertTrue(instances.size() > 0);
+        
+        String instanceName = System.getenv("STREAMS_INSTANCE_ID");
 
         Instance i2 = connection.getInstance(instanceName);
         assertEquals(instanceName, i2.getId());
@@ -90,7 +93,7 @@ public class StreamsOnlyConnectionTest extends StreamsConnectionTest{
         }
         
         for (Instance instance : instances)
-            checkDomainFromInstance(instance);
+            StreamsConnectionTest.checkDomainFromInstance(instance);
 
         try {
             // try a fake instance name

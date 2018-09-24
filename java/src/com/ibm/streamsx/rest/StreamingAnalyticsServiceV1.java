@@ -36,17 +36,20 @@ import com.google.gson.JsonObject;
  * This is cut & paste of the code from the original uses. 
  */
 class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
+	
+	private final String authorization;
+	
     StreamingAnalyticsServiceV1(JsonObject service) {
         super(service);
         // Authorization header never changes in V1 once set
-        setAuthorization(StreamsRestUtils.createBasicAuth(credentials));
+        authorization = StreamsRestUtils.createBasicAuth(credentials());
     }
 
     @Override
     protected String getStatusUrl(CloseableHttpClient httpClient) {
         StringBuilder sb = new StringBuilder(500);
-        sb.append(jstring(credentials, "rest_url"));
-        sb.append(jstring(credentials, "status_path"));
+        sb.append(jstring(credentials(), "rest_url"));
+        sb.append(jstring(credentials(), "status_path"));
         return sb.toString();
     }
 
@@ -54,8 +57,8 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
     protected String getJobSubmitUrl(CloseableHttpClient httpClient, File bundle)
             throws UnsupportedEncodingException {
         StringBuilder sb = new StringBuilder(500);
-        sb.append(jstring(credentials, "rest_url"));
-        sb.append(jstring(credentials, "jobs_path"));
+        sb.append(jstring(credentials(), "rest_url"));
+        sb.append(jstring(credentials(), "jobs_path"));
         sb.append("?");
         sb.append("bundle_id=");
         sb.append(URLEncoder.encode(bundle.getName(), StandardCharsets.UTF_8.name()));
@@ -67,8 +70,8 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
             throws UnsupportedEncodingException {
         String artifactId = jstring(artifact, "id");
         StringBuilder sb = new StringBuilder(500);
-        sb.append(jstring(credentials, "rest_url"));
-        sb.append(jstring(credentials, "jobs_path").replace("jobs", "builds"));
+        sb.append(jstring(credentials(), "rest_url"));
+        sb.append(jstring(credentials(), "jobs_path").replace("jobs", "builds"));
         sb.append("?");
         sb.append("artifact_id=");
         sb.append(URLEncoder.encode(artifactId, StandardCharsets.UTF_8.name()));
@@ -77,8 +80,8 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
 
     @Override
     protected String getBuildsUrl(CloseableHttpClient httpClient){
-        String buildURL = jstring(credentials, "jobs_path").replace("jobs", "builds");
-        return jstring(credentials, "rest_url") + buildURL;
+        String buildURL = jstring(credentials(), "jobs_path").replace("jobs", "builds");
+        return jstring(credentials(), "rest_url") + buildURL;
     }
 
     @Override
@@ -92,12 +95,11 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
     }
 
     @Override
-    protected JsonObject getBuild(String buildId, CloseableHttpClient httpclient,
-            String authorization) throws IOException {
+    protected JsonObject getBuild(String buildId, CloseableHttpClient httpclient) throws IOException {
         String buildURL = getBuildsUrl(httpclient) + "?build_id="
             + URLEncoder.encode(buildId, StandardCharsets.UTF_8.name());
         HttpGet httpget = new HttpGet(buildURL);
-        httpget.addHeader("Authorization", authorization);
+        httpget.addHeader("Authorization", getAuthorization());
 
         JsonObject response = StreamsRestUtils.getGsonResponse(httpclient, httpget);
         // Get the correct build
@@ -113,14 +115,14 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
 
     @Override
     protected JsonObject getBuildOutput(String buildId, String outputId,
-            CloseableHttpClient httpclient, String authorization)
+            CloseableHttpClient httpclient)
             throws IOException {
         String buildOutputURL = getBuildsUrl(httpclient) + "?build_id="
                 + URLEncoder.encode(buildId, StandardCharsets.UTF_8.name())
                 + "&output_id="
                 + URLEncoder.encode(outputId, StandardCharsets.UTF_8.name());
         HttpGet httpget = new HttpGet(buildOutputURL);
-        httpget.addHeader("Authorization", authorization);
+        httpget.addHeader("Authorization", getAuthorization());
 
         JsonObject response = StreamsRestUtils.getGsonResponse(httpclient, httpget);
         for(JsonElement outputElem : array(response, "builds")){
@@ -134,12 +136,12 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
 
     @Override
     protected JsonObject submitBuild(CloseableHttpClient httpclient,
-            String authorization, File archive, String buildName)
+            File archive, String buildName)
             throws IOException {
         String newBuildURL = getBuildsUrl(httpclient) + "?build_name=" +
                 URLEncoder.encode(buildName, StandardCharsets.UTF_8.name());
         HttpPost httppost = new HttpPost(newBuildURL);
-        httppost.addHeader("Authorization", authorization);
+        httppost.addHeader("Authorization", getAuthorization());
 
         FileBody archiveBody = new FileBody(archive,
                 ContentType.create("application/zip"));
@@ -156,11 +158,12 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
     /**
      * Submit the job from the built artifact.
      */
+    @Override
     protected JsonObject submitBuildArtifact(CloseableHttpClient httpclient,
-            JsonObject jobConfigOverlays, String authorization, String submitUrl)
+            JsonObject jobConfigOverlays, String submitUrl)
             throws IOException {
         HttpPut httpput = new HttpPut(submitUrl);
-        httpput.addHeader("Authorization", authorization);
+        httpput.addHeader("Authorization", getAuthorization());
         httpput.addHeader("content-type", ContentType.APPLICATION_JSON.getMimeType());
 
         StringEntity params = new StringEntity(jobConfigOverlays.toString(),
@@ -176,6 +179,6 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
 
     @Override
     AbstractStreamingAnalyticsConnection createStreamsConnection() throws IOException {
-        return StreamingAnalyticsConnectionV1.of(service, false);
+        return StreamingAnalyticsConnectionV1.of(this, service, false);
     }
 }

@@ -9,12 +9,14 @@ import com.ibm.streamsx.topology.internal.streams.InvokeSubmit;
 
 class StreamsConnectionImpl extends AbstractStreamsConnection {
 
+	private final String authorization;
     private final String userName;
 
     StreamsConnectionImpl(String userName, String authorization,
-            String resourcesUrl, boolean allowInsecure) throws IOException {
-        super(authorization, resourcesUrl, allowInsecure);
+            String resourcesUrl, boolean allowInsecure) {
+        super(resourcesUrl, allowInsecure);
         this.userName = userName;
+        this.authorization = authorization;
     }
 
     @Override
