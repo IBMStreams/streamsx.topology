@@ -13,7 +13,7 @@ class StreamsConnectionImpl extends AbstractStreamsConnection {
     private final String userName;
 
     StreamsConnectionImpl(String userName, String authorization,
-            String resourcesUrl, boolean allowInsecure) throws IOException {
+            String resourcesUrl, boolean allowInsecure) {
         super(resourcesUrl, allowInsecure);
         this.userName = userName;
         this.authorization = authorization;

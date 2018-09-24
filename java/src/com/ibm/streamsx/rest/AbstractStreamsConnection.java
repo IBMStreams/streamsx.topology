@@ -13,7 +13,6 @@ import org.apache.http.client.fluent.Executor;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
@@ -26,7 +25,7 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
     private final String resourcesUrl;
 
     protected Executor executor;
-    protected String instancesUrl;
+    private String instancesUrl;
     
     /**
      * Cancel a job.
@@ -61,32 +60,15 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
      *            for example: https://server:port/streams/rest/resources
      */
     AbstractStreamsConnection(String resourcesUrl,
-            boolean allowInsecure) throws IOException {
+            boolean allowInsecure) {
         this.resourcesUrl = resourcesUrl;
         this.executor = StreamsRestUtils.createExecutor(allowInsecure);
     }
-
-    /**
-     * Must be called after construction once to initialize the connection.
-     */
-    synchronized void init() throws IOException, JsonSyntaxException {
-        if (null == instancesUrl) {
-            // Query the resourcesUrl to find the instances URL
-            String response = getResponseString(resourcesUrl);
-            ResourcesArray resources = new GsonBuilder()
-                    .excludeFieldsWithoutExposeAnnotation()
-                    .create().fromJson(response, ResourcesArray.class);
-            for (Resource resource : resources.resources) {
-                if (INSTANCES_RESOURCE_NAME.equals(resource.name)) {
-                    instancesUrl = resource.resource;
-                    break;
-                }
-            }
-            if (null == instancesUrl) {
-                // If we couldn't find instances something is wrong
-                throw new RESTException("Unable to find instances resource from resources URL: " + resourcesUrl);
-            }
-        }
+    
+    @Override
+    public boolean allowInsecureHosts(boolean allowInsecure) {
+    	this.executor = StreamsRestUtils.createExecutor(allowInsecure);
+    	return allowInsecure;
     }
 
     /**
@@ -113,7 +95,7 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
      */
     @Override
     public List<Instance> getInstances() throws IOException {
-        return Instance.createInstanceList(this, instancesUrl);
+        return Instance.createInstanceList(this, getInstancesURL());
     }
 
     /* (non-Javadoc)
@@ -126,7 +108,7 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
             // should add some fallback code to see if there's only one instance
             throw new IllegalArgumentException("Missing instance id");
         } else {
-            String query = instancesUrl + "?id=" + instanceId;
+            String query = getInstancesURL() + "?id=" + instanceId;
 
             List<Instance> instances = Instance.createInstanceList(this, query);
             if (instances.size() == 1) {
@@ -138,6 +120,27 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
 
         }
         return si;
+    }
+    
+    private String getInstancesURL() throws IOException {
+    	if (instancesUrl == null) {
+            // Query the resourcesUrl to find the instances URL
+            String response = getResponseString(resourcesUrl);
+            ResourcesArray resources = new GsonBuilder()
+                    .excludeFieldsWithoutExposeAnnotation()
+                    .create().fromJson(response, ResourcesArray.class);
+            for (Resource resource : resources.resources) {
+                if (INSTANCES_RESOURCE_NAME.equals(resource.name)) {
+                    instancesUrl = resource.resource;
+                    break;
+                }
+            }
+            if (null == instancesUrl) {
+                // If we couldn't find instances something is wrong
+                throw new RESTException("Unable to find instances resource from resources URL: " + resourcesUrl);
+            }
+    	}
+    	return instancesUrl;
     }
 
     private static class Resource {

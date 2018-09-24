@@ -19,7 +19,7 @@ class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsConnectio
     StreamingAnalyticsConnectionV2(
     		StreamingAnalyticsServiceV2 service,
             String resourcesUrl, boolean allowInsecure)
-            throws IOException {
+            {
         super(service, resourcesUrl, allowInsecure);
     }
 
@@ -74,7 +74,6 @@ class StreamingAnalyticsConnectionV2 extends AbstractStreamingAnalyticsConnectio
                         streamsResourcesUrl,
                         allowInsecure);
         connection.baseConsoleURL = StreamsRestUtils.getRequiredMember(sasResources, "streams_console");
-        connection.init();
         return connection;
     }
 

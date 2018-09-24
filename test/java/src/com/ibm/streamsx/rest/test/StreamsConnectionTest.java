@@ -52,7 +52,7 @@ public class StreamsConnectionTest {
     public StreamsConnectionTest() {
     }
 
-    protected String getStreamsPort() {
+    static String getStreamsPort() {
         String streamsPort = System.getenv("STREAMS_INSTANCE_PORT");
         if ((streamsPort == null) || streamsPort.isEmpty()) {
             // if port not specified, assume default one

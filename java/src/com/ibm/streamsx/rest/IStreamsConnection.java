@@ -13,6 +13,8 @@ import java.util.List;
  * {@link StreamsRestFactory}
  */
 interface IStreamsConnection {
+		
+	public boolean allowInsecureHosts(boolean allowInsecure);
 
     /**
      * Gets a list of {@link Instance instances} that are available to this IBM

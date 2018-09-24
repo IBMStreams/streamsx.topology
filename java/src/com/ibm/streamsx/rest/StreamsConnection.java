@@ -13,17 +13,10 @@ import com.ibm.streamsx.topology.internal.streams.Util;
  * Connection to IBM Streams.
  */
 public class StreamsConnection {
-    IStreamsConnection delegate;
-    protected boolean allowInsecure;
+    private IStreamsConnection delegate;
 
-    private String userName;
-    private String authToken;
-    private String url;
-
-    StreamsConnection(IStreamsConnection delegate,
-            boolean allowInsecure) {
+    StreamsConnection(IStreamsConnection delegate) {
         this.delegate = delegate;
-        this.allowInsecure = allowInsecure;
     }
 
     /**
@@ -60,10 +53,7 @@ public class StreamsConnection {
     		url = System.getenv(Util.STREAMS_REST_URL);
     	
         IStreamsConnection delegate = createDelegate(userName, authToken, url);
-        StreamsConnection sc = new StreamsConnection(delegate, false);
-        sc.userName = userName;
-        sc.authToken = authToken;
-        sc.url = url;
+        StreamsConnection sc = new StreamsConnection(delegate);
         return sc;
     }
 
@@ -84,22 +74,7 @@ public class StreamsConnection {
      *         </ul>
      */
     public boolean allowInsecureHosts(boolean allowInsecure) {
-        if (allowInsecure != this.allowInsecure
-                && null != userName && null != authToken && null != url) {
-            try {
-                StreamsConnectionImpl connection = new StreamsConnectionImpl(userName,
-                        StreamsRestUtils.createBasicAuth(userName, authToken),
-                        url, allowInsecure);
-                connection.init();
-                delegate = connection;
-                this.allowInsecure = allowInsecure; 
-            } catch (IOException e) {
-                // Don't change current allowInsecure but update delegate in
-                // case new exception is more informative.
-                delegate = new InvalidStreamsConnection(e);
-            }
-        }
-        return this.allowInsecure;
+    	return delegate.allowInsecureHosts(allowInsecure);
     }
 
     /**
@@ -130,38 +105,8 @@ public class StreamsConnection {
 
     private static IStreamsConnection createDelegate(String userName,
             String authToken, String url) {
-        IStreamsConnection delegate = null;
-        try {
-            StreamsConnectionImpl connection = new StreamsConnectionImpl(userName,
+        return new StreamsConnectionImpl(userName,
                     StreamsRestUtils.createBasicAuth(userName, authToken),
                     url, false);
-            connection.init();
-            delegate = connection;
-        } catch (Exception e) {
-            delegate = new InvalidStreamsConnection(e);
-        }
-        return delegate;
-    }
-
-    // Since the original class never threw on exception on creation, we need a
-    // dummy class that will throw on use.
-    static class InvalidStreamsConnection implements IStreamsConnection {
-        private final static String MSG = "Invalid Streams connection";
-
-        private final Exception exception;
-
-        InvalidStreamsConnection(Exception e) {
-            exception = e;
-        }
-
-        @Override
-        public Instance getInstance(String instanceId) throws IOException {
-            throw new RESTException(MSG, exception);
-        }
-
-        @Override
-        public List<Instance> getInstances() throws IOException {
-            throw new RESTException(MSG, exception);
-        }
     }
 }

@@ -4,7 +4,6 @@
  */
 package com.ibm.streamsx.rest;
 
-import static com.ibm.streamsx.rest.StreamsRestUtils.MEMBER_PASSWORD;
 import static com.ibm.streamsx.rest.StreamsRestUtils.MEMBER_USERID;
 
 import java.io.IOException;
@@ -36,7 +35,7 @@ class StreamingAnalyticsConnectionV1 extends AbstractStreamingAnalyticsConnectio
     StreamingAnalyticsConnectionV1(
     		StreamingAnalyticsServiceV1 service,
             String resourcesUrl, boolean allowInsecure)
-            throws IOException {
+             {
         super(service, resourcesUrl, allowInsecure);
     }
 
@@ -76,7 +75,6 @@ class StreamingAnalyticsConnectionV1 extends AbstractStreamingAnalyticsConnectio
                 new StreamingAnalyticsConnectionV1(actualService,
                 streamsResourcesUrl, allowInsecure);
         connection.baseConsoleURL = StreamsRestUtils.getRequiredMember(sasResources, "streams_console_url");
-        connection.init();
         return connection;
     }
 }

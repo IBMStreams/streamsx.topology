@@ -33,7 +33,7 @@ abstract class AbstractStreamingAnalyticsConnection
     AbstractStreamingAnalyticsConnection(
     		AbstractStreamingAnalyticsService service,
             String resourcesUrl, boolean allowInsecure)
-            throws IOException {
+            {
         super(resourcesUrl, allowInsecure);
         this.service = service;
     }
@@ -95,7 +95,7 @@ abstract class AbstractStreamingAnalyticsConnection
     }
 
     @Override
-    Result<Job, JsonObject> submitJob(ApplicationBundle bundle, JsonObject jco) throws IOException {
-    	throw new UnsupportedOperationException();
+    Result<Job, JsonObject> submitJob(ApplicationBundle bundle, JsonObject jco) throws IOException {    	
+    	return service.submitJob(((FileBundle) bundle).bundleFile(), jco);
     }
 }
