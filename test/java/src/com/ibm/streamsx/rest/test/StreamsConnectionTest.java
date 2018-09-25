@@ -115,7 +115,6 @@ public class StreamsConnectionTest {
 		TStream<Integer> sourceDouble = source.map(doubleNumber());
 		sourceDouble.invocationName("IntegerTransformInteger");
 		sourceDouble.colocate(source);
-		@SuppressWarnings("unused")
 		TStream<Integer> sourceDoubleAgain = sourceDouble.isolate().map(doubleNumber());
 		sourceDoubleAgain.invocationName("ZIntegerTransformInteger");
 
@@ -223,8 +222,6 @@ public class StreamsConnectionTest {
     }
 
     private void validateOperators() throws Exception {
-    	setupJob();
-
         List<Operator> operators = job.getOperators();
 
         // there should be 3 operators for this test, ordered by name
@@ -461,7 +458,6 @@ public class StreamsConnectionTest {
         assertSame(rai, ra.getInstance());
         
         Resource r = ra.getResource();
-        System.out.println("DDDD:RESOURCE:" + r.getDisplayName());
         assertNotNull(r.getId());
         assertNotNull(r.getDisplayName());
         assertNotNull(r.getIpAddress());       
