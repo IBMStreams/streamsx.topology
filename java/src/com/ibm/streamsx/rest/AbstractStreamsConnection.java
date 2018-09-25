@@ -18,7 +18,7 @@ import com.google.gson.annotations.Expose;
 /**
  * Connection to IBM Streams instance
  */
-abstract class AbstractStreamsConnection implements IStreamsConnection {
+abstract class AbstractStreamsConnection {
 
     private static final String INSTANCES_RESOURCE_NAME = "instances";
 
@@ -65,7 +65,6 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
         this.executor = StreamsRestUtils.createExecutor(allowInsecure);
     }
     
-    @Override
     public boolean allowInsecureHosts(boolean allowInsecure) {
     	this.executor = StreamsRestUtils.createExecutor(allowInsecure);
     	return allowInsecure;
@@ -93,7 +92,6 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
     /* (non-Javadoc)
      * @see com.ibm.streamsx.rest.StreamsConnection#getInstances()
      */
-    @Override
     public List<Instance> getInstances() throws IOException {
         return Instance.createInstanceList(this, getInstancesURL());
     }
@@ -101,7 +99,6 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
     /* (non-Javadoc)
      * @see com.ibm.streamsx.rest.StreamsConnection#getInstance(java.lang.String)
      */
-    @Override
     public Instance getInstance(String instanceId) throws IOException {
         Instance si = null;
         if ("".equals(instanceId)) {
