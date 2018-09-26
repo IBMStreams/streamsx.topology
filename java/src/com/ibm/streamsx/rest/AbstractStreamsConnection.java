@@ -100,23 +100,19 @@ abstract class AbstractStreamsConnection {
      * @see com.ibm.streamsx.rest.StreamsConnection#getInstance(java.lang.String)
      */
     public Instance getInstance(String instanceId) throws IOException {
-        Instance si = null;
-        if ("".equals(instanceId)) {
-            // should add some fallback code to see if there's only one instance
-            throw new IllegalArgumentException("Missing instance id");
+        if (instanceId.isEmpty()) {
+            throw new IllegalArgumentException("Empty instance id");
         } else {
             String query = getInstancesURL() + "?id=" + instanceId;
 
             List<Instance> instances = Instance.createInstanceList(this, query);
             if (instances.size() == 1) {
                 // Should find one or none
-                si = instances.get(0);
+                return instances.get(0);
             } else {
-                throw new RESTException(404, "No single instance with id " + instanceId);
+                throw new RESTException(404, "No instance with id " + instanceId);
             }
-
         }
-        return si;
     }
     
     private String getInstancesURL() throws IOException {
