@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.rest;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -90,8 +92,8 @@ public class StreamsConnection {
      * @return a single {@link Instance}
      * @throws IOException
      */
-    public Instance getInstance(String instanceId) throws IOException {
-        return delegate().getInstance(instanceId);
+    public Instance getInstance(String instanceId) throws IOException {   	
+        return delegate().getInstance(requireNonNull(instanceId));
     }
 
     /**

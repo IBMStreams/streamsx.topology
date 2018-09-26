@@ -57,7 +57,11 @@ public class StreamsConnectionTest {
             testType = "DISTRIBUTED";
 
             instanceName = System.getenv("STREAMS_INSTANCE_ID");
-            System.out.println("InstanceName: " + instanceName);
+            if (instanceName == null)
+                System.out.println("InstanceName: " + instanceName);
+            else
+            	System.out.println("InstanceName: assumng single instance");
+            	
 
             connection = StreamsConnection.createInstance(null, null, null);
 
@@ -70,7 +74,13 @@ public class StreamsConnectionTest {
         setupConnection();
 
         if (instance == null) {
-            instance = connection.getInstance(instanceName);
+			if (instanceName != null) {
+				instance = connection.getInstance(instanceName);
+			} else {
+				List<Instance> instances = connection.getInstances();
+				assertEquals(1, instances.size());
+				instance = instances.get(0);
+			}
             // don't continue if the instance isn't started
             assumeTrue(instance.getStatus().equals("running"));
         }
