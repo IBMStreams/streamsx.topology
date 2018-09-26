@@ -86,7 +86,7 @@ public class StreamsOnlyConnectionTest {
         // there should be at least one instance
         assertTrue(instances.size() > 0);
         
-        Instance i2
+        Instance i2;
         String instanceName = System.getenv("STREAMS_INSTANCE_ID");
         if (instanceName != null) {
 
