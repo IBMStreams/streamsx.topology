@@ -91,11 +91,12 @@ public class StreamsConnectionTest {
         instance.refresh();
         
         Domain domain = instance.getDomain();
-        assertNotNull(domain);
-        assertNotNull(domain.getId());
-        assertNotNull(domain.getZooKeeperConnectionString());
-        assertNotNull(domain.getCreationUser());
-        assertTrue(domain.getCreationTime() <= instance.getCreationTime());
+		if (domain != null) {
+			assertNotNull(domain.getId());
+			assertNotNull(domain.getZooKeeperConnectionString());
+			assertNotNull(domain.getCreationUser());
+			assertTrue(domain.getCreationTime() <= instance.getCreationTime());
+		}
         
         checkResourceAllocations(instance.getResourceAllocations(), false);
     }

@@ -256,14 +256,14 @@ public class Instance extends Element {
     /**
      * Get the Streams domain for this instance.
      * 
-     * @return Domain for this instance.
+     * @return Domain for this instance.ull if no domain is associated with an instance.
      * 
      * @throws IOException Error communicating with REST api.
      * 
      * @since 1.8
      */
     public Domain getDomain() throws IOException {
-        if (_domain == null) {
+        if (_domain == null && domain != null) {
             _domain = create(connection(), domain, Domain.class);
         }
         return _domain;

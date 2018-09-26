@@ -86,13 +86,18 @@ public class StreamsOnlyConnectionTest {
         // there should be at least one instance
         assertTrue(instances.size() > 0);
         
+        Instance i2
         String instanceName = System.getenv("STREAMS_INSTANCE_ID");
+        if (instanceName != null) {
 
-        Instance i2 = connection.getInstance(instanceName);
-        assertEquals(instanceName, i2.getId());
-
-        i2.refresh();
-        assertEquals(instanceName, i2.getId());
+            i2 = connection.getInstance(instanceName);
+            assertEquals(instanceName, i2.getId());
+            
+            i2.refresh();
+            assertEquals(instanceName, i2.getId());
+        } else {
+        	i2 = instances.get(0);
+        }
         
         List<ProcessingElement> instancePes = i2.getPes();
         for (ProcessingElement pe : instancePes) {
