@@ -86,6 +86,8 @@ public abstract class Element {
             final AbstractStreamsConnection sc, String uri,
             Class<E> elementClass) throws IOException {
         
+    	if (uri == null)
+    		return null;
         return createFromResponse(sc, sc.getResponseString(uri), elementClass);
     }
     

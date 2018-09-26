@@ -437,6 +437,8 @@ public class StreamsConnectionTest {
     }
 
     private static void checkResourceAllocation(ResourceAllocation ra, boolean app) throws IOException {
+    	if (ra == null)
+    		return;
         assertEquals("resourceAllocation", ra.getResourceType());
         if (app)
             assertTrue(ra.isApplicationResource());

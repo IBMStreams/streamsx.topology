@@ -263,7 +263,7 @@ public class Instance extends Element {
      * @since 1.8
      */
     public Domain getDomain() throws IOException {
-        if (_domain == null && domain != null) {
+        if (_domain == null) {
             _domain = create(connection(), domain, Domain.class);
         }
         return _domain;
