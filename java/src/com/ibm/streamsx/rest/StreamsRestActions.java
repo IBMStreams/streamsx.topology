@@ -41,6 +41,9 @@ class StreamsRestActions {
 		JsonObject body = new JsonObject();
 		body.addProperty("application", appId);
 		body.addProperty("preview", false);
+		
+		// TODO: Temp work around bug for empty JCO.
+		if (!jco.entrySet().isEmpty())
 		body.add("jobConfigurationOverlay", jco);
 		
 		final AbstractStreamsConnection conn = bundle.instance().connection();
