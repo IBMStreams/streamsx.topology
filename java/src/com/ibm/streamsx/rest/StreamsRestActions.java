@@ -4,6 +4,7 @@ import static com.ibm.streamsx.rest.StreamsRestUtils.requestGsonResponse;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 
 import org.apache.http.auth.AUTH;
 import org.apache.http.client.fluent.Request;
@@ -44,6 +45,8 @@ class StreamsRestActions {
 		
 		final AbstractStreamsConnection conn = bundle.instance().connection();
 		
+		System.err.println(new Date() + " SUBMIT_JOB:" + jco);
+		
 		Request postBundle = Request.Post(bundle.instance().self() + "/jobs");
 		postBundle.addHeader(AUTH.WWW_AUTH_RESP, conn.getAuthorization());
 		postBundle.body(new StringEntity(body.toString(), ContentType.APPLICATION_JSON));		
@@ -52,7 +55,8 @@ class StreamsRestActions {
 		
 		Job job = Job.create(bundle.instance(), response.toString());
 		
-		System.err.println("JOB_SUBMITTED:" + job.getId() + " -- " +job.getName());
+		
+		System.err.println(new Date() + " JOB_SUBMITTED:" + job.getId() + " -- " +job.getName());
 
 		return new ResultImpl<Job, JsonObject>(true, job.getId(),
 				() -> job, new JsonObject());
@@ -64,7 +68,7 @@ class StreamsRestActions {
     	Request deleteJob = Request.Delete(instance.self() + "/jobs/" + jobId);
     	Response response = instance.connection().executor.execute(deleteJob);
     	
-    	System.err.println("JOB_CANCELED:" + jobId + " -- " + response.returnResponse().getStatusLine().getStatusCode());
+    	System.err.println(new Date() + " JOB_CANCELED:" + jobId + " -- " + response.returnResponse().getStatusLine().getStatusCode());
     	// TODO - error handling
     	return true;
     }
