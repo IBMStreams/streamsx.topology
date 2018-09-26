@@ -124,6 +124,9 @@ public abstract class Element {
     final static <E extends Element, A extends ElementArray<E>> List<E> createList(
             AbstractStreamsConnection sc,
             String uri, Class<A> arrayClass) throws IOException {
+    	// Assume not supported if no associated URI.
+    	if (uri == null)
+    		return Collections.emptyList();
         try {
             A array = gson.fromJson(sc.getResponseString(uri), arrayClass);
             for (Element e : array.elements()) {

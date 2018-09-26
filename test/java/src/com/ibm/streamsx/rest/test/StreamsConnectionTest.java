@@ -57,7 +57,7 @@ public class StreamsConnectionTest {
             testType = "DISTRIBUTED";
 
             instanceName = System.getenv("STREAMS_INSTANCE_ID");
-            if (instanceName == null)
+            if (instanceName != null)
                 System.out.println("InstanceName: " + instanceName);
             else
             	System.out.println("InstanceName: assumng single instance");
