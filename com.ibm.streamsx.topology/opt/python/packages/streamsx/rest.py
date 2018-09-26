@@ -100,7 +100,13 @@ class StreamsConnection:
         self.rest_client._sc = self
         self.session = self.rest_client.session
         self._analytics_service = False
-        self._delegator = _streams_delegator(self)
+        self._delegator_impl = None
+
+    @property
+    def _delegator(self):
+        if self._delegator_impl is None:
+            self._delegator_impl = _streams_delegator(self)
+        return self._delegator_impl
 
     @property
     def resource_url(self):
@@ -228,7 +234,7 @@ class StreamingAnalyticsConnection(StreamsConnection):
         self.session = self.rest_client.session
         self._analytics_service = True
         self._sas = StreamingAnalyticsService(self.rest_client, self.credentials)
-        self._delegator = self._sas._delegator
+        self._delegator_impl = self._sas._delegator
 
     @staticmethod
     def of_definition(service_def):

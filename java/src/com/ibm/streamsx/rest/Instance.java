@@ -35,8 +35,7 @@ public class Instance extends Element {
     private long creationTime;
     @Expose
     private String creationUser;
-    @Expose
-    private String domain;
+    @Expose String domain;
     @Expose
     private String exportedStreams;
     @Expose

@@ -1977,7 +1977,10 @@ class _FileBundle(ApplicationBundle):
 # _cancel_job - Cancel a running job
 
 def _streams_delegator(sc):
-    return _StreamsV4Delegator(sc.rest_client)
+    root_resources = sc.rest_client.make_request(sc.resource_url)
+    if 'domains' in root_resources:
+        return _StreamsV4Delegator(sc.rest_client)
+    return _StreamsRestDelegator(sc.rest_client)
 
 class _StreamsV4Delegator(object):
     """Delegator for a IBM Streams 4.2/4.3 instance.
@@ -1997,3 +2000,55 @@ class _StreamsV4Delegator(object):
         if st._has_local_install:
             return st._cancel_job(job.id, force)
         return False
+
+class _UploadedBundle(ApplicationBundle):
+    def _app_id(self):
+        app_id = self.application
+        if app_id is None:
+            self.refresh()
+            app_id = self.application
+
+        # One time use only
+        self.json_rep['application'] = None
+        return app_id
+
+class _StreamsRestDelegator(object):
+    """Delegator for IBM Streams instances where the
+       Streams REST API provides actions.
+    """
+    def __init__(self, rest_client):
+        self.rest_client = rest_client
+
+    def _upload_bundle(self, instance, bundle):
+        app_bundle_url = instance.self + '/applicationbundles'
+
+        sab_name = os.path.basename(bundle)
+        with open(bundle, 'rb') as bundle_fp:
+            res = self.rest_client.session.post(app_bundle_url,
+                headers = {'Authorization' : self.rest_client._get_authorization(), 'Accept' : 'application/json', 'Content-Type': 'application/x-jar'},
+                data=bundle_fp)
+            self.rest_client.handle_http_errors(res)
+            if res.status_code != 201:
+                raise ValueError(str(res))
+            location = res.headers['Location']
+            json_rep = self.rest_client.make_request(location)
+            return _UploadedBundle(self, instance, json_rep, self.rest_client)
+
+    def _submit_bundle(self, bundle, job_config):
+        job_options = job_config.as_overlays() if job_config else {}
+        app_id = bundle._app_id()
+        res = self.rest_client.session.post(bundle._instance.jobs,
+           headers = {'Authorization' : self.rest_client._get_authorization(), 'Accept' : 'application/json'}, json={'application': app_id, 'jobConfigurationOverlay':job_options, 'preview':False})
+        self.rest_client.handle_http_errors(res)
+        if res.status_code != 201:
+            raise ValueError(str(res))
+        location = res.headers['Location']
+        job = Job({'self': location}, self.rest_client)
+        job.refresh()
+        return job.id
+
+    def _cancel_job(self, job, force):
+        cancel_url = job.instance + '/jobs/' + job.id
+        res = self.rest_client.session.delete(cancel_url,
+                headers = {'Authorization' : self.rest_client._get_authorization(), 'Accept' : 'application/json'})
+        #TODO return code

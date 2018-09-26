@@ -1,5 +1,6 @@
 package com.ibm.streamsx.rest;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 
@@ -23,9 +24,20 @@ class StreamsConnectionImpl extends AbstractStreamsConnection {
     String getAuthorization() {
         return authorization;
     }
+    
+    @Override
+    ApplicationBundle uploadBundle(Instance instance, File bundle) throws IOException {
+    	if (instance.domain == null)
+    		return StreamsRestActions.uploadBundle(instance, bundle);
+
+    	return super.uploadBundle(instance, bundle);
+    }
 
     @Override
     boolean cancelJob(Instance instance, String jobId) throws IOException {
+    	
+    	if (instance.domain == null)
+    		return StreamsRestActions.cancelJob(instance, jobId);
 
         InvokeCancel cancelJob = new InvokeCancel(
                 instance.getDomain().getId(), instance.getId(),
@@ -40,12 +52,15 @@ class StreamsConnectionImpl extends AbstractStreamsConnection {
 
 	@Override
 	Result<Job, JsonObject> submitJob(ApplicationBundle bundle, JsonObject jco) throws IOException {
-		InvokeSubmit submit = new InvokeSubmit(((FileBundle)bundle).bundleFile());
 		
 		if (jco == null)
 			jco = new JsonObject();
 		
-		//JsonObject deploy = new JsonObject();
+    	if (bundle.instance().domain == null)
+    		return StreamsRestActions.submitJob(bundle, jco);
+		
+		InvokeSubmit submit = new InvokeSubmit(((FileBundle)bundle).bundleFile());
+		
 		BigInteger jobId;
 		try {
 			jobId = submit.invoke(jco);
@@ -62,9 +77,5 @@ class StreamsConnectionImpl extends AbstractStreamsConnection {
 		
 		return new ResultImpl<Job, JsonObject>(true, jobIds,
 				() -> instance.getJob(jobIds), new JsonObject());
-		
-		
-		// TODO Auto-generated method stub
-		// throw new UnsupportedOperationException();
 	}
 }
