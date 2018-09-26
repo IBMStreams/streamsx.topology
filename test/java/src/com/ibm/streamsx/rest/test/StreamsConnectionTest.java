@@ -52,15 +52,6 @@ public class StreamsConnectionTest {
     public StreamsConnectionTest() {
     }
 
-    static String getStreamsPort() {
-        String streamsPort = System.getenv("STREAMS_INSTANCE_PORT");
-        if ((streamsPort == null) || streamsPort.isEmpty()) {
-            // if port not specified, assume default one
-            streamsPort = "8443";
-        }
-        return streamsPort;
-    }
-
     protected void setupConnection() throws Exception {
         if (connection == null) {
             testType = "DISTRIBUTED";
@@ -68,12 +59,7 @@ public class StreamsConnectionTest {
             instanceName = System.getenv("STREAMS_INSTANCE_ID");
             System.out.println("InstanceName: " + instanceName);
 
-            String streamsPort = getStreamsPort();
-            System.out.println("streamsPort: " + streamsPort);
-
-
-            String restUrl = "https://localhost:" + streamsPort + "/streams/rest/resources";
-            connection = StreamsConnection.createInstance(null, null, restUrl);
+            connection = StreamsConnection.createInstance(null, null, null);
 
             // for localhost, need to disable security
             connection.allowInsecureHosts(true);
