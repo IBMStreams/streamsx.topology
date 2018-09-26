@@ -51,15 +51,20 @@ class StreamsRestActions {
 		JsonObject response = requestGsonResponse(conn.executor, postBundle);
 		
 		Job job = Job.create(bundle.instance(), response.toString());
+		
+		System.err.println("JOB_SUBMITTED:" + job.getId() + " -- " +job.getName());
 
 		return new ResultImpl<Job, JsonObject>(true, job.getId(),
 				() -> job, new JsonObject());
 	}
 	
     static boolean cancelJob(Instance instance, String jobId) throws IOException {
+    	System.err.println("CANCELJOB:" + jobId);
     	
     	Request deleteJob = Request.Delete(instance.self() + "/jobs/" + jobId);
     	Response response = instance.connection().executor.execute(deleteJob);
+    	
+    	System.err.println("JOB_CANCELED:" + jobId + " -- " + response.returnResponse().getStatusLine().getStatusCode());
     	// TODO - error handling
     	return true;
     }
