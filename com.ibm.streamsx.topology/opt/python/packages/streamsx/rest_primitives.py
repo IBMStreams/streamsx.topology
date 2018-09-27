@@ -1978,7 +1978,13 @@ class _FileBundle(ApplicationBundle):
 
 def _streams_delegator(sc):
     root_resources = sc.rest_client.make_request(sc.resource_url)
-    if 'domains' in root_resources:
+    has_domains = False
+    for resource in root_resources['resources']:
+        if resource['name'] == 'domains':
+            has_domains = True
+            break
+  
+    if has_domains:
         return _StreamsV4Delegator(sc.rest_client)
     return _StreamsRestDelegator(sc.rest_client)
 
