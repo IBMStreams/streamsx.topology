@@ -1998,13 +1998,15 @@ class _StreamsV4Delegator(object):
         return _FileBundle(self, instance, bundle, {'self':None}, self.rest_client)
 
     def _submit_bundle(self, bundle, job_config):
-        return streamsx.st._submit_bundle(bundle._bundle_path, job_config)
+        return streamsx.st._submit_bundle(bundle._bundle_path, job_config,
+            domain_id=bundle._instance.get_domain().id, instance_id=bundle._instance.id)
 
     def _cancel_job(self, job, force):
         """Cancel job using streamtool."""
         import streamsx.st as st
         if st._has_local_install:
-            return st._cancel_job(job.id, force)
+            return st._cancel_job(job.id, force,
+                domain_id=job.get_instance().get_domain().id, instance_id=job.get_instance().id)
         return False
 
 class _UploadedBundle(ApplicationBundle):
