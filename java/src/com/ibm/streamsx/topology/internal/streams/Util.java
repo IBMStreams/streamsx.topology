@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.internal.streams;
 
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static java.lang.Math.min;
+import static java.util.Objects.requireNonNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -90,6 +91,13 @@ public class Util {
             throws IllegalStateException {
         getDefaultDomainId();
         getDefaultInstanceId();
+    }
+    
+    static void addDomainInstanceArgs(List<String> commands, String domainId, String instanceId) {
+    	commands.add("--domain-id");
+    	commands.add(requireNonNull(domainId));
+    	commands.add("--instance-id");
+    	commands.add(requireNonNull(instanceId));
     }
     
     public static String getDefaultDomainId() {

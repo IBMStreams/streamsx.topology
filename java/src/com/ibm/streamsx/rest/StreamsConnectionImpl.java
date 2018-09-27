@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.streams.InvokeCancel;
 import com.ibm.streamsx.topology.internal.streams.InvokeSubmit;
 
@@ -63,8 +64,8 @@ class StreamsConnectionImpl extends AbstractStreamsConnection {
 		
 		BigInteger jobId;
 		try {
-			jobId = submit.invoke(jco);
-			System.out.println("SUBMITTED:" +jobId);
+			jobId = submit.invoke(jco,
+					bundle.instance().getDomain().getId(), bundle.instance().getId());
 		} catch (IOException e) {
 			throw e;
 		} catch (Exception e) {
@@ -75,7 +76,10 @@ class StreamsConnectionImpl extends AbstractStreamsConnection {
 		
 		Instance instance = bundle.instance();
 		
+		JsonObject response = new JsonObject();
+		response.addProperty(SubmissionResultsKeys.JOB_ID, jobIds);
+		
 		return new ResultImpl<Job, JsonObject>(true, jobIds,
-				() -> instance.getJob(jobIds), new JsonObject());
+				() -> instance.getJob(jobIds), response);
 	}
 }

@@ -8,6 +8,7 @@ import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deplo
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
 
 import java.io.File;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -33,11 +34,33 @@ public class DistributedStreamsContext extends
     public DistributedStreamsContext() {
         super(false);
     }
+    
+    public boolean useRestApi() {
+    	return useRestApi.get();
+    }
 
     @Override
     public Type getType() {
         return Type.DISTRIBUTED;
     }
+    
+    public synchronized Instance instance() throws IOException {
+    	if (!useRestApi())
+    		throw new IllegalStateException(/*internal error*/);
+
+		if (instance == null) {
+			StreamsConnection conn = StreamsConnection.createInstance(null, null, null);
+			// TODO - allow setting of insecure hosts - for testing now hardcode as false
+			conn.allowInsecureHosts(true);
+			
+			String instanceName = System.getenv(Util.STREAMS_INSTANCE_ID);
+			if (instanceName == null)
+			    instance = conn.getInstances().get(0);
+			else
+				instance = conn.getInstance(instanceName);
+		}
+		return instance;
+	}
     
     @Override
     protected void preSubmit(AppEntity entity) {
@@ -55,13 +78,13 @@ public class DistributedStreamsContext extends
     @Override
     Future<BigInteger> invoke(AppEntity entity, File bundle) throws Exception {
     	
-    	if (useRestApi.get())
+    	if (useRestApi())
     		return EXECUTOR.submit(() -> invokeUsingRest(entity, bundle));
 
         try {
             InvokeSubmit submitjob = new InvokeSubmit(bundle);
 
-            BigInteger jobId = submitjob.invoke(deploy(entity.submission));
+            BigInteger jobId = submitjob.invoke(deploy(entity.submission), null, null);
             
             final JsonObject submissionResult = GsonUtilities.objectCreate(entity.submission, RemoteContext.SUBMISSION_RESULTS);
             submissionResult.addProperty(SubmissionResultsKeys.JOB_ID, jobId.toString());
@@ -73,16 +96,11 @@ public class DistributedStreamsContext extends
         }
     }
     
-    private BigInteger invokeUsingRest(AppEntity entity, File bundle) throws Exception {
-		synchronized (this) {
-			if (instance == null) {
-				StreamsConnection conn = StreamsConnection.createInstance(null, null, null);
-				// TODO - allow setting of insecure hosts - for testing now hardcode as false
-				conn.allowInsecureHosts(true);
-				instance = conn.getInstances().get(0);
-			}
-		}
-    	Result<Job, JsonObject> result = instance.submitJob(bundle, deploy(entity.submission));
+    protected BigInteger invokeUsingRest(AppEntity entity, File bundle) throws Exception {
+
+    	Result<Job, JsonObject> result = instance().submitJob(bundle, deploy(entity.submission));
+    	
+    	entity.submission.add( RemoteContext.SUBMISSION_RESULTS, result.getRawResult());
     	
     	return new BigInteger(result.getId());
     }

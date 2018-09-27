@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.tester;
 
+import static com.ibm.streamsx.topology.internal.context.remote.RemoteBuildAndSubmitRemoteContext.streamingAnalyticServiceFromDeploy;
 import static com.ibm.streamsx.topology.internal.tester.TesterRuntime.TestState.NO_PROGRESS;
 import static com.ibm.streamsx.topology.internal.tester.TesterRuntime.TestState.PROGRESS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -25,6 +26,7 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.function.Predicate;
+import com.ibm.streamsx.topology.internal.context.streams.DistributedTester;
 import com.ibm.streamsx.topology.internal.tester.TesterRuntime.TestState;
 import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
@@ -171,22 +173,28 @@ public class ConditionTesterImpl implements Tester {
      * Graph finalization time.
      */
 
-    public void finalizeGraph(StreamsContext.Type contextType) throws Exception {
+    public void finalizeGraph(StreamsContext<?> context) throws Exception {
                 
         if (handlers.isEmpty() && conditions.isEmpty())
             return;
 
         synchronized (this) {
-            switch (contextType) {
+            switch (context.getType()) {
             case EMBEDDED_TESTER:
                 runtime = new EmbeddedTesterRuntime(this);
                 break;
             case DISTRIBUTED_TESTER:
+            	if (((DistributedTester) context).useRestApi()) {
+            		runtime = new RESTTesterRuntime(this,
+            				deployment -> () -> ((DistributedTester) context).instance());
+            		break;
+            	}
             case STANDALONE_TESTER:
-                runtime = new TCPTesterRuntime(contextType, this);
+                runtime = new TCPTesterRuntime(context.getType(), this);
                 break;
             case STREAMING_ANALYTICS_SERVICE_TESTER:
-                runtime = new RESTTesterRuntime(this);
+                runtime = new RESTTesterRuntime(this,
+                		deployment -> () -> streamingAnalyticServiceFromDeploy(deployment).getInstance());
                 break;
             default: // nothing to do
                 return;
@@ -222,7 +230,7 @@ public class ConditionTesterImpl implements Tester {
         if (context.getType() != Type.EMBEDDED_TESTER)
             totalWait += SECONDS.toMillis(30); // allow extra time for execution setup              
         
-        Future<?> future = context.submit(topology, config);
+        Future<?> jobSubmission = context.submit(topology, config);
         
         final long start = System.currentTimeMillis();
         
@@ -230,7 +238,7 @@ public class ConditionTesterImpl implements Tester {
         boolean seenValid = false;
         while (state == null || (System.currentTimeMillis() - start) < totalWait) {
             
-            state = getRuntime().checkTestState(context, config, future, endCondition);
+            state = getRuntime().checkTestState(context, config, jobSubmission, endCondition);
             switch (state) {
             case NOT_READY:
                 continue;
@@ -266,7 +274,7 @@ public class ConditionTesterImpl implements Tester {
             Topology.TOPOLOGY_LOGGER.warning(topology.getName() + " timed out waiting for condition");           
         }
         
-        getRuntime().shutdown(future);
+        getRuntime().shutdown(jobSubmission);
               
         return endCondition.valid();
     }

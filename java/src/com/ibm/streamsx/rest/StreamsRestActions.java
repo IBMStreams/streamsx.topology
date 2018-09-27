@@ -14,6 +14,7 @@ import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 
 class StreamsRestActions {
 	
@@ -45,8 +46,6 @@ class StreamsRestActions {
 		
 		final AbstractStreamsConnection conn = bundle.instance().connection();
 		
-		System.err.println(new Date() + " SUBMIT_JOB:" + jco);
-		
 		Request postBundle = Request.Post(bundle.instance().self() + "/jobs");
 		postBundle.addHeader(AUTH.WWW_AUTH_RESP, conn.getAuthorization());
 		postBundle.body(new StringEntity(body.toString(), ContentType.APPLICATION_JSON));		
@@ -55,20 +54,17 @@ class StreamsRestActions {
 		
 		Job job = Job.create(bundle.instance(), response.toString());
 		
-		
-		System.err.println(new Date() + " JOB_SUBMITTED:" + job.getId() + " -- " +job.getName());
+		if (!response.has(SubmissionResultsKeys.JOB_ID))
+			response.addProperty(SubmissionResultsKeys.JOB_ID, job.getId());
 
 		return new ResultImpl<Job, JsonObject>(true, job.getId(),
-				() -> job, new JsonObject());
+				() -> job, response);
 	}
 	
     static boolean cancelJob(Instance instance, String jobId) throws IOException {
-    	System.err.println("CANCELJOB:" + jobId);
-    	
     	Request deleteJob = Request.Delete(instance.self() + "/jobs/" + jobId);
     	Response response = instance.connection().executor.execute(deleteJob);
     	
-    	System.err.println(new Date() + " JOB_CANCELED:" + jobId + " -- " + response.returnResponse().getStatusLine().getStatusCode());
     	// TODO - error handling
     	return true;
     }
