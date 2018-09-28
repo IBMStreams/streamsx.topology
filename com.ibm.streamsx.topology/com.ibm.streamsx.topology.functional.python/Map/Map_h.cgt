@@ -1,6 +1,7 @@
 @include "../../opt/python/codegen/py_pystateful.cgt"
 @include "../../opt/python/codegen/py_state.cgt"
 
+#include "splpy.h"
 #include "splpy_funcop.h"
 
 using namespace streamsx::topology;
