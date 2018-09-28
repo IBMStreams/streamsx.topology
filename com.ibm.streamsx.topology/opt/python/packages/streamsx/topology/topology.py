@@ -473,7 +473,7 @@ class Topology(object):
         sl = _SourceLocation(_source_info(), "source")
         _name = self.graph._requested_name(_name, action='source', func=func)
         # source is always stateful
-        op = self.graph.addOperator(self.opnamespace+"::Source", func, name=_name, sl=sl, stateful=True)
+        op = self.graph.addOperator(self.opnamespace+"::Source", func, name=_name, sl=sl)
         op._layout(kind='Source', name=_name, orig_name=name)
         oport = op.addOutputPort(name=_name)
         return Stream(self, oport)._make_placeable()

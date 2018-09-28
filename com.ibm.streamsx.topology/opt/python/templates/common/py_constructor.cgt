@@ -18,10 +18,6 @@
     if (splpy_OperatorCallable() eq 'class') {
 %>
    { 
-     // The callable is a class, so there may be state that can be saved
-     // and restored for checkpointing.
-     this->pyop_->setStateful(true);
-
      // Pass all the arguments by name in a dictionary
      // object, effectively as **kwargs. Python will
      // unpack correctly to the actual __init__ args

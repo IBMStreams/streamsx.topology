@@ -2,6 +2,11 @@
  * # Licensed Materials - Property of IBM
  * # Copyright IBM Corp. 2017
  */
+<%
+require "splpy_operator.pm";
+my $pyStateful = splpy_OperatorCallable() eq 'class';
+%>
+@include "../../opt/.__splpy/common/py_state.cgt"
 
 #include "splpy_pyop.h"
 

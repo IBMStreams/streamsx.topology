@@ -1,4 +1,4 @@
-@include "../../opt/python/codegen/py_pystateful.cgt"
+<% my $pyStateful = 1; %>
 @include "../../opt/python/codegen/py_state.cgt"
 
 #include "splpy.h"

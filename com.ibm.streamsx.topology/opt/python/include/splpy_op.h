@@ -183,7 +183,11 @@ class SplpyOp {
        * Is this operator stateful for checkpointing?  Derived classes
        * must override this to support checkpointing.
        */
-      virtual bool isStateful () { return false; }
+#ifdef SPLPY_OP_STATEFUL
+      bool isStateful () { return true; }
+#else
+      bool isStateful () { return false; }
+#endif
 
       /**
        * Register a state handler for the operator.  The state handler

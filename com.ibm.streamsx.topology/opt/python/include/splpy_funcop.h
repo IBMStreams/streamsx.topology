@@ -107,10 +107,6 @@ class SplpyFuncOp : public SplpyOp {
           setup();
       }
 
-      virtual bool isStateful() {
-        return static_cast<SPL::boolean>(op()->getParameterValues("pyStateful")[0]->getValue());
-      }
- 
       /*
        *  Add any packages in the application directory
        *  to the Python path. The application directory
