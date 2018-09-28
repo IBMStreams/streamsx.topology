@@ -18,7 +18,7 @@ import com.google.gson.annotations.Expose;
 /**
  * Connection to IBM Streams instance
  */
-abstract class AbstractStreamsConnection implements IStreamsConnection {
+abstract class AbstractStreamsConnection {
 
     private static final String INSTANCES_RESOURCE_NAME = "instances";
 
@@ -65,7 +65,6 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
         this.executor = StreamsRestUtils.createExecutor(allowInsecure);
     }
     
-    @Override
     public boolean allowInsecureHosts(boolean allowInsecure) {
     	this.executor = StreamsRestUtils.createExecutor(allowInsecure);
     	return allowInsecure;
@@ -93,7 +92,6 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
     /* (non-Javadoc)
      * @see com.ibm.streamsx.rest.StreamsConnection#getInstances()
      */
-    @Override
     public List<Instance> getInstances() throws IOException {
         return Instance.createInstanceList(this, getInstancesURL());
     }
@@ -101,25 +99,20 @@ abstract class AbstractStreamsConnection implements IStreamsConnection {
     /* (non-Javadoc)
      * @see com.ibm.streamsx.rest.StreamsConnection#getInstance(java.lang.String)
      */
-    @Override
     public Instance getInstance(String instanceId) throws IOException {
-        Instance si = null;
-        if ("".equals(instanceId)) {
-            // should add some fallback code to see if there's only one instance
-            throw new IllegalArgumentException("Missing instance id");
+        if (instanceId.isEmpty()) {
+            throw new IllegalArgumentException("Empty instance id");
         } else {
             String query = getInstancesURL() + "?id=" + instanceId;
 
             List<Instance> instances = Instance.createInstanceList(this, query);
             if (instances.size() == 1) {
                 // Should find one or none
-                si = instances.get(0);
+                return instances.get(0);
             } else {
-                throw new RESTException(404, "No single instance with id " + instanceId);
+                throw new RESTException(404, "No instance with id " + instanceId);
             }
-
         }
-        return si;
     }
     
     private String getInstancesURL() throws IOException {

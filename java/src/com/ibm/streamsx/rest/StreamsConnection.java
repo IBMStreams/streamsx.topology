@@ -4,6 +4,8 @@
  */
 package com.ibm.streamsx.rest;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -13,10 +15,14 @@ import com.ibm.streamsx.topology.internal.streams.Util;
  * Connection to IBM Streams.
  */
 public class StreamsConnection {
-    private IStreamsConnection delegate;
+    private AbstractStreamsConnection delegate;
 
-    StreamsConnection(IStreamsConnection delegate) {
+    StreamsConnection(AbstractStreamsConnection delegate) {
         this.delegate = delegate;
+    }
+    
+    private final AbstractStreamsConnection delegate() {
+    	return this.delegate;
     }
 
     /**
@@ -52,7 +58,7 @@ public class StreamsConnection {
     	if (url == null)
     		url = System.getenv(Util.STREAMS_REST_URL);
     	
-        IStreamsConnection delegate = createDelegate(userName, authToken, url);
+    	AbstractStreamsConnection delegate = createDelegate(userName, authToken, url);
         StreamsConnection sc = new StreamsConnection(delegate);
         return sc;
     }
@@ -74,7 +80,7 @@ public class StreamsConnection {
      *         </ul>
      */
     public boolean allowInsecureHosts(boolean allowInsecure) {
-    	return delegate.allowInsecureHosts(allowInsecure);
+    	return delegate().allowInsecureHosts(allowInsecure);
     }
 
     /**
@@ -86,8 +92,8 @@ public class StreamsConnection {
      * @return a single {@link Instance}
      * @throws IOException
      */
-    public Instance getInstance(String instanceId) throws IOException {
-        return delegate.getInstance(instanceId);
+    public Instance getInstance(String instanceId) throws IOException {   	
+        return delegate().getInstance(requireNonNull(instanceId));
     }
 
     /**
@@ -99,11 +105,11 @@ public class StreamsConnection {
      * @throws IOException
      */
     public List<Instance> getInstances() throws IOException {
-        return delegate.getInstances();
+        return delegate().getInstances();
     }
 
 
-    private static IStreamsConnection createDelegate(String userName,
+    private static AbstractStreamsConnection createDelegate(String userName,
             String authToken, String url) {
         return new StreamsConnectionImpl(userName,
                     StreamsRestUtils.createBasicAuth(userName, authToken),

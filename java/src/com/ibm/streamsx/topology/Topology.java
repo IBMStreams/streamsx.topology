@@ -544,10 +544,10 @@ public class Topology implements TopologyElement {
      * 
      * @throws Exception
      */
-    public void finalizeGraph(StreamsContext.Type contextType) throws Exception {
+    public void finalizeGraph(StreamsContext<?> context) throws Exception {
         
         if (hasTester())
-            tester.finalizeGraph(contextType);
+            tester.finalizeGraph(context);
 
         dependencyResolver.resolveDependencies();
         

@@ -137,7 +137,7 @@ public class StreamTest extends TestTopology {
 
     @Test
     public void testUnion() throws Exception {
-        final Topology topology = newTopology("Union");
+        final Topology topology = newTopology();
         TStream<String> s1 = topology.strings("A1", "B1", "C1", "D1");
         TStream<String> s2 = topology.strings("A2", "B2", "C2", "D2");
         List<String> l3 = new ArrayList<>();
@@ -187,7 +187,7 @@ public class StreamTest extends TestTopology {
 
     @Test
     public void testUnionSet() throws Exception {
-        final Topology topology = newTopology("Union");
+        final Topology topology = newTopology();
         TStream<String> s1 = topology.strings("A1", "B1", "C1");
         TStream<String> s2 = topology.strings("A2", "B2", "C2", "D2");
         TStream<String> s3 = topology.strings("A3", "B3", "C3");
@@ -215,7 +215,7 @@ public class StreamTest extends TestTopology {
     @Test
     public void testSimpleParallel() throws Exception {
 
-        final Topology topology = newTopology("EmbeddedParallel");
+        final Topology topology = newTopology();
         TStream<Number> s1 = topology.numbers(1, 2, 3, 94, 5, 6).parallel(6)
                 .filter(new AllowAll<Number>()).endParallel();
 

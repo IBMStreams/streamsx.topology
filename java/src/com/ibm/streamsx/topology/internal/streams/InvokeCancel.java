@@ -49,15 +49,8 @@ public class InvokeCancel {
         commands.add(sj.getAbsolutePath());
         commands.add("canceljob");
         if (domainId != null)
-        {
-          commands.add("--domain-id");
-          commands.add(domainId);
-        }
-        if (instanceId != null)
-        {
-          commands.add("--instance-id");
-          commands.add(instanceId);
-        }
+        	Util.addDomainInstanceArgs(commands, domainId, instanceId);
+
         if (null != userName)
         {
           commands.add("-U");

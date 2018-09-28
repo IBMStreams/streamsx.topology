@@ -113,7 +113,7 @@ public abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
         
         JsonObject submission = new JsonObject();
         
-        entity.app.finalizeGraph(getType());
+        entity.app.finalizeGraph(this);
         
         JsonObject deploy = new JsonObject();        
         addConfigToDeploy(deploy, entity.config);

@@ -288,10 +288,11 @@ class Tester(object):
         if not 'STREAMS_INSTALL' in os.environ:
             raise unittest.SkipTest("Skipped due to no local IBM Streams install")
 
-        if not 'STREAMS_INSTANCE_ID' in os.environ:
-            raise unittest.SkipTest("Skipped due to STREAMS_INSTANCE_ID environment variable not set")
-        if not 'STREAMS_DOMAIN_ID' in os.environ:
-            raise unittest.SkipTest("Skipped due to STREAMS_DOMAIN_ID environment variable not set")
+        domain_instance_setup = 'STREAMS_INSTANCE_ID' in os.environ and 'STREAMS_DOMAIN_ID' in os.environ
+        rest_setup = 'STREAMS_REST_URL' in os.environ
+
+        if not domain_instance_setup and not rest_setup:
+            raise unittest.SkipTest("Skipped due missing environment variables")
 
         test.test_ctxtype = stc.ContextTypes.DISTRIBUTED
         test.test_config = {}

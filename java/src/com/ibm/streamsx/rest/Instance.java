@@ -35,8 +35,7 @@ public class Instance extends Element {
     private long creationTime;
     @Expose
     private String creationUser;
-    @Expose
-    private String domain;
+    @Expose String domain;
     @Expose
     private String exportedStreams;
     @Expose
@@ -257,7 +256,7 @@ public class Instance extends Element {
     /**
      * Get the Streams domain for this instance.
      * 
-     * @return Domain for this instance.
+     * @return Domain for this instance.ull if no domain is associated with an instance.
      * 
      * @throws IOException Error communicating with REST api.
      * 

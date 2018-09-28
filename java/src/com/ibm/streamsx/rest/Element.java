@@ -12,6 +12,7 @@ import java.util.List;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
@@ -85,10 +86,29 @@ public abstract class Element {
             final AbstractStreamsConnection sc, String uri,
             Class<E> elementClass) throws IOException {
         
-        E element = gson.fromJson(sc.getResponseString(uri), elementClass);
+    	if (uri == null)
+    		return null;
+        return createFromResponse(sc, sc.getResponseString(uri), elementClass);
+    }
+    
+    static final <E extends Element> E createFromResponse(
+            final AbstractStreamsConnection sc, String response,
+            Class<E> elementClass) throws IOException {
+
+        E element = gson.fromJson(response, elementClass);
         element.setConnection(sc);
         return element;
     }
+    
+    static final <E extends Element> E createFromResponse(
+            final AbstractStreamsConnection sc, JsonObject response,
+            Class<E> elementClass) throws IOException {
+
+        E element = gson.fromJson(response, elementClass);
+        element.setConnection(sc);
+        return element;
+    }
+    
     
     /**
      * internal usage to get the list of processing elements
@@ -106,6 +126,9 @@ public abstract class Element {
     final static <E extends Element, A extends ElementArray<E>> List<E> createList(
             AbstractStreamsConnection sc,
             String uri, Class<A> arrayClass) throws IOException {
+    	// Assume not supported if no associated URI.
+    	if (uri == null)
+    		return Collections.emptyList();
         try {
             A array = gson.fromJson(sc.getResponseString(uri), arrayClass);
             for (Element e : array.elements()) {

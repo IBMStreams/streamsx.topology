@@ -52,28 +52,18 @@ public class StreamsConnectionTest {
     public StreamsConnectionTest() {
     }
 
-    static String getStreamsPort() {
-        String streamsPort = System.getenv("STREAMS_INSTANCE_PORT");
-        if ((streamsPort == null) || streamsPort.isEmpty()) {
-            // if port not specified, assume default one
-            streamsPort = "8443";
-        }
-        return streamsPort;
-    }
-
     protected void setupConnection() throws Exception {
         if (connection == null) {
             testType = "DISTRIBUTED";
 
             instanceName = System.getenv("STREAMS_INSTANCE_ID");
-            System.out.println("InstanceName: " + instanceName);
+            if (instanceName != null)
+                System.out.println("InstanceName: " + instanceName);
+            else
+            	System.out.println("InstanceName: assumng single instance");
+            	
 
-            String streamsPort = getStreamsPort();
-            System.out.println("streamsPort: " + streamsPort);
-
-
-            String restUrl = "https://localhost:" + streamsPort + "/streams/rest/resources";
-            connection = StreamsConnection.createInstance(null, null, restUrl);
+            connection = StreamsConnection.createInstance(null, null, null);
 
             // for localhost, need to disable security
             connection.allowInsecureHosts(true);
@@ -84,7 +74,13 @@ public class StreamsConnectionTest {
         setupConnection();
 
         if (instance == null) {
-            instance = connection.getInstance(instanceName);
+			if (instanceName != null) {
+				instance = connection.getInstance(instanceName);
+			} else {
+				List<Instance> instances = connection.getInstances();
+				assertEquals(1, instances.size());
+				instance = instances.get(0);
+			}
             // don't continue if the instance isn't started
             assumeTrue(instance.getStatus().equals("running"));
         }
@@ -95,11 +91,12 @@ public class StreamsConnectionTest {
         instance.refresh();
         
         Domain domain = instance.getDomain();
-        assertNotNull(domain);
-        assertNotNull(domain.getId());
-        assertNotNull(domain.getZooKeeperConnectionString());
-        assertNotNull(domain.getCreationUser());
-        assertTrue(domain.getCreationTime() <= instance.getCreationTime());
+		if (domain != null) {
+			assertNotNull(domain.getId());
+			assertNotNull(domain.getZooKeeperConnectionString());
+			assertNotNull(domain.getCreationUser());
+			assertTrue(domain.getCreationTime() <= instance.getCreationTime());
+		}
         
         checkResourceAllocations(instance.getResourceAllocations(), false);
     }
@@ -115,7 +112,6 @@ public class StreamsConnectionTest {
 		TStream<Integer> sourceDouble = source.map(doubleNumber());
 		sourceDouble.invocationName("IntegerTransformInteger");
 		sourceDouble.colocate(source);
-		@SuppressWarnings("unused")
 		TStream<Integer> sourceDoubleAgain = sourceDouble.isolate().map(doubleNumber());
 		sourceDoubleAgain.invocationName("ZIntegerTransformInteger");
 
@@ -223,8 +219,6 @@ public class StreamsConnectionTest {
     }
 
     private void validateOperators() throws Exception {
-    	setupJob();
-
         List<Operator> operators = job.getOperators();
 
         // there should be 3 operators for this test, ordered by name
@@ -443,6 +437,8 @@ public class StreamsConnectionTest {
     }
 
     private static void checkResourceAllocation(ResourceAllocation ra, boolean app) throws IOException {
+    	if (ra == null)
+    		return;
         assertEquals("resourceAllocation", ra.getResourceType());
         if (app)
             assertTrue(ra.isApplicationResource());
@@ -461,7 +457,6 @@ public class StreamsConnectionTest {
         assertSame(rai, ra.getInstance());
         
         Resource r = ra.getResource();
-        System.out.println("DDDD:RESOURCE:" + r.getDisplayName());
         assertNotNull(r.getId());
         assertNotNull(r.getDisplayName());
         assertNotNull(r.getIpAddress());       

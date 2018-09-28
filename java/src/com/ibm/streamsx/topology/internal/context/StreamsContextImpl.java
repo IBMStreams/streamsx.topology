@@ -5,6 +5,8 @@
 package com.ibm.streamsx.topology.internal.context;
 
 import java.util.Collections;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import com.google.gson.JsonObject;
@@ -12,6 +14,8 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext;
 
 public abstract class StreamsContextImpl<T> implements StreamsContext<T> {
+	
+	public static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
 
     @Override
     public final Future<T> submit(Topology topology) throws Exception {

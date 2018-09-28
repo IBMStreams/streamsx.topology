@@ -34,13 +34,19 @@ def get_rest_api():
         raise ChildProcessError('streamtool geturl')
     return url[0]
 
-def _submit_bundle(bundle, job_config=None):
+def _submit_bundle(bundle, job_config=None, domain_id=None, instance_id=None):
     assert _has_local_install
 
     jo = tempfile.NamedTemporaryFile(delete=False)
     jo.close()
 
     args = ['submitjob']
+    if domain_id:
+        args.append('--domain-id')
+        args.append(domain_id)
+    if instance_id:
+        args.append('--instance-id')
+        args.append(instance_id)
     args.append('--outfile')
     args.append(jo.name)
     jcf = None
@@ -63,10 +69,16 @@ def _submit_bundle(bundle, job_config=None):
     os.remove(jo.name)
     raise RuntimeError('streamtool submitjob failed for: ' + bundle)
 
-def _cancel_job(job_id, force):
+def _cancel_job(job_id, force, domain_id=None, instance_id=None):
     assert _has_local_install
 
     args = ['canceljob']
+    if domain_id:
+        args.append('--domain-id')
+        args.append(domain_id)
+    if instance_id:
+        args.append('--instance-id')
+        args.append(instance_id)
     if force:
         args.append('--force')
     args.append(str(job_id))

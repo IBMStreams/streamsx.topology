@@ -27,7 +27,7 @@ public class EmbeddedStreamsContext extends
     public Future<JavaTestableGraph> submit(Topology app,
             Map<String, Object> config) throws Exception {
         
-        app.finalizeGraph(getType());
+        app.finalizeGraph(this);
         
         config = new HashMap<>(config);
 

@@ -18,10 +18,10 @@ import java.util.logging.Logger;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.jobconfig.SubmissionParameter;
-import com.ibm.streamsx.topology.internal.messages.Messages;
 
 public class InvokeSubmit {
 
@@ -38,11 +38,12 @@ public class InvokeSubmit {
         Util.checkInvokeStreamtoolPreconditions();
     }
 
-    public BigInteger invoke(JsonObject deploy) throws Exception, InterruptedException {
+    public BigInteger invoke(JsonObject deploy, String domainId, String instanceId) throws Exception, InterruptedException {
         String si = Util.getStreamsInstall();
         File sj = new File(si, "bin/streamtool");
         
-        checkPreconditions();
+        if (domainId == null)
+        	checkPreconditions();
         
         File jobidFile = Files.createTempFile("streamsjobid", "txt").toFile();
 
@@ -50,6 +51,8 @@ public class InvokeSubmit {
 
         commands.add(sj.getAbsolutePath());
         commands.add("submitjob");
+        if (domainId != null)
+        	Util.addDomainInstanceArgs(commands, domainId, instanceId);
         String user = System.getenv(Util.STREAMS_USERNAME);
         if (user != null) {
             commands.add("--User");

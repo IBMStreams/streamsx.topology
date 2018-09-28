@@ -10,6 +10,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.net.URL;
 import java.util.List;
 
 import org.junit.Test;
@@ -28,11 +29,15 @@ public class StreamsOnlyConnectionTest {
     @Test
     public void testBadConnections() throws Exception {
 
-        String sPort = StreamsConnectionTest.getStreamsPort();
+        URL correctUrl = new URL(System.getenv("STREAMS_REST_URL"));
+        
+        URL badUrl = new URL(correctUrl.getProtocol(), correctUrl.getHost(),
+        		     correctUrl.getPort(), "/streams/re");      
+        System.err.println("BAD1:" + badUrl.toExternalForm());
+        
 
         // send in wrong url
-        String badUrl = "https://localhost:" + sPort + "/streams/re";
-        StreamsConnection badConn = StreamsConnection.createInstance(null, null, badUrl);
+        StreamsConnection badConn = StreamsConnection.createInstance(null, null, badUrl.toExternalForm());
         badConn.allowInsecureHosts(true);
         try {
             badConn.getInstances();
@@ -41,8 +46,11 @@ public class StreamsOnlyConnectionTest {
         }
 
         // send in url too long
-        String badURL = "https://localhost:" + sPort + "/streams/rest/resourcesTooLong";
-        badConn = StreamsConnection.createInstance(null, null, badURL);
+        badUrl = new URL(correctUrl.getProtocol(), correctUrl.getHost(),
+   		     correctUrl.getPort(), "/streams/rest/resourcesTooLong");      
+        System.err.println("BAD2:" + badUrl.toExternalForm());
+
+        badConn = StreamsConnection.createInstance(null, null, badUrl.toExternalForm());
         badConn.allowInsecureHosts(true);
         try {
             badConn.getInstances();
@@ -51,8 +59,7 @@ public class StreamsOnlyConnectionTest {
         }
 
         // send in bad iName
-        String restUrl = "https://localhost:" + sPort + "/streams/rest/resources";
-        badConn = StreamsConnection.createInstance("fakeName", null, restUrl);
+        badConn = StreamsConnection.createInstance("fakeName", null, correctUrl.toExternalForm());
         badConn.allowInsecureHosts(true);
         try {
             badConn.getInstances();
@@ -61,7 +68,7 @@ public class StreamsOnlyConnectionTest {
         }
 
         // send in wrong password
-        badConn = StreamsConnection.createInstance(null, "badPassword", restUrl);
+        badConn = StreamsConnection.createInstance(null, "badPassword", correctUrl.toExternalForm());
         badConn.allowInsecureHosts(true);
         try {
             badConn.getInstances();
@@ -79,13 +86,18 @@ public class StreamsOnlyConnectionTest {
         // there should be at least one instance
         assertTrue(instances.size() > 0);
         
+        Instance i2;
         String instanceName = System.getenv("STREAMS_INSTANCE_ID");
+        if (instanceName != null) {
 
-        Instance i2 = connection.getInstance(instanceName);
-        assertEquals(instanceName, i2.getId());
-
-        i2.refresh();
-        assertEquals(instanceName, i2.getId());
+            i2 = connection.getInstance(instanceName);
+            assertEquals(instanceName, i2.getId());
+            
+            i2.refresh();
+            assertEquals(instanceName, i2.getId());
+        } else {
+        	i2 = instances.get(0);
+        }
         
         List<ProcessingElement> instancePes = i2.getPes();
         for (ProcessingElement pe : instancePes) {

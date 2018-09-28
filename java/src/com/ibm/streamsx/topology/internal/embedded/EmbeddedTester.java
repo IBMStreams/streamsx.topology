@@ -30,7 +30,7 @@ public class EmbeddedTester extends StreamsContextImpl<JavaTestableGraph> {
         if (app.hasTester()) {
             tester = (ConditionTesterImpl) app.getTester();
             if (tester.hasTests())
-                tester.finalizeGraph(getType());
+                tester.finalizeGraph(this);
             else
                 tester = null;
         }

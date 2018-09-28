@@ -181,7 +181,7 @@ class StreamsRestUtils {
     }
 
     /**
-     * Gets a JSON response to an HTTP call
+     * Gets a JSON response to an HTTP GET call
      * 
      * @param executor HTTP client executor to use for call
      * @param auth Authentication header contents, or null
@@ -192,14 +192,20 @@ class StreamsRestUtils {
      */
     static JsonObject getGsonResponse(Executor executor, String auth, String inputString)
             throws IOException {
-        Request request = Request
-                .Get(inputString)
-                .addHeader("accept", ContentType.APPLICATION_JSON.getMimeType())
-                .useExpectContinue();
+        Request request = Request.Get(inputString).useExpectContinue();
+        
         if (null != auth) {
             request = request.addHeader(AUTH.WWW_AUTH_RESP, auth);
         }
-
+        
+        return requestGsonResponse(executor, request);
+    }
+    
+    /**
+     * Gets a JSON response to an HTTP request call
+     */
+    static JsonObject requestGsonResponse(Executor executor, Request request) throws IOException {
+    	request.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         Response response = executor.execute(request);
         return gsonFromResponse(response.returnResponse());
     }
