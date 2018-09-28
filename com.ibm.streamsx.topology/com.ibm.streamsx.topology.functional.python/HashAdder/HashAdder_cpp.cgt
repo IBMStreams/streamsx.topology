@@ -1,8 +1,3 @@
-#include "splpy.h"
-#include "splpy_funcop.h"
-
-using namespace streamsx::topology;
-
 <%SPL::CodeGen::implementationPrologue($model);%>
 
 @include "../pyspltuple.cgt"

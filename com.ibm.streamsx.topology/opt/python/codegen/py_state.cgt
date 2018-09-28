@@ -1,0 +1,18 @@
+<% 
+ # State handling setup for Python operators.
+ # Requires $pyStateful is set
+ # Sets CPP defines:
+ #     SPLPY_STATE_HANDLER - Set if the operator needs a state handle.
+
+ my $isInConsistentRegion = $model->getContext()->getOptionalContext("ConsistentRegion");
+ my $ckptKind = $model->getContext()->getCheckpointingKind();
+%>
+// isInConsistentRegion <%=$isInConsistentRegion%>
+// ckptKind <%=$ckptKind%>
+// XpyStateful <%=$XpyStateful%>
+<%
+ my $needStateHandler = $XpyStateful && ($isInConsistentRegion or $ckptKind ne "none");
+ if ($needStateHandler) {
+%>
+#define SPLPY_STATE_HANDLER
+<%}%>
