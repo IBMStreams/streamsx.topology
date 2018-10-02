@@ -56,6 +56,8 @@ class SplpyOp {
           callable_(NULL),
           pydl_(NULL),
           exc_suppresses(NULL),
+          ckpts_(NULL),
+          resets_(NULL),
           opc_(NULL),
           stateHandler(NULL)
       {
@@ -261,8 +263,8 @@ class SplpyOp {
             SPLAPPTRC(L_DEBUG, "Creating state handler", "python");
             // pickledCallable reference stolen here.
             stateHandler = new SplpyOpStateHandlerImpl(this, pickledCallable);
-            //op()->getContext().registerStateHandler(dynamic_cast<SPL::StateHandler &>(*op()));
-            //SPLAPPTRC(L_DEBUG, "Registered operator as state handler", "python");
+
+            createStateMetrics(consistentRegion);
           }
           else {
             SPLAPPTRC(L_DEBUG, "Not state handler", "python");
@@ -270,20 +272,34 @@ class SplpyOp {
         }
       }
 
+      void createStateMetrics(bool consistentRegion) {
+           SPL::OperatorMetrics & metrics = op_->getContext().getMetrics();
+           ckpts_ = &(metrics.createCustomMetric(
+               "nCheckpoints", "Number of checkpoints.", SPL::Metric::Counter));
+
+          if (consistentRegion) {
+              resets_ = &(metrics.createCustomMetric(
+                  "nResets", "Number of resets.", SPL::Metric::Counter));
+          }
+      }
+
       void checkpoint(SPL::Checkpoint & ckpt) {
         if (stateHandler) {
+          ckpts_->incrementValue();
           stateHandler->checkpoint(ckpt);
         }
       }
 
       void reset(SPL::Checkpoint & ckpt) {
         if (stateHandler) {
+          resets_->incrementValue();
           stateHandler->reset(ckpt);
         }
       }
 
       void resetToInitialState() {
         if (stateHandler) {
+          resets_->incrementValue();
           stateHandler->resetToInitialState();
         }
       }
@@ -299,6 +315,8 @@ class SplpyOp {
 
       // Number of exceptions suppressed by __exit__
       SPL::Metric *exc_suppresses;
+      SPL::Metric *ckpts_;
+      SPL::Metric *resets_;
 
       // PyLong of op_
       PyObject *opc_;
