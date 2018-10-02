@@ -42,7 +42,6 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         tester.tuple_count(s, iterations)
         tester.contents(s, list(zip(range(0,iterations))))
 
-        # cfg={}
         # job_config = streamsx.topology.context.JobConfig(tracing='debug')
         # job_config.add(self.test_config)
 
@@ -121,10 +120,8 @@ class TestDistributedConsistentRegion(unittest.TestCase):
 
         transit = op.Map('com.ibm.streamsx.topology.pytest.checkpoint::EnterExitMap', source.stream, schema.StreamSchema('tuple<rstring from, int32 enter, int32 exit>').as_tuple())
 
-#        streamsx.topology.context.submit('TOOLKIT', topo)
-
         tester = Tester(topo)
-        tester.resets(5)
+        tester.resets(10)
 
         # On each operator, __enter__ and __exit__ should be called once for 
         # each reset.  Also __enter__ should be called at startup and __exit__
@@ -139,9 +136,8 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         tester.eventual_result(source.stream, lambda tuple_ : True if tuple_ == ('source', 6, 5) else None)
         tester.eventual_result(transit.stream, lambda tuple_ : True if tuple_ == ('transit', 6, 5) else None)
 
-        # cfg={}
-        # job_config = streamsx.topology.context.JobConfig(tracing='debug')
-        # job_config.add(self.test_config)
+        job_config = streamsx.topology.context.JobConfig(tracing='debug')
+        job_config.add(self.test_config)
 
         tester.test(self.test_ctxtype, self.test_config)
 

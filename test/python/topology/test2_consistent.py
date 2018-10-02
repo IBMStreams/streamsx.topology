@@ -46,11 +46,25 @@ class TimeCounter(object):
         # Otherwise increment, sleep, and return.
         to_return = self.count
         self.count += 1
+        self._metric.value = self.count
         time.sleep(self.period)
         return to_return
 
     def next(self):
         return self.__next__()
+
+    def __enter__(self):
+        self._metric = ec.CustomMetric(self, "nTuplesSent", "Logical tuples sent")
+        self._metric.value = self.count
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        if '_metric' in state:
+            del state['_metric']
+        return state
 
 # This just provides a __call__ method that computes the average of its
 # parameter, but since it is a class it is stateful and will have its state
@@ -353,11 +367,7 @@ class TestOperatorDriven(unittest.TestCase):
         tester = Tester(topo)
         self.assertFalse(tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False))
 
-    def test_for_each(self):
-        pass # There is no way to set consistent on a sink
-
-    def test_hash_adder(self):
-        pass # There is no way to set consistent on hash_adder
+    # There is no way to set consistent on a sink or hash_adder
 
     def test_map(self):
         topo = Topology()

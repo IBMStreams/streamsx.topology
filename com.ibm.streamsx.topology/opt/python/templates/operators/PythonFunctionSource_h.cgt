@@ -1,16 +1,19 @@
 /*
  * # Licensed Materials - Property of IBM
- * # Copyright IBM Corp. 2015  
+ * # Copyright IBM Corp. 2015,2018
  */
+<%
+require "splpy_operator.pm";
+my $pyStateful = splpy_OperatorCallable() eq 'class';
+%>
+@include "../../opt/.__splpy/common/py_state.cgt"
 
+#include "splpy.h"
 #include "splpy_pyop.h"
 
 using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
-<%
-  require "splpy_operator.pm";
-%>
 
 @include "../../opt/.__splpy/common/py_disallow_cr_trigger.cgt"
 
@@ -18,7 +21,10 @@ using namespace streamsx::topology;
   my $oport = $model->getOutputPortAt(0);
 %>
 
-class MY_OPERATOR : public MY_BASE_OPERATOR, public DelegatingStateHandler
+class MY_OPERATOR : public MY_BASE_OPERATOR
+#if SPLPY_OP_STATEFUL == 1
+     , public DelegatingStateHandler
+#endif
 {
 public:
   // Constructor
@@ -37,12 +43,12 @@ public:
   void process(uint32_t idx);
 
 private:
+    SplpyOp *op() { return pyop_; }
 
   // Members
     SplpyPyOp *pyop_;
     PyObject *pyOutNames_0;
 
-    SplpyOp *op() { return pyop_; }
     void pySubmitTuplesPort0(PyObject * value);
     void fromPythonToPort0(PyObject * pyTuple, OPort0Type & otuple);
     void fromPythonDictToPort0(PyObject * pyDict, OPort0Type & otuple);

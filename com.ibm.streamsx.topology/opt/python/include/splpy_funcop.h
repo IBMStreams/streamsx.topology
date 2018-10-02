@@ -29,13 +29,15 @@ namespace streamsx {
 class SplpyFuncOp : public SplpyOp {
   public:
 
-      SplpyFuncOp(SPL::Operator * op, const std::string & wrapfn) :
+      SplpyFuncOp(SPL::Operator * op, bool stateful,  const std::string & wrapfn) :
         SplpyOp(op, "/opt/python/packages/streamsx/topology")
       {
          setSubmissionParameters();
          addAppPythonPackages();
-         loadAndWrapCallable(wrapfn);
+         loadAndWrapCallable(stateful, wrapfn);
       }
+
+      virtual ~SplpyFuncOp() {}
       
   private:
       int hasParam(const char *name) {
@@ -77,7 +79,7 @@ class SplpyFuncOp : public SplpyOp {
        * Load and wrap the callable that will be invoked
        * by the operator.
       */
-      void loadAndWrapCallable(const std::string & wrapfn) {
+      void loadAndWrapCallable(bool stateful, const std::string & wrapfn) {
           SplpyGIL lock;
 
           // pointer to the application function or callable class
@@ -104,13 +106,9 @@ class SplpyFuncOp : public SplpyOp {
 
           setCallable(SplpyGeneral::callFunction(
                "streamsx.topology.runtime", wrapfn, appCallable, extraArg));
-          setup();
+          setup(stateful);
       }
 
-      virtual bool isStateful() {
-        return static_cast<SPL::boolean>(op()->getParameterValues("pyStateful")[0]->getValue());
-      }
- 
       /*
        *  Add any packages in the application directory
        *  to the Python path. The application directory

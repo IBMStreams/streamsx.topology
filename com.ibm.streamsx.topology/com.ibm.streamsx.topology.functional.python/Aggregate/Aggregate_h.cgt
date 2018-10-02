@@ -1,4 +1,7 @@
-/* Additional includes go here */
+@include "../py_pystateful.cgt"
+@include "../../opt/python/codegen/py_state.cgt"
+
+#include "splpy.h"
 #include "splpy_funcop.h"
 #include <SPL/Runtime/Window/Window.h>
 
@@ -17,8 +20,10 @@ using namespace streamsx::topology;
 
 @include "../pyspltuple.cgt"
 class MY_OPERATOR : public MY_BASE_OPERATOR,
-      public WindowEvent<PyObject *>,
-      public DelegatingStateHandler
+      public WindowEvent<PyObject *>
+#if SPLPY_OP_STATEFUL == 1
+      ,public DelegatingStateHandler
+#endif
 {
 public:
   // Constructor

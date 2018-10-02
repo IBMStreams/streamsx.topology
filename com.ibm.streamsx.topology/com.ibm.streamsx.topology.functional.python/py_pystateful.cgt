@@ -1,0 +1,4 @@
+<% 
+ # State $pyStateful from functional operator parameter.
+ my $pyStateful = $model->getParameterByName("pyStateful")->getValueAt(0)->getSPLExpression() eq "true" ? 1 : 0;
+%>

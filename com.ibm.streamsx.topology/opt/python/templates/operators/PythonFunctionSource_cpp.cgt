@@ -1,12 +1,7 @@
 /*
  * # Licensed Materials - Property of IBM
- * # Copyright IBM Corp. 2015,2016
+ * # Copyright IBM Corp. 2015,2018
  */
-
-#include "splpy.h"
-#include "splpy_pyop.h"
-
-using namespace streamsx::topology;
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 
@@ -50,10 +45,13 @@ MY_OPERATOR::MY_OPERATOR() :
              "streamsx.spl.runtime", "_SourceIterable",
              callable, NULL);   
      this->pyop_->setCallable(callable);
-     this->pyop_->setup();
+     this->pyop_->setup(SPLPY_OP_STATEFUL);
 
      pyOutNames_0 = Splpy::pyAttributeNames(getOutputPortAt(0));
    }
+#if SPLPY_OP_STATEFUL == 1
+   this->getContext().registerStateHandler(*this);
+#endif
 }
 
 // Destructor

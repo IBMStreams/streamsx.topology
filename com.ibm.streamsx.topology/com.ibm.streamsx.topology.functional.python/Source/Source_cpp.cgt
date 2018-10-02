@@ -1,10 +1,3 @@
-/* Additional includes go here */
-
-#include "splpy.h"
-#include "splpy_funcop.h"
-
-using namespace streamsx::topology;
-
 <%SPL::CodeGen::implementationPrologue($model);%>
 
 <% my $pywrapfunc='source_pickle'; %>
@@ -38,7 +31,11 @@ MY_OPERATOR::MY_OPERATOR() :
  }
 %>
 
-    funcop_ = new SplpyFuncOp(this, wrapfn);
+    funcop_ = new SplpyFuncOp(this, SPLPY_OP_STATEFUL, wrapfn);
+
+#if SPLPY_OP_STATEFUL == 1
+   this->getContext().registerStateHandler(*this);
+#endif
 }
 
 // Destructor

@@ -143,7 +143,7 @@ class SPLGraph(object):
         return self._requested_name(name)
 
 
-    def addOperator(self, kind, function=None, name=None, params=None, sl=None, stateful=False):
+    def addOperator(self, kind, function=None, name=None, params=None, sl=None, stateful=None):
         if(params is None):
             params = {}
 
@@ -272,7 +272,7 @@ class SPLGraph(object):
 
 class _SPLInvocation(object):
 
-    def __init__(self, index, kind, function, name, params, graph, view_configs = None, sl=None, stateful = False):
+    def __init__(self, index, kind, function, name, params, graph, view_configs = None, sl=None, stateful=None):
         self.index = index
         self.kind = kind
         self.model = None
@@ -282,13 +282,12 @@ class _SPLInvocation(object):
         self.category = None
         self.params = {}
         self.setParameters(params)
-        self._addOperatorFunction(self.function, stateful)
+        self.config = {}
         self.graph = graph
         self.viewable = True
         self.sl = sl
         self._placement = {}
         self._start_op = False
-        self.config = {}
         self._consistent = None
         # Arbitrary JSON for operator
         self._op_def = {}
@@ -301,6 +300,7 @@ class _SPLInvocation(object):
         self.inputPorts = []
         self.outputPorts = []
         self._layout_hints = {}
+        self._addOperatorFunction(self.function, stateful)
 
     def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema= CommonSchema.Python,partitioned_keys=None, routing = None):
         if name is None:
@@ -443,7 +443,7 @@ class _SPLInvocation(object):
             self._ex_op._generate(_op)
         return _op
 
-    def _addOperatorFunction(self, function, stateful=False):
+    def _addOperatorFunction(self, function, stateful):
         if (function is None):
             return None
         if not hasattr(function, "__call__"):
@@ -470,8 +470,11 @@ class _SPLInvocation(object):
             # dill format is binary; base64 encode so it is json serializable 
             self.params["pyCallable"] = base64.b64encode(dill.dumps(function)).decode("ascii")
 
-        self.params["pyStateful"] = bool(stateful)
-
+        if stateful is not None:
+            self.params['pyStateful'] = bool(stateful)
+            if not stateful:
+                self.config['noCheckpoint'] = True
+                 
         # note: functions in the __main__ module cannot be used as input to operations 
         # function.__module__ will be '__main__', so C++ operators cannot import the module
         self.params["pyModule"] = function.__module__
