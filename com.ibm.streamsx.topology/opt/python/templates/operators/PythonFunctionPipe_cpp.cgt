@@ -3,10 +3,6 @@
  * # Copyright IBM Corp. 2015,2016
  */
 
-#include "splpy.h"
-
-using namespace streamsx::topology;
-
 <%SPL::CodeGen::implementationPrologue($model);%>
 
 <%
@@ -61,6 +57,10 @@ MY_OPERATOR::MY_OPERATOR() :
                getInputPortAt(0));
 <% } %>
    }
+
+#if SPLPY_OP_STATEFUL == 1
+   this->getContext().registerStateHandler(*this);
+#endif
 }
 
 // Destructor

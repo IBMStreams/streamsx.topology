@@ -16,7 +16,10 @@ using namespace streamsx::topology;
  my $oport = $model->getOutputPortAt(0);
 %>
 
-class MY_OPERATOR : public MY_BASE_OPERATOR, public DelegatingStateHandler
+class MY_OPERATOR : public MY_BASE_OPERATOR
+#if SPLPY_OP_STATEFUL == 1
+      ,public DelegatingStateHandler
+#endif
 {
 public:
   // Constructor

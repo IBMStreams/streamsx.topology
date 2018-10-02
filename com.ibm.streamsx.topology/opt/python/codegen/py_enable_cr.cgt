@@ -21,5 +21,3 @@
   typedef OptionalConsistentRegionContextImpl<isInConsistentRegion> OptionalConsistentRegionContext;
   typedef OptionalConsistentRegionContext::Permit AutoConsistentRegionPermit;
   typedef OptionalAutoLockImpl<isCheckpointing> OptionalAutoLock;
-
-

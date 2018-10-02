@@ -126,7 +126,7 @@ class SplpyOp {
        *   a metric that keeps track of exceptions suppressed
        *   by __exit__
        */
-      void setup() {
+      void setup(bool stateful) {
           if (PyObject_HasAttrString(callable_, "_streamsx_ec_context")) {
               PyObject *hasContext = PyObject_GetAttrString(callable_, "_streamsx_ec_context");
               if (PyObject_IsTrue(hasContext)) {
@@ -140,7 +140,8 @@ class SplpyOp {
               Py_DECREF(hasContext);
           }
 
-          setupStateHandler();
+          if (stateful)
+              setupStateHandler();
       }
 
       /**
@@ -180,41 +181,30 @@ class SplpyOp {
       }
      
       /**
-       * Is this operator stateful for checkpointing?  Derived classes
-       * must override this to support checkpointing.
-       */
-#ifdef SPLPY_OP_STATEFUL
-      bool isStateful () { return true; }
-#else
-      bool isStateful () { return false; }
-#endif
-
-      /**
        * Register a state handler for the operator.  The state handler
        * handles checkpointing and supports consistent regions.  Checkpointing
        * will be enabled for this operator only if checkpoint is enabled for
        * the topology, this operator is stateful, and it can be saved and
        * restored using dill.
        */
-      virtual void setupStateHandler() {
+      void setupStateHandler() {
         // If the checkpointing or consistent region is enabled and the
         // operator is stateful, create a state handler instance.
-        bool stateful = isStateful();
         bool checkpointing = op()->getContext().isCheckpointingOn();
         if (checkpointing)
-          SPLAPPTRC(L_TRACE, "checkpointing enabled", "python");
+          SPLAPPTRC(L_DEBUG, "checkpointing enabled", "python");
         else
-          SPLAPPTRC(L_TRACE, "checkpointing disabled", "python");
+          SPLAPPTRC(L_DEBUG, "checkpointing disabled", "python");
 
         bool consistentRegion = (NULL != op()->getContext().getOptionalContext(CONSISTENT_REGION));
         if (consistentRegion)
-          SPLAPPTRC(L_TRACE, "consistent region enabled", "python");
+          SPLAPPTRC(L_DEBUG, "consistent region enabled", "python");
         else
-          SPLAPPTRC(L_TRACE, "consistent region disabled", "python");
+          SPLAPPTRC(L_DEBUG, "consistent region disabled", "python");
 
         if (checkpointing || consistentRegion) {
           PyObject * pickledCallable = NULL;
-          if (stateful) {
+          if (1) {
 
             // Ensure that callable() can be pickled before using it in a state
             // handler.
@@ -267,10 +257,12 @@ class SplpyOp {
             }
           }
           assert(!stateHandler);
-          if (stateful && pickledCallable) {
+          if (pickledCallable) {
             SPLAPPTRC(L_DEBUG, "Creating state handler", "python");
             // pickledCallable reference stolen here.
             stateHandler = new SplpyOpStateHandlerImpl(this, pickledCallable);
+            //op()->getContext().registerStateHandler(dynamic_cast<SPL::StateHandler &>(*op()));
+            //SPLAPPTRC(L_DEBUG, "Registered operator as state handler", "python");
           }
           else {
             SPLAPPTRC(L_DEBUG, "Not state handler", "python");

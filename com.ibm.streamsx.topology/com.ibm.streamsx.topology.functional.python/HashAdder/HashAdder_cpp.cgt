@@ -11,9 +11,13 @@ MY_OPERATOR::MY_OPERATOR() :
    pyInStyleObj_(NULL),
    crContext(this)
 {
-    funcop_ = new SplpyFuncOp(this, "<%=$pywrapfunc%>");
+    funcop_ = new SplpyFuncOp(this, SPLPY_OP_STATEFUL, "<%=$pywrapfunc%>");
 
 @include "../pyspltuple_constructor.cgt"
+
+#if SPLPY_OP_STATEFUL == 1
+   this->getContext().registerStateHandler(*this);
+#endif
 }
 
 

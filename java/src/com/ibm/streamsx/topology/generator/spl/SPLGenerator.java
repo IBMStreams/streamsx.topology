@@ -761,6 +761,9 @@ public class SPLGenerator {
     
     void generateGraph(JsonObject graph, StringBuilder sb) throws IOException {
         JsonObject graphConfig = getGraphConfig(graph);
+        
+        createCheckpointConfig(graphConfig);
+        
         graphConfig.addProperty("supportsJobConfigOverlays", versionAtLeast(4,2));
 
         String namespace = splAppNamespace(graph);
@@ -899,18 +902,38 @@ public class SPLGenerator {
         }
     }
     
+    private String checkpointConfig;
+    private void createCheckpointConfig(JsonObject graphConfig) {
+    	JsonObject checkpoint = GsonUtilities.jobject(graphConfig, "checkpoint");
+    	if (checkpoint == null)
+    		return;
+    	
+        TimeUnit unit = TimeUnit.valueOf(jstring(checkpoint, "unit"));
+        long period = checkpoint.get("period").getAsLong();
+        
+        // SPL works in seconds, including fractions.
+        long periodMs = unit.toMillis(period);
+        double periodSec = ((double) periodMs) / 1000.0;
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append("    checkpoint: periodic(");
+        sb.append(periodSec);
+        sb.append(");\n");
+        
+        checkpointConfig = sb.toString();       
+    }
+    
+    String getCheckpointConfig() {
+    	return checkpointConfig;
+    }
+    
     private void generateMainCompConfig(JsonObject graphConfig, StringBuilder sb) {
         JsonArray hostPools = array(graphConfig, "__spl_hostPools");
         boolean hasHostPools =  hostPools != null && hostPools.size() != 0;
-        
-        JsonObject checkpoint = GsonUtilities.jobject(graphConfig, "checkpoint");
-        
-        boolean hasCheckpoint = checkpoint != null;
-                
-        if (hasHostPools || hasCheckpoint)
+                        
+        if (hasHostPools)
             sb.append("  config\n");
-        
-        
+                
         if (hasHostPools) {
             boolean seenOne = false;
             for (JsonElement hpo : hostPools) {
@@ -935,18 +958,6 @@ public class SPLGenerator {
                 sb.append("]}, Sys.Shared)");
             }
             sb.append(";\n");
-        }
-        
-        if (hasCheckpoint) {
-            TimeUnit unit = TimeUnit.valueOf(jstring(checkpoint, "unit"));
-            long period = checkpoint.get("period").getAsLong();
-            
-            // SPL works in seconds, including fractions.
-            long periodMs = unit.toMillis(period);
-            double periodSec = ((double) periodMs) / 1000.0;
-            sb.append("    checkpoint: periodic(");
-            sb.append(periodSec);
-            sb.append(");\n");
         }
     }
 

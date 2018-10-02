@@ -282,13 +282,12 @@ class _SPLInvocation(object):
         self.category = None
         self.params = {}
         self.setParameters(params)
-        self._addOperatorFunction(self.function, stateful)
+        self.config = {}
         self.graph = graph
         self.viewable = True
         self.sl = sl
         self._placement = {}
         self._start_op = False
-        self.config = {}
         self._consistent = None
         # Arbitrary JSON for operator
         self._op_def = {}
@@ -301,6 +300,7 @@ class _SPLInvocation(object):
         self.inputPorts = []
         self.outputPorts = []
         self._layout_hints = {}
+        self._addOperatorFunction(self.function, stateful)
 
     def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema= CommonSchema.Python,partitioned_keys=None, routing = None):
         if name is None:
@@ -471,8 +471,10 @@ class _SPLInvocation(object):
             self.params["pyCallable"] = base64.b64encode(dill.dumps(function)).decode("ascii")
 
         if stateful is not None:
-            self.params["pyStateful"] = bool(stateful)
-
+            self.params['pyStateful'] = bool(stateful)
+            if not stateful:
+                self.config['noCheckpoint'] = True
+                 
         # note: functions in the __main__ module cannot be used as input to operations 
         # function.__module__ will be '__main__', so C++ operators cannot import the module
         self.params["pyModule"] = function.__module__

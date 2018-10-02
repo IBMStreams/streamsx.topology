@@ -647,7 +647,7 @@ class OperatorGenerator {
         }
     }
 
-    static void configClause(JsonObject graphConfig, JsonObject op, StringBuilder sb) {
+    void configClause(JsonObject graphConfig, JsonObject op, StringBuilder sb) {
 
         if (!op.has(OpProperties.CONFIG))
             return;
@@ -655,6 +655,13 @@ class OperatorGenerator {
         JsonObject config = jobject(op, OpProperties.CONFIG);
 
         StringBuilder sbConfig = new StringBuilder();
+        
+        // Inherit the graph wide checkpoint unless the operator invocation says no
+        if (!jboolean(config, "noCheckpoint")) {
+        	String checkpoint = splGenerator.getCheckpointConfig();
+        	if (checkpoint != null)
+        		sbConfig.append(checkpoint);
+        }
 
         if (config.has("streamViewability")) {
             sbConfig.append("    streamViewability: ");

@@ -28,6 +28,8 @@ class SplpyPyOp : public SplpyOp {
       SplpyPyOp(SPL::Operator * op) :
           SplpyOp(op, "/opt/.__splpy/common") {
       }
+
+      virtual ~SplpyPyOp() {}
 };
 
 }}

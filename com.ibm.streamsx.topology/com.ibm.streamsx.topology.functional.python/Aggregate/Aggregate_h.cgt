@@ -20,8 +20,10 @@ using namespace streamsx::topology;
 
 @include "../pyspltuple.cgt"
 class MY_OPERATOR : public MY_BASE_OPERATOR,
-      public WindowEvent<PyObject *>,
-      public DelegatingStateHandler
+      public WindowEvent<PyObject *>
+#if SPLPY_OP_STATEFUL == 1
+      ,public DelegatingStateHandler
+#endif
 {
 public:
   // Constructor

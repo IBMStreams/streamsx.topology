@@ -120,7 +120,7 @@ template<>
 class OptionalAutoLockImpl<false>
 {
  public:
-  OptionalAutoLockImpl(DelegatingStateHandler*) {}
+  OptionalAutoLockImpl(void* outer) {}
 };
 
 inline void DelegatingStateHandler::checkpoint(SPL::Checkpoint & ckpt) {

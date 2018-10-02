@@ -8,7 +8,10 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
-class MY_OPERATOR : public MY_BASE_OPERATOR, public DelegatingStateHandler
+class MY_OPERATOR : public MY_BASE_OPERATOR
+#if SPLPY_OP_STATEFUL == 1
+      ,public DelegatingStateHandler
+#endif
 {
 public:
   // Constructor
