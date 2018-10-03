@@ -15,8 +15,7 @@
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
    pyInStyleObj_(NULL),
-   occ_(-1),
-   crContext(this)
+   occ_(-1)
 { 
     const char * wrapfn = "<%=$pywrapfunc%>";
 

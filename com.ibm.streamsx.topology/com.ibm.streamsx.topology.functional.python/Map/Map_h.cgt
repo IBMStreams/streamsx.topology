@@ -59,7 +59,6 @@ if ($pyoutstyle eq 'dict') {
     int32_t occ_;
 
     @include "../../opt/python/codegen/py_enable_cr.cgt"
-    OptionalConsistentRegionContext crContext;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>
