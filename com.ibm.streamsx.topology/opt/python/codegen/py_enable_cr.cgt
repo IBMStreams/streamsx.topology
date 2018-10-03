@@ -19,5 +19,4 @@
   static const bool isCheckpointing = <%=$splpy_op_stateful ? "true" : "false" %>;
 
   typedef OptionalConsistentRegionContextImpl<isInConsistentRegion> OptionalConsistentRegionContext;
-  typedef OptionalConsistentRegionContext::Permit AutoConsistentRegionPermit;
   typedef OptionalAutoLockImpl<isCheckpointing> OptionalAutoLock;
