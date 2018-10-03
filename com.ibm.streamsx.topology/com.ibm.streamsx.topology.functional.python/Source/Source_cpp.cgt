@@ -5,8 +5,7 @@
 // Constructor
 MY_OPERATOR::MY_OPERATOR() :
     funcop_(NULL),
-    occ_(-1),
-    crContext(this)
+    occ_(-1)
 {
     const char * wrapfn = "<%=$pywrapfunc%>";
 <%
@@ -59,13 +58,19 @@ void MY_OPERATOR::prepareToShutdown()
 // Processing for source and threaded operators   
 void MY_OPERATOR::process(uint32_t idx)
 {
+#if SPLPY_OP_CR == 1
+  SPL::ConsistentRegionContext *crc = static_cast<SPL::ConsistentRegionContext *>(getContext().getOptionalContext(CONSISTENT_REGION));
+#endif
+
   PyObject *pyReturnVar = NULL;
 
   while(!getPE().getShutdownRequested()) {
    try {
     OPort0Type otuple;
 
-    AutoConsistentRegionPermit crp(crContext);
+#if SPLPY_OP_CR == 1
+    ConsistentRegionPermit crp(crc);
+#endif
     OptionalAutoLock stateLock(this);
     { // start lock
       SplpyGIL lock;

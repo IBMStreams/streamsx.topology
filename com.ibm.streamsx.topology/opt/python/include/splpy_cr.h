@@ -15,8 +15,6 @@ namespace streamsx {
 /** 
  * OptionalConsistentRegionContext<true> holds a pointer to a 
  * ConsistentRegionContext,
- * and ConsistentRegionContext::Permit is an RAII helper
- * for acquiring and releasing a ConsistentRegionPermit.
  * OptionalConsistentRegionContxt<false> does nothing.
  */
 template<bool b>
@@ -87,7 +85,6 @@ class OptionalConsistentRegionContextImpl<true> {
     crContext = static_cast<SPL::ConsistentRegionContext *>(op->getContext().getOptionalContext(CONSISTENT_REGION));
   }
   operator SPL::ConsistentRegionContext *() {return crContext;}
-  typedef SPL::ConsistentRegionPermit Permit;
 
 private:
   SPL::ConsistentRegionContext * crContext;
@@ -97,10 +94,6 @@ template<>
 class OptionalConsistentRegionContextImpl<false> {
  public:
   OptionalConsistentRegionContextImpl(SPL::Operator * op) {}
-  class Permit {
-  public:
-    Permit(OptionalConsistentRegionContextImpl<false>){}
-  };
 };
 
 template<>

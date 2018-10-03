@@ -56,7 +56,6 @@ private:
     void fromPyDictToSPLTuple(PyObject *pyTuple, OPort0Type & otuple);
 
 @include "../../opt/.__splpy/common/py_enable_cr.cgt"
-    OptionalConsistentRegionContext crContext;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>
