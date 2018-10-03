@@ -39,7 +39,6 @@ private:
     PyObject *pyInStyleObj_;
 
     @include "../../opt/python/codegen/py_enable_cr.cgt"
-    OptionalConsistentRegionContext crContext;
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

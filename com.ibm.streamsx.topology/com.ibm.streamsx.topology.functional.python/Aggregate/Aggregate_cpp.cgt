@@ -24,8 +24,7 @@ MY_OPERATOR::MY_OPERATOR() :
    pyInStyleObj_(NULL),
    loads(NULL),
    occ_(-1),
-   window_(<%=$windowCppInitializer%>),
-   crContext(this)
+   window_(<%=$windowCppInitializer%>)
 {
 <% if ($window->isSliding()) {%>
     window_.registerOnWindowTriggerHandler(this);
