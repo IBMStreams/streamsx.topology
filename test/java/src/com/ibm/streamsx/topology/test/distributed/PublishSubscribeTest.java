@@ -5,7 +5,6 @@
 package com.ibm.streamsx.topology.test.distributed;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -19,6 +18,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -163,27 +164,20 @@ public class PublishSubscribeTest extends TestTopology {
         Topology t = strings.topology();
                 
         Condition<Long> atLeast = t.getTester().atLeastTupleCount(strings, 1000);
-        Condition<List<String>> subTuples = isStreamingAnalyticsRun() ? null :
-                t.getTester().stringContents(strings);
+        
+        AtomicBoolean first = new AtomicBoolean(true);
+        AtomicInteger lastHolder = new AtomicInteger(-1);
+        Condition<String> checker = t.getTester().stringTupleTester(strings,
+        		r -> {
+        			int v = Integer.valueOf(r.substring(1));
+        			int last = lastHolder.getAndSet(v);
+        			return 'S' == r.charAt(0) && (last+1 == v || first.getAndSet(false));
+        		});
         
         complete(t.getTester(), atLeast, 60, TimeUnit.SECONDS);
         
+        assertTrue(checker.valid());
         assertTrue(atLeast.valid());
-        
-        // Can't get results from the Condition.
-        if (isStreamingAnalyticsRun())
-            return;
-
-        List<String> result = subTuples.getResult();
-        assertFalse(result.isEmpty());
-        int last = -1;
-        for (String r : result) {
-            assertEquals('S', r.charAt(0));
-            int v = Integer.valueOf(r.substring(1));
-            if (last != -1)
-                assertEquals(last+1, v);
-            last = v;
-        }
     }
     
     @Test
