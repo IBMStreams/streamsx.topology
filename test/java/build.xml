@@ -1,5 +1,7 @@
 <project name="streamsx.topology.test" default="all" basedir="."
     xmlns:jacoco="antlib:org.jacoco.ant"
+    xmlns:if="ant:if"
+    xmlns:unless="ant:unless"
     >
     <description>
         Testing
@@ -123,7 +125,7 @@
    </exec>
   </target>
   <target name="test.python.toolkit">
-   <exec executable="${topology.test.python}">
+   <exec unless:blank="${topology.test.python}" executable="${topology.test.python}">
      <arg value="${tk}/bin/spl-python-extract.py"/>
      <arg value="-i"/>
      <arg value="../python/spl/testtkpy"/>

@@ -42,6 +42,8 @@ public class CheckpointTest extends TestTopology {
         Condition<Long> atLeast = topology.getTester().atLeastTupleCount(s, 50*50);
         
         complete(topology.getTester(), atLeast, 120, TimeUnit.SECONDS);
+        
+        assertTrue(atLeast.valid());
     }
     
     @Test
@@ -66,40 +68,61 @@ public class CheckpointTest extends TestTopology {
         TStream<String> sb = StringStreams.toString(b.isolate());
         
         Condition<Long> atLeast = topology.getTester().atLeastTupleCount(sb, 230);
-        Condition<List<String>> output = topology.getTester().stringContents(sb);
+        Condition<String> outputChecker = topology.getTester().stringTupleTester(sb, new CheckOutput(crashAfterCount));
         
         complete(topology.getTester(), atLeast, 90, TimeUnit.SECONDS);
         
-        System.err.println("RESULT: " + output.getResult());
+        assertTrue(atLeast.valid());
+        assertTrue(outputChecker.valid());       
+    }
+    
+    public static class CheckOutput implements Predicate<String> {
+		private static final long serialVersionUID = 1L;
+
+		CheckOutput(int crashAfterCount) {
+    		this.crashAfterCount = crashAfterCount;
+    	}
+           
+    	private final int crashAfterCount;
+        private Long starting = null;
+        private long last = -1;
+        private int count = 0;
         
-        Long starting = null;
-        long last = -1;
-        int count = 0;
-        for (String ls : output.getResult()) {
+        @Override
+        public boolean test(String ls) {
+
             long l = Long.valueOf(ls);
             count++;
             if (starting == null) {
-                assertEquals(0L, l);
+            	if (l != 0L)
+            		return false;
                 starting = last = l;
-                continue;
+                return true;
             }
                
             if (l > last) {
                 if (l == last+1) {  
-                    assertTrue("no crash @" + l, count < crashAfterCount+1);
+                	if (count >= crashAfterCount+1)
+                		return false;
+                    // assertTrue("no crash @" + l, count < crashAfterCount+1);
                     last = l;
-                    continue;
+                    return true;
                 }
             }
             
             // Has crashed and restarted,
-            assertEquals("crash count @" + l, crashAfterCount+1, count);
-            
+            // assertEquals("crash count @" + l, crashAfterCount+1, count);
+            if (crashAfterCount+1 != count)
+            	return false;
+                        
             // Assert that there was a successful
             // checkpoint that increased the value
-            assertTrue("after ckpt @" + l, l > starting);
+            // assertTrue("after ckpt @" + l, l > starting);
+            if (l <= starting)
+            	return false;
             starting = last = l;
             count = 1;
+            return true;
         }
     }
     

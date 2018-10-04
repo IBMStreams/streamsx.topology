@@ -1,4 +1,6 @@
-<project name="streamsx.topology.common">
+<project name="streamsx.topology.common"
+  xmlns:if="ant:if"
+  xmlns:unless="ant:unless">
     <description>
         Common definitions for streamsx.topology
     </description>
@@ -27,7 +29,7 @@
   <property name="topology.test.root" location="${streamsx.topology}/test"/>
   <property name="topology.test.python" value="python3"/>
 
-  <exec executable="${topology.test.python}-config"
+  <exec unless:blank="${topology.test.python}" executable="${topology.test.python}-config"
        outputproperty="topology.test.python.prefix">
        <arg value="--prefix"/>
   </exec>
