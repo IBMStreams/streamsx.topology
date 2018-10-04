@@ -77,7 +77,16 @@ void MY_OPERATOR::prepareToShutdown()
 }
 
 <%
-  my $no_tuples_action = "submit(Punctuation::WindowMarker, 0);";
+  my $no_tuples_action = "submit(Punctuation::WindowMarker, 0);
+#if SPLPY_OP_CR == 1
+        // Wait until the region becomes consistent
+        // before completing. If a reset occurred
+        // then we need to continue the iterator which
+        // might have been reset, and hence more tuples to submit.
+        if (!crc->makeConsistent())
+            continue;
+#endif
+";
 %>
 
 void MY_OPERATOR::process(uint32_t idx)
