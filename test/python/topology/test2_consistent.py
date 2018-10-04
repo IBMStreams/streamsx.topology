@@ -41,6 +41,7 @@ class TimeCounter(object):
     def __next__(self):
         # If the number of iterations has been met, stop iterating.
         if self.iterations is not None and self.count >= self.iterations:
+            self._metric2.value = 1
             raise StopIteration
 
         # Otherwise increment, sleep, and return.
@@ -56,6 +57,7 @@ class TimeCounter(object):
     def __enter__(self):
         self._metric = ec.CustomMetric(self, "nTuplesSent", "Logical tuples sent")
         self._metric.value = self.count
+        self._metric2 = ec.CustomMetric(self, "stopped", "Logical tuples sent")
 
     def __exit__(self, exc_type, exc_value, traceback):
         pass
@@ -64,6 +66,8 @@ class TimeCounter(object):
         state = self.__dict__.copy()
         if '_metric' in state:
             del state['_metric']
+        if '_metric2' in state:
+            del state['_metric2']
         return state
 
 # This just provides a __call__ method that computes the average of its
