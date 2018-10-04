@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
@@ -32,6 +33,12 @@ abstract class PublishSubscribePython extends TestTopology {
     @Before
     public void checkIsDistributed() {
         assumeTrue(getTesterType() == Type.DISTRIBUTED_TESTER || isStreamingAnalyticsRun());
+    }
+    
+    @BeforeClass
+    public static void checkPython() {
+    	String pythonversion = System.getProperty("topology.test.python");
+    	assumeTrue(pythonversion == null || !pythonversion.isEmpty());
     }
     
     Path genPythonToolkit(String module) throws IOException, InterruptedException {

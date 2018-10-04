@@ -5,16 +5,24 @@
 package com.ibm.streamsx.topology.test.splpy;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ibm.streamsx.topology.test.TestTopology;
 
 public class PythonInvalidFunctionalOperatorsTest extends TestTopology {
+	
+    @BeforeClass
+    public static void checkPython() {
+    	String pythonversion = System.getProperty("topology.test.python");
+    	assumeTrue(pythonversion == null || !pythonversion.isEmpty());
+    }
     
     @Test
     public void testInvalidStyle() throws Exception {
