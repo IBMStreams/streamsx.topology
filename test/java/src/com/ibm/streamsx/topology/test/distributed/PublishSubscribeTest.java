@@ -99,7 +99,7 @@ public class PublishSubscribeTest extends TestTopology {
         final Topology t = new Topology();
         int[] sv = new int[1];
         TStream<String> source = t.periodicSource(() -> prefix + sv[0]++,
-                10, TimeUnit.MILLISECONDS);
+                1, TimeUnit.MILLISECONDS);
  
         return source.asType(String.class);
     }
