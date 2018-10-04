@@ -796,7 +796,9 @@ def _result_to_dict(passed, t):
     return result
 
 class _ConditionChecker(object):
-    _UNHEALTHY = (False, False, False, None)
+    # Return from _check_once
+    # (valid, fail, progress, condition_states)
+    _UNHEALTHY = (False, True, False, None)
 
     def __init__(self, tester, sc, sjr):
         self.tester = tester
@@ -843,7 +845,7 @@ class _ConditionChecker(object):
 
     def _complete(self):
         while (self.waits * self.delay) < self.timeout:
-            check = self. __check_once()
+            check = self._check_once()
             if check[1]:
                 return self._end(False, check)
             if check[0]:
@@ -869,7 +871,7 @@ class _ConditionChecker(object):
         if self.job is not None:
             self.job.cancel(force=not result['passed'])
 
-    def __check_once(self):
+    def _check_once(self):
         if not self._check_job_health(verbose=True):
             return _ConditionChecker._UNHEALTHY
         cms = self._get_job_metrics()
@@ -914,7 +916,7 @@ class _ConditionChecker(object):
             else:
                 condition_states[cn] = 'Valid'
 
-        return (valid, fail, progress, condition_states)
+        return valid, fail, progress, condition_states
 
     def _check_job_health(self, start=False, verbose=False):
         self.job.refresh()
