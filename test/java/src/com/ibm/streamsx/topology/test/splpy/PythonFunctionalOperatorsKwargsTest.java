@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ibm.streams.operator.Tuple;
@@ -28,6 +29,12 @@ import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
 public class PythonFunctionalOperatorsKwargsTest extends TestTopology {
+	
+    @BeforeClass
+    public static void checkPython() {
+    	String pythonversion = System.getProperty("topology.test.python");
+    	assumeTrue(pythonversion == null || !pythonversion.isEmpty());
+    }
 	
     @Before
     public void runSpl() {

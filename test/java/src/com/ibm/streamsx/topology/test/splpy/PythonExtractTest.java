@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.test.splpy;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
@@ -27,6 +29,12 @@ import com.ibm.streamsx.topology.test.TestTopology;
 public class PythonExtractTest extends TestTopology {
     
     static Logger trace = Logger.getLogger(PythonExtractTest.class.getName());
+    
+    @BeforeClass
+    public static void checkPython() {
+    	String pythonversion = System.getProperty("topology.test.python");
+    	assumeTrue(pythonversion == null || !pythonversion.isEmpty());
+    }
     
     public static int extract(File tkDir, boolean tkMake) throws Exception {
         

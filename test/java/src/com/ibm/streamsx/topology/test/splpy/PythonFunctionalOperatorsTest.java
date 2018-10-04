@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.math.complex.Complex;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ibm.streams.operator.OutputTuple;
@@ -32,7 +33,6 @@ import com.ibm.streams.operator.types.RString;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.TopologyElement;
-import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.BiFunction;
@@ -95,6 +95,12 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
     		  ">";
     
     public static final int TUPLE_COUNT = 1000;
+    
+    @BeforeClass
+    public static void checkPython() {
+    	String pythonversion = System.getProperty("topology.test.python");
+    	assumeTrue(pythonversion == null || !pythonversion.isEmpty());
+    }
     
     @Before
     public void runSpl() {

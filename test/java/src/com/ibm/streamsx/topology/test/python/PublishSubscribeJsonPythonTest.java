@@ -4,9 +4,12 @@
  */
 package com.ibm.streamsx.topology.test.python;
 
+import static org.junit.Assume.assumeTrue;
+
 import java.util.Arrays;
 import java.util.Random;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ibm.json.java.JSONObject;
@@ -19,6 +22,12 @@ import com.ibm.streamsx.topology.Topology;
  *
  */
 public class PublishSubscribeJsonPythonTest extends PublishSubscribePython {
+	
+    @BeforeClass
+    public static void checkPython() {
+    	String pythonversion = System.getProperty("topology.test.python");
+    	assumeTrue(pythonversion == null || !pythonversion.isEmpty());
+    }
 
 	/**
 	 * Json Subscribe feeding a map
