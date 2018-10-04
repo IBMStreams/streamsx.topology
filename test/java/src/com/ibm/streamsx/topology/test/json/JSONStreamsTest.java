@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.test.json;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.IOException;
@@ -23,15 +24,12 @@ import com.ibm.json.java.JSON;
 import com.ibm.json.java.JSONArray;
 import com.ibm.json.java.JSONArtifact;
 import com.ibm.json.java.JSONObject;
-import com.ibm.streams.flow.handlers.MostRecent;
-import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function.UnaryOperator;
 import com.ibm.streamsx.topology.json.JSONSchemas;
 import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.spl.SPLStream;
-import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tuple.JSONAble;
@@ -53,12 +51,6 @@ public class JSONStreamsTest extends TestTopology {
             + "      {\"value\": \"Open\", \"onclick\": \"OpenDoc()\"},\n"
             + "      {\"value\": \"Close\", \"onclick\": \"CloseDoc()\"}\n"
             + "    ]\n" + "  }\n" + "}}";
-
-    @Before
-    public void checkLocalFiles() {
-        // Uses a StreamHandler to test - not yet supported.
-        assumeTrue(!isStreamingAnalyticsRun());
-    }
     
     /**
      * Convert an example JSON as a String back to a String through JSON
@@ -84,26 +76,25 @@ public class JSONStreamsTest extends TestTopology {
         checkJsonOutput(JSON.parse(JSON_EXAMPLE), jsonString);
     }
 
-    private JSONArtifact checkJsonOutput(JSONArtifact expected,
+    private void checkJsonOutput(JSONArtifact expected,
             TStream<String> jsonString) throws Exception, IOException {
-        
-        
+               
         assertEquals(String.class, jsonString.getTupleClass());
         assertEquals(String.class, jsonString.getTupleType());
+               
+        Condition<?> valueChecker = jsonString.topology().getTester().stringTupleTester(jsonString, v -> {
+			try {
+				return expected.equals(JSON.parse(v));
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		});
+
+        Condition<Long> singleTuple = jsonString.topology().getTester().tupleCount(jsonString, 1);
+        complete(jsonString.topology().getTester(), singleTuple.and(valueChecker), 10, TimeUnit.SECONDS);
         
-        
-        SPLStream splS = SPLStreams.stringToSPLStream(jsonString);
-        MostRecent<Tuple> mr = jsonString.topology().getTester()
-                .splHandler(splS, new MostRecent<Tuple>());
-
-        Condition<Long> singleTuple = jsonString.topology().getTester().tupleCount(splS, 1);
-        complete(jsonString.topology().getTester(), singleTuple, 10, TimeUnit.SECONDS);
-
-        JSONArtifact rv = JSON.parse(mr.getMostRecentTuple().getString(0));
-
-        assertEquals(expected, rv);
-
-        return rv;
+        assertTrue(singleTuple.valid());
+        assertTrue(valueChecker.valid());
     }
 
     @Test
