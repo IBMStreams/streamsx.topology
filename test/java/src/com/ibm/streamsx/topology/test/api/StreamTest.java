@@ -177,8 +177,7 @@ public class StreamTest extends TestTopology {
         Condition<Long> suCount = tester.tupleCount(su, 12);
         Condition<List<String>> suContents = tester.stringContentsUnordered(su, "A1", "B1", "C1", "D1", "A2", "B2", "C2", "D2", "A3", "B3", "A4", "B4");
 
-        //assertTrue(complete(tester, suCount, 10, TimeUnit.SECONDS));
-        complete(tester, suCount, 10, TimeUnit.SECONDS);
+        complete(tester, suCount.and(suContents), 10, TimeUnit.SECONDS);
 
         assertTrue("SU Contents", suContents.valid());
         assertTrue("SU Count", suCount.valid());

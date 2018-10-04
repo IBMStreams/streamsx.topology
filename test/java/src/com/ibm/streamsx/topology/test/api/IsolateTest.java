@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.test.api;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.util.Arrays;
@@ -41,26 +42,19 @@ public class IsolateTest extends TestTopology {
         TStream<String> ss1 = ss.transform(getContainerId()).isolate();
         TStream<String> ss2 = ss.isolate().transform(getContainerId())
                 .isolate();
+        
+        TStream<String> ssu = uniqueValues(ss1.union(ss2));
 
         Tester tester = topology.getTester();
 
-        Condition<List<String>> condss1 = tester.stringContents(ss1);
-        Condition<List<String>> condss2 = tester.stringContents(ss2);
-
         Condition<Long> condss1Cnt = tester.tupleCount(ss1, 1);
         Condition<Long> condss2Cnt = tester.tupleCount(ss2, 1);
-        Condition<Long> endCond = new MultiLongCondition(Arrays.asList(condss1Cnt, condss2Cnt));
+        Condition<Long> uniqueCount = tester.tupleCount(ssu, 2);
+        Condition<Long> endCond = new MultiLongCondition(Arrays.asList(condss1Cnt, condss2Cnt, uniqueCount));
         
         complete(topology.getTester(), endCond, 15, TimeUnit.SECONDS);
-
-        Integer result1 = Integer.parseInt(condss1.getResult().get(0));
-        Integer result2 = Integer.parseInt(condss2.getResult().get(0));
-
-        Set<Integer> m = new HashSet<>();
-
-        m.add(result1);
-        m.add(result2);
-        assertEquals(2, m.size());
+        
+        assertTrue(uniqueCount.valid());
     }
     
     @Test

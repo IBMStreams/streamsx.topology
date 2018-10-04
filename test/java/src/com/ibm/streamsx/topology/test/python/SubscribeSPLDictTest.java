@@ -66,8 +66,6 @@ public class SubscribeSPLDictTest extends PublishSubscribePython {
         
         complete(tester, allConditions(expectedCount, expectedCountSpl), 60, TimeUnit.SECONDS);
 
-        System.out.println(expectedCount.getResult());
-        System.out.println(expectedCountSpl.getResult());
         assertTrue(expectedCount.valid());
         assertTrue(expectedCountSpl.valid());
         

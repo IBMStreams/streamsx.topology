@@ -13,8 +13,10 @@ import static org.junit.Assume.assumeTrue;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -421,5 +423,13 @@ public class TestTopology {
     protected void adlOk() {
         assumeTrue(SC_OK);
         assumeTrue(getTesterType() == StreamsContext.Type.STANDALONE_TESTER);
+    }
+    
+    /**
+     * Return a stream that will only contain unique values from stream.
+     */
+    public static <T> TStream<T> uniqueValues(TStream<T> stream) {   	
+    	Set<T> seen = new HashSet<>();
+    	return stream.map(tuple -> seen.add(tuple) ? tuple : null);
     }
 }
