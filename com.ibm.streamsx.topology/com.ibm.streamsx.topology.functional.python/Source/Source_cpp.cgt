@@ -85,9 +85,19 @@ void MY_OPERATOR::process(uint32_t idx)
          throw SplpyExceptionInfo::pythonError("source");
       }
  
+      // Has the iterator completed?
       if (SplpyGeneral::isNone(pyReturnVar)) {
         Py_DECREF(pyReturnVar);
         pyReturnVar = NULL;
+
+#if SPLPY_OP_CR == 1
+        // Wait until the region becomes consistent
+        // before completing. If a reset occurred
+        // then we need to continue the iterator which
+        // might have been reset, and hence more tuples to submit.
+        if (!crc->makeConsistent())
+            continue;
+#endif
         break;
       }
 
