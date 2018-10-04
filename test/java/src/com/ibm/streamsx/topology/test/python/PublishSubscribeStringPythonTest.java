@@ -4,6 +4,9 @@
  */
 package com.ibm.streamsx.topology.test.python;
 
+import static org.junit.Assume.assumeTrue;
+
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ibm.streamsx.topology.TStream;
@@ -15,6 +18,12 @@ import com.ibm.streamsx.topology.Topology;
  *
  */
 public class PublishSubscribeStringPythonTest extends PublishSubscribePython {
+	
+    @BeforeClass
+    public static void checkPython() {
+    	String pythonversion = System.getProperty("topology.test.python");
+    	assumeTrue(pythonversion == null || !pythonversion.isEmpty());
+    }
 
 	/**
 	 * String Subscribe feeding a map

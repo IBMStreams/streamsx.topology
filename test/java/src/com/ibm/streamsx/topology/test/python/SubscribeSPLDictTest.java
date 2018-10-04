@@ -7,12 +7,14 @@ package com.ibm.streamsx.topology.test.python;
 import static com.ibm.streamsx.topology.test.splpy.PythonFunctionalOperatorsTest.TUPLE_COUNT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ibm.json.java.JSON;
@@ -29,6 +31,12 @@ import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
 public class SubscribeSPLDictTest extends PublishSubscribePython {
+	
+    @BeforeClass
+    public static void checkPython() {
+    	String pythonversion = System.getProperty("topology.test.python");
+    	assumeTrue(pythonversion == null || !pythonversion.isEmpty());
+    }
     
     @Test
     public void testSubscribeSPLDictMap() throws Exception {
