@@ -5,7 +5,7 @@
 package com.ibm.streamsx.topology.tester;
 
 /**
- * A test condition on a stream.
+ * A test condition on a stream or application under test.
  * 
  * A condition is created on a stream to allow
  * testing of the contents of the stream. Conditions
@@ -13,6 +13,8 @@ package com.ibm.streamsx.topology.tester;
  * for testing is completed, for example
  * {@link Tester#atLeastTupleCount(com.ibm.streamsx.topology.TStream, long) at least N}
  * tuples have been seen on the stream.
+ * <BR>
+ * While the topology is executing then the state of the condition may change.
  * 
  * <P>
  * In a consistent region a condition exhibits exactly once behavior. For example
@@ -51,6 +53,7 @@ package com.ibm.streamsx.topology.tester;
  * @see Tester#stringContentsUnordered(com.ibm.streamsx.topology.TStream, String...)
  * 
  * @since 1.9 Support for consistent region added.
+ * @since 1.11 {@link #getResult()} deprecated.
  */
 public interface Condition<T> {
     
@@ -64,6 +67,15 @@ public interface Condition<T> {
     /**
      * Get the result for this condition.
      * @return result for this condition.
+     * 
+     * @deprecated Since 1.11. In most distributed environments specific results cannot be obtained
+     * from conditions (such as stream contents) due to network isolation. While the condition will
+     * correct report its failed or valid state tests should no longer rely on using this method
+     * to perform additional testing. An alternative is to use
+     * {@link Tester#stringTupleTester(com.ibm.streamsx.topology.TStream, com.ibm.streamsx.topology.function.Predicate) stringTupleTester}
+     * to perform a per-tuple check.
+     * 
+     * @throws UnsupportedOperationException Test environment does not support fetching results.
      */
     T getResult();
     

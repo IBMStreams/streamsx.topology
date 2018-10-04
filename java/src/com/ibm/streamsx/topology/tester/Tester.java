@@ -69,94 +69,118 @@ public interface Tester {
      * @param stream Stream to have its tuples captured.
      * @param handler {@code StreamHandler} to capture tuples.
      * @return {@code handler}
+     * 
+     * @deprecated Since 1.11. In most distributed environments stream contents cannot be obtained
+     * due to network isolation. An alternative is to use
+     * {@link Tester#stringTupleTester(com.ibm.streamsx.topology.TStream, com.ibm.streamsx.topology.function.Predicate) stringTupleTester}
+     * to perform a per-tuple check.
      */
     <T extends StreamHandler<Tuple>> T splHandler(SPLStream stream, T handler);
 
     /**
      * Return a condition that evaluates if {@code stream} has submitted
-     * exactly {@code expectedCount} number of tuples. The function may be evaluated
-     * after the
-     * {@link com.ibm.streamsx.topology.context.StreamsContext#submit(com.ibm.streamsx.topology.Topology)
-     * submit} call has returned.
+     * exactly {@code expectedCount} number of tuples.
+     * 
+     * <P>
+     * <b>Note:</b> Since 1.11 {@code getResult()} from the returned {@code Condition} is
+     * deprecated and tests should not rely on it returning the tuple count seen on the stream.
+     * <strike>
      * <BR>
-     * The {@link Condition#getResult() result} of the returned {@code Condition} is the number of
+     *  The {@link Condition#getResult() result} of the returned {@code Condition} is the number of
      * tuples seen on {@code stream} so far.
-     * <BR>
-     * If the topology is still executing then the returned values from {@link Condition#valid()}
-     * and {@link Condition#getResult()} may change as more tuples are seen on {@code stream}.
-     * <BR>
+     * </strike>
+     * </P>
+     *
      * 
      * @param stream
      *            Stream to be tested.
      * @param expectedCount
      *            Number of tuples expected on {@code stream}.
-     * @return True if the stream has submitted exactly {@code expectedCount} number of
-     *         tuples, false otherwise.
+     * @return Exact tuple count condition.
      */
     Condition<Long> tupleCount(TStream<?> stream, long expectedCount);
     
     /**
      * Return a condition that evaluates if {@code stream} has submitted
-     * at least {@code expectedCount} number of tuples. The function may be evaluated
-     * after the
-     * {@link com.ibm.streamsx.topology.context.StreamsContext#submit(com.ibm.streamsx.topology.Topology)
-     * submit} call has returned.
+     * at least {@code expectedCount} number of tuples.
+     * <P>
+     * <b>Note:</b> Since 1.11 {@code getResult()} from the returned {@code Condition} is
+     * deprecated and tests should not rely on it returning the tuple count seen on the stream.
+     * <strike>
      * <BR>
      * The {@link Condition#getResult() result} of the returned {@code Condition} is the number of
      * tuples seen on {@code stream} so far.
-     * <BR>
-     * If the topology is still executing then the returned values from {@link Condition#valid()}
-     * and {@link Condition#getResult()} may change as more tuples are seen on {@code stream}.
-     * <BR>
+     * </strike>
+     * </P>
      * 
      * @param stream
      *            Stream to be tested.
      * @param expectedCount
      *            Number of tuples expected on {@code stream}.
-     * @return True if the stream has submitted at least {@code expectedCount} number of
-     *         tuples, false otherwise.
+     * @return At least tuple count condition.
      */
     Condition<Long> atLeastTupleCount(TStream<?> stream, long expectedCount);
 
     /**
      * Return a condition that evaluates if {@code stream} has submitted
      * at tuples matching {@code values} in the same order.
+     * <P>
+     * <b>Note:</b> Since 1.11 {@code getResult()} from the returned {@code Condition} is
+     * deprecated and tests should not rely on it returning the tuple count seen on the stream.
+     * <strike>
      * <BR>
      * The {@link Condition#getResult() result} of the returned {@code Condition} is the
      * tuples seen on {@code stream} so far.
-     * <BR>
-     * If the topology is still executing then the returned values from {@link Condition#valid()}
-     * and {@link Condition#getResult()} may change as more tuples are seen on {@code stream}.
-     * <BR>
+     * </strike>
+     * </P>
      * 
      * @param stream
      *            Stream to be tested.
      * @param values
      *            Expected tuples on {@code stream}.
-     * @return True if the stream has submitted at least tuples matching {@code values} in
-     * the same order, false otherwise.
+     * @return Tuple contents condition.
      */
     Condition<List<String>> stringContents(TStream<String> stream, String... values);
     
+    /**
+     * Return a condition that evaluates if {@code stream} has submitted
+     * at tuples matching {@code values} in the same order.
+     * <P>
+     * <b>Note:</b> Since 1.11 {@code getResult()} from the returned {@code Condition} is
+     * deprecated and tests should not rely on it returning the tuple count seen on the stream.
+     * <strike>
+     * <BR>
+     * The {@link Condition#getResult() result} of the returned {@code Condition} is the
+     * tuples seen on {@code stream} so far.
+     * </strike>
+     * </P>
+     * 
+     * @param stream
+     *            Stream to be tested.
+     * @param values
+     *            Expected tuples on {@code stream}.
+     * @return Tuple contents condition.
+     */
     Condition<List<Tuple>> tupleContents(SPLStream stream, Tuple... values);
 
     /**
      * Return a condition that evaluates if {@code stream} has submitted
      * at tuples matching {@code values} in any order.
+     * <P>
+     * <b>Note:</b> Since 1.11 {@code getResult()} from the returned {@code Condition} is
+     * deprecated and tests should not rely on it returning the tuple count seen on the stream.
+     * <strike>
      * <BR>
      * The {@link Condition#getResult() result} of the returned {@code Condition} is the
      * tuples seen on {@code stream} so far.
-     * <BR>
-     * If the topology is still executing then the returned values from {@link Condition#valid()}
-     * and {@link Condition#getResult()} may change as more tuples are seen on {@code stream}.
-     * <BR>
+     * </strike>
+     * </P>
      * 
      * @param stream
      *            Stream to be tested.
      * @param values
      *            Expected tuples on {@code stream}.
-     * @return True if the stream has submitted at least tuples matching {@code values} in
-     * the any order, false otherwise.
+     * @return Unordered tuple contents condition..
      */
     Condition<List<String>> stringContentsUnordered(TStream<String> stream, String... values);
     
