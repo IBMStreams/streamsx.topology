@@ -115,9 +115,6 @@ class _FunctionalCondition(Condition):
             del state[key]
         return state
 
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-
     def __enter__(self):
         self._metric_valid = self._create_metric("valid", kind='Gauge')
         self._metric_seq = self._create_metric("seq")
@@ -130,7 +127,14 @@ class _FunctionalCondition(Condition):
             self.valid = self._valid
          
     def __exit__(self, exc_type, exc_value, traceback):
-        if (ec.is_standalone()):
+        if self._fail:
+            _logger.error("Condition:%s: Failed. %s", self.name, str(self))
+        elif self.valid:
+            _logger.info("Condition:%s: Valid. %s", self.name, str(self))
+        else:
+            _logger.error("Condition:%s: Not valid. %s", self.name, str(self))
+            
+        if ec.is_standalone():
             if exc_type is None and not self._valid:
                 raise AssertionError("Condition did not become valid:" + str(self))
 
@@ -157,8 +161,8 @@ class _TupleCount(_StreamCondition):
 
     def __enter__(self):
         super(_TupleCount, self).__enter__()
-        self._metric_target = ec.CustomMetric(self, name='expectedTupleCount',  kind='Counter')
-        self._metric_count = ec.CustomMetric(self, name='currentTupleCount',  kind='Counter')
+        self._metric_target = ec.CustomMetric(self, name='nTuplesExpected',  kind='Counter')
+        self._metric_count = ec.CustomMetric(self, name='nTuplesReceived',  kind='Counter')
         if self.exact is not None:
             self._metric_exact = ec.CustomMetric(self, name='exactCount',  kind='Gauge')
             self._metric_exact.value = self.exact
@@ -181,7 +185,7 @@ class _TupleExactCount(_TupleCount):
             self.fail()
 
     def __str__(self):
-        return "Exact tuple count: expected:" + str(self.target) + " received:" + str(self.count)
+        return "Condition:{}: Exact tuple count: expected:{} received:{}".format(self.name, self.target, self.count)
 
 class _TupleAtLeastCount(_TupleCount):
     def __init__(self, target, name):
@@ -193,7 +197,7 @@ class _TupleAtLeastCount(_TupleCount):
             self.valid = True
 
     def __str__(self):
-        return "At least tuple count: expected:" + str(self.target) + " received:" + str(self.count)
+        return "Condition:{}: At least tuple count: expected:{} received:{}".format(self.name, self.target, self.count)
 
 class _StreamContents(_TupleCount):
     def __init__(self, expected, name=None):
@@ -220,13 +224,13 @@ class _StreamContents(_TupleCount):
         """
         tc = len(self.received) - 1
         if self.expected[tc] != self.received[tc]:
-            _logger.error("Tuple %d: expected %s, received %s" , tc, str(self.expected[tc]), str(self.received[tc]))
+            _logger.error(str(self))
             self.fail()
             return True
         return False
 
     def __str__(self):
-        return "Stream contents: expected:" + str(self.expected) + " received:" + str(self.received)
+        return "Condition:{}: Stream contents: expected:{} received:{}".format(self.name, str(self.expected), str(self.received))
 
 class _UnorderedStreamContents(_StreamContents):
     def _check_for_failure(self):
@@ -254,7 +258,7 @@ class _TupleCheck(_StreamCondition):
             self.valid = True
 
     def __str__(self):
-        return "Tuple checker:" + str(self.checker)
+        return "Condition:{}: Tuple checker:{}".format(self.name, str(self.checker))
 
 class _EventualResult(_StreamCondition):
     def __init__(self, checker, name):
@@ -275,8 +279,7 @@ class _EventualResult(_StreamCondition):
             self.fail()
 
     def __str__(self):
-        return "Eventual Result:" + str(self.checker)
-
+        return "Condition:{}: Eventual result:{}".format(self.name, str(self.checker))
 
 class _Resetter(Condition):
     CONDITION_NAME = "ConditionRegionResetter"
@@ -309,4 +312,4 @@ class _RunFor(_FunctionalCondition):
             yield None
 
     def __str__(self):
-        return "Test run time:" + str(self.duration)
+        return "Condition:{}: Run time duration:{} running:{}".format(self.name, str(self.duration), str(time.time() - start))
