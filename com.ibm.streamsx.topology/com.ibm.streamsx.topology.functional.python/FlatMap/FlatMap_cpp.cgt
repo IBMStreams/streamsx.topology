@@ -59,9 +59,9 @@ MY_OPERATOR::MY_OPERATOR() :
 
 MY_OPERATOR::~MY_OPERATOR() 
 {
-  if (pyInStyleObj_) {
+  {
       SplpyGIL lock;
-      Py_DECREF(pyInStyleObj_);
+      Py_CLEAR(pyInStyleObj_);
   }
 
   delete funcop_;

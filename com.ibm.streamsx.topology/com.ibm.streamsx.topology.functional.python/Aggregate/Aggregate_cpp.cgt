@@ -88,9 +88,7 @@ MY_OPERATOR::~MY_OPERATOR()
   <% if (($pystyle eq 'json') || ($pystyle eq 'pickle')) {%>
   {
       SplpyGIL lock;
-      if (loads != NULL){
-      	 Py_DECREF(loads);
-      }
+      Py_CLEAR(loads);
   }
   <% } %>
 }

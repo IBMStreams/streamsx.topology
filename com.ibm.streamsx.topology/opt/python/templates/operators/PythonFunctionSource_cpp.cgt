@@ -56,8 +56,7 @@ MY_OPERATOR::~MY_OPERATOR()
 {
    {
    SplpyGIL lock;
-   if (pyOutNames_0)
-      Py_DECREF(pyOutNames_0);
+   Py_CLEAR(pyOutNames_0);
    }
    delete pyop_;
 }

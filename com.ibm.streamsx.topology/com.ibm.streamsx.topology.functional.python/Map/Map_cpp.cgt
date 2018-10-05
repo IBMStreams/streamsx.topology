@@ -67,8 +67,8 @@ MY_OPERATOR::~MY_OPERATOR()
 {
   {
     SplpyGIL lock;
-      Py_XDECREF(pyInStyleObj_);
-      Py_XDECREF(pyOutNames_0);
+      Py_CLEAR(pyInStyleObj_);
+      Py_CLEAR(pyOutNames_0);
   }
 
   delete funcop_;
