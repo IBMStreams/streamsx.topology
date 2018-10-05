@@ -196,7 +196,8 @@ class SplpyOp {
         else
           SPLAPPTRC(L_DEBUG, "checkpointing disabled", "python");
 
-        if (NULL != op()->getContext().getOptionalContext(CONSISTENT_REGION))
+        bool consistentRegion = NULL != op()->getContext().getOptionalContext(CONSISTENT_REGION);
+        if (consistentRegion)
           SPLAPPTRC(L_DEBUG, "consistent region enabled", "python");
         else
           SPLAPPTRC(L_DEBUG, "consistent region disabled", "python");
