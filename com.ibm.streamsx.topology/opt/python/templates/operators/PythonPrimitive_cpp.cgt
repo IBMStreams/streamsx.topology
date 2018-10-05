@@ -216,6 +216,7 @@ for (my $p = 0; $p < $model->getNumberOfInputPorts(); $p++) {
 <%
 for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) {
     my $oport = $model->getOutputPortAt($p);
+    my $oport_submission = 1;
     my $iport = undef;
 %>
 @include  "../../opt/.__splpy/common/py_valueToTuples.cgt"
