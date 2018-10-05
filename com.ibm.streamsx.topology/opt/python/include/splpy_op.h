@@ -186,90 +186,32 @@ class SplpyOp {
        * Register a state handler for the operator.  The state handler
        * handles checkpointing and supports consistent regions.  Checkpointing
        * will be enabled for this operator only if checkpoint is enabled for
-       * the topology, this operator is stateful, and it can be saved and
-       * restored using dill.
+       * the topology, this operator is stateful.
        */
       void setupStateHandler() {
-        // If the checkpointing or consistent region is enabled and the
-        // operator is stateful, create a state handler instance.
-        bool checkpointing = op()->getContext().isCheckpointingOn();
-        if (checkpointing)
+        assert(!stateHandler);
+
+        if (op()->getContext().isCheckpointingOn())
           SPLAPPTRC(L_DEBUG, "checkpointing enabled", "python");
         else
           SPLAPPTRC(L_DEBUG, "checkpointing disabled", "python");
 
-        bool consistentRegion = (NULL != op()->getContext().getOptionalContext(CONSISTENT_REGION));
+        bool consistentRegion = NULL != op()->getContext().getOptionalContext(CONSISTENT_REGION);
         if (consistentRegion)
           SPLAPPTRC(L_DEBUG, "consistent region enabled", "python");
         else
           SPLAPPTRC(L_DEBUG, "consistent region disabled", "python");
 
-        if (checkpointing || consistentRegion) {
-          PyObject * pickledCallable = NULL;
-          if (1) {
+        // Save the initial callable.
+        SplpyGIL lock;
+        Py_INCREF(callable());
+        PyObject *pickledCallable = SplpyGeneral::callFunction("dill", "dumps", callable(), NULL);
 
-            // Ensure that callable() can be pickled before using it in a state
-            // handler.
-            SplpyGIL lock;
-            PyObject * dumps = SplpyGeneral::loadFunction("dill", "dumps");
-            PyObject * args = PyTuple_New(1);
-            Py_INCREF(callable());
-            PyTuple_SET_ITEM(args, 0, callable());
-            pickledCallable = PyObject_CallObject(dumps, args);
-            Py_DECREF(args);
-            Py_DECREF(dumps);
+        SPLAPPTRC(L_DEBUG, "Creating state handler", "python");
+        // pickledCallable reference stolen here.
+        stateHandler = new SplpyOpStateHandlerImpl(this, pickledCallable);
 
-            std::stringstream msg;
-            msg << "Checkpointing is not available for the " << op()->getContext().getName() << " operator";
-
-            if (!pickledCallable) {
-              // The callable cannot be pickled.  Throw an exception that
-              // shuts down the operator, unless it is supressed.
-              // If it is suppressed, this operator will continue to run, but
-              // with no checkpointing enabled.
-              if (PyErr_Occurred()) {
-                SplpyExceptionInfo exceptionInfo = SplpyExceptionInfo::pythonError("setup");
-                if (exceptionInfo.pyValue_) {
-                  SPL::rstring text;
-                  // note pyRStringFromPyObject returns zero on success
-                  if (pyRStringFromPyObject(text, exceptionInfo.pyValue_) == 0) {
-                    msg << " because of python error " << text;
-                  }
-
-                  SPLAPPTRC(L_WARN, msg.str(), "python");
-                  // Offer the exception to the operator, so the operator
-                  // can suppress it.
-                  if (exceptionRaised(exceptionInfo) == 0) {
-                    throw exceptionInfo.exception();
-                  }
-                  exceptionInfo.clear();
-                  // The exception was suppressed.  Continue with
-                  // pickledCallable == NULL, which will cause no
-                  // state handler to be created.
-                  // Checkpointing will not be enabled for
-                  // this operator even though it is stateful.
-                  SPLAPPTRC(L_WARN, "Proceeding with no checkpointing for the " << op()->getContext().getName() << " operator", "python");
-                }
-              }
-              else {
-                // This is probably unreachable.  PyObject_CallObject
-                // returned NULL, but there was no python exception.
-                throw SplpyGeneral::generalException("setup", msg.str());
-              }
-            }
-          }
-          assert(!stateHandler);
-          if (pickledCallable) {
-            SPLAPPTRC(L_DEBUG, "Creating state handler", "python");
-            // pickledCallable reference stolen here.
-            stateHandler = new SplpyOpStateHandlerImpl(this, pickledCallable);
-
-            createStateMetrics(consistentRegion);
-          }
-          else {
-            SPLAPPTRC(L_DEBUG, "Not state handler", "python");
-          }
-        }
+        createStateMetrics(consistentRegion);
       }
 
       void createStateMetrics(bool consistentRegion) {
