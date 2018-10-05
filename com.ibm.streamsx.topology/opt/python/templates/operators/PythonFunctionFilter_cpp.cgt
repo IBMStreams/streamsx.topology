@@ -74,8 +74,9 @@ MY_OPERATOR::MY_OPERATOR() :
 MY_OPERATOR::~MY_OPERATOR() 
 {
    {
-   SplpyGIL lock;
-   Py_CLEAR(pyInNames_);
+     SplpyGIL lock;
+     Py_CLEAR(pyInNames_);
+   }
    delete pyop_;
 }
 
