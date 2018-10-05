@@ -19,6 +19,7 @@
  my $iport;
  
   my $oport = $model->getOutputPortAt(0);
+  my $oport_submission = 1;
   my $otupleType = $oport->getSPLTupleType();
   my @onames = SPL::CodeGen::Type::getAttributeNames($otupleType);
   my @otypes = SPL::CodeGen::Type::getAttributeTypes($otupleType);
