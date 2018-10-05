@@ -18,7 +18,6 @@
 #define SPLPY_AGGREGATE(f, v, r, occ) \
     streamsx::topology::Splpy::pyTupleMap(f, v, r)
 
-// Constructor
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
    pyInStyleObj_(NULL),
@@ -82,7 +81,6 @@ MY_OPERATOR::MY_OPERATOR() :
 #endif
 }
 
-// Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
   delete funcop_;
@@ -97,13 +95,11 @@ MY_OPERATOR::~MY_OPERATOR()
   <% } %>
 }
 
-// Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
     funcop_->prepareToShutdown();
 }
 
-// Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
 @include "../pyspltuple2value.cgt"

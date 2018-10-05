@@ -37,7 +37,6 @@
   my $skip_set_callable = 0;
 %>
 
-// Constructor
 MY_OPERATOR::MY_OPERATOR() :
     pyop_(NULL),
     pyInNames_(NULL)
@@ -58,7 +57,6 @@ MY_OPERATOR::MY_OPERATOR() :
 #endif
 }
 
-// Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
    {
@@ -74,7 +72,6 @@ void MY_OPERATOR::prepareToShutdown()
     pyop_->prepareToShutdown();
 }
 
-// Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
  @include  "../../opt/.__splpy/common/py_splTupleCheckForBlobs.cgt"

@@ -6,7 +6,6 @@
  my $pywrapfunc= $pystyle_fn . '_in';
 %>
 
-// Constructor
 MY_OPERATOR::MY_OPERATOR():
    funcop_(NULL),
    pyInStyleObj_(NULL)
@@ -20,7 +19,6 @@ MY_OPERATOR::MY_OPERATOR():
 #endif
 }
 
-// Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
   if (pyInStyleObj_) {
@@ -31,13 +29,11 @@ MY_OPERATOR::~MY_OPERATOR()
   delete funcop_;
 }
 
-// Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
     funcop_->prepareToShutdown();
 }
 
-// Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
     OptionalAutoLock stateLock(this);

@@ -21,7 +21,6 @@
  my %cpp_tuple_types;
 %>
 
-// Constructor
 MY_OPERATOR::MY_OPERATOR() :
     pyop_(NULL)
 <%if ($model->getNumberOfInputPorts() != 0) {%>
@@ -141,7 +140,6 @@ void MY_OPERATOR::process(uint32_t idx)
    }
 }
 
-// Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
    SplpyGIL lock;
