@@ -25,14 +25,10 @@ class MY_OPERATOR : public MY_BASE_OPERATOR, public SplpyPrimitiveOp
 {
 public:
   MY_OPERATOR();
-
   virtual ~MY_OPERATOR(); 
-
   void allPortsReady();
   void process(uint32_t idx);
-
   void prepareToShutdown(); 
-
   void process(Tuple const & tuple, uint32_t port);
 
   void convertAndSubmit(uint32_t port, PyObject *tuple_);

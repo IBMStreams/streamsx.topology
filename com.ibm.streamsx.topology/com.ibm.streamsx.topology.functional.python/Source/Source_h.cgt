@@ -16,19 +16,10 @@ class MY_OPERATOR : public MY_BASE_OPERATOR
 #endif
 {
 public:
-  // Constructor
   MY_OPERATOR();
-
-  // Destructor
   virtual ~MY_OPERATOR(); 
-
-  // Notify port readiness
   void allPortsReady(); 
-
-  // Notify termination
   void prepareToShutdown(); 
-
-  // Processing for source and threaded operators   
   void process(uint32_t idx);
     
 private:

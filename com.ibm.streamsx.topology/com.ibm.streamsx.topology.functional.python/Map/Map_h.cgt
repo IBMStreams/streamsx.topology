@@ -22,16 +22,9 @@ class MY_OPERATOR : public MY_BASE_OPERATOR
 #endif
 {
 public:
-  // Constructor
   MY_OPERATOR();
-
-  // Destructor
   virtual ~MY_OPERATOR(); 
-
-  // Notify termination
   void prepareToShutdown(); 
-
-  // Tuple processing for non-mutating ports
   void process(Tuple const & tuple, uint32_t port);
   void process(Punctuation const & punct, uint32_t port);
 

@@ -27,7 +27,6 @@
   my $skip_set_callable = 1;
 %>
 
-// Constructor
 MY_OPERATOR::MY_OPERATOR() :
    pyop_(NULL),
    pyOutNames_0(NULL)
@@ -53,24 +52,20 @@ MY_OPERATOR::MY_OPERATOR() :
 #endif
 }
 
-// Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
    {
    SplpyGIL lock;
-   if (pyOutNames_0)
-      Py_DECREF(pyOutNames_0);
+   Py_CLEAR(pyOutNames_0);
    }
    delete pyop_;
 }
 
-// Notify port readiness
 void MY_OPERATOR::allPortsReady()
 {
   createThreads(1);
 }
 
-// Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
     pyop_->prepareToShutdown();

@@ -2,7 +2,6 @@
 
 <% my $pywrapfunc='source_pickle'; %>
 
-// Constructor
 MY_OPERATOR::MY_OPERATOR() :
     funcop_(NULL),
     occ_(-1)
@@ -37,25 +36,21 @@ MY_OPERATOR::MY_OPERATOR() :
 #endif
 }
 
-// Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
     delete funcop_;
 }
 
-// Notify port readiness
 void MY_OPERATOR::allPortsReady() 
 {
   createThreads(1);
 }
  
-// Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
     funcop_->prepareToShutdown();
 }
 
-// Processing for source and threaded operators   
 void MY_OPERATOR::process(uint32_t idx)
 {
 #if SPLPY_OP_CR == 1

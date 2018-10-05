@@ -39,7 +39,6 @@
   my $skip_set_callable = 0;
 %>
 
-// Constructor
 MY_OPERATOR::MY_OPERATOR() :
    pyop_(NULL),
    pyInNames_(NULL),
@@ -63,21 +62,17 @@ MY_OPERATOR::MY_OPERATOR() :
 #endif
 }
 
-// Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
    {
    SplpyGIL lock;
-   if (pyInNames_)
-      Py_DECREF(pyInNames_);
-   if (pyOutNames_0)
-      Py_DECREF(pyOutNames_0);
+   Py_CLEAR(pyInNames_);
+   Py_CLEAR(pyOutNames_0);
    }
 
    delete pyop_;
 }
 
-// Notify pending shutdown
 void MY_OPERATOR::prepareToShutdown() 
 {
     pyop_->prepareToShutdown();
@@ -87,7 +82,6 @@ void MY_OPERATOR::prepareToShutdown()
   my $no_tuples_action = "";
 %>
 
-// Tuple processing for non-mutating ports
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
  @include  "../../opt/.__splpy/common/py_splTupleCheckForBlobs.cgt"
@@ -109,7 +103,6 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 @include  "../../opt/.__splpy/common/py_valueToTuples.cgt"
 @include  "../../opt/.__splpy/common/py_pyTupleTosplTuple.cgt"
 
-// Punctuation processing
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
 {
     forwardWindowPunctuation(punct);

@@ -21,7 +21,6 @@
  my %cpp_tuple_types;
 %>
 
-// Constructor
 MY_OPERATOR::MY_OPERATOR() :
     pyop_(NULL)
 <%if ($model->getNumberOfInputPorts() != 0) {%>
@@ -141,25 +140,21 @@ void MY_OPERATOR::process(uint32_t idx)
    }
 }
 
-// Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
    SplpyGIL lock;
-   delete pyop_;
-
+   {
 <%if ($model->getNumberOfInputPorts() != 0) {%>
-   if (pyinputfns_ != NULL)
-       Py_DECREF(pyinputfns_);
-   if (pyInNames_ != NULL)
-       Py_DECREF(pyInNames_);
+   Py_CLEAR(pyinputfns_);
+   Py_CLEAR(pyInNames_);
 <%  for (my $p = 1; $p < $model->getNumberOfInputPorts(); $p++) { %>
-   if (pyInNames_<%=$p%> != NULL)
-       Py_DECREF(pyInNames_<%=$p%>);
+       Py_CLEAR(pyInNames_<%=$p%>);
 <%}}%>
 <%  for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) { %>
-   if (pyOutNames_<%=$p%> != NULL)
-       Py_DECREF(pyOutNames_<%=$p%>);
+       Py_CLEAR(pyOutNames_<%=$p%>);
 <%}%>
+   }
+   delete pyop_;
 }
 
 void MY_OPERATOR::prepareToShutdown() 

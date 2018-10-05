@@ -6,7 +6,6 @@
  my $pywrapfunc= $pystyle_fn . '_in';
 %>
 
-// Constructor
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
    pyInStyleObj_(NULL)
@@ -20,12 +19,11 @@ MY_OPERATOR::MY_OPERATOR() :
 #endif
 }
 
-// Destructor
 MY_OPERATOR::~MY_OPERATOR() 
 {
-    if (pyInStyleObj_) {
+    {
       SplpyGIL lock;
-      Py_DECREF(pyInStyleObj_);
+      Py_CLEAR(pyInStyleObj_);
     }
 
     delete funcop_;
