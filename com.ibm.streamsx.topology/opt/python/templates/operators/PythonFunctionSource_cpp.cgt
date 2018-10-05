@@ -72,44 +72,50 @@ void MY_OPERATOR::prepareToShutdown()
 }
 
 <%
-  my $no_tuples_action = "submit(Punctuation::WindowMarker, 0);
-#if SPLPY_OP_CR == 1
-        // Wait until the region becomes consistent
-        // before completing. If a reset occurred
-        // then we need to continue the iterator which
-        // might have been reset, and hence more tuples to submit.
-        if (!crc->makeConsistent())
-            continue;
-#endif
-";
+  my $no_tuples_action = "allDone=true;";
 %>
 
 void MY_OPERATOR::process(uint32_t idx)
 {
 #if SPLPY_OP_CR == 1
-  SPL::ConsistentRegionContext *crc = static_cast<SPL::ConsistentRegionContext *>(getContext().getOptionalContext(CONSISTENT_REGION));
+    SPL::ConsistentRegionContext *crc = static_cast<SPL::ConsistentRegionContext *>(getContext().getOptionalContext(CONSISTENT_REGION));
 #endif
 
-  while(!getPE().getShutdownRequested()) {
-
-    try {
-
+    while(!getPE().getShutdownRequested()) {
+        bool allDone = false;
 #if SPLPY_OP_CR == 1
-      ConsistentRegionPermit crp(crc);
+        ConsistentRegionPermit crp(crc);
 #endif
-      OptionalAutoLock stateLock(this);
+        {
+            OptionalAutoLock stateLock(this);
 
-      // GIL is released across submission
-      SplpyGIL lock;
-
-      PyObject *pyTuple = PyTuple_New(0);
-      PyObject *pyDict = NULL;
+            // GIL is released across submission
+            try {
+                SplpyGIL lock;
+                PyObject *pyTuple = PyTuple_New(0);
+                PyObject *pyDict = NULL;
 
 @include  "../../opt/.__splpy/common/py_functionReturnToTuples.cgt"
-    } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
-       SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+
+            } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+                SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+                continue;
+            }
+        }
+
+        if (allDone) {
+             submit(Punctuation::WindowMarker, 0);
+#if SPLPY_OP_CR == 1
+             // Wait until the region becomes consistent
+             // before completing. If a reset occurred
+             // then we need to continue the iterator which
+             // might have been reset, and hence more tuples to submit.
+             if (!crc->makeConsistent())
+                  continue;
+#endif
+            break;
+        }
     }
-  }
 }
 
 // Create member function that converts Python tuple to SPL tuple
