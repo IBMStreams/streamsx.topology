@@ -19,10 +19,10 @@
     if (SplpyGeneral::isNone(pyReturnVar)) {
          Py_DECREF(pyReturnVar);
          <%=$no_tuples_action%>
-         return;
+    } else {
+
+         pySubmitTuplesPort<%=$oport->getIndex()%>(pyReturnVar <%=$ituplearg%>);
+
+         Py_DECREF(pyReturnVar);
     }
-
-    pySubmitTuplesPort<%=$oport->getIndex()%>(pyReturnVar <%=$ituplearg%>);
-
-    Py_DECREF(pyReturnVar);
 <%}%>

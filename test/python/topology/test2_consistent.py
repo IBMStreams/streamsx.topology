@@ -38,9 +38,12 @@ class TimeCounter(object):
     def __iter__(self):
         return self
 
+    def _done(self):
+        return self.iterations is not None and self.count >= self.iterations
+
     def __next__(self):
         # If the number of iterations has been met, stop iterating.
-        if self.iterations is not None and self.count >= self.iterations:
+        if self._done():
             self._metric2.value = 1
             raise StopIteration
 
@@ -58,6 +61,7 @@ class TimeCounter(object):
         self._metric = ec.CustomMetric(self, "nTuplesSent", "Logical tuples sent")
         self._metric.value = self.count
         self._metric2 = ec.CustomMetric(self, "stopped", "Logical tuples sent")
+        self._metric2.value = int(self._done())
 
     def __exit__(self, exc_type, exc_value, traceback):
         pass
