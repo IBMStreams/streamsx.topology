@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -18,6 +19,7 @@ import org.junit.Test;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.logic.Value;
 import com.ibm.streamsx.topology.streams.StringStreams;
@@ -95,22 +97,30 @@ public class TopologySourceTest extends TestTopology {
     
     @Test
     public void testPeriodicSource() throws Exception {
-        // Uses Condition.getResult()
-        assumeTrue(!isStreamingAnalyticsRun());
         
         Topology topology = newTopology();
 
         TStream<Long> timestamps = topology.periodicSource(new PeriodicSourceTester(), 500, TimeUnit.MILLISECONDS);
-        TStream<String> st = StringStreams.toString(timestamps);
+        AtomicLong last = new AtomicLong(System.currentTimeMillis());
+        Thread.sleep(401);
+        TStream<Long> delays = timestamps.map(ts -> ts - last.getAndSet(ts));
+        TStream<String> st = StringStreams.toString(delays);
         
-        Condition<Long> c = topology.getTester().atLeastTupleCount(st, 20);
-        Condition<List<String>> tuples = topology.getTester().stringContents(st);
+        
+        
+        Condition<Long> c = topology.getTester().atLeastTupleCount(st, 30);
+        //Condition<List<String>> tuples = topology.getTester().stringContents(st);
+        
+        Condition<?> al400 = topology.getTester().stringTupleTester(st, ts -> Long.parseLong(ts) >= 400);
 
-        long start = System.currentTimeMillis();
-        complete(topology.getTester(), c, 30, TimeUnit.SECONDS);
+        //long start = System.currentTimeMillis();
+        complete(topology.getTester(), c.and(al400), 30, TimeUnit.SECONDS);
+        
+        assertTrue(al400.valid());
+        assertTrue(c.valid());
         
         
-        
+        /*
         Long lastTime = null;
         for (String t : tuples.getResult()) {
             long time = Long.parseLong(t);
@@ -124,6 +134,7 @@ public class TopologySourceTest extends TestTopology {
             
             lastTime = time;
         }
+        */
     }
     
     public static class PeriodicSourceTester implements Supplier<Long> {
@@ -135,71 +146,86 @@ public class TopologySourceTest extends TestTopology {
     }
     
     @Test
-    public void testPeriodicMultiSource() throws Exception {
-        // Uses Condition.getResult()
-        assumeTrue(!isStreamingAnalyticsRun());
-        
+    public void testPeriodicMultiSource() throws Exception {        
         Topology topology = newTopology();
 
         TStream<String> ms = topology.periodicMultiSource(new PeriodicMultiSourceTester(),
                 500, TimeUnit.MILLISECONDS);
         
         Condition<Long> ending = topology.getTester().atLeastTupleCount(ms, 60);
-        Condition<List<String>> tuples = topology.getTester().stringContents(ms);
-
-        long start = System.currentTimeMillis();
+        // Condition<List<String>> tuples = topology.getTester().stringContents(ms);
+        Condition<?> checker = topology.getTester().stringTupleTester(ms, new TPMS());
+        
         complete(topology.getTester(), ending, 30, TimeUnit.SECONDS);
         
-        long totalDiff = 0;
-        int count = 0;
-        String prevTuple = null;
-        Long lastTime = null;
-        for (String t : tuples.getResult()) {
+        assertTrue(checker.valid());
+        assertTrue(ending.valid());
+    }
+    
+    public static class TPMS implements Predicate<String> {
+
+		private static final long serialVersionUID = 1L;
+		private final long start = System.currentTimeMillis();
+        private long totalDiff;
+        private int count;
+        private String prevTuple;
+        private Long lastTime;
+        
+    	@Override
+    	public boolean test(String t) {
+        
             if (prevTuple == null) {
-                assertTrue(t.startsWith("A"));
+                boolean ok = t.startsWith("A");
                 prevTuple = t;
-                continue;
+                return ok;
             }
+            
+
             char c = (char) (prevTuple.charAt(0) + 1);
             if (c == 'D')
                 c = 'A';
-            assertTrue(c == t.charAt(0));
+            boolean ok = c == t.charAt(0);
+            if (!ok)
+            	return false;
             prevTuple = t;
             
             long time = Long.parseLong(t.substring(1));
-            assertTrue("Expected time:" + time + ">= start:" + start,
-                       time >= start);
+            ok = time >= start;
+            if (!ok)
+            	return false;
             
             if (lastTime != null) {
-                assertTrue("Expected time:" + time + ">= lastTime:" + lastTime,
-                            time >= lastTime);
+                ok = time >= lastTime;
+                if (!ok)
+                	return false;
                 if (t.startsWith("A")) {
                     // Can't really test for a specific diff as the periodic is
                     // at a fixed rate and thread scheduling may mean that the
                     // get was delayed and then called just before the next iteration.
                     
                     long diff = time - lastTime;
-                    assertTrue(Long.toString(diff), diff > 0);                    
+                    ok =  diff > 0;        
+                    if (!ok)
+                    	return false;
                     totalDiff += diff;
                     count++;
                 }
             }
             lastTime = time;
+            
+            if (count > 40) {
+                // Try asserting the average period is somewhat close to 500ms.
+                double averageDiff = ((double) totalDiff) / ((double) count);
+                ok = averageDiff > 350.0;
+            }
+            return ok;
         }
-        
-        // Try asserting the average period is somewhat close to 500ms.
-        double averageDiff = ((double) totalDiff) / ((double) count);
-        assertTrue("Average diff:" + averageDiff, averageDiff > 350.0);
     }
     
     public static class PeriodicMultiSourceTester implements Supplier<Iterable<String>> {
         private static final long serialVersionUID = 1L;
         @Override
         public Iterable<String> get() {
-            try {
-                Thread.sleep(2);
-            } catch (InterruptedException e) {
-            }
             long now = System.currentTimeMillis();
             return Arrays.asList("A"+now, "B"+now, "C"+now);
         }
