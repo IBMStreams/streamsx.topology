@@ -4,8 +4,7 @@
  */
 package com.ibm.streamsx.topology.test.distributed;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.util.List;
@@ -33,24 +32,14 @@ public class JobConfigSubmissionTest extends TestTopology {
         
         JobConfig config = new JobConfig();
         config.setJobGroup("default");
-        List<String> result = testItDirect("testGroupJobConfig", config);
-        
-        assertFalse(result.get(0).isEmpty()); // job id       
-        assertFalse(result.get(2).isEmpty()); // job name
-        assertEquals("default", result.get(2)); // job group
-        assertEquals("<empty>", result.get(3)); // data-directory
+        testItDirect("testGroupJobConfig", config, "<jobId>", "<jobName>", "default", "<empty>");
     }
     @Test
     public void testNameJobConfig() throws Exception {
         
         JobConfig config = new JobConfig();
         config.setJobName("nameG");
-        List<String> result = testItDirect("testNameJobConfig", config);
-        
-        assertFalse(result.get(0).isEmpty()); // job id
-        assertEquals("nameG", result.get(1)); // job name
-        assertEquals("default", result.get(2)); // job group
-        assertEquals("<empty>", result.get(3)); // data-directory
+        testItDirect("testNameJobConfig", config, "<jobId>", "nameG", "default", "<empty>");
     }
     
     @Test
@@ -59,15 +48,10 @@ public class JobConfigSubmissionTest extends TestTopology {
         JobConfig config = new JobConfig();
         config.setJobName("nameDD");
         config.setDataDirectory("/tmp/some/dir");
-        List<String> result = testItDirect("testNameJobConfig", config);
-        
-        assertFalse(result.get(0).isEmpty()); // job id
-        assertEquals("nameDD", result.get(1)); // job name
-        assertEquals("default", result.get(2)); // job group
-        assertEquals("/tmp/some/dir", result.get(3)); // data-directory
+        testItDirect("testNameJobConfig", config, "<jobId>", "nameDD", "default", "/tmp/some/dir");
     }
     
-    private List<String> testItDirect(String topologyName, JobConfig config)
+    private void testItDirect(String topologyName, JobConfig config, String ...expected)
             throws Exception {
         
         // Uses a Java primitive operator directly.
@@ -85,10 +69,12 @@ public class JobConfigSubmissionTest extends TestTopology {
         TStream<String> source = sourceSPL.toStringStream();
 
         Condition<Long> end = topology.getTester().tupleCount(source, 4);
-        Condition<List<String>> result = topology.getTester().stringContents(source);
-        complete(topology.getTester(), end, 10, TimeUnit.SECONDS);
+        Condition<List<String>> result = topology.getTester().stringContents(source, expected);
+        complete(topology.getTester(), end.and(result), 10, TimeUnit.SECONDS);
         
-        return result.getResult();
+        
+        assertTrue(result.valid());
+        assertTrue(end.valid());
     }
     
 }
