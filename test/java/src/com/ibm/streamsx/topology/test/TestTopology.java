@@ -12,6 +12,7 @@ import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -374,7 +375,7 @@ public class TestTopology {
                 seconds, TimeUnit.SECONDS,
                 contents);
 
-        assertTrue("Expected:" + contents, expectedContents.valid());
+        assertTrue("Expected:" + Arrays.asList(contents), expectedContents.valid());
     }
     
     /**
