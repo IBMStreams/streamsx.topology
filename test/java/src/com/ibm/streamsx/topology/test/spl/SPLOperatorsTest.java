@@ -4,9 +4,7 @@
  */
 package com.ibm.streamsx.topology.test.spl;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.util.Collections;
@@ -21,7 +19,6 @@ import org.junit.Test;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.ibm.streams.flow.handlers.MostRecent;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.Type;

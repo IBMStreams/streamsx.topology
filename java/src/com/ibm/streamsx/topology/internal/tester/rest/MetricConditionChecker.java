@@ -128,13 +128,16 @@ public class MetricConditionChecker {
     }
 
 
-    void shutdown() throws IOException, Exception {
+    void shutdown(TestState state) throws IOException, Exception {
         for (MetricCondition<?> condition : this.conditions.values()) {
             condition.freeze();
         }
         try {
-            if (job != null)
-                job.cancel(); 
+            if (job != null) {
+            	if (state != TestState.VALID)
+            	    job.retrieveLogTrace(null);
+                job.cancel();                 
+            }
         } finally {
             job = null;
         }

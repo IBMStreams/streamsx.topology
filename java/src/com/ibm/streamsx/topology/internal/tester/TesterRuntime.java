@@ -48,7 +48,7 @@ public abstract class TesterRuntime {
     
     public abstract void start(Object info) throws Exception;
 
-    public abstract void shutdown(Future<?> future) throws Exception;
+    public abstract void shutdown(Future<?> future, TestState state) throws Exception;
     
     public abstract void finalizeTester(Map<TStream<?>, Set<StreamHandler<Tuple>>> handlers,
             Map<TStream<?>, Set<UserCondition<?>>> conditions) throws Exception;  
