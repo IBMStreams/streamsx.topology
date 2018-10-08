@@ -4,8 +4,6 @@
  */
 package com.ibm.streamsx.topology.test.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -48,45 +46,28 @@ import com.ibm.streamsx.topology.tester.Condition;
 public class JobPropertiesTest extends TestTopology {
 
     @Test
-    public void testNameProperty() throws Exception {
-        assumeTrue(!isStreamingAnalyticsRun()); // Result not available on SAS
-        
-        List<String> result = testItDirect("testNameProperty", JobProperties.NAME,
-                "JobPropertiesTestJobName").getResult();
-        
-        assertFalse(result.get(0).isEmpty()); // job id
-        assertEquals("JobPropertiesTestJobName", result.get(1));
-        assertFalse(result.get(2).isEmpty()); // job group
-        assertEquals("<empty>", result.get(3)); // data-directory
+    public void testNameProperty() throws Exception {        
+        testItDirect("testNameProperty", JobProperties.NAME,
+                "JobPropertiesTestJobName", "<jobId>", "JobPropertiesTestJobName", "default", "<empty>");
     }
 
     @Test
-    public void testGroupPropertyDefault() throws Exception {
-        assumeTrue(!isStreamingAnalyticsRun()); // Result not available on SAS
-        
-        List<String> result = testItDirect("testGroupProperty", JobProperties.GROUP,
+    public void testGroupPropertyDefault() throws Exception {        
+        testItDirect("testGroupProperty", JobProperties.GROUP,
                 // lame, but otherwise need a real pre-existing non-default one.
-                "default").getResult();
-        assertFalse(result.get(0).isEmpty()); // job id
-        assertFalse(result.get(1).isEmpty()); // job name
-        assertEquals("default", result.get(2)); // job group
-        assertEquals("<empty>", result.get(3)); // data-directory
+                "default", "<jobId>", "<jobName>", "default", "<empty>");
     }
 
     @Test
     public void testGroupPropertyNonDefault() throws Exception {
-        assumeTrue(!isStreamingAnalyticsRun()); // Result not available on SAS
+        assumeTrue(!isStreamingAnalyticsRun()); // Can't have different group on SAS
         
         // NOT a real API EV... though perhaps should be.
         // Must name a pre-existing job group.
         // Skip the test if it's not set.
         String group = System.getenv("STREAMSX_TOPOLOGY_DEFAULT_JOB_GROUP");
         assumeNotNull(group);
-        List<String> result = testItDirect("testGroupProperty", JobProperties.GROUP, group).getResult();
-        assertFalse(result.get(0).isEmpty()); // job id
-        assertFalse(result.get(1).isEmpty()); // job name
-        assertEquals(group, result.get(2)); // job group
-        assertEquals("<empty>", result.get(3)); // data-directory
+        testItDirect("testGroupProperty", JobProperties.GROUP, group, "<jobId>", "<jobName>", group, "<empty>");
     }
 
     @Test(expected=Exception.class)
@@ -97,15 +78,9 @@ public class JobPropertiesTest extends TestTopology {
 
     @Test
     public void testDataDirectoryProperty() throws Exception {
-        assumeTrue(!isStreamingAnalyticsRun()); // Result not available on SAS
         
-        List<String> result = testItDirect("testDataDirectoryProperty", JobProperties.DATA_DIRECTORY,
-                "/no/such/path").getResult();
-        
-        assertFalse(result.get(0).isEmpty()); // job id
-        assertFalse(result.get(1).isEmpty()); // job name
-        assertFalse(result.get(2).isEmpty());  // job group
-        assertEquals("/no/such/path", result.get(3)); // data-directory
+        testItDirect("testDataDirectoryProperty", JobProperties.DATA_DIRECTORY,
+                "/no/such/path", "<jobId>", "<jobName>", "default","/no/such/path");
     }
 
     @Test
@@ -115,7 +90,7 @@ public class JobPropertiesTest extends TestTopology {
                 JobProperties.OVERRIDE_RESOURCE_LOAD_PROTECTION, true);
     }
     
-    private Condition<List<String>> testItDirect(String topologyName, String propName, Object value)
+    private void testItDirect(String topologyName, String propName, Object value, String ...expected)
             throws Exception {
         // Primitive op has direct dependency on Java Operator API
         assumeTrue(hasStreamsInstall());
@@ -132,9 +107,11 @@ public class JobPropertiesTest extends TestTopology {
         TStream<String> source = sourceSPL.toStringStream();
 
         Condition<Long> end = topology.getTester().tupleCount(source, 4);
-        Condition<List<String>> result = topology.getTester().stringContents(source);
-        complete(topology.getTester(), end, 10, TimeUnit.SECONDS);
-        return result;
+        Condition<List<String>> result = topology.getTester().stringContents(source, expected);
+        complete(topology.getTester(), end.and(result), 10, TimeUnit.SECONDS);
+        
+        assertTrue(result.valid());
+        assertTrue(end.valid());
     }
     
     
@@ -326,17 +303,19 @@ public class JobPropertiesTest extends TestTopology {
             ProcessingElement pe = getOperatorContext().getPE();
             
             OutputTuple out = getOutput(0).newTuple();
-            out.setString("string", pe.getJobId().toString());
+            out.setString("string", pe.getJobId() == null ? "<NULL>" : "<jobId>");
             getOutput(0).submit(out);
             
-            out.setString("string", pe.getJobName());
+            String jobId = pe.getJobId().toString();
+            String jobName = pe.getJobName();
+            if (jobName.endsWith(jobId))
+            	jobName = "<jobName>";
+            
+            out.setString("string", jobName);
             getOutput(0).submit(out);
             
-            try {
-                out.setString("string", pe.getJobGroup());
-            } catch (AbstractMethodError e) {
-                out.setString("string", "Streams401");
-            }
+            out.setString("string", pe.getJobGroup());
+
             getOutput(0).submit(out);           
             
             out.setString("string", pe.hasDataDirectory() ? pe.getDataDirectory().toString() : "<empty>");
