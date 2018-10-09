@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.rest;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,6 +74,8 @@ public class Job extends Element {
     private long submitTime;
     @Expose
     private String views;
+    @Expose
+    private String applicationLogTrace;
     
     private Instance _instance;
 
@@ -284,6 +287,31 @@ public class Job extends Element {
             Thread.sleep(sleepTime);
             refresh();
         }
+    }
+    
+    /**
+     * TODO
+     * @param directory
+     * @return
+     * @throws IOException
+     * 
+     * @since 1.11
+     */
+    public File retrieveLogTrace(File directory) throws IOException {
+    	if (this.applicationLogTrace == null)
+    		return null;
+    	
+    	File fn;
+    	String lfn = "job_" + this.id + "_" + (System.currentTimeMillis()/1000L) + ".tgz";
+    	if (directory == null) {
+    		fn = new File(lfn);
+    	} else {
+    		fn = new File(directory, lfn);
+    	}
+    	
+    	StreamsRestUtils.getFile(connection().getExecutor(), connection().getAuthorization(), applicationLogTrace, fn);
+    	
+    	return fn;
     }
 
     private static class JobArray  extends ElementArray<Job> {

@@ -18,7 +18,6 @@ import com.ibm.streams.flow.javaprimitives.JavaTestableGraph;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.builder.BOutput;
-import com.ibm.streamsx.topology.builder.BOutputPort;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.internal.embedded.EmbeddedGraph;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
@@ -45,7 +44,7 @@ public final class EmbeddedTesterRuntime extends HandlerTesterRuntime {
     }
 
     @Override
-    public void shutdown(Future<?> future) throws Exception {
+    public void shutdown(Future<?> future, TestState state) throws Exception {
         future.cancel(true);
     }
     

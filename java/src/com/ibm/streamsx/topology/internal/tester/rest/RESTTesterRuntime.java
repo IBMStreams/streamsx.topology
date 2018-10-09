@@ -28,6 +28,7 @@ import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
+import com.ibm.streamsx.topology.internal.tester.TesterRuntime.TestState;
 import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.NoStreamCondition;
@@ -68,8 +69,8 @@ public class RESTTesterRuntime extends TesterRuntime {
     }
 
     @Override
-    public void shutdown(Future<?> future) throws Exception {
-        metricsChecker.shutdown();
+    public void shutdown(Future<?> future, TestState state) throws Exception {
+        metricsChecker.shutdown(state);
     }
     
     @Override

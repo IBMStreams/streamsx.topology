@@ -4,9 +4,7 @@
  */
 package com.ibm.streamsx.topology.test.spl;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.util.Collections;
@@ -21,7 +19,6 @@ import org.junit.Test;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.ibm.streams.flow.handlers.MostRecent;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.Type;
@@ -129,7 +126,6 @@ public class SPLOperatorsTest extends TestTopology {
         
         Topology topology = new Topology(testName); 
         opParamAdder.init(topology, getConfig());
-        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         
         StreamSchema schema = Type.Factory.getStreamSchema(
                 "tuple<"
@@ -141,14 +137,20 @@ public class SPLOperatorsTest extends TestTopology {
                 + ", float32 f32, float64 f64"
                 + " >");
         
+        Map<String,Object> expectedValues = new HashMap<>();
+        
         Random rand = new Random();
         String r = "test    X\tY\"Lit\nerals\\nX\\tY " + rand.nextInt();
         opParamAdder.put("r", r);
         String u = "test    X\tY\"Lit\nerals\\nX\\tY " + rand.nextInt();
         opParamAdder.put("u", SPL.createValue(u, MetaType.USTRING));
+        
+        expectedValues.put("r", new RString(r));
+        expectedValues.put("u", u);
 
         boolean b = rand.nextBoolean();
         opParamAdder.put("b", b);
+        expectedValues.put("b", b);
         
         byte i8 = (byte) rand.nextInt();
         short i16 = (short) rand.nextInt(); 
@@ -158,6 +160,11 @@ public class SPLOperatorsTest extends TestTopology {
         opParamAdder.put("i16", i16); 
         opParamAdder.put("i32", i32); 
         opParamAdder.put("i64", i64); 
+        
+        expectedValues.put("i8", i8);
+        expectedValues.put("i16", i16); 
+        expectedValues.put("i32", i32); 
+        expectedValues.put("i64", i64); 
 
         byte ui8 = (byte) 0xFF;       // 255 => -1
         short ui16 = (short) 0xFFFE;  // 65534 => -2 
@@ -168,45 +175,31 @@ public class SPLOperatorsTest extends TestTopology {
         opParamAdder.put("ui32", SPL.createValue(ui32, MetaType.UINT32)); 
         opParamAdder.put("ui64", SPL.createValue(ui64, MetaType.UINT64)); 
         
-        float f32 = rand.nextFloat();
-        double f64 = rand.nextDouble();
+        expectedValues.put("ui8", ui8);
+        expectedValues.put("ui16", ui16);
+        expectedValues.put("ui32", ui32);
+        expectedValues.put("ui64", ui64);
+        
+        float f32 = 4.0f;
+        double f64 = 32.0;
         opParamAdder.put("f32", f32); 
         opParamAdder.put("f64", f64);
+        expectedValues.put("f32", f32); 
+        expectedValues.put("f64", f64);
    
         SPL.addToolkit(topology, new File(getTestRoot(), "spl/testtk"));
         SPLStream paramTuple = SPL.invokeSource(topology, "testgen::TypeLiteralTester", opParamAdder.getParams(), schema);
-
-        // paramTuple.print();
-        // paramTuple.filter(new AllowAll<Tuple>());
+        
+        Tuple expectedTuple = schema.getTuple(expectedValues);
         
         Tester tester = topology.getTester();
         
         Condition<Long> expectedCount = tester.tupleCount(paramTuple, 1);
-        MostRecent<Tuple> mr = tester.splHandler(paramTuple, new MostRecent<Tuple>());
-
-        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
-        complete(tester, expectedCount, 10, TimeUnit.SECONDS);
-
-        assertTrue(expectedCount.toString(), expectedCount.valid());
-        Tuple tuple = mr.getMostRecentTuple();
-        // System.out.println("tuple: " + tuple);
+        Condition<?> contents = tester.tupleContents(paramTuple, expectedTuple);;
+        complete(tester, expectedCount.and(contents), 10, TimeUnit.SECONDS);
         
-        assertEquals(r, tuple.getString("r"));
-        assertEquals(u, tuple.getString("u"));
-        assertEquals(i8, tuple.getByte("i8"));
-        assertEquals(i16, tuple.getShort("i16"));
-        assertEquals(i32, tuple.getInt("i32"));
-        assertEquals(i64, tuple.getLong("i64"));
-        assertEquals(ui8, tuple.getByte("ui8"));
-        assertEquals("255", tuple.getString("ui8"));
-        assertEquals(ui16, tuple.getShort("ui16"));
-        assertEquals("65534", tuple.getString("ui16"));
-        assertEquals(ui32, tuple.getInt("ui32"));
-        assertEquals("4294967293", tuple.getString("ui32"));
-        assertEquals(ui64, tuple.getLong("ui64"));
-        assertEquals("18446744073709551612", tuple.getString("ui64"));
-        assertEquals(f32, tuple.getFloat("f32"), 0.001);
-        assertEquals(f64, tuple.getDouble("f64"), 0.001);
+        assertTrue(contents.valid());
+        assertTrue(expectedCount.valid());
     }
 
     /**
@@ -242,11 +235,8 @@ public class SPLOperatorsTest extends TestTopology {
     private void testOpParamsOptionalTypes(String testName, OpParamAdder opParamAdder)
         throws Exception {
         
-        assumeTrue(!isStreamingAnalyticsRun()); // TODO: Uses Stream handler
-        
         Topology topology = new Topology(testName); 
         opParamAdder.init(topology, getConfig());
-        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         
         StreamSchema schema = Type.Factory.getStreamSchema(
                 "tuple<"
@@ -258,13 +248,20 @@ public class SPLOperatorsTest extends TestTopology {
                 + ", optional<int32> oi32nv"
                 + " >");
         
+        Map<String,Object> expectedValues = new HashMap<>();
         Random rand = new Random();
         String r = "test    X\tY\"Lit\nerals\\nX\\tY " + rand.nextInt();
         opParamAdder.put("r", r);
+        expectedValues.put("r", new RString(r));
+        
         String orv = "test    X\tY\"Lit\nerals\\nX\\tY " + rand.nextInt();
         opParamAdder.put("orv", orv);
         // test setting optional type to null by using null in Map
         opParamAdder.put("ornv", null);
+        
+        expectedValues.put("orv", new RString(orv));
+        expectedValues.put("ornv", null);
+              
         
         int i32 = rand.nextInt();
         opParamAdder.put("i32", i32); 
@@ -272,33 +269,23 @@ public class SPLOperatorsTest extends TestTopology {
         opParamAdder.put("oi32v", oi32v); 
         // test setting optional type to null by using createNullValue() in Map
         opParamAdder.put("oi32nv", SPL.createNullValue());
+        
+        expectedValues.put("i32", i32);
+        expectedValues.put("oi32v", oi32v);
+        expectedValues.put("oi32nv", null);
    
         SPL.addToolkit(topology, new File(getTestRoot(), "spl/testtkopt"));
         SPLStream paramTuple = SPL.invokeSource(topology, "testgen::TypeLiteralTester", opParamAdder.getParams(), schema);
-
-        // paramTuple.print();
-        // paramTuple.filter(new AllowAll<Tuple>());
         
         Tester tester = topology.getTester();
         
         Condition<Long> expectedCount = tester.tupleCount(paramTuple, 1);
-        MostRecent<Tuple> mr = tester.splHandler(paramTuple, new MostRecent<Tuple>());
+        Condition<?> contents = tester.tupleContents(paramTuple, schema.getTuple(expectedValues));
 
-        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
-        complete(tester, expectedCount, 10, TimeUnit.SECONDS);
+        complete(tester, expectedCount.and(contents), 10, TimeUnit.SECONDS);
 
-        assertTrue(expectedCount.toString(), expectedCount.valid());
-        Tuple tuple = mr.getMostRecentTuple();
-        // System.out.println("tuple: " + tuple);
-        
-        assertEquals(r, tuple.getString("r"));
-        assertEquals(orv, tuple.getString("orv"));
-        assertEquals(new RString(orv), tuple.getObject("orv"));
-        assertEquals("null", tuple.getString("ornv"));
-        assertEquals(null, tuple.getObject("ornv"));
-        assertEquals(i32, tuple.getInt("i32"));
-        assertEquals(new Integer(oi32v), tuple.getObject("oi32v"));
-        assertEquals(null, tuple.getObject("oi32nv"));
+        assertTrue(contents.valid());
+        assertTrue(expectedCount.valid());
     }
 
     @Test
@@ -310,7 +297,6 @@ public class SPLOperatorsTest extends TestTopology {
 
     @Test
     public void testSubmissionParamsWithDefault() throws Exception {
-        assumeTrue(!isStreamingAnalyticsRun()); // TODO: Uses Stream handler
         
         // Test operator parameters with submission time values with defaults
         testOpParams("testSubmissionParamsWithDefault", new OpParamAdder() {
@@ -327,7 +313,6 @@ public class SPLOperatorsTest extends TestTopology {
 
     @Test
     public void testSubmissionParamsWithoutDefault() throws Exception {
-        assumeTrue(!isStreamingAnalyticsRun()); // TODO: Uses Stream handler
            
         // Test operator parameters with submission time values without defaults
         testOpParams("testSubmissionParamsWithoutDefault", new OpParamAdder() {

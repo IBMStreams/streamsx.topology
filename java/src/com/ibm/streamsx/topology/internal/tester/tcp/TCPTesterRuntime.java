@@ -41,6 +41,7 @@ import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.internal.streams.InvokeCancel;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
+import com.ibm.streamsx.topology.internal.tester.TesterRuntime.TestState;
 import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.handlers.HandlerTesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.ops.TesterSink;
@@ -129,7 +130,7 @@ public class TCPTesterRuntime extends HandlerTesterRuntime {
     }
 
     @Override
-    public void shutdown(Future<?> future) throws Exception {
+    public void shutdown(Future<?> future, TestState state) throws Exception {
         try {
             if (contextType == Type.DISTRIBUTED_TESTER) {
                 InvokeCancel cancel = new InvokeCancel((BigInteger) (future.get()));

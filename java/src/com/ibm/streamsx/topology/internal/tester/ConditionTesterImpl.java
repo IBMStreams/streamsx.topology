@@ -274,7 +274,7 @@ public class ConditionTesterImpl implements Tester {
             Topology.TOPOLOGY_LOGGER.warning(topology.getName() + " timed out waiting for condition");           
         }
         
-        getRuntime().shutdown(jobSubmission);
+        getRuntime().shutdown(jobSubmission, state);
               
         return endCondition.valid();
     }
