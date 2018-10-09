@@ -74,12 +74,31 @@ class TimeCounter(object):
             del state['_metric2']
         return state
 
-# This just provides a __call__ method that computes the average of its
-# parameter, but since it is a class it is stateful and will have its state
-# saved during checkpointing.
 class StatefulAverage(object):
+    def __init__(self):
+        self.count = 0
     def __call__(self, x):
-        return float(sum(x))/float(len(x))
+        self.count += 1
+        return self.count, float(sum(x))/float(len(x))
+
+# Due to the timed nature can't check specific values.
+class TimedStatefulAverageChecker(object):
+    def __init__(self):
+        self.count = 0
+        self.last = 0.0
+    def __call__(self, agg):
+        print("TSAC", self.count, self.last, agg, flush=True)
+        self.count += 1
+        if self.count != agg[0]:
+            print("TimedStatefulAverageChecker", "Expected count", self.count, "got", agg[0])
+            return False
+        # Could fire consecutively without receiving more tuples.
+        if self.last > agg[1]:
+            print("TimedStatefulAverageChecker", "Expected >= ", self.last, "got", agg[1])
+            return False
+        self.last = agg[1]
+        return True
+        
 
 # Pass only even integers.  This is a class, therefore is checkpointed
 # even though it does not have meaningful state.
@@ -210,17 +229,11 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         tester.contents(s, range(0,iterations))
         tester.resets(reset_count)
 
-        # cfg={}
-        # job_config = streamsx.topology.context.JobConfig(tracing='debug')
-        # job_config.add(self.test_config)
-
         tester.test(self.test_ctxtype, self.test_config)
 
     # Source, ForEach, Filter, Aggregate operators
     # (based on test2_python_window.TestPythonWindowing.test_basicCountCountWindow)
     def test_aggregate(self):
-        # If the number of iterations is changed, keep it a multiple of six,
-        # or improve the expected results generation below.
         iterations = 3000
         reset_count = 5
         topo = Topology()
@@ -232,25 +245,28 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         s = s.filter(StatefulEvenFilter())
         # Halve the even ones and add one.  Now have integers [1,(iterations/2))
         s = s.map(StatefulHalfPlusOne())
-        s = s.last(10).trigger(3).aggregate(StatefulAverage())
+
+        sc = s.last(10).trigger(3).aggregate(StatefulAverage())
+        st = s.last(17).trigger(datetime.timedelta(seconds=2)).aggregate(StatefulAverage())
 
         tester = Tester(topo)
         tester.resets(reset_count)
 
         # Find the expected results.
-        # The first three values (until the window fills) are special.
-        expected = [2.0, 3.5, 5.0]
-        # The rest start at 7.5 and increase by three until 1495.5.
-        # Assuming that the number of iterations is a multiple of six,
-        # the final trigger happens at the last tuple.  There will be
-        # ten values in the window, from (iterations/2 - 9) to (iterations/2).
-        # The average is then ((iterations/2 - 9) + (iterations/2))/2.
-        # For 3000 iterations, that works out to 1495.5
-        end = float(iterations)/2.0 - 4.5
-        expected.extend(itertools.takewhile(lambda x: x <= end, itertools.count(7.5,3)))
-        tester.contents(s, expected)
-        tester.test(self.test_ctxtype, self.test_config)
+        # mimic the processing using Python builtins
+        iv = filter(StatefulEvenFilter(), range(iterations))
+        iv = list(map(StatefulHalfPlusOne(), iv))
 
+        # Expected for the non-stateful
+        sagg = StatefulAverage()
+        ers = [ sagg(iv[0:i+3][-10:]) for i in range(0, len(iv), 3)]
+        tester.contents(sc, ers)
+
+        tester.tuple_check(st, TimedStatefulAverageChecker())
+        # Must eventually aggregate on the last 17 items in iv
+        tester.eventual_result(st, lambda av : True if av[1] == sagg(iv[-17:])[1] else None)
+
+        tester.test(self.test_ctxtype, self.test_config, always_collect_logs=False)
 
     # Test flat map (based on a sample)
     def test_flat_map(self):

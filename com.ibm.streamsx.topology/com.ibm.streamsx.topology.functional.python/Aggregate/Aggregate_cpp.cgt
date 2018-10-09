@@ -225,22 +225,30 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
 // End Window Event Handler Overrides
 // ##################################
 
+#if SPLPY_OP_STATEFUL == 1
+void MY_OPERATOR::drain() {
+    SPLAPPTRC(L_TRACE, "drain: enter", "python");
+    window_.drain();
+    SPLAPPTRC(L_TRACE, "drain: exit", "python");
+}
+
 void MY_OPERATOR::checkpointExtra(SPL::Checkpoint & ckpt) {
-    SPLAPPTRC(L_TRACE, "checkpointExtra: enter", SPL_OPER_DBG);
+    SPLAPPTRC(L_TRACE, "checkpointExtra: enter", "python");
     window_.checkpoint(ckpt);
-    SPLAPPTRC(L_TRACE, "checkpointExtra: exit", SPL_OPER_DBG);
+    SPLAPPTRC(L_TRACE, "checkpointExtra: exit", "python");
 }
 
 void MY_OPERATOR::resetExtra(SPL::Checkpoint & ckpt) {
-    SPLAPPTRC(L_TRACE, "resetExtra", SPL_OPER_DBG);
+    SPLAPPTRC(L_TRACE, "resetExtra", "python");
     window_.reset(ckpt);
-    SPLAPPTRC(L_TRACE, "resetExtra: exit", SPL_OPER_DBG);
+    SPLAPPTRC(L_TRACE, "resetExtra: exit", "python");
 }
 
 void MY_OPERATOR::resetToInitialStateExtra() {
-    SPLAPPTRC(L_TRACE, "resetToInitialStateExtra: enter", SPL_OPER_DBG);
+    SPLAPPTRC(L_TRACE, "resetToInitialStateExtra: enter", "python");
     window_.resetToInitialState();
-    SPLAPPTRC(L_TRACE, "resetToInitialStateExtra: exit", SPL_OPER_DBG);
+    SPLAPPTRC(L_TRACE, "resetToInitialStateExtra: exit", "python");
 }
+#endif
 
 <%SPL::CodeGen::implementationEpilogue($model);%>

@@ -38,6 +38,7 @@ public:
   DelegatingStateHandler() {}
   virtual ~DelegatingStateHandler() {}
 
+  virtual void drain() {}
   virtual void checkpoint(SPL::Checkpoint & ckpt);
   virtual void reset(SPL::Checkpoint & ckpt);
   virtual void resetToInitialState();

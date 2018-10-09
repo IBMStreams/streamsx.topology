@@ -28,6 +28,9 @@ class MY_OPERATOR : public MY_BASE_OPERATOR,
 public:
   MY_OPERATOR();
   virtual ~MY_OPERATOR(); 
+#if SPLPY_OP_STATEFUL == 1
+  virtual void drain();
+#endif
   void prepareToShutdown(); 
   void process(Tuple const & tuple, uint32_t port);
   void process(Punctuation const & punct, uint32_t port);
@@ -43,10 +46,12 @@ void afterTupleEvictionEvent(
      Window<PyObject *> & window,  Window<PyObject *>::TupleType & tuple,
      Window<PyObject *>::PartitionType const & partition);
 
+#if SPLPY_OP_STATEFUL == 1
 protected:
   virtual void checkpointExtra(SPL::Checkpoint & ckpt);
   virtual void resetExtra(SPL::Checkpoint & ckpt);
   virtual void resetToInitialStateExtra();
+#endif
 
 private:
     SplpyOp * op() { return funcop_; }
