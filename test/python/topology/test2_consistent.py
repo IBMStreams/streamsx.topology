@@ -1,3 +1,4 @@
+from streamsx.topology.context import ContextTypes
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology.tester_runtime import _StreamCondition
@@ -87,7 +88,6 @@ class TimedStatefulAverageChecker(object):
         self.count = 0
         self.last = 0.0
     def __call__(self, agg):
-        print("TSAC", self.count, self.last, agg, flush=True)
         self.count += 1
         if self.count != agg[0]:
             print("TimedStatefulAverageChecker", "Expected count", self.count, "got", agg[0])
@@ -212,9 +212,12 @@ class ListIterator(object):
 # is an error and the application stops.  There is an inconsistency about
 # how we handle the unsupported configuration.
 
-class TestDistributedConsistentRegion(unittest.TestCase):
+class TestWithoutConsistentRegion(unittest.TestCase):
     def setUp(self):
-        Tester.setup_distributed(self)
+        Tester.setup_standalone(self)
+
+    def is_cr(self):
+        return self.test_ctxtype != ContextTypes.STANDALONE
 
     # Source operator
     def test_source(self):
@@ -223,11 +226,13 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         topo = Topology()
         
         s = topo.source(TimeCounter(iterations=iterations, period=0.01))
-        s.set_consistent(ConsistentRegionConfig.periodic(5, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
+        if self.is_cr():
+            s.set_consistent(ConsistentRegionConfig.periodic(5, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
 
         tester = Tester(topo)
         tester.contents(s, range(0,iterations))
-        tester.resets(reset_count)
+        if self.is_cr():
+            tester.resets(reset_count)
 
         tester.test(self.test_ctxtype, self.test_config)
 
@@ -239,7 +244,8 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         topo = Topology()
         # Generate integers from [0,3000)
         s = topo.source(TimeCounter(iterations=iterations, period=0.01))
-        s.set_consistent(ConsistentRegionConfig.periodic(5, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
+        if self.is_cr():
+            s.set_consistent(ConsistentRegionConfig.periodic(5, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
 
         # Filter the odd ones 
         s = s.filter(StatefulEvenFilter())
@@ -249,24 +255,36 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         sc = s.last(10).trigger(3).aggregate(StatefulAverage())
         st = s.last(17).trigger(datetime.timedelta(seconds=2)).aggregate(StatefulAverage())
 
+        # non-stateful aggregation functions
+        nsc = s.last(19).trigger(13).aggregate(lambda tuples : sum(tuples))
+
         tester = Tester(topo)
-        tester.resets(reset_count)
+        if self.is_cr():
+            tester.resets(reset_count)
 
         # Find the expected results.
         # mimic the processing using Python builtins
         iv = filter(StatefulEvenFilter(), range(iterations))
         iv = list(map(StatefulHalfPlusOne(), iv))
 
-        # Expected for the non-stateful
+        # Expected stateful averages sc,st
         sagg = StatefulAverage()
-        ers = [ sagg(iv[0:i+3][-10:]) for i in range(0, len(iv), 3)]
+        ers = [ sagg(iv[0:i+3][-10:]) for i in range(0, 3*int(len(iv)/3), 3) ]
         tester.contents(sc, ers)
 
         tester.tuple_check(st, TimedStatefulAverageChecker())
-        # Must eventually aggregate on the last 17 items in iv
-        tester.eventual_result(st, lambda av : True if av[1] == sagg(iv[-17:])[1] else None)
 
-        tester.test(self.test_ctxtype, self.test_config, always_collect_logs=False)
+        # Must eventually aggregate on the last 17 items in iv
+        # but only if cr otherwise the final marker stops
+        # the window before the final trigger
+        if self.is_cr():
+            tester.eventual_result(st, lambda av : True if av[1] == sagg(iv[-17:])[1] else None)
+
+        # Expected non-stateful averages nsc
+        ernsc = [ sum(iv[0:i+13][-19:]) for i in range(0, 13*int(len(iv)/13), 13) ]
+        tester.contents(nsc, ernsc)
+
+        tester.test(self.test_ctxtype, self.test_config)
 
     # Test flat map (based on a sample)
     def test_flat_map(self):
@@ -276,11 +294,13 @@ class TestDistributedConsistentRegion(unittest.TestCase):
 
         lines = topo.source(ListIterator(["All work","and no play","makes Jack","a dull boy"], period=0.01, count=count))
 
-        lines.set_consistent(ConsistentRegionConfig.periodic(5, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
+        if self.is_cr():
+            lines.set_consistent(ConsistentRegionConfig.periodic(5, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
 
         words = lines.flat_map(StatefulSplit())
         tester = Tester(topo)
-        tester.resets(reset_count)
+        if self.is_cr():
+            tester.resets(reset_count)
 
         # Find the expected results.
         flat_contents = ["All","work","and","no","play","makes","Jack","a","dull","boy"]
@@ -298,7 +318,8 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         reset_count=5
         topo = Topology()
         s = topo.source(TimeCounter(iterations=iterations, period=0.01))
-        s.set_consistent(ConsistentRegionConfig.periodic(5, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
+        if self.is_cr():
+            s.set_consistent(ConsistentRegionConfig.periodic(5, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
 
         width = 3
         s = s.parallel(width, Routing.HASH_PARTITIONED, StatefulStupidHash())
@@ -308,7 +329,8 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         expected = [v + 23 for v in range(iterations)]
 
         tester = Tester(topo)
-        tester.resets(reset_count)
+        if self.is_cr():
+            tester.resets(reset_count)
         tester.contents(s, expected, ordered=width==1)
         tester.test(self.test_ctxtype, self.test_config)
 
@@ -318,14 +340,21 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         reset_count = 5
         topo = Topology()
         s = topo.source(TimeCounter(iterations=iterations, period=0.01))
-        s.set_consistent(ConsistentRegionConfig.periodic(5, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
+        if self.is_cr():
+            s.set_consistent(ConsistentRegionConfig.periodic(5, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
 
         s.for_each(VerifyNumericOrder())
 
         tester = Tester(topo)
         tester.contents(s, range(0,iterations))
-        tester.resets(reset_count)
+        if self.is_cr():
+            tester.resets(reset_count)
         tester.test(self.test_ctxtype, self.test_config)
+
+
+class TestDistributedConsistentRegion(TestWithoutConsistentRegion):
+    def setUp(self):
+        Tester.setup_distributed(self)
 
     def test_enter_exit(self):
         iterations = 3000
@@ -342,16 +371,18 @@ class TestDistributedConsistentRegion(unittest.TestCase):
 
         tester.test(self.test_ctxtype, self.test_config)
 
+
 class TestSasConsistentRegion(TestDistributedConsistentRegion):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
+
 
 # Python operators may not be the source of operator-driven consistent regions.
 class TestOperatorDriven(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)
 
-    def test_aggregate(self):
+    def test_opdriven_aggregate(self):
         topo = Topology()
         # Generate integers from [0,30)
         s = topo.source(TimeCounter(iterations=30, period=0.1))
@@ -365,7 +396,7 @@ class TestOperatorDriven(unittest.TestCase):
         tester = Tester(topo)
         self.assertFalse(tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False))
 
-    def test_filter(self):
+    def test_opdriven_filter(self):
         topo = Topology()
         # Generate integers from [0,30)
         s = topo.source(TimeCounter(iterations=30, period=0.1))
@@ -379,7 +410,7 @@ class TestOperatorDriven(unittest.TestCase):
         tester = Tester(topo)
         self.assertFalse(tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False))
 
-    def test_flat_map(self):
+    def test_opdriven_flat_map(self):
         topo = Topology();
 
         lines = topo.source(ListIterator(["mary had a little lamb", "its fleece was white as snow"]))
@@ -393,7 +424,7 @@ class TestOperatorDriven(unittest.TestCase):
 
     # There is no way to set consistent on a sink or hash_adder
 
-    def test_map(self):
+    def test_opdriven_map(self):
         topo = Topology()
         # Generate integers from [0,30)
         s = topo.source(TimeCounter(iterations=30, period=0.1))
@@ -408,7 +439,7 @@ class TestOperatorDriven(unittest.TestCase):
         self.assertFalse(tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False))
 
     # Source operator
-    def test_source(self):
+    def test_opdriven_source(self):
         topo = Topology()
         
         s = topo.source(TimeCounter(iterations=30, period=0.1))
