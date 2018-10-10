@@ -85,6 +85,8 @@ class _FunctionalCondition(Condition):
     def valid(self, v):
         if self._fail:
            return
+        if v and not self._valid:
+            _logger.info("Condition:%s: VALID", self.name)
         self._metric_valid.value = 1 if v else 0
         self._valid = v
         self._show_progress()
@@ -98,11 +100,13 @@ class _FunctionalCondition(Condition):
         Marks the condition as failed. Once a condition has failed it
         can never become valid, the test that uses the condition will fail.
         """
+        if not self._fail:
+            _logger.error("Condition:%s: FAILED", self.name)
         self._metric_fail.value = 1
         self.valid = False
         self._fail = True
         if (ec.is_standalone()):
-            raise AssertionError("Condition failed:" + str(self))
+            raise AssertionError("Condition:{}: FAILED".format(self.name))
 
     def __getstate__(self):
         # Remove metrics from saved state.
@@ -116,6 +120,8 @@ class _FunctionalCondition(Condition):
         return state
 
     def __enter__(self):
+        # Provide breadcrumbs of what the check is.
+        _logger.debug(str(self))
         self._metric_valid = self._create_metric("valid", kind='Gauge')
         self._metric_seq = self._create_metric("seq")
         self._metric_fail = self._create_metric("fail", kind='Gauge')
@@ -127,16 +133,12 @@ class _FunctionalCondition(Condition):
             self.valid = self._valid
          
     def __exit__(self, exc_type, exc_value, traceback):
-        if self._fail:
-            _logger.error("Condition:%s: Failed. %s", self.name, str(self))
-        elif self.valid:
-            _logger.info("Condition:%s: Valid. %s", self.name, str(self))
-        else:
-            _logger.error("Condition:%s: Not valid. %s", self.name, str(self))
+        if not self._fail and not self.valid:
+            _logger.warning("Condition:%s: NOT VALID at __exit__.", self.name)
             
         if ec.is_standalone():
             if exc_type is None and not self._valid:
-                raise AssertionError("Condition did not become valid:" + str(self))
+                raise AssertionError("Condition:{}: NOT VALID.".format(self.name))
 
     def _create_metric(self, mt, kind=None):
         return ec.CustomMetric(self, name=Condition._mn(mt, self.name), kind=kind)
@@ -220,24 +222,29 @@ class _StreamContents(_TupleCount):
             self.valid = True
 
     def _check_for_failure(self):
-        """Check for failure.
+        """Check for failure with ordered tuples.
         """
         tc = len(self.received) - 1
         if self.expected[tc] != self.received[tc]:
-            _logger.error(str(self))
+            _logger.error("Condition:%s: Position %d Expected tuple %s received %s", self.name, tc, self.expected[tc], self.received[tc])
             self.fail()
             return True
         return False
 
     def __str__(self):
-        return "Condition:{}: Stream contents: expected:{} received:{}".format(self.name, str(self.expected), str(self.received))
+        return "Condition:{}: Stream contents: expected:{}".format(self.name, str(self.expected))
 
 class _UnorderedStreamContents(_StreamContents):
     def _check_for_failure(self):
         """Unordered check for failure.
 
-        Can only check when the expected number of tuples have been received.
+        Can only fully check when the expected number of tuples have been received.
         """
+        tuple_ = self.received[-1]
+        if not tuple_ in self.expected:
+            _logger.error("Condition:%s: Tuple count %d Received unexpected tuple %s", self.name, len(self.receivied), tuple_)
+            self.fail()
+            return True
         if len(self.expected) == len(self.received):
             if collections.Counter(self.expected) != collections.Counter(self.received):
                 self.fail()
