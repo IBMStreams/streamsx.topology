@@ -63,7 +63,7 @@ MY_OPERATOR::MY_OPERATOR() :
  }
 %>
 
-    funcop_ = new SplpyFuncOp(this, SPLPY_OP_STATEFUL, out_wrapfn);
+    funcop_ = new SplpyFuncOp(this, SPLPY_CALLABLE_STATEFUL, out_wrapfn);
 
 @include "../pyspltuple_constructor.cgt"
     
