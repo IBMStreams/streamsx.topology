@@ -96,6 +96,7 @@ import os
 import unittest
 import logging
 import collections
+import pkg_resources
 import threading
 from streamsx.rest import StreamsConnection
 from streamsx.rest import StreamingAnalyticsConnection
@@ -139,7 +140,23 @@ class Tester(object):
         self._run_for = 0
 
     @staticmethod
-    def setup_standalone(test):
+    def _log_env(test, verbose):
+        if verbose:
+            _logger.propogate = False
+            _logger.setLevel(logging.DEBUG)
+            _logger.addHandler(logging.StreamHandler())
+
+        _logger.debug("Test:%s: PYTHONHOME=%s", test.id(), os.environ.get('PYTHONHOME', '<notset>'))
+        _logger.debug("Test:%s: sys.path=%s", test.id(), sys.path)
+        _logger.debug("Test:%s: tester.__file__=%s", test.id(), __file__)
+        srp = pkg_resources.working_set.find(pkg_resources.Requirement.parse('streamsx'))
+        if srp is None:
+            _logger.debug("Test:%s: streamsx not installed.", test.id())
+        else:
+            _logger.debug("Test:%s: %s installed at %s.", test.id(), srp, srp.location)
+
+    @staticmethod
+    def setup_standalone(test, verbose=None):
         """
         Set up a unittest.TestCase to run tests using IBM Streams standalone mode.
 
@@ -159,11 +176,13 @@ class Tester(object):
 
         Args:
             test(unittest.TestCase): Test case to be set up to run tests using Tester
+            verbose(bool): If `true` then the ``streamsx.topology.test`` logger is configured at ``DEBUG`` level with output sent to standard error.
 
         Returns: None
         """
         if not 'STREAMS_INSTALL' in os.environ:
             raise unittest.SkipTest("Skipped due to no local IBM Streams install")
+        Tester._log_env(test, verbose)
         test.test_ctxtype = stc.ContextTypes.STANDALONE
         test.test_config = {}
 
@@ -246,7 +265,7 @@ class Tester(object):
             raise unittest.SkipTest("Skipped as test requires IBM Streams {0} but {1} is setup for {2}.".format(required_version, Tester.get_streams_version(test), test.test_ctxtype))
 
     @staticmethod
-    def setup_distributed(test):
+    def setup_distributed(test, verbose=None):
         """
         Set up a unittest.TestCase to run tests using IBM Streams distributed mode.
 
@@ -281,6 +300,7 @@ class Tester(object):
 
         Args:
             test(unittest.TestCase): Test case to be set up to run tests using Tester
+            verbose(bool): If `true` then the ``streamsx.topology.test`` logger is configured at ``DEBUG`` level with output sent to standard error.
 
         Returns: None
 
@@ -294,11 +314,12 @@ class Tester(object):
         if not domain_instance_setup and not rest_setup:
             raise unittest.SkipTest("Skipped due missing environment variables")
 
+        Tester._log_env(test, verbose)
         test.test_ctxtype = stc.ContextTypes.DISTRIBUTED
         test.test_config = {}
 
     @staticmethod
-    def setup_streaming_analytics(test, service_name=None, force_remote_build=False):
+    def setup_streaming_analytics(test, service_name=None, force_remote_build=False, verbose=None):
         """
         Set up a unittest.TestCase to run tests using Streaming Analytics service on IBM Cloud.
 
@@ -316,6 +337,8 @@ class Tester(object):
             test(unittest.TestCase): Test case to be set up to run tests using Tester
             service_name(str): Name of Streaming Analytics service to use. Must exist as an
                 entry in the VCAP services. Defaults to value of STREAMING_ANALYTICS_SERVICE_NAME environment variable.
+            force_remote_build(bool): Force use of the Streaming Analytics build service. If `false` and ``STREAMS_INSTALL`` is set then a local build will be used if the local environment is suitable for the service, otherwise the Streams application bundle is built using the build service.
+            verbose(bool): If `true` then the ``streamsx.topology.test`` logger is configured at ``DEBUG`` level with output sent to standard error.
 
         If run with Python 2 the test is skipped, only Python 3.5
         is supported with Streaming Analytics service.
@@ -334,6 +357,8 @@ class Tester(object):
             service_name = os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME', None)
         if service_name is None:
             raise unittest.SkipTest("Skipped due to no service name supplied")
+
+        Tester._log_env(test, verbose)
         test.test_config = {'topology.service.name': service_name}
         if force_remote_build:
             test.test_config['topology.forceRemoteBuild'] = True
