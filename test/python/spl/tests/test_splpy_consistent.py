@@ -133,8 +133,8 @@ class TestDistributedConsistentRegion(unittest.TestCase):
         # of times __enter__ and __exit__ have been called. 
         # We are looking for two specific tuples:
         # ('source', 6, 5) and ('transit', 6, 5)
-        tester.eventual_result(source.stream, lambda tuple_ : True if tuple_ == ('source', 6, 5) else None)
-        tester.eventual_result(transit.stream, lambda tuple_ : True if tuple_ == ('transit', 6, 5) else None)
+        tester.eventual_result(source.stream, lambda tuple_ : True if tuple_[1] >= 6 and tuple_[1] == tuple_[2] + 1 else Fale if tuple_[1] != tuple_[2] + 1 else None)
+        tester.eventual_result(transit.stream, lambda tuple_ : True if tuple_[1] >= 6 and tuple_[1] == tuple_[2] + 1 else Fale if tuple_[1] != tuple_[2] + 1 else None)
 
         job_config = streamsx.topology.context.JobConfig(tracing='debug')
         job_config.add(self.test_config)
