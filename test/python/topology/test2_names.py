@@ -43,8 +43,8 @@ class TestNames(unittest.TestCase):
   def test_LongTopoNames(self):
      """ Test long topo names
      """
-     n = 'abcd8' # * 30
-     ns = 'def9' #* 100
+     n = 'abcd8' * 30
+     ns = 'def9' * 100
      topo = Topology(name=n, namespace=ns)
 
      self.assertEqual(n, topo.name)
@@ -57,7 +57,7 @@ class TestNames(unittest.TestCase):
      tester.contents(hw, ["Hello", "Tester"])
      tester.test(self.test_ctxtype, self.test_config)
 
-class TestCloudNames(TestNames):
+class TestSasNames(TestNames):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
 
