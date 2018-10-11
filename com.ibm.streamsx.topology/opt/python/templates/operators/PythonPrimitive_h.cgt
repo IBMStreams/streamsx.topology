@@ -4,7 +4,7 @@
  */
 <%
 require "splpy_operator.pm";
-my $pyStateful = splpy_OperatorCallable() eq 'class';
+my $pyStateful = splpy_OperatorCallable() eq 'class' ? 1 : 0;
 %>
 @include "../../opt/.__splpy/common/py_state.cgt"
 
