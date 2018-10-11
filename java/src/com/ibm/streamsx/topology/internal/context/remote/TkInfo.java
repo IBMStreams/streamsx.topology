@@ -37,14 +37,20 @@ public class TkInfo {
         return tkinfo;
     }
 
-    public static ToolkitDependencyType getTookitDependency(String toolkitRoot) throws JAXBException {
+    public static ToolkitDependencyType getTookitDependency(String toolkitRoot, boolean exact) throws JAXBException {
         
         ToolkitInfoModelType depTkInfo = getToolkitInfo(new File(toolkitRoot));
                
-        String depTkVersion = depTkInfo.getIdentity().getVersion();       
-        String[] elements = depTkVersion.split("\\.");
-        int next = Integer.valueOf(elements[0]) + 1;       
-        String versionRange = "[" + elements[0] + "." + elements[1] + "," + next + ".0)"; 
+        String depTkVersion = depTkInfo.getIdentity().getVersion();     
+        
+        String versionRange;
+        if (exact) {
+        	versionRange = depTkVersion;
+        } else {
+            String[] elements = depTkVersion.split("\\.");
+            int next = Integer.valueOf(elements[0]) + 1;       
+            versionRange = "[" + elements[0] + "." + elements[1] + "," + next + ".0)";
+        }
         
         ToolkitDependencyType depTk = new ToolkitDependencyType();      
         depTk.setName(depTkInfo.getIdentity().getName());
