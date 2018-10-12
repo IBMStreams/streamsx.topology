@@ -230,8 +230,8 @@ public class ParallelTest extends TestTopology {
 
 	complete(tester, allConditions(assertFinished, expectedCount), 60, TimeUnit.SECONDS);
 
-        assertTrue(expectedCount.getResult().toString(), expectedCount.valid());
-	assertTrue(assertFinished.getResult().toString(), assertFinished.valid());
+        assertTrue(expectedCount.valid());
+        assertTrue(assertFinished.valid());
     }
 
     @Test
@@ -425,7 +425,6 @@ public class ParallelTest extends TestTopology {
 
         Topology topology = newTopology("testParallelWidthValue");
         final int count = new Random().nextInt(1000) + 37;
-        String submissionWidthName = "width";
         final Integer submissionWidth = 5;
         
         TStream<BeaconTuple> fb = BeaconStreams.beacon(topology, count);
@@ -606,7 +605,8 @@ public class ParallelTest extends TestTopology {
     private void checkUdpSupported() {
         assumeTrue(SC_OK);
         assumeTrue(getTesterType() == StreamsContext.Type.STANDALONE_TESTER ||
-                getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
+                getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER ||
+                getTesterType() == StreamsContext.Type.STREAMING_ANALYTICS_SERVICE_TESTER);
     }
     
     @Test
