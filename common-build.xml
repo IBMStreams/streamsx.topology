@@ -51,7 +51,7 @@
   </path>
 
   <path id="compress.classpath">
-    <pathelement location="${tk.opt}/client/apache-commons/commons-compress-1.7.jar"/>
+    <pathelement location="${tk.opt}/client/apache-commons/commons-compress-1.18.jar"/>
   </path>
 
   <path id="tk.classpath">
