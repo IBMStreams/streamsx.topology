@@ -59,7 +59,8 @@ public class StreamsContextFactory {
      * 
      * @see StreamsContext.Type
      */
-    public static StreamsContext<?> getStreamsContext(StreamsContext.Type type) {
+    @SuppressWarnings("deprecation")
+	public static StreamsContext<?> getStreamsContext(StreamsContext.Type type) {
         switch (type) {
         case EMBEDDED:
             return getEmbedded();

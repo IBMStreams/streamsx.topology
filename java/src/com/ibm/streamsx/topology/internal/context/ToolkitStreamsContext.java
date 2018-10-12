@@ -67,7 +67,7 @@ public class ToolkitStreamsContext extends JSONStreamsContext<File> {
         final Future<File> future = tkrc.submit(submission);
         final File toolkitRoot = future.get();
         
-        JsonObject deploy = object(submission, SUBMISSION_DEPLOY);
+        JsonObject deploy = object(submission, RemoteContext.SUBMISSION_DEPLOY);
                 
         // Index the toolkit
         makeToolkit(deploy, toolkitRoot);

@@ -4,12 +4,15 @@
  */
 package com.ibm.streamsx.topology.test.cloud;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -24,8 +27,10 @@ import com.ibm.streamsx.rest.test.StreamingAnalyticsServiceTest;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.AnalyticsServiceProperties;
+import com.ibm.streamsx.topology.context.ResultProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
+import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.test.TestTopology;
 
 public class ServiceSubmissionAPITest extends TestTopology {
@@ -47,6 +52,42 @@ public class ServiceSubmissionAPITest extends TestTopology {
         
         assumeTrue(vcapServices != null);
         assumeTrue(serviceName != null);
+    }
+    
+    @Test
+    public void testNoResults() throws Exception {
+    	TStream<String> stream = createTopology("testNoResults");
+        @SuppressWarnings("unchecked")
+        StreamsContext<BigInteger> ctx =
+        (StreamsContext<BigInteger>) StreamsContextFactory.getStreamsContext("STREAMING_ANALYTICS_SERVICE");
+        
+        Map<String,Object> config = new HashMap<>();
+        BigInteger jobId = ctx.submit(stream.topology(), config).get();
+        cancel(jobId);
+        
+        assertFalse(config.containsKey(ResultProperties.JOB_SUBMISSION));   
+    }
+    
+    @Test
+    public void testResults() throws Exception {
+    	TStream<String> stream = createTopology("testResults");
+        @SuppressWarnings("unchecked")
+        StreamsContext<BigInteger> ctx =
+        (StreamsContext<BigInteger>) StreamsContextFactory.getStreamsContext("STREAMING_ANALYTICS_SERVICE");
+        
+        Map<String,Object> config = new HashMap<>();
+        config.put(ResultProperties.JOB_SUBMISSION, false);
+        BigInteger jobId = ctx.submit(stream.topology(), config).get();
+        cancel(jobId);
+        
+        assertTrue(config.containsKey(ResultProperties.JOB_SUBMISSION));
+        Object r = config.get(ResultProperties.JOB_SUBMISSION);
+        assertTrue(r.getClass().getName(), r instanceof JsonObject);
+        
+        JsonObject sr = (JsonObject) r;
+        
+        assertTrue(sr.has(SubmissionResultsKeys.CONSOLE_APPLICATION_URL));
+        assertTrue(sr.has(SubmissionResultsKeys.CONSOLE_APPLICATION_JOB_URL));
     }
     
     @Test
@@ -121,6 +162,10 @@ public class ServiceSubmissionAPITest extends TestTopology {
         StreamsContext<BigInteger> ctx = (StreamsContext<BigInteger>) StreamsContextFactory.getStreamsContext("STREAMING_ANALYTICS_SERVICE");
         BigInteger jobId = ctx.submit(topology, getConfig()).get();
         assertNotNull(jobId);
+        cancel(jobId);
+    }
+    
+    private void cancel(BigInteger jobId) throws Exception {
         
         JsonElement vse;
         if (vcapServices.startsWith(File.separator))

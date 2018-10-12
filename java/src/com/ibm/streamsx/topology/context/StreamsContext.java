@@ -9,7 +9,6 @@ import java.util.concurrent.Future;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.context.remote.RemoteContext;
 
 /**
  * A {@code StreamsContext} provides the ability to turn
@@ -127,6 +126,9 @@ public interface StreamsContext<T> {
          * The {@code Future} returned from {@code submit()} will
          * always be complete when the {@code submit()} returns.
          * </P>
+         * 
+         * @deprecated Use {@link #BUNDLE} - A single bundle now works for both
+         * distributed and standalone.
          */
         STANDALONE_BUNDLE,
 
@@ -218,6 +220,8 @@ public interface StreamsContext<T> {
          * <P>
          * This is a synonym for {@link #STREAMING_ANALYTICS_SERVICE}.
          * </P>
+         * 
+         * @deprecated Use {@link #STREAMING_ANALYTICS_SERVICE}
          */
         ANALYTICS_SERVICE,
         
@@ -252,7 +256,7 @@ public interface StreamsContext<T> {
          * the IBM Streams install and submitted to the service. This may be overridden
          * by setting the context property {@link ContextProperties#FORCE_REMOTE_BUILD FORCE_REMOTE_BUILD}
          * to {@code true}.
-         * <.P>
+         * </P>
          */
         STREAMING_ANALYTICS_SERVICE,
         
@@ -324,11 +328,5 @@ public interface StreamsContext<T> {
      * 
      * @see ContextProperties
      */
-    Future<T> submit(JsonObject submission) throws Exception;
-    
-    String SUBMISSION_DEPLOY = RemoteContext.SUBMISSION_DEPLOY;
-    String SUBMISSION_GRAPH = RemoteContext.SUBMISSION_GRAPH;
-    String SUBMISSION_RESULTS = RemoteContext.SUBMISSION_RESULTS;
-    String SUBMISSION_RESULTS_FILE = RemoteContext.SUBMISSION_RESULTS_FILE;
-    
+    Future<T> submit(JsonObject submission) throws Exception;  
 }
