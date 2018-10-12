@@ -224,7 +224,7 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
         info.getIdentity().setName(toolkitRoot.getName());
         info.getIdentity().setDescription(new DescriptionType());
         info.getIdentity().setVersion("1.0.0." + System.currentTimeMillis());
-        info.getIdentity().setRequiredProductVersion("4.0.1.0");
+        info.getIdentity().setRequiredProductVersion("4.2.0.0");
               
         DependenciesType dependencies = new DependenciesType();
         
@@ -235,7 +235,7 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
             String root = jstring(tk, "root");
             if (root != null) {
                 try {
-                    depTkInfo = TkInfo.getTookitDependency(root);
+                    depTkInfo = TkInfo.getTookitDependency(root, false);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -249,7 +249,7 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
         });
         
         File topologyToolkitRoot = TkInfo.getTopologyToolkitRoot();
-        toolkits.add(TkInfo.getTookitDependency(topologyToolkitRoot.getAbsolutePath()));
+        toolkits.add(TkInfo.getTookitDependency(topologyToolkitRoot.getAbsolutePath(), true));
         
         info.setDependencies(dependencies);
         
