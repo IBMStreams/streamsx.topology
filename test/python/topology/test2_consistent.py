@@ -171,9 +171,7 @@ class VerifyEnterExit(_StreamCondition):
         return ret
 
     def __str__(self):
-        enter_count = self._metric_enter_count.value
-        exit_count = self._metric_exit_count.value
-        return "Verify enter and exit: expected:" + str(self.expected_minimum) + " received: " + str(enter_count) + " enter and " + str(exit_count) + " exit."
+        return "VerifyEnterExit:" + str(self.expected_minimum)
 
 # Compute a hash code, statefully.  Again the state is not meaningful
 class StatefulStupidHash(object):
