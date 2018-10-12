@@ -10,7 +10,7 @@ MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
    pyInStyleObj_(NULL)
 {
-    funcop_ = new SplpyFuncOp(this, SPLPY_OP_STATEFUL, "<%=$pywrapfunc%>");
+    funcop_ = new SplpyFuncOp(this, SPLPY_CALLABLE_STATEFUL, "<%=$pywrapfunc%>");
 
 @include "../pyspltuple_constructor.cgt"
 
