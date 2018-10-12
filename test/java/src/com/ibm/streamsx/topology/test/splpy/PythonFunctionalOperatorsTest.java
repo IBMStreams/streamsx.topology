@@ -161,23 +161,19 @@ public class PythonFunctionalOperatorsTest extends TestTopology {
         SPLStream viaPython = SPL.invokeOperator("com.ibm.streamsx.topology.pysamples.positional::Noop", tuples, tuples.getSchema(), null);
         
         // Test accessing the execution context provides the correct results
-        // Only supported for Python 3.5 and Streams 4.2 and later
-        if ((getVersion().getVersion() > 4) ||
-                (getVersion().getVersion() == 4 && getVersion().getRelease() >= 2)) {
-            viaPython = SPL.invokeOperator(
-                    "com.ibm.streamsx.topology.pytest.pyec::TestOperatorContext", viaPython,
-                    viaPython.getSchema(), null);
+		viaPython = SPL.invokeOperator("com.ibm.streamsx.topology.pytest.pyec::TestOperatorContext", viaPython,
+				viaPython.getSchema(), null);
 
-            viaPython = SPL.invokeOperator(
-                    "com.ibm.streamsx.topology.pytest.pyec::PyTestMetrics", viaPython,
-                    viaPython.getSchema(), null);
-        }
+		viaPython = SPL.invokeOperator("com.ibm.streamsx.topology.pytest.pyec::PyTestMetrics", viaPython,
+				viaPython.getSchema(), null);
 
         Tester tester = topology.getTester();
         Condition<Long> expectedCount = tester.tupleCount(viaPython, TUPLE_COUNT);
         
         Condition<List<Tuple>> viaSPLResult = tester.tupleContents(viaSPL);
         Condition<List<Tuple>> viaPythonResult = tester.tupleContents(viaPython);
+        
+        this.getConfig().put("topology.keepArtifacts", true);
         
         complete(tester, expectedCount, 60, TimeUnit.SECONDS);
 
