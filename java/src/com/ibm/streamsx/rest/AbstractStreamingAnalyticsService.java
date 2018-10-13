@@ -255,6 +255,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             
             Result<Job,JsonObject> result = jobResult(response);
             result.getRawResult().add(SubmissionResultsKeys.SUBMIT_METRICS, metrics);
+            result.getRawResult().add(SubmissionResultsKeys.BUILD_STATUS, buildStatus);
             return addConsoleURLs(result);
         } finally {
             httpclient.close();

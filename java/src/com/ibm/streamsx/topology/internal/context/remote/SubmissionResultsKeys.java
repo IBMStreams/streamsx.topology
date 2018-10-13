@@ -34,6 +34,7 @@ public interface SubmissionResultsKeys {
     /**
      * JSON object holding metrics related to build/job submission.
      */
+    String BUILD_STATUS = "buildStatus";
     String SUBMIT_METRICS = "submitMetrics";
     String TIME_MS_SUFFIX = "Time_ms";
             
