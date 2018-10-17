@@ -46,3 +46,7 @@ class TestSPLWindow(unittest.TestCase):
                 tester = Tester(topo)
                 tester.contents(agg.stream, expected)
                 tester.test(self.test_ctxtype, self.test_config)
+
+class TestDistributedSPLWindow(TestSPLWindow):
+    def setUp(self):
+        Tester.setup_distributed(self)
