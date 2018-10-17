@@ -109,6 +109,13 @@ import streamsx.topology.tester_runtime as sttrt
 
 _logger = logging.getLogger('streamsx.topology.test')
 
+class _TestConfig(dict):
+    def __init__(self, test, entries=None):
+        super(_TestConfig, self).__init__()
+        self._test = test
+        if entries:
+            self.update(entries)
+
 class Tester(object):
     """Testing support for a Topology.
 
@@ -184,7 +191,7 @@ class Tester(object):
             raise unittest.SkipTest("Skipped due to no local IBM Streams install")
         Tester._log_env(test, verbose)
         test.test_ctxtype = stc.ContextTypes.STANDALONE
-        test.test_config = {}
+        test.test_config = _TestConfig(test)
 
     @staticmethod
     def get_streams_version(test):
@@ -316,7 +323,7 @@ class Tester(object):
 
         Tester._log_env(test, verbose)
         test.test_ctxtype = stc.ContextTypes.DISTRIBUTED
-        test.test_config = {}
+        test.test_config = _TestConfig(test)
 
     @staticmethod
     def setup_streaming_analytics(test, service_name=None, force_remote_build=False, verbose=None):
@@ -359,7 +366,7 @@ class Tester(object):
             raise unittest.SkipTest("Skipped due to no service name supplied")
 
         Tester._log_env(test, verbose)
-        test.test_config = {'topology.service.name': service_name}
+        test.test_config = _TestConfig(test, {'topology.service.name': service_name})
         if force_remote_build:
             test.test_config['topology.forceRemoteBuild'] = True
 
@@ -661,6 +668,20 @@ class Tester(object):
              ``STREAMS_USERNAME`` and ``STREAMS_PASSWORD`` to define
              the Streams user.
         """
+        if config is None:
+            config = {}
+        config['topology.alwaysCollectLogs'] = always_collect_logs
+
+        # Look for streamsx.testing plugins
+        # Each action that plugin attached to the test is
+        # called passing Tester, TestCase, context type and config
+        if isinstance(config, _TestConfig):
+            test_ = config._test
+            actions = test_._streamsx_testing_actions if hasattr(test_, '_streamsx_testing_actions') else None
+            if actions:
+                for action in actions:
+                    _logger.debug("Adding nose plugin action %s to topology %s.", str(action), self.topology.name)
+                    action(self, test_, ctxtype, config)
 
         # Add the conditions into the graph as sink operators
         _logger.debug("Adding conditions to topology %s.", self.topology.name)
@@ -677,9 +698,6 @@ class Tester(object):
             cond_run_time.category = 'Tester'
             cond_run_time._op()._layout(hidden=True)
 
-        if config is None:
-            config = {}
-        config['topology.alwaysCollectLogs'] = always_collect_logs
 
         _logger.debug("Starting test topology %s context %s.", self.topology.name, ctxtype)
 
