@@ -1,6 +1,6 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2017
+# Copyright IBM Corp. 2017,2018
  */
 package com.ibm.streamsx.rest;
 
@@ -8,6 +8,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 import com.ibm.streamsx.topology.internal.streams.Util;
 
@@ -52,11 +53,15 @@ public class StreamsConnection {
     			userName = System.getProperty("user.name");
     	}
     	
-    	if (authToken == null)
+    	if (authToken == null) {
     		authToken = System.getenv(Util.STREAMS_PASSWORD);
+    		Objects.requireNonNull(authToken, "Environment variable " + Util.STREAMS_PASSWORD + " is not set");
+    	}
     	
-    	if (url == null)
+    	if (url == null) {
     		url = System.getenv(Util.STREAMS_REST_URL);
+    		Objects.requireNonNull(url, "Environment variable " + Util.STREAMS_REST_URL + " is not set");
+    	}
     	
     	AbstractStreamsConnection delegate = createDelegate(userName, authToken, url);
         StreamsConnection sc = new StreamsConnection(delegate);
