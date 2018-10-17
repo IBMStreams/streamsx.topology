@@ -78,8 +78,12 @@ public class DistributedStreamsContext extends
     @Override
     Future<BigInteger> invoke(AppEntity entity, File bundle) throws Exception {
     	
-    	if (useRestApi())
-    		return EXECUTOR.submit(() -> invokeUsingRest(entity, bundle));
+    	if (useRestApi()) {
+    		Future<BigInteger> submit =  EXECUTOR.submit(() -> invokeUsingRest(entity, bundle));
+    		// Wait for it to complete to ensure the results file.
+    		submit.get();
+    		return submit;
+    	}
 
         try {
             InvokeSubmit submitjob = new InvokeSubmit(bundle);
@@ -88,6 +92,7 @@ public class DistributedStreamsContext extends
             
             final JsonObject submissionResult = GsonUtilities.objectCreate(entity.submission, RemoteContext.SUBMISSION_RESULTS);
             submissionResult.addProperty(SubmissionResultsKeys.JOB_ID, jobId.toString());
+            submissionResult.addProperty(SubmissionResultsKeys.INSTANCE_ID, Util.getDefaultInstanceId());
             
             return new CompletedFuture<BigInteger>(jobId);
         } finally {
@@ -97,10 +102,14 @@ public class DistributedStreamsContext extends
     }
     
     protected BigInteger invokeUsingRest(AppEntity entity, File bundle) throws Exception {
-
-    	Result<Job, JsonObject> result = instance().submitJob(bundle, deploy(entity.submission));
     	
+    	Instance instance = instance();
+
+    	Result<Job, JsonObject> result = instance.submitJob(bundle, deploy(entity.submission));
+    	
+    	result.getRawResult().addProperty(SubmissionResultsKeys.INSTANCE_ID, instance.getId());
     	entity.submission.add( RemoteContext.SUBMISSION_RESULTS, result.getRawResult());
+    	
     	
     	return new BigInteger(result.getId());
     }
