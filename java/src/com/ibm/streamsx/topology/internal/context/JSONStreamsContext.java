@@ -97,6 +97,7 @@ public abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
      * Post-submit hook when submitting a Topology.
      */
     protected Future<T> postSubmit(AppEntity entity, Future<T> future) throws Exception{
+    	future.get(); // wait to get the results.
         RemoteContexts.writeResultsToFile(entity.submission);
         return future;
     }

@@ -387,7 +387,6 @@ class _DistributedSubmitter(_BaseSubmitter):
         return self._streams_connection
 
     def _augment_submission_result(self, submission_result):
-        submission_result['instanceId'] = os.environ.get('STREAMS_INSTANCE_ID', 'StreamsInstance')
         # If we have the information to create a StreamsConnection, do it
         if not ((self.username is None or self.password is None) and
                         self.config.get(ConfigParams.STREAMS_CONNECTION) is None):
