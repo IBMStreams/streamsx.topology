@@ -1,6 +1,6 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015  
+# Copyright IBM Corp. 2015,2018
  */
 package com.ibm.streamsx.topology.internal.context.streams;
 
@@ -10,6 +10,7 @@ import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepA
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -18,6 +19,7 @@ import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamsConnection;
+import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
@@ -44,26 +46,54 @@ public class DistributedStreamsContext extends
         return Type.DISTRIBUTED;
     }
     
+    private StreamsConnection getConfigConnection(AppEntity entity) {
+    	
+    	Map<String,Object> config = entity.config;
+    	if (config != null && config.containsKey(ContextProperties.STREAMS_CONNECTION)) {
+    		Object conn = config.get(ContextProperties.STREAMS_CONNECTION);
+    		if (conn instanceof StreamsConnection)
+    			return (StreamsConnection) conn;
+    	}
+    	return null;
+    }
+    
     public synchronized Instance instance() throws IOException {
     	if (!useRestApi())
     		throw new IllegalStateException(/*internal error*/);
+    	
+    	return instance;
+    }
+    
+    public synchronized Instance createInstance(AppEntity entity) throws IOException {
+    	if (!useRestApi())
+    		throw new IllegalStateException(/*internal error*/);
+    	    	
+		StreamsConnection conn = getConfigConnection(entity);
+		if (conn == null) {
+		    conn = StreamsConnection.createInstance(null, null, null);
 
-		if (instance == null) {
-			StreamsConnection conn = StreamsConnection.createInstance(null, null, null);
 			// TODO - allow setting of insecure hosts - for testing now hardcode as false
 			conn.allowInsecureHosts(true);
-			
-			String instanceName = System.getenv(Util.STREAMS_INSTANCE_ID);
-			if (instanceName == null)
-			    instance = conn.getInstances().get(0);
-			else
-				instance = conn.getInstance(instanceName);
 		}
+
+		String instanceName = System.getenv(Util.STREAMS_INSTANCE_ID);
+		if (instanceName == null)
+			instance = conn.getInstances().get(0);
+		else
+			instance = conn.getInstance(instanceName);
 		return instance;
 	}
     
+
     @Override
     protected void preSubmit(AppEntity entity) {
+    	
+    	if (getConfigConnection(entity) != null) {  		
+    	    // Allow the config to provide a connection.
+    		useRestApi.set(true);
+    		return;
+    	}
+    		
     	try {
             InvokeSubmit.checkPreconditions();
             useRestApi.set(false);
@@ -103,13 +133,12 @@ public class DistributedStreamsContext extends
     
     protected BigInteger invokeUsingRest(AppEntity entity, File bundle) throws Exception {
     	
-    	Instance instance = instance();
+    	Instance instance = createInstance(entity);
 
     	Result<Job, JsonObject> result = instance.submitJob(bundle, deploy(entity.submission));
     	
     	result.getRawResult().addProperty(SubmissionResultsKeys.INSTANCE_ID, instance.getId());
     	entity.submission.add( RemoteContext.SUBMISSION_RESULTS, result.getRawResult());
-    	
     	
     	return new BigInteger(result.getId());
     }

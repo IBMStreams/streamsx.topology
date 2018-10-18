@@ -1,6 +1,6 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015  
+# Copyright IBM Corp. 2015,2018
  */
 package com.ibm.streamsx.topology.test.distributed;
 
@@ -8,12 +8,16 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
+import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.spl.JavaPrimitive;
 import com.ibm.streamsx.topology.spl.SPLSchemas;
@@ -38,17 +42,36 @@ public class JobConfigSubmissionTest extends TestTopology {
     public void testNameJobConfig() throws Exception {
         
         JobConfig config = new JobConfig();
-        config.setJobName("nameG");
-        testItDirect("testNameJobConfig", config, "<jobId>", "nameG", "default", "<empty>");
+        String jobName = "nameG" + System.currentTimeMillis();
+        config.setJobName(jobName);
+        testItDirect("testNameJobConfig", config, "<jobId>", jobName, "default", "<empty>");
+    }
+    
+    @Test
+    public void testSubmitUsingConnection() throws Exception {
+    	
+    	assumeTrue(getTesterContext().getType() == Type.DISTRIBUTED_TESTER);
+    	assumeTrue(System.getenv("STREAMS_REST_URL") != null);
+        
+        JobConfig config = new JobConfig();
+        String jobName = "nameSC" + System.currentTimeMillis();
+        config.setJobName(jobName);
+        
+        StreamsConnection conn = StreamsConnection.createInstance(null, null, null);
+        conn.allowInsecureHosts(true);
+        getConfig().put(ContextProperties.STREAMS_CONNECTION, conn);
+        
+        testItDirect("testNameJobConfig", config, "<jobId>", jobName, "default", "<empty>");
     }
     
     @Test
     public void testDataDirJobConfig() throws Exception {
         
         JobConfig config = new JobConfig();
-        config.setJobName("nameDD");
+        String jobName = "nameDD" + System.currentTimeMillis();
+        config.setJobName(jobName);
         config.setDataDirectory("/tmp/some/dir");
-        testItDirect("testNameJobConfig", config, "<jobId>", "nameDD", "default", "/tmp/some/dir");
+        testItDirect("testNameJobConfig", config, "<jobId>", jobName, "default", "/tmp/some/dir");
     }
     
     private void testItDirect(String topologyName, JobConfig config, String ...expected)
