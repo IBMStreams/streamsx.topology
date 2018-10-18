@@ -1004,7 +1004,7 @@ public class SPLGenerator {
     private static final int NAME_LEN = 80;
     public static String getSPLCompatibleName(String name) {
 
-        if (name.length() <= NAME_LEN && name.matches("^[a-zA-Z_][a-zA-Z0-9_]+$"))
+        if (name.length() <= NAME_LEN && name.matches("^[a-zA-Z_][a-zA-Z0-9_]*$"))
             return name;
         
         final byte[] original = name.getBytes(StandardCharsets.UTF_8);
