@@ -557,7 +557,7 @@ class Job(_ResourceElement):
             dir (str): a valid directory in which to save the archive. Defaults to the current directory.
 
         Returns:
-            str: the path to the created tar file, or None if retrieving a job's logs is not supported in the version of streams to which the job is submitted.
+            str: the path to the created tar file, or ``None`` if retrieving a job's logs is not supported in the version of IBM Streams to which the job is submitted.
 
         .. versionadded:: 1.8
         """
