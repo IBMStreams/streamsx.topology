@@ -295,10 +295,12 @@ class TestSuppressMetric(TestBaseExceptions):
 
         self.tester = Tester(topo)
         self.tester.local_check = self.check_suppress_metric
-        self.tester.tuple_count(sm.stream, 38)
-        self.tester.tuple_count(ms.stream, 2)
-        self.tester.tuple_count(mm.stream, 2)
-        self.tester.tuple_count(mf.stream, 2)
+        # Add filters to avoid the test operators having
+        # names of NOMETIC/HASMETRIC
+        self.tester.tuple_count(sm.stream.filter(lambda _ : True), 38)
+        self.tester.tuple_count(ms.stream.filter(lambda _ : True), 2)
+        self.tester.tuple_count(mm.stream.filter(lambda _ : True), 2)
+        self.tester.tuple_count(mf.stream.filter(lambda _ : True), 2)
         self.tester.test(self.test_ctxtype, self.test_config)
             
     def check_suppress_metric(self):
@@ -331,7 +333,7 @@ class TestSuppressMetric(TestBaseExceptions):
             m = op.get_metrics(name='nExceptionsSuppressed')[0]
             self.assertEqual(exp, m.value, msg=op.name)
 
-class TestSuppressMetricService(TestSuppressMetric):
+class TestSasSuppressMetric(TestSuppressMetric):
     def setUp(self):
         self.tf = None
         Tester.setup_streaming_analytics(self, force_remote_build=True)
