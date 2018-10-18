@@ -305,7 +305,7 @@ class TestPubSub(unittest.TestCase):
             self.tester.test(self.test_ctxtype, self.test_config)
 
 
-class TestPubSubCloud(TestPubSub):
+class TestSasPubSub(TestPubSub):
     """ Test basic pub-sub in SPL
     """
     def setUp(self):
