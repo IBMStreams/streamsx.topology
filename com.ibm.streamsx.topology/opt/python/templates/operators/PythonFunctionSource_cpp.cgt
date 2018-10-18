@@ -44,11 +44,11 @@ MY_OPERATOR::MY_OPERATOR() :
              "streamsx.spl.runtime", "_SourceIterable",
              callable, NULL);   
      this->pyop_->setCallable(callable);
-     this->pyop_->setup(SPLPY_OP_STATEFUL);
+     this->pyop_->setup(SPLPY_CALLABLE_STATE_HANDLER);
 
      pyOutNames_0 = Splpy::pyAttributeNames(getOutputPortAt(0));
    }
-#if SPLPY_OP_STATEFUL == 1
+#if SPLPY_OP_STATE_HANDLER == 1
    this->getContext().registerStateHandler(*this);
 #endif
 }

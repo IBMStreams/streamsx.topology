@@ -128,7 +128,7 @@ class SplpyOp {
        *   a metric that keeps track of exceptions suppressed
        *   by __exit__
        */
-      void setup(bool stateful) {
+      void setup(bool needStateHandler) {
           if (PyObject_HasAttrString(callable_, "_streamsx_ec_context")) {
               PyObject *hasContext = PyObject_GetAttrString(callable_, "_streamsx_ec_context");
               if (PyObject_IsTrue(hasContext)) {
@@ -142,7 +142,7 @@ class SplpyOp {
               Py_DECREF(hasContext);
           }
 
-          if (stateful)
+          if (needStateHandler)
               setupStateHandler();
       }
 

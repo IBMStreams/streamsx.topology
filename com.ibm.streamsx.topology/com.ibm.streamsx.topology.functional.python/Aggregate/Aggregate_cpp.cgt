@@ -63,7 +63,7 @@ MY_OPERATOR::MY_OPERATOR() :
  }
 %>
 
-    funcop_ = new SplpyFuncOp(this, SPLPY_CALLABLE_STATEFUL, out_wrapfn);
+    funcop_ = new SplpyFuncOp(this, SPLPY_CALLABLE_STATE_HANDLER, out_wrapfn);
 
 @include "../pyspltuple_constructor.cgt"
     
@@ -76,7 +76,7 @@ MY_OPERATOR::MY_OPERATOR() :
     loads = SplpyGeneral::loadFunction("json", "loads");
     <% } %>
     }
-#if SPLPY_OP_STATEFUL == 1
+#if SPLPY_OP_STATE_HANDLER == 1
    this->getContext().registerStateHandler(*this);
 #endif
 }
@@ -225,7 +225,7 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
 // End Window Event Handler Overrides
 // ##################################
 
-#if SPLPY_OP_STATEFUL == 1
+#if SPLPY_OP_STATE_HANDLER == 1
 void MY_OPERATOR::drain() {
     SPLAPPTRC(L_TRACE, "drain: enter", "python");
     window_.drain();

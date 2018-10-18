@@ -21,14 +21,14 @@ using namespace streamsx::topology;
 @include "../pyspltuple.cgt"
 class MY_OPERATOR : public MY_BASE_OPERATOR,
       public WindowEvent<PyObject *>
-#if SPLPY_OP_STATEFUL == 1
+#if SPLPY_OP_STATE_HANDLER == 1
       ,public DelegatingStateHandler
 #endif
 {
 public:
   MY_OPERATOR();
   virtual ~MY_OPERATOR(); 
-#if SPLPY_OP_STATEFUL == 1
+#if SPLPY_OP_STATE_HANDLER == 1
   virtual void drain();
 #endif
   void prepareToShutdown(); 
@@ -46,7 +46,7 @@ void afterTupleEvictionEvent(
      Window<PyObject *> & window,  Window<PyObject *>::TupleType & tuple,
      Window<PyObject *>::PartitionType const & partition);
 
-#if SPLPY_OP_STATEFUL == 1
+#if SPLPY_OP_STATE_HANDLER == 1
 protected:
   virtual void checkpointExtra(SPL::Checkpoint & ckpt);
   virtual void resetExtra(SPL::Checkpoint & ckpt);

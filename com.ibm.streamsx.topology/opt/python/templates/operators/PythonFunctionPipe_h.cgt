@@ -23,7 +23,7 @@ using namespace streamsx::topology;
 %>
 
 class MY_OPERATOR : public MY_BASE_OPERATOR
-#if SPLPY_OP_STATEFUL == 1
+#if SPLPY_OP_STATE_HANDLER == 1
     , public DelegatingStateHandler
 #endif
 {
