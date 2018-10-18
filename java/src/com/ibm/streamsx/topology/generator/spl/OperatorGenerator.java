@@ -32,6 +32,7 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.stringArray;
 
 import java.io.IOException;
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -46,7 +47,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.ibm.icu.text.Collator;
 import com.ibm.streamsx.topology.builder.JParamTypes;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.generator.operator.OpProperties;
@@ -768,7 +768,7 @@ class OperatorGenerator {
         
         // Sort the resource tags into order and use that as the basis for the name.
         List<String> sorted = new ArrayList<>(uniqueResourceTags);
-        Collections.sort(sorted,Collator.getInstance(Locale.US));
+        Collections.sort(sorted, Collator.getInstance(Locale.US));
         StringBuilder sb = new StringBuilder();
         sb.append("HostPool");
         for (String tag : sorted) {
