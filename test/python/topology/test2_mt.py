@@ -12,7 +12,7 @@ import threading
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 
-class MTFilter(object):
+class MTChecker(object):
     def __init__(self):
         self.a = 0
         self.b = 0
@@ -22,6 +22,12 @@ class MTFilter(object):
         time.sleep(0.001)
         self.b += 1
         return self.a == self.b
+
+class MTForEach(MTChecker):
+    def __call__(self, tuple_):
+        v = super(MTForEach, self).__call__(tuple_)
+        if not v:
+            raise ValueError(str(self.a) + " != " + str(self.b))
 
 class TestMT(unittest.TestCase):
     _multiprocess_can_split_ = True
@@ -37,8 +43,12 @@ class TestMT(unittest.TestCase):
         s3 = topo.source(range(N)).low_latency()
 
         s = s1.union({s2,s3})
-        s = s.filter(MTFilter())
+        s = s.filter(MTChecker())
         s = s.filter(lambda _ : True)
+        s = s.map(MTChecker())
+        s = s.map()
+        s.for_each(MTForEach())
+        s.for_each(lambda _ : None)
         s = s.end_low_latency()
       
         tester = Tester(topo)

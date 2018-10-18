@@ -8,6 +8,10 @@
  my %cpp_tuple_types;
 %>
 
+#if SPLPY_OP_STATE_HANDLER == 1
+#include "splpy_sh.h"
+#endif
+
 #define SPLPY_TUPLE_MAP(f, v, r, occ) \
     streamsx::topology::Splpy::pyTupleMap(f, v, r)
 
@@ -83,7 +87,11 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
   OPort0Type otuple;
   {
-    OptionalAutoLock stateLock(this);
+#if SPLPY_OP_STATE_HANDLER == 1
+    SPL::AutoMutex am(mutex_);
+#elif SPLPY_CALLABLE_STATEFUL == 1
+    SPL::AutoPortMutex am(mutex_, *this);
+#endif
   
     try {
 
