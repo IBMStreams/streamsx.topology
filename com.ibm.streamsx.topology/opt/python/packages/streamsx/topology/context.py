@@ -395,7 +395,7 @@ class _DistributedSubmitter(_BaseSubmitter):
             env.pop('STREAMS_DOMAIN_ID', None)
             env.pop('STREAMS_USERNAME', None)
             env.pop('STREAMS_PASSWORD', None)
-            env['STREAMS_REST_URL'] = sc._resource_url
+            env['STREAMS_REST_URL'] = sc.resource_url
             env['STREAMS_USERNAME'] = sc.rest_client._username
             env['STREAMS_PASSWORD'] = sc.rest_client._password
         return env
