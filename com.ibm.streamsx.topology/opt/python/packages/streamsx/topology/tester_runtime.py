@@ -305,19 +305,20 @@ class _Resetter(Condition):
         
 
 class _RunFor(_FunctionalCondition):
-    def __init__(self, duration):
-        super(_RunFor, self).__init__("TestRunTime")
+    def __init__(self, duration, name):
+        super(_RunFor, self).__init__(name)
         self.duration = duration
+        self.start = None
 
     def __iter__(self):
-        start = time.time()
+        self.start = time.time()
         while True:
             time.sleep(1)
-            if (time.time() - start) >= self.duration:
+            if (time.time() - self.start) >= self.duration:
                 self.valid = True
                 return
             self._show_progress()
             yield None
 
     def __str__(self):
-        return "Condition:{}: Run time duration:{} running:{}".format(self.name, str(self.duration), str(time.time() - start))
+        return "Condition:{}: Duration:{} running:{}".format(self.name, str(self.duration), str(time.time() - self.start) if self.start else 0)
