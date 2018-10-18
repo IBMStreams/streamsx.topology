@@ -692,9 +692,10 @@ class Tester(object):
 
         # Standalone uses --kill-after parameter.
         if self._run_for and stc.ContextTypes.STANDALONE != ctxtype:
-            run_cond = sttrt._RunFor(self._run_for)
+            rfn = 'run_for_' + str(int(self._run_for)) + 's'
+            run_cond = sttrt._RunFor(self._run_for, rfn)
             self.add_condition(None, run_cond)
-            cond_run_time = self.topology.source(run_cond, name="TestRunTime")
+            cond_run_time = self.topology.source(run_cond, name=rfn)
             cond_run_time.category = 'Tester'
             cond_run_time._op()._layout(hidden=True)
 
