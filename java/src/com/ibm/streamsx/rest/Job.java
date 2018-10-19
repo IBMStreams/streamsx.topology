@@ -7,7 +7,9 @@ package com.ibm.streamsx.rest;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -270,14 +272,35 @@ public class Job extends Element {
      */
     public void waitForHealthy(long timeout, TimeUnit unit) throws TimeoutException, InterruptedException, IOException {
         final long start =  System.currentTimeMillis();
-        final long end = start + unit.toMillis(timeout);
+        long end = start + unit.toMillis(timeout);
         long sleepTime = 200;
+        Set<String> healthyPes = new HashSet<>();
+        int healthyPeCount = 0;
+
         while (!"healthy".equals(getHealth())) {
             
             long now = System.currentTimeMillis();
             
             if (now > end)
                 throw new TimeoutException();
+                                    
+            for (ProcessingElement pe : getPes()) {
+                String id = pe.getId();
+                if ("healthy".equals(pe.getHealth())) {
+                    if (!healthyPes.contains(id))
+                        healthyPes.add(id);
+                }
+            }
+            if (healthyPes.size() > healthyPeCount) {
+                // making progress - delay the timeout.
+                now = System.currentTimeMillis();
+                if (now > end)
+                    end = now + (2 * sleepTime);
+                else
+                    end += (2 * sleepTime);
+
+                healthyPeCount = healthyPes.size();
+            }
             
             // backoff if it seems like it is unlikely to start
             if ((now - start) > 5000) {
