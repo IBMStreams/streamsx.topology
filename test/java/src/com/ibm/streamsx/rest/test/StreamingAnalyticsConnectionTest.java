@@ -61,6 +61,9 @@ public class StreamingAnalyticsConnectionTest extends StreamsConnectionTest {
     public void testVCAPOptions() throws Exception {
         String serviceName = System.getenv("STREAMING_ANALYTICS_SERVICE_NAME");
         String existingVCAP = System.getenv("VCAP_SERVICES");
+        
+        assumeNotNull(serviceName, existingVCAP);
+        
         String vcapString;
 
         // VCAP_SERVICES can be either a string representing a json object, a

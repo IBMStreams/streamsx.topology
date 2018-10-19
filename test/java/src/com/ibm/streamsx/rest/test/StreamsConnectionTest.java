@@ -210,7 +210,7 @@ public class StreamsConnectionTest {
     	setupInstance();
         try {
             // get a non-existant job
-            instance.getJob("9999999");
+            instance.getJob("9999999999");
             fail("this job number should not exist");
         } catch (RESTException r) {
             assertEquals(r.toString(), 404, r.getStatusCode());
