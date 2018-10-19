@@ -29,6 +29,13 @@ class MTForEach(MTChecker):
         if not v:
             raise ValueError(str(self.a) + " != " + str(self.b))
 
+class MTHashAdder(MTChecker):
+    def __call__(self, tuple_):
+        v = super(MTHashAdder, self).__call__(tuple_)
+        if not v:
+            raise ValueError(str(self.a) + " != " + str(self.b))
+        return self.a
+
 class TestMT(unittest.TestCase):
     _multiprocess_can_split_ = True
 
@@ -49,8 +56,12 @@ class TestMT(unittest.TestCase):
         s = s.map()
         s.for_each(MTForEach())
         s.for_each(lambda _ : None)
+        sp = s.parallel(3, Routing.HASH_PARTITIONED, MTHashAdder())
         s = s.end_low_latency()
+
+        sp = sp.map().end_parallel()
       
         tester = Tester(topo)
         tester.tuple_count(s, N*3)
+        tester.tuple_count(sp, N*3)
         tester.test(self.test_ctxtype, self.test_config)
