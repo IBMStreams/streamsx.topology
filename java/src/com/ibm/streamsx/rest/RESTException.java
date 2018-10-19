@@ -8,7 +8,9 @@ package com.ibm.streamsx.rest;
 import java.io.IOException;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
 /**
@@ -16,6 +18,11 @@ import com.google.gson.JsonSyntaxException;
  */
 public class RESTException extends IOException {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+    
     private int status;
     private RESTErrorMessage error;
 
@@ -29,22 +36,35 @@ public class RESTException extends IOException {
      *         Message
      */
     public static final RESTException create(int code, String streamsMessage) {
-        RESTErrorMessage error = null;
-        RESTException rcException;
 
-        if ((streamsMessage == null) || streamsMessage.equals("")) {
-            rcException = new RESTException(code);
+        if (streamsMessage == null || streamsMessage.isEmpty()) {
+            return new RESTException(code);
         } else {
             try {
-                error = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(streamsMessage,
-                        RESTErrorMessage.class);
-                rcException = new RESTException(code, error);
+                
+                JsonObject jsonError = new JsonParser().parse(streamsMessage).getAsJsonObject();
+
+                if (jsonError.has("message")) {
+
+                    RESTErrorMessage error = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(streamsMessage,
+                            RESTErrorMessage.class);
+                    return new RESTException(code, error);
+                } else if (jsonError.has("messages")) {
+                    JsonArray messages = jsonError.getAsJsonArray("messages");
+                    if (messages.size() == 1) {
+                        RESTErrorMessage error = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create().fromJson(messages.get(0).getAsJsonObject(),
+                                RESTErrorMessage.class);
+                        return new RESTException(code, error);
+                    }
+                }
+                
+                return new RESTException(code, streamsMessage);
+                
             } catch (JsonSyntaxException e) {
                 // chances are this is a 404 http error with some other message
-                rcException = new RESTException(code, streamsMessage);
+                return new RESTException(code, streamsMessage);
             }
         }
-        return rcException;
     }
 
     private RESTException(int code, RESTErrorMessage error) {

@@ -264,7 +264,7 @@ class StreamsRestUtils {
             // with a 404 message, we are likely to have a message from Streams
             // but if not, provide a better message
             sReturn = EntityUtils.toString(hResponse.getEntity());
-            if ((sReturn != null) && (!sReturn.equals(""))) {
+            if (sReturn != null && !sReturn.isEmpty()) {
                 throw RESTException.create(rcResponse, sReturn);
             } else {
                 String httpError = "HttpStatus is " + rcResponse + " for url " + inputString;
