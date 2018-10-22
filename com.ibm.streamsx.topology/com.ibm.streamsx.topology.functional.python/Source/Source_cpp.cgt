@@ -1,5 +1,9 @@
 <%SPL::CodeGen::implementationPrologue($model);%>
 
+#if SPLPY_OP_STATE_HANDLER == 1
+#include "splpy_sh.h"
+#endif
+
 <% my $pywrapfunc='source_pickle'; %>
 
 MY_OPERATOR::MY_OPERATOR() :
@@ -69,7 +73,9 @@ void MY_OPERATOR::process(uint32_t idx)
         ConsistentRegionPermit crp(crc);
 #endif
         {
-            OptionalAutoLock stateLock(this);
+#if SPLPY_OP_STATE_HANDLER == 1
+            SPL::AutoMutex am(mutex_);
+#endif
             try {
                 SplpyGIL lock;
                 Py_CLEAR(pyReturnVar);

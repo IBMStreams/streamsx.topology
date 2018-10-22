@@ -12,6 +12,29 @@ import threading
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 
+class MTSource(object):
+    def __init__(self, N):
+        self.a = 0
+        self.b = 0
+        self.N = N
+        self.c = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.c >= self.N:
+            raise StopIteration()
+        v = self.c
+        self.c += 1
+        self.a += 1
+        time.sleep(0.0001)
+        self.b += 1
+        if self.a != self.b:
+            raise ValueError('MTSource:' + str(self.a) + " != " + str(self.b))
+        return v
+        
+
 class MTChecker(object):
     def __init__(self):
         self.a = 0
@@ -22,6 +45,8 @@ class MTChecker(object):
         time.sleep(0.001)
         self.b += 1
         return self.a == self.b
+
+    
 
 class MTForEach(MTChecker):
     def __call__(self, tuple_):
@@ -50,7 +75,7 @@ class TestMT(unittest.TestCase):
     def test_mt(self):
         topo = Topology()
         N = 1000
-        s1 = topo.source(range(N)).low_latency()
+        s1 = topo.source(MTSource(N)).low_latency()
         s2 = topo.source(range(N)).low_latency()
         s3 = topo.source(range(N)).low_latency()
 
