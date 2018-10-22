@@ -27,13 +27,18 @@ class MTForEach(MTChecker):
     def __call__(self, tuple_):
         v = super(MTForEach, self).__call__(tuple_)
         if not v:
-            raise ValueError(str(self.a) + " != " + str(self.b))
+            raise ValueError('MTForEach:' + str(self.a) + " != " + str(self.b))
+
+class MTFlatMap(MTChecker):
+    def __call__(self, tuple_):
+        v = super(MTFlatMap, self).__call__(tuple_)
+        return [v]
 
 class MTHashAdder(MTChecker):
     def __call__(self, tuple_):
         v = super(MTHashAdder, self).__call__(tuple_)
         if not v:
-            raise ValueError(str(self.a) + " != " + str(self.b))
+            raise ValueError('MTHashAdder:' + str(self.a) + " != " + str(self.b))
         return self.a
 
 class TestMT(unittest.TestCase):
@@ -54,6 +59,8 @@ class TestMT(unittest.TestCase):
         s = s.filter(lambda _ : True)
         s = s.map(MTChecker())
         s = s.map()
+        s = s.flat_map(MTFlatMap())
+        s = s.flat_map(lambda v : [v])
         s.for_each(MTForEach())
         s.for_each(lambda _ : None)
         sp = s.parallel(3, Routing.HASH_PARTITIONED, MTHashAdder())
