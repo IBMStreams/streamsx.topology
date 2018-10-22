@@ -243,7 +243,7 @@ class _UnorderedStreamContents(_StreamContents):
         """
         tuple_ = self.received[-1]
         if not tuple_ in self.expected:
-            _logger.error("Condition:%s: Tuple count %d Received unexpected tuple %s", self.name, len(self.receivied), tuple_)
+            _logger.error("Condition:%s: Tuple count %d Received unexpected tuple %s", self.name, len(self.received), tuple_)
             self.fail()
             return True
         if len(self.expected) == len(self.received):
