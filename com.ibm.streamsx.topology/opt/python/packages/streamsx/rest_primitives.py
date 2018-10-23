@@ -613,7 +613,8 @@ class Job(_ResourceElement):
         Returns:
             list(Host): List of Host elements associated with this job.
         """
-        return self._get_elements(self.hosts, 'hosts', Host)
+        if hasattr(self, 'hosts'):
+            return self._get_elements(self.hosts, 'hosts', Host)
 
     def get_operator_connections(self):
         """Get the list of :py:class:`OperatorConnection` elements associated with this job.
@@ -1301,7 +1302,8 @@ class Instance(_ResourceElement):
         Returns:
             list(Host): List of Host element associated with this instance.
         """
-        return self._get_elements(self.hosts, 'hosts', Host)
+        if hasattr(self, 'hosts'):
+            return self._get_elements(self.hosts, 'hosts', Host)
 
     def get_domain(self):
         """Get the Streams domain that owns this instance.
@@ -1559,7 +1561,8 @@ class Domain(_ResourceElement):
         Returns:
             list(Host): List of Host elements associated with this domain.
         """
-        return self._get_elements(self.hosts, 'hosts', Host)
+        if hasattr(self, 'hosts'):
+            return self._get_elements(self.hosts, 'hosts', Host)
 
     def get_active_services(self):
         """Get the list of :py:class:`ActiveService` elements associated with this domain.
