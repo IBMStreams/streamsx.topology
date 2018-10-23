@@ -21,12 +21,15 @@ class MTSource(object):
         time.sleep(0.0001)
         self.b += 1
         if self.a == self.b:
-            if self.count == N:
+            if self.count == self.N:
                 raise StopIteration()
             v = self.count
             self.count += 1
             return v,
         return None
+
+    def next(self):
+        return self.__next__()
 
 @spl.filter()
 class MTFilter(object):
