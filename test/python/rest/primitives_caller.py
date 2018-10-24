@@ -20,7 +20,7 @@ def _fetch_from_instance(tc, instance):
     _check_non_empty_list(tc, instance.get_views(), View)
     _check_non_empty_list(tc, instance.get_operator_connections(), OperatorConnection)
     _check_non_empty_list(tc, instance.get_resource_allocations(), ResourceAllocation, none_ok=True)
-    _check_non_empty_list(tc, instance.get_active_services(), ActiveService)
+    _check_non_empty_list(tc, instance.get_active_services(), ActiveService, none_ok=True)
 
     _check_list(tc, instance.get_exported_streams(), ExportedStream)
     _check_list(tc, instance.get_hosts(), Host, none_ok=True)
@@ -244,7 +244,7 @@ def check_domain(tc, domain):
 
 def _fetch_from_domain(tc, domain):
     _check_non_empty_list(tc, domain.get_instances(), Instance)
-    _check_non_empty_list(tc, domain.get_active_services(), ActiveService)
+    _check_non_empty_list(tc, domain.get_active_services(), ActiveService, none_ok=True)
     
     # See issue 952
     if tc.test_ctxtype != 'STREAMING_ANALYTICS_SERVICE':

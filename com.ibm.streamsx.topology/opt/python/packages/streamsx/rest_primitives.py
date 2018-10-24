@@ -1375,7 +1375,8 @@ class Instance(_ResourceElement):
         Returns:
             list(ActiveService): List of ActiveService elements associated with this instance.
         """
-        return self._get_elements(self.activeServices, 'activeServices', ActiveService)
+        if hasattr(self, 'activeServices'):
+            return self._get_elements(self.activeServices, 'activeServices', ActiveService)
 
     def get_resource_allocations(self):
         """Get the list of :py:class:`ResourceAllocation` elements associated with this instance.
@@ -1578,7 +1579,8 @@ class Domain(_ResourceElement):
         Returns:
             list(ActiveService): List of ActiveService elements associated with this domain.
         """
-        return self._get_elements(self.activeServices, 'activeServices', ActiveService)
+        if hasattr(self, 'activeServices'):
+            return self._get_elements(self.activeServices, 'activeServices', ActiveService)
 
     def get_resource_allocations(self):
         """Get the list of :py:class:`ResourceAllocation` elements associated with this domain.
