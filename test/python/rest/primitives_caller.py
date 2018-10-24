@@ -23,7 +23,7 @@ def _fetch_from_instance(tc, instance):
     _check_non_empty_list(tc, instance.get_active_services(), ActiveService)
 
     _check_list(tc, instance.get_exported_streams(), ExportedStream)
-    _check_list(tc, instance.get_hosts(), Host)
+    _check_list(tc, instance.get_hosts(), Host, none_ok=True)
     _check_list(tc, instance.get_imported_streams(), ImportedStream)
     _check_list(tc, instance.get_pe_connections(), PEConnection)
 
@@ -226,7 +226,7 @@ def _fetch_from_job(tc, job):
 
         shutil.rmtree(td)
 
-    _check_list(tc, job.get_hosts(), Host)
+    _check_list(tc, job.get_hosts(), Host, none_ok=True)
     _check_list(tc, job.get_pe_connections(), PEConnection)
 
     tc.assertIsInstance(job.get_instance(), Instance)
@@ -248,7 +248,7 @@ def _fetch_from_domain(tc, domain):
         _check_resource_allocations(tc, domain)
     _check_non_empty_list(tc, domain.get_resources(), Resource)
 
-    _check_list(tc, domain.get_hosts(), Host)
+    _check_list(tc, domain.get_hosts(), Host, none_ok=True)
 
 def _check_non_empty_list(tc, items, expect_class, none_ok=False):
     if items is None and none_ok:
@@ -256,6 +256,8 @@ def _check_non_empty_list(tc, items, expect_class, none_ok=False):
     tc.assertTrue(items)
     _check_list(tc, items, expect_class)
 
-def _check_list(tc, items, expect_class):
+def _check_list(tc, items, expect_class, none_ok=False):
+    if items is None and none_ok:
+        return
     for item in items:
         tc.assertIsInstance(item, expect_class)
