@@ -27,7 +27,9 @@ def _fetch_from_instance(tc, instance):
     _check_list(tc, instance.get_imported_streams(), ImportedStream)
     _check_list(tc, instance.get_pe_connections(), PEConnection)
 
-    tc.assertIsInstance(instance.get_domain(), Domain)
+    d = instance.get_domain()
+    if d is not None
+        tc.assertIsInstance(d, Domain)
 
 def _check_operators(tc, ops):
     for op in ops:
@@ -230,7 +232,9 @@ def _fetch_from_job(tc, job):
     _check_list(tc, job.get_pe_connections(), PEConnection)
 
     tc.assertIsInstance(job.get_instance(), Instance)
-    tc.assertIsInstance(job.get_domain(), Domain)
+    d = job.get_domain()
+    if d is not None:
+        tc.assertIsInstance(d, Domain)
 
 def check_domain(tc, domain):
     """Basic test of calls against an Domain """
