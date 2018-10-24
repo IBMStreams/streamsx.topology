@@ -28,7 +28,7 @@ def _fetch_from_instance(tc, instance):
     _check_list(tc, instance.get_pe_connections(), PEConnection)
 
     d = instance.get_domain()
-    if d is not None
+    if d is not None:
         tc.assertIsInstance(d, Domain)
 
 def _check_operators(tc, ops):
