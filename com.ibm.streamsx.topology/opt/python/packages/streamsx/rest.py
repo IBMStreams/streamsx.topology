@@ -140,7 +140,8 @@ class StreamsConnection:
         Returns:
             :py:obj:`list` of :py:class:`~.rest_primitives.Domain`: List of available domains
         """
-        return self._get_elements('domains', Domain)
+        if hasattr(self, 'domains'):
+            return self._get_elements('domains', Domain)
 
     def get_domain(self, id):
         """Retrieves available domain matching a specific domain ID
@@ -154,8 +155,9 @@ class StreamsConnection:
         Raises:
             ValueError: No matching domain exists.
         """
-        return self._get_element_by_id('domains', Domain, id)
-
+        if hasattr(self, 'domains'):
+            return self._get_element_by_id('domains', Domain, id)
+  
     def get_instances(self):
         """Retrieves available instances.
 
