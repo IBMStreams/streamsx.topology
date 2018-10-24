@@ -671,7 +671,8 @@ class Job(_ResourceElement):
         Returns:
             list(ResourceAllocation): List of ResourceAllocation elements associated with this job.
         """
-        return self._get_elements(self.resourceAllocations, 'resourceAllocations', ResourceAllocation)
+        if hasattr(self, 'resourceAllocations'):
+            return self._get_elements(self.resourceAllocations, 'resourceAllocations', ResourceAllocation)
 
     def cancel(self, force=False):
         """Cancel this job.
@@ -1008,7 +1009,8 @@ class PE(_ResourceElement):
 
         .. versionadded:: 1.9
         """
-        return ResourceAllocation(self.rest_client.make_request(self.resourceAllocation), self.rest_client)
+        if hasattr(self, 'resourceAllocation'):
+            return ResourceAllocation(self.rest_client.make_request(self.resourceAllocation), self.rest_client)
 
 
 class PEConnection(_ResourceElement):
@@ -1381,7 +1383,8 @@ class Instance(_ResourceElement):
         Returns:
             list(ResourceAllocation): List of ResourceAllocation elements associated with this instance.
         """
-        return self._get_elements(self.resourceAllocations, 'resourceAllocations', ResourceAllocation)
+        if hasattr(self, 'resourceAllocations'):
+            return self._get_elements(self.resourceAllocations, 'resourceAllocations', ResourceAllocation)
 
     def get_published_topics(self):
         """Get a list of published topics for this instance.
@@ -1583,7 +1586,8 @@ class Domain(_ResourceElement):
         Returns:
             list(ResourceAllocation): List of ResourceAllocation elements associated with this domain.
         """
-        return self._get_elements(self.resourceAllocations, 'resourceAllocations', ResourceAllocation)
+        if hasattr(self, 'resourceAllocations'):
+            return self._get_elements(self.resourceAllocations, 'resourceAllocations', ResourceAllocation)
 
     def get_resources(self):
         """Get the list of :py:class:`Resource` elements associated with this domain.
