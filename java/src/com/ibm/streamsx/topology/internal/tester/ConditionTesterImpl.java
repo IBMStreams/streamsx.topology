@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Logger;
 
 import com.ibm.streams.flow.handlers.StreamHandler;
 import com.ibm.streams.operator.Tuple;
@@ -47,6 +48,8 @@ import com.ibm.streamsx.topology.tester.Tester;
  * them against a topology.
  */
 public class ConditionTesterImpl implements Tester {
+    
+    public static final Logger trace = Logger.getLogger("com.ibm.streamsx.topology.testing");
 
     private final Topology topology;
     private AtomicBoolean used = new AtomicBoolean();
