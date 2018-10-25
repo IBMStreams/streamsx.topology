@@ -31,7 +31,7 @@ import com.ibm.streamsx.topology.tester.Tester;
 public class IsolateTest extends TestTopology {
 
     @Test
-    public void simpleIsolationTest() throws Exception {
+    public void testSimpleIsolation() throws Exception {
         assumeTrue(SC_OK);
         assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
         
@@ -199,29 +199,7 @@ public class IsolateTest extends TestTopology {
                 .endLowLatency()
                 ;
     }
-       
-    /**
-     * Get the container ids from a tuple of the form produced with
-     * getContainerIdAgg() - i.e. <some-tag> <id1> [<id2> ...]
-     * @param results
-     * @return
-     */
-    public static Set<String> getContainerIds(List<String> results) {
-        Set<String> ids = new HashSet<>();
-        for (String s : results) {
-            boolean first = true;
-            for (String stok : s.split(" ")) {
-                if (first) {
-                    first = false;
-                    continue;
-                }
-                // see GetContainerIdAndChannelAppend
-                String[] idParts = stok.split("::ch-");
-                ids.add(idParts[0]); // just the container id
-            }
-        }        
-        return ids;
-    }
+
 
 
     public static Function<String, String> getContainerId() {

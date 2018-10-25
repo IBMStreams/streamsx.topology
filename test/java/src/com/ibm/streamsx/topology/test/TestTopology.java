@@ -428,6 +428,10 @@ public class TestTopology {
     
     /**
      * Return a stream that will only contain unique values from stream.
+     * 
+     * This method is only recommended for test applications as
+     * it maintains an unbounded collection of the unique values
+     * seen on the stream.
      */
     public static <T> TStream<T> uniqueValues(TStream<T> stream) {   	
     	Set<T> seen = new HashSet<>();
