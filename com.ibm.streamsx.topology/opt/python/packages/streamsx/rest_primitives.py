@@ -427,7 +427,8 @@ class View(_ResourceElement):
         Returns:
             Domain: Streams domain for the instance owning this view.
         """
-        return Domain(self.rest_client.make_request(self.domain), self.rest_client)
+        if hasattr(self, 'domain'):
+            return Domain(self.rest_client.make_request(self.domain), self.rest_client)
 
     def get_instance(self):
         """Get the Streams instance that owns this view.
@@ -597,7 +598,8 @@ class Job(_ResourceElement):
         Returns:
             Domain: Streams domain that owns this job.
         """
-        return Domain(self.rest_client.make_request(self.domain), self.rest_client)
+        if hasattr(self, 'domain'):
+            return Domain(self.rest_client.make_request(self.domain), self.rest_client)
 
     def get_instance(self):
         """Get the Streams instance that owns this job.
@@ -669,7 +671,8 @@ class Job(_ResourceElement):
         Returns:
             list(ResourceAllocation): List of ResourceAllocation elements associated with this job.
         """
-        return self._get_elements(self.resourceAllocations, 'resourceAllocations', ResourceAllocation)
+        if hasattr(self, 'resourceAllocations'):
+            return self._get_elements(self.resourceAllocations, 'resourceAllocations', ResourceAllocation)
 
     def cancel(self, force=False):
         """Cancel this job.
@@ -730,7 +733,8 @@ class Operator(_ResourceElement):
 
         .. versionadded:: 1.9
         """
-        return Host(self.rest_client.make_request(self.host), self.rest_client) if self.host else None
+        if hasattr(self, 'host') and self.host:
+            return Host(self.rest_client.make_request(self.host), self.rest_client)
 
     def get_pe(self):
         """Get the Streams processing element this operator is executing in.
@@ -924,7 +928,8 @@ class PE(_ResourceElement):
 
         .. versionadded:: 1.9
         """
-        return Host(self.rest_client.make_request(self.host), self.rest_client) if self.host else None
+        if hasattr(self, 'host') and self.host:
+            return Host(self.rest_client.make_request(self.host), self.rest_client)
 
     def retrieve_trace(self, filename=None, dir=None):
         """Retrieves the application trace files for this PE
@@ -1004,7 +1009,8 @@ class PE(_ResourceElement):
 
         .. versionadded:: 1.9
         """
-        return ResourceAllocation(self.rest_client.make_request(self.resourceAllocation), self.rest_client)
+        if hasattr(self, 'resourceAllocation'):
+            return ResourceAllocation(self.rest_client.make_request(self.resourceAllocation), self.rest_client)
 
 
 class PEConnection(_ResourceElement):
@@ -1091,7 +1097,7 @@ class ResourceAllocation(_ResourceElement):
 
 
 class ActiveService(_ResourceElement):
-    """Domain or an instance service.
+    """Domain or instance service.
 
     Attributes:
         resourceType(str): Identifies the REST resource type, which is *activeService*.
@@ -1311,7 +1317,8 @@ class Instance(_ResourceElement):
         Returns:
             Domain: Streams domain owning this instance.
         """
-        return Domain(self.rest_client.make_request(self.domain), self.rest_client)
+        if hasattr(self, 'domain'):
+            return Domain(self.rest_client.make_request(self.domain), self.rest_client)
 
     def get_jobs(self, name=None):
         """Retrieves jobs running in this instance.
@@ -1368,7 +1375,8 @@ class Instance(_ResourceElement):
         Returns:
             list(ActiveService): List of ActiveService elements associated with this instance.
         """
-        return self._get_elements(self.activeServices, 'activeServices', ActiveService)
+        if hasattr(self, 'activeServices'):
+            return self._get_elements(self.activeServices, 'activeServices', ActiveService)
 
     def get_resource_allocations(self):
         """Get the list of :py:class:`ResourceAllocation` elements associated with this instance.
@@ -1376,7 +1384,8 @@ class Instance(_ResourceElement):
         Returns:
             list(ResourceAllocation): List of ResourceAllocation elements associated with this instance.
         """
-        return self._get_elements(self.resourceAllocations, 'resourceAllocations', ResourceAllocation)
+        if hasattr(self, 'resourceAllocations'):
+            return self._get_elements(self.resourceAllocations, 'resourceAllocations', ResourceAllocation)
 
     def get_published_topics(self):
         """Get a list of published topics for this instance.
@@ -1570,7 +1579,8 @@ class Domain(_ResourceElement):
         Returns:
             list(ActiveService): List of ActiveService elements associated with this domain.
         """
-        return self._get_elements(self.activeServices, 'activeServices', ActiveService)
+        if hasattr(self, 'activeServices'):
+            return self._get_elements(self.activeServices, 'activeServices', ActiveService)
 
     def get_resource_allocations(self):
         """Get the list of :py:class:`ResourceAllocation` elements associated with this domain.
@@ -1578,7 +1588,8 @@ class Domain(_ResourceElement):
         Returns:
             list(ResourceAllocation): List of ResourceAllocation elements associated with this domain.
         """
-        return self._get_elements(self.resourceAllocations, 'resourceAllocations', ResourceAllocation)
+        if hasattr(self, 'resourceAllocations'):
+            return self._get_elements(self.resourceAllocations, 'resourceAllocations', ResourceAllocation)
 
     def get_resources(self):
         """Get the list of :py:class:`Resource` elements associated with this domain.
@@ -2012,6 +2023,7 @@ class _StreamsV4Delegator(object):
                 domain_id=job.get_instance().get_domain().id, instance_id=job.get_instance().id)
         return False
 
+
 class _UploadedBundle(ApplicationBundle):
     def _app_id(self):
         app_id = self.application
@@ -2022,6 +2034,7 @@ class _UploadedBundle(ApplicationBundle):
         # One time use only
         self.json_rep['application'] = None
         return app_id
+
 
 class _StreamsRestDelegator(object):
     """Delegator for IBM Streams instances where the
