@@ -65,8 +65,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
         String topic = uniqueTopic("testPublishUDPSubscribeNonUDP/" + width);
     
         final Topology t = new Topology();
-        TStream<String> source = t.strings("325", "457", "9325", "hello", "udp");
-        
+        TStream<String> source = t.strings("325", "457", "9325", "hello", "udp");     
         source = addStartupDelay(source);
         
         if (width > 0)
@@ -99,7 +98,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
     private void testPublishUDPSubscribeUDP(int pwidth, int swidth) throws Exception {
         
         
-        String topic = "testPublishUDPSubscribeUDP/" + pwidth;
+        String topic = uniqueTopic("testPublishUDPSubscribeUDP/" + pwidth);
         
         String[] data = new String[100];
         for (int i = 0; i < data.length; i++) {
@@ -111,12 +110,11 @@ public class PublishSubscribeUDPTest extends TestTopology {
         SPL.addToolkit(t, new File(getTestRoot(), "spl/testtk"));
                
         TStream<String> source = t.strings(data);
+        source = addStartupDelay(source);
         
         if (pwidth > 0)
             source = source.parallel(pwidth);
-        
-        source = addStartupDelay(source);
-        
+               
         source.publish(topic);
         
         Map<String,Object> params = new HashMap<>();
@@ -135,7 +133,6 @@ public class PublishSubscribeUDPTest extends TestTopology {
     
         final Topology t = new Topology();
         TStream<String> source = t.strings("325", "457", "9325", "hello", "udp");   
-        setStartupDelay(20);
         source = addStartupDelay(source);   
 
         source = source.parallel(4);     
@@ -174,8 +171,7 @@ public class PublishSubscribeUDPTest extends TestTopology {
             data.add(new BigDecimal(r.nextDouble()* 100.0));
     
         final Topology t = new Topology();
-        TStream<BigDecimal> source = t.constants(data);
-              
+        TStream<BigDecimal> source = t.constants(data);             
         source = addStartupDelay(source).asType(BigDecimal.class);
         
         if (width > 0)

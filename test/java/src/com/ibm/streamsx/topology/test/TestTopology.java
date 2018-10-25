@@ -189,7 +189,7 @@ public class TestTopology {
      * @param stream
      * @return
      */
-    public <T,S> TStream<T> addStartupDelay(TStream<T> stream) {
+    public <T> TStream<T> addStartupDelay(TStream<T> stream) {
          
         if (getTesterType() == Type.DISTRIBUTED_TESTER || getTesterType() == Type.STREAMING_ANALYTICS_SERVICE_TESTER) {
             return stream.modify(new InitialDelay<T>(getStartupDelay()*1000L));
