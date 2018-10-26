@@ -189,7 +189,7 @@ public class TestTopology {
      * @param stream
      * @return
      */
-    public <T,S> TStream<T> addStartupDelay(TStream<T> stream) {
+    public <T> TStream<T> addStartupDelay(TStream<T> stream) {
          
         if (getTesterType() == Type.DISTRIBUTED_TESTER || getTesterType() == Type.STREAMING_ANALYTICS_SERVICE_TESTER) {
             return stream.modify(new InitialDelay<T>(getStartupDelay()*1000L));
@@ -428,6 +428,10 @@ public class TestTopology {
     
     /**
      * Return a stream that will only contain unique values from stream.
+     * 
+     * This method is only recommended for test applications as
+     * it maintains an unbounded collection of the unique values
+     * seen on the stream.
      */
     public static <T> TStream<T> uniqueValues(TStream<T> stream) {   	
     	Set<T> seen = new HashSet<>();
