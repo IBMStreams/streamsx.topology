@@ -14,5 +14,8 @@ final class FileBundle extends ApplicationBundle {
 		setInstance(instance);
 	}
 	
-	File bundleFile() { return bundle;}	
+	File bundleFile() { return bundle;}
+	
+    @Override
+    public void refresh() {}
 }

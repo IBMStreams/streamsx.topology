@@ -34,13 +34,8 @@ class StreamsRestActions {
 	static Result<Job, JsonObject> submitJob(ApplicationBundle bundle, JsonObject jco) throws IOException {
 		UploadedApplicationBundle uab = (UploadedApplicationBundle) bundle;
 		
-		if (uab.application == null)
-			uab.refresh();
-		String appId = uab.application;
-		uab.application = null;
-		
 		JsonObject body = new JsonObject();
-		body.addProperty("application", appId);
+		body.addProperty("application", uab.getBundleId());
 		body.addProperty("preview", false);		
 		body.add("jobConfigurationOverlay", jco);
 		
