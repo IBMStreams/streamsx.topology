@@ -23,18 +23,6 @@ public abstract class ApplicationBundle extends Element {
 		this._instance = instance;
 	}
     
-    @Expose
-    private String id;
-
-    /**
-     * Gets the IBM Streams unique identifier for this domain.
-     * 
-     * @return the IBM Streams unique identifier.
-     */
-    public String getId() {
-        return id;
-    }
-    
     public final Result<Job,JsonObject> submitJob(JsonObject jco) throws IOException {
     	return _instance.connection().submitJob(this, jco);
     }

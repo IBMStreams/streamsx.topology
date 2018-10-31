@@ -8,6 +8,18 @@ from past.builtins import basestring
 import streamsx.topology.topology
 import streamsx.topology.schema
 
+def _single_schema(schemas):
+    if isinstance(schemas, basestring):
+        return schemas
+    if isinstance(schemas, streamsx.topology.schema.CommonSchema):
+        return schemas
+    if isinstance(schemas, streamsx.topology.schema.StreamSchema):
+        return schemas
+    if isinstance(schemas, list):
+        return schemas[0] if len(schemas) == 1 else None
+    if isinstance(schemas, tuple):
+        return schemas[0] if len(schemas) == 1 else None
+
 
 class ExtensionOperator(object):
     def __init__(self,topology,kind,inputs=None,schemas=None,params=None,name=None):
@@ -35,10 +47,7 @@ class ExtensionOperator(object):
         if isinstance(_input, streamsx.topology.topology.Window):
             win_cfg = _input._config
             _input = _input.stream
-            alias = None
-        else:
-            alias = _input._alias
-        self._op().addInputPort(outputPort=_input.oport, window_config=win_cfg, alias=alias)
+        self._op().addInputPort(outputPort=_input.oport, window_config=win_cfg, alias=_input.name)
         self._inputs.append(_input)
 
     def __inputs(self, inputs):
@@ -53,19 +62,13 @@ class ExtensionOperator(object):
 
     def __outputs(self, schemas):
         self.outputs = []
-        if schemas is not None:
-            stream_name = None
-            if isinstance(schemas, basestring):
-                schemas = (schemas,)
-                stream_name = self._op().name
-
-            try:
-                for schema in schemas:
-                    schema = streamsx.topology.schema._stream_schema(schema)
-                    oport = self._op().addOutputPort(schema=schema, name=stream_name)
-                    self.outputs.append(streamsx.topology.topology.Stream(self.topology, oport)._make_placeable())
-            except TypeError:
-                # not iterable, single schema
-                schema = streamsx.topology.schema._stream_schema(schemas)
+        if schemas:
+            if _single_schema(schemas):
+                schema = streamsx.topology.schema._stream_schema(_single_schema(schemas))
                 oport = self._op().addOutputPort(schema=schema, name=self._op().name)
                 self.outputs.append(streamsx.topology.topology.Stream(self.topology, oport)._make_placeable())
+            else:
+                for schema in schemas:
+                    schema = streamsx.topology.schema._stream_schema(schema)
+                    oport = self._op().addOutputPort(schema=schema)
+                    self.outputs.append(streamsx.topology.topology.Stream(self.topology, oport)._make_placeable())

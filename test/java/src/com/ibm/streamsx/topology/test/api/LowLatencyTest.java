@@ -6,11 +6,10 @@ package com.ibm.streamsx.topology.test.api;
 
 import static com.ibm.streamsx.topology.logic.Logic.identity;
 import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerIdAppend;
-import static com.ibm.streamsx.topology.test.api.IsolateTest.getContainerIds;
 import static com.ibm.streamsx.topology.test.api.PlaceableTest.adlAssertColocated;
 import static com.ibm.streamsx.topology.test.api.PlaceableTest.adlAssertDefaultHostpool;
 import static com.ibm.streamsx.topology.test.api.PlaceableTest.produceADL;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.util.ArrayList;
@@ -30,7 +29,6 @@ import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
-import com.ibm.streamsx.topology.test.AllowAll;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -120,8 +118,6 @@ public class LowLatencyTest extends TestTopology {
     
     @Test
     public void testLowLatencySplit() throws Exception {
-        // Uses Condition.getResult - not supported.
-        assumeTrue(!isStreamingAnalyticsRun());
         
         // lowLatency().split() is an interesting case because split()
         // has >1 oports.
@@ -153,22 +149,19 @@ public class LowLatencyTest extends TestTopology {
         
         /////////////////////////////////////
         TStream<String> all = splitChFanin.endLowLatency();
+        
+        TStream<String> peIds = all.filter(v -> true).union(s2.filter(v -> true));
+        peIds = TestTopology.uniqueValues(peIds);
 
         Tester tester = topology.getTester();
         
         Condition<Long> uCount = tester.tupleCount(all, strs.length);
+        Condition<Long> uniqueIds = tester.tupleCount(peIds, 1);
+
+        complete(tester, uCount.and(uniqueIds), 10, TimeUnit.SECONDS);
         
-        Condition<List<String>> contents = tester.stringContents(all);
-        Condition<List<String>> s2contents = tester.stringContents(s2);
-
-        complete(tester, uCount, 10, TimeUnit.SECONDS);
-
-        Set<String> peIds = new HashSet<>();
-        peIds.addAll(contents.getResult());
-        peIds.addAll(s2contents.getResult());
-        
-
-        assertEquals("peIds: "+peIds, 1, peIds.size() );
+        assertTrue(uniqueIds.valid());
+        assertTrue(uCount.valid());
     }
     
     @SuppressWarnings("serial")
@@ -195,12 +188,10 @@ public class LowLatencyTest extends TestTopology {
     
     @Test
     public void testNested() throws Exception {
-        // Uses Condition.getResult - not supported.
-        assumeTrue(!isStreamingAnalyticsRun());
         
         // ensure nested low latency yields all fns in the same container
         
-        final Topology topology = newTopology("nestedTest");
+        final Topology topology = newTopology();
         final Tester tester = topology.getTester();
         // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         
@@ -219,16 +210,42 @@ public class LowLatencyTest extends TestTopology {
                 .endLowLatency()
                 ;
         
-        Condition<Long> uCount = tester.tupleCount(s2.filter(new AllowAll<String>()), 1);
-        Condition<List<String>> contents = tester.stringContents(
-                s2.filter(new AllowAll<String>()));
+        s2 = s2.filter(v -> true);
+        
+        TStream<String> ids = s2.flatMap(v -> getContainerIds(v));
+        ids = TestTopology.uniqueValues(ids);
+        
+        Condition<Long> uCount = tester.tupleCount(s2, 1);
+        Condition<Long> uIds = tester.tupleCount(ids, 1);
 
-        complete(tester, uCount, 10, TimeUnit.SECONDS);
+        complete(tester, uCount.and(uIds), 10, TimeUnit.SECONDS);
 
-        Set<String> ids = getContainerIds(contents.getResult());
-        assertEquals("ids: "+ids, 1, ids.size());
+        assertTrue(uCount.valid());
+        assertTrue(uIds.valid());
     }
     
+    /**
+     * Get the container ids from a tuple of the form produced with
+     * getContainerIdAgg() - i.e. <some-tag> <id1> [<id2> ...]
+     * 
+     * @param results
+     * @return
+     */
+    private static Set<String> getContainerIds(String result) {
+        Set<String> ids = new HashSet<>();
+        boolean first = true;
+        for (String stok : result.split(" ")) {
+            if (first) {
+                first = false;
+                continue;
+            }
+            // see GetContainerIdAndChannelAppend
+            String[] idParts = stok.split("::ch-");
+            ids.add(idParts[0]); // just the container id
+        }
+        return ids;
+    }
+ 
     private static ThreadLocal<Long> sameThread = new ThreadLocal<>();
 
     /**

@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.internal.tester.rest;
 
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl.trace;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Map;
@@ -28,7 +29,6 @@ import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
-import com.ibm.streamsx.topology.internal.tester.TesterRuntime.TestState;
 import com.ibm.streamsx.topology.internal.tester.conditions.ContentsUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.CounterUserCondition;
 import com.ibm.streamsx.topology.internal.tester.conditions.NoStreamCondition;
@@ -62,6 +62,9 @@ public class RESTTesterRuntime extends TesterRuntime {
 
         String jobId = jstring(submission, SubmissionResultsKeys.JOB_ID);
         requireNonNull(jobId);
+        
+        trace.info("Testing topology:" +
+            topology().getNamespace() + "::" + topology().getName() + " JobId:" + jobId);
 
         Job job = instanceSupplier.apply(deployment).call().getJob(jobId);
 

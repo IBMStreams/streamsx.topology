@@ -27,7 +27,7 @@ class AddIt(object):
         return str(t) + '-' + self.spv
 
 class TestSubmissionParams(unittest.TestCase):
-    """ Test submission params (distributed).
+    """ Test submission params (standalone).
     """
     _multiprocess_can_split_ = True
 
@@ -158,7 +158,7 @@ class TestSubmissionParams(unittest.TestCase):
         tester.contents(s,[0,15,30,45,60]*3, ordered=False)
         tester.test(self.test_ctxtype, self.test_config)
 
-class TestSubmissionParamsDistributed(TestSubmissionParams):
+class TestDistributedSubmissionParams(TestSubmissionParams):
     """ Test submission params (distributed).
     """
     def setUp(self):
@@ -203,3 +203,8 @@ class TestSubmissionParamsDistributed(TestSubmissionParams):
         tester.contents(s.stream, [{'seq':i, 's':G} for i in range(N)])
         tester.test(self.test_ctxtype, self.test_config)
 
+class TestSasSubmissionParams(TestDistributedSubmissionParams):
+    """ Test submission params (service).
+    """
+    def setUp(self):
+        Tester.setup_streaming_analytics(self, force_remote_build=True)

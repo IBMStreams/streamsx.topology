@@ -413,16 +413,21 @@ class OperatorGenerator {
                 sb.append("; ");
 
             AtomicBoolean firstStream = new AtomicBoolean(true);
+            String[] firstStreamName = new String[1];
             stringArray(input, "connections", name -> {
                 if (!firstStream.getAndSet(false))
                     sb.append(", ");
+                else
+                    firstStreamName[0] = name;
                 sb.append(getSPLCompatibleName(name));
             });
             
             String alias = jstring(input, "alias");
             if (alias != null) {
-                sb.append(" as ");
-                sb.append(getSPLCompatibleName(alias));
+                if (!alias.equals(firstStreamName[0])) {
+                    sb.append(" as ");
+                    sb.append(getSPLCompatibleName(alias));
+                }
             }
         });
 
