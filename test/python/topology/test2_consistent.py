@@ -79,8 +79,9 @@ class StatefulAverage(object):
     def __init__(self):
         self.count = 0
     def __call__(self, x):
-        self.count += 1
-        return self.count, float(sum(x))/float(len(x))
+        if x:
+            self.count += 1
+            return self.count, float(sum(x))/float(len(x))
 
 # Due to the timed nature can't check specific values.
 class TimedStatefulAverageChecker(object):
