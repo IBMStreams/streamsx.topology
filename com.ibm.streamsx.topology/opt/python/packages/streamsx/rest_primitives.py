@@ -2026,14 +2026,7 @@ class _StreamsV4Delegator(object):
 
 class _UploadedBundle(ApplicationBundle):
     def _app_id(self):
-        app_id = self.application
-        if app_id is None:
-            self.refresh()
-            app_id = self.application
-
-        # One time use only
-        self.json_rep['application'] = None
-        return app_id
+        return self.bundleId
 
 
 class _StreamsRestDelegator(object):
@@ -2052,11 +2045,9 @@ class _StreamsRestDelegator(object):
                 headers = {'Authorization' : self.rest_client._get_authorization(), 'Accept' : 'application/json', 'Content-Type': 'application/x-jar'},
                 data=bundle_fp)
             self.rest_client.handle_http_errors(res)
-            if res.status_code != 201:
+            if res.status_code != 200:
                 raise ValueError(str(res))
-            location = res.headers['Location']
-            json_rep = self.rest_client.make_request(location)
-            return _UploadedBundle(self, instance, json_rep, self.rest_client)
+            return _UploadedBundle(self, instance, res.json(), self.rest_client)
 
     def _submit_bundle(self, bundle, job_config):
         job_options = job_config.as_overlays() if job_config else {}
