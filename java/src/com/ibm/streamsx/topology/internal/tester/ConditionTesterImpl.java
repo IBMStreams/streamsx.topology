@@ -1,6 +1,6 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015  
+# Copyright IBM Corp. 2015, 2018  
  */
 package com.ibm.streamsx.topology.internal.tester;
 
@@ -18,12 +18,15 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.ibm.streams.flow.handlers.StreamHandler;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.ContextProperties;
+import com.ibm.streamsx.topology.context.JobProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.function.Predicate;
@@ -37,6 +40,7 @@ import com.ibm.streamsx.topology.internal.tester.conditions.UserCondition;
 import com.ibm.streamsx.topology.internal.tester.embedded.EmbeddedTesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.rest.RESTTesterRuntime;
 import com.ibm.streamsx.topology.internal.tester.tcp.TCPTesterRuntime;
+import com.ibm.streamsx.topology.jobconfig.JobConfig;
 import com.ibm.streamsx.topology.spl.SPLStream;
 import com.ibm.streamsx.topology.streams.StringStreams;
 import com.ibm.streamsx.topology.tester.Condition;
@@ -231,9 +235,34 @@ public class ConditionTesterImpl implements Tester {
         long totalWait = unit.toMillis(timeout);
         
         if (context.getType() != Type.EMBEDDED_TESTER)
-            totalWait += SECONDS.toMillis(30); // allow extra time for execution setup              
+            totalWait += SECONDS.toMillis(30); // allow extra time for execution setup   
         
-        Future<?> jobSubmission = context.submit(topology, config);
+        String overrideTraceS = System.getProperty(Tester.TEST_TRACE_LEVEL);
+        
+        JobConfig jc = null;
+        Level oldTracing = null;
+        Future<?> jobSubmission;
+        try {
+            if (overrideTraceS != null) {
+                Level overrideTrace = Level.parse(overrideTraceS);
+                Map<String, Object> configN = new HashMap<>();
+                if (config != null)
+                    configN.putAll(config);
+                config = configN;
+                if (config.containsKey(JobProperties.CONFIG)) {
+                    jc = (JobConfig) config.get(JobProperties.CONFIG);
+                    oldTracing = jc.getTracing();
+                    jc.setTracing(overrideTrace);                 
+                } else {
+                    config.put(ContextProperties.TRACING_LEVEL, overrideTrace);
+                }
+            }
+
+            jobSubmission = context.submit(topology, config);
+        } finally {
+            if (jc != null)
+                jc.setTracing(oldTracing);
+        }
         
         final long start = System.currentTimeMillis();
         
