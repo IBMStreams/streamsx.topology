@@ -14,7 +14,7 @@ import com.ibm.streamsx.topology.function.FunctionContext;
 import com.ibm.streamsx.topology.function.Initializable;
 import com.ibm.streamsx.topology.tester.Tester;
 
-public abstract class ConditionChecker<T> implements Consumer<T>, Initializable {
+public abstract class ConditionChecker<T> implements Consumer<T>, Initializable, AutoCloseable {
     
     static Logger TEST_TRACE = Logger.getLogger(Tester.class.getName());
     
@@ -80,8 +80,7 @@ public abstract class ConditionChecker<T> implements Consumer<T>, Initializable 
     }
     
     void failTooMany(long expected) {
-        String why = String.format("Too many tuples: Expected %d, received %d.", expected, this.tupleCount());
-        setFailed(why);
+        setFailed(notValidText());
     }
     
     void failUnexpectedTuple(T tuple, List<T> expected) {
@@ -116,5 +115,21 @@ public abstract class ConditionChecker<T> implements Consumer<T>, Initializable 
         checkValid(tuple);
     }
     
+    @Override
+    public void close() throws Exception {
+        if (valid.get())
+            TEST_TRACE.info(name + ": Condition valid.");
+        if (fail.get())
+            TEST_TRACE.severe(name + ": Condition failed.");
+        
+        TEST_TRACE.severe(name + ": Condition failed to become valid:" + notValidText());
+    }
+    
     abstract void checkValid(T tuple);
+    
+    abstract String notValidText();
+    
+    String expectedCountText(long expected) {
+        return String.format("Too many tuples: Expected %d, received %d.", expected, tupleCount());
+    }
 }

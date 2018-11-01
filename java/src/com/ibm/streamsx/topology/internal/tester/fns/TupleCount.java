@@ -32,4 +32,9 @@ public final class TupleCount<T> extends ConditionChecker<T> {
             // can never become valid again
             failTooMany(expected);
     }
+    
+    @Override
+    String notValidText() {
+        return expectedCountText(expected);
+    }
 }
