@@ -109,14 +109,14 @@ public class DistributedStreamsContext extends
 
     @Override
     Future<BigInteger> invoke(AppEntity entity, File bundle) throws Exception {
-        if (useRestApi()) {
-    		Future<BigInteger> submit =  EXECUTOR.submit(() -> invokeUsingRest(entity, bundle));
-    		// Wait for it to complete to ensure the results file.
-    		submit.get();
-    		return submit;
-    	}
-
         try {
+            if (useRestApi()) {
+                Future<BigInteger> submit = EXECUTOR.submit(() -> invokeUsingRest(entity, bundle));
+                // Wait for it to complete to ensure the results file.
+                submit.get();
+                return submit;
+            }
+
             InvokeSubmit submitjob = new InvokeSubmit(bundle);
 
             BigInteger jobId = submitjob.invoke(deploy(entity.submission), null, null);
