@@ -107,6 +107,9 @@ class _SchemaParser(object):
         self.tokens = tokenize.generate_tokens(ios)
         self._parse_tuple(self._type, next(self.tokens))
         endtoken = next(self.tokens)
+        # Python 3.6.7 adds a newline at the end! Issue #1959
+        if endtoken[0] == token.NEWLINE:
+            endtoken = next(self.tokens)
         if not endtoken[0] == token.ENDMARKER:
             self._parse_error(endtoken)
         return self._type
