@@ -118,9 +118,11 @@ class TestEc(unittest.TestCase):
       Tester.setup_standalone(self)
 
   def test_enter_called(self):
+      self.assertFalse(streamsx.ec.is_active())
       topo = Topology()
       s = topo.source(EcSource('A211'))
       s = s.filter(EcFilter('F243'))
+      s = s.filter(lambda _ : streamsx.ec.is_active())
       s.for_each(EcForEach())
       s = s.map(EcMap('M523'))
       tester = Tester(topo)
