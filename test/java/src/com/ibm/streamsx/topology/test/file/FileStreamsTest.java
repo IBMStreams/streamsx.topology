@@ -8,20 +8,22 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Before;
 import org.junit.Test;
 
+import com.ibm.streams.operator.PERuntime;
+import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.JobProperties;
 import com.ibm.streamsx.topology.file.FileStreams;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.streams.BeaconStreams;
@@ -31,10 +33,55 @@ import com.ibm.streamsx.topology.tester.Tester;
 
 public class FileStreamsTest extends TestTopology {
     
-    @Before
+    private static final class FileCreator implements Consumer<Long>, AutoCloseable {
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+        private final int repeat;
+        private final String[] files;
+
+        private FileCreator(int repeat, String[] files) {
+            this.repeat = repeat;
+            this.files = files;
+        }
+        
+        @Override
+        public void accept(Long arg0) {
+            try {
+                for (int r = 0; r < repeat; r++) {
+                    for (int i = 0; i < files.length; i++) {
+                        File newFile = new File(files[i]);
+                        if (repeat > 1) {
+                            newFile.delete();
+                            Thread.sleep(10);
+                        }
+                        Files.createFile(newFile.toPath());
+                        Thread.sleep(10);
+                    }
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+        
+        @Override
+        public void close() throws Exception {
+            // Ensure we clean up!
+            for (int i = 0; i < files.length; i++) {
+                new File(files[i]).delete();
+            }
+        }
+    }
+
+    //@Before
     public void checkLocalFiles() {
         // Can't access the files on Bluemix
         assumeTrue(!isStreamingAnalyticsRun());
+        
+        // Or on remote instances accessed through REST
+        assumeTrue(System.getenv("STREAMS_DOMAIN_ID") != null);
     }
 
     /**
@@ -42,30 +89,34 @@ public class FileStreamsTest extends TestTopology {
      */
     @Test
     public void testDirectoryWatcherOrder() throws Exception {
-        final Topology t = new Topology("testDirectoryWatcherOrder");
-
+        final Topology t = newTopology("testDirectoryWatcherOrder");
         runDirectoryWatcher(t, 20, 1);
 
     }
     @Test
     public void testDirectoryWatcherOrderWithDelete() throws Exception {
-        final Topology t = new Topology("testDirectoryWatcherOrder");
-
+        final Topology t = newTopology("testDirectoryWatcherOrderWithDelete");
         runDirectoryWatcher(t, 20, 3);
-
     }
+    
+    private static String PREFIX = "ADIWQDWDMQ";
     
     private void runDirectoryWatcher(final Topology t, int numberOfFiles, int repeat) throws Exception {
         
-        final Path dir = Files.createTempDirectory("testdw");
+        // final Path dir = Files.createTempDirectory("testdw");
         final String[] files = new String[numberOfFiles];
         for (int i = 0; i < files.length; i++) {
-            files[i] = dir.resolve("A" + (numberOfFiles - i)).toAbsolutePath()
-                    .toString();
+            files[i] = PREFIX + (numberOfFiles - i);
         }
-
-        TStream<String> fileNames = FileStreams.directoryWatcher(t, dir
-                .toAbsolutePath().toString());
+        
+        
+        this.getConfig().put(JobProperties.DATA_DIRECTORY, ".");
+        
+        TStream<String> rawFileNames = FileStreams.directoryWatcher(t, ".");
+        
+        TStream<String> fileNames = rawFileNames.modify(fn -> new File(fn).getName());
+        fileNames = fileNames.filter(fn -> fn.startsWith(PREFIX));
+        //fileNames.print();
 
         // Create the files from within the topology to ensure it works
         // in distributed and standalone.
@@ -80,8 +131,10 @@ public class FileStreamsTest extends TestTopology {
         // with the result being not seeing/processing the expected number
         // of files.
         
-        addStartupDelay(BeaconStreams.single(t))
+        TSink creator = addStartupDelay(BeaconStreams.single(t))
                     .forEach(createFiles(files, repeat));
+        
+        creator.colocate(rawFileNames);
 
         Tester tester = t.getTester();
         Condition<Long> expectedCount = tester.tupleCount(fileNames,
@@ -100,44 +153,10 @@ public class FileStreamsTest extends TestTopology {
 
         assertTrue(expectedCount.toString(), expectedCount.valid());
         assertTrue(expectedNames.toString(), expectedNames.valid());
-
-        deleteFiles(dir, files);
     }
 
-
-    private void deleteFiles(final Path dir, final String[] files) {
-        // Ensure we clean up!
-        for (int i = 0; i < files.length; i++) {
-            Path path = Paths.get(files[i]);
-            path.toFile().delete();
-        }
-        dir.toFile().delete();
-    }
-
-    @SuppressWarnings("serial")
     static Consumer<Long> createFiles(final String[] files, final int repeat) {
-        return new Consumer<Long>() {
-
-            @Override
-            public void accept(Long arg0) {
-                try {
-                    for (int r = 0; r < repeat; r++) {
-                        for (int i = 0; i < files.length; i++) {
-                            Path path = Paths.get(files[i]);
-                            if (repeat > 1) {
-                                path.toFile().delete();
-                                Thread.sleep(10);
-                            }
-                            Files.createFile(path);
-                            Thread.sleep(10);
-                        }
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-
-            }
-        };
+        return new FileCreator(repeat, files);
     }
 
     @Test
@@ -163,7 +182,11 @@ public class FileStreamsTest extends TestTopology {
         bw.close();
         
         final Topology t = new Topology("testTextFileReader");
-        TStream<String> contents = FileStreams.textFileReader(t.strings(tmpFile.toAbsolutePath().toString()));
+        t.addFileDependency(tmpFile.toAbsolutePath().toString(), "etc");
+        TStream<String> relativeName = t.strings("etc/" + tmpFile.getFileName().toString());
+        TStream<String> absoluteName = relativeName.modify(
+                f -> new File(PERuntime.getPE().getApplicationDirectory(), f).getAbsolutePath());
+        TStream<String> contents = FileStreams.textFileReader(absoluteName);
         
         
         Tester tester = t.getTester();

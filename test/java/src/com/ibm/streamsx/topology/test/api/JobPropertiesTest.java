@@ -31,6 +31,7 @@ import com.ibm.streams.operator.samples.patterns.ProcessTupleProducer;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.JobProperties;
+import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.internal.streams.Util;
 import com.ibm.streamsx.topology.spl.JavaPrimitive;
 import com.ibm.streamsx.topology.spl.SPLSchemas;
@@ -86,6 +87,7 @@ public class JobPropertiesTest extends TestTopology {
     @Test
     public void testOverrideResourceLoadProtectionProperty() throws Exception {
         assumeTrue(!isStreamingAnalyticsRun()); // Permission error on SAS
+
         testIt("testOverrideResourceLoadProtectionProperty",
                 JobProperties.OVERRIDE_RESOURCE_LOAD_PROTECTION, true);
     }
@@ -118,11 +120,15 @@ public class JobPropertiesTest extends TestTopology {
     private void testIt(String topologyName, String propName, Object value)
             throws Exception {
         
+        // This test assumes streamtool for submission but when using REST api
+        // streamtool is not used.
+        assumeTrue(System.getenv("STREAMS_DOMAIN_ID") != null);
+        
         // tests by running streamtool submitjob
         assumeTrue(hasStreamsInstall());
 
         // JobProperties only apply to DISTRIBUTED submit
-        assumeTrue(isDistributedOrService());
+        assumeTrue(getTesterType() == Type.DISTRIBUTED_TESTER);
         
         // Full verification of the override or preload properties isn't practical
         // or really necessary for our API.  Streams doesn't provide any way to
@@ -175,7 +181,7 @@ public class JobPropertiesTest extends TestTopology {
                 }
             }
             
-            assertTrue("propName="+getConfig().get(propName),
+            assertTrue(propName + "=" +getConfig().get(propName),
                     hasSubmitjobArg(propName, getConfig(), log));
         }
         finally {
