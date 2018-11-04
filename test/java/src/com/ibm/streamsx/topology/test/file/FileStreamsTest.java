@@ -24,6 +24,7 @@ import com.ibm.streamsx.topology.TSink;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.JobProperties;
+import com.ibm.streamsx.topology.context.StreamsContext.Type;
 import com.ibm.streamsx.topology.file.FileStreams;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.streams.BeaconStreams;
@@ -40,8 +41,10 @@ public class FileStreamsTest extends TestTopology {
         private static final long serialVersionUID = 1L;
         private final int repeat;
         private final String[] files;
+        private final String dir;
 
-        private FileCreator(int repeat, String[] files) {
+        private FileCreator(String dir, int repeat, String[] files) {
+            this.dir = dir;
             this.repeat = repeat;
             this.files = files;
         }
@@ -51,7 +54,7 @@ public class FileStreamsTest extends TestTopology {
             try {
                 for (int r = 0; r < repeat; r++) {
                     for (int i = 0; i < files.length; i++) {
-                        File newFile = new File(files[i]);
+                        File newFile = new File(dir, files[i]);
                         if (repeat > 1) {
                             newFile.delete();
                             Thread.sleep(10);
@@ -73,15 +76,6 @@ public class FileStreamsTest extends TestTopology {
                 new File(files[i]).delete();
             }
         }
-    }
-
-    //@Before
-    public void checkLocalFiles() {
-        // Can't access the files on Bluemix
-        assumeTrue(!isStreamingAnalyticsRun());
-        
-        // Or on remote instances accessed through REST
-        assumeTrue(System.getenv("STREAMS_DOMAIN_ID") != null);
     }
 
     /**
@@ -109,10 +103,15 @@ public class FileStreamsTest extends TestTopology {
             files[i] = PREFIX + (numberOfFiles - i);
         }
         
+        String dir;
+        if (this.getTesterType() == Type.EMBEDDED_TESTER) {
+            dir = Files.createTempDirectory("testdw").toAbsolutePath().toString();
+        } else {
+            dir = ".";
+            this.getConfig().put(JobProperties.DATA_DIRECTORY, dir);
+        }
         
-        this.getConfig().put(JobProperties.DATA_DIRECTORY, ".");
-        
-        TStream<String> rawFileNames = FileStreams.directoryWatcher(t, ".");
+        TStream<String> rawFileNames = FileStreams.directoryWatcher(t, dir);
         
         TStream<String> fileNames = rawFileNames.modify(fn -> new File(fn).getName());
         fileNames = fileNames.filter(fn -> fn.startsWith(PREFIX));
@@ -132,7 +131,7 @@ public class FileStreamsTest extends TestTopology {
         // of files.
         
         TSink creator = addStartupDelay(BeaconStreams.single(t))
-                    .forEach(createFiles(files, repeat));
+                    .forEach(createFiles(dir, files, repeat));
         
         creator.colocate(rawFileNames);
 
@@ -147,16 +146,20 @@ public class FileStreamsTest extends TestTopology {
                 System.arraycopy(files, 0, expectedFileNames, r * files.length, files.length);
         }
         Condition<List<String>> expectedNames = tester.stringContentsUnordered(
-                fileNames, expectedFileNames);
+                fileNames.filter(x -> true), expectedFileNames);
 
         complete(tester, expectedCount, 60, TimeUnit.SECONDS);
+        
+        if (!".".equals(dir)) {
+           // Files.d
+        }
 
         assertTrue(expectedCount.toString(), expectedCount.valid());
         assertTrue(expectedNames.toString(), expectedNames.valid());
     }
 
-    static Consumer<Long> createFiles(final String[] files, final int repeat) {
-        return new FileCreator(repeat, files);
+    static Consumer<Long> createFiles(String dir, final String[] files, final int repeat) {
+        return new FileCreator(dir, repeat, files);
     }
 
     @Test
@@ -182,11 +185,19 @@ public class FileStreamsTest extends TestTopology {
         bw.close();
         
         final Topology t = new Topology("testTextFileReader");
-        t.addFileDependency(tmpFile.toAbsolutePath().toString(), "etc");
-        TStream<String> relativeName = t.strings("etc/" + tmpFile.getFileName().toString());
-        TStream<String> absoluteName = relativeName.modify(
+        String fileLocation;
+        if (getTesterType() == Type.EMBEDDED_TESTER) {
+            fileLocation = tmpFile.toAbsolutePath().toString();
+        } else {
+            t.addFileDependency(tmpFile.toAbsolutePath().toString(), "etc");
+            fileLocation = "etc/" + tmpFile.getFileName().toString();
+        }
+        
+        TStream<String> fileName = t.strings(fileLocation);
+        if (getTesterType() != Type.EMBEDDED_TESTER)
+            fileName = fileName.modify(
                 f -> new File(PERuntime.getPE().getApplicationDirectory(), f).getAbsolutePath());
-        TStream<String> contents = FileStreams.textFileReader(absoluteName);
+        TStream<String> contents = FileStreams.textFileReader(fileName);
         
         
         Tester tester = t.getTester();
