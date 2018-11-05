@@ -97,3 +97,32 @@ class TestMT(unittest.TestCase):
         tester.tuple_count(s, N*3)
         tester.tuple_count(sp, N*3)
         tester.test(self.test_ctxtype, self.test_config)
+
+    def test_mt_batch_aggregate(self):
+        topo = Topology()
+        N = 1000
+        s1 = topo.source(range(N))
+        s2 = topo.source(range(N))
+        s3 = topo.source(range(N))
+        s = s1.union({s2,s3})
+
+        s = s.batch(7).aggregate(lambda tuples : tuples).flat_map()
+
+        tester = Tester(topo)
+        tester.tuple_count(s, N*3)
+        tester.test(self.test_ctxtype, self.test_config)
+        
+    def test_mt_last_aggregate(self):
+        topo = Topology()
+        N = 1000
+        s1 = topo.source(range(N))
+        s2 = topo.source(range(N))
+        s3 = topo.source(range(N))
+        s = s1.union({s2,s3})
+
+        s = s.last(1).trigger(1).aggregate(lambda tuples : tuples).flat_map()
+
+        tester = Tester(topo)
+        tester.tuple_count(s, N*3)
+        tester.test(self.test_ctxtype, self.test_config)
+        

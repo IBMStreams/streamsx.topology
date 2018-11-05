@@ -18,19 +18,18 @@ using namespace streamsx::topology;
  my $windowCppType = SPL::CodeGen::getWindowCppType($window,"PyObject *");
 %>
 
+#define SPLPY_AGGREGATE_TIME_POLICIES <%=$window->getEvictionPolicyType() == $SPL::Operator::Instance::Window::Time || ($window->hasTriggerPolicy() && $window->getEvictionPolicyType() == $SPL::Operator::Instance::Window::Time) ? 1 : 0%>
+
 @include "../pyspltuple.cgt"
 class MY_OPERATOR : public MY_BASE_OPERATOR,
       public WindowEvent<PyObject *>
 #if SPLPY_OP_STATE_HANDLER == 1
-      ,public DelegatingStateHandler
+ , public SPL::StateHandler
 #endif
 {
 public:
   MY_OPERATOR();
   virtual ~MY_OPERATOR(); 
-#if SPLPY_OP_STATE_HANDLER == 1
-  virtual void drain();
-#endif
   void prepareToShutdown(); 
   void process(Tuple const & tuple, uint32_t port);
   void process(Punctuation const & punct, uint32_t port);
@@ -47,10 +46,14 @@ void afterTupleEvictionEvent(
      Window<PyObject *>::PartitionType const & partition);
 
 #if SPLPY_OP_STATE_HANDLER == 1
-protected:
-  virtual void checkpointExtra(SPL::Checkpoint & ckpt);
-  virtual void resetExtra(SPL::Checkpoint & ckpt);
-  virtual void resetToInitialStateExtra();
+  virtual void drain();
+  virtual void checkpoint(SPL::Checkpoint & ckpt);
+  virtual void reset(SPL::Checkpoint & ckpt);
+  virtual void resetToInitialState();
+
+  void onCheckpointEvent(SPL::Checkpoint & ckpt) { op()->checkpoint(ckpt); }
+  void onResetEvent(SPL::Checkpoint & ckpt) { op()->reset(ckpt);}
+  void onResetToInitialStateEvent() {op()->resetToInitialState();}
 #endif
 
 private:
@@ -72,7 +75,9 @@ private:
     // Window definition
     <%=$windowCppType%>  window_;	       
 
-    @include "../../opt/python/codegen/py_enable_cr.cgt"
+#if SPLPY_AGGREGATE_TIME_POLICIES != 1
+    SPL::Mutex mutex_;
+#endif
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>
