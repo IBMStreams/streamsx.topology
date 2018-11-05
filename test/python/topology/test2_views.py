@@ -17,7 +17,7 @@ def rands():
     while True:
        yield r.random()
 
-class TestViews(unittest.TestCase):
+class TestDistributedViews(unittest.TestCase):
     _multiprocess_can_split_ = True
 
     def setUp(self):
@@ -76,7 +76,7 @@ class TestViews(unittest.TestCase):
         topo = Topology()
         beacon = op.Source(topo, "spl.utility::Beacon",
             'tuple<uint64 seq, rstring fixed>',
-            params = {'period': 0.05, 'iterations':1000})
+            params = {'period': 0.05})
         beacon.seq = beacon.output('IterationCount()')
         beacon.fixed = beacon.output(spltypes.rstring('FixedValue'))
 
@@ -86,9 +86,9 @@ class TestViews(unittest.TestCase):
         
         tester = Tester(topo)
         tester.local_check = self._object_view
-        tester.tuple_count(s, 1000)
+        tester.tuple_count(s, 1000, exact=False)
         tester.test(self.test_ctxtype, self.test_config)
 
-class TestViewsCloud(TestViews):
+class TestSasViews(TestDistributedViews):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)

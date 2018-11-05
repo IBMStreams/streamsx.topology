@@ -19,18 +19,23 @@ public final class StringPredicateChecker extends ConditionChecker<Object> imple
     }
     @Override
     public void initialize(FunctionContext functionContext) throws Exception {
-        super.initialize(functionContext);
-        setValid();
+        super.initialize(functionContext);       
     }
 
     @Override
-    void checkValid(Object v) {        
+    void checkValid(Object v) {              
         if (!predicate.test(v.toString()))
             failed();
+        setValid();
     }
     
     @Override
     public Object getWrappedFunction() {
         return predicate;
+    }
+    
+    @Override
+    String notValidText() {
+        return "no tuples recevied";
     }
 }

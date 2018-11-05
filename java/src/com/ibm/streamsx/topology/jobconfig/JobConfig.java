@@ -280,7 +280,7 @@ public class JobConfig {
         if (tli == Level.OFF.intValue())
             tls = "off";
         else if (tli == Level.ALL.intValue())
-            tls = "debug";
+            tls = "trace";
         else if (tli >= Level.SEVERE.intValue())
             tls = "error";
         else if (tli >= Level.WARNING.intValue())

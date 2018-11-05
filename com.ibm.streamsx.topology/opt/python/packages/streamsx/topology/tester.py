@@ -971,8 +971,13 @@ class _ConditionChecker(object):
             if not start:
                 return False
         ok_pes = 0
-        for pe in self.job.get_pes():
+        pes = self.job.get_pes()
+        if verbose:
+            _logger.info("Job %s health:%s PE count:%d", self.job.name, self.job.health, len(pes))
+        for pe in pes:
             if pe.launchCount == 0:
+                if verbose:
+                    _logger.warn("PE %s launch count == 0", pe.id)
                 continue # not a test failure, but not an ok_pe either
             if pe.launchCount > 1:
                 if verbose or start:
@@ -984,6 +989,8 @@ class _ConditionChecker(object):
                 if not start:
                     return False
             else:
+                if verbose:
+                    _logger.info("PE %s health: %s", pe.id, pe.health)
                 ok_pes += 1
         return True if ok_ else ok_pes
 

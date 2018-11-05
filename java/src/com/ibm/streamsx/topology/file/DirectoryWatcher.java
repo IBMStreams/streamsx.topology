@@ -52,6 +52,8 @@ public class DirectoryWatcher extends ProcessTupleProducer implements
         if (!dirFile.isAbsolute())
             dirFile = new File(getOperatorContext().getPE().getDataDirectory(),
                     getDirectory());
+        
+        dirFile = dirFile.getCanonicalFile();
     }
 
     @Parameter

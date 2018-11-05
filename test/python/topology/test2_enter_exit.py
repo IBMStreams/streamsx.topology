@@ -105,7 +105,7 @@ class EESMClassM(object):
 def EEMSFunc(x):
     return None
 
-class TestSuppressMetricDistributed(unittest.TestCase):
+class TestDistributedSuppressMetric(unittest.TestCase):
     _multiprocess_can_split_ = True
     def setUp(self):
         Tester.setup_distributed(self)
@@ -152,7 +152,8 @@ class TestSuppressMetricDistributed(unittest.TestCase):
                     seen_suppress_metric = True
             if 'NOMETRIC_' in op.name:
                 self.assertFalse(seen_suppress_metric, msg=op.name)
-            elif 'HASMETRIC_' in op.name:
+            elif 'HASMETRIC_' in op.name and len(op.name) == 13:
+                # Add length to avoid injected test operators.
                 hms.append(op)
                 self.assertTrue(seen_suppress_metric, msg=op.name)
 
@@ -173,6 +174,6 @@ class TestSuppressMetricDistributed(unittest.TestCase):
             self.assertEqual(exp, m.value, msg=op.name)
 
 
-class TestSuppressMetricService(TestSuppressMetricDistributed):
+class TestSasSuppressMetric(TestDistributedSuppressMetric):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)

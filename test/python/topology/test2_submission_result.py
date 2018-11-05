@@ -29,13 +29,13 @@ class TestSubmissionResult(unittest.TestCase):
 
         sc = rest.StreamsConnection(username=self.username, password=self.password)
         sc.session.verify = False
-        config = {ConfigParams.STREAMS_CONNECTION : sc}
+        self.test_config[ConfigParams.STREAMS_CONNECTION] = sc
 
         tester = Tester(topo)
         self.tester = tester
 
         tester.local_check = self._correct_job_ids
-        tester.test(self.test_ctxtype, config)
+        tester.test(self.test_ctxtype, self.test_config)
 
     def test_fetch_logs_on_failure(self):
         topo = Topology("fetch_logs_on_failure")

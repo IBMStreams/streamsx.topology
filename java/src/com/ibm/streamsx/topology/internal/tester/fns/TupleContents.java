@@ -74,4 +74,9 @@ public final class TupleContents<T> extends ConditionChecker<T> {
             setValid();
         }
     }
+    
+    @Override
+    String notValidText() {
+        return expectedCountText(expected.size());
+    }
 }

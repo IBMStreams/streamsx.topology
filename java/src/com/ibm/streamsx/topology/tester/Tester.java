@@ -1,6 +1,6 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015  
+# Copyright IBM Corp. 2015, 2018
  */
 package com.ibm.streamsx.topology.tester;
 
@@ -51,6 +51,30 @@ import com.ibm.streamsx.topology.spl.SPLStream;
  * </P>
  */
 public interface Tester {
+    
+    /**
+     * System property to set the trace level of application under tests.
+     * 
+     * For jobs to submitted to {@link StreamsContext.Type#STANDALONE_TESTER},
+     * {@link StreamsContext.Type#DISTRIBUTED_TESTER} and
+     * {@link StreamsContext.Type#STREAMING_ANALYTICS_SERVICE_TESTER} contexts
+     * setting this property overrides any default trace level or any trace
+     * level set by a test.
+     * <P>
+     * The value should be one of the enumeration names of {@code java.util.logging.Level}.
+     * <UL>
+     * <LI>{@code SEVERE} - IBM Streams {@code error}.</LI>
+     * <LI>{@code WARNING} - IBM Streams {@code warn}.</LI>
+     * <LI>{@code INFO} - IBM Streams {@code info}.</LI>
+     * <LI>{@code FINE} - IBM Streams {@code debug}.</LI>
+     * <LI>{@code FINEST}, {@code ALL} - IBM Streams {@code trace}.</LI>
+     * <LI>{@code OFF}- IBM Streams {@code off}.</LI>
+     * </UL>
+     * </P>
+     * 
+     * @since 1.11
+     */
+    String TEST_TRACE_LEVEL = "topology.tester.traceLevel";
     
     /**
      * Get the topology for this tester.

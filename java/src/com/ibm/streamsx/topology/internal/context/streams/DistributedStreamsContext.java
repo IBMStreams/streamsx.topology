@@ -11,9 +11,11 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.Job;
@@ -49,8 +51,8 @@ public class DistributedStreamsContext extends
     private StreamsConnection getConfigConnection(AppEntity entity) {
     	
     	Map<String,Object> config = entity.config;
-    	if (config != null && config.containsKey(ContextProperties.STREAMS_CONNECTION)) {
-    		Object conn = config.get(ContextProperties.STREAMS_CONNECTION);
+    	if (config != null && config.containsKey(ContextProperties.STREAMS_CONNECTION)) {  	    
+    		Object conn = config.get(ContextProperties.STREAMS_CONNECTION);   		
     		if (conn instanceof StreamsConnection)
     			return (StreamsConnection) conn;
     	}
@@ -87,7 +89,7 @@ public class DistributedStreamsContext extends
 
     @Override
     protected void preSubmit(AppEntity entity) {
-    	
+            	
     	if (getConfigConnection(entity) != null) {  		
     	    // Allow the config to provide a connection.
     		useRestApi.set(true);
@@ -107,15 +109,14 @@ public class DistributedStreamsContext extends
 
     @Override
     Future<BigInteger> invoke(AppEntity entity, File bundle) throws Exception {
-    	
-    	if (useRestApi()) {
-    		Future<BigInteger> submit =  EXECUTOR.submit(() -> invokeUsingRest(entity, bundle));
-    		// Wait for it to complete to ensure the results file.
-    		submit.get();
-    		return submit;
-    	}
-
         try {
+            if (useRestApi()) {
+                Future<BigInteger> submit = EXECUTOR.submit(() -> invokeUsingRest(entity, bundle));
+                // Wait for it to complete to ensure the results file.
+                submit.get();
+                return submit;
+            }
+
             InvokeSubmit submitjob = new InvokeSubmit(bundle);
 
             BigInteger jobId = submitjob.invoke(deploy(entity.submission), null, null);
@@ -138,7 +139,9 @@ public class DistributedStreamsContext extends
     	Result<Job, JsonObject> result = instance.submitJob(bundle, deploy(entity.submission));
     	
     	result.getRawResult().addProperty(SubmissionResultsKeys.INSTANCE_ID, instance.getId());
-    	entity.submission.add( RemoteContext.SUBMISSION_RESULTS, result.getRawResult());
+    	final JsonObject submissionResult = GsonUtilities.objectCreate(entity.submission, RemoteContext.SUBMISSION_RESULTS);
+    	for (Entry<String, JsonElement> kv : result.getRawResult().entrySet())
+    	    submissionResult.add(kv.getKey(), kv.getValue());
     	
     	return new BigInteger(result.getId());
     }
