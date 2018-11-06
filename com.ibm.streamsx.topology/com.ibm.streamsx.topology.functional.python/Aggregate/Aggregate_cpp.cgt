@@ -258,39 +258,39 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
 /* StateHandler methods */
 
 void MY_OPERATOR::drain() {
+    SPLAPPTRC(L_DEBUG, "drain-Aggregate: enter", SPLPY_SH_ASPECT);
 #if SPLPY_AGGREGATE_TIME_POLICIES == 0
     SPL::AutoMutex am(mutex_);
 #endif
-    SPLAPPTRC(L_TRACE, "drain: enter", "python");
     window_.drain();
-    SPLAPPTRC(L_TRACE, "drain: exit", "python");
+    SPLAPPTRC(L_DEBUG, "drain-Aggregate: exit", SPLPY_SH_ASPECT);
 }
 
 void MY_OPERATOR::checkpoint(SPL::Checkpoint & ckpt) {
+    SPLAPPTRC(L_DEBUG, "checkpoint-Aggregate: enter", SPLPY_SH_ASPECT);
 #if SPLPY_AGGREGATE_TIME_POLICIES == 0
     SPL::AutoMutex am(mutex_);
 #endif
-    SPLAPPTRC(L_TRACE, "checkpoint: enter", "python");
     window_.checkpoint(ckpt);
-    SPLAPPTRC(L_TRACE, "checkpoint: exit", "python");
+    SPLAPPTRC(L_DEBUG, "checkpoint-Aggregate: exit", SPLPY_SH_ASPECT);
 }
 
 void MY_OPERATOR::reset(SPL::Checkpoint & ckpt) {
+    SPLAPPTRC(L_DEBUG, "reset-Aggregate: enter", SPLPY_SH_ASPECT);
 #if SPLPY_AGGREGATE_TIME_POLICIES == 0
     SPL::AutoMutex am(mutex_);
 #endif
-    SPLAPPTRC(L_TRACE, "reset", "python");
     window_.reset(ckpt);
-    SPLAPPTRC(L_TRACE, "reset: exit", "python");
+    SPLAPPTRC(L_DEBUG, "reset-Aggregate: exit", SPLPY_SH_ASPECT);
 }
 
 void MY_OPERATOR::resetToInitialState() {
+    SPLAPPTRC(L_DEBUG, "resetToInitialState-Aggregate: enter", SPLPY_SH_ASPECT);
 #if SPLPY_AGGREGATE_TIME_POLICIES == 0
     SPL::AutoMutex am(mutex_);
 #endif
-    SPLAPPTRC(L_TRACE, "resetToInitialState: enter", "python");
     window_.resetToInitialState();
-    SPLAPPTRC(L_TRACE, "resetToInitialState: exit", "python");
+    SPLAPPTRC(L_DEBUG, "resetToInitialState-Aggregate: exit", SPLPY_SH_ASPECT);
 }
 
 #endif

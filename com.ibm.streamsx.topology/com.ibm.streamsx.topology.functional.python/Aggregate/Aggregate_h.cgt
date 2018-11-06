@@ -41,7 +41,7 @@ public:
      onWindowTriggerEvent(window, key);
   }
   
-void afterTupleEvictionEvent(
+  void afterTupleEvictionEvent(
      Window<PyObject *> & window,  Window<PyObject *>::TupleType & tuple,
      Window<PyObject *>::PartitionType const & partition);
 
@@ -51,13 +51,13 @@ void afterTupleEvictionEvent(
   virtual void reset(SPL::Checkpoint & ckpt);
   virtual void resetToInitialState();
 
-  void onCheckpointEvent(SPL::Checkpoint & ckpt) { op()->checkpoint(ckpt); }
-  void onResetEvent(SPL::Checkpoint & ckpt) { op()->reset(ckpt);}
+  void onCheckpointEvent(SPL::Checkpoint & ckpt) const {op()->checkpoint(ckpt);}
+  void onResetEvent(SPL::Checkpoint & ckpt) {op()->reset(ckpt);}
   void onResetToInitialStateEvent() {op()->resetToInitialState();}
 #endif
 
 private:
-    SplpyOp * op() { return funcop_; }
+    SplpyOp * op() const { return funcop_; }
 
     // Members
     // Control for interaction with Python
@@ -75,7 +75,9 @@ private:
     // Window definition
     <%=$windowCppType%>  window_;	       
 
-#if SPLPY_AGGREGATE_TIME_POLICIES != 1
+#if SPLPY_AGGREGATE_TIME_POLICIES == 0
+    // Locking is through window acquire data when
+    // there are time policies
     SPL::Mutex mutex_;
 #endif
 }; 
