@@ -33,7 +33,7 @@ public class IsolateTest extends TestTopology {
     @Test
     public void testSimpleIsolation() throws Exception {
         assumeTrue(SC_OK);
-        assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
+        assumeTrue(isDistributedOrService());
         
         Topology topology = newTopology("simpleIsolationTest");
 
@@ -50,9 +50,8 @@ public class IsolateTest extends TestTopology {
         Condition<Long> condss1Cnt = tester.tupleCount(ss1, 1);
         Condition<Long> condss2Cnt = tester.tupleCount(ss2, 1);
         Condition<Long> uniqueCount = tester.tupleCount(ssu, 2);
-        Condition<Long> endCond = new MultiLongCondition(Arrays.asList(condss1Cnt, condss2Cnt, uniqueCount));
         
-        complete(topology.getTester(), endCond, 15, TimeUnit.SECONDS);
+        complete(topology.getTester(), condss1Cnt.and(condss2Cnt,uniqueCount), 20, TimeUnit.SECONDS);
         
         assertTrue(uniqueCount.valid());
     }
