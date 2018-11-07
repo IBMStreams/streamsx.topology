@@ -8,6 +8,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
@@ -22,6 +23,7 @@ import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Predicate;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.json.JSONStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
@@ -63,7 +65,6 @@ public class WindowTest extends TestTopology {
 
     @Test
     public void testBasicCount() throws Exception {
-        assumeTrue(isMainRun());
         final Topology f = newTopology("CountWindow");
         TStream<String> source = f.strings("a", "b", "c");
         TWindow<String,?> window = source.last(10);
@@ -73,7 +74,6 @@ public class WindowTest extends TestTopology {
 
     @Test
     public void testBasicTime() throws Exception {
-        assumeTrue(isMainRun());
         final Topology f = newTopology("TimeWindow");
         TStream<String> source = f.strings("a", "b", "c");
         TWindow<String,?> window = source.last(10, TimeUnit.SECONDS);
@@ -83,7 +83,6 @@ public class WindowTest extends TestTopology {
     
     @Test(expected=IllegalArgumentException.class)
     public void testZeroTimeWindow() throws Exception {
-        assumeTrue(isMainRun());
         final Topology f = newTopology("ZeroTimeWindow");
         TStream<String> source = f.strings("a", "b", "c");
         source.last(0, TimeUnit.DAYS);
@@ -91,7 +90,6 @@ public class WindowTest extends TestTopology {
     
     @Test(expected=IllegalArgumentException.class)
     public void testZeroTimeAggregate() throws Exception {
-        assumeTrue(isMainRun());
         final Topology f = newTopology("ZeroTimeWindow");
         TStream<Number> source = f.numbers(1, 2, 3, 4, 5, 6, 7);
         source.last(1, TimeUnit.DAYS).aggregate(new SumInt(), 0, TimeUnit.HOURS);
@@ -226,7 +224,6 @@ public class WindowTest extends TestTopology {
     public void testContinuousAggregateLastSeconds() throws Exception {
         // Uses JSON4J
         assumeTrue(hasStreamsInstall());
-        assumeTrue(!isStreamingAnalyticsRun()); // TODO: Uses Condition.getResult()
         
         final Topology t = newTopology();
         TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS);
@@ -235,48 +232,71 @@ public class WindowTest extends TestTopology {
         TStream<String> strings = JSONStreams.serialize(aggregate);
         
         Tester tester = t.getTester();
-        
-        Condition<List<String>> contents = tester.stringContents(strings);
+                
+        Condition<String> checker = tester.stringTupleTester(strings, new ContinuousAggregateTester());
         
         // 10 tuples per second, each is aggregated, so 15 seconds is around 150 tuples.
         Condition<Long> ending = tester.atLeastTupleCount(strings, 150);
         complete(tester, ending, 30, TimeUnit.SECONDS);
         
-        assertTrue(ending.valid());  
+        assertTrue(ending.valid()); 
+        assertTrue(checker.valid()); 
+    }
+    
+    public static class ContinuousAggregateTester implements Predicate<String> {
+        private static final long serialVersionUID = 1L;
+        private long startTs;
         
-        long startTs = 0;
-        for (String output : contents.getResult()) {
-            JSONObject agg = JSONObject.parse(output);
+        @Override
+        public boolean test(String output) {
+            JSONObject agg;
+            try {
+                agg = JSONObject.parse(output);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
             JSONArray items  = (JSONArray) agg.get("items");
             long ts = (Long) agg.get("ts");
             
             // Should see around 30 tuples per window, once we
             // pass the first three seconds.
-            assertTrue("Number of tuples in window:" + items.size(), items.size() <= 45);
+            if (items.size() > 45) {
+                System.err.println("Number of tuples in window > 45:" + items.size());
+                return false;
+            }
             if (agg.containsKey("delta")) {
                 long delta = (Long) agg.get("delta");
-                assertTrue(delta >= 0);
-                
+                if (delta < 0) {
+                    System.err.println("Negative delta:" + delta);
+                    return false;
+                }
+                                   
                 if (startTs == 0) {
                     startTs = ts;
                 } else {
                     long diff = ts - startTs;
-                    if (diff > 3000)
-                        assertTrue(
-                                "Number of tuples in window:" + items.size(),
-                                items.size() >= 25);
+                    if (diff > 3000) {
+                        if (items.size() < 25) {
+                            System.err.println("Number of tuples in window < 25:" + items.size());
+                            return false;
+                        }
+                    }
                 }
             }
+            return true;
         }
+        
     }
+    
+    
+    
     
     /**
      * Test a periodic aggregation.
      */
     @Test
     public void testPeriodicAggregateLastSeconds() throws Exception {
-        // Uses Condition.getResult
-        assumeTrue(!isStreamingAnalyticsRun());
         
         final Topology t = newTopology();
         TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS);
@@ -287,17 +307,30 @@ public class WindowTest extends TestTopology {
         
         Tester tester = t.getTester();
         
-        Condition<List<String>> contents = tester.stringContents(strings);
+        Condition<String> checker = tester.stringTupleTester(strings, new PeriodicAggregateTester());
         
         // 10 tuples per second, aggregate every second, so 15 seconds is around 15 tuples.
         Condition<Long> ending = tester.atLeastTupleCount(strings, 15);
         complete(tester, ending, 30, TimeUnit.SECONDS);
         
-        assertTrue(ending.valid());  
+        assertTrue(ending.valid()); 
+        assertTrue(checker.valid()); 
+    }
+    
+    public static class PeriodicAggregateTester implements Predicate<String> {
+        private static final long serialVersionUID = 1L;
         
-        long startTs = 0;
-        for (String output : contents.getResult()) {
-            JSONObject agg = JSONObject.parse(output);
+        private long startTs = 0;
+
+        @Override
+        public boolean test(String output) {
+            JSONObject agg;
+            try {
+                agg = JSONObject.parse(output);
+            } catch (IOException e) {
+                e.printStackTrace(System.err);
+                return false;
+            }
             JSONArray items  = (JSONArray) agg.get("items");
             long ts = (Long) agg.get("ts");
             
@@ -306,19 +339,28 @@ public class WindowTest extends TestTopology {
             assertTrue("Number of tuples in window:" + items.size(), items.size() <= 45);
             if (agg.containsKey("delta")) {
                 long delta = (Long) agg.get("delta");
-                assertTrue(delta >= 0);
-                assertTrue("timeBetweenAggs: " + delta, delta > 800 && delta < 1200);
-             
+                if (delta < 0) {
+                    System.err.println("Negative delta:" + delta);
+                    return false;
+                }
+                if (!(delta > 800 && delta < 1200)) {
+                    System.err.println("timeBetweenAggs: " + delta);
+                    return false;                    
+                }
+
                 if (startTs == 0) {
                     startTs = ts;
                 } else {
                     long diff = ts - startTs;
-                    if (diff > 3000)
-                        assertTrue(
-                                "Number of tuples in window:" + items.size(),
-                                items.size() >= 25);
+                    if (diff > 3000) {
+                        if (items.size() < 25) {
+                            System.err.println("Number of tuples in window < 25:" + items.size());
+                            return false;
+                        }
+                    }
                 }
             }
+            return true;
         }
     }
     
