@@ -224,6 +224,11 @@ public class TestTopology {
      */
     public boolean complete(Tester tester, Condition<?> endCondition, long timeout, TimeUnit unit) throws Exception {
         
+        if (isDistributedOrService()) {
+            timeout = getStartupDelay() + unit.toSeconds(timeout);
+            unit = TimeUnit.SECONDS;
+        }
+        
         return tester.complete(getTesterContext(), getConfig(), endCondition, timeout, unit);
     }
 
@@ -365,7 +370,7 @@ public class TestTopology {
         
         Tester tester = output.topology().getTester();
         
-        if (getTesterType() == Type.DISTRIBUTED_TESTER)
+        if (isDistributedOrService())
             seconds += getStartupDelay();
         
         Condition<List<String>> expectedContents = tester.completeAndTestStringOutput(
