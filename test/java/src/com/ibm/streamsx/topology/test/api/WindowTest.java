@@ -65,7 +65,6 @@ public class WindowTest extends TestTopology {
 
     @Test
     public void testBasicCount() throws Exception {
-        assumeTrue(isMainRun());
         final Topology f = newTopology("CountWindow");
         TStream<String> source = f.strings("a", "b", "c");
         TWindow<String,?> window = source.last(10);
@@ -75,7 +74,6 @@ public class WindowTest extends TestTopology {
 
     @Test
     public void testBasicTime() throws Exception {
-        assumeTrue(isMainRun());
         final Topology f = newTopology("TimeWindow");
         TStream<String> source = f.strings("a", "b", "c");
         TWindow<String,?> window = source.last(10, TimeUnit.SECONDS);
@@ -85,7 +83,6 @@ public class WindowTest extends TestTopology {
     
     @Test(expected=IllegalArgumentException.class)
     public void testZeroTimeWindow() throws Exception {
-        assumeTrue(isMainRun());
         final Topology f = newTopology("ZeroTimeWindow");
         TStream<String> source = f.strings("a", "b", "c");
         source.last(0, TimeUnit.DAYS);
@@ -93,7 +90,6 @@ public class WindowTest extends TestTopology {
     
     @Test(expected=IllegalArgumentException.class)
     public void testZeroTimeAggregate() throws Exception {
-        assumeTrue(isMainRun());
         final Topology f = newTopology("ZeroTimeWindow");
         TStream<Number> source = f.numbers(1, 2, 3, 4, 5, 6, 7);
         source.last(1, TimeUnit.DAYS).aggregate(new SumInt(), 0, TimeUnit.HOURS);
@@ -301,8 +297,6 @@ public class WindowTest extends TestTopology {
      */
     @Test
     public void testPeriodicAggregateLastSeconds() throws Exception {
-        // Uses Condition.getResult
-        assumeTrue(!isStreamingAnalyticsRun());
         
         final Topology t = newTopology();
         TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS);
