@@ -183,29 +183,39 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
 {
 <% if ($window->isTumbling()) {%>
-
    // Aggregate the remaining contents if there are some.
-   if (punct == Punctuation::FinalMarker) {
+   if (punct == Punctuation::FinalMarker)
+       aggregateRemaining();
+<%}%>
+}
+
+<% if ($window->isTumbling()) {%>
+void MY_OPERATOR::aggregateRemaining() {
 #if SPLPY_AGGREGATE_TIME_POLICIES == 1
-       SPL::AutoWindowDataAcquirer<PyObject *> awd(window_);
+    SPL::AutoWindowDataAcquirer<PyObject *> awd(window_);
 #elif SPLPY_OP_STATE_HANDLER == 1
     SPL::AutoMutex am(mutex_);
 #else
     SPL::AutoPortMutex am(mutex_, *this);
 #endif
-       Window<PyObject *>::StorageType & storage = window_.getWindowStorage();
-       Window<PyObject *>::DataType & content = storage[0];
-       if (content.size() > 0)
-            onWindowTriggerEvent(window_, 0);
-   }
-<%}%>
+    Window<PyObject *>::StorageType & storage = window_.getWindowStorage();
+    Window<PyObject *>::DataType & content = storage[0];
+    if (!content.empty()) {
+        beforeWindowFlushEvent(window_, 0);
+
+       // Since we have processed these tuples in batch
+       // don't process them again. 
+       content.clear();
+    }
 }
+<%}%>
 
 
 // ##############################
 // Window Event Handler Overrides
 // ##############################
 
+<% if ($window->isSliding()) {%>
 
 void MY_OPERATOR::afterTupleEvictionEvent(
      Window<PyObject *> & window,  Window<PyObject *>::TupleType & tuple,  Window<PyObject *>::PartitionType const & partition) {
@@ -214,7 +224,16 @@ void MY_OPERATOR::afterTupleEvictionEvent(
      Py_DECREF(tuple);
 }
 
-void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObject *>::PartitionType const & key){    
+<%}%>
+
+// Perform the aggregation.
+<% if ($window->isSliding()) {%>
+void MY_OPERATOR::onWindowTriggerEvent(
+<%}%>
+<% if ($window->isTumbling()) {%>
+void MY_OPERATOR::beforeWindowFlushEvent(
+<%}%>
+    Window<PyObject *> & window, Window<PyObject *>::PartitionType const & key){    
     Window<PyObject *>::StorageType & storage = window.getWindowStorage();
 
     Window<PyObject *>::DataType & content = storage[key];
@@ -225,9 +244,12 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
     unsigned int idx = 0;
     for(WindowType::DataType::iterator it=content.begin(); it!=content.end(); ++it) {
         PyObject *item = *it;
-	// The tuple steals a reference, increment such that the window can maintain a copy
-	// once the tuple is deleted.
+<% if ($window->isSliding()) {%>
+	// The list steals a reference, increment such that the window can maintain a copy
+	// once the tuple is deleted. Woith tumbling the window does
+        // retain the contents.
 	Py_INCREF(item);
+<%}%>
 	PyList_SET_ITEM(items, idx, item);
 	++idx;
     }
@@ -259,6 +281,9 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
 
 void MY_OPERATOR::drain() {
     SPLAPPTRC(L_DEBUG, "drain-Aggregate: enter", SPLPY_SH_ASPECT);
+<% if ($window->isTumbling()) {%>
+   aggregateRemaining();
+<%}%>
 #if SPLPY_AGGREGATE_TIME_POLICIES == 0
     SPL::AutoMutex am(mutex_);
 #endif
