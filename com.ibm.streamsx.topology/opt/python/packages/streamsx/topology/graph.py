@@ -26,6 +26,7 @@ import re
 import streamsx.topology.dependency
 import streamsx.topology.functions
 import streamsx.topology.param
+import streamsx.topology.state
 import streamsx.spl.op
 from streamsx.topology.schema import CommonSchema, StreamSchema
 from streamsx.topology.schema import _stream_schema
@@ -416,7 +417,7 @@ class _SPLInvocation(object):
             _op['consistent'] = {}
             consistent = _op['consistent']
             consistent['trigger'] = self._consistent.trigger.name
-            if self._consistent.trigger == streamsx.topology.consistent.ConsistentRegionConfig.Trigger.PERIODIC:
+            if self._consistent.trigger == streamsx.topology.state.ConsistentRegionConfig.Trigger.PERIODIC:
                 if isinstance(self._consistent.period, datetime.timedelta):
                     consistent_period = self._consistent.period.total_seconds()
                 else:
