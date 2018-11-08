@@ -2,7 +2,7 @@ from streamsx.topology.context import ContextTypes
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology.tester_runtime import _StreamCondition
-from streamsx.topology.consistent import ConsistentRegionConfig
+from streamsx.topology.state import ConsistentRegionConfig
 import streamsx.spl.op as op
 import streamsx.ec as ec
 

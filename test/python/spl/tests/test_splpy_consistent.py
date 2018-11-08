@@ -3,7 +3,7 @@ from streamsx.topology import schema
 from streamsx.topology.tester import Tester
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
-from streamsx.topology.consistent import ConsistentRegionConfig
+from streamsx.topology.state import ConsistentRegionConfig
 
 import spl_tests_utils as stu
 

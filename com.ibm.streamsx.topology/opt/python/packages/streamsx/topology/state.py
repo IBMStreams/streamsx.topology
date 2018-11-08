@@ -6,7 +6,7 @@ from enum import Enum
 from datetime import timedelta
 
 """
-Consistent region configuration
+Application state.
 
 ***************
 Module contents
