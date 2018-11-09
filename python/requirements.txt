@@ -1,4 +1,1 @@
-requests
-future
-dill
-enum34
+../requirements.txt

@@ -1,5 +1,5 @@
 from streamsx.topology.topology import *
-from streamsx.topology.consistent import ConsistentRegionConfig
+from streamsx.topology.state import ConsistentRegionConfig
 
 import unittest
 from datetime import timedelta

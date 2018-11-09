@@ -208,7 +208,6 @@ import random
 import streamsx._streams._placement as _placement
 import streamsx.spl.op
 import streamsx.spl.types
-import streamsx.topology.consistent
 import streamsx.topology.graph
 import streamsx.topology.schema
 import streamsx.topology.functions
