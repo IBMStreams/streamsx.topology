@@ -757,7 +757,7 @@ class Topology(object):
         if not self._has_jcp:
             jcp = self.graph.addOperator(kind="spl.control::JobControlPlane", name="JobControlPlane")
             jcp.viewable = False
-            self.has_jcp = True
+            self._has_jcp = True
 
 
 class Stream(_placement._Placement, object):
