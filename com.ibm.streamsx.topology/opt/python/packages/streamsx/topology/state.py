@@ -16,7 +16,7 @@ processing element (PE) restart. A restart may occur due to:
 
     * a failure in the PE or its resource,
     * a explicit PE restart request,
-    * or a parallel region width change.
+    * or a parallel region width change (IBM Streams 4.3 or later)
 
 The application or a portion of it may be configured to maintain
 state after a PE restart by one of two mechanisms.
@@ -30,6 +30,18 @@ state after a PE restart by one of two mechanisms.
     * Checkpointing, each stateful callable is checkpointed periodically and after a PE restart its callables are reset to their most recent checkpointed state.
 
         * :py:attr:`streamsx.topology.topology.Topology.checkpoint_period`
+
+******************
+Stateful callables
+******************
+
+Use of a class instance allows a transformation (for example :py:meth:`~streamsx.topology.topology.Stream.map`) to be stateful by maintaining state in instance
+attributes across invocations.
+
+When the callable is in a consistent region or checkpointing then it is serialized using `dill`. Serialization uses the standard Python pickle mechanism of ``__getstate__`` and ``__setstate__``. For details see See https://docs.python.org/3.5/library/pickle.html#handling-stateful-objects .
+
+If the callable as ``__enter__`` and ``__exit__`` context manager methods then ``__enter__`` is called after the object has been deserialized by `dill`. Thus ``__enter__`` is used to recreate runtime objects that cannot be serialized such as open files or sockets.
+
 """
 
 from enum import Enum
