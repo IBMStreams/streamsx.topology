@@ -11,6 +11,7 @@ import threading
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
+from streamsx.topology.state import ConsistentRegionConfig
 
 class MTSource(object):
     def __init__(self, N):
@@ -72,12 +73,16 @@ class TestMT(unittest.TestCase):
     def setUp(self):
         Tester.setup_standalone(self)
 
+    def add_stateful(self, topo, s):
+        pass
+
     def test_mt(self):
         topo = Topology()
         N = 1000
         s1 = topo.source(MTSource(N)).low_latency()
         s2 = topo.source(range(N)).low_latency()
         s3 = topo.source(range(N)).low_latency()
+        self.add_stateful(topo, [s1,s2,s3])
 
         s = s1.union({s2,s3})
         s = s.filter(MTChecker())
@@ -104,6 +109,7 @@ class TestMT(unittest.TestCase):
         s1 = topo.source(range(N))
         s2 = topo.source(range(N))
         s3 = topo.source(range(N))
+        self.add_stateful(topo, [s1,s2,s3])
         s = s1.union({s2,s3})
 
         s = s.batch(7).aggregate(lambda tuples : tuples).flat_map()
@@ -118,6 +124,7 @@ class TestMT(unittest.TestCase):
         s1 = topo.source(range(N))
         s2 = topo.source(range(N))
         s3 = topo.source(range(N))
+        self.add_stateful(topo, [s1,s2,s3])
         s = s1.union({s2,s3})
 
         s = s.last(1).trigger(1).aggregate(lambda tuples : tuples).flat_map()
@@ -125,4 +132,28 @@ class TestMT(unittest.TestCase):
         tester = Tester(topo)
         tester.tuple_count(s, N*3)
         tester.test(self.test_ctxtype, self.test_config)
-        
+
+class TestDistributedMTCheckpoint(TestMT):
+    def setUp(self):
+        Tester.setup_distributed(self)
+
+    def add_stateful(self, topo, s=None):
+        topo.checkpoint_period = 0.5
+
+class TestDistributedMTConsistentRegion(TestMT):
+    def setUp(self):
+        Tester.setup_distributed(self)
+
+    def add_stateful(self, topo, streams):
+        for s in streams:
+            s.set_consistent(ConsistentRegionConfig.periodic(0.5))
+
+
+class TestSasMTCheckpoint(TestDistributedMTCheckpoint):
+    def setUp(self):
+        Tester.setup_streaming_analytics(self, force_remote_build=True)
+
+
+class TestSasMTConsistentRegion(TestDistributedMTConsistentRegion):
+    def setUp(self):
+        Tester.setup_streaming_analytics(self, force_remote_build=True)

@@ -33,17 +33,19 @@ public:
   void prepareToShutdown(); 
   void process(Tuple const & tuple, uint32_t port);
   void process(Punctuation const & punct, uint32_t port);
+
+  
+<% if ($window->isSliding()) {%>
   void onWindowTriggerEvent(
      Window<PyObject *> & window, Window<PyObject *>::PartitionType const& key);
-  void beforeWindowFlushEvent(
-     Window<PyObject *> & window, Window<PyObject *>::PartitionType const& key) {
-
-     onWindowTriggerEvent(window, key);
-  }
-  
   void afterTupleEvictionEvent(
      Window<PyObject *> & window,  Window<PyObject *>::TupleType & tuple,
      Window<PyObject *>::PartitionType const & partition);
+<%}%>
+<% if ($window->isTumbling()) {%>
+  void beforeWindowFlushEvent(
+     Window<PyObject *> & window, Window<PyObject *>::PartitionType const& key);
+<%}%>
 
 #if SPLPY_OP_STATE_HANDLER == 1
   virtual void drain();
@@ -58,6 +60,9 @@ public:
 
 private:
     SplpyOp * op() const { return funcop_; }
+<% if ($window->isTumbling()) {%>
+   void aggregateRemaining();
+<%}%>
 
     // Members
     // Control for interaction with Python
