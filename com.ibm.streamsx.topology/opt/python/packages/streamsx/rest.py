@@ -43,6 +43,9 @@ import requests
 from pprint import pformat
 import streamsx.topology.context
 
+import streamsx._streams._version
+__version__ = streamsx._streams._version.__version__
+
 from streamsx import st
 from .rest_primitives import (Domain, Instance, Installation, RestResource, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
     _exact_resource, _IAMStreamsRestClient, _IAMConstants)

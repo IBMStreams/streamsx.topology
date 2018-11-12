@@ -570,6 +570,9 @@ import streamsx.ec as ec
 import streamsx._streams._runtime
 import importlib
 
+import streamsx._streams._version
+__version__ = streamsx._streams._version.__version__
+
 ############################################
 # setup for function inspection
 if sys.version_info.major == 3:

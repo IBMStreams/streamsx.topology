@@ -107,6 +107,9 @@ import sys
 
 import streamsx.topology.tester_runtime as sttrt
 
+import streamsx._streams._version
+__version__ = streamsx._streams._version.__version__
+
 _logger = logging.getLogger('streamsx.topology.test')
 
 class _TestConfig(dict):

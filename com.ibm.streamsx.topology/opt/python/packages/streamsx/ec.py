@@ -110,6 +110,9 @@ import importlib
 import logging
 import sys
 
+import streamsx._streams._version
+__version__ = streamsx._streams._version.__version__
+
 try:
     import _streamsx_ec as _ec
 except ImportError:

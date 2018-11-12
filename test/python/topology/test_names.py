@@ -111,3 +111,31 @@ class TestNames(unittest.TestCase):
      self.assertIsNone(s.category)
      with self.assertRaises(TypeError):
          s.category = 'Foo'
+
+  def test_versions_pep396(self):
+        import streamsx._streams._version as ssv
+        v = ssv.__version__
+        self.assertIsInstance(v, type('abc'))
+
+        import streamsx.ec
+        self.assertEqual(streamsx.ec.__version__, v)
+
+        import streamsx.rest
+        self.assertEqual(streamsx.rest.__version__, v)
+
+        import streamsx.spl.spl
+        self.assertEqual(streamsx.spl.spl.__version__, v)
+
+        import streamsx.spl.op
+        self.assertEqual(streamsx.spl.op.__version__, v)
+
+        import streamsx.topology.context
+        self.assertEqual(streamsx.topology.context.__version__, v)
+        import streamsx.topology.schema
+        self.assertEqual(streamsx.topology.schema.__version__, v)
+        import streamsx.topology.state
+        self.assertEqual(streamsx.topology.state.__version__, v)
+        import streamsx.topology.topology
+        self.assertEqual(streamsx.topology.topology.__version__, v)
+        import streamsx.topology.tester
+        self.assertEqual(streamsx.topology.tester.__version__, v)
