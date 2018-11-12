@@ -1,22 +1,56 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2018
+"""
+Application state.
+
+********
+Overview
+********
+
+Stateful applications are ones that include callables that are classes and
+thus can maintain state as instance variables.
+
+By default any state is reset to its initial state after a
+processing element (PE) restart. A restart may occur due to:
+
+    * a failure in the PE or its resource,
+    * a explicit PE restart request,
+    * or a parallel region width change (IBM Streams 4.3 or later)
+
+The application or a portion of it may be configured to maintain
+state after a PE restart by one of two mechanisms.
+
+    * Consistent region. A consistent region is a subgraph where the states of callables become consistent by processing all the tuples within defined points on a stream. After a PE restart all callables in the region are reset to the last consistent point, so that the state of all callables represents the processing of the same input tuples to the region.
+
+        * :py:meth:`streamsx.topology.topology.Stream.set_consistent`
+        * :py:class:`ConsistentRegionConfig`
+        * `Consistent region overview <https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.3.0/com.ibm.streams.dev.doc/doc/consistentregions.html>`_
+
+    * Checkpointing, each stateful callable is checkpointed periodically and after a PE restart its callables are reset to their most recent checkpointed state.
+
+        * :py:attr:`streamsx.topology.topology.Topology.checkpoint_period`
+
+******************
+Stateful callables
+******************
+
+Use of a class instance allows a transformation (for example :py:meth:`~streamsx.topology.topology.Stream.map`) to be stateful by maintaining state in instance
+attributes across invocations.
+
+When the callable is in a consistent region or checkpointing then it is serialized using `dill`. Serialization uses the standard Python pickle mechanism of ``__getstate__`` and ``__setstate__``. For details see See https://docs.python.org/3.5/library/pickle.html#handling-stateful-objects .
+
+If the callable as ``__enter__`` and ``__exit__`` context manager methods then ``__enter__`` is called after the object has been deserialized by `dill`. Thus ``__enter__`` is used to recreate runtime objects that cannot be serialized such as open files or sockets.
+
+"""
 
 from enum import Enum
 from datetime import timedelta
 
-"""
-Application state.
-
-***************
-Module contents
-***************
-
-"""
 
 class ConsistentRegionConfig(object):
     """
-    A :py:class:`ConsistentRegionConfig` defines a consistent region.
+    A :py:class:`ConsistentRegionConfig` configures a consistent region.
     
     The recommended way to create a :py:class:`ConsistentRegionConfig` is
     to call either :py:meth:`.operator_driven` or :py:meth:`.periodic`.
