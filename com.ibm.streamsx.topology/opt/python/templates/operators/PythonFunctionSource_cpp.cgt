@@ -28,6 +28,10 @@
   my $skip_set_callable = 1;
 %>
 
+#if SPLPY_OP_STATE_HANDLER == 1
+#include "splpy_sh.h"
+#endif
+
 MY_OPERATOR::MY_OPERATOR() :
    pyop_(NULL),
    pyOutNames_0(NULL)
@@ -44,11 +48,11 @@ MY_OPERATOR::MY_OPERATOR() :
              "streamsx.spl.runtime", "_SourceIterable",
              callable, NULL);   
      this->pyop_->setCallable(callable);
-     this->pyop_->setup(SPLPY_OP_STATEFUL);
+     this->pyop_->setup(SPLPY_CALLABLE_STATE_HANDLER);
 
      pyOutNames_0 = Splpy::pyAttributeNames(getOutputPortAt(0));
    }
-#if SPLPY_OP_STATEFUL == 1
+#if SPLPY_OP_STATE_HANDLER == 1
    this->getContext().registerStateHandler(*this);
 #endif
 }
@@ -88,8 +92,9 @@ void MY_OPERATOR::process(uint32_t idx)
         ConsistentRegionPermit crp(crc);
 #endif
         {
-            OptionalAutoLock stateLock(this);
-
+#if SPLPY_OP_STATE_HANDLER == 1
+            SPL::AutoMutex am(mutex_);
+#endif
             // GIL is released across submission
             try {
                 SplpyGIL lock;

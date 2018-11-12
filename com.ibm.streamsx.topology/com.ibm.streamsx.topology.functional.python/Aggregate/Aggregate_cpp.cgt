@@ -4,6 +4,19 @@
 
 <%
 
+#
+# Locking
+#
+# If a window has real-time based policies then window acquire
+# data is used as locking. In this case the window object itself
+# gets all the locking.
+#
+# Otherwise if the window has a state handler then an AutoMutex
+# is used to provide locking between tuple/punct processing and
+# state handler methods.
+#
+# Otherwise tuple/punct processing is protected by an AutoPortMutex.
+
 # Configure Windowing
  my $inputPort = $model->getInputPortAt(0); 
  my $window = $inputPort->getWindow();
@@ -32,6 +45,10 @@ MY_OPERATOR::MY_OPERATOR() :
 <% if ($window->isTumbling()) {%>
     window_.registerBeforeWindowFlushHandler(this);
 <%}%>
+
+#if SPLPY_OP_STATE_HANDLER == 1
+    window_.registerSerializationHandler(this);
+#endif
 
     const char * out_wrapfn = "<%=$out_pywrapfunc%>";
 <%
@@ -63,7 +80,7 @@ MY_OPERATOR::MY_OPERATOR() :
  }
 %>
 
-    funcop_ = new SplpyFuncOp(this, SPLPY_CALLABLE_STATEFUL, out_wrapfn);
+    funcop_ = new SplpyFuncOp(this, SPLPY_CALLABLE_STATE_HANDLER, out_wrapfn);
 
 @include "../pyspltuple_constructor.cgt"
     
@@ -76,7 +93,7 @@ MY_OPERATOR::MY_OPERATOR() :
     loads = SplpyGeneral::loadFunction("json", "loads");
     <% } %>
     }
-#if SPLPY_OP_STATEFUL == 1
+#if SPLPY_OP_STATE_HANDLER == 1
    this->getContext().registerStateHandler(*this);
 #endif
 }
@@ -101,8 +118,6 @@ void MY_OPERATOR::prepareToShutdown()
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
 @include "../pyspltuple2value.cgt"
-
-  OptionalAutoLock stateLock(this);
 
   PyObject *python_value;
 
@@ -154,17 +169,30 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
  %>
 
 
+#if SPLPY_AGGREGATE_TIME_POLICIES == 1
+   // window_.insert() obtains the mutex.
+#elif SPLPY_OP_STATE_HANDLER == 1
+    SPL::AutoMutex am(mutex_);
+#else
+    SPL::AutoPortMutex am(mutex_, *this);
+#endif
+
   window_.insert(python_value);
 }
 
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
 {
 <% if ($window->isTumbling()) {%>
-    OptionalAutoLock stateLock(this);
 
    // Aggregate the remaining contents if there are some.
    if (punct == Punctuation::FinalMarker) {
+#if SPLPY_AGGREGATE_TIME_POLICIES == 1
        SPL::AutoWindowDataAcquirer<PyObject *> awd(window_);
+#elif SPLPY_OP_STATE_HANDLER == 1
+    SPL::AutoMutex am(mutex_);
+#else
+    SPL::AutoPortMutex am(mutex_, *this);
+#endif
        Window<PyObject *>::StorageType & storage = window_.getWindowStorage();
        Window<PyObject *>::DataType & content = storage[0];
        if (content.size() > 0)
@@ -225,30 +253,46 @@ void MY_OPERATOR::onWindowTriggerEvent(Window<PyObject *> & window, Window<PyObj
 // End Window Event Handler Overrides
 // ##################################
 
-#if SPLPY_OP_STATEFUL == 1
+#if SPLPY_OP_STATE_HANDLER == 1
+
+/* StateHandler methods */
+
 void MY_OPERATOR::drain() {
-    SPLAPPTRC(L_TRACE, "drain: enter", "python");
+    SPLAPPTRC(L_DEBUG, "drain-Aggregate: enter", SPLPY_SH_ASPECT);
+#if SPLPY_AGGREGATE_TIME_POLICIES == 0
+    SPL::AutoMutex am(mutex_);
+#endif
     window_.drain();
-    SPLAPPTRC(L_TRACE, "drain: exit", "python");
+    SPLAPPTRC(L_DEBUG, "drain-Aggregate: exit", SPLPY_SH_ASPECT);
 }
 
-void MY_OPERATOR::checkpointExtra(SPL::Checkpoint & ckpt) {
-    SPLAPPTRC(L_TRACE, "checkpointExtra: enter", "python");
+void MY_OPERATOR::checkpoint(SPL::Checkpoint & ckpt) {
+    SPLAPPTRC(L_DEBUG, "checkpoint-Aggregate: enter", SPLPY_SH_ASPECT);
+#if SPLPY_AGGREGATE_TIME_POLICIES == 0
+    SPL::AutoMutex am(mutex_);
+#endif
     window_.checkpoint(ckpt);
-    SPLAPPTRC(L_TRACE, "checkpointExtra: exit", "python");
+    SPLAPPTRC(L_DEBUG, "checkpoint-Aggregate: exit", SPLPY_SH_ASPECT);
 }
 
-void MY_OPERATOR::resetExtra(SPL::Checkpoint & ckpt) {
-    SPLAPPTRC(L_TRACE, "resetExtra", "python");
+void MY_OPERATOR::reset(SPL::Checkpoint & ckpt) {
+    SPLAPPTRC(L_DEBUG, "reset-Aggregate: enter", SPLPY_SH_ASPECT);
+#if SPLPY_AGGREGATE_TIME_POLICIES == 0
+    SPL::AutoMutex am(mutex_);
+#endif
     window_.reset(ckpt);
-    SPLAPPTRC(L_TRACE, "resetExtra: exit", "python");
+    SPLAPPTRC(L_DEBUG, "reset-Aggregate: exit", SPLPY_SH_ASPECT);
 }
 
-void MY_OPERATOR::resetToInitialStateExtra() {
-    SPLAPPTRC(L_TRACE, "resetToInitialStateExtra: enter", "python");
+void MY_OPERATOR::resetToInitialState() {
+    SPLAPPTRC(L_DEBUG, "resetToInitialState-Aggregate: enter", SPLPY_SH_ASPECT);
+#if SPLPY_AGGREGATE_TIME_POLICIES == 0
+    SPL::AutoMutex am(mutex_);
+#endif
     window_.resetToInitialState();
-    SPLAPPTRC(L_TRACE, "resetToInitialStateExtra: exit", "python");
+    SPLAPPTRC(L_DEBUG, "resetToInitialState-Aggregate: exit", SPLPY_SH_ASPECT);
 }
+
 #endif
 
 <%SPL::CodeGen::implementationEpilogue($model);%>

@@ -10,6 +10,9 @@
 // flat map code is nothing.
 #define SPLPY_OUT_TUPLE_FLAT_MAP_BY_REF(splv, pyv, occ)
     
+#if SPLPY_OP_STATE_HANDLER == 1
+#include "splpy_sh.h"
+#endif
 
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
@@ -49,10 +52,10 @@ MY_OPERATOR::MY_OPERATOR() :
  }
 %>
 
-    funcop_ = new SplpyFuncOp(this, SPLPY_CALLABLE_STATEFUL, wrapfn);
+    funcop_ = new SplpyFuncOp(this, SPLPY_CALLABLE_STATE_HANDLER, wrapfn);
 
 @include "../pyspltuple_constructor.cgt"
-#if SPLPY_OP_STATEFUL == 1
+#if SPLPY_OP_STATE_HANDLER == 1
    this->getContext().registerStateHandler(*this);
 #endif
 }
@@ -77,7 +80,12 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
   std::vector<OPort0Type> output_tuples; 
   
  {
-  OptionalAutoLock stateLock(this);
+#if SPLPY_OP_STATE_HANDLER == 1
+  SPL::AutoMutex am(mutex_);
+#elif SPLPY_CALLABLE_STATEFUL == 1
+  SPL::AutoPortMutex am(mutex_, *this);
+#endif
+
 @include "../pyspltuple2value.cgt"
   try {
     SplpyGIL lock;

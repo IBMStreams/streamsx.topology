@@ -40,6 +40,10 @@
   my $skip_set_callable = 0;
 %>
 
+#if SPLPY_OP_STATE_HANDLER == 1
+#include "splpy_sh.h"
+#endif
+
 MY_OPERATOR::MY_OPERATOR() :
    pyop_(NULL),
    pyInNames_(NULL),
@@ -58,7 +62,7 @@ MY_OPERATOR::MY_OPERATOR() :
 <% } %>
    }
 
-#if SPLPY_OP_STATEFUL == 1
+#if SPLPY_OP_STATE_HANDLER == 1
    this->getContext().registerStateHandler(*this);
 #endif
 }
@@ -87,7 +91,11 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
  @include  "../../opt/.__splpy/common/py_splTupleCheckForBlobs.cgt"
 
- OptionalAutoLock stateLock(this);
+#if SPLPY_OP_STATE_HANDLER == 1
+ SPL::AutoMutex am(mutex_);
+#elif SPLPY_CALLABLE_STATEFUL == 1
+ SPL::AutoPortMutex am(mutex_, *this);
+#endif
  try {
  // GIL is released across submission
  SplpyGIL lock;

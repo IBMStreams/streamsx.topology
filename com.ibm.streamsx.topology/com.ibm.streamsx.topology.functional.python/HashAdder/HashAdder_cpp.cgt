@@ -6,15 +6,19 @@
  my $pywrapfunc= $pystyle_fn . '_in';
 %>
 
+#if SPLPY_OP_STATE_HANDLER == 1
+#include "splpy_sh.h"
+#endif
+
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
    pyInStyleObj_(NULL)
 {
-    funcop_ = new SplpyFuncOp(this, SPLPY_CALLABLE_STATEFUL, "<%=$pywrapfunc%>");
+    funcop_ = new SplpyFuncOp(this, SPLPY_CALLABLE_STATE_HANDLER, "<%=$pywrapfunc%>");
 
 @include "../pyspltuple_constructor.cgt"
 
-#if SPLPY_OP_STATEFUL == 1
+#if SPLPY_OP_STATE_HANDLER == 1
    this->getContext().registerStateHandler(*this);
 #endif
 }
@@ -39,7 +43,12 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
     SPL::int32 _hash = 0;
     {
-        OptionalAutoLock stateLock(this);
+#if SPLPY_OP_STATE_HANDLER == 1
+        SPL::AutoMutex am(mutex_);
+#elif SPLPY_CALLABLE_STATEFUL == 1
+        SPL::AutoPortMutex am(mutex_, *this);
+#endif
+
         try {
 @include "../pyspltuple2value.cgt"
 

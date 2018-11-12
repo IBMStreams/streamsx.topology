@@ -70,7 +70,7 @@
 %>
 <% if (not $skip_set_callable) { %>
      this->pyop_->setCallable(callable);
-     this->pyop_->setup(SPLPY_CALLABLE_STATEFUL);
+     this->pyop_->setup(SPLPY_CALLABLE_STATE_HANDLER);
 <% } %>
 
     }

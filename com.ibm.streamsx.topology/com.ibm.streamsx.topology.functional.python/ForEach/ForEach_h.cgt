@@ -9,8 +9,8 @@ using namespace streamsx::topology;
 <%SPL::CodeGen::headerPrologue($model);%>
 
 class MY_OPERATOR : public MY_BASE_OPERATOR
-#if SPLPY_OP_STATEFUL == 1
-      ,public DelegatingStateHandler
+#if SPLPY_OP_STATE_HANDLER == 1
+ , public SPL::StateHandler
 #endif
 {
 public:
@@ -18,6 +18,12 @@ public:
   virtual ~MY_OPERATOR(); 
   void prepareToShutdown(); 
   void process(Tuple const & tuple, uint32_t port);
+
+#if SPLPY_OP_STATE_HANDLER == 1
+  virtual void checkpoint(SPL::Checkpoint & ckpt);
+  virtual void reset(SPL::Checkpoint & ckpt);
+  virtual void resetToInitialState();
+#endif
 
 private:
   SplpyOp * op() { return funcop_; }
@@ -28,7 +34,9 @@ private:
   
   PyObject *pyInStyleObj_;
 
-  @include "../../opt/python/codegen/py_enable_cr.cgt"
+#if SPLPY_CALLABLE_STATEFUL == 1
+    SPL::Mutex mutex_;
+#endif
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>
