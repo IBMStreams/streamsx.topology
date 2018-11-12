@@ -202,6 +202,9 @@ try:
 except (ImportError,NameError):
     pass
 
+import streamsx._streams._version
+__version__ = streamsx._streams._version.__version__
+
 import copy
 import random
 import streamsx._streams._placement as _placement

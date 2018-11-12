@@ -34,6 +34,9 @@ import sys
 import token
 import tokenize
 
+import streamsx._streams._version
+__version__ = streamsx._streams._version.__version__
+
 _spl_str = unicode if sys.version_info.major == 2 else str
 
 

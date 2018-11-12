@@ -39,6 +39,9 @@ import tempfile
 import copy
 import time
 
+import streamsx._streams._version
+__version__ = streamsx._streams._version.__version__
+
 logger = logging.getLogger('streamsx.topology.context')
 
 #
