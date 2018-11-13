@@ -150,4 +150,21 @@ public interface ContextProperties {
      * @since 1.11
      */
     String STREAMS_CONNECTION = "topology.streamsConnection";
+    
+    /**
+     * Set SSL certification verification state.
+     * 
+     * If set as {@code true} (the default) then SSL certificate verification
+     * is enabled when using a REST connection to a IBM Streams distributed instance.
+     * <BR>
+     * Otherwise if set to {@code false} then SSL certification verification does
+     * not occur. This is useful for test distributed instances or the IBM Streams
+     * Quick Start edition where a self-signed certificate is used.
+     * 
+     * If a connection is passed in to a submission context using
+     * {@link #STREAMS_CONNECTION} then this value is ignored.
+     * 
+     * @since 1.11
+     */
+    String SSL_VERIFY = "topology.SSLVerify";
 }
