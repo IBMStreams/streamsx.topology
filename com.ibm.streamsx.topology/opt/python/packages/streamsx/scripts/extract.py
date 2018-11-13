@@ -21,6 +21,7 @@ import xml.etree.ElementTree as ET
 import html
 from streamsx.spl.spl import _OperatorType
 from streamsx.spl.spl import _valid_op_parameter
+import streamsx.spl.spl
 
 import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
@@ -556,7 +557,11 @@ def _reset_path(items):
         sys.path.remove(p)
 
 def main(args=None):
-    _extract_from_toolkit(args)
+    try:
+        streamsx.spl.spl._EXTRACTING.active = True
+        _extract_from_toolkit(args)
+    finally:
+        streamsx.spl.spl._EXTRACTING.active = False
 
 if __name__ == '__main__':
     main()
