@@ -48,8 +48,10 @@ public class MetricConditionChecker {
             }
         } else {
             job.refresh();
-            if (!"healthy".equals(job.getHealth()))
+            if ("unhealthy".equals(job.getHealth()))
                 return TestState.FAIL;
+            if (!"healthy".equals(job.getHealth()))
+                return TesterRuntime.TestState.NOT_READY;                  
         }
         
         Thread.sleep(1000);
