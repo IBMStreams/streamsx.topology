@@ -13,6 +13,8 @@ import streamsx.spl.op as op
 import streamsx.spl.toolkit
 import streamsx.scripts.extract
 
+from streamsx.spl import spl
+
 import spl_tests_utils as stu
 
 def down_a_pint():
@@ -78,4 +80,26 @@ class TestPipInstalls(unittest.TestCase):
             s)
         tester = Tester(topo)
         tester.contents(fp.stream, ['RTTK_PintImported'])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_not_extracting(self):
+        self.assertFalse(spl.extracting())
+        topo = Topology()
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy_pip_op'))
+
+        s = topo.source(['a', 'b', 'c'])
+        s = s.as_string()
+        fpe = op.Map(
+            "com.ibm.streamsx.topology.pytest.pypip::check_not_extracting",
+            s)
+        fpa = op.Map(
+            "com.ibm.streamsx.topology.pytest.pypip::check_ec_active",
+            fpe.stream)
+
+        fplc = op.Map(
+            "com.ibm.streamsx.topology.pytest.pypip::check_protected_import",
+            fpa.stream)
+
+        tester = Tester(topo)
+        tester.contents(fplc.stream, ['a', 'b', 'c'])
         tester.test(self.test_ctxtype, self.test_config)
