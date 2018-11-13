@@ -4,16 +4,15 @@
  */
 package com.ibm.streamsx.topology.test.state;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ibm.streams.operator.logging.LogLevel;
@@ -31,7 +30,8 @@ public class CheckpointTest extends TestTopology {
     @Before
     public void checkIsDistributed() {
         assumeTrue(SC_OK);
-        assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
+        assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER
+                || getTesterType() == StreamsContext.Type.STREAMING_ANALYTICS_SERVICE_TESTER);
     }
     
     @Test
@@ -51,9 +51,13 @@ public class CheckpointTest extends TestTopology {
         testPeriodicCheckpoint(2, 45);
     }
     
+    @Test
+    @Ignore("Stream issue with crash before 1st checkpoint")
+    public void testPeriodicCheckpointEarlyFail() throws Exception {
+        testPeriodicCheckpoint(2000, 45);
+    }
+    
     private void testPeriodicCheckpoint(int period, final int crashAfterCount) throws Exception {
-        assumeTrue(SC_OK);
-        assumeTrue(getTesterType() == StreamsContext.Type.DISTRIBUTED_TESTER);
 
         final Topology topology = new Topology();
         topology.checkpointPeriod(period, TimeUnit.SECONDS);
@@ -66,7 +70,7 @@ public class CheckpointTest extends TestTopology {
         lb.colocate(b);
         
         TStream<String> sb = StringStreams.toString(b.isolate());
-        
+                
         Condition<Long> atLeast = topology.getTester().atLeastTupleCount(sb, 230);
         Condition<String> outputChecker = topology.getTester().stringTupleTester(sb, new CheckOutput(crashAfterCount));
         
