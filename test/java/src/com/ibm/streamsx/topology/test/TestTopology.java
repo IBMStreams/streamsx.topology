@@ -40,7 +40,9 @@ import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
 
 /**
- * Root class for topology tests.
+ * Root class for internal topology tests.
+ * 
+ * This is not a public-api class.
  * 
  */
 public class TestTopology {
@@ -103,6 +105,9 @@ public class TestTopology {
             config.put(ContextProperties.COMPILE_INSTALL_DIR, differentCompile);
             Util.STREAMS_LOGGER.setLevel(Level.INFO);
         }
+        
+        if (System.getProperty("topology.test.SSLVerify") != null)
+            config.put(ContextProperties.SSL_VERIFY, Boolean.getBoolean("topology.test.SSLVerify"));
     }
     
 
