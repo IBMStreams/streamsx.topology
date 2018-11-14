@@ -11,7 +11,7 @@ import codecs
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
-import streamsx.ec as ec
+import streamsx.ec
 
 def _trc_msg_direct(level):
     atm = (level, "direct _ec message:" + str(level*77), "A1,B2,python", "MyFile.py", "MyFunc", 4242)
@@ -47,7 +47,7 @@ def _log_msg(msg):
     print("Current Stream log logger level:", ctl, logging.getLevelName(ctl))
 
 def read_config_file(name):
-    path = os.path.join(ec.get_application_directory(), 'etc', name)
+    path = os.path.join(streamsx.ec.get_application_directory(), 'etc', name)
     with codecs.open(path, encoding='utf-8') as f:
         return f.read()
 
@@ -149,7 +149,7 @@ class TestEc(unittest.TestCase):
       self.assertEqual('etc/' + bfn, rtpath)
 
       s = topo.source(['A'])
-      s = s.filter(lambda x : os.path.isdir(ec.get_application_directory()))
+      s = s.filter(lambda x : os.path.isdir(streamsx.ec.get_application_directory()))
       s = s.map(lambda x : read_config_file(bfn))
 
       tester = Tester(topo)
