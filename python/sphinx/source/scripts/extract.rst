@@ -16,7 +16,7 @@ primitive operator meta-data required by the SPL compiler (`sc`).
 Usage
 *****
 
-::
+.. code-block:: none
 
     spl-python-extract [-h] -i DIRECTORY [--make-toolkit] [-v]
 

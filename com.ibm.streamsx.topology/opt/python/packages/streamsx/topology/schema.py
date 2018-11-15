@@ -43,7 +43,8 @@ _spl_str = unicode if sys.version_info.major == 2 else str
 
 def is_common(schema):
     """
-    Is `schema` an common schema
+    Is `schema` an common schema.
+
     Args:
         schema: Scheme to test.
 

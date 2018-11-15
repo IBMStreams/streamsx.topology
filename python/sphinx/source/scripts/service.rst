@@ -12,9 +12,9 @@ Control commands for a Streaming Analytics service.
 Usage
 *****
 
-::
+.. code-block:: none
 
-    service.py [-h] [--service-name SERVICE_NAME] [--full-response]
+    streamsx-service [-h] [--service-name SERVICE_NAME] [--full-response]
                   {start,status,stop} ...
 
     Control commands for a Streaming Analytics service.
