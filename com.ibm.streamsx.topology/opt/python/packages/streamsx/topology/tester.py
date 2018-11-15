@@ -758,7 +758,8 @@ class Tester(object):
             # Supply a default StreamsConnection object with SSL verification disabled, because the default
             # streams server is not shipped with a valid SSL certificate
             self.streams_connection = StreamsConnection(username, password)
-            self.streams_connection.session.verify = False
+            if ConfigParams.SSL_VERIFY in config:
+                self.streams_connection.session.verify = config[ConfigParams.SSL_VERIFY]
             config[ConfigParams.STREAMS_CONNECTION] = self.streams_connection
         sjr = stc.submit(stc.ContextTypes.DISTRIBUTED, self.topology, config)
         self.submission_result = sjr
