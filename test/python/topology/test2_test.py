@@ -149,6 +149,26 @@ class TestTester(unittest.TestCase):
         ok = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
         self.assertFalse(ok)
 
+    def test_count_bad(self):
+        N=10
+        topo = Topology()
+        s = topo.source(range(N))
+        tester = Tester(topo)
+        tester.tuple_count(s, N+1)
+        ok = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
+        self.assertFalse(ok)
+
+    def test_count_bad_conflicting(self):
+        N=10
+        topo = Topology()
+        s = topo.source(range(N))
+        tester = Tester(topo)
+        # Add one that fails and one that never becomes valid
+        tester.tuple_count(s.map(), int(N/2))
+        tester.tuple_count(s, N+1)
+        ok = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
+        self.assertFalse(ok)
+
     def get_start_time(self):
         job = self.tester.submission_result.job
         self.rf_start = job.submitTime / 1000.0

@@ -300,7 +300,6 @@ class SplpyGeneral {
       SplpyGeneral::flush_PyErr_Print();
       
       SPL::SPLRuntimeOperatorException exc(location, msg);
-      
       return exc;
   }
 

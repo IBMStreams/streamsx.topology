@@ -82,7 +82,6 @@ class SplpyOp {
           SplpyGIL lock;
 
           clearCallable();
-
           Py_CLEAR(opc_);
 
           SplpyGeneral::flush_PyErrPyOut();
@@ -111,11 +110,12 @@ class SplpyOp {
       }
       void clearCallable() {
         if (callable_) {
+             PyObject *cleared = callable_;
+             callable_ = NULL;
              // Exit the context manager and release it
              // THe function call steals the operator's reference
              SplpyGeneral::callVoidFunction(
-               "streamsx._streams._runtime", "_call_exit", callable_, NULL);
-             callable_ = NULL;
+               "streamsx._streams._runtime", "_call_exit", cleared, NULL);
         }
       }
 
@@ -152,16 +152,18 @@ class SplpyOp {
       /**
        * Actions for a Python operator on prepareToShutdown
        * Flush any pending output.
-       * Note we do not interact with the callable here
+       * Note in distributed we do not interact with the callable here
        * as it may still be needed for concurrent tuple
        * processing. The callable is shutdown and its __exit__
        * method called when this object's destructor is called.
-       * This means the mutex in the operator is not required
-       * when calling this function.
       */
       void prepareToShutdown() {
           SplpyGIL lock;
           SplpyGeneral::flush_PyErrPyOut();
+
+          if (op()->getPE().isStandalone()) {
+              clearCallable();
+          }
       }
 
       int exceptionRaised(const SplpyExceptionInfo& exInfo) {
