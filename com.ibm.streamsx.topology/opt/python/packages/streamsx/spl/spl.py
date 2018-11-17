@@ -569,7 +569,6 @@ import sys
 import streamsx.ec as ec
 import streamsx._streams._runtime
 import importlib
-import threading
 
 import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
@@ -613,7 +612,7 @@ def _valid_op_parameter(name):
     if name in ['suppress', 'include']:
         raise ValueError("Parameter name {0} is reserved".format(name))
 
-_EXTRACTING=threading.local()
+_EXTRACTING=False
 
 def extracting():
     """Is a module being loaded by ``spl-python-extract``.
@@ -642,7 +641,7 @@ def extracting():
  
     .. versionadded:: 1.11
     """
-    return 'active' in _EXTRACTING.__dict__ and _EXTRACTING.active
+    return _EXTRACTING
 
 def pipe(wrapped):
     """
