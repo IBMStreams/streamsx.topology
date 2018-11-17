@@ -35,6 +35,8 @@ import time
 
 _logger = logging.getLogger('streamsx.topology.test')
 
+_STANDALONE_FAILED = False
+
 class Condition(object):
     """A condition for testing.
 
@@ -107,6 +109,9 @@ class _FunctionalCondition(Condition):
         self.valid = False
         self._fail = True
         if (ec.is_standalone()):
+            global _STANDALONE_FAILED
+            print("SETTING CONDITION:", str(self), _STANDALONE_FAILED)
+            _STANDALONE_FAILED = True
             raise AssertionError("Condition:{}: FAILED".format(self.name))
 
     def __getstate__(self):
@@ -135,9 +140,13 @@ class _FunctionalCondition(Condition):
          
     def __exit__(self, exc_type, exc_value, traceback):
         if not self._fail and not self.valid:
-            _logger.warning("Condition:%s: NOT VALID at __exit__.", self.name)
+            _logger.warning("Condition:%s: NOT VALID.", self.name)
             
-        if ec.is_standalone():
+        # Force a non-zero return code in standalone
+        # if a condition did not become valid
+        global _STANDALONE_FAILED
+        print("CLOSING CONDITION:", str(self), _STANDALONE_FAILED)
+        if ec.is_standalone() and not _STANDALONE_FAILED:
             if exc_type is None and not self._valid:
                 raise AssertionError("Condition:{}: NOT VALID.".format(self.name))
 
