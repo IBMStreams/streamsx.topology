@@ -14,11 +14,7 @@ import datetime
 import pickle
 from enum import Enum
 
-try:
-    import dill
-    dill.settings['recurse'] = True
-except ImportError:
-    dill = pickle
+import dill
 
 import types
 import base64
@@ -469,6 +465,11 @@ class _SPLInvocation(object):
             # callable is a callable class instance
             self.params["pyName"] = function.__class__.__name__
             # dill format is binary; base64 encode so it is json serializable 
+            #print('DILL-----------------------------------------------')
+            #dddddd = dill.dumps(function)
+            #print('DILL-LEN', len(dddddd))
+            #print(dddddd)
+            #print('END-DILL-----------------------------------------------')
             self.params["pyCallable"] = base64.b64encode(dill.dumps(function)).decode("ascii")
 
         if stateful is not None:
