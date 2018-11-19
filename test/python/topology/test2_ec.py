@@ -11,7 +11,7 @@ import codecs
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
-import streamsx.ec as ec
+import streamsx.ec
 
 def _trc_msg_direct(level):
     atm = (level, "direct _ec message:" + str(level*77), "A1,B2,python", "MyFile.py", "MyFunc", 4242)
@@ -47,7 +47,7 @@ def _log_msg(msg):
     print("Current Stream log logger level:", ctl, logging.getLevelName(ctl))
 
 def read_config_file(name):
-    path = os.path.join(ec.get_application_directory(), 'etc', name)
+    path = os.path.join(streamsx.ec.get_application_directory(), 'etc', name)
     with codecs.open(path, encoding='utf-8') as f:
         return f.read()
 
@@ -109,15 +109,15 @@ class EcForEach(object):
 
 class EcDuplicateMetric(object):
     def __enter__(self):
-        self.m1 = ec.CustomMetric(self, name='METRIC1', initialValue=37)
+        self.m1 = streamsx.ec.CustomMetric(self, name='METRIC1', initialValue=37)
         if int(self.m1.value) != 37:
             raise ValueError("Expected initial 37 got " + int(self.m1.value))
-        self.m1 = ec.CustomMetric(self, name='METRIC1', initialValue=99)
+        self.m1 = streamsx.ec.CustomMetric(self, name='METRIC1', initialValue=99)
         if int(self.m1.value) != 37:
             raise ValueError("Expected 37 got " + int(self.m1.value))
 
         try:
-            ec.CustomMetric(self, name='METRIC1', kind='Gauge')
+            streamsx.ec.CustomMetric(self, name='METRIC1', kind='Gauge')
             self.okerror = False
         except ValueError as e:
             self.okerror = True
@@ -171,7 +171,7 @@ class TestEc(unittest.TestCase):
       self.assertEqual('etc/' + bfn, rtpath)
 
       s = topo.source(['A'])
-      s = s.filter(lambda x : os.path.isdir(ec.get_application_directory()))
+      s = s.filter(lambda x : os.path.isdir(streamsx.ec.get_application_directory()))
       s = s.map(lambda x : read_config_file(bfn))
 
       tester = Tester(topo)
