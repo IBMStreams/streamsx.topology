@@ -109,15 +109,15 @@ class EcForEach(object):
 
 class EcDuplicateMetric(object):
     def __enter__(self):
-        self.m1 = ec.CustomMetric(self, name='METRIC1', initialValue=37)
+        self.m1 = streamsx.ec.CustomMetric(self, name='METRIC1', initialValue=37)
         if int(self.m1.value) != 37:
             raise ValueError("Expected initial 37 got " + int(self.m1.value))
-        self.m1 = ec.CustomMetric(self, name='METRIC1', initialValue=99)
+        self.m1 = streamsx.ec.CustomMetric(self, name='METRIC1', initialValue=99)
         if int(self.m1.value) != 37:
             raise ValueError("Expected 37 got " + int(self.m1.value))
 
         try:
-            ec.CustomMetric(self, name='METRIC1', kind='Gauge')
+            streamsx.ec.CustomMetric(self, name='METRIC1', kind='Gauge')
             self.okerror = False
         except ValueError as e:
             self.okerror = True
