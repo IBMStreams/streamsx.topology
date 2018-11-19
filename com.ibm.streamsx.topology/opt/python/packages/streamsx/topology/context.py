@@ -699,6 +699,17 @@ class ConfigParams(object):
     """
     Key for a :py:class:`StreamsConnection` object for connecting to a running IBM Streams instance.
     """
+    SSL_VERIFY = 'topology.SSLVerify'
+    """
+    Key for the SSL verification value passed to `requests` as its ``verify``
+    option for distributed contexts. By default set to `True`.
+
+    .. note:: Only ``True`` or ``False`` is supported. Behaviour is undefined
+        when passing a path to a CA_BUNDLE file or directory with
+        certificates of trusted CAs.
+
+    .. versionadded: 1.11
+    """
     SERVICE_DEFINITION = 'topology.service.definition'
     """Streaming Analytics service definition.
     Identifies the Streaming Analytics service to use. The definition can be one of

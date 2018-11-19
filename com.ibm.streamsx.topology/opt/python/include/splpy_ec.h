@@ -23,6 +23,7 @@
 
 #include "splpy_ec_api.h"
 #include "splpy_general.h"
+#include "splpy_exc.h"
 
 #include <SPL/Runtime/ProcessingElement/ProcessingElement.h>
 #include <SPL/Runtime/Operator/OperatorMetrics.h>
@@ -97,9 +98,13 @@ static PyObject * __splpy_ec_get_app_config(PyObject *self, PyObject *pyname) {
    SPL::map<SPL::rstring, SPL::rstring> properties;
 
    Py_BEGIN_ALLOW_THREADS
+   try {
 
-   rc = SPL::Functions::Utility::getApplicationConfiguration(properties, name);
-
+       rc = SPL::Functions::Utility::getApplicationConfiguration(properties, name);
+   } catch (const std::exception& e) {
+       Py_BLOCK_THREADS
+       throw e;
+   }
    Py_END_ALLOW_THREADS
 
    if (rc == 0)
@@ -137,13 +142,14 @@ static PyObject * __splpy_ec_app_trc(PyObject *self, PyObject *args) {
        int line = (int) PyLong_AsLong(pyline);
 
        Py_BEGIN_ALLOW_THREADS
-
-       Distillery::debug::write_appmsg(ilvl,
-          SPL::splAppTrcAspect(aspects),
-          func,
-          file,
-          line,
-          msg);
+       try {
+           Distillery::debug::write_appmsg(ilvl,
+              SPL::splAppTrcAspect(aspects),
+              func, file, line, msg);
+       } catch (const std::exception& e) {
+           Py_BLOCK_THREADS
+           throw e;
+       }
 
        Py_END_ALLOW_THREADS
    }
@@ -199,13 +205,16 @@ static PyObject * __splpy_ec_app_log(PyObject *self, PyObject *args) {
        int line = (int) PyLong_AsLong(pyline);
 
        Py_BEGIN_ALLOW_THREADS
+       try {
 
-       Distillery::debug::write_log(ilvl,
-          SPL::splAppLogAspect(aspects),
-          func,
-          file,
-          line,
-          msg);
+           Distillery::debug::write_log(ilvl,
+               SPL::splAppLogAspect(aspects),
+               func, file, line, msg);
+       } catch (const std::exception& e) {
+           Py_BLOCK_THREADS
+           throw e;
+       }
+
        Py_END_ALLOW_THREADS
      }
    }
@@ -264,24 +273,32 @@ static PyObject * __splpy_ec_create_custom_metric(PyObject *self, PyObject *args
    void * cmptr = NULL;
 
    Py_BEGIN_ALLOW_THREADS
+   try {
 
-   // If the metric already exists with the same name
-   // and kind then return that. Do not set the value
-   // as the create custom metric is the initial value.
-   if (metrics.hasCustomMetric(name)) {
-       SPL::Metric &cm = metrics.getCustomMetricByName(name);
-       if (cm.getKind() == kind)
+       // If the metric already exists with the same name
+       // and kind then return that. Do not set the value
+       // as the create custom metric is the initial value.
+       if (metrics.hasCustomMetric(name)) {
+           SPL::Metric &cm = metrics.getCustomMetricByName(name);
+           if (cm.getKind() == kind)
+               cmptr = reinterpret_cast<void *>(&cm);
+
+           // Otherwise let SPL runtime handle the duplicate
+       }
+
+       if (cmptr == NULL) {
+           SPL::Metric &cm = metrics.createCustomMetric(name, desc, kind);
+           cm.setValue(value);
            cmptr = reinterpret_cast<void *>(&cm);
-
-       // Otherwise let SPL runtime handle the duplicate
+       }
+   } catch (const SPL::SPLRuntimeInvalidMetricException& e) {
+       Py_BLOCK_THREADS
+       PyErr_SetString(streamsx::topology::SplpyErrors::ValueError, e.getExplanation().c_str());
+       return NULL;
+   } catch (const std::exception& e) {
+       Py_BLOCK_THREADS
+       throw e;
    }
-
-   if (cmptr == NULL) {
-       SPL::Metric &cm = metrics.createCustomMetric(name, desc, kind);
-       cm.setValue(value);
-       cmptr = reinterpret_cast<void *>(&cm);
-   }
-
    Py_END_ALLOW_THREADS
 
    return PyLong_FromVoidPtr(cmptr);

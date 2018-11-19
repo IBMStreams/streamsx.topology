@@ -1,5 +1,8 @@
 pipeline {
   agent { label 'streamsx_public' }
+  options {
+        buildDiscarder(logRotator(artifactDaysToKeepStr: '5', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '5')) 
+  }
   environment {
      VCAP_SERVICES = credentials('VCAP_SERVICES')
      STREAMING_ANALYTICS_SERVICE_NAME = credentials('STREAMING_ANALYTICS_SERVICE_NAME')

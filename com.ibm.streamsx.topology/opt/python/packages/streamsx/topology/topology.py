@@ -334,27 +334,21 @@ class SubscribeConnection(Enum):
         return streamsx.spl.op.Expression.expression('com.ibm.streamsx.topology.topic::' + self.name).spl_json()
 
 class Topology(object):
-    """The Topology class is used to define data sources, and is passed as a parameter when submitting an application.
-       Topology keeps track of all sources, sinks, and data operations within your application.
+    """The Topology class is used to define data sources, and is passed as a parameter when submitting an application. Topology keeps track of all sources, sinks, and transformations within your application.
 
-       Submission of a Topology results in a Streams application that has
-       the name `namespace::name`.
+    Submission of a Topology results in a Streams application that has
+    the name `namespace::name`.
 
-       Arguments:
-           name(str): Name of the topology. Defaults to a name dervied
-              from the calling evironment if it can be determined, otherwise
-              a random name.
-           namespace(str): Namespace of the topology. Defaults to a name dervied
-              from the calling evironment if it can be determined, otherwise
-              a random name.
+    Args:
+        name(str): Name of the topology. Defaults to a name dervied from the calling evironment if it can be determined, otherwise a random name.
+        namespace(str): Namespace of the topology. Defaults to a name dervied from the calling evironment if it can be determined, otherwise a random name.
 
-       Attributes:
-           include_packages(set[str]): Python package names to be included in the built application. Any package in this list is copied into the bundle and made available at runtime to the Python callables used in the application. By default a ``Topology`` will automatically discover which packages and modules are required to be copied, this field may be used to add additional packages that were not automatically discovered.
+    Attributes:
+        include_packages(set[str]): Python package names to be included in the built application. Any package in this list is copied into the bundle and made available at runtime to the Python callables used in the application. By default a ``Topology`` will automatically discover which packages and modules are required to be copied, this field may be used to add additional packages that were not automatically discovered.
 
-           exclude_packages(set[str]): Python top-level package names to be excluded from the built application. Excluding a top-level packages excludes all sub-modules at any level in the package, e.g. `sound` excludes `sound.effects.echo`. Only the top-level package can be defined, e.g. `sound` rather than `sound.filters`. Behavior when adding a module within a package is undefined.
-               When compiling the application using Anaconda this set is pre-loaded with Python packages from the Anaconda pre-loaded set.
+        exclude_packages(set[str]): Python top-level package names to be excluded from the built application. Excluding a top-level packages excludes all sub-modules at any level in the package, e.g. `sound` excludes `sound.effects.echo`. Only the top-level package can be defined, e.g. `sound` rather than `sound.filters`. Behavior when adding a module within a package is undefined. When compiling the application using Anaconda this set is pre-loaded with Python packages from the Anaconda pre-loaded set.
 
-               Package names in `include_packages` take precedence over package names in `exclude_packages`.
+    Package names in `include_packages` take precedence over package names in `exclude_packages`.
 
     All declared streams in a `Topology` are available through their name
     using ``topology[name]``. The stream's name is defined by :py:meth:`Stream.name` and will differ from the name parameter passed when creating the stream if the application uses duplicate names.
@@ -710,8 +704,17 @@ class Topology(object):
         A stateful operator is an operator whose callable is an instance of a
         Python callable class.
 
-        Returns:
-            The checkpoint period.
+        Examples::
+
+            # Create a topology that will checkpoint every thirty seconds
+            topo = Topology()
+            topo.checkpoint_period = 30.0
+
+        ::
+
+            # Create a topology that will checkpoint every two minutes
+            topo = Topology()
+            topo.checkpoint_period = datetime.timedelta(minutes=2)
 
         .. versionadded:: 1.11
         """
@@ -1299,6 +1302,17 @@ class Stream(_placement._Placement, object):
                 number of tuples or `datetime.timedelta` to define the
                 duration of the window.
 
+        Examples::
+
+            # Create a window against stream s of the last 100 tuples
+            w = s.last(size=100)
+
+        ::
+
+            # Create a window against stream s of tuples
+            # arrived on the stream in the last five minutes
+            w = s.last(size=datetime.timedelta(minutes=5))
+
         Returns:
             Window: Window of the last (most recent) tuples on this stream.
         """
@@ -1317,26 +1331,46 @@ class Stream(_placement._Placement, object):
 
         The number of tuples in the batch is defined by `size`.
 
-        If `size` is an `int` then it is the count of tuples in the batch.
-        For example, with ``size=10`` the batch will contain ten tuples.
-        Thus processing against the returned :py:class:`Window`,
-        such as :py:meth:`aggregate` will be executed every ten tuples
-        against the last ten tuples on the stream. For example the
-        first three aggregations would be against the first ten tuples
-        on the stream, then the next ten tuples and then the third ten tuples.
+        If `size` is an ``int`` then it is the count of tuples in the batch.
+        For example, with ``size=10`` each batch will nominally
+        contain ten tuples. Thus processing against the returned
+        :py:class:`Window`, such as :py:meth:`~Window.aggregate` will be
+        executed every ten tuples against the last ten tuples on the stream.
+        For example the first three aggregations would be against
+        the first ten tuples on the stream, then the next ten tuples
+        and then the third ten tuples, etc.
 
         If `size` is an `datetime.timedelta` then it is the duration
         of the batch using wallclock time.
         With a `timedelta` representing five minutes
         then the window contains any tuples that arrived in the last
         five minutes.  Thus processing against the returned :py:class:`Window`,
-        such as :py:meth:`aggregate` will be executed every five minutes tuples
+        such as :py:meth:`~Window.aggregate` will be executed every five minutes tuples
         against the batch of tuples arriving in the last five minutes
         on the stream. For example the first three aggregations would be
         against any tuples on the stream in the first five minutes,
         then the next five minutes and then minutes ten to fifteen.
+        A batch can contain no tuples if no tuples arrived on the stream
+        in the defined duration.
 
         Each tuple on the stream appears only in a single batch.
+
+        The number of tuples seen by processing against the
+        returned window may be less than `size` (count or time based)
+        when:
+
+            * the stream is finite, the final batch may contain less tuples than the defined size,
+            * the stream is in a consistent region, drain processing will complete the current batch without waiting for it to batch to reach its nominal size.
+
+        Examples::
+
+            # Create batches against stream s of 100 tuples each
+            w = s.batch(size=100)
+
+        ::
+
+            # Create batches against stream s every five minutes
+            w = s.last(size=datetime.timedelta(minutes=5))
 
         Args:
             size: The size of each batch, either an `int` to define the
@@ -1821,7 +1855,6 @@ class Window(object):
         Returns: 
             Stream: A `Stream` of the returned values of the supplied function.
 
-        
         .. warning::
             In Python 3.5 or later if the stream being aggregated has a
             structured schema that contains a ``blob`` type then any ``blob``

@@ -181,8 +181,9 @@ class Tester(object):
         run for time using :py:meth:`run_for` to ensure the test completes
 
         Two attributes are set in the test case:
-         * test_ctxtype - Context type the test will be run in.
-         * test_config- Test configuration.
+
+            * test_ctxtype - Context type the test will be run in.
+            * test_config- Test configuration.
 
         Args:
             test(unittest.TestCase): Test case to be set up to run tests using Tester
@@ -305,8 +306,9 @@ class Tester(object):
                 `Generating authentication keys for IBM Streams <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.1/com.ibm.streams.cfg.doc/doc/ibminfospherestreams-user-security-authentication-rsa.html>`_
 
         Two attributes are set in the test case:
-         * test_ctxtype - Context type the test will be run in.
-         * test_config - Test configuration.
+
+             * test_ctxtype - Context type the test will be run in.
+             * test_config - Test configuration.
 
         Args:
             test(unittest.TestCase): Test case to be set up to run tests using Tester
@@ -334,14 +336,16 @@ class Tester(object):
         Set up a unittest.TestCase to run tests using Streaming Analytics service on IBM Cloud.
 
         The service to use is defined by:
-         * VCAP_SERVICES environment variable containing `streaming_analytics` entries.
-         * service_name which defaults to the value of STREAMING_ANALYTICS_SERVICE_NAME environment variable.
+
+            * VCAP_SERVICES environment variable containing `streaming_analytics` entries.
+             * service_name which defaults to the value of STREAMING_ANALYTICS_SERVICE_NAME environment variable.
 
         If VCAP_SERVICES is not set or a service name is not defined, then the test is skipped.
 
         Two attributes are set in the test case:
-         * test_ctxtype - Context type the test will be run in.
-         * test_config - Test configuration.
+
+            * test_ctxtype - Context type the test will be run in.
+            * test_config - Test configuration.
 
         Args:
             test(unittest.TestCase): Test case to be set up to run tests using Tester
@@ -525,8 +529,7 @@ class Tester(object):
         The return from `checker` is handled as:
             * ``None`` - The condition requires more tuples to become valid.
             * `true value` - The condition has become valid.
-            * `false value` - The condition has failed. Once a condition has
-                failed it can never become valid.
+            * `false value` - The condition has failed. Once a condition has failed it can never become valid.
 
         Thus `checker` is typically stateful and allows ensuring that
         condition becomes valid from a set of input tuples. For example
@@ -755,7 +758,8 @@ class Tester(object):
             # Supply a default StreamsConnection object with SSL verification disabled, because the default
             # streams server is not shipped with a valid SSL certificate
             self.streams_connection = StreamsConnection(username, password)
-            self.streams_connection.session.verify = False
+            if ConfigParams.SSL_VERIFY in config:
+                self.streams_connection.session.verify = config[ConfigParams.SSL_VERIFY]
             config[ConfigParams.STREAMS_CONNECTION] = self.streams_connection
         sjr = stc.submit(stc.ContextTypes.DISTRIBUTED, self.topology, config)
         self.submission_result = sjr

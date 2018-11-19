@@ -18,13 +18,14 @@ The application to be submitted can be:
 Usage
 *****
 
-::
+.. code-block:: none
 
     streamsx-runner [-h] (--service-name SERVICE_NAME | --create-bundle)
                  (--topology TOPOLOGY | --main-composite MAIN_COMPOSITE | --bundle BUNDLE)
                  [--toolkits TOOLKITS [TOOLKITS ...]] [--job-name JOB_NAME]
                  [--preload] [--trace {error,warn,info,debug,trace}]
                  [--submission-parameters SUBMISSION_PARAMETERS [SUBMISSION_PARAMETERS ...]]
+                 [--job-config-overlays file]
     
     Execute a Streams application using a Streaming Analytics service.
     
@@ -56,6 +57,10 @@ Usage
                             Application trace level
       --submission-parameters SUBMISSION_PARAMETERS [SUBMISSION_PARAMETERS ...], -p SUBMISSION_PARAMETERS [SUBMISSION_PARAMETERS ...]
                             Submission parameters as name=value pairs
+      --job-config-overlays file
+                            Path to file containing job configuration overlays
+                            JSON. Overrides any job configuration set by the
+                            application.
 
 *****************************************
 Submitting to Streaming Analytics service

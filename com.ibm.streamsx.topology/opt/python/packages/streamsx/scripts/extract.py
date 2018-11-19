@@ -558,10 +558,10 @@ def _reset_path(items):
 
 def main(args=None):
     try:
-        streamsx.spl.spl._EXTRACTING.active = True
+        streamsx.spl.spl._EXTRACTING = True
         _extract_from_toolkit(args)
     finally:
-        streamsx.spl.spl._EXTRACTING.active = False
+        streamsx.spl.spl._EXTRACTING = False
 
 if __name__ == '__main__':
     main()

@@ -73,9 +73,11 @@ public class DistributedStreamsContext extends
 		StreamsConnection conn = getConfigConnection(entity);
 		if (conn == null) {
 		    conn = StreamsConnection.createInstance(null, null, null);
-
-			// TODO - allow setting of insecure hosts - for testing now hardcode as false
-			conn.allowInsecureHosts(true);
+		    
+		    if (deploy(entity.submission).has(ContextProperties.SSL_VERIFY)) {		        
+		        Boolean verify = deploy(entity.submission).get(ContextProperties.SSL_VERIFY).getAsBoolean();		        
+		        conn.allowInsecureHosts(!verify);
+		    }
 		}
 
 		String instanceName = System.getenv(Util.STREAMS_INSTANCE_ID);
