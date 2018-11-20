@@ -318,8 +318,9 @@ sub convertAndAddToPythonTupleObject {
 ##
 sub spl_pip_packages {
 
-  my $model = $_[0];
-  my $packages = $_[1];
+  my $pip = $_[0] == 3 ? 'pip3' : 'pip';
+  my $model = $_[1];
+  my $packages = $_[2];
   my $reqFile = $model->getContext()->getToolkitDirectory()."/opt/python/streams/requirements.txt";
 
   my $needPip = @$packages || -r $reqFile;
@@ -332,8 +333,6 @@ sub spl_pip_packages {
 
 # Need pip 9
 # '--upgrade-strategy', 'only-if-needed');
-
-    my $pip = 'pip';
 
     my $rcv2 = `$pip --version`;
     SPL::CodeGen::println("pip version:" . $rcv2);
