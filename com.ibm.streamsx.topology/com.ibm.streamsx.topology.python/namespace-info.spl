@@ -576,7 +576,8 @@ of the toolkit, thus increasing the distribution size of the toolkit.
 # Packages installed by pip at SPL compile time
 
 Python packages can be explictly requested to be installed during the SPL
-compilation using `pip install --user`. The packages are installed locally into
+compilation using `pip3 install --user` (`pip` is used for Python 2.7).
+The packages are installed locally into
 the compliation's output directory, thus becoming part of the
 Streams application bundle (`sab`). The packages will be installed
 from [https://pypi.python.org/pypi|PyPi].
