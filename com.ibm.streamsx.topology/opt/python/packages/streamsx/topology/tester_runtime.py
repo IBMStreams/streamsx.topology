@@ -110,7 +110,6 @@ class _FunctionalCondition(Condition):
         self._fail = True
         if (ec.is_standalone()):
             global _STANDALONE_FAILED
-            print("SETTING CONDITION:", str(self), _STANDALONE_FAILED)
             _STANDALONE_FAILED = True
             raise AssertionError("Condition:{}: FAILED".format(self.name))
 
@@ -145,7 +144,6 @@ class _FunctionalCondition(Condition):
         # Force a non-zero return code in standalone
         # if a condition did not become valid
         global _STANDALONE_FAILED
-        print("CLOSING CONDITION:", str(self), _STANDALONE_FAILED)
         if ec.is_standalone() and not _STANDALONE_FAILED:
             if exc_type is None and not self._valid:
                 raise AssertionError("Condition:{}: NOT VALID.".format(self.name))
