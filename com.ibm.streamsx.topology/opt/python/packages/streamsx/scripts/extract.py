@@ -295,8 +295,8 @@ class _Extractor(object):
          shutil.copy(optemplate + '_h.cgt', os.path.join(opdir, name + '_h.cgt'))
          opmodel_xml = os.path.join(opdir, name + '.xml')
          shutil.copy(optemplate + '.xml', opmodel_xml)
-         replaceTokenInFile(opmodel_xml, "__SPLPY__MAJOR_VERSION__SPLPY__", str(sys.version_info[0]));
-         replaceTokenInFile(opmodel_xml, "__SPLPY__MINOR_VERSION__SPLPY__", str(sys.version_info[1]));
+         replaceTokenInFile(opmodel_xml, "__SPLPY__MAJOR_VERSION__SPLPY__", str(sys.version_info.major));
+         replaceTokenInFile(opmodel_xml, "__SPLPY__MINOR_VERSION__SPLPY__", str(sys.version_info.minor));
          self._create_op_parameters(opmodel_xml, name, funcTuple)
          self._create_op_spldoc(opmodel_xml, name, funcTuple)
          if cgtbase == 'PythonPrimitive':
@@ -397,6 +397,9 @@ class _Extractor(object):
         cfgfile.write('sub splpy_OperatorCallable {\'' + _opcallable(opobj) + "\'}\n")
         cfgfile.write('sub splpy_FunctionName {\'' + opname + "\'}\n")
         cfgfile.write('sub splpy_OperatorType {\'' + _optype(opobj).name + "\'}\n")
+
+        cfgfile.write('sub splpy_PyMajor {' + str(sys.version_info.major) + "}\n")
+        cfgfile.write('sub splpy_PyMinor {' + str(sys.version_info.minor) + "}\n")
         self._write_style_info(cfgfile, opobj)
 
         if hasattr(dynm, 'spl_pip_packages'):

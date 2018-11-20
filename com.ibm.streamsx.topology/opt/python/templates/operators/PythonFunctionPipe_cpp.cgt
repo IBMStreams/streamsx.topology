@@ -16,7 +16,7 @@
  my $paramStyle = splpy_ParamStyle();
  my $fixedParam = splpy_FixedParam();
  my @packages = splpy_Packages();
- spl_pip_packages($model, \@packages);
+ spl_pip_packages(splpy_PyMajor(), $model, \@packages);
  
  my $iport = $model->getInputPortAt(0);
 
