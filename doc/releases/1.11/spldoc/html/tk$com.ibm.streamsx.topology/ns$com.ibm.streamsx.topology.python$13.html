@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="SPL blob handling"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_page"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>SPL blob handling</title>
+</head>
+<body id="spldoc_page">
+
+
+<h1 class="title topictitle1">SPL blob handling</h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.11.6.beta</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$6.html">Creating SPL Operators from Python code</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$12.html">Supported SPL types</a> &gt; SPL blob handling</p>
+
+</div>
+
+
+<div class="section">
+<p class="p">A SPL <tt class="ph tt">blob</tt> value is passed into Python as a <tt class="ph tt">memoryview</tt> object to avoid copying the contents of the value. The <tt class="ph tt">memoryview</tt> object will be released after the callable returns and thus any further use of it will throw a <tt class="ph tt">ValueError</tt>. 
+</p>
+
+<p class="p">Thus if the callable wants to maintain the value after the call it must copy the required information from the <tt class="ph tt">memoryview</tt> before returning.
+</p>
+
+<p class="p">The <tt class="ph tt">memoryview</tt> object may be safely returned by the callable as part of a tuple to be submitted.
+</p>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

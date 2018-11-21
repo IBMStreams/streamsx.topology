@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="Python functions as SPL operators"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_page"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>Python functions as SPL operators</title>
+</head>
+<body id="spldoc_page">
+
+
+<h1 class="title topictitle1">Python functions as SPL operators</h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.11.6.beta</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$6.html">Creating SPL Operators from Python code</a> &gt; Python functions as SPL operators</p>
+
+</div>
+
+
+<div class="section">
+<p class="p">Decorating a Python function creates a stateless SPL operator. In SPL terms this is similar to an SPL Custom operator, where the code in the Python function is the custom code. For operators with input ports the function is called for each input tuple, passing a Python representation of the SPL input tuple. For a SPL source operator the function is called to obtain an iterable whose contents will be submitted to the output stream as SPL tuples.
+</p>
+
+<p class="p">Operator parameters are not supported.
+</p>
+
+<p class="p">An example SPL sink operator that prints each input SPL tuple after its conversion to a Python tuple.
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+@spl.for_each()
+def PrintTuple(*tuple):
+    "Print each tuple to standard out."
+     print(tuple, flush=True)
+</pre>
+
+
+</div>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

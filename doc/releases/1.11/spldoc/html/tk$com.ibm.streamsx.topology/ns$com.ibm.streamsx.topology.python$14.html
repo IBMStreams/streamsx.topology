@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="@spl decorator options"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_page"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>@spl decorator options</title>
+</head>
+<body id="spldoc_page">
+
+
+<h1 class="title topictitle1">@spl decorator options</h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.11.6.beta</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$6.html">Creating SPL Operators from Python code</a> &gt; @spl decorator options</p>
+
+</div>
+
+
+<div class="section">
+<p class="p">@spl decorators support an number of options.
+</p>
+
+<div class="p">
+<ul class="ul">
+<li class="li"> <tt class="ph tt">style</tt> - Parameter passing style.</li>
+
+<li class="li"> <tt class="ph tt">docpy</tt> - Include Python code in operator model for SPLDOC.</li>
+
+</ul>
+
+</div>
+
+<p class="p">Options are passed as parameters to the decorators, for example:
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+# a,b,c will map to the first three attributes in the SPL tuple
+# SPLDOC for f will not include the source code in its description
+
+@spl.map(style='position', docpy=False)
+def f(a, b, c):
+    pass
+</pre>
+
+
+</div>
+
+<p class="p"><strong class="ph b">Note</strong>: For backwards compatibility <tt class="ph tt">@spl.pipe</tt> and <tt class="ph tt">@spl.sink</tt> do <strong class="ph b">not</strong> support these options, defaulting to <em class="ph i">attributes by position</em> and not including Python code in the function.
+</p>
+
+<p class="p"><tt class="ph tt">@spl.ignore</tt> does not accept any options.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle"><tt class="ph tt">style</tt>
+</h2>
+
+<p class="p">Defines how the SPL tuple is passed into the decorated callable.
+</p>
+
+<p class="p">Can be set to:
+</p>
+
+<div class="p">
+<ul class="ul">
+<li class="li"> <tt class="ph tt">'position'</tt> - Pass using <em class="ph i">attributes by position</em>.</li>
+
+<li class="li"> <tt class="ph tt">'name'</tt> - Pass using <em class="ph i">attributes by name</em>.</li>
+
+</ul>
+
+</div>
+
+<p class="p">Defaults to <tt class="ph tt">None</tt>, the passing style is defined by the callable's signature where possible, otherwise <em class="ph i">attributes by name</em> will be used, equivalent to 'name'
+</p>
+
+<p class="p">Passing style <em class="ph i">dictionary</em> is selected by having a callable signature with a single <tt class="ph tt">**kwargs</tt> parameter.
+</p>
+
+<p class="p">Passing style <em class="ph i">tuple</em> is selected by having a callable signature with a single <tt class="ph tt">*args</tt> parameter.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle"><tt class="ph tt">docpy</tt>
+</h2>
+
+<p class="p">Include the Python callable source code in the operator model.
+</p>
+
+<p class="p">Can be set to:
+</p>
+
+<div class="p">
+<ul class="ul">
+<li class="li"> <tt class="ph tt">True</tt> - Include the source code in the operator model, the default.</li>
+
+<li class="li"> <tt class="ph tt">False</tt> - Do not include the source code.</li>
+
+</ul>
+
+</div>
+
+<p class="p">The source code is then included in the operator description when creating SPLDOC for the toolkit using <tt class="ph tt">spl-make-doc</tt>.
+</p>
+
+</div>
+
+</div>
+
+
+</body>
+</html>
