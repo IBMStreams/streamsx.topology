@@ -3,4 +3,4 @@
 # Copyright IBM Corp. 2018
 
 ## Common PEP396 version for modules shipped with streamsx packages
-__version__='1.11.5a'
+__version__='1.11.6b'
