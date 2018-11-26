@@ -51,7 +51,9 @@ class _SourceIterable(streamsx._streams._runtime._WrapOpLogic):
             while True:
                 tuple_ = next(self._it)
                 if tuple_ is not None:
-                     return tuple_
+                    return tuple_
+                elif streamsx.ec.shutdown().is_set():
+                    return None
         except StopIteration:
             self._it = None
             return None

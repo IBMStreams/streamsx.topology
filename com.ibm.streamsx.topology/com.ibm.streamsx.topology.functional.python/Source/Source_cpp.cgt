@@ -87,7 +87,7 @@ void MY_OPERATOR::process(uint32_t idx)
                 // Has the iterator completed?
                 if (SplpyGeneral::isNone(pyReturnVar)) {
                     Py_CLEAR(pyReturnVar);
-                    allDone = true;
+                    allDone = !getPE().getShutdownRequested();
                 } else {
                     submitTuple = true;
 

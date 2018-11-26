@@ -162,6 +162,30 @@ def _check():
     if not _State._state._supported:
         raise NotImplementedError("Access to the execution context requires Streams 4.2 or later")
 
+_SHUTDOWN = threading.Event()
+
+def _prepare_shutdown():
+    _SHUTDOWN.set()
+
+def shutdown():
+    """Return the processing element (PE) shutdown event.
+
+    The event is set when the PE is being shutdown.
+    Can be used in source iterators that need to block by sleeping::
+
+        # Sleep for 60 seconds unless the PE is being shutdown
+        if streamsx.ec.shutdown.wait(60.0):
+            return None
+
+    Code must not call ``set()`` on the returned event.
+
+    Returns:
+        threading.Event: Event object representing PE shutdown.
+    
+    .. versionadded:: 1.11
+    """
+    return _SHUTDOWN
+
 def domain_id():
     """
     Return the instance identifier.

@@ -272,6 +272,8 @@ class _IterableAnyOut(_FunctionalCallable):
                 tuple_ = next(self._it)
                 if not tuple_ is None:
                     return tuple_
+                elif ec.shutdown().is_set():
+                    return None
             except StopIteration:
                 return None
 
