@@ -573,14 +573,14 @@ class Job(_ResourceElement):
             return None
 
     def get_views(self, name=None):
-        """Get the list of :py:class:`View` elements associated with this job.
+        """Get the list of :py:class:`~streamsx.rest_primitives.View` elements associated with this job.
 
         Args:
             name(str, optional): Returns view(s) matching `name`.  `name` can be a regular expression.  If `name`
             is not supplied, then all views associated with this instance are returned.
 
         Returns:
-            list(View): List of views matching `name`.
+            list(streamsx.rest_primitives.View): List of views matching `name`.
 
         Retrieving a list of views that contain the string "temperatureSensor" could be performed as followed
         Example:
@@ -1284,14 +1284,14 @@ class Instance(_ResourceElement):
         return self._get_elements(self.peConnections, 'connections', PEConnection)
 
     def get_views(self, name=None):
-        """Get the list of :py:class:`View` elements associated with this instance.
+        """Get the list of :py:class:`~streamsx.rest_primitives.View` elements associated with this instance.
 
         Args:
             name(str, optional): Returns view(s) matching `name`.  `name` can be a regular expression.  If `name`
             is not supplied, then all views associated with this instance are returned.
 
         Returns:
-            list(View): List of views matching `name`.
+            list(streamsx.rest_primitives.View): List of views matching `name`.
 
         Retrieving a list of views whose name contains the string "temperatureSensor" could be performed as followed
         Example:
