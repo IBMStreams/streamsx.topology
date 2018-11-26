@@ -159,6 +159,8 @@ class SplpyOp {
       */
       void prepareToShutdown() {
           SplpyGIL lock;
+          SplpyGeneral::callVoidFunction(
+               "streamsx.ec", "_prepare_shutdown", NULL, NULL);
           SplpyGeneral::flush_PyErrPyOut();
 
           if (op()->getPE().isStandalone()) {

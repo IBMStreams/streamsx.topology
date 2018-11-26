@@ -81,13 +81,15 @@ void MY_OPERATOR::process(uint32_t idx)
                 Py_CLEAR(pyReturnVar);
                 pyReturnVar = PyObject_CallObject(funcop_->callable(), NULL);
 
-                if (pyReturnVar == NULL)
-                    throw SplpyExceptionInfo::pythonError("source");
- 
-                // Has the iterator completed?
-                if (SplpyGeneral::isNone(pyReturnVar)) {
+                if (pyReturnVar == NULL) {
+                    // Has the iteration completed?
+                    if (PyErr_Occurred() == SplpyErrors::StopIteration)
+                        allDone = true;
+                    else
+                        throw SplpyExceptionInfo::pythonError("source");
+                }
+                else if (SplpyGeneral::isNone(pyReturnVar)) {
                     Py_CLEAR(pyReturnVar);
-                    allDone = true;
                 } else {
                     submitTuple = true;
 

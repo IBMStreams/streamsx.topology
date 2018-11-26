@@ -23,9 +23,11 @@ namespace streamsx { namespace topology {
 class SplpyErrors {
   public:
     static PyObject* ValueError;
+    static PyObject* StopIteration;
 };
 
 PyObject* SplpyErrors::ValueError;
+PyObject* SplpyErrors::StopIteration;
 
 }}
 #endif

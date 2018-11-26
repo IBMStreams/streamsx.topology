@@ -855,8 +855,8 @@ class source(object):
     see :ref:`submit-from-python`.
     
     If the iteration completes then no more tuples
-    are submitted and a final punctuation mark
-    is submitted to the output port.
+    are submitted and a window punctuation mark followed
+    by final punctuation mark are submitted to the output port.
 
     Example definition::
 
@@ -876,6 +876,16 @@ class source(object):
                 stop: 100;
         }
 
+    If ``__iter__`` or ``__next__`` block then shutdown, checkpointing
+    or consistent region processing may be delayed. Having ``__next__``
+    return ``None`` (no available tuples) or tuples to submit
+    will allow such processing to proceed.
+
+    A shutdown ``threading.Event`` is available through
+    :py:func:`streamsx.ec.shutdown` which becomes set when a shutdown
+    of the processing element has been requested. This event my be waited
+    on to perform a sleep that will terminate upon shutdown.
+    
     Args:
        docpy: Copy Python docstrings into SPL operator model for SPLDOC.
 
