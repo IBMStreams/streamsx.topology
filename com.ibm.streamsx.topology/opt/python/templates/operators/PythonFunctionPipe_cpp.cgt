@@ -84,7 +84,7 @@ void MY_OPERATOR::prepareToShutdown()
 }
 
 <%
-  my $no_tuples_action = "";
+  my $call_error_action = "";
 %>
 
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)

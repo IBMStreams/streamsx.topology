@@ -86,6 +86,9 @@ class SplpySetup {
     static void setupErrors(void * pydl) {
         PyObject** ves = (PyObject**) dlsym(pydl, "PyExc_ValueError");
         SplpyErrors::ValueError = *ves;
+
+        ves = (PyObject**) dlsym(pydl, "PyExc_StopIteration");
+        SplpyErrors::StopIteration = *ves;
     }
 
     /*

@@ -13,12 +13,11 @@
     PyObject * pyReturnVar = SplpyGeneral::pyObject_Call(pyop_->callable(), pyTuple, pyDict);
 
     if (pyReturnVar == NULL) {
+        <%=$call_error_action%>
         throw SplpyExceptionInfo::pythonError("<%=$functionName%>");
     }
-
-    if (SplpyGeneral::isNone(pyReturnVar)) {
+    else if (SplpyGeneral::isNone(pyReturnVar)) {
          Py_DECREF(pyReturnVar);
-         <%=$no_tuples_action%>
     } else {
 
          pySubmitTuplesPort<%=$oport->getIndex()%>(pyReturnVar <%=$ituplearg%>);
