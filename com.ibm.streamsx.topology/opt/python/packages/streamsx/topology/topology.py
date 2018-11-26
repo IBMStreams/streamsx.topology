@@ -434,7 +434,17 @@ class Topology(object):
 
         Each tuple is a Python object and must be picklable to allow execution of the application
         to be distributed across available resources in the Streams instance.
-        
+
+        If the iterator's ``__iter__`` or ``__next__`` block then shutdown,
+        checkpointing or consistent region processing may be delayed.
+        Having ``__next__`` return ``None`` (no available tuples) or tuples
+        to submit will allow such processing to proceed.
+
+        A shutdown ``threading.Event`` is available through
+        :py:func:`streamsx.ec.shutdown` which becomes set when a shutdown
+        of the processing element has been requested. This event my be waited
+        on to perform a sleep that will terminate upon shutdown.
+
         Args:
             func(callable): An iterable or a zero-argument callable that returns an iterable of tuples.
             name(str): Name of the stream, defaults to a generated name.

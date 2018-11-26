@@ -46,15 +46,8 @@ class _SourceIterable(streamsx._streams._runtime._WrapOpLogic):
 
     def __call__(self):
         if self._it is None:
-           self._start()
-        try:
-            while True:
-                tuple_ = next(self._it)
-                if tuple_ is not None:
-                     return tuple_
-        except StopIteration:
-            self._it = None
-            return None
+            self._start()
+        return next(self._it)
 
     def __enter__(self):
         self._callable._streamsx_ec_opc = self._streamsx_ec_opc
