@@ -338,7 +338,7 @@ class Tester(object):
         The service to use is defined by:
 
             * VCAP_SERVICES environment variable containing `streaming_analytics` entries.
-             * service_name which defaults to the value of STREAMING_ANALYTICS_SERVICE_NAME environment variable.
+            * service_name which defaults to the value of STREAMING_ANALYTICS_SERVICE_NAME environment variable.
 
         If VCAP_SERVICES is not set or a service name is not defined, then the test is skipped.
 
