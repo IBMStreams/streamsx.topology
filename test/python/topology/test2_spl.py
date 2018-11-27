@@ -19,6 +19,12 @@ import streamsx.spl.toolkit
 import streamsx.spl.types
 from streamsx.spl.types import Timestamp
 
+try:
+    import numpy as np
+except ImportError:
+    np = None
+
+
 def ts_check(tuple_):
     return isinstance(tuple_.ts, Timestamp)
 
@@ -254,6 +260,14 @@ GOOD_DATA = {
     'timestamp': [Timestamp.now(7), datetime.datetime.today()]
 }
 
+if np is not None:
+    GOOD_DATA['int8'].extend([np.int8(93), np.int8(-47)])
+    GOOD_DATA['int8'].extend([np.int8(93), np.int8(-47)])
+    GOOD_DATA['int16'].extend([np.int16(95), np.int16(-4232)])
+    GOOD_DATA['int32'].extend([np.int32(21031), np.int32(-54232)])
+    GOOD_DATA['int64'].extend([np.int64(23214234), np.int32(-4575775)])
+    GOOD_DATA['float32'].extend([np.float32(8.9)])
+    GOOD_DATA['float64'].extend([np.float64(92142.999)])
 
 class TestConversion(unittest.TestCase):
     """ Test conversions of Python values to SPL attributes/types.
@@ -314,14 +328,18 @@ class TestConversion(unittest.TestCase):
 import shutil
 import uuid
 import subprocess
+def _index_tk():
+    si = os.environ['STREAMS_INSTALL']
+    tkl = 'tkl_mc_' + str(uuid.uuid4().hex)
+    this_dir = os.path.dirname(os.path.realpath(__file__))
+    shutil.copytree(os.path.join(this_dir, 'spl_mc'), tkl)
+    ri = subprocess.call([os.path.join(si, 'bin', 'spl-make-toolkit'), '-i', tkl])
+    return ri,tkl
+
 @unittest.skipIf('STREAMS_INSTALL' not in os.environ, 'STREAMS_INSTALL not set')
 class TestMainComposite(unittest.TestCase):
     def test_main_composite(self):
-        si = os.environ['STREAMS_INSTALL']
-        tkl = 'tkl_mc_' + str(uuid.uuid4().hex)
-        this_dir = os.path.dirname(os.path.realpath(__file__))
-        shutil.copytree(os.path.join(this_dir, 'spl_mc'), tkl)
-        ri = subprocess.call([os.path.join(si, 'bin', 'spl-make-toolkit'), '-i', tkl])
+        ri,tkl = _index_tk()
         self.assertEqual(0, ri)
         r = op.main_composite(kind='app::MyMain', toolkits=[tkl])
         self.assertIsInstance(r, tuple)
@@ -330,5 +348,47 @@ class TestMainComposite(unittest.TestCase):
         rc = streamsx.topology.context.submit('BUNDLE', r[0])
         self.assertEqual(0, rc['return_code'])
         shutil.rmtree(tkl)
+        os.remove(rc['bundlePath'])
+        os.remove(rc['jobConfigPath'])
+
+class TestParamTypes(unittest.TestCase):
+    def test_param_types(self):
+        ri,tkl = _index_tk()
+        self.assertEqual(0, ri)
+
+        topo = Topology()
+        streamsx.spl.toolkit.add_toolkit(topo, tkl)
+
+        p = {}
+        p['b'] = False
+        p['u8'] =  streamsx.spl.types.uint8(78)
+        p['u16'] = streamsx.spl.types.uint16(78)
+        p['u32'] = streamsx.spl.types.uint32(78)
+        p['u64'] = streamsx.spl.types.uint64(78)
+        p['i8'] =  streamsx.spl.types.int8(78)
+        p['i16'] = streamsx.spl.types.int16(78)
+        p['i32'] = 78
+        p['i64'] = streamsx.spl.types.int64(78)
+        p['f32'] = streamsx.spl.types.float32(78)
+        p['f64'] = 78.9
+        s = op.Invoke(topo, "testtopo::PT", params = p, name="PY")
+
+        if np is not None:
+            p = {}
+            p['b'] = np.bool_(False)
+            p['u8'] =  np.uint8(78)
+            p['u16'] = np.uint16(78)
+            p['u32'] = np.uint32(78)
+            p['u64'] = np.uint64(78)
+            p['i8'] =  np.int8(78)
+            p['i16'] = np.int16(78)
+            p['i32'] = np.int32(89)
+            p['i64'] = np.int64(78)
+            p['f32'] = np.float32(78.03)
+            p['f64'] = np.float64(78.9)
+            snp = op.Invoke(topo, "testtopo::PT", params = p, name="Numpy")
+
+        rc = streamsx.topology.context.submit('BUNDLE', topo)
+        self.assertEqual(0, rc['return_code'])
         os.remove(rc['bundlePath'])
         os.remove(rc['jobConfigPath'])
