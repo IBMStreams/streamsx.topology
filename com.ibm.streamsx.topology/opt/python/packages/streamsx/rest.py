@@ -104,6 +104,7 @@ class StreamsConnection:
         self.session = self.rest_client.session
         self._analytics_service = False
         self._delegator_impl = None
+        self._domains = None
 
     @property
     def _delegator(self):
@@ -142,7 +143,10 @@ class StreamsConnection:
         Returns:
             :py:obj:`list` of :py:class:`~.rest_primitives.Domain`: List of available domains
         """
-        return self._get_elements('domains', Domain)
+        # Domains are fixed and actually only one per REST api.
+        if self._domains is None:
+            self._domains = self._get_elements('domains', Domain)
+        return self._domains
 
     def get_domain(self, id):
         """Retrieves available domain matching a specific domain ID
