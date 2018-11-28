@@ -453,24 +453,16 @@ class StreamsRestUtils {
      * @return The IAM token URL.
      */
     static String getTokenUrl(JsonObject credentials) {
-        // Default to the well-known Bluemix URL
-        String iamUrl = "https://iam.bluemix.net/oidc/token";
-        // If the REST URL looks like a staging server, construct an IAM URL
-        // in the expected place, eg https://iam.stage1.bluemix.net/oidc/token
-        // If anything goes wrong, we get the default.
+        // Default to the IBM Cloud production URL
+        String iamUrl = "https://iam.cloud.ibm.com/oidc/token";
         if (credentials.has(MEMBER_V2_REST_URL)) {
             try {
                 URL restUrl = new URL(jstring(credentials, MEMBER_V2_REST_URL));
                 String host = restUrl.getHost();
-                int start = host.indexOf(".stage");
-                if (-1 != start) {
-                    String stage = host.substring(start + 1);
-                    int end = stage.indexOf('.');
-                    if (-1 != end) {
-                        iamUrl = "https://iam." + stage.substring(0, end)
-                                + ".bluemix.net/oidc/token";
-                    }
-                }
+                
+                // See if it's a test or staging environment.
+                if (host.endsWith(".test.cloud.ibm.com") || host.matches(".*\\.stage1.*\\.bluemix\\.net"))
+                    iamUrl = "https://iam.test.cloud.ibm.com/oidc/token";              
             } catch (MalformedURLException ignored) {}
         }
         return iamUrl;

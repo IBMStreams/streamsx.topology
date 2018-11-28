@@ -244,9 +244,12 @@ class _IAMStreamsRestClient(_StreamsRestClient):
         # Retrieves a token
         self._auth_expiry_time = -1
 
-        # Determine if service is in stage1
-        if 'stage1' in  self._credentials[_IAMConstants.V2_REST_URL]:
-            self._token_url = _IAMConstants.TOKEN_URL_STAGE1
+        # Determine if service is in production or staging/test
+        v2url = self._credentials[_IAMConstants.V2_REST_URL]
+
+        v2host = parse.urlparse(v2url).hostname
+        if v2host.endswith('test.cloud.ibm.com') or ('stage1' in v2host and v2host.endswith('.bluemix.net')):
+            self._token_url = _IAMConstants.TOKEN_URL_TEST
         else:
             self._token_url = _IAMConstants.TOKEN_URL
 
@@ -1933,14 +1936,12 @@ class _IAMConstants(object):
     GRANT_PARAM = 'grant_type'
     GRANT_TYPE = 'urn:ibm:params:oauth:grant-type:apikey'
 
-    TOKEN_URL = 'https://iam.bluemix.net/oidc/token'
-    """The url from which to receive bearer authentication tokens for Authorizing REST requests on
-    IBM Cloud.
+    TOKEN_URL = 'https://iam.cloud.ibm.com/oidc/token'
+    """The url from which to receive bearer authentication tokens for Authorizing REST requests on production IBM Cloud.
     """
 
-    TOKEN_URL_STAGE1 = 'https://iam.stage1.bluemix.net/oidc/token'
-    """The url from which to receive bearer authentication tokens for Authorizing REST requests on
-    stage1 IBM Cloud.
+    TOKEN_URL_TEST = 'https://iam.test.cloud.ibm.com/oidc/token'
+    """The url from which to receive bearer authentication tokens for Authorizing REST requests on test/staging IBM Cloud.
     """
 
     EXPIRY_PAD_MS = 300000
