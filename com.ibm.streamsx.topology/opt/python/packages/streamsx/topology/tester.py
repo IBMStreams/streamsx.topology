@@ -792,7 +792,7 @@ class Tester(object):
             if self.local_check is not None:
                 self._local_thread.join()
         else:
-            _logger.error ("wait for healthy failed")
+            _logger.error ("Job %s Wait for healthy failed", cc._job_id)
             self.result = cc._end(False, _ConditionChecker._UNHEALTHY)
 
         self.result['submission_result'] = self.submission_result
@@ -877,7 +877,7 @@ class _ConditionChecker(object):
                 self.waits = 0
                 return True
             if ok_ is False: # actually failed
-                _logger.error ("wait for healthy actually failed")
+                _logger.error ("Job %s wait for healthy actually failed", self._job_id)
                 return False
 
             # ok_ is number of ok PEs
@@ -890,7 +890,7 @@ class _ConditionChecker(object):
                 ok_pes = ok_
             time.sleep(self.delay)
         else:
-            _logger.error ("timed out waiting for healthy")
+            _logger.error ("Job %s Timed out waiting for healthy", self._job_id)
 
         return self._check_job_health(verbose=True)
 
@@ -910,7 +910,7 @@ class _ConditionChecker(object):
                 self.waits += 1
             time.sleep(self.delay)
         else:
-            _logger.error("timed out waiting for test to complete")
+            _logger.error("Job %s Timed out waiting for test to complete", self._job_id)
 
         return self._end(False, check)
 
@@ -974,7 +974,7 @@ class _ConditionChecker(object):
         ok_ = self.job.health == 'healthy'
         if not ok_:
             if verbose:
-                _logger.error("Job %s health:%s", self.job.name, self.job.health)
+                _logger.error("Job %s (%s) health:%s", self.job.name, self._job_id, self.job.health)
             if not start:
                 return False
         ok_pes = 0
@@ -984,20 +984,20 @@ class _ConditionChecker(object):
         for pe in pes:
             if pe.launchCount == 0:
                 if verbose:
-                    _logger.warn("PE %s launch count == 0", pe.id)
+                    _logger.warn("Job %s PE %s launch count == 0", self._job_id, pe.id)
                 continue # not a test failure, but not an ok_pe either
             if pe.launchCount > 1:
                 if verbose or start:
-                    _logger.error("PE %s launch count > 1: %s", pe.id, pe.launchCount)
+                    _logger.error("Job %s PE %s launch count > 1: %s", self._job_id, pe.id, pe.launchCount)
                 return False
             if pe.health != 'healthy':
                 if verbose:
-                    _logger.error("PE %s health: %s", pe.id, pe.health)
+                    _logger.error("Job %s PE %s health: %s", self._job_id, pe.id, pe.health)
                 if not start:
                     return False
             else:
                 if verbose:
-                    _logger.info("PE %s health: %s", pe.id, pe.health)
+                    _logger.info("Job %s PE %s health: %s", self._job_id, pe.id, pe.health)
                 ok_pes += 1
         return True if ok_ else ok_pes
 
