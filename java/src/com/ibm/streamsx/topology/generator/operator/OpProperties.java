@@ -29,6 +29,7 @@ public interface OpProperties {
     String LANGUAGE_JAVA = "java";
     String LANGUAGE_CPP = "cpp";
     String LANGUAGE_PYTHON = "python";
+    String LANGUAGE_SCALA = "scala";
     String LANGUAGE_SPL = "spl";
     String LANGUAGE_MARKER = "marker";
     
