@@ -201,9 +201,16 @@ class PEPlacement {
         final JsonPrimitive lowLatencyTag =
             new JsonPrimitive("__spl_lowLatency$" + lowLatencyRegionCount++);
 
-        Set<JsonObject> llStartChildren = getDownstream(llStart, graph);
+        Set<JsonObject> llStartChildren;
+        Set<BVirtualMarker> boundaries;
         
-        Set<BVirtualMarker> boundaries = EnumSet.of(LOW_LATENCY, END_LOW_LATENCY);
+        if (direction == Direction.DOWNSTREAM) {
+            llStartChildren = getDownstream(llStart, graph);
+            boundaries = EnumSet.of(END_LOW_LATENCY);
+        } else {
+            llStartChildren = getUpstream(llStart, graph);
+            boundaries = EnumSet.of(LOW_LATENCY);
+        }
 
         GraphUtilities.visitOnce(
                 new VisitController(direction, boundaries),
@@ -228,7 +235,7 @@ class PEPlacement {
     /**
      * Goes through the graph and looks to merge all colocation tags to a
      * single value for the set of colocated operators.
-     * This resolves the mutliple potential colocate tags
+     * This resolves the multiple potential colocate tags
      * through explicit colocation, isolation and low-latency.
      * Each operator with a colocate directive is left with
      * a single key to a map of tags in the graph config.
@@ -298,8 +305,8 @@ class PEPlacement {
       
          for (Entry<String, JsonElement> entry : tagMaps.entrySet()) {
              JsonObject idInfo = new JsonObject();
-             idInfo.addProperty("parallel", 0);
-             idInfo.addProperty("lowLatency", 0);
+             idInfo.addProperty("parallelUse", 0);
+             idInfo.addProperty("lowLatencyUse", 0);
              colocateIds.add(entry.getValue().getAsString(), idInfo);
          }
     }
@@ -311,10 +318,10 @@ class PEPlacement {
      * composite instance name, otherwise it's absolute.
      */
     void compositeColocateIdUse(JsonObject compositeDefinition) {
-        
-        if (jboolean(compositeDefinition, "lowLatencyComposite"))
+        final boolean lowLatency = jboolean(compositeDefinition, "lowLatencyComposite");
+        if (lowLatency)
             return;
-               
+                       
         Set<String> usedColocateKeys = new HashSet<>();
         operators(compositeDefinition, op -> {
             JsonObject placement = object(op, CONFIG, PLACEMENT);
@@ -336,15 +343,13 @@ class PEPlacement {
         
         final boolean parallel = jboolean(compositeDefinition, "parallelComposite");
         final boolean main = jboolean(compositeDefinition, "__spl_mainComposite");
-        final boolean lowLatency = jboolean(compositeDefinition, "lowLatencyComposite");
+        
         JsonObject colocateIds = object(graph, CONFIG, CFG_COLOCATE_IDS);
         for (String id : usedColocateIds) {
             JsonObject idInfo = colocateIds.getAsJsonObject(id);
             
             if (parallel) 
-                idInfo.addProperty("parallel", idInfo.get("parallel").getAsInt()+1);
-            if (lowLatency)
-                idInfo.addProperty("lowLatency", idInfo.get("lowLatency").getAsInt()+1);
+                idInfo.addProperty("parallelUse", idInfo.get("parallelUse").getAsInt()+1);
             if (main)
                 idInfo.addProperty("main", main);
         }

@@ -695,17 +695,22 @@ class OperatorGenerator {
             StringBuilder sbPlacement = new StringBuilder();
 
             String colocateKey = jstring(placement, OpProperties.PLACEMENT_COLOCATE_KEY);
-            //String colocateKey = colocateTags != null && colocateTags.size() >= 1 ? colocateTags.get(0).getAsString() : null;
-            //String colocateTag = jstring(placement, OpProperties.PLACEMENT_COLOCATE_KEY);
             if (colocateKey != null) {
-                JsonObject mapping = object(graphConfig, CFG_COLOCATE_TAG_MAPPING);               
+                JsonObject mapping = object(graphConfig, CFG_COLOCATE_TAG_MAPPING);  
                 String colocationId = jstring(mapping, colocateKey);               
                 JsonObject colocateIds = object(graphConfig, CFG_COLOCATE_IDS);
                 JsonObject idInfo = object(colocateIds, colocationId);
                 
+                /*
+                 * If a colocate tag is used in the main composite
+                 * then it must be absolute.
+                 * 
+                 * If it is used in multiple parallel composites
+                 * then it must be absolute.
+                 */
                 boolean absoluteColocate = jboolean(idInfo, "main");
                 if (!absoluteColocate) {
-                    int parallel = idInfo.get("parallel").getAsInt();
+                    int parallel = idInfo.get("parallelUse").getAsInt();
                     if (parallel >= 2)
                         absoluteColocate = true;
                 }
