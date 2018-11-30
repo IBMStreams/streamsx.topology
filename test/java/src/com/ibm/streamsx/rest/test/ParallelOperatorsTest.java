@@ -10,8 +10,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
@@ -21,6 +23,7 @@ import org.junit.Test;
 import com.ibm.streamsx.rest.Operator;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 
@@ -57,7 +60,9 @@ public class ParallelOperatorsTest {
             sourceDoubleAgain.invocationName("ZIntegerTransformInteger");
 
             if (helper.testType.equals("DISTRIBUTED")) {
-                helper.jobId = StreamsContextFactory.getStreamsContext(StreamsContext.Type.DISTRIBUTED).submit(topology).get()
+                Map<String,Object> cfg = new HashMap<>();
+                cfg.put(ContextProperties.STREAMS_CONNECTION, helper.connection);
+                helper.jobId = StreamsContextFactory.getStreamsContext(StreamsContext.Type.DISTRIBUTED).submit(topology, cfg).get()
                         .toString();
             } else if (helper.testType.equals("STREAMING_ANALYTICS_SERVICE")) {
                 helper.jobId = StreamsContextFactory.getStreamsContext(StreamsContext.Type.STREAMING_ANALYTICS_SERVICE)

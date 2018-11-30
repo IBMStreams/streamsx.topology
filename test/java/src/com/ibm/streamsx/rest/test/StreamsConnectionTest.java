@@ -14,7 +14,9 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
@@ -36,6 +38,7 @@ import com.ibm.streamsx.rest.ResourceAllocation;
 import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
 import com.ibm.streamsx.topology.function.Function;
@@ -51,6 +54,14 @@ public class StreamsConnectionTest {
 
     public StreamsConnectionTest() {
     }
+    
+    public static boolean sslVerify() {
+        String v = System.getProperty("topology.test.SSLVerify");
+        if (v == null)
+            return true;
+        
+        return Boolean.valueOf(v);
+    }
 
     protected void setupConnection() throws Exception {
         if (connection == null) {
@@ -65,8 +76,8 @@ public class StreamsConnectionTest {
 
             connection = StreamsConnection.createInstance(null, null, null);
 
-            // for localhost, need to disable security
-            connection.allowInsecureHosts(true);
+            if (!sslVerify())
+                connection.allowInsecureHosts(true);
         }
     }
 
@@ -116,6 +127,9 @@ public class StreamsConnectionTest {
 		sourceDoubleAgain.invocationName("ZIntegerTransformInteger");
 
 		if (testType.equals("DISTRIBUTED")) {
+		    Map<String,Object> cfg = new HashMap<>();
+		    cfg.put(ContextProperties.SSL_VERIFY, sslVerify());
+		    
 			jobId = StreamsContextFactory.getStreamsContext(StreamsContext.Type.DISTRIBUTED).submit(topology).get()
 					.toString();
 		} else if (testType.equals("STREAMING_ANALYTICS_SERVICE")) {

@@ -385,8 +385,7 @@
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="${topology.test.showoutput}"
            threads="${topology.test.threads}"
            haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
-       <sysproperty key="topology.test.root" value="${topology.test.root}"/>
-       <sysproperty key="topology.test.resource_dir" file="resources"/>
+       <syspropertyset refid="junit.test.props" />
        <sysproperty key="topology.toolkit.release" value="${topology.toolkit.release}"/>
        <sysproperty key="log4j.configuration" value="${topology.log4j}"/>
 
