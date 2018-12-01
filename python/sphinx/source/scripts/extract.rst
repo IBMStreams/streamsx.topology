@@ -1,3 +1,5 @@
+.. _spl-py-extract:
+
 ##################
 spl-python-extract
 ##################
