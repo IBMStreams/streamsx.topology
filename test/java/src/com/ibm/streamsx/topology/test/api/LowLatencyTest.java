@@ -26,6 +26,7 @@ import org.w3c.dom.Document;
 import com.ibm.streams.operator.PERuntime;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
+import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.function.ToIntFunction;
 import com.ibm.streamsx.topology.function.UnaryOperator;
@@ -75,6 +76,36 @@ public class LowLatencyTest extends TestTopology {
         adlAssertDefaultHostpool(adl);
         adlAssertColocated(adl, false, "R1_A", "R1_B", "R1_C");
         adlAssertColocated(adl, false, "R2_X", "R2_Y", "R2_Z");
+    }
+    
+    @Test
+    public void testMultipleRegionNestedLowLatency() throws Exception{
+        adlOk();
+        
+        Topology topology = newTopology();
+
+        // Construct topology
+        TStream<String> ss = topology.strings("hello")
+                .map(identity()).map(identity());
+        
+        TStream<String> ss1 = ss.map(identity()).invocationName("R1_A").lowLatency();
+        TStream<String> ss2 = ss1
+                .map(identity()).invocationName("R1_B")
+                .map(identity()).invocationName("R1_C")
+                .endLowLatency().map(identity());
+        
+        TStream<String> ss3 = ss2.map(identity()).invocationName("R2_X").lowLatency();
+        ss3.map(identity()).invocationName("R2_Y").map(identity()).invocationName("R2_Z")
+                .lowLatency().map(identity()).invocationName("R2_IA")
+                .map(identity()).invocationName("R2_IB")
+                .endLowLatency()
+            .map(identity()).invocationName("R2_ZZ")
+            .endLowLatency().forEach(tuple->{});
+        
+        Document adl = produceADL(topology);
+        adlAssertDefaultHostpool(adl);
+        adlAssertColocated(adl, false, "R1_A", "R1_B", "R1_C");
+        adlAssertColocated(adl, false, "R2_X", "R2_Y", "R2_Z", "R2_ZZ", "R2_IA", "R2_IB");
     }
     
     @Test
@@ -193,7 +224,6 @@ public class LowLatencyTest extends TestTopology {
         
         final Topology topology = newTopology();
         final Tester tester = topology.getTester();
-        // getConfig().put(ContextProperties.KEEP_ARTIFACTS, true);
         
         String[] s1Strs = {"a"};
         TStream<String> s1 = topology.strings(s1Strs);
@@ -202,17 +232,17 @@ public class LowLatencyTest extends TestTopology {
                 s1
                 .isolate()
                 .lowLatency()
-                    .modify(getContainerIdAppend())
+                    .modify(getContainerIdAppend()).invocationName("OuterStart")
                     .lowLatency()
-                        .modify(getContainerIdAppend())
+                        .modify(getContainerIdAppend()).invocationName("Inner")
                     .endLowLatency()
-                    .modify(getContainerIdAppend())
+                    .modify(getContainerIdAppend()).invocationName("OuterEnd")
                 .endLowLatency()
                 ;
         
         s2 = s2.filter(v -> true);
         
-        TStream<String> ids = s2.flatMap(v -> getContainerIds(v));
+        TStream<String> ids = s2.flatMap(v -> getContainerIds(v)).invocationName("Flatten");
         ids = TestTopology.uniqueValues(ids);
         
         Condition<Long> uCount = tester.tupleCount(s2, 1);
