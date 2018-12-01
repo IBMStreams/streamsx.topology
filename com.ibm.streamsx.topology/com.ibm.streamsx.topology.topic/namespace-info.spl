@@ -91,8 +91,8 @@
  * streams and `Topology.subscribe(topic)` to subscribe to published
  * streams.
  *
- * Python only supports publishing and subscribing to streams
- * containing Python, [com.ibm.streamsx.topology::Json|JSON]
+ * Python supports publishing and subscribing to streams
+ * containing Python, SPL (structured) schemas, [com.ibm.streamsx.topology::Json|JSON]
  * or [com.ibm.streamsx.topology::String|String] objects.
 igy
  *
@@ -105,12 +105,13 @@ igy
  *   * SPL : SPL schema of the stream.
  *   * Java : [../../javadoc/com/ibm/streamsx/topology/spl/SPLStream.html|SPLStream] with a schema matching the SPL schema.
  *   * Scala : `com.ibm.streamsx.topology.spl.SPLStream` with a schema matching the SPL schema.
+ *   * Python: `streamsx.topology.schema.StreamSchema` matching the SPL schema. Tuples are `dict`, `tuple` or namedtuple objects.
  * * JSON tuples
  *   * SPL : [com.ibm.streamsx.topology::Json]  
  *   * Java: `TStream<JSONObject>`.
        See [../../javadoc/com/ibm/streamsx/topology/json/package-summary.html#package_description|com.ibm.streamsx.topology.json].
  *   * Scala: `TStream\[JSONObject\]`
- *   * Python: `schema.CommonSchema.Json` - Tuples are Python dictionary objects converted to from JSON using `json.loads` and `json.dumps`.
+ *   * Python: `schema.CommonSchema.Json` - Tuples are Python `dict` objects converted to from JSON using `json.loads` and `json.dumps`.
  * * String tuples
  *   * SPL : [com.ibm.streamsx.topology::String]
  *   * Java: `TStream<String>`
@@ -119,7 +120,7 @@ igy
  * * XML tuples
  *   * SPL : [com.ibm.streamsx.topology::XML]
  *   * Java: `TStream<com.ibm.streams.operator.types.XML>`
- *   * Java: `TStream\[com.ibm.streams.operator.types.XML\]`
+ *   * Scala: `TStream\[com.ibm.streams.operator.types.XML\]`
  * * Binary tuples
  *   * SPL : [com.ibm.streamsx.topology::Blob]
  *   * Java: `TStream<com.ibm.streams.operator.types.Blob>`
