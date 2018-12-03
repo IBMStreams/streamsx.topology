@@ -2,6 +2,23 @@
 IBM Streams Python setup
 ########################
 
+.. warning::
+   When using the `streamsx` package ensure that the evironment variable
+   ``PYTHONPATH`` does **not** include a path ending with
+   ``com.ibm.streamsx.topology/opt/python/packages``.
+   The IBM Streams environment configuration script ``streamsprofile.sh``
+   modifies or sets ``PYTHONPATH`` to include the Python support
+   from the SPL topology toolkit shipped with the product. This was to
+   support Python before the `streamsx` package was available. The
+   recommendation is to unset ``PYTHONPATH`` or modify it not to
+   include the path to the topology toolkit.
+
+.. note::
+   The `streamsx` package is self-contained and does not depend on any
+   SPL topology toolkit (``com.ibm.streamsx.topology``) installed
+   under ``$STREAMS_INSTALL/toolkits`` or on the SPL compiler's (``sc``)
+   toolkit path. This is true at SPL compilation time and runtime.
+
 ***************************
 Streaming Analytics service
 ***************************
