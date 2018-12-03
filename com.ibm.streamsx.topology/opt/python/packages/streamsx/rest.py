@@ -84,6 +84,7 @@ class StreamsConnection:
     """
     def __init__(self, username=None, password=None, resource_url=None):
         """specify username, password, and resource_url"""
+        streamsx._streams._version._mismatch_check(__name__)
         if username and password:
             # resource URL can be obtained via streamtool geturl or REST call
             pass
@@ -224,6 +225,7 @@ class StreamingAnalyticsConnection(StreamsConnection):
     .. seealso: :ref:`sas-access`
     """
     def __init__(self, vcap_services=None, service_name=None):
+        streamsx._streams._version._mismatch_check(__name__)
         self.service_name = service_name or os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME')
         self.credentials = _get_credentials(_get_vcap_services(vcap_services), self.service_name)
         self._resource_url = None

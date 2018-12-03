@@ -43,6 +43,7 @@ def submit(args=None):
     """ Performs the submit according to arguments and
     returns an object describing the result.
     """
+    streamsx._streams._version._mismatch_check('streamsx.topology.context')
     cmd_args = _parse_args(args)
     if cmd_args.topology is not None:
         app = _get_topology_app(cmd_args)

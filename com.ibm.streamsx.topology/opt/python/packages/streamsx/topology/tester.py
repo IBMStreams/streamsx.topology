@@ -151,6 +151,7 @@ class Tester(object):
 
     @staticmethod
     def _log_env(test, verbose):
+        streamsx._streams._version._mismatch_check(__name__)
         if verbose:
             _logger.propogate = False
             _logger.setLevel(logging.DEBUG)

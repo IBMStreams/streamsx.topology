@@ -560,6 +560,7 @@ def _reset_path(items):
         sys.path.remove(p)
 
 def main(args=None):
+    streamsx._streams._version._mismatch_check('streamsx.spl.spl')
     try:
         streamsx.spl.spl._EXTRACTING = True
         _extract_from_toolkit(args)
