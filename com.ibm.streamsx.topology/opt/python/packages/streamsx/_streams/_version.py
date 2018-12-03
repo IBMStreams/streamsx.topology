@@ -17,7 +17,7 @@ import warnings
 def _mismatch_check(module_name):
     srp = pkg_resources.working_set.find(pkg_resources.Requirement.parse('streamsx'))
     if srp is None or not srp.has_version():
-        spv = __version__
+        spv = pkg_resources.parse_version(__version__)
     else:
         spv = srp.parsed_version
 
