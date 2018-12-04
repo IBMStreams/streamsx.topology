@@ -392,3 +392,4 @@ class TestParamTypes(unittest.TestCase):
         self.assertEqual(0, rc['return_code'])
         os.remove(rc['bundlePath'])
         os.remove(rc['jobConfigPath'])
+        shutil.rmtree(tkl)
