@@ -259,6 +259,10 @@
   -->
   <property name="topology.test.base.pattern" value="**/*Test.java"/>
 
+  <propertyset id="junit.test.props">
+      <propertyref prefix="topology.test."/>
+ </propertyset>
+
   <target name="unittest.base" depends="unittest.base.scala">
     <echo message="topology.samples.jar=${topology.samples.jar}"/>
      <mkdir dir="${test.dir}"/>
@@ -275,12 +279,7 @@
            haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
        <env key="STREAMS_INSTALL" value="${streams.install}"/>
        <env key="PYTHONHOME" value="${topology.test.python.prefix}"/>
-       <sysproperty key="topology.test.root" value="${topology.test.root}"/>
-       <sysproperty key="topology.test.type" value="${topology.test.type}"/>
-       <sysproperty key="topology.test.sc_ok" value="${topology.test.sc_ok}"/>
-       <sysproperty key="topology.test.perf_ok" value="${topology.test.perf_ok}"/>
-       <sysproperty key="topology.test.resource_dir" file="resources"/>
-       <sysproperty key="topology.test.python" value="${topology.test.python}"/>
+       <syspropertyset refid="junit.test.props" />
        <sysproperty key="topology.toolkit.release" value="${topology.toolkit.release}"/>
        <sysproperty key="topology.install.compile" value="${topology.install.compile}"/>
        <sysproperty key="log4j.configuration" value="${topology.log4j}"/>
@@ -303,10 +302,7 @@
            threads="${topology.test.threads}"
            haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
        <env key="STREAMS_INSTALL" value="${streams.install}"/>
-       <sysproperty key="topology.test.root" value="${topology.test.root}"/>
-       <sysproperty key="topology.test.type" value="${topology.test.type}"/>
-       <sysproperty key="topology.test.sc_ok" value="${topology.test.sc_ok}"/>
-       <sysproperty key="topology.test.perf_ok" value="${topology.test.perf_ok}"/>
+       <syspropertyset refid="junit.test.props" />
        <sysproperty key="topology.install.compile" value="${topology.install.compile}"/>
        <sysproperty key="log4j.configuration" value="${topology.log4j}"/>
 
@@ -389,8 +385,7 @@
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="${topology.test.showoutput}"
            threads="${topology.test.threads}"
            haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
-       <sysproperty key="topology.test.root" value="${topology.test.root}"/>
-       <sysproperty key="topology.test.resource_dir" file="resources"/>
+       <syspropertyset refid="junit.test.props" />
        <sysproperty key="topology.toolkit.release" value="${topology.toolkit.release}"/>
        <sysproperty key="log4j.configuration" value="${topology.log4j}"/>
 

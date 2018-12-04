@@ -1,33 +1,59 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015, 2017 
+# Copyright IBM Corp. 2015, 2018
  */
 
 /**
 
-Support for Python in IBM Streams.
-
 # Python Support
 
-+ Python Application API
+Support for Python with IBM Streams.
+
+Python is integrated with IBM Streams for:
+
+* Building complete streaming applications in Python
+* Implementing SPL primitive operators in Python
+* Using the IBM Streams and Streaming Analytics REST APIs from Python
+
+Python developers are recommended to install the latest version
+of the *streamsx* package from [https://pypi.org/project/streamsx/ | pypi.org].
+
+Python support is also available from this toolkit by including
+the path *toolkit location*`/com.ibm.streamsx.topology/opt/python/packages`
+in the `PYTHONPATH` environment variable. This is setup automatically
+by `streamsprofile.sh` to the product version of this toolkit
+under `$STREAMS_INSTALL/toolkits`.
+
+**Note:** If you are using the *streamsx* package or a different version
+to the product install version then you **must** remove the path to
+the product version from `PYTHONPATH`.
+
+Python support is documented through Sphinx documentation generated
+from the Python code available at:
+
+* `doc/pythondoc/index.html` - in this toolkit.
+* [https://ibmstreams.github.io/streamsx.topology/doc/releases/latest/pythondoc/index.html|streamsx documentation] - at *GitHub*.
+* [https://streamsxtopology.readthedocs.io|streamsx documentation] - at *Read the Docs*.
+
+The following SPLDOC documentation provides an overview for the Python topology API and SPL specific details for SPL Python primitive operators.
+
++ Python Topology API
 Develop IBM Streams applications with Python.
 
 # Overview
 
 A functional api to develop streaming applications for IBM Streams
 using Python. Streams are defined, transformed and sinked (terminated)
-using Python functions. The return of a function determines the
-content of the stream. Tuples on a stream are Python objects,
-a stream may contain different types of objects.
+using Python callables. The return of a callable determines the
+content of the stream. Tuples on a stream are Python objects or structured SPL tuples, object streams may contain different types of objects.
 
-# Prerequites
+# Prerequisites
 
-* Install and configure IBM Streams Version 4.0.1 (or later).
-* Install Python
-  * Either install Anaconda 3.5 - this is the easiest option. When running distributed the Streams instance application environment variable `PYTHONHOME` must be set to the install location.
-  * or install CPython 3.5.0 (or later). This is more involved and usually requires building Python from source code.
-* Download and extract the IBM Streams Topology Toolkit, which includes the Python Application API.
-*  Include the fully qualified path of the `com.ibm.streamsx.topology/opt/python/packages` directory in the PYTHONPATH environment variable.
+* IBM Streams Version 4.2 (or later).
+* Python 2.7, 3.5 or 3.6
+  * Either install Anaconda or Miniconda - this are the easiest options. When running distributed the Streams instance application environment variable `PYTHONHOME` must be set to the install location.
+  * or install CPython. This is more involved and usually requires building Python from source code.
+  * Python 3.5 is required when using the Streaming Analytics service on IBM Cloud.
 
 # HelloWorld Application
 
@@ -38,23 +64,18 @@ Example code that builds and then submits a Hello World topology.
     import streamsx.topology.context
 
     topo = Topology("HelloWorld")
-    hw = topo.source(mymodule.hello_world)
-    hw.sink(print)
+    hw = topo.source(['hello', 'world', 2018])
+    hw.for_each(print)
     streamsx.topology.context.submit("STANDALONE", topo.graph)
 
-The `source` function is passed a callable that returns an `Iterable`, in
-this case `mymodule.hello_world`.
+The `source` function is passed a callable that returns an `Iterable` or an `Iterable`, in a `list` of two strings and a number.
 
+SPL runtime will create an iterator from source's iterable. Then each value returned from the iterator will be sent on the stream.
 
-    def hello_world() :
-        return ["Hello", "World!"]
+The `for_each` function is passed a callable that will be called for each tuple
+on the stream, in this case the builtin `print` function (Python 3).
 
-The callable will be called when the application starts, and the SPL runtime will create an iterator from the returned value. Then each value returned from the iterator will be sent on the stream.
-
-The `sink` function is passed a callable that will be called for each tuple
-on the stream, in this case the builtin `print` function.
-
-# User-supplied functions to operations
+# User-supplied callables to operations
 
 Operations such as `source` and `sink` accept a callable as input.  The callable must be one of the following:
   * the name of a built-in function
@@ -67,244 +88,24 @@ The modules containing the callables, along with third-party libraries required 
 * Dependent native libaries outside of the package directory are not copied into the bundle
 
 Limitations on callable inputs to operations:
-* Callables must be defined in a module file.
-* Callables must not be dynamically created nor anonymous.
-* Callables must not be defined in the `__main__` module.  They must be defined in a separate module.
 * Importing modules that contain user-defined functions with importlib is unsupported.  The PYTHONPATH or sys.path must contain the directory where modules to import are located.
 * Importing modules that contain user-defined functions from zip/egg/wheel files is unsupported.
 
-To avoid name conflicts, do not create modules with the same name as 
-* `streamsx` which is used by the Python Application API
-* built-in or standard library module names
+# Microservices
 
-++ Python Application API functions 
+Python applications can publish streams and subscribe to streams from other
+applications running in the same IBM Streams instance. These allows interchange
+of streaming data from applications implemented in any language supported by IBM Streams.
 
-Functions to create topologies and streams.
+See [namespace:com.ibm.streamsx.topology.topic] for more details.
 
-* `source(self, func)` function on `Topology`
+++ Python documentation links
 
-  Fetches information from an external system and presents that information as a stream.
-  Takes a zero-argument callable that returns an iterable of tuples.
-  Each tuple that is not None from the iterator returned
-  from iter(func()) is present on the returned stream.
+* `doc/pythondoc/streamsx.topology.html#module-streamsx.topology` - in this toolkit.
+* [https://ibmstreams.github.io/streamsx.topology/doc/releases/latest/pythondoc/streamsx.topology.html#module-streamsx.topology|module streamsx.topology] - at *GitHub*.
+* [https://streamsxtopology.readthedocs.io/en/stable/streamsx.topology.html#module-streamsx.topology|module streamsx.topology] - at *Read the Docs*.
 
-  param `func`: A zero-argument callable that returns an iterable of tuples.
-  A tuple is represented as a Python object that must be picklable.
-
-  return: A Stream whose tuples are the result of the output obtained by invoking the provided callable.
-
-* `subscribe(self, topic, schema=CommonSchema.Python)` function on `Topology`
-
-  Subscribe to a topic published by IBM Streams applications.
-  A Streams application may publish a stream to allow other
-  applications to subscribe to it. A subscriber matches a
-  publisher if the topic and schema match.
-
-  schema defaults to `CommonSchema.Python` which subscribes to streams
-  published by Python applications where the stream contains Python objects.
-
-  Setting schema to `CommonSchema.Json` subscribes to streams of
-  JSON objects published by IBM Streams applications. JSON is used
-  as a common interchange format between all languages supported
-  by IBM Streams, including SPL, Java, Scala and Python.
-
-  Setting schema to `CommonSchema.String` subscribes to streams of
-  strings published by IBM Streams applications. String is used
-  as a common interchange format between all languages supported
-  by IBM Streams, including SPL, Java, Scala and Python.
-
-  Setting schema to any other SPL schema subscribes to streams
-  with the matching SPL tuple type published by IBM Streams applications.
-  In general this will be SPL applications though Java and Scala applications
-  can publish streams with an SPL schema.  In Python tuples will
-  be transformed into a Python dictionary object (based on the schema).
-  Each tuple attribute will be converted into an appropriate Python type and added to the 
-  Python dictionary object using the name of the attribute as the dictionary key value. 
-
-  Supported SPL types and resultant Python types are: 
-    int8,int16,int32,int64 : int
-    uint8,uint16,uint32,uint64 : int
-    float32,float64 : float
-    complex32,complex64 : complex
-    rstring : str
-    ustring : str
-    boolean : bool
-    timestamp : streamsx.spl.type.Timestamp
-    decimal32,decimal64,decimal128 : decimal.Decimal
-    list : list
-    set : set
-    map : dictionary
-
-  See [namespace:com.ibm.streamsx.topology.topic] for more details.
-
-  param `topic`: Topic to subscribe to.
-  param `schema`: Schema to subscriber to. Defaults to CommonSchema.Python representing Python objects.
-  return: A Stream whose tuples have been published to the topic by IBM Streams applications.
-
-* `sink(self, func)` function on `Stream`
-
-  Sends information as a stream to an external system.
-  Takes a user provided callable that does not return a value.
-
-  param `func`: A callable that takes a single parameter for the tuple and returns None.
-  The callable is invoked for each incoming tuple.  
-  
-  return: None
-        
-* `filter(self, func)` function on `Stream`
-
-  Filters tuples from a stream using the supplied callable `func`.
-  For each tuple on the stream the callable is called passing
-  the tuple, if the callable return evalulates to true the
-  tuple will be present on the returned stream, otherwise
-  the tuple is filtered out.
-  
-  param `func`: A callable that takes a single parameter for the tuple, and returns True or False.
-  If True, the tuple is included on the returned stream.  If False, the tuple is filtered out.
-  The callable is invoked for each incoming tuple.
-  
-  return: A Stream containing tuples that have not been filtered out.
-  
-* `transform(self, func)` or `map(self, func)` function on `Stream`
-
-  Transforms each tuple from this stream into 0 or 1 tuples using the supplied callable `func`.
-  For each tuple on this stream, the returned stream will contain a tuple
-  that is the result of the callable when the return is not None.
-  If the callable returns None then no tuple is submitted to the returned 
-  stream.
- 
-  param `func`: A callable that takes a single parameter for the tuple, and returns a tuple or None.
-  The callable is invoked for each incoming tuple.
- 
-  return: A Stream containing transformed tuples.
-  
-* `multi_transform(self, func)` or `flat_map(self, func)` function on `Stream`
-
-  Transforms each tuple from this stream into 0 or more tuples using the supplied callable `func`. 
-  For each tuple on this stream, the returned stream will contain all non-None tuples from
-  the iterable.
-  Tuples will be added to the returned stream in the order the iterable
-  returns them.
-  If the return is None or an empty iterable then no tuples are added to
-  the returned stream.
-
-  param `func`: A callable that takes a single parameter for the tuple, and returns an iterable of tuples or None.
-  The callable must return an iterable or None, otherwise a TypeError is raised.
-  The callable is invoked for each incoming tuple.
-
-  return: A Stream containing transformed tuples.
-  
-* `isolate(self)` function on `Stream`
-
-  Guarantees that the upstream operation will run in a separate process from the downstream operation when 
-  the application is executed in distributed mode.
-  
-  return: Stream
-  
-* `low_latency(self)` function on `Stream`
-
-  The function is guaranteed to run in the same process as the
-  upstream Stream function. All streams that are created from the returned stream 
-  are also guaranteed to run in the same process until end_low_latency() 
-  is called.
-  
-  return: Stream
-  
-* `end_low_latency(self)` function on `Stream`
-
-  Returns a Stream that is no longer guaranteed to run in the same process
-  as the calling stream.
-  
-  return: Stream
-
-* `union(self, streamSet)` function on `Stream`
-
-  The Union operator merges the outputs of the streams in the set into a single stream.
-  
-  param `streamSet` - Set of streams outputs to merge
-  
-  returns: Stream
-        
-* `parallel(self, width, routing=None, func=None)` function on `Stream`
-
-  Parallelizes the stream into `width` parallel channels.
-  Tuples are routed to parallel channels such that an even distribution is maintained.
-  Each parallel channel can be thought of as being assigned its own thread.
-  As such, each parallelized stream function are separate instances and operate independently from one another.
-  
-  `parallel` will only parallelize the stream operations performed after the call to `parallel` and before the call to `end_parallel`
-  
-  Parallel regions aren't required to have an output stream, and thus may be used as sinks.
-  In other words, a parallel sink is created by calling `parallel` and creating a sink operation.
-  It is not necessary to invoke `end_parallel` on parallel sinks.
-  
-  Nested parallelism is not currently supported.
-  A call to `parallel` should never be made immediately after another call to `parallel` without having an `end_parallel` in between.
-  
-  Every call to `end_parallel` must have a call to `parallel` preceding it.
-     
-  param `width`: degree of parallelism
-
-  param: `routing` - denotes what type of tuple routing to use. 
-  * ROUND_ROBIN: delivers tuples in round robin fashion to downstream operators (Default)
-  * HASH_PARTIONED: delivers to downstream operators based on the hash of the tuples being sent or if a function is provided the function will be called to provide the hash
-  
-  param: `func` - (Optional) Function called when HASH_PARTIONED routing is specified. The function provides an int32 value to be used as the hash that determines the tuple routing to downstream operators
-  
-  return: Stream whose subsequent processing will occur on `width` channels.
-        
-* `end_parallel(self)` function on `Stream`
-
-  Ends a parallel region by merging the channels into a single stream
-  
-  return: A Stream for which subsequent transformations are no longer parallelized
-
-* `publish(self, topic, schema=schema.CommonSchema.Python)` function on `Stream`
-
-  Publish this stream on a topic for IBM Streams applications to subscribe to.
-  A Streams application may publish a stream to allow other
-  applications to subscribe to it. A subscriber matches a
-  publisher if the topic and schema match.
-
-  schema defaults to `CommonSchema.Python` which publishes 
-  the stream as Python objects.
-
-  Setting schema to `CommonSchema.Json` publishes the stream
-  as JSON objects. Each tuple (a Python object) is converted using
-  `json.dumps`. Note that each tuple object ype on the stream must
-  be able to be converted to JSON.
-  JSON is used as a common interchange format between all languages supported
-  by IBM Streams, including SPL, Java, Scala and Python.
-
-  Setting schema to `CommonSchema.String` publishes the stream
-  as strings. Each tuple (a Python object) is converted using
-  `str()`.
-  String is used as a common interchange format between all languages supported
-  by IBM Streams, including SPL, Java, Scala and Python.
-
-  See [namespace:com.ibm.streamsx.topology.topic] for more details.
-
-  param `topic`: Topic to publish this stream to.
-  param: `schema`: Schema to publish. Defaults to CommonSchema.Python representing Python objects.
-
-  return: None
-
-* `autonomous(self)` function on `Stream`
-  Starts an autonomous region for downstream processing.
-  By default IBM Streams processing is executed in an autonomous region
-  where any checkpointing of operator state is autonomous (independent)
-  of other operators.
-  
-  This function may be used to end a consistent region by starting an
-  autonomous region. This may be called even if this stream is in
-  an autonomous region.
-  
-  Autonomous is not applicable when a topology is submitted
-  to a STANDALONE contexts and will be ignored.
-  
-  Supported since v1.5
-  
-++ Sample Application
+++ Sample application
 
 Example code that builds and then submits a simple topology.
 
@@ -314,8 +115,8 @@ Example code that builds and then submits a simple topology.
 
     topo = Topology("transform_sample")
     source = topo.source(transform_sample_functions.int_strings_transform)
-    i1 = source.transform(transform_sample_functions.string_to_int)
-    i2 = i1.transform(transform_sample_functions.AddNum(17))
+    i1 = source.map(lambda tuple_ : int(tuple_))
+    i2 = i1.map(transform_sample_functions.AddNum(17))
     i2.print()
     streamsx.topology.context.submit("STANDALONE", topo.graph)
 
@@ -325,13 +126,10 @@ this case `transform_sample_functions.int_strings_transform`.
     def int_strings_transform():
         return ["325", "457", "9325"]
 
-The first `transform` function is passed a function that returns an integer
-converted from the string object, in this case `transform_sample_functions.string_to_int`.
+The first `map` function is passed a function that returns an integer
+converted from the string object, in this case a lambda expression.
 
-    def string_to_int(t):
-        return int(t)
-
-The second `transform` function is passed an instance of a callable class that adds 17 to the integer,
+The second `map` function is passed an instance of a callable class that adds 17 to the integer,
 in this case `transform_sample_functions.AddNum(17)`.
 
     class AddNum:
@@ -352,94 +150,11 @@ Sample output:
     474
     9342
 
-++ Context Types
-
-Only submission using `DISTRIBUTED`, `BUNDLE` and `STANDALONE` context type are supported.
-* `DISTRIBUTED` converts the application to an SPL graph, compiles it and submits it as a Streams application bundle to a Streams instance. The bundle is submitted using `streamtool` which must be setup to submit without requiring authentication input.
-* `BUNDLE` converts the application to an SPL graph and compiles it, producing a SPL application bundle (.sab file).  The application is executed separately by submitting the bundle to an IBM Streams instance as a distributed application.  A bundle can be submitted to an IBM Streams instance using `streamtool submitjob`, the IBM Streams Console, or IBM Streams JMX API.
-* `STANDALONE` converts the application to an SPL graph, compiles it and executes it as an IBM Streams standalone application.  The standalone execution is spawned as a separate process.
-
-++ MQTT support
-Publishing and subscribing to an MQTT broker.
-
- A simple connector to a MQTT broker for publishing
- string tuples to MQTT topics, and
- subscribing to MQTT topics and creating streams.
- 
-* `MqttStreams(self, config)` MQTT Connector 
-
-A connector is for a specific MQTT Broker as specified in
-the configuration object config. Any number of  publish()and  subscribe()
-connections may be created from a single MqttStreams connector.
-
-* `publish(self, pub_stream, topic)` function on MQTT Conector
-
-  Publish this stream (pub_stream) on a topic to an MQTT server for applications to subscribe to.
-  A Streams application may publish a stream to an MQTT server to allow other
-  applications to subscribe to it. A subscriber matches a
-  publisher if the topics and server URI match.  The schema of the stream to publish must be tuple<rstring message>
-
-  param: `pub_stream`: Stream to publish to MQTT server.
-  param `topic`: Topic to publish this stream to.
-
-
-  return: None
-  
-* `subscribe(self, topic)` function on MQTT Conector
-
-  Subscribe to a topic published to a MQTT server.
-  A Streams application may subscribe to a stream published to a MQTT server. 
-  A subscriber matches a publisher if the topic matches.
-  The schema of the stream returned from the MQTT server is tuple<rstring message>
-
-
-  param `topic`: Topic to subscribe to.
-  return: A Stream whose tuples have been published to the topic on a MQTT server.  
-
-# Sample use:
-
-	topo = Topology("An MQTT application")
-	// optionally, define configuration information
-	config = {}
-	config['clientID'] = "test_MQTTpublishClient"
-	config['defaultQOS'] = 1  (needs to be int vs long)
-	config['qos'] = int("1") #(needs to be int vs long)
-	config['keepAliveInterval'] = int(20) (needs to be int vs long)
-	config['commandTimeoutMsec'] = 30000 (needs to be int vs long)
-	config['reconnectDelayMsec'] = 5000 (needs to be int vs long)
-	config['receiveBufferSize'] = 10 (needs to be int vs long)
-	config['reconnectionBound'] = int(20)
-	config['retain'] = True 
-	config['password'] = "mypw"
-	config['trustStore'] = "/tmp/no-such-trustStore"
-	config['trustStorePassword'] = "trustpw"
-	config['keyStore'] = "/tmp/no-such-keyStore"
-	config['keyStorePassword'] = "keypw"
-
-	// create the connector's configuration property map
-	config['serverURI'] = "tcp://localhost:1883"
-	config['userID'] = "user1id"
-	config[' password'] = "user1passwrd"
-	
-	// create the connector
-	mqstream = MqttStreams(topo,config)
-	
-	// publish a python source stream to the topic "python.topic1"
-	topic = "python.topic1"
-	src = topo.source(test_functions.mqtt_publish)
-	mqstream.publish(src, topic) 
-	streamsx.topology.context.submit("BUNDLE", topo.graph)
-		
-	 # // subscribe to the topic "python.topic1"
-	topic = ["python.topic1", ]
-	mqs = mqstream.subscribe(topic) 
-	mqs.print()
-
 + Creating SPL Operators from Python code
 SPL operators that call a Python function or callable class are created by
 decorators provided by this toolkit.
 
-`bin/spl-python-extract.py` is a Python script that creates SPL operators from
+`spl-python-extract` is a Python script that creates SPL operators from
 Python functions and classes contained in modules in a toolkit.
 The resulting operators embed the Python runtime to
 allow stream processing using Python.
@@ -448,8 +163,7 @@ To create SPL operators from Python functions or classes one or more Python
 modules are created in the `opt/python/streams` directory
 of an SPL toolkit.
 
-Each module must import the `streamsx.spl`
-package which is located in the `opt/packages` directory of this toolkit.
+Each module must import the `streamsx.spl` package.
 It contains the decorators use to create SPL operators from Python functions.
 The module must also define a function `spl_namespace` that returns a string
 containing the SPL namespace the operators for that module will be placed in.
@@ -477,7 +191,7 @@ Any Python docstring for the function or class is copied into the SPL operator's
 Functions or classes in the modules that are not decorated, decorated with `@spl.ignore` or start with `spl` are ignored and will not result in any SPL operator.
 
 ++ Python classes as SPL operators
-Decorating a Python class creates a stateful SPL operator
+Decorating a Python *class* creates a stateful SPL operator
 where the instance fields of the class are the operator's state. An instance
 of the class is created when the SPL operator invocation is initialized
 at SPL runtime. The instance of the Python class is private to the SPL
@@ -534,7 +248,7 @@ or both operator parameters can be set:
     }
 
 ++ Python functions as SPL operators
-Decorating a Python function creates a stateless SPL operator.
+Decorating a Python *function* creates a stateless SPL operator.
 In SPL terms this is similar to an SPL Custom operator, where
 the code in the Python function is the custom code. For
 operators with input ports the function is called for each
@@ -969,8 +683,11 @@ A limited set of SPL types are supported.
   * `list<T>` where `T` is any supported type. Passed into Python as a list.
   * `set<T>` where `T` is any supported primitive type except `blob`. Passed into Python as a set. `T` must be primitive to match Python's requirement that an element of a set is hashable.
   * `map<K,V>` where `K` is any supported primitive type expect `blob` and `V` is any supported type. Passed into Python as a dictionary.  `K` must be primitive to match Python's requirement that a key of a map is hashable.
+  * `optional<T>` (Streams 4.3) - maps to `None` when not present otherwise the value mapping for `T`.
 
-+++ SPL blob handling
+For details see the Python documentation.
+
+# SPL blob handling
 
 A SPL `blob` value is passed into Python as a `memoryview` object to
 avoid copying the contents of the value. The `memoryview` object will
@@ -1288,13 +1005,17 @@ Operator to send an e-mail for each tuple using the local SMTP server.
 ++ \@spl.ignore
 Decorator to ignore a Python function.
 If the Python function is decorated with `@spl.ignore`
-then function is ignored by `spl-python-extract.py`.
+then function is ignored by `spl-python-extract`.
 
 ++ Extracting SPL operators from Python
 
 # Overview
 
 To create SPL operators in a toolkit, execute:
+
+    spl-python-extract -i toolkit-directory
+
+When not using the `streamsx` package then the extraction script is available in the `bin` directory of this toolkit.
 
     python3 spl-python-extract.py -i toolkit-directory
 
@@ -1308,9 +1029,9 @@ These directories in a toolkit are automatically added to the Python search path
 
 A single Python embedded runtime is used by an SPL processing element (PE), thus when multiple operators
 implemented in python are fused into the same PE they share the same runtime. The library and include
-paths to the Python runtime are set from the version of Python used to execute `spl-python-extract.py`.
+paths to the Python runtime are set from the version of Python used to execute `spl-python-extract`.
 
-The toolkit has no dependency on this toolkit (`com.ibm.streamsx.topology`) once `spl-python-extract.py` has been executed.
+The toolkit has no dependency on this toolkit (`com.ibm.streamsx.topology`) once `spl-python-extract` has been executed.
 
 The toolkit is extended with resources files `impl/nl/<locale>/TopologySplpyResource.xlf`. These resource files must be added to the 
 the `resource` section in file `info.xml`.
@@ -1326,10 +1047,10 @@ using positional arguments.
 
 E.g.
 
-    python3 $HOME/toolkits/com.ibm.streamsx.topology/bin/spl-python-extract.py -i samples/python/com.ibm.streamsx.topology.pysamples
+    spl-python-extract -i samples/python/com.ibm.streamsx.topology.pysamples
 
 # Usage
-    usage: spl-python-extract.py [-h] -i DIRECTORY [--make-toolkit]
+    usage: spl-python-extract [-h] -i DIRECTORY [--make-toolkit]
     
     Extract SPL operators from decorated Python classes and functions.
     
@@ -1339,13 +1060,20 @@ E.g.
                             Toolkit directory
       --make-toolkit        Index toolkit using spl-make-toolkit
 
+++ Python documentation links
+
+* `doc/pythondoc/streamsx.spl.spl.html#module-streamsx.spl.spl` - in this toolkit.
+* [http://ibmstreams.github.io/streamsx.topology/doc/releases/latest/pythondoc/streamsx.spl.spl.html#module-streamsx.spl.spl|module streamsx.spl.spl] - at *GitHub*.
+* [https://streamsxtopology.readthedocs.io/en/stable/streamsx.spl.spl.html#module-streamsx.spl.spl|module streamsx.spl.spl] - at *Read the Docs*.
+
 ++ Sample toolkit
 
 A toolkit with a number of decorated Python functions and SPL applications that invoke them is supplied under `samples/python/com.ibm.streamsx.topology.pysamples`.
 
 + Executing applications using Python
 
-++ PYTHONHOME
+# PYTHONHOME
+
 The location of Python at runtime is defined by the environment
 variable `PYTHONHOME`. The location at runtime can be different
 to the location used when compiling the Streams application
@@ -1362,6 +1090,10 @@ When running standalone `PYTHONHOME` must be set in the user's environment.
 
 The application will use `PYTHONHOME` to locate the Python shared library
 as follows:
+
+*Python 3.6*
+* `$PYTHONHOME/lib/libpython3.6m.so`
+* `$PYTHONHOME/lib64/libpython3.6m.so` if the path above does not exist.
 
 *Python 3.5*
 * `$PYTHONHOME/lib/libpython3.5m.so`

@@ -336,7 +336,10 @@ public class WindowTest extends TestTopology {
             
             // Should see around 30 tuples per window, once we
             // pass the first three seconds.
-            assertTrue("Number of tuples in window:" + items.size(), items.size() <= 45);
+            if (items.size() > 45) {
+                System.err.println("Number of tuples in window > 45:" + items.size());
+                return false;
+            }
             if (agg.containsKey("delta")) {
                 long delta = (Long) agg.get("delta");
                 if (delta < 0) {
