@@ -2,6 +2,50 @@
 IBM Streams Python setup
 ########################
 
+***************
+Developer setup
+***************
+
+Developers install the `streamsx` package Python Package Index (PyPI) to
+use this functionality::
+
+    pip install streamsx
+
+If already installed upgrade to the latest version is recommended::
+
+   pip install --upgrade streamsx
+
+Python 2.7, 3.5 or 3.6 can be used. Python 3.5 is required for submitting streaming applications against the Streaming Analytics service on IBM Cloud.
+
+A local install of IBM Streams is **not** required when:
+
+    * Using the Streams and Streaming Analytics REST bindings :py:mod:`streamsx.rest`.
+    * Devloping and submitting streaming applications using :py:mod:`streamsx.topology.topology` to the Streaming Analytics service on IBM Cloud.
+        * The environment variable ``JAVA_HOME`` must reference a Java 1.8 JRE or JDK/SDK.
+
+A local install of IBM Streams is required when:
+
+    * Developing and submitting streaming applications using :py:mod:`streamsx.topology.topology` to the IBM Streams distributed or standalone contexts.
+        * If set the environment variable ``JAVA_HOME`` must reference a Java 1.8 JRE or JDK/SDK, otherwise the Java install from ``$STREAMS_INSTALL/java`` is used.
+    * Creating SPL Python primitive operators using :py:mod:`streamsx.spl.spl` decorators.
+
+.. warning::
+   When using the `streamsx` package ensure that the environment variable
+   ``PYTHONPATH`` does **not** include a path ending with
+   ``com.ibm.streamsx.topology/opt/python/packages``.
+   The IBM Streams environment configuration script ``streamsprofile.sh``
+   modifies or sets ``PYTHONPATH`` to include the Python support
+   from the SPL topology toolkit shipped with the product. This was to
+   support Python before the `streamsx` package was available. The
+   recommendation is to unset ``PYTHONPATH`` or modify it not to
+   include the path to the topology toolkit.
+
+.. note::
+   The `streamsx` package is self-contained and does not depend on any
+   SPL topology toolkit (``com.ibm.streamsx.topology``) installed
+   under ``$STREAMS_INSTALL/toolkits`` or on the SPL compiler's (``sc``)
+   toolkit path. This is true at SPL compilation time and runtime.
+
 ***************************
 Streaming Analytics service
 ***************************
@@ -20,12 +64,13 @@ IBM Streams on-premises
 For a distributed cluster running Streams Python 2.7, 3.5 or 3.6 may
 be used.
 
-Anaconda may be used as the Python runtime, Anaconda has the advantage of
-being pre-built and including a number of standard packages. Ananconda
-installs may be downloaded at: https://www.continuum.io/downloads .
+Anaconda or Miniconda distributions may be used as the Python runtime, these hav the advantage of being pre-built and including a number of standard packages.
+Ananconda installs may be downloaded at: https://www.continuum.io/downloads .
 
 .. note::
-    An Anaconda distribution for Python 2.7, 3.5 or 3.6 must be used.
+    When used by a distributed cluster a distribution matching
+    the required Python 2.7, 3.5 or 3.6 release must be used, rather
+    than a conda environment.
 
 If building Python from source then it must be built to support embedding
 of the runtime with shared libraries (``--enabled-shared`` option to `configure`).

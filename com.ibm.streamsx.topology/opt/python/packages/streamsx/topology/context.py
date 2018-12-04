@@ -76,6 +76,7 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
         SubmissionResult: Result of the submission. For details of what is contained see the :py:class:`ContextTypes`
         constant passed as `ctxtype`.
     """
+    streamsx._streams._version._mismatch_check(__name__)
     graph = graph.graph
 
     if not graph.operators:

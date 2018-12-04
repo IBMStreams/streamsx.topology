@@ -39,6 +39,7 @@ def run_cmd(args=None):
 def main(args=None):
     """ Performs an action against a Streaming Analytics service.
     """
+    streamsx._streams._version._mismatch_check('streamsx.topology.context')
     try:
         sr = run_cmd(args)
         sr['return_code'] = 0
