@@ -150,15 +150,14 @@ For example, invoking an SPL `Beacon` operator using an output function to set t
 from future.builtins import *
 
 import streamsx.spl.toolkit
-import streamsx.topology.exop as exop
-import streamsx.topology.runtime
+import streamsx.topology.exop
 import streamsx.topology.topology
-import streamsx._streams._placement as _placement
+import streamsx._streams._placement
 
 import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
 
-class Invoke(_placement._Placement, exop.ExtensionOperator):
+class Invoke(streamsx._streams._placement._Placement, streamsx.topology.exop.ExtensionOperator):
     """
     Declaration of an invocation of an SPL operator in a Topology.
 

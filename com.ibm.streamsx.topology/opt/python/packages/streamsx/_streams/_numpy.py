@@ -2,10 +2,10 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2018
 
-import streamsx.spl.types
 
 try:
     import numpy as np
+    import streamsx.spl.types
     _SPL_CONVERSIONS = {
         np.bool_:bool,
         np.uint8:streamsx.spl.types.uint8,

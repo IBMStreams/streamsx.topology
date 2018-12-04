@@ -24,7 +24,6 @@ import streamsx.topology.functions
 import streamsx.topology.param
 import streamsx.topology.state
 import streamsx.spl.op
-import streamsx._streams._numpy
 from streamsx.topology.schema import CommonSchema, StreamSchema
 from streamsx.topology.schema import _stream_schema
 
@@ -53,6 +52,7 @@ def _as_spl_expr(value):
     if isinstance(value, Enum):
         value = streamsx.spl.op.Expression.expression(value.name)
 
+    import streamsx._streams._numpy
     npcnv = streamsx._streams._numpy.as_spl_expr(value)
     if npcnv is not None:
         return npcnv
