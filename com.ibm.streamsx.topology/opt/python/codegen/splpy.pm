@@ -318,7 +318,6 @@ sub convertAndAddToPythonTupleObject {
 ##
 sub spl_pip_packages {
 
-  my $pip = $_[0] == 3 ? 'pip3' : 'pip';
   my $model = $_[1];
   my $packages = $_[2];
   my $reqFile = $model->getContext()->getToolkitDirectory()."/opt/python/streams/requirements.txt";
@@ -327,6 +326,7 @@ sub spl_pip_packages {
 
   if ($needPip) {
 
+    my $pip = $_[0] == 3 ? 'pip3' : 'pip';
     use File::Path qw(make_path);
     my $pkgDir = $model->getContext()->getOutputDirectory()."/etc/streamsx.topology/python";
     make_path($pkgDir);
@@ -334,7 +334,15 @@ sub spl_pip_packages {
 # Need pip 9
 # '--upgrade-strategy', 'only-if-needed');
 
+
     my $rcv2 = `$pip --version`;
+    if ( ! defined $rcv2) {
+        # If pip3 doesn't exist use pip
+        if ($pip == 'pip3') {
+            $pip = 'pip';
+            $rcv2 = `$pip --version`;
+        }
+    }
     SPL::CodeGen::println("pip version:" . $rcv2);
 
     my @pipCmd = ($pip, 'install', '--disable-pip-version-check', '--user', '--upgrade');
