@@ -1,0 +1,26 @@
+namespace testtopo;
+
+public composite PT {
+param
+    expression<boolean> $b;
+    expression<uint8>  $u8;
+    expression<uint16> $u16;
+    expression<uint32> $u32;
+    expression<uint64> $u64;
+    expression<int8>  $i8;
+    expression<int16> $i16;
+    expression<int32> $i32;
+    expression<int64> $i64;
+    expression<float32> $f32;
+    expression<float64> $f64;
+
+graph 
+  () as X = Custom() {
+  logic state: rstring s = 
+      (rstring) $b +
+      (rstring) $u8  + (rstring) $u16  + (rstring) $u32  + (rstring) $u64 +
+      (rstring) $i8  + (rstring) $i16  + (rstring) $i32  + (rstring) $i64 +
+      (rstring) $f32  + (rstring) $f64
+      ;
+  }
+}
