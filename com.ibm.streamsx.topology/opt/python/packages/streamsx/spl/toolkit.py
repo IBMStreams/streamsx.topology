@@ -21,7 +21,6 @@ must not be added through ``add_toolkit``.
 from future.builtins import *
 
 import os
-import streamsx.topology.topology
 
 def add_toolkit(topology, location):
     """Add an SPL toolkit to a topology.
@@ -30,6 +29,7 @@ def add_toolkit(topology, location):
         topology(Topology): Topology to include toolkit in.
         location(str): Location of the toolkit directory.
     """
+    import streamsx.topology.topology
     assert isinstance(topology, streamsx.topology.topology.Topology)
     tkinfo = dict()
     tkinfo['root'] = os.path.abspath(location)
