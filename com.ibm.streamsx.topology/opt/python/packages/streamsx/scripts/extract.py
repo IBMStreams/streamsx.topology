@@ -315,15 +315,25 @@ class _Extractor(object):
 
          # Optionally include the Python source code
          if _opdoc(opobj):
+             decor = None
+             if inspect.isclass(opobj):
+                 if hasattr(opobj, '_splpy_decor'):
+                      decor = opobj._splpy_decor
+                 opobj = inspect.getmro(opobj)[1]
              try:
                  _pysrc = inspect.getsource(opobj)
                  opdoc += "\n"
                  opdoc += "# Python\n";
 
+                 if decor:
+                     opdoc += '    '
+                     opdoc += decor
+                     opdoc += '\n'
+
                  for _line in str.splitlines(_pysrc):
-                     opdoc += "    "
+                     opdoc += '    '
                      opdoc += html.escape(_line)
-                     opdoc += "\n"
+                     opdoc += '\n'
              except:
                  pass
          
