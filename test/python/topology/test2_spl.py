@@ -230,7 +230,7 @@ class TestDistributedSPL(TestSPL):
     def setUp(self):
         Tester.setup_distributed(self)
 
-class TestBluemixSPL(TestSPL):
+class TestSasSPL(TestSPL):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
         # Ensure the old name still works.

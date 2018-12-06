@@ -67,7 +67,7 @@ class TestDistributedPackages(TestPackages):
   def setUp(self):
       Tester.setup_distributed(self)
 
-class TestBluemixPackages(TestPackages):
+class TestSasPackages(TestPackages):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
 

@@ -24,7 +24,6 @@ import streamsx.topology.functions
 import streamsx.topology.param
 import streamsx.topology.state
 import streamsx.spl.op
-import streamsx._streams._numpy
 from streamsx.topology.schema import CommonSchema, StreamSchema
 from streamsx.topology.schema import _stream_schema
 
@@ -47,6 +46,8 @@ def _as_spl_expr(value):
     """ Return value converted to an SPL expression if
     needed other otherwise value.
     """
+    import streamsx._streams._numpy
+
     if hasattr(value, 'spl_json'):
         return value
       
