@@ -48,6 +48,11 @@ __SPLPY__INPORT_0_DESCRIPTION__SPLPY__
     </inputPorts>
     <outputPorts>
       <outputPortSet>
+        <description>
+This filter operator is configurable with one or two output ports. This first output port is mandatory.
+
+This filter operator requires that the stream type of this output port matches the stream type of the input port. This output port receives the tuples that match the filter.
+        </description>
         <expressionMode>Nonexistent</expressionMode>
         <autoAssignment>true</autoAssignment>
         <completeAssignment>false</completeAssignment>
@@ -59,6 +64,11 @@ __SPLPY__INPORT_0_DESCRIPTION__SPLPY__
         <optional>false</optional>
       </outputPortSet>
       <outputPortSet>
+        <description>
+This filter operator is configurable with one or two output ports. This second output port is optional.
+
+This filter operator requires that the stream type of this output port matches the stream type of the input port. This output port, if present, receives the tuples that fail to match the filter.
+        </description>
         <expressionMode>Nonexistent</expressionMode>
         <autoAssignment>false</autoAssignment>
         <completeAssignment>false</completeAssignment>

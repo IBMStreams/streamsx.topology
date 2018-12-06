@@ -67,8 +67,6 @@ def spl_namespace():
 # Example where the function has acccess to
 # all attributes of the input tuple using
 # Python variable arguments.
-#
-# See Test01.spl
 
 @spl.map()
 def Noop(*tuple_):
@@ -129,15 +127,13 @@ class PrintWithTimeIntervals(object):
 # Remember input attributes are passed in from SPL by
 # position, any additional attributes beyond the
 # first two are ignored. Attribute names in SPL are irrelevant.
-#
-# See Test02.spl
 
 @spl.pipe
 def SimpleFilter(a,b):
    """
    Filter tuples only allowing output if the first attribute is less than the second.
    
-   Returns the sum of the first two attributes."
+   Returns the sum of the first two attributes.
    """
    if (a < b):
        return a+b,
@@ -145,12 +141,6 @@ def SimpleFilter(a,b):
 # Adds the first two attributes and the
 # second two attributes and returns
 # the results as the first two attribute in the output tuple 
-#
-#
-# See Test03.spl - Note that the from SPL we pass in integers
-# and rstring values, and the Python code handles the '+'
-# as arithmetic addition for the integers and string
-# concatenation for the string values.
 
 @spl.pipe
 def AddFirstTwoSecondTwo(a,b,c,d):

@@ -931,7 +931,18 @@ class source(object):
         self.docpy = docpy
     
     def __call__(self, wrapped):
-        return _wrapforsplop(_OperatorType.Source, wrapped, self.style, self.docpy)
+        decorated = _wrapforsplop(_OperatorType.Source, wrapped, self.style, self.docpy)
+        if inspect.isclass(decorated):
+            decorated._splpy_decor = str(self)
+        return decorated
+
+    def __str__(self):
+        s = ''
+        if not self.docpy:
+            if s:
+                 s += ', '
+            s += 'docpy=False'
+        return '@spl.source(' + s + ')'
 
 class map(object):
     """
@@ -983,7 +994,20 @@ class map(object):
         self.docpy = docpy
     
     def __call__(self, wrapped):
-        return _wrapforsplop(_OperatorType.Pipe, wrapped, self.style, self.docpy)
+        decorated =  _wrapforsplop(_OperatorType.Pipe, wrapped, self.style, self.docpy)
+        if inspect.isclass(decorated):
+            decorated._splpy_decor = str(self)
+        return decorated
+
+    def __str__(self):
+        s = ''
+        if self.style is not None:
+            s += 'style=' + str(self.style)
+        if not self.docpy:
+            if s:
+                 s += ', '
+            s += 'docpy=False'
+        return '@spl.map(' + s + ')'
 
 class filter(object):
     """
@@ -1037,7 +1061,20 @@ class filter(object):
         self.docpy = docpy
     
     def __call__(self, wrapped):
-        return _wrapforsplop(_OperatorType.Filter, wrapped, self.style, self.docpy)
+        decorated =  _wrapforsplop(_OperatorType.Filter, wrapped, self.style, self.docpy)
+        if inspect.isclass(decorated):
+            decorated._splpy_decor = str(self)
+        return decorated
+
+    def __str__(self):
+        s = ''
+        if self.style is not None:
+            s += 'style=' + str(self.style)
+        if not self.docpy:
+            if s:
+                 s += ', '
+            s += 'docpy=False'
+        return '@spl.filter(' + s + ')'
 
 def ignore(wrapped):
     """
@@ -1107,7 +1144,20 @@ class for_each(object):
         self.docpy = docpy
 
     def __call__(self, wrapped):
-        return _wrapforsplop(_OperatorType.Sink, wrapped, self.style, self.docpy)
+        decorated = _wrapforsplop(_OperatorType.Sink, wrapped, self.style, self.docpy)
+        if inspect.isclass(decorated):
+            decorated._splpy_decor = str(self)
+        return decorated
+
+    def __str__(self):
+        s = ''
+        if self.style is not None:
+            s += 'style=' + str(self.style)
+        if not self.docpy:
+            if s:
+                 s += ', '
+            s += 'docpy=False'
+        return '@spl.for_each(' + s + ')'
 
 class PrimitiveOperator(object):
     """Primitive operator super class.
@@ -1321,5 +1371,16 @@ class primitive_operator(object):
             for i in range(len(self._output_ports)):
                 cls._splpy_output_ports[self._output_ports[i]] = i
 
+        cls._splpy_decor = str(self)
         return cls
 
+    def __str__(self):
+        s = ''
+        if self._output_ports:
+            s += 'output_ports=' + str(self._output_ports)
+             
+        if not self._docpy:
+            if s:
+                 s += ', '
+            s += 'docpy=False'
+        return '@spl.primitive(' + s + ')'
