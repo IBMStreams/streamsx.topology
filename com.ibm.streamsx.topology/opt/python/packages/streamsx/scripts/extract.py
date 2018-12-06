@@ -431,8 +431,12 @@ class _Extractor(object):
     def _copy_python_dir(self, dir_):
         cmn_src = os.path.join(_topology_tk_dir(), "opt", "python", dir_);
         cmn_dst = os.path.join(self._tk_dir, "opt", ".splpy", os.path.basename(dir_))
-        if (os.path.isdir(cmn_dst)):
+        if os.path.isdir(cmn_dst):
             shutil.rmtree(cmn_dst)
+        # Remove the old directory used - see #1997
+        old_dst = os.path.join(self._tk_dir, "opt", ".__splpy")
+        if os.path.isdir(old_dst):
+            shutil.rmtree(old_dst)
         shutil.copytree(cmn_src, cmn_dst)
 
     def _setup_info_xml(self, languageList):
