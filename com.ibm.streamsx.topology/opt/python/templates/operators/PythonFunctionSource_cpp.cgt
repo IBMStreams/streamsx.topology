@@ -6,7 +6,7 @@
 <%SPL::CodeGen::implementationPrologue($model);%>
 
 <% 
- my $cmnDir = $model->getContext()->getToolkitDirectory()."/opt/.__splpy/common/";
+ my $cmnDir = $model->getContext()->getToolkitDirectory()."/opt/.splpy/common/";
 
  require "splpy_operator.pm";
  require $cmnDir."/splpy.pm";
@@ -37,7 +37,7 @@ MY_OPERATOR::MY_OPERATOR() :
    pyOutNames_0(NULL)
 {
    PyObject * callable;
-@include  "../../opt/.__splpy/common/py_constructor.cgt"
+@include  "../../opt/.splpy/common/py_constructor.cgt"
    
    {
       SplpyGIL lock;
@@ -101,7 +101,7 @@ void MY_OPERATOR::process(uint32_t idx)
                 PyObject *pyTuple = PyTuple_New(0);
                 PyObject *pyDict = NULL;
 
-@include  "../../opt/.__splpy/common/py_functionReturnToTuples.cgt"
+@include  "../../opt/.splpy/common/py_functionReturnToTuples.cgt"
 
             } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
                 SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
@@ -125,7 +125,7 @@ void MY_OPERATOR::process(uint32_t idx)
 }
 
 // Create member function that converts Python tuple to SPL tuple
-@include  "../../opt/.__splpy/common/py_valueToTuples.cgt"
-@include  "../../opt/.__splpy/common/py_pyTupleTosplTuple.cgt"
+@include  "../../opt/.splpy/common/py_valueToTuples.cgt"
+@include  "../../opt/.splpy/common/py_pyTupleTosplTuple.cgt"
 
 <%SPL::CodeGen::implementationEpilogue($model);%>

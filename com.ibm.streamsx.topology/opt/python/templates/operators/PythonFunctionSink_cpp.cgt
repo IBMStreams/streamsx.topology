@@ -5,10 +5,10 @@
 
 <%SPL::CodeGen::implementationPrologue($model);%>
 
-@include "../../opt/.__splpy/common/py_disallow_cr_trigger.cgt"
+@include "../../opt/.splpy/common/py_disallow_cr_trigger.cgt"
 
 <%
- my $cmnDir = $model->getContext()->getToolkitDirectory()."/opt/.__splpy/common/";
+ my $cmnDir = $model->getContext()->getToolkitDirectory()."/opt/.splpy/common/";
 
  require "splpy_operator.pm";
  require $cmnDir."/splpy.pm";
@@ -46,7 +46,7 @@ MY_OPERATOR::MY_OPERATOR() :
     pyInNames_(NULL)
 {
    PyObject * callable;
-@include  "../../opt/.__splpy/common/py_constructor.cgt"
+@include  "../../opt/.splpy/common/py_constructor.cgt"
 
 <% if ($paramStyle eq 'dictionary') { %>
    {
@@ -77,7 +77,7 @@ void MY_OPERATOR::prepareToShutdown()
 
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
- @include  "../../opt/.__splpy/common/py_splTupleCheckForBlobs.cgt"
+ @include  "../../opt/.splpy/common/py_splTupleCheckForBlobs.cgt"
 
 #if SPLPY_OP_STATE_HANDLER == 1
    SPL::AutoMutex am(mutex_);
@@ -87,7 +87,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 try {
    SplpyGIL lock;
 
- @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
+ @include  "../../opt/.splpy/common/py_splTupleToFunctionArgs.cgt"
   
     PyObject * pyReturnNone = SplpyGeneral::pyObject_Call(pyop_->callable(), pyTuple, pyDict);
 

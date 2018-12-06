@@ -8,7 +8,7 @@ import time
 
 # Add
 # 
-# opt/.__splpy/common/packages
+# opt/.splpy/common/packages
 # opt/python/packages
 # opt/python/modules
 # opt/python/streams
@@ -19,7 +19,7 @@ import time
 # of a Python operator
 
 # This file is contained in
-# toolkit_root/opt/.__splpy/common
+# toolkit_root/opt/.splpy/common
 
 def __splpy_addDirToPath(dir):
     if os.path.isdir(dir):

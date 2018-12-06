@@ -26,7 +26,7 @@ namespace streamsx {
 class SplpyPyOp : public SplpyOp {
   public:
       SplpyPyOp(SPL::Operator * op) :
-          SplpyOp(op, "/opt/.__splpy/common") {
+          SplpyOp(op, "/opt/.splpy/common") {
       }
 
       virtual ~SplpyPyOp() {}
