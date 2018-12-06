@@ -5,7 +5,7 @@
 /com.ibm.streamsx.topology.pysamples.sources/
 /com.ibm.streamsx.topology.pysamples.primitives/
 /impl/
-/opt/.__splpy/
+/opt/.splpy/
 /opt/python/streams/__pycache__/
 /output/
 /doc/

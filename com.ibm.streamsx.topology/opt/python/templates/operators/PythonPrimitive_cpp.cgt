@@ -6,7 +6,7 @@
 <%SPL::CodeGen::implementationPrologue($model);%>
 
 <%
- my $cmnDir = $model->getContext()->getToolkitDirectory()."/opt/.__splpy/common/";
+ my $cmnDir = $model->getContext()->getToolkitDirectory()."/opt/.splpy/common/";
 
  require "splpy_operator.pm";
  require $cmnDir."/splpy.pm";
@@ -34,7 +34,7 @@ MY_OPERATOR::MY_OPERATOR() :
 <%}%>
 {
    PyObject * callable;
-@include  "../../opt/.__splpy/common/py_constructor.cgt"
+@include  "../../opt/.splpy/common/py_constructor.cgt"
 
 <% if ($model->getNumberOfInputPorts() != 0) { %>
 {
@@ -188,11 +188,11 @@ for (my $p = 0; $p < $model->getNumberOfInputPorts(); $p++) {
 %>
  try {
  // Code block for a single port
- @include  "../../opt/.__splpy/common/py_splTupleCheckForBlobs.cgt"
+ @include  "../../opt/.splpy/common/py_splTupleCheckForBlobs.cgt"
 
     SplpyGIL lock;
 
- @include  "../../opt/.__splpy/common/py_splTupleToFunctionArgs.cgt"
+ @include  "../../opt/.splpy/common/py_splTupleToFunctionArgs.cgt"
 
     PyObject *fn = PyList_GET_ITEM(pyinputfns_, (Py_ssize_t) <%=$p%>);
     PyObject * pyReturnVar = SplpyGeneral::pyObject_Call(fn, pyTuple, pyDict);
@@ -219,8 +219,8 @@ for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) {
     my $oport_submission = 1;
     my $iport = undef;
 %>
-@include  "../../opt/.__splpy/common/py_valueToTuples.cgt"
-@include  "../../opt/.__splpy/common/py_pyTupleTosplTuple.cgt"
+@include  "../../opt/.splpy/common/py_valueToTuples.cgt"
+@include  "../../opt/.splpy/common/py_pyTupleTosplTuple.cgt"
 <% } %>
 
 void MY_OPERATOR::convertAndSubmit(uint32_t port, PyObject *tuple_) {

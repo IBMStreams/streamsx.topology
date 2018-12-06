@@ -68,7 +68,7 @@
     <delete dir="${pytk}/output"/>
     <delete dir="${pytk}/doc"/>
     <delete dir="${pytk}/impl"/>
-    <delete dir="${pytk}/opt/.__splpy"/>
+    <delete dir="${pytk}/opt/.splpy"/>
     <delete includeemptydirs="true" >
        <fileset dir="${pytk}">
           <include name="com.ibm.streamsx.topology.pysamples.kwargs/**"/>

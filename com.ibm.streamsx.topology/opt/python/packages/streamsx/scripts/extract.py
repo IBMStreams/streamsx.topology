@@ -430,7 +430,7 @@ class _Extractor(object):
 
     def _copy_python_dir(self, dir_):
         cmn_src = os.path.join(_topology_tk_dir(), "opt", "python", dir_);
-        cmn_dst = os.path.join(self._tk_dir, "opt", ".__splpy", os.path.basename(dir_))
+        cmn_dst = os.path.join(self._tk_dir, "opt", ".splpy", os.path.basename(dir_))
         if (os.path.isdir(cmn_dst)):
             shutil.rmtree(cmn_dst)
         shutil.copytree(cmn_src, cmn_dst)

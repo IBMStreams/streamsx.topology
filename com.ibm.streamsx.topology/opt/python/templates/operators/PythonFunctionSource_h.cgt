@@ -6,7 +6,7 @@
 require "splpy_operator.pm";
 my $pyStateful = splpy_OperatorCallable() eq 'class' ? 1 : 0;
 %>
-@include "../../opt/.__splpy/common/py_state.cgt"
+@include "../../opt/.splpy/common/py_state.cgt"
 
 #include "splpy.h"
 #include "splpy_pyop.h"
@@ -15,7 +15,7 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
-@include "../../opt/.__splpy/common/py_disallow_cr_trigger.cgt"
+@include "../../opt/.splpy/common/py_disallow_cr_trigger.cgt"
 
 <%
   my $oport = $model->getOutputPortAt(0);
