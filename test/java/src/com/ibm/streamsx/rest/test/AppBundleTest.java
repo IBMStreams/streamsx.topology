@@ -90,8 +90,7 @@ public class AppBundleTest {
 		JobConfig jc = new JobConfig();
 		jc.setJobName(jobName);
 		
-		JsonObject overlay = new JsonObject();
-				
+		JsonObject overlay = new JsonObject();				
 		overlay.add("jobConfig", new Gson().toJsonTree(jc));
 		
 		JsonArray a = new JsonArray();
@@ -106,6 +105,10 @@ public class AppBundleTest {
 		final ApplicationBundle appBundle = instance.uploadBundle(bundle);
 		assertNotNull(appBundle);
 		verifyJob(appBundle.submitJob(null), appName, null);
+		
+		jobName = "ABJN2_"+ (int) (Math.random() * 10000.0) + "_" + System.currentTimeMillis();
+		jc.setJobName(jobName);
+	    overlay.add("jobConfig", new Gson().toJsonTree(jc));
 		verifyJob(appBundle.submitJob(jco), appName, jobName);
 	}
 	
