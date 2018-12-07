@@ -36,7 +36,9 @@ def _mismatch_check(module_name):
         return
 
     opv = pkg_resources.parse_version(sm.__version__)
-    if opv < spv:
+    opv_base = pkg_resources.parse_version(opv.base_version)
+    spv_base = pkg_resources.parse_version(spv.base_version)
+    if opv_base < spv_base:
         warnings.warn(_warning_msg(spv, module_name, file_name, opv))
         return
 
