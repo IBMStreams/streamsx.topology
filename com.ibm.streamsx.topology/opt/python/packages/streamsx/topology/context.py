@@ -30,6 +30,7 @@ import logging
 import os
 import os.path
 import json
+import platform
 import subprocess
 import threading
 import sys
@@ -99,6 +100,7 @@ class _BaseSubmitter(object):
             # the callers config
             self.config.update(config)
         self.config['contextType'] = str(self.ctxtype)
+        self.config['originator'] = 'topology-' + __version__ + ':python-' + platform.python_version()
         self.graph = graph
         self.fn = None
         self.results_file = None

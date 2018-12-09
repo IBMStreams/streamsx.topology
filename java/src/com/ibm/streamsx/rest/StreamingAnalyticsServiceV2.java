@@ -106,6 +106,8 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
         }
         return buildsUrl;
     }
+    
+    
 
     private synchronized void setUrls(JsonObject statusResponse)
             throws IllegalStateException {
@@ -148,10 +150,15 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
 
     @Override
     protected JsonObject submitBuild(CloseableHttpClient httpclient,
-            File archive, String buildName)
+            File archive, String buildName, String originator)
             throws IOException {
         String newBuildURL = getBuildsUrl(httpclient);
+        
+        newBuildURL = newBuildURL + "?originator=" +
+            URLEncoder.encode(originator, StandardCharsets.UTF_8.name());
+        
         HttpPost httppost = new HttpPost(newBuildURL);
+        
         httppost.addHeader("Authorization", getAuthorization());
 
         JsonObject buildParams = new JsonObject();

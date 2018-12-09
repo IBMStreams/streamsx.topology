@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.spi.builder;
 
+import static com.ibm.streamsx.topology.internal.context.remote.BuildConfigKeys.ORIGINATOR;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.logic.ObjectUtils.serializeLogic;
 import static com.ibm.streamsx.topology.spi.builder.Utils.copyParameters;
@@ -24,6 +25,7 @@ import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.function.Consumer;
 import com.ibm.streamsx.topology.function.ObjIntConsumer;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.internal.context.remote.BuildConfigKeys;
 import com.ibm.streamsx.topology.internal.core.JavaFunctional;
 import com.ibm.streamsx.topology.internal.core.SourceInfo;
 import com.ibm.streamsx.topology.internal.core.TSinkImpl;
@@ -273,5 +275,27 @@ public interface Invoker {
      */
     static void setFunctionalNamespace(Topology topology, String namespace) {
         topology.builder().setFunctionalNamespace(namespace);
+    }
+    
+    /**
+     * Set the build configuration.
+     * 
+     * Build configuration that is tied to a topology.
+     * <BR>
+     * <b>Build service originator</b>
+     * Value for the key {@code originator} is the build service
+     * originator. It provides tracking information in Streaming Analytics
+     * build service on IBM Cloud. it is ignored for other submission contexts.
+     * The format is <em>tool</em>[-<em>version</em>:<em>language</em>[-<em>version</em>
+     * so that version information is optional. An example is {@code topology-1.11.8:java-1.8.0}.
+     * 
+     * @param topology Topology to set build configuration.
+     * @param buildConfig JSON build configuration.
+     * 
+     * @since 1.11
+     */
+    static void setBuildConfig(Topology topology, JsonObject buildConfig) {
+        if (buildConfig.has(ORIGINATOR))
+            topology.builder().setOriginator(jstring(buildConfig, ORIGINATOR));
     }
 }
