@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.internal.context.remote;
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_DEFINITION;
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.SERVICE_NAME;
 import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_SERVICES;
+import static com.ibm.streamsx.topology.internal.context.remote.BuildConfigKeys.determineBuildConfig;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.SERVICE_NO_CHECK_PERIOD;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.SERVICE_RUNNING_TIME;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
@@ -80,10 +81,13 @@ public class RemoteBuildAndSubmitRemoteContext extends ZippedToolkitRemoteContex
                 checkIfRunning = (System.currentTimeMillis() - last) > SERVICE_NO_CHECK_PERIOD;
 	        }
 	        
+	        JsonObject buildConfig = determineBuildConfig(deploy, submission);
+	        
 	        if (checkIfRunning)
 	            RemoteContexts.checkServiceRunning(sas);
 	        
-	        Result<Job, JsonObject> submitResult = sas.buildAndSubmitJob(buildArchive, jco, buildName);
+	        Result<Job, JsonObject> submitResult = sas.buildAndSubmitJob(buildArchive, jco, buildName,
+	                buildConfig);
 	        final JsonObject submissionResult = GsonUtilities.objectCreate(submission,
 	                RemoteContext.SUBMISSION_RESULTS);
 

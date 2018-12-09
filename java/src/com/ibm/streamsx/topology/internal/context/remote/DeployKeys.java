@@ -1,6 +1,6 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2017  
+# Copyright IBM Corp. 2017, 2018
  */
 package com.ibm.streamsx.topology.internal.context.remote;
 
@@ -61,6 +61,17 @@ public interface DeployKeys {
      * "version": sys.version
      */
     String PYTHON = "python";
+    
+    /**
+     * Optional originator for build service:
+     * 
+     * tool:[-version]:language:[-version]
+     * 
+     * E.g.
+     * 
+     * topology-1.11.8:python3.5.4
+     */
+    String ORIGINATOR = "originator";
     
     /**
      * Streams 4.2 job config overlays. Expect value

@@ -15,6 +15,7 @@ import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_FUNCTIONAL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_SPL;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.MODEL_VIRTUAL;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.ORIGINATOR;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.NS_COLON;
 import static com.ibm.streamsx.topology.internal.core.JavaFunctionalOps.PASS_KIND;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CFG_STREAMS_VERSION;
@@ -40,6 +41,7 @@ import com.ibm.streamsx.topology.generator.port.PortProperties;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.Direction;
 import com.ibm.streamsx.topology.generator.spl.GraphUtilities.VisitController;
+import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 import com.ibm.streamsx.topology.internal.core.JavaFunctionalOps;
 import com.ibm.streamsx.topology.internal.core.SubmissionParameterFactory;
 import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
@@ -85,6 +87,13 @@ public class GraphBuilder extends BJSONObject {
         // Indicate how the graph was generated.
         getConfig().addProperty(MODEL, MODEL_FUNCTIONAL);
         getConfig().addProperty(LANGUAGE, LANGUAGE_JAVA);
+        
+        // Default to Java originator.
+        String originator = "topology:" + LANGUAGE_JAVA;
+        String version = System.getProperty("java.version");
+        if (version != null)
+            originator += "-" + version;
+        setOriginator(originator);
     }
    
    private final Map<String,Integer> usedNames = new HashMap<>();
@@ -323,6 +332,9 @@ public class GraphBuilder extends BJSONObject {
      */
     public void setFunctionalNamespace(String namespace) {
         functionalNamespaceColon = namespace + "::";   
+    }
+    public void setOriginator(String originator) {
+        _json().addProperty(ORIGINATOR, originator); 
     }
     
     private String correctFunctionalNamespace(String kind) {

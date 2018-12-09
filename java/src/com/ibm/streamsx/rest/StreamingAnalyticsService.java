@@ -140,8 +140,7 @@ public interface StreamingAnalyticsService {
     Result<Job,JsonObject> submitJob(File bundle, JsonObject jco) throws IOException;
 
     /**
-     * Submit an archive to build on the Streaming Analytics Service, and submit
-     * the job if the build is successful.
+     * Submit an archive to build and run on the Streaming Analytics service.
      * <P>
      * The returned {@link Result} instance has:
      * <UL>
@@ -152,6 +151,23 @@ public interface StreamingAnalyticsService {
      * <LI>{@link Result#getRawResult()} return the raw JSON response.</LI>
      * </UL>
      * </P>
+     * @param archive The application archive to build.
+     * @param jco Job configuration overlay in JSON format.
+     * @param buildName A name for the build, or null.
+     * @param buildConfig Build configuration, or null.
+     * @return Result of the build and job submission.
+     * @throws IOException Error communicating with the service.
+     * 
+     * @since 1.11
+     */
+    Result<Job,JsonObject> buildAndSubmitJob(File archive, JsonObject jco, String buildName, JsonObject buildConfig) throws IOException;
+
+    /**
+     * Submit an archive to build and run on the Streaming Analytics service.
+     * 
+     * Equivalent to {@link #buildAndSubmitJob(File, JsonObject, String, JsonObject)}
+     * passing {@code null} for build configuration.
+     * 
      * @param archive The application archive to build.
      * @param jco Job configuration overlay in JSON format.
      * @param buildName A name for the build, or null.

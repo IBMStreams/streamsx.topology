@@ -48,6 +48,15 @@ import com.ibm.streamsx.topology.internal.streams.Util;
  * version-specific behaviour pushed to abstract methods.
  */
 abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsService {
+    
+    private static final String DEFAULT_ORIGINATOR;
+    static {
+        String originator = "rest:java";
+        String version = System.getProperty("java.version");
+        if (version != null)
+            originator = originator + "-" + version;
+        DEFAULT_ORIGINATOR = originator;
+    }
 
     private final JsonObject credentials;
     final protected JsonObject service;
@@ -107,13 +116,13 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             throws IOException;
     /** Version-specific to submit a build. */
     protected abstract JsonObject submitBuild(CloseableHttpClient httpclient,
-            File archive, String buildName) throws IOException;
+            File archive, String buildName, String originator) throws IOException;
     /** Version-specific to get build info. */
     protected abstract JsonObject getBuild(String buildId,
             CloseableHttpClient httpclient) throws IOException;
     /** Version-specific to submit build artifact as job. */
     protected abstract JsonObject submitBuildArtifact(CloseableHttpClient httpclient,
-            JsonObject deploy, String submitUrl)
+            JsonObject jco, String submitUrl)
             throws IOException;
     /** Version-specific to get build info that includes output. */
     protected abstract JsonObject getBuildOutput(String buildId, String outputId,
@@ -168,10 +177,16 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         }
 
     }
+    
+    @Override
+    public final Result<Job, JsonObject> buildAndSubmitJob(File archive, JsonObject jco,
+            String buildName) throws IOException {
+        return buildAndSubmitJob(archive, jco, buildName, null);
+    }
 
     @Override
     public Result<Job, JsonObject> buildAndSubmitJob(File archive, JsonObject jco,
-            String buildName) throws IOException {
+            String buildName, JsonObject buildConfig) throws IOException {
         
         JsonObject metrics = new JsonObject();
         metrics.addProperty(SubmissionResultsKeys.SUBMIT_ARCHIVE_SIZE, archive.length());
@@ -184,10 +199,18 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             }
             buildName = getSPLCompatibleName(buildName) + "_" + randomHex(16);
             buildName = URLEncoder.encode(buildName, StandardCharsets.UTF_8.name());
+            
+            String originator = null;
+            if (buildConfig != null) {
+                originator = jstring(buildConfig, "originator");
+            }
+            if (originator == null)
+                originator = DEFAULT_ORIGINATOR;
+                      
             // Perform initial post of the archive
-            TRACE.info("Streaming Analytics service (" + serviceName + "): submitting build " + buildName);
+            TRACE.info("Streaming Analytics service (" + serviceName + "): submitting build " + buildName + " originator " + originator);
             final long startUploadTime = System.currentTimeMillis();
-            JsonObject buildSubmission = submitBuild(httpclient, archive, buildName);
+            JsonObject buildSubmission = submitBuild(httpclient, archive, buildName, originator);
             final long endUploadTime = System.currentTimeMillis();
             metrics.addProperty(SubmissionResultsKeys.SUBMIT_UPLOAD_TIME, (endUploadTime - startUploadTime));
             

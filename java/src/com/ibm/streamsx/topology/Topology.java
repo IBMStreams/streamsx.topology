@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology;
 
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE;
+import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_JAVA;
 import static com.ibm.streamsx.topology.generator.operator.OpProperties.LANGUAGE_SCALA;
 import static com.ibm.streamsx.topology.internal.core.InternalProperties.SPL_PREFIX;
 import static com.ibm.streamsx.topology.internal.core.TypeDiscoverer.getTupleName;
@@ -12,6 +13,8 @@ import static com.ibm.streamsx.topology.spi.builder.Invoker.invokeSource;
 import static java.util.Objects.requireNonNull;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
@@ -170,8 +173,23 @@ public class Topology implements TopologyElement {
         
         // Name of source file declaring the topology.
         String fileName = defaultNames[2];
-        if (fileName != null && fileName.endsWith(".scala"))
+        if (fileName != null && fileName.endsWith(".scala")) {
             builder.getConfig().addProperty(LANGUAGE, LANGUAGE_SCALA);
+
+            String originator = "topology:" + LANGUAGE_SCALA;
+            String version = null;
+            Class<?> sup;
+            try {
+                sup = Class.forName("scala.util.Properties");
+                Method m = sup.getMethod("versionNumberString");
+                version = m.invoke(null).toString();
+            } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | IllegalAccessException
+                    | IllegalArgumentException | InvocationTargetException e) {
+            }
+            if (version != null)
+                originator += "-" + version;
+            builder.setOriginator(originator);
+        }
     }
 
     /**
