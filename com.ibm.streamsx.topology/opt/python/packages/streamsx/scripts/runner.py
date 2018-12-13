@@ -13,6 +13,7 @@ import imp
 import glob
 import json
 import os
+import platform
 import shutil
 import argparse
 import subprocess
@@ -23,6 +24,7 @@ import streamsx.spl.toolkit as tk
 import streamsx.spl.op as op
 import streamsx.rest
 import streamsx.scripts.extract
+import streamsx._streams._version
 
 # Structure for an application
 # app - Topology object or str (sab file)
@@ -122,6 +124,9 @@ def _get_topology_app(cmd_args):
     elif not isinstance(app[1], dict):
         raise ValueError(app)
 
+    if 'originator' not in app.cfg:
+        cfg['originator'] = 'streamsxrunner-' + streamsx._streams._version.__version__ + ':python-' + platform.python_version() 
+
     return app
 
 def _get_spl_app(cmd_args):
@@ -134,7 +139,9 @@ def _get_spl_app(cmd_args):
         for tk_path in cmd_args.toolkits:
             if os.access(tk_path, os.W_OK):
                 streamsx.scripts.extract.main(['-i', tk_path, '--make-toolkit'])
-    return _App(topo, {})
+    cfg = {}
+    cfg['originator'] = 'streamsxrunner-' + streamsx._streams._version.__version__ + ':spl'
+    return _App(topo, cfg)
 
 def _get_bundle(cmd_args):
     return _App(cmd_args.bundle, {})
