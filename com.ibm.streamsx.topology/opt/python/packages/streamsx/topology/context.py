@@ -100,7 +100,8 @@ class _BaseSubmitter(object):
             # the callers config
             self.config.update(config)
         self.config['contextType'] = str(self.ctxtype)
-        self.config['originator'] = 'topology-' + __version__ + ':python-' + platform.python_version()
+        if 'originator' not in self.config:
+            self.config['originator'] = 'topology-' + __version__ + ':python-' + platform.python_version()
         self.graph = graph
         self.fn = None
         self.results_file = None

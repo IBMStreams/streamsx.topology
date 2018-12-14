@@ -97,6 +97,7 @@ import unittest
 import logging
 import collections
 import pkg_resources
+import platform
 import threading
 from streamsx.rest import StreamsConnection
 from streamsx.rest import StreamingAnalyticsConnection
@@ -678,6 +679,7 @@ class Tester(object):
         if config is None:
             config = {}
         config['topology.alwaysCollectLogs'] = always_collect_logs
+        config['originator'] = 'tester-' + __version__ + ':python-' + platform.python_version() 
 
         # Look for streamsx.testing plugins
         # Each action that plugin attached to the test is
