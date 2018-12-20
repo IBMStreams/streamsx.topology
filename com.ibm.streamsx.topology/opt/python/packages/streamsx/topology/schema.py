@@ -320,9 +320,9 @@ class StreamSchema(object) :
     """
     def __init__(self, schema):
         schema = schema.strip()
-        self.__spl_type = not schema.startswith("tuple<")
-        self.__schema=schema
-        if not self.__spl_type:
+        self._spl_type = not schema.startswith("tuple<")
+        self._schema=schema
+        if not self._spl_type:
             parser = _SchemaParser(schema)
             self._types = parser._parse()
 
@@ -331,12 +331,12 @@ class StreamSchema(object) :
     def _set(self, schema):
         """Set a schema from another schema"""
         if isinstance(schema, CommonSchema):
-            self.__spl_type = False
-            self.__schema = schema.schema()
+            self._spl_type = False
+            self._schema = schema.schema()
             self._style = self._default_style()
         else:
-            self.__spl_type = schema.__spl_type
-            self.__schema = schema.__schema
+            self._spl_type = schema._spl_type
+            self._schema = schema._schema
             self._style = schema._style
 
     @property
@@ -370,7 +370,7 @@ class StreamSchema(object) :
         return self._style
 
     def _default_style(self):
-        if self.__spl_type:
+        if self._spl_type:
             return _spl_dict
         return _SCHEMA_COMMON_STYLES[self.schema()] if is_common(self) else _spl_dict
 
@@ -387,7 +387,7 @@ class StreamSchema(object) :
         return c
 
     def _make_named_tuple(self, name):
-        if self.__spl_type:
+        if self._spl_type:
             return tuple
         if name is True:
             name = 'StreamTuple'
@@ -473,11 +473,11 @@ class StreamSchema(object) :
 
     def schema(self):
         """Private method. May be removed at any time."""
-        return self.__schema
+        return self._schema
 
     def __str__(self):
         """Private method. May be removed at any time."""
-        return self.__schema
+        return self._schema
 
     def spl_json(self):
         """Private method. May be removed at any time."""
@@ -499,7 +499,7 @@ class StreamSchema(object) :
         Returns:
             StreamSchema: New schema that is an extension of this schema.
         """
-        if self.__spl_type:
+        if self._spl_type:
            raise TypeError("Not supported for declared SPL types")
         base = self.schema()
         extends = schema.schema()
