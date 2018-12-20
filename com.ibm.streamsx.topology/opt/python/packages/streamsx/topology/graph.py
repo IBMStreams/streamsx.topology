@@ -24,8 +24,7 @@ import streamsx.topology.functions
 import streamsx.topology.param
 import streamsx.topology.state
 import streamsx.spl.op
-from streamsx.topology.schema import CommonSchema, StreamSchema
-from streamsx.topology.schema import _stream_schema
+from streamsx.topology.schema import CommonSchema, StreamSchema, _normalize
 
 
 def _fix_namespace(ns):
@@ -586,7 +585,7 @@ class OPort(object):
     def __init__(self, name, operator, index, schema, width=None, partitioned_keys=None, routing=None):
         self.name = name
         self.operator = operator
-        self.schema = _stream_schema(schema)
+        self.schema = _normalize(schema)
         self.index = index
         self.width = width
         self.partitioned = partitioned_keys is not None

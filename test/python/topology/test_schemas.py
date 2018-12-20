@@ -252,7 +252,26 @@ class TestSchema(unittest.TestCase):
         self.assertEqual('hello', tv.c)
         self.assertTrue(str(tv).startswith('MyTuple('))
 
+    def test_normalize(self):
+        self.assertIsNone(_sch._normalize(None))
 
+        for cs in _sch.CommonSchema:
+            self.assertEqual(cs, _sch._normalize(cs))
+
+        s = _sch.StreamSchema('tuple<int32 a>')
+        self.assertEqual(s, _sch._normalize(s))
+        s = _sch.StreamSchema('MyCoolSchema')
+        self.assertEqual(s, _sch._normalize(s))
+
+        self.assertEqual(_sch.CommonSchema.Python, _sch._normalize(object))
+        _u = str if sys.version_info.major == 3 else unicode
+        self.assertEqual(_sch.CommonSchema.String, _sch._normalize(_u))
+        import json
+        self.assertEqual(_sch.CommonSchema.Json, _sch._normalize(json))
+
+        self.assertIsInstance(_sch._normalize('tuple<int32 b>'), _sch.StreamSchema)
+        self.assertIsInstance(_sch._normalize('MyCoolSchema'), _sch.StreamSchema)
+        self.assertRaises(ValueError, _sch._normalize, False)
         
 
 class TestKeepSchema(unittest.TestCase):

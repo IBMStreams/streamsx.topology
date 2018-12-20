@@ -2,6 +2,7 @@
 # Copyright IBM Corp. 2017
 import unittest
 import sys
+import json
 import itertools
 
 
@@ -69,18 +70,22 @@ class TestPython2SPL(unittest.TestCase):
         topo = Topology()
         s = topo.source([93,'hello',True])
         st = s.map(lambda x : x, schema=CommonSchema.String)
+        st2 = s.map(schema=str)
 
         tester = Tester(topo)
         tester.contents(st, ['93','hello','True'])
+        tester.contents(st2, ['93','hello','True'])
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_object_to_json(self):
         topo = Topology()
         s = topo.source([{'a': 7}, {'b': 8}, {'c': 9}])
         st = s.map(lambda x: x, schema=CommonSchema.Json)
+        st2 = s.map(schema=json)
 
         tester = Tester(topo)
         tester.contents(st, [{'a': 7}, {'b': 8}, {'c': 9}])
+        tester.contents(st2, [{'a': 7}, {'b': 8}, {'c': 9}])
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_string_to_schema(self):

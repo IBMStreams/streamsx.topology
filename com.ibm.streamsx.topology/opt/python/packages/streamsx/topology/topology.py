@@ -523,6 +523,7 @@ class Topology(object):
 
         .. seealso:`SubscribeConnection`
         """
+        schema = streamsx.topology.schema._normalize(schema)
         _name = self.graph._requested_name(name, 'subscribe')
         sl = _SourceLocation(_source_info(), "subscribe")
         # subscribe is never stateful
@@ -922,6 +923,7 @@ class Stream(_placement._Placement, object):
         return Stream(self.topology, oport)._make_placeable()
 
     def _map(self, func, schema, name=None):
+        schema = streamsx.topology.schema._normalize(schema)
         _name = self.topology.graph._requested_name(name, action="map", func=func)
         stateful = self._determine_statefulness(func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Map", func, name=_name, stateful=stateful)
@@ -998,16 +1000,17 @@ class Stream(_placement._Placement, object):
         `schema` parameter changes the type of the stream and
         modifies each ``result`` before submission.
 
-        * :py:const:`~streamsx.topology.schema.CommonSchema.Python` - The default:  `result` is submitted.
-        * :py:const:`~streamsx.topology.schema.CommonSchema.String` - A stream of strings: ``str(result)`` is submitted.
-        * :py:const:`~streamsx.topology.schema.CommonSchema.Json` - A stream of JSON objects: ``result`` must be convertable to a JSON object using `json` package.
+        * ``object`` or :py:const:`~streamsx.topology.schema.CommonSchema.Python` - The default:  `result` is submitted.
+        * ``str`` type (``unicode`` 2.7) or :py:const:`~streamsx.topology.schema.CommonSchema.String` - A stream of strings: ``str(result)`` is submitted.
+        * ``json`` or :py:const:`~streamsx.topology.schema.CommonSchema.Json` - A stream of JSON objects: ``result`` must be convertable to a JSON object using `json` package.
         * :py:const:`~streamsx.topology.schema.StreamSchema` - A structured stream. `result` must be a `dict` or (Python) `tuple`. When a `dict` is returned the outgoing stream tuple attributes are set by name, when a `tuple` is returned stream tuple attributes are set by position.
+        * string value - Equivalent to passing ``StreamSchema(schema)``
 
         Args:
             func: A callable that takes a single parameter for the tuple.
                 If not supplied then a function equivalent to ``lambda tuple_ : tuple_`` is used.
             name(str): Name of the mapped stream, defaults to a generated name.
-            schema(StreamSchema): Schema of the resulting stream.
+            schema(StreamSchema|CommonSchema|str): Schema of the resulting stream.
 
         If invoking ``func`` for a tuple on the stream raises an exception
         then its processing element will terminate. By default the processing
@@ -1492,6 +1495,7 @@ class Stream(_placement._Placement, object):
             Now returns a :py:class:`Sink` instance.
         """
         sl = _SourceLocation(_source_info(), 'publish')
+        schema = streamsx.topology.schema._normalize(schema)
         if schema is not None and self.oport.schema.schema() != schema.schema():
             nc = None
             if schema == streamsx.topology.schema.CommonSchema.Json:
