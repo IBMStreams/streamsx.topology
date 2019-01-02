@@ -64,11 +64,11 @@ class ExtensionOperator(object):
         self.outputs = []
         if schemas:
             if _single_schema(schemas):
-                schema = streamsx.topology.schema._stream_schema(_single_schema(schemas))
+                schema = streamsx.topology.schema._normalize(_single_schema(schemas), False)
                 oport = self._op().addOutputPort(schema=schema, name=self._op().name)
                 self.outputs.append(streamsx.topology.topology.Stream(self.topology, oport)._make_placeable())
             else:
                 for schema in schemas:
-                    schema = streamsx.topology.schema._stream_schema(schema)
+                    schema = streamsx.topology.schema._normalize(schema, False)
                     oport = self._op().addOutputPort(schema=schema)
                     self.outputs.append(streamsx.topology.topology.Stream(self.topology, oport)._make_placeable())
