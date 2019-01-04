@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016,2017
+# Copyright IBM Corp. 2016,2018
 """
 Schemas for streams.
 
@@ -63,6 +63,7 @@ from future.builtins import *
 from past.builtins import basestring, unicode
 
 import collections
+import decimal
 import enum
 import io
 import itertools
@@ -98,6 +99,14 @@ def _normalize(schema, allow_none=True):
 
     if schema in py_types:
         return py_types[schema]
+
+    # With Python 3 allow a named tuple with type hints
+    # to be used as a schema definition
+    if sys.version_info.major == 3:
+        import typing
+        if isinstance(schema, type) and  issubclass(schema, tuple):
+            if hasattr(schema, '_fields') and hasattr(schema, '_field_types'):
+                return _from_named_tuple(schema)
 
     raise ValueError("Unknown stream schema type:" + str(schema))
 
@@ -679,3 +688,42 @@ class CommonSchema(enum.Enum):
 
     def __str__(self):
         return str(self.schema())
+
+_PYTYPE_TO_SPL = {
+    str:'rstring', bool:'boolean', int:'int64', float:'float64',
+    complex:'complex64', decimal.Decimal:'decimal128',
+}
+
+def _from_named_tuple(nt):
+    import typing
+    spl_types = []
+    for name in nt._fields:
+        spl_types.append(_spl_from_type(nt._field_types[name]))
+
+    td = 'tuple<'
+    for i in range(len(nt._fields)):
+        if i:
+            td += ', '
+        td += spl_types[i]
+        td += ' '
+        td += nt._fields[i]
+    td += '>'
+    return StreamSchema(td).as_tuple(named=nt.__name__)
+
+def _spl_from_type(type_):
+    if type_ in _PYTYPE_TO_SPL:
+        return _PYTYPE_TO_SPL[type_]
+
+    if isinstance(type_, type):
+        import typing
+        if issubclass(type_, typing.List):
+            et = type_.__args__[0]
+            return 'list<' + _spl_from_type(et) + '>'
+        if issubclass(type_, typing.Set):
+            et = type_.__args__[0]
+            return 'set<' + _spl_from_type(et) + '>'
+        if issubclass(type_, typing.Mapping):
+            kt = type_.__args__[0]
+            vt = type_.__args__[1]
+            return 'map<' + _spl_from_type(kt) + ', ' + _spl_from_type(vt) + '>'
+    raise ValueError("Unsupported type: " + type_)

@@ -3,6 +3,7 @@
 from past.builtins import unicode
 import unittest
 import random
+import decimal
 import collections
 import sys
 import threading
@@ -272,6 +273,33 @@ class TestSchema(unittest.TestCase):
         self.assertIsInstance(_sch._normalize('tuple<int32 b>'), _sch.StreamSchema)
         self.assertIsInstance(_sch._normalize('MyCoolSchema'), _sch.StreamSchema)
         self.assertRaises(ValueError, _sch._normalize, False)
+
+        if sys.version_info.major == 3:
+            import typing
+            Employee = typing.NamedTuple('Employee', [('name', str), ('id', int)])
+            nts = _sch._normalize(Employee)
+            self.assertIsInstance(nts, _sch.StreamSchema)
+            self.assertEqual('tuple<rstring name, int64 id>', nts._schema)
+
+            AllSPLTypes = typing.NamedTuple('AllSPLTypes', [
+                ('b', bool),
+                ('i64', int),
+                ('f64', float),
+                ('c64', complex),
+                ('d128', decimal.Decimal),
+                ('s', _u),
+                ('li64', typing.List[int]),
+                ('lf64', typing.List[float]),
+                ('mi64b', typing.Mapping[int,bool]),
+                ('llf64', typing.List[typing.List[float]]),
+                ('mi64li64', typing.Mapping[int,typing.List[int]]),
+                ('sc64', typing.Set[complex]),
+                ('sli64', typing.Set[typing.List[int]]),
+                ])
+            nts = _sch._normalize(AllSPLTypes)
+            self.assertIsInstance(nts, _sch.StreamSchema)
+            self.assertEqual('tuple<boolean b, int64 i64, float64 f64, complex64 c64, decimal128 d128, rstring s, list<int64> li64, list<float64> lf64, map<int64, boolean> mi64b, list<list<float64>> llf64, map<int64, list<int64>> mi64li64, set<complex64> sc64, set<list<int64>> sli64>', nts._schema)
+            self.assertEqual('AllSPLTypes', nts.style.__name__)
         
 
 class TestKeepSchema(unittest.TestCase):
