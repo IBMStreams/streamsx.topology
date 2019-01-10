@@ -87,7 +87,7 @@ def _normalize(schema, allow_none=True):
     if isinstance(schema, StreamSchema):
         return schema
 
-    if isinstance(schema, str) or isinstance(schema, _spl_str):
+    if isinstance(schema, basestring):
         return StreamSchema(schema)
 
     py_types = {
