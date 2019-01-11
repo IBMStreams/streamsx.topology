@@ -459,8 +459,14 @@ class View(_ResourceElement):
     def start_data_fetch(self):
         """Starts a thread that fetches data from the Streams view server.
 
+        Each item in the returned `Queue` represents a single tuple
+        on the stream the view is attached to.
+        
         Returns:
             queue.Queue: Queue containing view data.
+
+        .. note:: This is a queue of the tuples coverted to Python
+            objects, it is not a queue of :py:class:`ViewItem` objects.
         """
         self.stop_data_fetch()
         self._data_fetcher = _ViewDataFetcher(self, self._tuple_fn)
