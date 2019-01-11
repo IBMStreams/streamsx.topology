@@ -937,11 +937,13 @@ class Stream(_placement._Placement, object):
 
         A view is a continually updated sampled buffer of a streams's tuples.
         Views allow visibility into a stream from external clients such
-        as the Streams console,
+        as Jupyter Notebooks, the Streams console,
         `Microsoft Excel <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.0/com.ibm.streams.excel.doc/doc/excel_overview.html>`_ or REST clients.
 
         The view created by this method can be used by external clients
-        and through the returned :py:class:`~streamsx.topology.topology.View` object after the topology is submitted. 
+        and through the returned :py:class:`~streamsx.topology.topology.View` object after the topology is submitted. For example a Jupyter Notebook can
+        declare and submit an application with views, and then
+        use the resultant `View` objects to visualize live data within the streams.
 
         When the stream contains Python objects then they are converted
         to JSON.
