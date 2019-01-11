@@ -308,7 +308,12 @@ class _ViewDataFetcher(object):
         self.view = view
         self.tuple_getter = tuple_getter
         self.stop = threading.Event()
-        self.items = queue.Queue()
+        if view.bufferCapacityUnits == 'tuples':
+            self.items = queue.Queue(view.bufferCapacityTuples)
+        elif view.bufferCapacityUnits == 'seconds':
+            self.items = queue.Queue(view.bufferCapacitySeconds * view.maximumTupleRate)
+        else:
+            self.items = queue.Queue(10000)
 
         self._last_collection_time = -1
         self._last_collection_time_count = 0
@@ -317,7 +322,18 @@ class _ViewDataFetcher(object):
         while not self._stopped():
             _items = self._get_deduplicated_view_items() or []
             for itm in _items:
-                self.items.put(itm)
+                try:
+                    self.items.put(itm, block=False)
+                except queue.Full:
+                    # Pop an item (and discard)
+                    try:
+                        self.items.get(block=False)
+                    except queue.Empty:
+                        pass
+                    # Should not block as this should be
+                    # the only producer
+                    self.items.put(itm)
+              
             time.sleep(1)
 
     def _get_deduplicated_view_items(self):
