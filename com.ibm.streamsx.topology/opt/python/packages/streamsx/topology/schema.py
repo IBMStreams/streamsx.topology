@@ -91,7 +91,7 @@ def _normalize(schema, allow_none=True):
         return StreamSchema(schema)
 
     py_types = {
-        object: CommonSchema.Python,
+        _spl_object: CommonSchema.Python,
         _spl_str: CommonSchema.String,
         json: CommonSchema.Json,
         }
