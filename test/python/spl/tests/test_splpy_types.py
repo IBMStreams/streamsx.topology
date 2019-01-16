@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016
+# Copyright IBM Corp. 2016,2019
 from __future__ import unicode_literals
 from builtins import *
 
@@ -46,6 +46,11 @@ class TestTypes(unittest.TestCase):
 
         toBlob = op.Map(
             "com.ibm.streamsx.topology.pysamples.positional::Noop",
+            toBlob.stream,
+            'tuple<blob b>')
+
+        toBlob = op.Map(
+            "com.ibm.streamsx.topology.pytest.pykwargs::KWNoop",
             toBlob.stream,
             'tuple<blob b>')
 
