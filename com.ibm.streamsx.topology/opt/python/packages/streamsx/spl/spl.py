@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015,2017
+# Copyright IBM Corp. 2015,2019
 """
 SPL Python primitive operators.
 
@@ -830,6 +830,9 @@ def _define_fixed(wrapped, callable_):
     """For the callable see how many positional parameters are required"""
     is_class = inspect.isclass(wrapped)
     style = callable_._splpy_style if hasattr(callable_, '_splpy_style') else wrapped._splpy_style
+
+    if style == 'dictionary':
+        return -1
 
     fixed_count = 0
     if style == 'tuple':
