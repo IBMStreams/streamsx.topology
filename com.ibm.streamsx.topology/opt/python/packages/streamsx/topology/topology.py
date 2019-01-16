@@ -1388,7 +1388,7 @@ class Stream(_placement._Placement, object):
         ::
 
             # Create batches against stream s every five minutes
-            w = s.last(size=datetime.timedelta(minutes=5))
+            w = s.batch(size=datetime.timedelta(minutes=5))
 
         Args:
             size: The size of each batch, either an `int` to define the
