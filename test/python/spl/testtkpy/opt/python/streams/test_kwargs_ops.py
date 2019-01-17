@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2017
+# Copyright IBM Corp. 2017,2019
 
 # Import the SPL decorators
 from streamsx.spl import spl
@@ -32,3 +32,11 @@ def KWForEach(**t):
         raise ValueError("A>=B" + str(t))
     if c <= 100:
         raise ValueError("C<=100" + str(t))
+
+
+@spl.map()
+class KWNoop(object):
+    def __init__(self):
+        pass
+    def __call__(self, **tuple_):
+        return tuple_
