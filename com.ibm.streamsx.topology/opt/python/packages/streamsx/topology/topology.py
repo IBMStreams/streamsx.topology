@@ -937,11 +937,13 @@ class Stream(_placement._Placement, object):
 
         A view is a continually updated sampled buffer of a streams's tuples.
         Views allow visibility into a stream from external clients such
-        as the Streams console,
+        as Jupyter Notebooks, the Streams console,
         `Microsoft Excel <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.0/com.ibm.streams.excel.doc/doc/excel_overview.html>`_ or REST clients.
 
         The view created by this method can be used by external clients
-        and through the returned object after the topology is submitted. 
+        and through the returned :py:class:`~streamsx.topology.topology.View` object after the topology is submitted. For example a Jupyter Notebook can
+        declare and submit an application with views, and then
+        use the resultant `View` objects to visualize live data within the streams.
 
         When the stream contains Python objects then they are converted
         to JSON.
@@ -956,8 +958,11 @@ class Stream(_placement._Placement, object):
                 remote client accesses it to retrieve data.
  
         Returns:
-            View object which can be used to access the data when the
+            streamsx.topology.topology.View: View object which can be used to access the data when the
             topology is submitted.
+
+        .. note:: Views are only supported when submitting to distributed
+            contexts including Streaming Analytics service.
         """
         if name is None:
             name = ''.join(random.choice('0123456789abcdef') for x in range(16))
@@ -1380,7 +1385,7 @@ class Stream(_placement._Placement, object):
         ::
 
             # Create batches against stream s every five minutes
-            w = s.last(size=datetime.timedelta(minutes=5))
+            w = s.batch(size=datetime.timedelta(minutes=5))
 
         Args:
             size: The size of each batch, either an `int` to define the
@@ -1639,18 +1644,18 @@ class Stream(_placement._Placement, object):
 
 class View(object):
     """
-    The View class provides access to a continuously updated sampling of data items on a Stream after submission.
-    A view object is produced by the view method, and will access data items from the stream on which it is invoked.
+    The View class provides access to a continuously updated sampling of data items on a :py:class:`Stream` after submission.
+    A view object is produced by :py:meth:`~Stream.view`, and will access data items from the stream on which it is invoked.
 
-    For example, a View object could be created and used as follows:
+    For example, a `View` object could be created and used as follows:
 
         >>> topology = Topology()
-        >>> rands = topology.source(lambda: random.random())
+        >>> rands = topology.source(lambda: iter(random.random, None))
         >>> view = rands.view()       
         >>> submit(ContextTypes.DISTRIBUTED, topology)
         >>> queue = view.start_data_fetch()
         >>> for val in iter(queue.get, None):
-        ... print(val)
+        ...     print(val)
         ...
         0.6527
         0.1963
@@ -1664,7 +1669,7 @@ class View(object):
         self._submit_context = None
         self._streams_connection = None
 
-    def initialize_rest(self):
+    def _initialize_rest(self):
         """Used to initialize the View object on first use.
         """
         if self._streams_connection is None:
@@ -1683,9 +1688,9 @@ class View(object):
         The data items are placed asynchronously in a queue, which is returned from this method.
 
         Returns:
-            A Queue object which is populated with the data items of the stream.
+            queue.Queue: A Queue object which is populated with the data items of the stream.
         """
-        self.initialize_rest()
+        self._initialize_rest()
         sc = self._streams_connection
         instance = sc.get_instance(id=self._submit_context.submission_results['instanceId'])
         job = instance.get_job(id=self._submit_context.submission_results['jobId'])
