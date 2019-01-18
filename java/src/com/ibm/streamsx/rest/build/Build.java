@@ -1,0 +1,158 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2017
+ */
+package com.ibm.streamsx.rest.build;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import org.apache.http.client.fluent.Request;
+import org.apache.http.entity.ContentType;
+
+import com.google.gson.JsonObject;
+import com.google.gson.annotations.Expose;
+
+/**
+ * 
+ * An object describing an IBM Streams build.
+ * 
+ */
+public class Build extends Element {
+    
+    @Expose
+    private String id;
+    @Expose
+    private String status;
+    @Expose
+    private long creationTime;
+    @Expose
+    private String creationUser;
+    @Expose
+    private String name;
+    @Expose
+    private long lastActivityTime;
+    @Expose
+    private String type;
+    
+    @Expose
+    private String artifacts;
+    @Expose
+    private String results;
+    
+    static final Build create(BuildService service, AbstractConnection connection, JsonObject gsonString) {
+        Build element = gson.fromJson(gsonString, Build.class);
+        element.setConnection(connection);
+        return element;
+    }
+
+    /**
+     * Gets the time in milliseconds when this domain was created.
+     * 
+     * @return the epoch time in milliseconds when the domain was created.
+     */
+    public long getCreationTime() {
+        return creationTime;
+    }
+
+    /**
+     * Gets the user ID that created this build.
+     * 
+     * @return the creation user ID
+     */
+    public String getCreationUser() {
+        return creationUser;
+    }
+
+    /**
+     * Gets the IBM Streams unique identifier for this build.
+     * 
+     * @return the IBM Streams unique identifier.
+     */
+    public String getId() {
+        return id;
+    }
+
+
+    /**
+     * Gets the status of the build.
+     *
+     * @return the instance status that contains one of the following values:
+     *         <ul>
+     *         <li>running</li>
+     *         <li>stopping</li>
+     *         <li>stopped</li>
+     *         <li>starting</li>
+     *         <li>removing</li>
+     *         <li>unknown</li>
+     *         </ul>
+     * 
+     */
+    public String getStatus() {
+        return status;
+    }
+    
+
+    /**
+     * Gets the name for this build.
+     * @return name for this build.
+     */
+    public String getName() {
+        return name;
+    }
+    
+    public Build uploadArchive(File archive) throws IOException {
+		Request put = Request.Put(self)	      
+			    .addHeader("Authorization", connection().getAuthorization())
+			    .bodyFile(archive, ContentType.create("application/zip"));
+
+		refresh( StreamsRestUtils.requestGsonResponse(connection().executor, put));
+		
+    	return this;
+    }
+    
+    public Build uploadArchiveAndBuild(File archive) throws IOException, InterruptedException {
+    	uploadArchive(archive);
+    	
+    	submit();
+    	
+		do {
+			Thread.sleep(2000);
+			refresh();
+			System.err.println("STATYS" + getStatus());
+			if ("built".equals(getStatus())) {
+				return this;
+			}
+		} while ("building".equals(getStatus()) || "waiting".equals(getStatus()));
+    	
+    	return this;
+    }
+    
+    
+    
+    public Build submit() throws IOException {   	
+    	action("submit");
+    	return this;
+    }
+    
+    public void action(String type) throws IOException {
+    	
+    	JsonObject action = new JsonObject();
+    	action.addProperty("type", type);
+		
+		Request post = Request.Post(self + "/actions")	      
+		    .addHeader("Authorization", connection().getAuthorization())
+		    .bodyString(action.toString(), ContentType.APPLICATION_JSON);
+		
+		refresh( StreamsRestUtils.requestGsonResponse(connection().executor, post));
+    }
+    
+    public List<Artifact> getArtifacts() throws IOException {
+    	return Artifact.createArtifactList(this, this.artifacts);
+    }
+    
+    public void delete() throws IOException {
+    	_delete();
+    }
+}
