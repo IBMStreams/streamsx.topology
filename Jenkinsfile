@@ -36,7 +36,7 @@ pipeline {
        }
     }
     stage('Python 3.5 standalone') {
-       when { anyOf { branch 'master'; branch 'feature/*' } }
+       when { anyOf { branch 'master'; branch 'v1_11'; branch 'feature/*' } }
        steps {
          script {
            try {
@@ -62,7 +62,7 @@ pipeline {
        }
     }
     stage('Python 2.7 standalone') {
-       when { anyOf { branch 'master'; branch 'feature/*' } }
+       when { anyOf { branch 'master'; branch 'v1_11'; branch 'feature/*' } }
        steps {
          script {
            try {
