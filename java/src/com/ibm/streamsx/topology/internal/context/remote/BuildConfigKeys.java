@@ -13,6 +13,8 @@ public interface BuildConfigKeys {
     
     String ORIGINATOR = com.ibm.streamsx.topology.internal.context.remote.DeployKeys.ORIGINATOR;
     
+    String KEEP_ARTIFACTS = "keepArtifacts";
+    
     
     static JsonObject determineBuildConfig(JsonObject deploy, JsonObject submission) {
         JsonObject buildConfig = new JsonObject();

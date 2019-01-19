@@ -28,6 +28,7 @@ import java.util.logging.Logger;
 import javax.net.ssl.SSLContext;
 import javax.xml.bind.DatatypeConverter;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -279,12 +280,18 @@ class StreamsRestUtils {
         return sReturn;
     }
     
-    static InputStream rawStreamingGet(Executor executor,
+    private static InputStream rawStreamingGet(Executor executor,
             String auth, String url) throws IOException {
+        
+        String accepted =
+                ContentType.APPLICATION_OCTET_STREAM.getMimeType()
+                + ","
+                + "application/x-compressed";
         Request request = Request
                 .Get(url)
-                .addHeader("accept", ContentType.APPLICATION_JSON.getMimeType())
+                .addHeader("accept",accepted)
                 .useExpectContinue();
+        
         if (null != auth) {
             request = request.addHeader(AUTH.WWW_AUTH_RESP, auth);
         }

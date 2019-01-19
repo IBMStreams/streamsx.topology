@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.topology.internal.context.remote;
 
+import static com.ibm.streamsx.topology.internal.context.remote.BuildConfigKeys.KEEP_ARTIFACTS;
 import static com.ibm.streamsx.topology.internal.context.remote.BuildConfigKeys.determineBuildConfig;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
@@ -49,6 +50,8 @@ abstract class BuildRemoteContext<C> extends ZippedToolkitRemoteContext {
         try {
 
             JsonObject buildConfig = determineBuildConfig(deploy, submission);
+            if (keepArtifacts(submission))
+                buildConfig.addProperty(KEEP_ARTIFACTS, true);
 
             JsonObject submitResult = submitBuildArchive(context, buildArchive,
                     deploy, jco, buildName, buildConfig);
