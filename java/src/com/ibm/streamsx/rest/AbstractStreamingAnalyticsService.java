@@ -34,7 +34,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.StreamsRestUtils.StreamingAnalyticsServiceVersion;
+import com.ibm.streamsx.topology.internal.context.remote.BuildConfigKeys;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
@@ -279,12 +281,23 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             Result<Job,JsonObject> result = jobResult(response);
             result.getRawResult().add(SubmissionResultsKeys.SUBMIT_METRICS, metrics);
             result.getRawResult().add(SubmissionResultsKeys.BUILD_STATUS, buildStatus);
+            
+            if (GsonUtilities.jboolean(buildConfig, BuildConfigKeys.KEEP_ARTIFACTS)) {
+                final long startDownloadSabTime = System.currentTimeMillis();
+                if (downloadArtifacts(httpclient, artifacts)) {
+                    final long endDownloadSabTime = System.currentTimeMillis();
+                    metrics.addProperty(SubmissionResultsKeys.DOWNLOAD_SABS_TIME, (endDownloadSabTime - startDownloadSabTime));
+                }
+            }
+            
             return addConsoleURLs(result);
         } finally {
             httpclient.close();
         }
     }
     
+    protected abstract boolean downloadArtifacts(CloseableHttpClient httpclient, JsonArray artifacts);
+
     /**
      * Add any required Streams console URLs into the result.
      */

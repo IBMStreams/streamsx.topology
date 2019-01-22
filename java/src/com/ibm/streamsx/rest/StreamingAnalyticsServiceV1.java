@@ -181,4 +181,9 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
     AbstractStreamingAnalyticsConnection createStreamsConnection() throws IOException {
         return StreamingAnalyticsConnectionV1.of(this, service, false);
     }
+    
+    @Override
+    protected boolean downloadArtifacts(CloseableHttpClient httpclient, JsonArray artifacts) {
+        return false;
+    }
 }

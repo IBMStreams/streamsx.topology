@@ -53,6 +53,7 @@ public interface SubmissionResultsKeys {
     String SUBMIT_UPLOAD_TIME = "buildArchiveUpload" + TIME_MS_SUFFIX;
     String SUBMIT_TOTAL_BUILD_TIME = "totalBuild" + TIME_MS_SUFFIX;
     String SUBMIT_JOB_TIME = "jobSubmission" + TIME_MS_SUFFIX;
+    String DOWNLOAD_SABS_TIME = "downloadSabs" + TIME_MS_SUFFIX;
     
     /**
      * Separate build state times in SUBMIT_METRICS
