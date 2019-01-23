@@ -46,6 +46,7 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
+import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -68,6 +69,8 @@ import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitDependencyType;
 import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
 
 public class ToolkitRemoteContext extends RemoteContextImpl<File> {
+    
+    static final Logger TRACE = Logger.getLogger("com.ibm.streamsx.topology");
     
     /**
      * Location where dependent jars are placed

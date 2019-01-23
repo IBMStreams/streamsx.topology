@@ -28,6 +28,7 @@ public interface RemoteContext<T> {
         BUILD_ARCHIVE,
         ANALYTICS_SERVICE,
         STREAMING_ANALYTICS_SERVICE,
+        BUNDLE,
     }
     
     
