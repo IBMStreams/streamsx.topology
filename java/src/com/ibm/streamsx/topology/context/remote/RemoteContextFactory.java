@@ -1,6 +1,7 @@
 package com.ibm.streamsx.topology.context.remote;
 
-import com.ibm.streamsx.topology.internal.context.remote.BuildServiceContext;
+import com.ibm.streamsx.topology.internal.context.streamsrest.BuildServiceContext;
+import com.ibm.streamsx.topology.internal.context.streamsrest.DistributedStreamsRestContext;
 import com.ibm.streamsx.topology.internal.context.remote.RemoteBuildAndSubmitRemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.ZippedToolkitRemoteContext;
@@ -23,6 +24,8 @@ public class RemoteContextFactory {
         	return new RemoteBuildAndSubmitRemoteContext();
         case BUNDLE:
             return new BuildServiceContext();
+        case DISTRIBUTED:
+            return new DistributedStreamsRestContext();
         default:
             throw new IllegalArgumentException(Messages.getString("CONTEXT_UNKNOWN_TYPE", type));
         }

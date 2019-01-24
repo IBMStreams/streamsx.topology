@@ -70,7 +70,7 @@ import com.ibm.streamsx.topology.internal.toolkit.info.ToolkitInfoModelType;
 
 public class ToolkitRemoteContext extends RemoteContextImpl<File> {
     
-    static final Logger TRACE = Logger.getLogger("com.ibm.streamsx.topology");
+    protected static final Logger TRACE = Logger.getLogger("com.ibm.streamsx.topology");
     
     /**
      * Location where dependent jars are placed

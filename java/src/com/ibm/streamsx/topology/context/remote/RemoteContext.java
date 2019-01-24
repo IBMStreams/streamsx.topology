@@ -29,6 +29,7 @@ public interface RemoteContext<T> {
         ANALYTICS_SERVICE,
         STREAMING_ANALYTICS_SERVICE,
         BUNDLE,
+        DISTRIBUTED,
     }
     
     

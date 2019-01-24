@@ -42,7 +42,7 @@ public class RemoteBuildAndSubmitRemoteContext extends BuildRemoteContext<Stream
     }
 	
     @Override
-    StreamingAnalyticsService createSubmissionContext(JsonObject deploy)
+    protected StreamingAnalyticsService createSubmissionContext(JsonObject deploy)
             throws Exception {
         return streamingAnalyticServiceFromDeploy(deploy);
     }
