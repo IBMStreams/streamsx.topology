@@ -69,6 +69,7 @@ class OperatorGenerator {
     String generate(JsonObject graphConfig, JsonObject op) throws IOException {
         JsonObject _op = op;
         StringBuilder sb = new StringBuilder();
+        genericAnnotations(_op, sb);
         noteAnnotations(_op, sb);
         categoryAnnotation(_op, sb);
         parallelAnnotation(_op, sb);
@@ -89,6 +90,46 @@ class OperatorGenerator {
         sb.append("  }\n");
 
         return sb.toString();
+    }
+    
+    /**
+     * Generically generate annotations.
+     * 
+     * @see OpProperties.ANNOTATIONS
+     */
+    static void genericAnnotations(JsonObject op, StringBuilder sb) {
+        JsonArray annotations = GsonUtilities.array(op, OpProperties.ANNOTATIONS);
+        if (annotations == null)
+            return;
+        for (JsonElement a : annotations) {
+            JsonObject annotation = a.getAsJsonObject();
+            sb.append('@');
+            sb.append(jstring(annotation, OpProperties.ANNOTATION_TYPE));
+            sb.append('(');
+            JsonObject properties = GsonUtilities.object(annotation, OpProperties.ANNOTATION_PROPERTIES);
+            boolean first = true;
+            for (Entry<String, JsonElement> property : properties.entrySet()) {
+                if (!first)
+                    sb.append(',');
+                sb.append(property.getKey());
+                sb.append('=');
+                if (property.getValue().isJsonPrimitive()) {
+                    JsonPrimitive value = property.getValue().getAsJsonPrimitive();
+                    if (value.isString())
+                        sb.append(SPLGenerator.stringLiteral(value.getAsString()));
+                    else
+                        sb.append(value.getAsString());
+                } else {
+                    SPLGenerator.value(sb, property.getValue().getAsJsonObject());
+                }
+                if (first)
+                    first = false;
+
+            }
+            
+            sb.append(')');
+            sb.append('\n');
+        }
     }
 
     private static void noteAnnotations(JsonObject op, StringBuilder sb) throws IOException {
