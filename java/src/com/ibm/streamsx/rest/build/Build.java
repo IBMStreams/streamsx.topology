@@ -126,8 +126,18 @@ public class Build extends Element {
 			if ("built".equals(getStatus())) {
 				return this;
 			}
-			Thread.sleep(2000);
-		} while ("building".equals(getStatus()) || "waiting".equals(getStatus()));
+			try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                try {
+                    delete();
+                } catch (IOException ie) {
+                }
+                throw e;
+            }
+		} while ("building".equals(getStatus()) || "waiting".equals(getStatus()) || "uploaded".equals(getStatus()));
+		
+		
 		
 		Request gr = Request.Get(this.results).addHeader("Authorization", connection().getAuthorization());
 		JsonObject response = StreamsRestUtils.requestGsonResponse(connection().executor, gr);
