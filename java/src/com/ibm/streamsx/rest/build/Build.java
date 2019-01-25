@@ -1,6 +1,6 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2017
+# Copyright IBM Corp. 2017,2019
  */
 package com.ibm.streamsx.rest.build;
 
@@ -13,6 +13,7 @@ import org.apache.http.entity.ContentType;
 
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
  * 
@@ -42,7 +43,9 @@ public class Build extends Element {
     private String results;
     
     static final Build create(BuildService service, AbstractConnection connection, JsonObject gsonString) {
-        Build element = gson.fromJson(gsonString, Build.class);
+        // Build element = gson.fromJson(gsonString, Build.class);
+        Build element = new Build();
+        element.self = GsonUtilities.jstring(gsonString, "build");
         element.setConnection(connection);
         return element;
     }
@@ -106,8 +109,9 @@ public class Build extends Element {
 		Request put = Request.Put(self)	      
 			    .addHeader("Authorization", connection().getAuthorization())
 			    .bodyFile(archive, ContentType.create("application/zip"));
-
-		refresh( StreamsRestUtils.requestGsonResponse(connection().executor, put));
+		
+		JsonObject response = StreamsRestUtils.requestGsonResponse(connection().executor, put);
+		refresh(response);
 		
     	return this;
     }
@@ -117,14 +121,17 @@ public class Build extends Element {
     	
     	submit();
     	
-		do {
-			Thread.sleep(2000);
+		do {			
 			refresh();
-			System.err.println("STATYS" + getStatus());
 			if ("built".equals(getStatus())) {
 				return this;
 			}
+			Thread.sleep(2000);
 		} while ("building".equals(getStatus()) || "waiting".equals(getStatus()));
+		
+		Request gr = Request.Get(this.results).addHeader("Authorization", connection().getAuthorization());
+		JsonObject response = StreamsRestUtils.requestGsonResponse(connection().executor, gr);
+        System.err.println("ERROR Response:" + response);
     	
     	return this;
     }

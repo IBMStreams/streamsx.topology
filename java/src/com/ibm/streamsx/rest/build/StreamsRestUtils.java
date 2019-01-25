@@ -282,8 +282,15 @@ class StreamsRestUtils {
     // TODO: unify error handling between this and getResponseString()
     private static JsonObject gsonFromResponse(HttpResponse response) throws IOException {
         HttpEntity entity = response.getEntity();
-        int statusCode = response.getStatusLine().getStatusCode();
-        if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED) {
+        final int statusCode = response.getStatusLine().getStatusCode();
+        switch (statusCode) {
+            case HttpStatus.SC_OK:
+            case HttpStatus.SC_CREATED:
+            case HttpStatus.SC_ACCEPTED:
+                break;
+            default:
+            
+            {
             final String errorInfo;
             if (entity != null)
                 errorInfo = " -- " + EntityUtils.toString(entity);
@@ -293,6 +300,7 @@ class StreamsRestUtils {
                     "Unexpected HTTP resource from service:"
                             + response.getStatusLine().getStatusCode() + ":" +
                             response.getStatusLine().getReasonPhrase() + errorInfo);
+            }
         }
 
         if (entity == null)

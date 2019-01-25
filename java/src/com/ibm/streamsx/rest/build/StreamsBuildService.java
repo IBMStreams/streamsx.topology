@@ -49,7 +49,8 @@ class StreamsBuildService extends AbstractConnection implements BuildService {
 		    .bodyString(buildParams.toString(),
 		                ContentType.APPLICATION_JSON);
 		
-		return Build.create(this, this, StreamsRestUtils.requestGsonResponse(executor, post));
+		Build build = Build.create(this, this, StreamsRestUtils.requestGsonResponse(executor, post));
+		return build;
 	}
 
 }

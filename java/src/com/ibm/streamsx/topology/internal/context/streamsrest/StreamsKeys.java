@@ -20,7 +20,10 @@ interface StreamsKeys {
         return getConnectionInfo(deploy, BUILD_SERVICE_URL);
     }
     static String getStreamsInstanceURL(JsonObject deploy) {
-        return getConnectionInfo(deploy, STREAMS_REST_URL);
+        String url = getConnectionInfo(deploy, STREAMS_REST_URL);
+        if (url == null)
+            url = System.getenv("STREAMS_REST_URL");
+        return url;
     }
     
     static String getConnectionInfo(JsonObject deploy, String key) {
