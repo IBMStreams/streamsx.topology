@@ -177,7 +177,6 @@ class StreamsRestUtils {
      * Gets a JSON response to an HTTP request call
      */
     static JsonObject requestGsonResponse(Executor executor, Request request) throws IOException {
-    	System.out.println("REQUEST:" + request.toString());
     	request.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         Response response = executor.execute(request);
         return gsonFromResponse(response.returnResponse());

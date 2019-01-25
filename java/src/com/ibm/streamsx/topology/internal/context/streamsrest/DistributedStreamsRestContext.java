@@ -2,8 +2,10 @@ package com.ibm.streamsx.topology.internal.context.streamsrest;
 
 import java.io.File;
 import java.net.URL;
+import java.util.Map.Entry;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.ApplicationBundle;
 import com.ibm.streamsx.rest.Instance;
@@ -13,6 +15,11 @@ import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class DistributedStreamsRestContext extends BuildServiceContext {
+    
+    @Override
+    public Type getType() {
+        return Type.DISTRIBUTED;
+    }
     
     @Override
     protected void postBuildAction(JsonObject deploy, JsonObject jco, JsonObject result) throws Exception {
@@ -25,14 +32,14 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
         if (instanceId.endsWith("/"))
             instanceId = instanceId.substring(0, instanceId.length()-1);
         
-        URL restUrl = new URL(instanceUrl.getProtocol(), instanceUrl.getHost(), instanceUrl.getPort(), "/streams/rest/resources");
+        URL restUrl = new URL(instanceUrl.getProtocol(), instanceUrl.getHost(), instanceUrl.getPort(),
+                "/streams/rest/resources");
                        
         StreamsConnection conn = StreamsConnection.ofBearerToken(restUrl.toExternalForm(), StreamsKeys.getBearerToken(deploy));
         
-        conn.allowInsecureHosts(true);
-        
-        System.err.println("REST_URL:" + restUrl.toExternalForm());
-        
+        if (!sslVerify(deploy))
+            conn.allowInsecureHosts(true);
+                
         Instance instance = conn.getInstance(instanceId);
         
         JsonArray artifacts = GsonUtilities.array(GsonUtilities.object(result, "build"), "artifacts");
@@ -45,7 +52,8 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
                        
         Result<Job, JsonObject> submissionResult = bundle.submitJob(jco);
         
-        System.out.println("Submission Result:" + submissionResult.getRawResult());
+        for (Entry<String, JsonElement> entry : submissionResult.getRawResult().entrySet())
+            result.add(entry.getKey(), entry.getValue());
     }
     
 }

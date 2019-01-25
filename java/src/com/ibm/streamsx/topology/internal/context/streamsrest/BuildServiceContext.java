@@ -15,13 +15,21 @@ import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.build.Artifact;
 import com.ibm.streamsx.rest.build.Build;
 import com.ibm.streamsx.rest.build.BuildService;
+import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.internal.context.remote.BuildRemoteContext;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class BuildServiceContext extends BuildRemoteContext<BuildService> {
     
     @Override
     public Type getType() {
         return Type.BUNDLE;
+    }
+    
+    protected boolean sslVerify(JsonObject deploy) {
+        if (deploy.has(ContextProperties.SSL_VERIFY))
+            return GsonUtilities.jboolean(deploy, ContextProperties.SSL_VERIFY);                
+        return true;
     }
 
     @Override
@@ -34,7 +42,8 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
             JsonObject deploy, JsonObject jco, String buildName,
             JsonObject buildConfig) throws Exception {
         
-        context.allowInsecureHosts();
+        if (!sslVerify(deploy))
+            context.allowInsecureHosts();
         
         buildName = getSPLCompatibleName(buildName) + "_" + randomHex(16);
 
