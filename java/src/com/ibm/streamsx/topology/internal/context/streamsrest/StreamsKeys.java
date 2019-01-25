@@ -44,5 +44,4 @@ interface StreamsKeys {
         
         return GsonUtilities.jstring(service, BEARER_TOKEN);
     }
-
 }

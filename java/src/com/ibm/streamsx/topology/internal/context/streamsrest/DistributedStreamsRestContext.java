@@ -1,5 +1,9 @@
 package com.ibm.streamsx.topology.internal.context.streamsrest;
 
+import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
+
 import java.io.File;
 import java.net.URL;
 import java.util.Map.Entry;
@@ -14,6 +18,10 @@ import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
+/**
+ * Distributed context that uses the REST api for building
+ * jobs and submission.
+ */
 public class DistributedStreamsRestContext extends BuildServiceContext {
     
     @Override
@@ -43,17 +51,31 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
         Instance instance = conn.getInstance(instanceId);
         
         JsonArray artifacts = GsonUtilities.array(GsonUtilities.object(result, "build"), "artifacts");
-        if (artifacts == null || artifacts.size() != 1)
-            throw new IllegalStateException();
-        
-        String location = GsonUtilities.jstring(artifacts.get(0).getAsJsonObject(), "location");
-        
-        ApplicationBundle bundle = instance.uploadBundle(new File(location));
-                       
-        Result<Job, JsonObject> submissionResult = bundle.submitJob(jco);
-        
-        for (Entry<String, JsonElement> entry : submissionResult.getRawResult().entrySet())
-            result.add(entry.getKey(), entry.getValue());
+        try {
+            if (artifacts == null || artifacts.size() != 1)
+                throw new IllegalStateException();
+
+            String location = GsonUtilities
+                    .jstring(artifacts.get(0).getAsJsonObject(), "location");
+
+            ApplicationBundle bundle = instance
+                    .uploadBundle(new File(location));
+
+            Result<Job, JsonObject> submissionResult = bundle.submitJob(jco);
+
+            for (Entry<String, JsonElement> entry : submissionResult
+                    .getRawResult().entrySet())
+                result.add(entry.getKey(), entry.getValue());
+        } finally {
+            if (!jboolean(deploy, KEEP_ARTIFACTS)) {
+                for (JsonElement e : artifacts) {
+                    JsonObject artifact = e.getAsJsonObject();
+                    if (artifact.has("location")) {
+                        new File(GsonUtilities.jstring(artifact, "location")).delete();
+                    }
+                }
+            }
+        }
     }
     
 }
