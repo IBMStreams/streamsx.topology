@@ -127,6 +127,24 @@ public interface OpProperties {
 	 * The width of the parallel region, if the operator is the start of a parallel region.
 	 */
 	String WIDTH = "width";
-
-
+	
+	
+	/**
+	 * Optional array of annotations.
+	 * Each element is a object with:
+	 *    {
+	 *       "type": annotation_type excluding @,
+	 *       "properties": object of key-values where the value is an SPL expression.
+	 *    }
+	 *    
+	 *    Value must be a JSON primitive or a JSONObject representing a typed SPL expression.
+	 *    
+	 *    Example for @spl_note
+	 *    
+	 *    { "type": "spl_note", "properties": {"id":"comment", "value":"This is a comment"}}
+	 */
+	String ANNOTATIONS = "annotations";
+	
+	String ANNOTATION_TYPE = "type";
+	String ANNOTATION_PROPERTIES = "properties";
 }

@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 from future.builtins import *
 from past.builtins import basestring
 
+import os
 import sys
 import uuid
 import json
@@ -189,6 +190,7 @@ class SPLGraph(object):
         _graph = {}
         _graph["name"] = self.name
         _graph["namespace"] = self.namespace
+        self._add_project_info(_graph)
         _graph["public"] = True
         _graph["config"] = {}
         self._determine_model(_graph["config"])
@@ -221,6 +223,19 @@ class SPLGraph(object):
 
         graph_cfg['model'] = 'spl' if all_spl else 'functional' 
         graph_cfg['language'] = 'spl' if all_spl else 'python'
+
+    def _add_project_info(self, _graph):
+        # Determine if it looks like we are in a project structure
+        # and if so add an @spl__project() annotation
+        project_id = os.environ.get('DSX_PROJECT_ID')
+        if project_id:
+            annotation = {'type':'spl__project', 'properties':{'id':project_id}}
+            project_name = os.environ.get('DSX_PROJECT_NAME')
+            if project_name:
+                annotation['properties']['name'] = project_name
+            if not 'annotations' in _graph:
+                _graph['annotations'] = []
+            _graph['annotations'].append(annotation)
 
     def _add_packages(self, includes):
         for package_path in self.resolver.packages:

@@ -101,6 +101,8 @@ public class SPLGenerator {
         mainCompsiteDef.add("parameters", graph.get("parameters"));
         mainCompsiteDef.addProperty("__spl_mainComposite", true);
         mainCompsiteDef.add("operators", graph.get("operators"));
+        if (graph.has(OpProperties.ANNOTATIONS))
+            mainCompsiteDef.add(OpProperties.ANNOTATIONS, graph.get(OpProperties.ANNOTATIONS));
         composites.add(mainCompsiteDef);
                 
         remapAllCompositePorts();
@@ -807,6 +809,9 @@ public class SPLGenerator {
 
     void generateComposite(JsonObject graphConfig, JsonObject graph,
             StringBuilder compBuilder) throws IOException {
+        
+        
+        OperatorGenerator.genericAnnotations(graph, compBuilder);
         boolean isPublic = jboolean(graph, "public");
         String kind = jstring(graph, KIND);
         kind = getSPLCompatibleName(kind);
