@@ -374,6 +374,9 @@ class Topology(object):
                     namespace = si[2].__module__
                 elif si[0] is not None:
                     namespace = os.path.splitext(os.path.basename(si[0]))[0]
+                    if namespace.startswith('<ipython-input'):
+                        if 'DSX_PROJECT_NAME' in os.environ:
+                            namespace = os.environ['DSX_PROJECT_NAME']
         
         if sys.version_info.major == 3:
           self.opnamespace = "com.ibm.streamsx.topology.functional.python"
