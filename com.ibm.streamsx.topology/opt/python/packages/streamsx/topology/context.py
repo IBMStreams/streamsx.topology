@@ -442,8 +442,7 @@ class _SubmitContextFactory(object):
         # are supported.
         streams_install = os.environ.get('STREAMS_INSTALL')
         if streams_install is None:
-            if not (ctxtype == ContextTypes.TOOLKIT or ctxtype == ContextTypes.BUILD_ARCHIVE
-                    or ctxtype == ContextTypes.ANALYTICS_SERVICE or ctxtype == ContextTypes.STREAMING_ANALYTICS_SERVICE):
+            if ctxtype == ContextTypes.STANDALONE:
                 raise ValueError(ctxtype + " must be submitted when an IBM Streams install is present.")
 
         if ctxtype == ContextTypes.DISTRIBUTED:
