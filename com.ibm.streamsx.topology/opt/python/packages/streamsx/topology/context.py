@@ -44,7 +44,7 @@ import streamsx.rest_primitives
 import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
 
-logger = logging.getLogger('streamsx.topology.context')
+logger = logging.getLogger(__name__)
 
 #
 # Submission of a python graph using the Java Application API
@@ -146,7 +146,10 @@ class _BaseSubmitter(object):
                 submit_class = "com.ibm.streamsx.topology.context.local.StreamsContextSubmit"
             cp = cp + ':' + os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
 
-        args = [jvm, '-classpath', cp, submit_class, self.ctxtype, self.fn]
+        jul_cfg = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logging.properties')
+        jul = '-Djava.util.logging.config.file=' + jul_cfg
+
+        args = [jvm, '-classpath', cp, jul, submit_class, self.ctxtype, self.fn, str(logging.getLogger().getEffectiveLevel())]
         logger.info("Generating SPL and submitting application.")
         proc_env = self._get_java_env()
         process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0, env=proc_env)
@@ -486,9 +489,19 @@ def _print_process_stdout(process):
     finally:
         process.stdout.close()
 
+_JAVA_LOG_LVL = {
+    # java.util.logging
+    'SEVERE': logging.ERROR,
+    'WARNING': logging.WARNING,
+    'INFO':logging.INFO, 'CONFIG':logging.INFO,
+    'FINE:':logging.DEBUG, 'FINER':logging.DEBUG, 'FINEST':logging.DEBUG,
+    'FATAL': logging.CRITICAL,
+    'ERROR': logging.ERROR,
+    'DEBUG:':logging.DEBUG, 'TRACE':logging.DEBUG
+    }
 
-# Used by a thread which polls a subprocess's stderr and writes it to stderr, until the sc compilation
-# has begun.
+# Used by a thread which polls a subprocess's stderr and writes it to
+# a logger or stderr
 def _print_process_stderr(process, submitter):
     try:
         if sys.version_info.major == 2:
@@ -499,6 +512,10 @@ def _print_process_stderr(process, submitter):
                 process.stderr.close()
                 break
             line = line.decode("utf-8").strip()
+            em = line.rstrip().split(': ', 1)
+            if len(em) == 2 and em[0] in _JAVA_LOG_LVL:
+                logger.log(_JAVA_LOG_LVL[em[0]], em[1])
+                continue
             if sys.version_info.major == 2:
                 serr.write(line)
                 serr.write("\n")

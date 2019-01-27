@@ -1,6 +1,6 @@
 /*
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016  
+# Copyright IBM Corp. 2016,2019 
  */
 package com.ibm.streamsx.topology.context.local;
 
@@ -11,6 +11,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.context.StreamsContextFactory;
+import com.ibm.streamsx.topology.internal.logging.Logging;
 
 /**
  * Given the path of a file containing the JSON representation of a graph,
@@ -22,6 +23,7 @@ public class StreamsContextSubmit {
     public static void main(String[] args) throws Exception {
     	String context = args[0];
         String JSONPath = args[1];
+        Logging.setRootLevels(args[2]);
         
         File JSONFile = new File(JSONPath);
         
