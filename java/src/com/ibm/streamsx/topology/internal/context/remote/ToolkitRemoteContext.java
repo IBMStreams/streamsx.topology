@@ -230,7 +230,7 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
         
         List<ToolkitDependencyType> toolkits = dependencies.getToolkit();
         
-        GsonUtilities.objectArray(object(jsonGraph, "spl"), TOOLKITS_JSON, tk -> {
+        GsonUtilities.objectArray(object(jsonGraph, "config", "spl"), TOOLKITS_JSON, tk -> {
             ToolkitDependencyType depTkInfo;
             String root = jstring(tk, "root");
             if (root != null) {
