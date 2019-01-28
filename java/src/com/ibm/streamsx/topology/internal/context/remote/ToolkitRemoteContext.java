@@ -236,6 +236,9 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
             if (root != null) {
                 try {
                     depTkInfo = TkInfo.getTookitDependency(root, false);
+                    // Handle missing info.xml
+                    if (depTkInfo == null)
+                        return;
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
