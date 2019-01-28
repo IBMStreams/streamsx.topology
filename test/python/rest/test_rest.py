@@ -241,7 +241,7 @@ class TestSasRestFeatures(TestDistributedRestFeatures):
         self.test_config[ConfigParams.STREAMS_CONNECTION]=self.sc
 
         self.is_v2 = False
-        if _IAMConstants.V2_REST_URL in self.sc.credentials:
+        if _IAMConstants.V2_REST_URL in self.sc.session.auth._credentials:
             self.is_v2 = True
 
     # The underscore in front of this test causes it to be skipped by default

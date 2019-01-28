@@ -243,6 +243,7 @@ class StreamingAnalyticsConnection(StreamsConnection):
         self._analytics_service = True
         self._sas = StreamingAnalyticsService(self.rest_client, self.credentials)
         self._delegator_impl = self._sas._delegator
+        self._domains = None
 
     @staticmethod
     def of_definition(service_def):
