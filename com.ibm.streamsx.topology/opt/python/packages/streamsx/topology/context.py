@@ -128,6 +128,7 @@ class _BaseSubmitter(object):
 
         cp = os.path.join(tk_root, "lib", "com.ibm.streamsx.topology.jar")
 
+        remote_context = False
         streams_install = os.environ.get('STREAMS_INSTALL')
         # If there is no streams install, get java from JAVA_HOME and use the remote contexts.
         if streams_install is None:
@@ -136,15 +137,45 @@ class _BaseSubmitter(object):
                 raise ValueError("JAVA_HOME not found. Please set the JAVA_HOME system variable")
 
             jvm = os.path.join(java_home, "bin", "java")
-            submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
+            remote_context = True
         # Otherwise, use the Java version from the streams install
         else:
             jvm = os.path.join(streams_install, "java", "jre", "bin", "java")
             if ConfigParams.FORCE_REMOTE_BUILD in self.config and self.config[ConfigParams.FORCE_REMOTE_BUILD]:
-                submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
-            else:
-                submit_class = "com.ibm.streamsx.topology.context.local.StreamsContextSubmit"
+                remote_context = True
             cp = cp + ':' + os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
+
+        progress_fn = lambda _ : None
+        if remote_context:
+            submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
+            try:
+                import ipywidgets as widgets
+                progress_bar = widgets.IntProgress(
+                    value=0,
+                    min=0, max=10, step=1,
+                    description='Initializing',
+                    bar_style='info', orientation='horizontal',
+                    style={'description_width':'initial'})
+                try:
+                    display(progress_bar)
+                    def _show_progress(msg):
+                        if msg is True:
+                            progress_bar.value = progress_bar.max
+                            progress_bar.bar_style = 'success'
+                            return
+                        if msg is False:
+                            progress_bar.bar_style = 'danger'
+                            return
+                        msg = msg.split('-')
+                        progress_bar.value += 1
+                        progress_bar.description = msg[3]
+                    progress_fn = _show_progress
+                except:
+                    pass
+            except:
+                pass
+        else:
+            submit_class = "com.ibm.streamsx.topology.context.local.StreamsContextSubmit"
 
         jul_cfg = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logging.properties')
         jul = '-Djava.util.logging.config.file=' + jul_cfg
@@ -154,7 +185,7 @@ class _BaseSubmitter(object):
         proc_env = self._get_java_env()
         process = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0, env=proc_env)
 
-        stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self]))
+        stderr_thread = threading.Thread(target=_print_process_stderr, args=([process, self, progress_fn]))
         stderr_thread.daemon = True
         stderr_thread.start()
 
@@ -170,15 +201,21 @@ class _BaseSubmitter(object):
             with open(self.results_file) as _file:
                 try:
                     results_json = json.loads(_file.read())
+                    progress_fn(True)
                 except IOError:
                     logger.error("Could not read file:" + str(_file.name))
+                    progress_fn(False)
                     raise
                 except json.JSONDecodeError:
                     logger.error("Could not parse results file:" + str(_file.name))
+                    progress_fn(False)
                     raise
                 except:
                     logger.error("Unknown error while processing results file.")
+                    progress_fn(False)
                     raise
+        else:
+            progress_fn(False)
 
         _delete_json(self)
         results_json['return_code'] = process.returncode
@@ -501,7 +538,7 @@ _JAVA_LOG_LVL = {
 
 # Used by a thread which polls a subprocess's stderr and writes it to
 # a logger or stderr
-def _print_process_stderr(process, submitter):
+def _print_process_stderr(process, submitter, progress_fn):
     try:
         if sys.version_info.major == 2:
             serr = codecs.getwriter('utf8')(sys.stderr)
@@ -513,6 +550,9 @@ def _print_process_stderr(process, submitter):
             line = line.decode("utf-8").strip()
             em = line.rstrip().split(': ', 1)
             if len(em) == 2 and em[0] in _JAVA_LOG_LVL:
+                if 'INFO' == em[0] and em[1].startswith('!!-streamsx-'):
+                    progress_fn(em[1])
+                    continue
                 logger.log(_JAVA_LOG_LVL[em[0]], em[1])
                 continue
             if sys.version_info.major == 2:

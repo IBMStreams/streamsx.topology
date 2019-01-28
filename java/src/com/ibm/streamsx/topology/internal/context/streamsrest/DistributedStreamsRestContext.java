@@ -58,14 +58,18 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
             String location = GsonUtilities
                     .jstring(artifacts.get(0).getAsJsonObject(), "location");
 
+            report("Uploading bundle");
             ApplicationBundle bundle = instance
                     .uploadBundle(new File(location));
 
+            report("Submitting job");
             Result<Job, JsonObject> submissionResult = bundle.submitJob(jco);
 
             for (Entry<String, JsonElement> entry : submissionResult
                     .getRawResult().entrySet())
                 result.add(entry.getKey(), entry.getValue());
+            
+            report("Job id:" + submissionResult.getId());
         } finally {
             if (!jboolean(deploy, KEEP_ARTIFACTS)) {
                 for (JsonElement e : artifacts) {

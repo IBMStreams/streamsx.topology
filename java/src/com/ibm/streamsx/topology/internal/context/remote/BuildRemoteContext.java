@@ -26,6 +26,11 @@ import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
  *            Context type used to maintain connection info.
  */
 public abstract class BuildRemoteContext<C> extends ZippedToolkitRemoteContext {
+    
+    @Override
+    public Type getType() {
+        return Type.BUNDLE;
+    }
 
     @Override
     public Future<File> _submit(JsonObject submission) throws Exception {
@@ -41,6 +46,8 @@ public abstract class BuildRemoteContext<C> extends ZippedToolkitRemoteContext {
         String buildName = GraphKeys.splAppName(graph);
 
         Future<File> archive = super._submit(submission);
+        
+        report("Building sab");
 
         File buildArchive = archive.get();
 

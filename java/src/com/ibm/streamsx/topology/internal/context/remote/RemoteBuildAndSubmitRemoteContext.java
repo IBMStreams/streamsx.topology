@@ -66,9 +66,12 @@ public class RemoteBuildAndSubmitRemoteContext extends BuildRemoteContext<Stream
                     - last) > SERVICE_NO_CHECK_PERIOD;
         }
 
-        if (checkIfRunning)
+        if (checkIfRunning) {
+            report("Checking service");
             RemoteContexts.checkServiceRunning(sas);
+        }
 
+        report("Building & submitting job");
         Result<Job, JsonObject> submitResult = sas
                 .buildAndSubmitJob(buildArchive, jco, buildName, buildConfig);
 
@@ -78,6 +81,8 @@ public class RemoteBuildAndSubmitRemoteContext extends BuildRemoteContext<Stream
         final String jobId = submitResult.getId();
         submitResult.getRawResult().addProperty(SubmissionResultsKeys.JOB_ID,
                 jobId);
+        
+        report("Job id:" + jobId);
 
         return submitResult.getRawResult();
     }
