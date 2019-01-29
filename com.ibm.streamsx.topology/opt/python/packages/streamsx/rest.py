@@ -100,7 +100,7 @@ class StreamsConnection:
             resource_url = os.environ['STREAMS_REST_URL']
         
         self._resource_url = resource_url
-        self.rest_client = _StreamsRestClient(username, password)
+        self.rest_client = _StreamsRestClient._of_basic(username, password)
         self.rest_client._sc = self
         self.session = self.rest_client.session
         self._analytics_service = False
@@ -237,7 +237,7 @@ class StreamingAnalyticsConnection(StreamsConnection):
         if self._iam:
             self.rest_client = _IAMStreamsRestClient._create(self.credentials)
         else:
-            self.rest_client = _StreamsRestClient(self.credentials['userid'], self.credentials['password'])
+            self.rest_client = _StreamsRestClient._of_basic(self.credentials['userid'], self.credentials['password'])
         self.rest_client._sc = self
         self.session = self.rest_client.session
         self._analytics_service = True

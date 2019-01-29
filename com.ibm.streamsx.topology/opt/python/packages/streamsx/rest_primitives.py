@@ -149,20 +149,22 @@ def _handle_http_errors(res):
 class _StreamsRestClient(object):
     """Session connection with the Streams REST API
     """
-    def __init__(self, username, password):
+    def __init__(self, auth):
+        self.session = requests.Session()
+        self.session.auth = auth
+
+    # Create session to reuse TCP connection
+    # https authentication
+    @staticmethod
+    def _of_basic(username, password):
         """
         Args:
             username(str): The username of an authorized Streams user.
             password(str): The password associated with the username.
         """
-        # Create session to reuse TCP connection
-        # https authentication
-        self._username = username
-        self._password = password
-
-        self.session = requests.Session()
-        self.session.auth = (username, password)
-
+        auth = (username, password)
+        return _StreamsRestClient(auth)
+    
     def make_request(self, url):
         logger.debug('Beginning a REST request to: ' + url)
         headers={ 'Accept': 'application/json'}
@@ -282,8 +284,7 @@ class _IAMStreamsRestClient(_StreamsRestClient):
         Args:
             credentials: The credentials of the Streaming Analytics service.
         """
-        self.session = requests.Session()
-        self.session.auth = _IAMAuthHandler(credentials)
+        super(_IAMStreamsRestClient, self).__init__(_IAMAuthHandler(credentials))
 
 
 class _ViewDataFetcher(object):
