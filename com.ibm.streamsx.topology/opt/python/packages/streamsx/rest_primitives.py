@@ -28,7 +28,9 @@ import time
 from pprint import pformat
 from urllib import parse
 
+import streamsx.topology.context
 import streamsx.topology.schema
+import streamsx.rest
 
 logger = logging.getLogger('streamsx.rest')
 
@@ -204,6 +206,15 @@ class _StreamsRestClient(object):
 
     def __str__(self):
         return pformat(self.__dict__)
+
+
+class _BearerAuthHandler(requests.auth.AuthBase):
+    def __init__(self, token):
+        self._bearer_token = 'Bearer ' + token
+
+    def __call__(self, r):
+        r.headers['Authorization'] = self._bearer_token
+        return r
 
 
 class _IAMAuthHandler(requests.auth.AuthBase):
@@ -1249,6 +1260,22 @@ class Instance(_ResourceElement):
     def __init__(self, json_rep, rest_client):
         super(Instance, self).__init__(json_rep, rest_client)
         self._delegator = rest_client._sc._delegator
+
+    @staticmethod
+    def of_service(cfg):
+        service = cfg.get(streamsx.topology.context.ConfigParams.SERVICE_DEFINITION, cfg)
+        endpoint = service['connection_info'].get('serviceRestEndpoint')
+        if not endpoint:
+            raise ValueError()
+        es = endpoint.split('/')
+        name = es[len(es)-1]
+        root_url = endpoint.split('/streams/rest/instances/')[0]
+        resource_url = root_url + '/streams/rest/resources'
+
+        sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=_BearerAuthHandler(service['bearerToken']))
+        if streamsx.topology.context.ConfigParams.SSL_VERIFY in cfg:
+                sc.session.verify = cfg[streamsx.topology.context.ConfigParams.SSL_VERIFY]
+        return sc.get_instance(name)
 
     def get_operators(self, name=None):
         """Get the list of :py:class:`Operator` elements associated with this instance.

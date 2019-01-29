@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015,2017
+# Copyright IBM Corp. 2015,2019
 """
 
 Context for submission of applications.
@@ -84,7 +84,9 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
         raise ValueError("Topology {0} does not contain any streams.".format(graph.topology.name))
 
     context_submitter = _SubmitContextFactory(graph, config, username, password).get_submit_context(ctxtype)
-    return SubmissionResult(context_submitter.submit())
+    sr = SubmissionResult(context_submitter.submit())
+    sr._submitter = context_submitter
+    return sr
 
 
 
@@ -368,6 +370,7 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
         self._config().pop(ConfigParams.SERVICE_DEFINITION, None)
 
         self._setup_views()
+        self._job = None
 
     def _create_full_json(self):
         fj = super(_StreamingAnalyticsSubmitter, self)._create_full_json()
@@ -378,10 +381,14 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
                 fj['deploy']['serviceRunningTime'] = rts[sn]
         return fj
 
-    def streams_connection(self):
+    def _job_access(self):
+        if self._job:
+            return self._job
         if self._streams_connection is None:
             self._streams_connection = streamsx.rest.StreamingAnalyticsConnection(self._vcap_services, self._service_name)
-        return self._streams_connection
+        self._job = self._streams_connection.get_instances()[0].get_job(
+                id=self.submission_results['jobId'])
+        return self._job
 
     def _augment_submission_result(self, submission_result):
         vcap = streamsx.rest._get_vcap_services(self._vcap_services)
@@ -392,7 +399,6 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
         else:
             instance_id = credentials['jobs_path'].split('/service_instances/', 1)[1].split('/', 1)[0]
         submission_result['instanceId'] = instance_id
-        submission_result['streamsConnection'] = self.streams_connection()
         if 'jobId' in submission_result:
             if not hasattr(_StreamingAnalyticsSubmitter._SERVICE_ACTIVE, 'running'):
                 _StreamingAnalyticsSubmitter._SERVICE_ACTIVE.running = dict()
@@ -417,6 +423,7 @@ class _DistributedSubmitter(_BaseSubmitter):
         self._streams_connection = config.get(ConfigParams.STREAMS_CONNECTION)
         self.username = username
         self.password = password
+        self._job = None
 
         # Verify if credential (if supplied) is consistent with those in StreamsConnection
         if self._streams_connection is not None:
@@ -430,10 +437,26 @@ class _DistributedSubmitter(_BaseSubmitter):
         # Give each view in the app the necessary information to connect to SWS.
         self._setup_views()
 
-    def streams_connection(self):
-        if self._streams_connection is None:
-            self._streams_connection = streamsx.rest.StreamsConnection(self.username, self.password)
-        return self._streams_connection
+    def _job_access(self):
+        if self._job:
+            return self._job
+        sc = self._config().get(ConfigParams.STREAMS_CONNECTION)
+        if not sc:
+            if ConfigParams.SERVICE_DEFINITION in self._config():
+                instance = streamsx.rest_primitives.Instance.of_service(self._config())
+                self._job = instance.get_job(id=self.submission_results['jobId'])
+                return self._job
+            sc = streamsx.rest.StreamsConnection(self.username, self.password)
+            if ConfigParams.SSL_VERIFY in self._config():
+                sc.session.verify = self._config()[ConfigParams.SSL_VERIFY]
+
+        iid = os.environ.get('STREAMS_INSTANCE_ID')
+        if iid:
+            instance = sc.get_instance(id=iid)
+        else:
+            instance = sc.get_instances()[0]
+        self._job = instance.get_job(id=self.submission_results['jobId'])
+        return self._job
 
     def _get_java_env(self):
         "Set env vars from connection if set"
@@ -446,17 +469,11 @@ class _DistributedSubmitter(_BaseSubmitter):
                  env.pop('STREAMS_INSTANCE_ID', None)
             else:
                  env['STREAMS_DOMAIN_ID'] = sc.get_domains()[0].id
-            env['STREAMS_REST_URL'] = sc.resource_url
-            env['STREAMS_USERNAME'] = sc.session.auth[0]
-            env['STREAMS_PASSWORD'] = sc.session.auth[1]
+            if not ConfigParams.SERVICE_DEFINITION in self._config():
+                env['STREAMS_REST_URL'] = sc.resource_url
+                env['STREAMS_USERNAME'] = sc.session.auth[0]
+                env['STREAMS_PASSWORD'] = sc.session.auth[1]
         return env
-
-    def _augment_submission_result(self, submission_result):
-        # If we have the information to create a StreamsConnection, do it
-        if not ((self.username is None or self.password is None) and
-                        self.config.get(ConfigParams.STREAMS_CONNECTION) is None):
-            submission_result['streamsConnection'] = self.streams_connection()
-
 
 class _SubmitContextFactory(object):
     """
@@ -1125,7 +1142,7 @@ class SubmissionResult(object):
     Allows the user to use dot notation to access dictionary elements."""
     def __init__(self, results):
         self.results = results
-
+        self._submitter = None
 
     @property
     def job(self):
@@ -1136,10 +1153,8 @@ class SubmissionResult(object):
         *NOTE*: The @property tag supersedes __getattr__. In other words, this job method is
         called before __getattr__(self, 'job') is called.
         """
-        if 'streamsConnection' in self.results:
-            sc = self.streamsConnection
-            inst = sc.get_instance(self.instanceId)
-            return inst.get_job(self.jobId)
+        if self._submitter and hasattr(self._submitter, '_job_access'):
+            return self._submitter._job_access()
         return None
 
     def __getattr__(self, key):

@@ -1674,21 +1674,21 @@ class View(object):
 
         self._view_object = None
         self._submit_context = None
-        self._streams_connection = None
+        self._job = None
 
     def _initialize_rest(self):
         """Used to initialize the View object on first use.
         """
-        if self._streams_connection is None:
+        if self._job is None:
             if self._submit_context is None:
                 raise ValueError("View has not been created.")
-
-            self._streams_connection = self._submit_context.streams_connection()
+            self._job = self._submit_context._job_access()
 
     def stop_data_fetch(self):
         """Terminates the background thread fetching stream data items.
         """
         self._view_object.stop_data_fetch()
+        self._view_object = None
 
     def start_data_fetch(self):
         """Starts a background thread which begins accessing data from the remote Stream.
@@ -1698,10 +1698,7 @@ class View(object):
             queue.Queue: A Queue object which is populated with the data items of the stream.
         """
         self._initialize_rest()
-        sc = self._streams_connection
-        instance = sc.get_instance(id=self._submit_context.submission_results['instanceId'])
-        job = instance.get_job(id=self._submit_context.submission_results['jobId'])
-        self._view_object = job.get_views(name=self.name)[0]
+        self._view_object = self._job.get_views(name=self.name)[0]
 
         return self._view_object.start_data_fetch()
 
