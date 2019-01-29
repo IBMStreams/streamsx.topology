@@ -383,11 +383,11 @@ class _DistributedSubmitter(_BaseSubmitter):
 
         # Verify if credential (if supplied) is consistent with those in StreamsConnection
         if self._streams_connection is not None:
-            self.username = self._streams_connection.rest_client._username
-            self.password = self._streams_connection.rest_client._password
-            if ((username is not None and username != self.username or
-                 password is not None and password != self.password)):
-                raise RuntimeError('Credentials supplied in the arguments differ than '
+            if isinstance(self._streams_connection.session.auth, tuple):
+                self.username = self._streams_connection.session.auth[0]
+                self.password = self._streams_connection.session.auth[1]
+                if ((username is not None and username != self.username) or (password is not None and password != self.password)):
+                        raise RuntimeError('Credentials supplied in the arguments differ than '
                                    'those specified in the StreamsConnection object')
 
         # Give each view in the app the necessary information to connect to SWS.
@@ -410,8 +410,8 @@ class _DistributedSubmitter(_BaseSubmitter):
             else:
                  env['STREAMS_DOMAIN_ID'] = sc.get_domains()[0].id
             env['STREAMS_REST_URL'] = sc.resource_url
-            env['STREAMS_USERNAME'] = sc.rest_client._username
-            env['STREAMS_PASSWORD'] = sc.rest_client._password
+            env['STREAMS_USERNAME'] = sc.session.auth[0]
+            env['STREAMS_PASSWORD'] = sc.session.auth[1]
         return env
 
     def _augment_submission_result(self, submission_result):

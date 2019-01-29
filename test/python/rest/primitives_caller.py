@@ -123,7 +123,7 @@ def _fetch_from_job(tc, job):
     _check_non_empty_list(tc, job.get_operator_connections(), OperatorConnection)
 
     # See issue 952
-    if tc.test_ctxtype != 'STREAMING_ANALYTICS_SERVICE' or tc.is_v1:
+    if tc.test_ctxtype != 'STREAMING_ANALYTICS_SERVICE' or not tc.is_v2:
         _check_non_empty_list(tc, job.get_resource_allocations(), ResourceAllocation, none_ok=True)
 
     # Presently, application logs can only be fetched from the Stream Analytics Service
