@@ -135,7 +135,7 @@ public class Build extends Element {
                 }
                 throw e;
             }
-		} while ("building".equals(getStatus()) || "waiting".equals(getStatus()) || "uploaded".equals(getStatus()));
+		} while ("building".equals(getStatus()) || "waiting".equals(getStatus()) || "submitted".equals(getStatus()));
 		
 		
 		
