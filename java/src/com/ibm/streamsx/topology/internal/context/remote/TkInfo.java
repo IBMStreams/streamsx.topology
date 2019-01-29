@@ -38,9 +38,11 @@ public class TkInfo {
     }
 
     public static ToolkitDependencyType getTookitDependency(String toolkitRoot, boolean exact) throws JAXBException {
-        
+                
         ToolkitInfoModelType depTkInfo = getToolkitInfo(new File(toolkitRoot));
-               
+        if (depTkInfo == null)
+            return null;
+        
         String depTkVersion = depTkInfo.getIdentity().getVersion();     
         
         String versionRange;
