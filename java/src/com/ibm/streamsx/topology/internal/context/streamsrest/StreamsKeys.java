@@ -12,18 +12,16 @@ interface StreamsKeys {
     String SERVICE_DEFINITION = "topology.service.definition";
     
     String CONNECTION_INFO = "connection_info";
-    String BUILD_SERVICE_URL = "serviceBuildUrl";
+    String BUILD_SERVICE_ENDPOINT = "serviceBuildEndpoint";
     String BEARER_TOKEN = "bearerToken";
-    String STREAMS_REST_URL = "streamsRestUrl";
+    // serviceRestEndpoint points directly to the instance URL
+    String STREAMS_REST_ENDPOINT = "serviceRestEndpoint";
     
     static String getBuildServiceURL(JsonObject deploy) {
-        return getConnectionInfo(deploy, BUILD_SERVICE_URL);
+        return getConnectionInfo(deploy, BUILD_SERVICE_ENDPOINT);
     }
     static String getStreamsInstanceURL(JsonObject deploy) {
-        String url = getConnectionInfo(deploy, STREAMS_REST_URL);
-        if (url == null)
-            url = System.getenv("STREAMS_REST_URL");
-        return url;
+        return getConnectionInfo(deploy, STREAMS_REST_ENDPOINT);
     }
     
     static String getConnectionInfo(JsonObject deploy, String key) {
