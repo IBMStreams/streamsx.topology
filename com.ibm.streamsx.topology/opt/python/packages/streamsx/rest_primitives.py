@@ -32,6 +32,12 @@ import streamsx.topology.context
 import streamsx.topology.schema
 import streamsx.rest
 
+##############################################################
+# NOTE verify is passed explictly when using session to
+# work around requests defect: #3829
+# https://github.com/requests/requests/issues/3829
+##############################################################
+
 logger = logging.getLogger('streamsx.rest')
 
 def _file_name(prefix, id_, suffix):
@@ -170,7 +176,7 @@ class _StreamsRestClient(object):
     def make_request(self, url):
         logger.debug('Beginning a REST request to: ' + url)
         headers={ 'Accept': 'application/json'}
-        res = self.session.get(url, headers=headers)
+        res = self.session.get(url, headers=headers, verify=self.session.verify)
         _handle_http_errors(res)
         return res.json()
 
@@ -179,7 +185,7 @@ class _StreamsRestClient(object):
         headers = {}
         if mimetype:
             headers['Accept'] = mimetype
-        res = self.session.get(url, stream=True, headers=headers)
+        res = self.session.get(url, stream=True, headers=headers, verify=self.session.verify)
         _handle_http_errors(res)
         return res
 
@@ -1818,7 +1824,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         # Cancel the job using the job id
         cancel_url = self._get_jobs_url() + '/' + str(job_id)
         headers = { 'Accept' : 'application/json'}
-        res = self.rest_client.session.delete(cancel_url, headers=headers)
+        res = self.rest_client.session.delete(cancel_url, headers=header)
         _handle_http_errors(res)
         return res.json()
 
@@ -2078,7 +2084,8 @@ class _StreamsRestDelegator(object):
         with open(bundle, 'rb') as bundle_fp:
             res = self.rest_client.session.post(app_bundle_url,
                 headers = {'Accept' : 'application/json', 'Content-Type': 'application/x-jar'},
-                data=bundle_fp)
+                data=bundle_fp,
+                verify=self.rest_client.session.verify)
             _handle_http_errors(res)
             if res.status_code != 200:
                 raise ValueError(str(res))
@@ -2088,7 +2095,8 @@ class _StreamsRestDelegator(object):
         job_options = job_config.as_overlays() if job_config else {}
         app_id = bundle._app_id()
         res = self.rest_client.session.post(bundle._instance.jobs,
-           headers = {'Accept' : 'application/json'}, json={'application': app_id, 'jobConfigurationOverlay':job_options, 'preview':False})
+            headers = {'Accept' : 'application/json'}, json={'application': app_id, 'jobConfigurationOverlay':job_options, 'preview':False},
+            verify=self.rest_client.session.verify)
         _handle_http_errors(res)
         if res.status_code != 201:
             raise ValueError(str(res))
@@ -2100,5 +2108,6 @@ class _StreamsRestDelegator(object):
     def _cancel_job(self, job, force):
         cancel_url = job.instance + '/jobs/' + job.id
         res = self.rest_client.session.delete(cancel_url,
-                headers = {'Accept' : 'application/json'})
+                headers = {'Accept' : 'application/json'},
+                verify=self.rest_client.session.verify)
         #TODO return code
