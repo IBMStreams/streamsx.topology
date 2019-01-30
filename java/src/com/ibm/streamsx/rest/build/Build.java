@@ -40,7 +40,7 @@ public class Build extends Element {
     @Expose
     private String artifacts;
     @Expose
-    private String results;
+    private String logMessages;
     
     static final Build create(BuildService service, AbstractConnection connection, JsonObject gsonString) {
         // Build element = gson.fromJson(gsonString, Build.class);
@@ -137,11 +137,14 @@ public class Build extends Element {
             }
 		} while ("building".equals(getStatus()) || "waiting".equals(getStatus()) || "submitted".equals(getStatus()));
 		
+		StreamsRestUtils.TRACE.severe("The submitted archive " + archive.getName() + " failed to build with status " + getStatus() + ".");
 		
-		
-		Request gr = Request.Get(this.results).addHeader("Authorization", connection().getAuthorization());
-		JsonObject response = StreamsRestUtils.requestGsonResponse(connection().executor, gr);
-        System.err.println("ERROR Response:" + response);
+		Request gr = Request.Get(this.logMessages).addHeader("Authorization", connection().getAuthorization());
+				
+		String output = StreamsRestUtils.requestTextResponse(connection().executor, gr);
+		String[] lines = output.split("\\R");
+		for (String line : lines)
+		    StreamsRestUtils.TRACE.severe(line);
     	
     	return this;
     }

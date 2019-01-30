@@ -181,6 +181,12 @@ class StreamsRestUtils {
         Response response = executor.execute(request);
         return gsonFromResponse(response.returnResponse());
     }
+    
+    static String requestTextResponse(Executor executor, Request request) throws IOException {
+        request.addHeader("accept", ContentType.TEXT_PLAIN.getMimeType());
+        Response response = executor.execute(request);
+        return textFromResponse(response.returnResponse());
+    }
 
     /**
      * Get a member that is expected to exist and be non-null.
@@ -309,5 +315,35 @@ class StreamsRestUtils {
         JsonObject jsonResponse = new Gson().fromJson(r, JsonObject.class);
         EntityUtils.consume(entity);
         return jsonResponse;
+    }
+    
+    // TODO: unify error handling between this and getResponseString()
+    private static String textFromResponse(HttpResponse response) throws IOException {
+        HttpEntity entity = response.getEntity();
+        final int statusCode = response.getStatusLine().getStatusCode();
+        switch (statusCode) {
+            case HttpStatus.SC_OK:
+            case HttpStatus.SC_CREATED:
+            case HttpStatus.SC_ACCEPTED:
+                break;
+            default:
+            
+            {
+            final String errorInfo;
+            if (entity != null)
+                errorInfo = " -- " + EntityUtils.toString(entity);
+            else
+                errorInfo = "";
+            throw new IllegalStateException(
+                    "Unexpected HTTP resource from service:"
+                            + response.getStatusLine().getStatusCode() + ":" +
+                            response.getStatusLine().getReasonPhrase() + errorInfo);
+            }
+        }
+        
+        if (entity == null)
+            throw new IllegalStateException("No HTTP resource from service");
+        
+        return EntityUtils.toString(entity);
     }
 }

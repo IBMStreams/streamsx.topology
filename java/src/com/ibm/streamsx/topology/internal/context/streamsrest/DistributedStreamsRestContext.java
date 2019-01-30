@@ -1,7 +1,6 @@
 package com.ibm.streamsx.topology.internal.context.streamsrest;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
-import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 
 import java.io.File;

@@ -16,7 +16,6 @@ import com.ibm.streamsx.rest.build.Artifact;
 import com.ibm.streamsx.rest.build.Build;
 import com.ibm.streamsx.rest.build.BuildService;
 import com.ibm.streamsx.topology.context.ContextProperties;
-import com.ibm.streamsx.topology.context.remote.RemoteContext.Type;
 import com.ibm.streamsx.topology.internal.context.remote.BuildRemoteContext;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
