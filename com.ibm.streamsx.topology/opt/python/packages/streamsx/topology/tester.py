@@ -756,19 +756,15 @@ class Tester(object):
         return sr['return_code'] == 0
 
     def _distributed_test(self, config, username, password):
-        self.streams_connection = config.get(ConfigParams.STREAMS_CONNECTION)
-        if self.streams_connection is None:
-            # Supply a default StreamsConnection object with SSL verification disabled, because the default
-            # streams server is not shipped with a valid SSL certificate
-            self.streams_connection = StreamsConnection(username, password)
-            if ConfigParams.SSL_VERIFY in config:
-                self.streams_connection.session.verify = config[ConfigParams.SSL_VERIFY]
-            config[ConfigParams.STREAMS_CONNECTION] = self.streams_connection
         sjr = stc.submit(stc.ContextTypes.DISTRIBUTED, self.topology, config)
         self.submission_result = sjr
         if sjr['return_code'] != 0:
             _logger.error("Failed to submit job to distributed instance.")
             return False
+        self.streams_connection = config.get(ConfigParams.STREAMS_CONNECTION)
+        if self.streams_connection is None:
+            self.streams_connection = self.submission_result.job.rest_client._sc
+            config[ConfigParams.STREAMS_CONNECTION] = self.streams_connection
         return self._distributed_wait_for_result(stc.ContextTypes.DISTRIBUTED, config)
 
 
