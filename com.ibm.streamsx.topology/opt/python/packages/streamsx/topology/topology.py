@@ -1679,8 +1679,12 @@ class View(object):
         if self._streams_connection is None:
             if self._submit_context is None:
                 raise ValueError("View has not been created.")
-
             self._streams_connection = self._submit_context.streams_connection()
+
+        if self._view_object is None:
+            instance = self._streams_connection.get_instance(id=self._submit_context.submission_results['instanceId'])
+            job = instance.get_job(id=self._submit_context.submission_results['jobId'])
+            self._view_object = job.get_views(name=self.name)[0]
 
     def stop_data_fetch(self):
         """Terminates the background thread fetching stream data items.
@@ -1696,11 +1700,15 @@ class View(object):
         """
         self._initialize_rest()
         sc = self._streams_connection
-        instance = sc.get_instance(id=self._submit_context.submission_results['instanceId'])
-        job = instance.get_job(id=self._submit_context.submission_results['jobId'])
-        self._view_object = job.get_views(name=self.name)[0]
 
         return self._view_object.start_data_fetch()
+
+    def fetch_tuples(self, n=10, timeout=None):
+        return self._view_object.fetch_tuples(n, timeout)
+
+    def display(self, duration=60, period=2):
+        self._initialize_rest()
+        return self._view_object.display(duration, period)
 
 
 class PendingStream(object):

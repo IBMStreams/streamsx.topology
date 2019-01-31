@@ -455,7 +455,7 @@ class View(_ResourceElement):
     def stop_data_fetch(self):
         """Stops the thread that fetches data from the Streams view server.
         """
-        if self._data_fetcher is not None:
+        if self._data_fetcher:
             self._data_fetcher.stop.set()
             self._data_fetcher = None
 
@@ -476,6 +476,71 @@ class View(_ResourceElement):
         t = threading.Thread(target=self._data_fetcher)
         t.start()
         return self._data_fetcher.items
+
+    def fetch_tuples(self, max_tuples=10, timeout=None):
+        """
+        Fetch a number of tuples from this view.
+
+        Fetching of data must have been started with
+        :py:meth:`start_data_fetch`before calling this method.
+
+        If ``timeout`` is ``None`` then the returned list will
+        contain ``n`` tuples. Otherwise if the timeout is reached
+        the list may contain less than ``n`` tuples.
+
+        Args:
+            max_tuples(int): Maximum number of tuples to fetch.
+            timeout(float): Maximum time to wait for ``n`` tuples.
+
+        Returns:
+            list: List of fetched tuples.
+        .. versionadded:: 1.12
+        """
+        tuples = list()
+        if timeout is None:
+            while len(tuples) < max_tuples:
+                fetcher = self._data_fetcher
+                if not fetcher:
+                    break
+                tuples.append(fetcher.items.get())
+            return tuples
+
+        timeout = float(timeout)
+        end = time.time() + timeout
+        while len(tuples) < max_tuples:
+            qto = end - time.time()
+            if qto <= 0:
+                break
+            try:
+                fetcher = self._data_fetcher
+                if not fetcher:
+                    break
+                tuples.append(fetcher.items.get(timeout=qto))
+            except queue.Empty:
+                break
+        return tuples
+
+    def display(self, duration=None, period=2):
+        import ipywidgets as widgets
+        vn = widgets.Text(value=self.description, description=self.name, disabled=True)
+        out = widgets.Output(layout={'border': '1px solid black'})
+        vb = widgets.VBox([vn, out])
+        display(vb)
+        self._display_thread = threading.Thread(target=lambda: self._display(out, duration, period))
+        self._display_thread.start()
+        
+    def _display(self, out, duration, period):
+        import pandas as pd
+        import IPython
+        self.start_data_fetch()
+        end = time.time() + float(duration) if duration is not None else None
+        max_rows = pd.options.display.max_rows
+        with out:
+            while self._data_fetcher and (duration is None or time.time() < end):
+                tuples = self.fetch_tuples(max_rows, period)
+                display(pd.DataFrame(tuples))
+                out.clear_output(wait=True)
+        self.stop_data_fetch()
 
     def get_view_items(self):
         """Get a list of :py:class:`ViewItem` elements associated with this view.
