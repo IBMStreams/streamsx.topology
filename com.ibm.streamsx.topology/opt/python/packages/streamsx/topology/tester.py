@@ -854,7 +854,6 @@ class _ConditionChecker(object):
         self.tester = tester
         self._sc = sc
         self._sjr = sjr
-        self._instance_id = sjr['instanceId']
         self._job_id = sjr['jobId']
         self._sequences = {}
         for cn in tester._conditions:
@@ -864,7 +863,7 @@ class _ConditionChecker(object):
         self.waits = 0
         self.additional_checks = 2
 
-        self.job = self._find_job()
+        self.job = self._sjr.job
 
     # Wait for job to be healthy. Returns True
     # if the job became healthy, False if not.
@@ -999,10 +998,6 @@ class _ConditionChecker(object):
                     _logger.info("Job %s PE %s health: %s", self._job_id, pe.id, pe.health)
                 ok_pes += 1
         return True if ok_ else ok_pes
-
-    def _find_job(self):
-        instance = self._sc.get_instance(id=self._instance_id)
-        return instance.get_job(id=self._job_id)
 
     def _get_job_metrics(self):
         """Fetch all the condition metrics for a job.
