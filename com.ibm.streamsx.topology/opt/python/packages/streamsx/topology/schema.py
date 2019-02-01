@@ -62,6 +62,8 @@ _spl_object = object
 from future.builtins import *
 from past.builtins import basestring, unicode
 
+import streamsx.spl.types
+
 import collections
 import decimal
 import enum
@@ -74,6 +76,7 @@ import tokenize
 
 import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
+
 
 _spl_str = unicode if sys.version_info.major == 2 else str
 
@@ -283,6 +286,14 @@ def _attribute_names(types):
         names.append(attr[1])
     return names
 
+# Returns a schema's types as a list of (name, python type) tuples
+# suitable for use in creating a typing.NamedTuple
+def _attribute_pytypes(types):
+    pytypes = []
+    for attr in types:
+        pytypes.append((attr[1], _type_from_spl(attr[0])))
+    return pytypes
+
 _SCHEMA_PYTHON_OBJECT = 'tuple<blob __spl_po>'
 _SCHEMA_STRING = 'tuple<rstring string>'
 _SCHEMA_JSON = 'tuple<rstring jsonString>'
@@ -453,8 +464,13 @@ class StreamSchema(object) :
             return tuple
         if name is True:
             name = 'StreamTuple'
-        fields = _attribute_names(self._types)
-        nt = collections.namedtuple(name, fields, rename=True)
+        if sys.version_info.major == 2:
+            fields = _attribute_names(self._types)
+            nt = collections.namedtuple(name, fields, rename=True)
+        else:
+            import typing
+            nt = typing.NamedTuple(name, _attribute_pytypes(self._types))
+
         nt._splpy_namedtuple = name
         return nt
 
@@ -692,6 +708,19 @@ class CommonSchema(enum.Enum):
 _PYTYPE_TO_SPL = {
     str:'rstring', bool:'boolean', int:'int64', float:'float64',
     complex:'complex64', decimal.Decimal:'decimal128',
+    streamsx.spl.types.Timestamp:'timestamp',
+}
+
+_SPLTYPE_TO_PY = {
+    'rstring': str, 'boolean':bool,
+    'int8':int, 'int16':int, 'int32':int, 'int64':int,
+    'uint8':int, 'uint16':int, 'uint32':int, 'uint64':int,
+    'float32':float, 'float64':float,
+    'complex32':complex, 'complex64':complex,
+    'decimal32':decimal.Decimal,
+    'decimal64':decimal.Decimal,
+    'decimal128':decimal.Decimal,
+    'timestamp':streamsx.spl.types.Timestamp,
 }
 
 def _from_named_tuple(nt):
@@ -727,3 +756,7 @@ def _spl_from_type(type_):
             vt = type_.__args__[1]
             return 'map<' + _spl_from_type(kt) + ', ' + _spl_from_type(vt) + '>'
     raise ValueError("Unsupported type: " + type_)
+
+def _type_from_spl(type_):
+    if type_ in _SPLTYPE_TO_PY:
+        return _SPLTYPE_TO_PY:[type_]
