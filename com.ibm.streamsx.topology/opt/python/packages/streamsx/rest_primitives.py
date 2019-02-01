@@ -477,20 +477,20 @@ class View(_ResourceElement):
         t.start()
         return self._data_fetcher.items
 
-    def fetch_tuples(self, max_tuples=10, timeout=None):
+    def fetch_tuples(self, max_tuples=20, timeout=None):
         """
         Fetch a number of tuples from this view.
 
         Fetching of data must have been started with
-        :py:meth:`start_data_fetch`before calling this method.
+        :py:meth:`start_data_fetch` before calling this method.
 
         If ``timeout`` is ``None`` then the returned list will
-        contain ``n`` tuples. Otherwise if the timeout is reached
-        the list may contain less than ``n`` tuples.
+        contain ``max_tuples`` tuples. Otherwise if the timeout is reached
+        the list may contain less than ``max_tuples`` tuples.
 
         Args:
             max_tuples(int): Maximum number of tuples to fetch.
-            timeout(float): Maximum time to wait for ``n`` tuples.
+            timeout(float): Maximum time to wait for ``max_tuples`` tuples.
 
         Returns:
             list: List of fetched tuples.
@@ -521,6 +521,31 @@ class View(_ResourceElement):
         return tuples
 
     def display(self, duration=None, period=2):
+        """Display a view within an Jupyter or IPython notebook.
+
+        Provides an easy mechanism to visualize data on a stream
+        using a view.
+
+        Tuples are fetched from the view and displayed in a table
+        within the notebook cell using a ``pandas.DataFrame``.
+        The table is continually updated with the latest tuples from the view.
+
+        This method calls :py:meth:`start_data_fetch` and will call
+        :py:meth:`stop_data_fetch` when completed if `duration` is set.
+
+        Args:
+            duration(float): Number of seconds to fetch and display tuples. If ``None`` then the display will be updated until :py:meth:`stop_data_fetch` is called.
+            period(float): Maximum update period.
+
+        .. note::
+            A view is a sampling of data on a stream so tuples that
+            are on the stream may not appear in the view.
+
+        .. warning::
+            Behavior when called outside a notebook is undefined.
+
+        .. versionadded:: 1.12
+        """
         import ipywidgets as widgets
         vn = widgets.Text(value=self.description, description=self.name, disabled=True)
         out = widgets.Output(layout={'border': '1px solid black'})
