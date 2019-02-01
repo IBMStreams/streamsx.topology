@@ -90,6 +90,9 @@ def _normalize(schema, allow_none=True):
     if isinstance(schema, basestring):
         return StreamSchema(schema)
 
+    if issubclass(schema, basestring):
+        return CommonSchema.String
+
     py_types = {
         _spl_object: CommonSchema.Python,
         _spl_str: CommonSchema.String,
