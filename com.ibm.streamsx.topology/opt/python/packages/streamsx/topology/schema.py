@@ -709,6 +709,7 @@ _PYTYPE_TO_SPL = {
     str:'rstring', bool:'boolean', int:'int64', float:'float64',
     complex:'complex64', decimal.Decimal:'decimal128',
     streamsx.spl.types.Timestamp:'timestamp',
+    bytes:'blob'
 }
 
 _SPLTYPE_TO_PY = {
@@ -721,6 +722,7 @@ _SPLTYPE_TO_PY = {
     'decimal64':decimal.Decimal,
     'decimal128':decimal.Decimal,
     'timestamp':streamsx.spl.types.Timestamp,
+    'blob': bytes,
 }
 
 def _from_named_tuple(nt):
@@ -759,4 +761,14 @@ def _spl_from_type(type_):
 
 def _type_from_spl(type_):
     if type_ in _SPLTYPE_TO_PY:
-        return _SPLTYPE_TO_PY:[type_]
+        return _SPLTYPE_TO_PY[type_]
+
+    if isinstance(type_, tuple):
+        import typing
+        if type_[0] == 'list':
+            return typing.List[_type_from_spl(type_[1])]
+        if type_[0] == 'set':
+            return typing.Set[_type_from_spl(type_[1])]
+        if type_[0] == 'map':
+            return typing.Mapping[_type_from_spl(type_[1][0]), _type_from_spl(type_[1][1])]
+    raise ValueError("Unsupported type: " + type_)

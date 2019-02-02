@@ -297,13 +297,18 @@ class TestSchema(unittest.TestCase):
                 ('sc64', typing.Set[complex]),
                 ('sli64', typing.Set[typing.List[int]]),
                 ('ts_spl', streamsx.spl.types.Timestamp),
+                ('binary', bytes),
                 ])
             nts = _sch._normalize(AllSPLTypes)
             self.assertIsInstance(nts, _sch.StreamSchema)
-            self.assertEqual('tuple<boolean b, int64 i64, float64 f64, complex64 c64, decimal128 d128, rstring s, list<int64> li64, list<float64> lf64, map<int64, boolean> mi64b, list<list<float64>> llf64, map<int64, list<int64>> mi64li64, set<complex64> sc64, set<list<int64>> sli64, timestamp ts_spl>', nts._schema)
+            self.assertEqual('tuple<boolean b, int64 i64, float64 f64, complex64 c64, decimal128 d128, rstring s, list<int64> li64, list<float64> lf64, map<int64, boolean> mi64b, list<list<float64>> llf64, map<int64, list<int64>> mi64li64, set<complex64> sc64, set<list<int64>> sli64, timestamp ts_spl, blob binary>', nts._schema)
             self.assertEqual('AllSPLTypes', nts.style.__name__)
-        
 
+            ont = nts.style
+            self.assertEqual(ont._fields, AllSPLTypes._fields)
+            if sys.version_info.major == 3:
+                self.assertEqual(ont._field_types, AllSPLTypes._field_types)
+           
 class TestKeepSchema(unittest.TestCase):
     """
     Testing that schemas are maintained through various transforms.
