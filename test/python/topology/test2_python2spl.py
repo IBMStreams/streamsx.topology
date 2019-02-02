@@ -70,7 +70,7 @@ class TestPython2SPL(unittest.TestCase):
         topo = Topology()
         s = topo.source([93,'hello',True])
         st = s.map(lambda x : x, schema=CommonSchema.String)
-        st2 = s.map(schema=str)
+        st2 = s.map(schema=unicode if sys.version_info.major == 2 else str)
 
         tester = Tester(topo)
         tester.contents(st, ['93','hello','True'])
