@@ -94,6 +94,7 @@ class TestTester(unittest.TestCase):
     def my_local(self):
         self.assertTrue(hasattr(self.tester, 'submission_result'))
         self.assertTrue(hasattr(self.tester, 'streams_connection'))
+        self.assertIs(self.tester.streams_connection, self.tester.submission_result.job.rest_client._sc)
         self.my_local_called = True
 
     def test_bad_pe(self):
