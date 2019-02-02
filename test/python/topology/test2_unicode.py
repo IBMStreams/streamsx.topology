@@ -43,7 +43,6 @@ class TestUnicode(unittest.TestCase):
         tester.contents(sd, dud)
 
         tester.test(self.test_ctxtype, self.test_config)
-        print(tester.result)
 
     def test_view_name(self):
         """
@@ -74,19 +73,6 @@ class TestDistributedUnicode(TestUnicode):
     def setUp(self):
         Tester.setup_distributed(self)
 
-        # Get username and password
-        username = os.getenv("STREAMS_USERNAME", "streamsadmin")
-        password = os.getenv("STREAMS_PASSWORD", "passw0rd")
-
-        self.sc = rest.StreamsConnection(username=username, password=password)
-
-        # Disable SSL verification
-        self.sc.session.verify = False
-        self.test_config[ConfigParams.STREAMS_CONNECTION] = self.sc
-
-class TestBluemixUnicode(TestUnicode):
+class TestSasUnicode(TestUnicode):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
-        vcap = self.test_config.get('topology.service.vcap')
-        sn = self.test_config.get('topology.service.name')
-        self.sc = rest.StreamingAnalyticsConnection(vcap, sn)
