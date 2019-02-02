@@ -19,7 +19,25 @@ A stream represents an unbounded flow of tuples with a declared schema so that e
 Structured schemas
 ******************
 
-A structured schema is a sequence of attributes, and an attribute is a named value of a specific type. For example a stream of sensor readings can be represented as a schema with three attributes ``sensor_id``, ``ts`` and ``reading`` with types of ``int64``, ``timestamp`` and ``float64`` respectively. This schema can be declared as::
+A structured schema is a sequence of attributes, and an attribute is a named value of a specific type. For example a stream of sensor readings can be represented as a schema with three attributes ``sensor_id``, ``ts`` and ``reading`` with types of ``int64``, ``int64`` and ``float64`` respectively.
+
+This schema can be declared a number of ways:
+
+Python 3.6::
+
+    class SensorReading(typing.NamedTuple):
+        sensor_id: int
+        ts: int
+        reading: float64
+
+    sensors = raw_readings.map(parse_sensor, schema=SensorReading)
+    
+Python 3::
+
+    SensorReading = typing.NamedTuple('SensorReading',
+        [('sensor_id', int), ('ts', int), ('reading', float)]
+
+Python 3, 2.7::
 
     sensors = raw_readings.map(parse_sensor,
         schema='tuple<int64 sensor_id, timestamp ts, float64 reading>')
@@ -45,6 +63,7 @@ Explictly defining a stream's schema is flexible and various types of values are
         * ``object`` - for :py:const:`~CommonSchema.Python`
 
     * Values of the enumeration :py:class:`CommonSchema`
+    * An instance of ``typing.NamedTuple`` (Python 3)
     * An instance of :py:class:`StreamSchema`
     * A string of the format ``tuple<...>`` defining the attribute names and types. See :py:class:`StreamSchema` for details on the format and types supported.
     * A string containing a namespace qualified SPL stream type (e.g. ``com.ibm.streams.geospatial::FlightPathEncounterTypes.Observation3D``)
@@ -314,14 +333,25 @@ class StreamSchema(object) :
     Language and include such types as `int8`, `int16`, `rstring`
     and `list<float32>`.
 
-    A schema is defined with the syntax ``tuple<type name [,...]>``,
-    for example::
+    A structured schema can be defined using a ``typing.NamedTuple`` in
+    Python 3 or or a string with the syntax ``tuple<type name [,...]>``,
 
-        tuple<rstring id, timestamp ts, float64 value>
+    typing.NamedTuple:
+ 
+        Blah blah named tuple
 
-    represents a schema with three attributes suitable for a sensor reading.
+    Tuple string:
 
-    The complete list of supported types are:
+        Blah blah
+        `tuple<type name [,...]>`:
+
+        Example::
+
+            tuple<rstring id, timestamp ts, float64 value>
+
+        represents a schema with three attributes suitable for a sensor reading.
+
+    IBM Streams types:
 
     ============================  ==============================  =========================================  =======================================
     Type                          Description                     Python representation                      Conversion from Python
