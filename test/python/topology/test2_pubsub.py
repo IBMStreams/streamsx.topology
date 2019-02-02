@@ -3,6 +3,7 @@
 import unittest
 import sys
 import itertools
+import time
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
@@ -89,10 +90,14 @@ class TestPubSub(unittest.TestCase):
             if op.operatorKind == 'spl.relational::Filter':
                 seen_sub = True
                 ip = op.get_input_ports()[0]
-                for m in ip.get_metrics():
-                    if m.name == 'queueSize':
-                        seen_qs = True
-                        self.assertEqual(self._buf_size, m.value)
+                for _ in range(5):
+                    for m in ip.get_metrics():
+                        if m.name == 'queueSize':
+                            seen_qs = True
+                            self.assertEqual(self._buf_size, m.value)
+                    if seen_qs:
+                        break
+                    time.sleep(2)
 
         self.assertTrue(seen_sub)
         self.assertTrue(seen_qs)
