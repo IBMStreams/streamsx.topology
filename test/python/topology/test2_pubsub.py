@@ -26,7 +26,7 @@ class TestPubSub(unittest.TestCase):
         Tester.setup_distributed(self)
 
     def _check_topics(self):
-        ins = self.tester.streams_connection.get_instance(self.tester.submission_result['instanceId'])
+        ins = self.tester.submission_result.job.get_instance()
         # topics are created dynamically so give some time
         # for them to be created
         for _ in range(10):

@@ -79,9 +79,8 @@ between tuples are within the timeout period the test remains running until ten 
 
 .. note:: The submitted job (application under test) has additional elements (streams & operators) inserted to implement the conditions. These are visible through various APIs including the Streams console raw graph view. Such elements are put into the `Tester` category.
 
-.. warning::
-    Streaming Analytics service or IBM Streams 4.2 or later is required when using `Tester`.
-
+.. note::
+    The package `streamsx.testing <https://pypi.org/project/streamsx.testing/>`_ provides `nose <https://pypi.org/project/nose>`_ plugins to provide control over tests without having to modify their source code.
 
 .. versionchanged:: 1.9 - Python 2.7 supported (except with Streaming Analytics service).
 
@@ -579,6 +578,11 @@ class Tester(object):
 
         The callable can use `submission_result` and `streams_connection` attributes from :py:class:`Tester` instance
         to interact with the job or the running Streams instance.
+        These REST binding classes can be obtained as follows:
+
+            * :py:class:`~streamsx.rest_primitives.Job` - ``tester.submission_result.job``
+            * :py:class:`~streamsx.rest_primitives.Instance` - ``tester.submission_result.job.get_instance()``
+            * :py:class:`~streamsx.rest.StreamsConnection` - ``tester.streams_connection``
 
         Simple example of checking the job is healthy::
 
