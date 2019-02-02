@@ -319,18 +319,24 @@ class Tester(object):
         Returns: None
 
         """
-        if not 'STREAMS_INSTALL' in os.environ:
-            raise unittest.SkipTest("Skipped due to no local IBM Streams install")
-
-        domain_instance_setup = 'STREAMS_INSTANCE_ID' in os.environ and 'STREAMS_DOMAIN_ID' in os.environ
-        rest_setup = 'STREAMS_REST_URL' in os.environ
-
-        if not domain_instance_setup and not rest_setup:
-            raise unittest.SkipTest("Skipped due missing environment variables")
-
         Tester._log_env(test, verbose)
         test.test_ctxtype = stc.ContextTypes.DISTRIBUTED
         test.test_config = _TestConfig(test)
+
+    # Distributed setup check is delayed until the test is run
+    # as the connection information can be in the service definition.
+    @staticmethod
+    def _check_setup_distributed(cfg):
+        domain_instance_setup = 'STREAMS_INSTANCE_ID' in os.environ and 'STREAMS_DOMAIN_ID' in os.environ
+        if domain_instance_setup:
+            if not 'STREAMS_INSTALL' in os.environ:
+                raise unittest.SkipTest("Skipped due to no local IBM Streams install")
+            return
+        if stc.ConfigParams.SERVICE_DEFINITION in cfg:
+            if 'connection_info' in cfg[stc.ConfigParams.SERVICE_DEFINITION]:
+                return
+
+        raise unittest.SkipTest("No IBM Streams instance definition for DISTRIBUTED")
 
     @staticmethod
     def setup_streaming_analytics(test, service_name=None, force_remote_build=False, verbose=None):
@@ -691,6 +697,9 @@ class Tester(object):
                 for action in actions:
                     _logger.debug("Adding nose plugin action %s to topology %s.", str(action), self.topology.name)
                     action(self, test_, ctxtype, config)
+
+        if stc.ContextTypes.DISTRIBUTED == ctxtype:
+            Tester._check_setup_distributed(config)
 
         # Add the conditions into the graph as sink operators
         _logger.debug("Adding conditions to topology %s.", self.topology.name)
