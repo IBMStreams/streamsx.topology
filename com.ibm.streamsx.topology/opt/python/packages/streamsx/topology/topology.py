@@ -1685,9 +1685,7 @@ class View(object):
             self._job = self._submit_context._job_access()
 
         if self._view_object is None:
-            instance = self._streams_connection.get_instance(id=self._submit_context.submission_results['instanceId'])
-            job = instance.get_job(id=self._submit_context.submission_results['jobId'])
-            self._view_object = job.get_views(name=self.name)[0]
+            self._view_object = self._job.get_views(name=self.name)[0]
 
     def stop_data_fetch(self):
         """Terminates the background thread fetching stream data items.
