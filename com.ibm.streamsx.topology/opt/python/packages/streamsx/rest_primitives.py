@@ -2179,7 +2179,7 @@ class _StreamsRestDelegator(object):
         self.rest_client = rest_client
 
     def _upload_bundle(self, instance, bundle):
-        self._block_ssl_warn()
+        self.rest_client._block_ssl_warn()
         app_bundle_url = instance.self + '/applicationbundles'
 
         sab_name = os.path.basename(bundle)
@@ -2194,7 +2194,7 @@ class _StreamsRestDelegator(object):
             return _UploadedBundle(self, instance, res.json(), self.rest_client)
 
     def _submit_bundle(self, bundle, job_config):
-        self._block_ssl_warn()
+        self.rest_client._block_ssl_warn()
         job_options = job_config.as_overlays() if job_config else {}
         app_id = bundle._app_id()
         res = self.rest_client.session.post(bundle._instance.jobs,
@@ -2209,7 +2209,7 @@ class _StreamsRestDelegator(object):
         return job.id
 
     def _cancel_job(self, job, force):
-        self._block_ssl_warn()
+        self.rest_client._block_ssl_warn()
         cancel_url = job.instance + '/jobs/' + job.id
         res = self.rest_client.session.delete(cancel_url,
                 headers = {'Accept' : 'application/json'},
