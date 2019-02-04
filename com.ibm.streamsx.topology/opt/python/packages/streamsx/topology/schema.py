@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016,2018
+# Copyright IBM Corp. 2016,2019
 """
 Schemas for streams.
 
@@ -83,7 +83,6 @@ _spl_object = object
 from future.builtins import *
 from past.builtins import basestring, unicode
 
-import streamsx.spl.types
 
 import collections
 import decimal
@@ -765,26 +764,6 @@ class CommonSchema(enum.Enum):
     def __str__(self):
         return str(self.schema())
 
-_PYTYPE_TO_SPL = {
-    str:'rstring', bool:'boolean', int:'int64', float:'float64',
-    complex:'complex64', decimal.Decimal:'decimal128',
-    streamsx.spl.types.Timestamp:'timestamp',
-    bytes:'blob'
-}
-
-_SPLTYPE_TO_PY = {
-    'rstring': str, 'boolean':bool,
-    'int8':int, 'int16':int, 'int32':int, 'int64':int,
-    'uint8':int, 'uint16':int, 'uint32':int, 'uint64':int,
-    'float32':float, 'float64':float,
-    'complex32':complex, 'complex64':complex,
-    'decimal32':decimal.Decimal,
-    'decimal64':decimal.Decimal,
-    'decimal128':decimal.Decimal,
-    'timestamp':streamsx.spl.types.Timestamp,
-    'blob': bytes,
-}
-
 def _from_named_tuple(nt):
     import typing
     spl_types = []
@@ -802,6 +781,7 @@ def _from_named_tuple(nt):
     return StreamSchema(td).as_tuple(named=nt.__name__)
 
 def _spl_from_type(type_):
+    _init_type_mappings()
     if type_ in _PYTYPE_TO_SPL:
         return _PYTYPE_TO_SPL[type_]
 
@@ -820,6 +800,7 @@ def _spl_from_type(type_):
     raise ValueError("Unsupported type: " + type_)
 
 def _type_from_spl(type_):
+    _init_type_mappings()
     if type_ in _SPLTYPE_TO_PY:
         return _SPLTYPE_TO_PY[type_]
 
@@ -832,3 +813,28 @@ def _type_from_spl(type_):
         if type_[0] == 'map':
             return typing.Mapping[_type_from_spl(type_[1][0]), _type_from_spl(type_[1][1])]
     raise ValueError("Unsupported type: " + type_)
+
+_PYTYPE_TO_SPL = {}
+_SPLTYPE_TO_PY = {}
+def _init_type_mappings():
+    global _PYTYPE_TO_SPL
+    if not _PYTYPE_TO_SPL:
+        import streamsx.spl.types
+        _PYTYPE_TO_SPL = {
+            str:'rstring', bool:'boolean', int:'int64', float:'float64',
+            complex:'complex64', decimal.Decimal:'decimal128',
+            streamsx.spl.types.Timestamp:'timestamp',
+            bytes:'blob' }
+
+        global _SPLTYPE_TO_PY
+        _SPLTYPE_TO_PY = {
+            'rstring': str, 'boolean':bool,
+            'int8':int, 'int16':int, 'int32':int, 'int64':int,
+            'uint8':int, 'uint16':int, 'uint32':int, 'uint64':int,
+            'float32':float, 'float64':float,
+            'complex32':complex, 'complex64':complex,
+            'decimal32':decimal.Decimal,
+            'decimal64':decimal.Decimal,
+            'decimal128':decimal.Decimal,
+            'timestamp':streamsx.spl.types.Timestamp,
+            'blob': bytes}

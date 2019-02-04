@@ -170,7 +170,7 @@ class TestSchemaTuple(unittest.TestCase):
         tester.contents(s, ['152Hi!-MapJSON', '304Hi!-MapJSON', '456Hi!-MapJSON'])
         tester.test(self.test_ctxtype, self.test_config)
 
-
+    
 class TestSchemaNamedTuple(TestSchemaTuple):
     def is_named(self):
         return True
@@ -182,3 +182,17 @@ class TestSchemaNamedTuple(TestSchemaTuple):
         s = topo.source([1,2,3])
         schema=StreamSchema('tuple<int32 x, rstring msg>').as_tuple(named=True)
         return s.map(lambda x : (x,str(x*2) + "Hi!"), schema=schema)
+
+@unittest.skipIf(sys.version_info < (3,6), "Requires Python 3.6 or later")
+class TestSchemaTypingNamedTuple(TestSchemaTuple):
+    def is_named(self):
+        return True
+
+    def hash_check(self):
+        return check_is_namedtuple_hash
+
+    def _create_stream(self, topo):
+        import py36_test_types
+ 
+        s = topo.source([1,2,3])
+        return s.map(lambda x : (x,str(x*2) + "Hi!"), schema=py36_test_types.NTS)
