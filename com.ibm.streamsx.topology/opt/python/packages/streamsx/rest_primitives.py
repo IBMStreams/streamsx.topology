@@ -1568,6 +1568,22 @@ class Instance(_ResourceElement):
         """
         return self.upload_bundle(bundle).submit_job(job_config)
 
+    def get_application_configurations(self, name=None):
+        """Retrieves application configurations for this instance.
+
+        Args:
+            name (str, optional): Only return application configurations containing property **name** that matches `name`. `name` can be a
+                regular expression. If `name` is not supplied, then all application configurations are returned.
+
+        Returns:
+            list(ApplicationConfiguration): A list of application configurations matching the given `name`.
+        
+        .. versionadded 1.12
+        """
+        if hasattr(self, 'applicationConfigurations'):
+           return self._get_elements(self.applicationConfigurations, 'applicationConfigurations', ApplicationConfiguration, None, name)
+
+
 class ResourceTag(object):
     """Resource tag defined in a Streams domain
 
@@ -2126,6 +2142,27 @@ class _UploadedBundle(ApplicationBundle):
     def _app_id(self):
         return self.bundleId
 
+class ApplicationConfiguration(_ResourceElement):
+    """An application configuration.
+   
+    Application configurations are used for secure storage and
+    retrieval of name/value pairs.
+
+    An application configuration maintains a set of properties
+    that an application can access at runtime. These are typically
+    used to maintain connection endpoint and credentials for sources
+    and sinks.
+
+    Attributes:
+        name (str): Name of the configuration.
+        description (str): Name of the configuration.
+        properties (dict): Property values stored for the configuration.
+        creationTime (long): Epoch time when this configuraiton was created.
+        lastModifiedTime (long): Epoch time when this configuration was last modified.
+
+    .. versionadded 1.12
+    """
+    pass
 
 class _StreamsRestDelegator(object):
     """Delegator for IBM Streams instances where the
