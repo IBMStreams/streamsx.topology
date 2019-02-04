@@ -151,6 +151,7 @@ class _BaseSubmitter(object):
         if remote_context:
             submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
             try:
+                get_ipython()
                 import ipywidgets as widgets
                 progress_bar = widgets.IntProgress(
                     value=0,
