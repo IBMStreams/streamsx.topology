@@ -36,6 +36,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.context.remote.RemoteContext.Type;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 
@@ -75,6 +76,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         }
               
         final File toolkitRoot = super._submit(submission).get();
+        report("Building code archive");
         return createCodeArchive(toolkitRoot, submission);
     }
     

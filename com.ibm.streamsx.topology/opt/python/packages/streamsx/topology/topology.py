@@ -374,6 +374,9 @@ class Topology(object):
                     namespace = si[2].__module__
                 elif si[0] is not None:
                     namespace = os.path.splitext(os.path.basename(si[0]))[0]
+                    if namespace.startswith('<ipython-input'):
+                        if 'DSX_PROJECT_NAME' in os.environ:
+                            namespace = os.environ['DSX_PROJECT_NAME']
         
         if sys.version_info.major == 3:
           self.opnamespace = "com.ibm.streamsx.topology.functional.python"
@@ -1671,20 +1674,18 @@ class View(object):
 
         self._view_object = None
         self._submit_context = None
-        self._streams_connection = None
+        self._job = None
 
     def _initialize_rest(self):
         """Used to initialize the View object on first use.
         """
-        if self._streams_connection is None:
+        if self._job is None:
             if self._submit_context is None:
                 raise ValueError("View has not been created.")
-            self._streams_connection = self._submit_context.streams_connection()
+            self._job = self._submit_context._job_access()
 
         if self._view_object is None:
-            instance = self._streams_connection.get_instance(id=self._submit_context.submission_results['instanceId'])
-            job = instance.get_job(id=self._submit_context.submission_results['jobId'])
-            self._view_object = job.get_views(name=self.name)[0]
+            self._view_object = self._job.get_views(name=self.name)[0]
 
     def stop_data_fetch(self):
         """Terminates the background thread fetching stream data items.
@@ -1699,8 +1700,6 @@ class View(object):
             queue.Queue: A Queue object which is populated with the data items of the stream.
         """
         self._initialize_rest()
-        sc = self._streams_connection
-
         return self._view_object.start_data_fetch()
 
     def fetch_tuples(self, max_tuples=20, timeout=None):

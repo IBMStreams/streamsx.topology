@@ -25,7 +25,12 @@ import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
  * @param <C>
  *            Context type used to maintain connection info.
  */
-abstract class BuildRemoteContext<C> extends ZippedToolkitRemoteContext {
+public abstract class BuildRemoteContext<C> extends ZippedToolkitRemoteContext {
+    
+    @Override
+    public Type getType() {
+        return Type.BUNDLE;
+    }
 
     @Override
     public Future<File> _submit(JsonObject submission) throws Exception {
@@ -41,6 +46,8 @@ abstract class BuildRemoteContext<C> extends ZippedToolkitRemoteContext {
         String buildName = GraphKeys.splAppName(graph);
 
         Future<File> archive = super._submit(submission);
+        
+        report("Building sab");
 
         File buildArchive = archive.get();
 
@@ -75,13 +82,13 @@ abstract class BuildRemoteContext<C> extends ZippedToolkitRemoteContext {
      * Separated from submitBuildArchive to allow connection info to be check
      * early, before any creation of the build archive.
      */
-    abstract C createSubmissionContext(JsonObject deploy) throws Exception;
+    protected abstract C createSubmissionContext(JsonObject deploy) throws Exception;
 
     /**
      * Build the archive returning submission results in the key
      * RemoteContext.SUBMISSION_RESULTS in the raw result.
      */
-    abstract JsonObject submitBuildArchive(C context, File buildArchive,
+    protected abstract JsonObject submitBuildArchive(C context, File buildArchive,
             JsonObject deploy, JsonObject jco, String buildName,
             JsonObject buildConfig) throws Exception;
 }
