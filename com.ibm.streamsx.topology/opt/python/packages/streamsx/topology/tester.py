@@ -769,19 +769,15 @@ class Tester(object):
         return sr['return_code'] == 0
 
     def _distributed_test(self, config, username, password):
-        self.streams_connection = config.get(ConfigParams.STREAMS_CONNECTION)
-        if self.streams_connection is None:
-            # Supply a default StreamsConnection object with SSL verification disabled, because the default
-            # streams server is not shipped with a valid SSL certificate
-            self.streams_connection = StreamsConnection(username, password)
-            if ConfigParams.SSL_VERIFY in config:
-                self.streams_connection.session.verify = config[ConfigParams.SSL_VERIFY]
-            config[ConfigParams.STREAMS_CONNECTION] = self.streams_connection
         sjr = stc.submit(stc.ContextTypes.DISTRIBUTED, self.topology, config)
         self.submission_result = sjr
         if sjr['return_code'] != 0:
             _logger.error("Failed to submit job to distributed instance.")
             return False
+        self.streams_connection = config.get(ConfigParams.STREAMS_CONNECTION)
+        if self.streams_connection is None:
+            self.streams_connection = self.submission_result.job.rest_client._sc
+            config[ConfigParams.STREAMS_CONNECTION] = self.streams_connection
         return self._distributed_wait_for_result(stc.ContextTypes.DISTRIBUTED, config)
 
 
@@ -871,7 +867,6 @@ class _ConditionChecker(object):
         self.tester = tester
         self._sc = sc
         self._sjr = sjr
-        self._instance_id = sjr['instanceId']
         self._job_id = sjr['jobId']
         self._sequences = {}
         for cn in tester._conditions:
@@ -881,7 +876,7 @@ class _ConditionChecker(object):
         self.waits = 0
         self.additional_checks = 2
 
-        self.job = self._find_job()
+        self.job = self._sjr.job
 
     # Wait for job to be healthy. Returns True
     # if the job became healthy, False if not.
@@ -1016,10 +1011,6 @@ class _ConditionChecker(object):
                     _logger.info("Job %s PE %s health: %s", self._job_id, pe.id, pe.health)
                 ok_pes += 1
         return True if ok_ else ok_pes
-
-    def _find_job(self):
-        instance = self._sc.get_instance(id=self._instance_id)
-        return instance.get_job(id=self._job_id)
 
     def _get_job_metrics(self):
         """Fetch all the condition metrics for a job.

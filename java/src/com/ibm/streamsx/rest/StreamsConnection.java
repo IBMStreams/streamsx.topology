@@ -67,6 +67,15 @@ public class StreamsConnection {
         StreamsConnection sc = new StreamsConnection(delegate);
         return sc;
     }
+    
+    public static StreamsConnection ofBearerToken(String url, String bearerToken) {
+        
+        AbstractStreamsConnection delegate = new StreamsConnectionImpl(null,
+                StreamsRestUtils.createBearerAuth(bearerToken),
+                url, false);
+        StreamsConnection sc = new StreamsConnection(delegate);
+        return sc;      
+    }
 
     /**
      * This function is used to disable checking the trusted certificate chain
