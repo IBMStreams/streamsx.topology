@@ -1925,7 +1925,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         # Cancel the job using the job id
         cancel_url = self._get_jobs_url() + '/' + str(job_id)
         headers = { 'Accept' : 'application/json'}
-        res = self.rest_client.session.delete(cancel_url, headers=header)
+        res = self.rest_client.session.delete(cancel_url, headers=headers)
         _handle_http_errors(res)
         return res.json()
 
