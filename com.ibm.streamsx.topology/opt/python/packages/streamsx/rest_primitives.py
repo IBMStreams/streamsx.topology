@@ -2217,7 +2217,7 @@ class ApplicationConfiguration(_ResourceElement):
 
     Attributes:
         name (str): Name of the configuration.
-        description (str): Name of the configuration.
+        description (str): Description for the configuration.
         properties (dict): Property values stored for the configuration.
         creationTime (long): Epoch time when this configuraiton was created.
         lastModifiedTime (long): Epoch time when this configuration was last modified.
@@ -2238,14 +2238,33 @@ class ApplicationConfiguration(_ResourceElement):
         return cv
 
     def update(self, properties=None, description=None):
+        """Update this application configuration.
+
+        To create or update a property provide its key-value
+        pair in `properties.
+
+        To delete a property provide its key with the value ``None``
+        in properties.
+
+        Args:
+            properties (dict): Property values to be updated. If ``None`` the properties are unchanged.
+            description (str): Description for the configuration. If ``None`` the description is unchanged.
+
+        Returns:
+            ApplicationConfiguration: self
+        """
         cv = ApplicationConfiguration._props(properties=properties, description=description)
-        res = self.rest_client.session.delete(self.rest_self,
-            headers = {'Accept' : 'application/json'},
+        res = self.rest_client.session.patch(self.rest_self,
+            headers = {'Accept' : 'application/json',
+                       'Content-Type' : 'application/json'},
             json=cv)
         _handle_http_errors(res)
         self.json_rep = res.json()
+        return self
 
     def delete(self):
+        """Delete this application configuration.
+        """
         res = self.rest_client.session.delete(self.rest_self)
         _handle_http_errors(res)
 
