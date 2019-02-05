@@ -27,6 +27,10 @@ def _fetch_from_instance(tc, instance):
     _check_list(tc, instance.get_imported_streams(), ImportedStream)
     _check_list(tc, instance.get_pe_connections(), PEConnection)
 
+    _check_list(tc, instance.get_application_configurations(), ApplicationConfiguration, none_ok=True)
+    if instance.get_application_configurations() is not None:
+        _check_app_configs(tc, instance)
+
     d = instance.get_domain()
     if d is not None:
         tc.assertIsInstance(d, Domain)
@@ -235,6 +239,51 @@ def _fetch_from_job(tc, job):
     d = job.get_domain()
     if d is not None:
         tc.assertIsInstance(d, Domain)
+
+def _check_app_configs(tc, instance):
+    name = 'TEST_AC' +  ''.join(random.choice('0123456789abcdef') for x in range(20))
+    description = 'Description of ' + name
+    ac = instance.create_application_configuration(name, {'A':'one', 'B':2}, description)
+    tc.assertEqual(name, ac.name)
+    tc.assertEqual(description, ac.description)
+    tc.assertEqual({'A':'one', 'B':'2'}, ac.properties)
+    ac.refresh()
+    tc.assertEqual(name, ac.name)
+    tc.assertEqual(description, ac.description)
+    tc.assertEqual({'A':'one', 'B':'2'}, ac.properties)
+
+    description = 'Better description of ' + name
+    ac.update(description=description)
+    tc.assertEqual(name, ac.name)
+    tc.assertEqual(description, ac.description)
+    tc.assertEqual({'A':'one', 'B':'2'}, ac.properties)
+
+    ac2 = ac.update({'B':None, 'C': 'the sea'})
+    tc.assertSame(ac, ac2)
+    tc.assertEqual(name, ac.name)
+    tc.assertEqual(description, ac.description)
+    tc.assertEqual({'A':'one', 'C':'the sea'}, ac.properties)
+
+    ac.update({'A':'one plus'})
+    tc.assertEqual(name, ac.name)
+    tc.assertEqual(description, ac.description)
+    tc.assertEqual({'A':'one plus', 'C':'the sea'}, ac.properties)
+
+    seen_ac = False
+    for rac in instance.get_application_configurations():
+        self.assertIsInstance(rac, ApplicationConfiguration)
+        if rac.name == name:
+            seen_ac = True
+            break
+    self.assertTrue(seen_ac)
+
+    lac = instance.get_application_configurations(name=name)
+    self.assertEqual(1, len(lac))
+    self.assertEqual(name, lac[0].name)
+
+    ac.delete()
+    lac = instance.get_application_configurations(name=name)
+    self.assertEqual(0, len(lac))
 
 def check_domain(tc, domain):
     """Basic test of calls against an Domain """
