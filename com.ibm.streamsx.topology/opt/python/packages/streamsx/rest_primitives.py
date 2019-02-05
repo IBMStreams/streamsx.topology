@@ -1583,6 +1583,24 @@ class Instance(_ResourceElement):
         if hasattr(self, 'applicationConfigurations'):
            return self._get_elements(self.applicationConfigurations, 'applicationConfigurations', ApplicationConfiguration, None, name)
 
+    def create_application_configuration(self, name, properties, description=None):
+        """Create an application configuration.
+
+        Args:
+            name (str, optional): Only return application configurations containing property **name** that matches `name`. `name` can be a
+        .. versionadded 1.12
+        """
+        if not hasattr(self, 'applicationConfigurations'):
+            raise NotImplementedError()
+
+        cv = ApplicationConfiguration._props(name, properties, description)
+
+        res = self.rest_client.session.post(self.applicationConfigurations,
+            headers = {'Accept' : 'application/json'},
+            json=cv)
+        _handle_http_errors(res)
+        return ApplicationConfiguration(res.json(), self.rest_client)
+
 
 class ResourceTag(object):
     """Resource tag defined in a Streams domain
@@ -2162,7 +2180,31 @@ class ApplicationConfiguration(_ResourceElement):
 
     .. versionadded 1.12
     """
-    pass
+    @staticmethod
+    def _props(name=None, properties=None, description=None):
+        cv = {}
+        if name:
+            cv['name'] = str(name)
+        if description:
+            cv['description'] = str(description)
+        acp = {}
+        for k,v in properties.items():
+            acp[str(k)] = None if v is None else str(v)
+        cv['properties'] = acp
+        return cv
+
+    def update(self, properties=None, description=None):
+        cv = ApplicationConfiguration._props(properties=properties, description=description)
+        res = self.rest_client.session.delete(self.rest_self,
+            headers = {'Accept' : 'application/json'},
+            json=cv)
+        _handle_http_errors(res)
+        self.json_rep = res.json()
+
+    def delete(self):
+        res = self.rest_client.session.delete(self.rest_self)
+        _handle_http_errors(res)
+
 
 class _StreamsRestDelegator(object):
     """Delegator for IBM Streams instances where the
