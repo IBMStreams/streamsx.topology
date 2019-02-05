@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016,2017
+# Copyright IBM Corp. 2016,2019
 """
 Schemas for streams.
 
@@ -19,12 +19,32 @@ A stream represents an unbounded flow of tuples with a declared schema so that e
 Structured schemas
 ******************
 
-A structured schema is a sequence of attributes, and an attribute is a named value of a specific type. For example a stream of sensor readings can be represented as a schema with three attributes ``sensor_id``, ``ts`` and ``reading`` with types of ``int64``, ``timestamp`` and ``float64`` respectively. This schema can be declared as::
+A structured schema is a sequence of attributes, and an attribute is a named value of a specific type. For example a stream of sensor readings can be represented as a schema with three attributes ``sensor_id``, ``ts`` and ``reading`` with types of ``int64``, ``int64`` and ``float64`` respectively.
+
+This schema can be declared a number of ways:
+
+Python 3.6::
+
+    class SensorReading(typing.NamedTuple):
+        sensor_id: int
+        ts: int
+        reading: float
+
+    sensors = raw_readings.map(parse_sensor, schema=SensorReading)
+    
+Python 3::
+
+    SensorReading = typing.NamedTuple('SensorReading',
+        [('sensor_id', int), ('ts', int), ('reading', float)]
+
+    sensors = raw_readings.map(parse_sensor, schema=SensorReading)
+
+Python 3, 2.7::
 
     sensors = raw_readings.map(parse_sensor,
-        schema='tuple<int64 sensor_id, timestamp ts, float64 reading>')
+        schema='tuple<int64 sensor_id, int64 ts, float64 reading>')
 
-The supported types are defined by IBM Streams and are listed in :py:class:`~StreamsSchema`.
+The supported types are defined by IBM Streams and are listed in :py:class:`~StreamSchema`.
 
 Structured schemas provide type-safety and efficient network serialization when compared to passing a ``dict`` using :py:const:`~CommonSchema.Python` streams. 
 
@@ -45,6 +65,7 @@ Explictly defining a stream's schema is flexible and various types of values are
         * ``object`` - for :py:const:`~CommonSchema.Python`
 
     * Values of the enumeration :py:class:`CommonSchema`
+    * An instance of ``typing.NamedTuple`` (Python 3)
     * An instance of :py:class:`StreamSchema`
     * A string of the format ``tuple<...>`` defining the attribute names and types. See :py:class:`StreamSchema` for details on the format and types supported.
     * A string containing a namespace qualified SPL stream type (e.g. ``com.ibm.streams.geospatial::FlightPathEncounterTypes.Observation3D``)
@@ -62,7 +83,9 @@ _spl_object = object
 from future.builtins import *
 from past.builtins import basestring, unicode
 
+
 import collections
+import decimal
 import enum
 import io
 import itertools
@@ -73,6 +96,7 @@ import tokenize
 
 import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
+
 
 _spl_str = unicode if sys.version_info.major == 2 else str
 
@@ -98,6 +122,14 @@ def _normalize(schema, allow_none=True):
 
     if schema in py_types:
         return py_types[schema]
+
+    # With Python 3 allow a named tuple with type hints
+    # to be used as a schema definition
+    if sys.version_info.major == 3:
+        import typing
+        if isinstance(schema, type) and  issubclass(schema, tuple):
+            if hasattr(schema, '_fields') and hasattr(schema, '_field_types'):
+                return _from_named_tuple(schema)
 
     raise ValueError("Unknown stream schema type:" + str(schema))
 
@@ -274,6 +306,14 @@ def _attribute_names(types):
         names.append(attr[1])
     return names
 
+# Returns a schema's types as a list of (name, python type) tuples
+# suitable for use in creating a typing.NamedTuple
+def _attribute_pytypes(types):
+    pytypes = []
+    for attr in types:
+        pytypes.append((attr[1], _type_from_spl(attr[0])))
+    return pytypes
+
 _SCHEMA_PYTHON_OBJECT = 'tuple<blob __spl_po>'
 _SCHEMA_STRING = 'tuple<rstring string>'
 _SCHEMA_JSON = 'tuple<rstring jsonString>'
@@ -290,18 +330,57 @@ class StreamSchema(object) :
     On a structured stream a tuple is a sequence of attributes,
     and an attribute is a named value of a specific type.
 
-    The supported types are defined by IBM Streams Streams Processing
-    Language and include such types as `int8`, `int16`, `rstring`
-    and `list<float32>`.
+    The supported types are defined by IBM Streams and include such
+    types as `int8`, `int16`, `rstring` and `list<float32>`.
 
-    A schema is defined with the syntax ``tuple<type name [,...]>``,
-    for example::
+    A structured schema can be defined using a ``typing.NamedTuple`` in
+    Python 3, a string with the syntax ``tuple<type name [,...]>`` or
+    an instance of this class.
 
-        tuple<rstring id, timestamp ts, float64 value>
+    typing.NamedTuple:
+ 
+        A ``typing.NamedTuple`` can be used to define a structured
+        schema with the field names and types mapping to the
+        structured schema attribute names and types.
 
-    represents a schema with three attributes suitable for a sensor reading.
+        Python types are mapped to IBM Streams types as follows:
 
-    The complete list of supported types are:
+        ================================== ================
+        Python type                        IBM Streams type
+        ================================== ================
+        ``str``                            ``rstring``
+        ``bool``                           ``boolean``
+        ``int``                            ``int64``
+        ``float``                          ``float64``
+        ``decimal.Decimal``                ``decimal128``
+        ``complex``                        ``complex64``
+        ``bytes``                          ``blob``
+        ``streamsx.spl.types.Timestamp``   ``timestamp``
+        ``typing.List<T>``                 ``list<T>``
+        ``typing.Set<T>``                  ``set<T>``
+        ``typing.Mapping<K,V>``            ``map<K,V>``
+        ================================== ================
+
+        .. note::
+            Tuples on a stream with a schema defined by a
+            ``typing.NamedTuple`` instance are passed into callables
+            as instance of a named tuple with the the correct field
+            names and types. This is not guaranteed to be the same class
+            instance as the one used to declared the schema.
+            
+
+    Tuple string:
+
+        A string of the format `tuple<type name [,...]>` can be used
+        to define a structured schema, where `type` is an IBM Streams type.
+
+        Example::
+
+            tuple<rstring id, timestamp ts, float64 value>
+
+        represents a schema with three attributes suitable for a sensor reading.
+
+    IBM Streams types:
 
     ============================  ==============================  =========================================  =======================================
     Type                          Description                     Python representation                      Conversion from Python
@@ -444,8 +523,13 @@ class StreamSchema(object) :
             return tuple
         if name is True:
             name = 'StreamTuple'
-        fields = _attribute_names(self._types)
-        nt = collections.namedtuple(name, fields, rename=True)
+        if sys.version_info.major == 2:
+            fields = _attribute_names(self._types)
+            nt = collections.namedtuple(name, fields, rename=True)
+        else:
+            import typing
+            nt = typing.NamedTuple(name, _attribute_pytypes(self._types))
+
         nt._splpy_namedtuple = name
         return nt
 
@@ -679,3 +763,78 @@ class CommonSchema(enum.Enum):
 
     def __str__(self):
         return str(self.schema())
+
+def _from_named_tuple(nt):
+    import typing
+    spl_types = []
+    for name in nt._fields:
+        spl_types.append(_spl_from_type(nt._field_types[name]))
+
+    td = 'tuple<'
+    for i in range(len(nt._fields)):
+        if i:
+            td += ', '
+        td += spl_types[i]
+        td += ' '
+        td += nt._fields[i]
+    td += '>'
+    return StreamSchema(td).as_tuple(named=nt.__name__)
+
+def _spl_from_type(type_):
+    _init_type_mappings()
+    if type_ in _PYTYPE_TO_SPL:
+        return _PYTYPE_TO_SPL[type_]
+
+    if isinstance(type_, type):
+        import typing
+        if issubclass(type_, typing.List):
+            et = type_.__args__[0]
+            return 'list<' + _spl_from_type(et) + '>'
+        if issubclass(type_, typing.Set):
+            et = type_.__args__[0]
+            return 'set<' + _spl_from_type(et) + '>'
+        if issubclass(type_, typing.Mapping):
+            kt = type_.__args__[0]
+            vt = type_.__args__[1]
+            return 'map<' + _spl_from_type(kt) + ', ' + _spl_from_type(vt) + '>'
+    raise ValueError("Unsupported type: " + type_)
+
+def _type_from_spl(type_):
+    _init_type_mappings()
+    if type_ in _SPLTYPE_TO_PY:
+        return _SPLTYPE_TO_PY[type_]
+
+    if isinstance(type_, tuple):
+        import typing
+        if type_[0] == 'list':
+            return typing.List[_type_from_spl(type_[1])]
+        if type_[0] == 'set':
+            return typing.Set[_type_from_spl(type_[1])]
+        if type_[0] == 'map':
+            return typing.Mapping[_type_from_spl(type_[1][0]), _type_from_spl(type_[1][1])]
+    raise ValueError("Unsupported type: " + type_)
+
+_PYTYPE_TO_SPL = {}
+_SPLTYPE_TO_PY = {}
+def _init_type_mappings():
+    global _PYTYPE_TO_SPL
+    if not _PYTYPE_TO_SPL:
+        import streamsx.spl.types
+        _PYTYPE_TO_SPL = {
+            str:'rstring', bool:'boolean', int:'int64', float:'float64',
+            complex:'complex64', decimal.Decimal:'decimal128',
+            streamsx.spl.types.Timestamp:'timestamp',
+            bytes:'blob' }
+
+        global _SPLTYPE_TO_PY
+        _SPLTYPE_TO_PY = {
+            'rstring': str, 'boolean':bool,
+            'int8':int, 'int16':int, 'int32':int, 'int64':int,
+            'uint8':int, 'uint16':int, 'uint32':int, 'uint64':int,
+            'float32':float, 'float64':float,
+            'complex32':complex, 'complex64':complex,
+            'decimal32':decimal.Decimal,
+            'decimal64':decimal.Decimal,
+            'decimal128':decimal.Decimal,
+            'timestamp':streamsx.spl.types.Timestamp,
+            'blob': bytes}
