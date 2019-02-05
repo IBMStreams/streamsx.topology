@@ -28,7 +28,15 @@ import time
 from pprint import pformat
 from urllib import parse
 
+import streamsx.topology.context
 import streamsx.topology.schema
+import streamsx.rest
+
+##############################################################
+# NOTE verify is passed explictly when using session to
+# work around requests defect: #3829
+# https://github.com/requests/requests/issues/3829
+##############################################################
 
 logger = logging.getLogger('streamsx.rest')
 
@@ -147,11 +155,20 @@ def _handle_http_errors(res):
 
 
 class _StreamsRestClient(object):
+    _blocked_ssl_warn = False
+
     """Session connection with the Streams REST API
     """
     def __init__(self, auth):
         self.session = requests.Session()
         self.session.auth = auth
+
+    def _block_ssl_warn(self):
+        if self.session.verify is False and not _StreamsRestClient._blocked_ssl_warn:
+            import warnings
+            import urllib3
+            warnings.simplefilter(action='once', category=urllib3.exceptions.InsecureRequestWarning)
+            _StreamsRestClient._blocked_ssl_warn = True
 
     # Create session to reuse TCP connection
     # https authentication
@@ -167,17 +184,19 @@ class _StreamsRestClient(object):
     
     def make_request(self, url):
         logger.debug('Beginning a REST request to: ' + url)
+        self._block_ssl_warn()
         headers={ 'Accept': 'application/json'}
-        res = self.session.get(url, headers=headers)
+        res = self.session.get(url, headers=headers, verify=self.session.verify)
         _handle_http_errors(res)
         return res.json()
 
     def make_raw_streaming_request(self, url, mimetype=None):
         logger.debug('Beginning a REST request to: ' + url)
+        self._block_ssl_warn()
         headers = {}
         if mimetype:
             headers['Accept'] = mimetype
-        res = self.session.get(url, stream=True, headers=headers)
+        res = self.session.get(url, stream=True, headers=headers, verify=self.session.verify)
         _handle_http_errors(res)
         return res
 
@@ -204,6 +223,15 @@ class _StreamsRestClient(object):
 
     def __str__(self):
         return pformat(self.__dict__)
+
+
+class _BearerAuthHandler(requests.auth.AuthBase):
+    def __init__(self, token):
+        self._bearer_token = 'Bearer ' + token
+
+    def __call__(self, r):
+        r.headers['Authorization'] = self._bearer_token
+        return r
 
 
 class _IAMAuthHandler(requests.auth.AuthBase):
@@ -1340,6 +1368,22 @@ class Instance(_ResourceElement):
         super(Instance, self).__init__(json_rep, rest_client)
         self._delegator = rest_client._sc._delegator
 
+    @staticmethod
+    def of_service(cfg):
+        service = cfg.get(streamsx.topology.context.ConfigParams.SERVICE_DEFINITION, cfg)
+        endpoint = service['connection_info'].get('serviceRestEndpoint')
+        if not endpoint:
+            raise ValueError()
+        es = endpoint.split('/')
+        name = es[len(es)-1]
+        root_url = endpoint.split('/streams/rest/instances/')[0]
+        resource_url = root_url + '/streams/rest/resources'
+
+        sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=_BearerAuthHandler(service['bearerToken']))
+        if streamsx.topology.context.ConfigParams.SSL_VERIFY in cfg:
+                sc.session.verify = cfg[streamsx.topology.context.ConfigParams.SSL_VERIFY]
+        return sc.get_instance(name)
+
     def get_operators(self, name=None):
         """Get the list of :py:class:`Operator` elements associated with this instance.
 
@@ -1881,7 +1925,7 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         # Cancel the job using the job id
         cancel_url = self._get_jobs_url() + '/' + str(job_id)
         headers = { 'Accept' : 'application/json'}
-        res = self.rest_client.session.delete(cancel_url, headers=headers)
+        res = self.rest_client.session.delete(cancel_url, headers=header)
         _handle_http_errors(res)
         return res.json()
 
@@ -2135,23 +2179,27 @@ class _StreamsRestDelegator(object):
         self.rest_client = rest_client
 
     def _upload_bundle(self, instance, bundle):
+        self.rest_client._block_ssl_warn()
         app_bundle_url = instance.self + '/applicationbundles'
 
         sab_name = os.path.basename(bundle)
         with open(bundle, 'rb') as bundle_fp:
             res = self.rest_client.session.post(app_bundle_url,
                 headers = {'Accept' : 'application/json', 'Content-Type': 'application/x-jar'},
-                data=bundle_fp)
+                data=bundle_fp,
+                verify=self.rest_client.session.verify)
             _handle_http_errors(res)
             if res.status_code != 200:
                 raise ValueError(str(res))
             return _UploadedBundle(self, instance, res.json(), self.rest_client)
 
     def _submit_bundle(self, bundle, job_config):
+        self.rest_client._block_ssl_warn()
         job_options = job_config.as_overlays() if job_config else {}
         app_id = bundle._app_id()
         res = self.rest_client.session.post(bundle._instance.jobs,
-           headers = {'Accept' : 'application/json'}, json={'application': app_id, 'jobConfigurationOverlay':job_options, 'preview':False})
+            headers = {'Accept' : 'application/json'}, json={'application': app_id, 'jobConfigurationOverlay':job_options, 'preview':False},
+            verify=self.rest_client.session.verify)
         _handle_http_errors(res)
         if res.status_code != 201:
             raise ValueError(str(res))
@@ -2161,7 +2209,9 @@ class _StreamsRestDelegator(object):
         return job.id
 
     def _cancel_job(self, job, force):
+        self.rest_client._block_ssl_warn()
         cancel_url = job.instance + '/jobs/' + job.id
         res = self.rest_client.session.delete(cancel_url,
-                headers = {'Accept' : 'application/json'})
+                headers = {'Accept' : 'application/json'},
+                verify=self.rest_client.session.verify)
         #TODO return code

@@ -1,3 +1,9 @@
+ifeq ($(origin STREAMS_SPLPATH), undefined)
+    ADDL_TKS=''
+else
+    ADDL_TKS=":$(STREAMS_SPLPATH)"
+endif
+
 OUT=output
 OUT_PY=${OUT}/etc/streamsx.topology/python
 all:
@@ -14,4 +20,4 @@ all:
             	fi; \
 		${STREAMS_INSTALL}/bin/spl-make-toolkit -i $${toolkit}; \
 	done;
-	${STREAMS_INSTALL}/bin/sc -M `cat main_composite.txt` --no-toolkit-indexing -t ${STREAMS_INSTALL}/toolkits --output-directory ${OUT}
+	${STREAMS_INSTALL}/bin/sc -M `cat main_composite.txt` --no-toolkit-indexing -t ${STREAMS_INSTALL}/toolkits${ADDL_TKS} --output-directory ${OUT}

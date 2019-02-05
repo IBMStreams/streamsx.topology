@@ -8,9 +8,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.logging.Level;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.ibm.streamsx.topology.internal.context.remote.RemoteContextImpl;
 import com.ibm.streamsx.topology.internal.logging.Logging;
 
 /**
@@ -31,6 +33,7 @@ public class RemoteContextSubmit {
             JsonObject json = parser.parse(reader).getAsJsonObject();
             reader.close();
             
+            RemoteContextImpl.PROGRESS.setLevel(Level.INFO);
             RemoteContext<?> sc = RemoteContextFactory.getRemoteContext(context);
             sc.submit(json).get();
         }
