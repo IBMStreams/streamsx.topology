@@ -35,6 +35,9 @@ class Job(_ResourceElement):
     def cancel(self, force: Any=bool) -> Union[Any, bool]: ...
 
 
+class ApplicationConfiguration(_ResourceElement): ...
+
+
 class Operator(_ResourceElement):
     def get_metrics(self, name: str=None) -> List[Metric]: ...
 
@@ -91,6 +94,7 @@ class Instance(_ResourceElement):
     def get_published_topics(self) -> List[PublishedTopic]: ...
     def upload_bundle(self, bundle:str): -> 'ApplicationBundle'
     def submit_job(self, bundle:str, job_config: streamsx.topology.context.JobConfig=None): -> Job
+    def get_application_configurations(self, name: str=None): -> List[ApplicationConfiguration]
 
 
 class ApplicationBundle(_ResourceElement):

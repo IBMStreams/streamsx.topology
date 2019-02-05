@@ -1612,6 +1612,40 @@ class Instance(_ResourceElement):
         """
         return self.upload_bundle(bundle).submit_job(job_config)
 
+    def get_application_configurations(self, name=None):
+        """Retrieves application configurations for this instance.
+
+        Args:
+            name (str, optional): Only return application configurations containing property **name** that matches `name`. `name` can be a
+                regular expression. If `name` is not supplied, then all application configurations are returned.
+
+        Returns:
+            list(ApplicationConfiguration): A list of application configurations matching the given `name`.
+        
+        .. versionadded 1.12
+        """
+        if hasattr(self, 'applicationConfigurations'):
+           return self._get_elements(self.applicationConfigurations, 'applicationConfigurations', ApplicationConfiguration, None, name)
+
+    def create_application_configuration(self, name, properties, description=None):
+        """Create an application configuration.
+
+        Args:
+            name (str, optional): Only return application configurations containing property **name** that matches `name`. `name` can be a
+        .. versionadded 1.12
+        """
+        if not hasattr(self, 'applicationConfigurations'):
+            raise NotImplementedError()
+
+        cv = ApplicationConfiguration._props(name, properties, description)
+
+        res = self.rest_client.session.post(self.applicationConfigurations,
+            headers = {'Accept' : 'application/json'},
+            json=cv)
+        _handle_http_errors(res)
+        return ApplicationConfiguration(res.json(), self.rest_client)
+
+
 class ResourceTag(object):
     """Resource tag defined in a Streams domain
 
@@ -2169,6 +2203,70 @@ class _StreamsV4Delegator(object):
 class _UploadedBundle(ApplicationBundle):
     def _app_id(self):
         return self.bundleId
+
+class ApplicationConfiguration(_ResourceElement):
+    """An application configuration.
+   
+    Application configurations are used for secure storage and
+    retrieval of name/value pairs.
+
+    An application configuration maintains a set of properties
+    that an application can access at runtime. These are typically
+    used to maintain connection endpoint and credentials for sources
+    and sinks.
+
+    Attributes:
+        name (str): Name of the configuration.
+        description (str): Description for the configuration.
+        properties (dict): Property values stored for the configuration.
+        creationTime (long): Epoch time when this configuraiton was created.
+        lastModifiedTime (long): Epoch time when this configuration was last modified.
+
+    .. versionadded 1.12
+    """
+    @staticmethod
+    def _props(name=None, properties=None, description=None):
+        cv = {}
+        if name:
+            cv['name'] = str(name)
+        if description:
+            cv['description'] = str(description)
+        acp = {}
+        for k,v in properties.items():
+            acp[str(k)] = None if v is None else str(v)
+        cv['properties'] = acp
+        return cv
+
+    def update(self, properties=None, description=None):
+        """Update this application configuration.
+
+        To create or update a property provide its key-value
+        pair in `properties.
+
+        To delete a property provide its key with the value ``None``
+        in properties.
+
+        Args:
+            properties (dict): Property values to be updated. If ``None`` the properties are unchanged.
+            description (str): Description for the configuration. If ``None`` the description is unchanged.
+
+        Returns:
+            ApplicationConfiguration: self
+        """
+        cv = ApplicationConfiguration._props(properties=properties, description=description)
+        res = self.rest_client.session.patch(self.rest_self,
+            headers = {'Accept' : 'application/json',
+                       'Content-Type' : 'application/json'},
+            json=cv)
+        _handle_http_errors(res)
+        self.json_rep = res.json()
+        return self
+
+    def delete(self):
+        """Delete this application configuration.
+        """
+        res = self.rest_client.session.delete(self.rest_self)
+        _handle_http_errors(res)
 
 
 class _StreamsRestDelegator(object):
