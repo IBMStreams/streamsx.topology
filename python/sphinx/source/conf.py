@@ -64,7 +64,7 @@ author = 'IBM'
 # built documents.
 #
 # The short X.Y version.
-version = '1.11'
+version = '1.12'
 # The full version, including alpha/beta/rc tags.
 import streamsx._streams._version
 release = streamsx._streams._version.__version__
