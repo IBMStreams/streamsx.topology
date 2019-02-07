@@ -73,7 +73,6 @@ class TestUDP(unittest.TestCase):
       tester = Tester(topo)
       tester.contents(s, [1 for i in range(25)])
       tester.test(self.test_ctxtype, self.test_config)
-      print(tester.result)
 
   def test_TopologySetParallel(self):
       topo = Topology("test_TopologySetParallel")
@@ -84,7 +83,6 @@ class TestUDP(unittest.TestCase):
       tester = Tester(topo)
       tester.contents(s, [1,1,1,1,1])
       tester.test(self.test_ctxtype, self.test_config)
-      print(tester.result)
 
   def test_TopologyMultiSetParallel(self):
       topo = Topology("test_TopologyMultiSetParallel")
@@ -103,7 +101,6 @@ class TestUDP(unittest.TestCase):
       tester = Tester(topo)
       tester.contents(s, [1,1,1,1,1,2,2,2,2,2], ordered=False)
       tester.test(self.test_ctxtype, self.test_config)
-      print(tester.result)
 
   def test_TopologyParallelRoundRobin(self):
       for width in (1,3):
@@ -119,7 +116,6 @@ class TestUDP(unittest.TestCase):
               tester = Tester(topo)
               tester.contents(s, range(36,161), ordered=width==1)
               tester.test(self.test_ctxtype, self.test_config)
-              print(tester.result)
 
   def test_TopologyParallelHash(self):
       for width in (1,3):
@@ -138,7 +134,6 @@ class TestUDP(unittest.TestCase):
               tester = Tester(topo)
               tester.contents(s, expected, ordered=width==1)
               tester.test(self.test_ctxtype, self.test_config)
-              print(tester.result)
 
   def test_TopologyParallelHashFunction(self):
       for width in (1,7):
@@ -157,7 +152,6 @@ class TestUDP(unittest.TestCase):
               tester = Tester(topo)
               tester.contents(s, expected, ordered=width==1)
               tester.test(self.test_ctxtype, self.test_config)
-              print(tester.result)
 
   def test_StringHash(self):
       """
@@ -184,7 +178,6 @@ class TestUDP(unittest.TestCase):
               tester = Tester(topo)
               tester.contents(s, data, ordered=width==1)
               tester.test(self.test_ctxtype, self.test_config)
-              print(tester.result)
 
   def test_SPLHashFunc(self):
       """
@@ -220,7 +213,6 @@ class TestUDP(unittest.TestCase):
               tester = Tester(topo)
               tester.contents(s, expected, ordered=width==1)
               tester.test(self.test_ctxtype, self.test_config)
-              print(tester.result)
 
   def test_in_region_multi_use(self):
         topo = Topology("test_TopologyMultiSetParallel")

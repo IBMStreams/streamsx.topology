@@ -435,12 +435,8 @@ class _DistributedSubmitter(_BaseSubmitter):
                         raise RuntimeError('Credentials supplied in the arguments differ than '
                                    'those specified in the StreamsConnection object')
         else:
-            if 'connection_info' in config and 'service_token' in config:
-                svc_info = {}
-                svc_info['connection_info'] = config['connection_info']
-                svc_info['service_token'] = config['service_token']
-                if 'user_token' in config:
-                    svc_info['user_token'] = config['user_token']
+            svc_info =  streamsx.rest_primitives.Instance._find_service_def(config)
+            if svc_info:
                 self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
 
         # Give each view in the app the necessary information to connect to SWS.

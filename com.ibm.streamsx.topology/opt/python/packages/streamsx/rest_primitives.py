@@ -1369,22 +1369,40 @@ class Instance(_ResourceElement):
         self._delegator = rest_client._sc._delegator
 
     @staticmethod
-    def of_service(cfg):
-        if 'connection_info' in cfg and 'service_token' in cfg:
-            service = cfg
+    def _is_service_def(config):
+        return 'connection_info' in config and config.get('type', None) == 'streams' and 'service_token' in config
+
+    @staticmethod
+    def _find_service_def(config):
+        if Instance._is_service_def(config):
+            service = config
         else:
-            service = cfg.get(streamsx.topology.context.ConfigParams.SERVICE_DEFINITION, cfg)
-        endpoint = service['connection_info'].get('serviceRestEndpoint')
-        if not endpoint:
+            service = config.get(streamsx.topology.context.ConfigParams.SERVICE_DEFINITION)
+
+        if service and Instance._is_service_def(service):
+            svc_info = {}
+            svc_info['connection_info'] = service['connection_info']
+            svc_info['type'] = service['type']
+            svc_info['service_token'] = service['service_token']
+            if 'user_token' in service:
+                svc_info['user_token'] = service['user_token']
+            return svc_info
+        return None
+
+    @staticmethod
+    def of_service(config):
+        service = Instance._find_service_def(config)
+        if not service:
             raise ValueError()
+        endpoint = service['connection_info'].get('serviceRestEndpoint')
         es = endpoint.split('/')
         name = es[len(es)-1]
         root_url = endpoint.split('/streams/rest/instances/')[0]
         resource_url = root_url + '/streams/rest/resources'
 
         sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=_BearerAuthHandler(service['service_token']))
-        if streamsx.topology.context.ConfigParams.SSL_VERIFY in cfg:
-                sc.session.verify = cfg[streamsx.topology.context.ConfigParams.SSL_VERIFY]
+        if streamsx.topology.context.ConfigParams.SSL_VERIFY in config:
+                sc.session.verify = config[streamsx.topology.context.ConfigParams.SSL_VERIFY]
         return sc.get_instance(name)
 
     def get_operators(self, name=None):
