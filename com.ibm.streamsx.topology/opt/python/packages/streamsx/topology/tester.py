@@ -100,6 +100,7 @@ import platform
 import threading
 from streamsx.rest import StreamsConnection
 from streamsx.rest import StreamingAnalyticsConnection
+import streamsx.rest_primitives
 from streamsx.topology.context import ConfigParams
 import time
 import json
@@ -326,14 +327,14 @@ class Tester(object):
     # as the connection information can be in the service definition.
     @staticmethod
     def _check_setup_distributed(cfg):
+        if streamsx.rest_primitives.Instance._find_service_def(cfg):
+            return
+
         domain_instance_setup = 'STREAMS_INSTANCE_ID' in os.environ and 'STREAMS_DOMAIN_ID' in os.environ
         if domain_instance_setup:
             if not 'STREAMS_INSTALL' in os.environ:
                 raise unittest.SkipTest("Skipped due to no local IBM Streams install")
             return
-        if stc.ConfigParams.SERVICE_DEFINITION in cfg:
-            if 'connection_info' in cfg[stc.ConfigParams.SERVICE_DEFINITION]:
-                return
 
         raise unittest.SkipTest("No IBM Streams instance definition for DISTRIBUTED")
 
@@ -777,7 +778,6 @@ class Tester(object):
         self.streams_connection = config.get(ConfigParams.STREAMS_CONNECTION)
         if self.streams_connection is None:
             self.streams_connection = self.submission_result.job.rest_client._sc
-            config[ConfigParams.STREAMS_CONNECTION] = self.streams_connection
         return self._distributed_wait_for_result(stc.ContextTypes.DISTRIBUTED, config)
 
 
