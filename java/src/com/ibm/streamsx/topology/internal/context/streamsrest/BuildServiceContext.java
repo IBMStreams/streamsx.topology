@@ -17,6 +17,7 @@ import com.ibm.streamsx.rest.build.Build;
 import com.ibm.streamsx.rest.build.BuildService;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.internal.context.remote.BuildRemoteContext;
+import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 public class BuildServiceContext extends BuildRemoteContext<BuildService> {
@@ -41,7 +42,7 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
     protected JsonObject submitBuildArchive(BuildService context, File buildArchive,
             JsonObject deploy, JsonObject jco, String buildName,
             JsonObject buildConfig) throws Exception {
-        
+            
         if (!sslVerify(deploy))
             context.allowInsecureHosts();
         
@@ -54,8 +55,9 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
         try {
             
             JsonObject result = new JsonObject();
+            result.add(SubmissionResultsKeys.SUBMIT_METRICS, build.getMetrics());
             JsonObject buildInfo = new JsonObject();
-            result.add("build", buildInfo);
+            result.add("build", buildInfo);           
             buildInfo.addProperty("name", build.getName());
 
             build.uploadArchiveAndBuild(buildArchive);
@@ -63,14 +65,20 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
             JsonArray artifacts = new JsonArray();
             buildInfo.add("artifacts", artifacts);
             
-            for (Artifact artifact : build.getArtifacts()) {
-                File sab = artifact.download(null);
-                JsonObject sabInfo = new JsonObject();
-                sabInfo.addProperty("name", artifact.getName());
-                sabInfo.addProperty("size",artifact.getSize());
-                sabInfo.addProperty("location", sab.getAbsolutePath());
-                sabInfo.addProperty("url", artifact.getURL());
-                artifacts.add(sabInfo);
+            if (!build.getArtifacts().isEmpty()) {
+                final long startDownloadSabTime = System.currentTimeMillis();
+                for (Artifact artifact : build.getArtifacts()) {
+                    File sab = artifact.download(null);
+                    JsonObject sabInfo = new JsonObject();
+                    sabInfo.addProperty("name", artifact.getName());
+                    sabInfo.addProperty("size", artifact.getSize());
+                    sabInfo.addProperty("location", sab.getAbsolutePath());
+                    sabInfo.addProperty("url", artifact.getURL());
+                    artifacts.add(sabInfo);
+                }
+                final long endDownloadSabTime = System.currentTimeMillis();
+                build.getMetrics().addProperty(SubmissionResultsKeys.DOWNLOAD_SABS_TIME,
+                        (endDownloadSabTime - startDownloadSabTime));
             }
             
             postBuildAction(deploy, jco, result);
@@ -81,7 +89,7 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
                 build.delete();
             } catch (IOException e) {
                 TRACE.warning(
-                        "Exception deleteing build: " + e.getMessage());
+                        "Exception deleting build: " + e.getMessage());
             }
         }
 
