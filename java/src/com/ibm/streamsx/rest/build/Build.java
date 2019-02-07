@@ -13,6 +13,7 @@ import org.apache.http.entity.ContentType;
 
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
+import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
@@ -41,6 +42,8 @@ public class Build extends Element {
     private String artifacts;
     @Expose
     private String logMessages;
+    
+    private JsonObject metrics = new JsonObject();
     
     static final Build create(BuildService service, AbstractConnection connection, JsonObject gsonString) {
         // Build element = gson.fromJson(gsonString, Build.class);
@@ -105,7 +108,13 @@ public class Build extends Element {
         return name;
     }
     
+    public JsonObject getMetrics() {
+        return metrics;
+    }
+    
     public Build uploadArchive(File archive) throws IOException {
+        final long startUploadTime = System.currentTimeMillis();
+
 		Request put = Request.Put(self)	      
 			    .addHeader("Authorization", connection().getAuthorization())
 			    .bodyFile(archive, ContentType.create("application/zip"));
@@ -113,21 +122,46 @@ public class Build extends Element {
 		JsonObject response = StreamsRestUtils.requestGsonResponse(connection().executor, put);
 		refresh(response);
 		
+        final long endUploadTime = System.currentTimeMillis();
+        metrics.addProperty(SubmissionResultsKeys.SUBMIT_UPLOAD_TIME, (endUploadTime - startUploadTime));
+		
     	return this;
     }
     
     public Build uploadArchiveAndBuild(File archive) throws IOException, InterruptedException {
+        
+        metrics.addProperty(SubmissionResultsKeys.SUBMIT_ARCHIVE_SIZE, archive.length());
+        
     	uploadArchive(archive);
+    	
+        final long startBuildTime = System.currentTimeMillis();
+        long lastCheckTime = startBuildTime;
+
     	
     	submit();
     	
 		do {			
 			refresh();
 			if ("built".equals(getStatus())) {
+	            final long endBuildTime = System.currentTimeMillis();
+	            metrics.addProperty(SubmissionResultsKeys.SUBMIT_TOTAL_BUILD_TIME, (endBuildTime - startBuildTime));
 				return this;
 			}
+			
+            String mkey = SubmissionResultsKeys.buildStateMetricKey(getStatus());
+            long now = System.currentTimeMillis();
+            long duration;
+            if (metrics.has(mkey)) {
+                duration = metrics.get(mkey).getAsLong();                  
+            } else {
+                duration = 0;
+            }
+            duration += (now - lastCheckTime);
+            metrics.addProperty(mkey, duration);
+            lastCheckTime = now;
+            
 			try {
-                Thread.sleep(2000);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 try {
                     delete();
@@ -149,7 +183,7 @@ public class Build extends Element {
     	return this;
     }
     
-    
+
     
     public Build submit() throws IOException {   	
     	action("submit");
