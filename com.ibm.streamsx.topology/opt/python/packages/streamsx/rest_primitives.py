@@ -1370,7 +1370,10 @@ class Instance(_ResourceElement):
 
     @staticmethod
     def of_service(cfg):
-        service = cfg.get(streamsx.topology.context.ConfigParams.SERVICE_DEFINITION, cfg)
+        if 'connection_info' in cfg and 'service_token' in cfg:
+            service = cfg
+        else:
+            service = cfg.get(streamsx.topology.context.ConfigParams.SERVICE_DEFINITION, cfg)
         endpoint = service['connection_info'].get('serviceRestEndpoint')
         if not endpoint:
             raise ValueError()
@@ -1379,7 +1382,7 @@ class Instance(_ResourceElement):
         root_url = endpoint.split('/streams/rest/instances/')[0]
         resource_url = root_url + '/streams/rest/resources'
 
-        sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=_BearerAuthHandler(service['bearerToken']))
+        sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=_BearerAuthHandler(service['service_token']))
         if streamsx.topology.context.ConfigParams.SSL_VERIFY in cfg:
                 sc.session.verify = cfg[streamsx.topology.context.ConfigParams.SSL_VERIFY]
         return sc.get_instance(name)

@@ -13,7 +13,7 @@ interface StreamsKeys {
     
     String CONNECTION_INFO = "connection_info";
     String BUILD_SERVICE_ENDPOINT = "serviceBuildEndpoint";
-    String BEARER_TOKEN = "bearerToken";
+    String BEARER_TOKEN = "service_token";
     // serviceRestEndpoint points directly to the instance URL
     String STREAMS_REST_ENDPOINT = "serviceRestEndpoint";
     

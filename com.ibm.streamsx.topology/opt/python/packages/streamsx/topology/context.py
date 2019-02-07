@@ -434,6 +434,14 @@ class _DistributedSubmitter(_BaseSubmitter):
                 if ((username is not None and username != self.username) or (password is not None and password != self.password)):
                         raise RuntimeError('Credentials supplied in the arguments differ than '
                                    'those specified in the StreamsConnection object')
+        else:
+            if 'connection_info' in config and 'service_token' in config:
+                svc_info = {}
+                svc_info['connection_info'] = config['connection_info']
+                svc_info['service_token'] = config['service_token']
+                if 'user_token' in config:
+                    svc_info['user_token'] = config['user_token']
+                self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
 
         # Give each view in the app the necessary information to connect to SWS.
         self._setup_views()
@@ -577,7 +585,7 @@ def _print_process_stderr(process, submitter, progress_fn):
                 serr.write(line)
                 serr.write("\n")
             else:
-                print(line)
+                print(line, file=sys.stderr)
     except:
         logger.error("Error reading from Java subprocess stderr stream.")
         raise
