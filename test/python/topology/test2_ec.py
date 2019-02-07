@@ -118,7 +118,8 @@ class EcDuplicateMetric(object):
 
         try:
             streamsx.ec.CustomMetric(self, name='METRIC1', kind='Gauge')
-            self.okerror = False
+            # 4.3 allows metrics of the same name regardless of kind.
+            self.okerror = True
         except ValueError as e:
             self.okerror = True
 
