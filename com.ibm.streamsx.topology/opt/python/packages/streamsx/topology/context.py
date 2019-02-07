@@ -438,7 +438,7 @@ class _DistributedSubmitter(_BaseSubmitter):
             svc_info =  streamsx.rest_primitives.Instance._find_service_def(config)
             if svc_info:
                 self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
-                streamsx.rest_primitives.Instance._clear_service_def_info(self._config())
+                streamsx.rest_primitives.Instance._clear_service_info(self._config())
 
         # Give each view in the app the necessary information to connect to SWS.
         self._setup_views()
