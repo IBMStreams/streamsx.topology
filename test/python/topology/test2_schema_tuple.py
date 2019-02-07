@@ -192,7 +192,7 @@ class TestSchemaTypingNamedTuple(TestSchemaTuple):
         return check_is_namedtuple_hash
 
     def _create_stream(self, topo):
-        import py36_test_types
+        import py36_types
  
         s = topo.source([1,2,3])
-        return s.map(lambda x : (x,str(x*2) + "Hi!"), schema=py36_test_types.NTS)
+        return s.map(lambda x : (x,str(x*2) + "Hi!"), schema=py36_types.NTS)
