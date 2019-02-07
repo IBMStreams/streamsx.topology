@@ -1390,6 +1390,14 @@ class Instance(_ResourceElement):
         return None
 
     @staticmethod
+    def _clear_service_info(config):
+        del config['connection_info']
+        del config['type']
+        del config['service_token']
+        if hasattr(config, 'user_token'):
+            config.pop('user_token')
+
+    @staticmethod
     def of_service(config):
         service = Instance._find_service_def(config)
         if not service:
