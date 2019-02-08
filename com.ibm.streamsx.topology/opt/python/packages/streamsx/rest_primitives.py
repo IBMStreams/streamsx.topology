@@ -260,7 +260,7 @@ class _IAMAuthHandler(requests.auth.AuthBase):
 
     def __call__(self, r):
         # Convert cur time to milliseconds
-        cur_time = int(time.time() * 1000)
+        cur_time = time.time()
         if cur_time >= self._auth_expiry_time:
             self._refresh_authorization()
         r.headers['Authorization'] = self._bearer_token
@@ -273,7 +273,7 @@ class _IAMAuthHandler(requests.auth.AuthBase):
         _handle_http_errors(res)
         res = res.json()
 
-        self._auth_expiry_time = int(res[_IAMConstants.EXPIRATION] * 1000) - _IAMConstants.EXPIRY_PAD_MS
+        self._auth_expiry_time = int(res[_IAMConstants.EXPIRATION]) - 30
         self._bearer_token = self._create_bearer_auth(res[_IAMConstants.ACCESS_TOKEN])
 
     def _create_bearer_auth(self, token):
@@ -2165,11 +2165,6 @@ class _IAMConstants(object):
 
     TOKEN_URL_TEST = 'https://iam.test.cloud.ibm.com/oidc/token'
     """The url from which to receive bearer authentication tokens for Authorizing REST requests on test/staging IBM Cloud.
-    """
-
-    EXPIRY_PAD_MS = 300000
-    """Padding to ensure that a new IAM token is retrieved when the current token is due to expire
-    in less than five minutes.
     """
 
 class ApplicationBundle(_ResourceElement):
