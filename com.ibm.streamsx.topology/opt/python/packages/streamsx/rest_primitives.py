@@ -598,7 +598,12 @@ class View(_ResourceElement):
                 if gap < period:
                     time.sleep(period - gap)
                 tuples = self.fetch_tuples(max_rows, period)
-                out.append_display_data(pd.DataFrame(tuples))
+                if not tuples:
+                    if not self._data_fetcher:
+                        break
+                    out.append_stdout('No tuples')
+                else:
+                    out.append_display_data(pd.DataFrame(tuples))
                 out.clear_output(wait=True)
                 last = time.time()
         except Exception as e:
