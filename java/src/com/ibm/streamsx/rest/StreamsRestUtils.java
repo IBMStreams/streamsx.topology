@@ -197,6 +197,7 @@ class StreamsRestUtils {
      */
     static JsonObject getGsonResponse(Executor executor, String auth, String inputString)
             throws IOException {
+        TRACE.fine("HTTP GET: " + inputString);
         Request request = Request.Get(inputString).useExpectContinue();
         
         if (null != auth) {
@@ -246,6 +247,7 @@ class StreamsRestUtils {
      */
     static String getResponseString(Executor executor,
             String auth, String inputString) throws IOException {
+        TRACE.fine("HTTP GET: " + inputString);
         String sReturn = "";
         Request request = Request
                 .Get(inputString)
@@ -266,7 +268,7 @@ class StreamsRestUtils {
             // but if not, provide a better message
             sReturn = EntityUtils.toString(hResponse.getEntity());
             if (sReturn != null && !sReturn.isEmpty()) {
-                throw RESTException.create(rcResponse, sReturn);
+                throw RESTException.create(rcResponse, sReturn + " for url " + inputString);
             } else {
                 String httpError = "HttpStatus is " + rcResponse + " for url " + inputString;
                 throw new RESTException(rcResponse, httpError);
@@ -282,7 +284,7 @@ class StreamsRestUtils {
     
     private static InputStream rawStreamingGet(Executor executor,
             String auth, String url) throws IOException {
-        
+        TRACE.fine("HTTP GET: " + url);
         String accepted =
                 ContentType.APPLICATION_OCTET_STREAM.getMimeType()
                 + ","
