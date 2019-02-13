@@ -576,24 +576,38 @@ class View(_ResourceElement):
         """
         import ipywidgets as widgets
         vn = widgets.Text(value=self.description, description=self.name, disabled=True)
+        active = widgets.Valid(value=True, description='Fetching', readout='Stopped')
         out = widgets.Output(layout={'border': '1px solid black'})
-        vb = widgets.VBox([vn, out])
+        hb = widgets.HBox([vn, active])
+        vb = widgets.VBox([hb, out])
         display(vb)
-        self._display_thread = threading.Thread(target=lambda: self._display(out, duration, period))
+        self._display_thread = threading.Thread(target=lambda: self._display(out, duration, period, active))
         self._display_thread.start()
         
-    def _display(self, out, duration, period):
+    def _display(self, out, duration, period, active):
         import pandas as pd
         import IPython
         self.start_data_fetch()
         end = time.time() + float(duration) if duration is not None else None
         max_rows = pd.options.display.max_rows
-        with out:
+        last = 0
+        try:
             while self._data_fetcher and (duration is None or time.time() < end):
+                # Slow down pace when view is busy
+                gap = time.time() - last
+                if gap < period:
+                    time.sleep(period - gap)
                 tuples = self.fetch_tuples(max_rows, period)
-                display(pd.DataFrame(tuples))
+                out.append_display_data(pd.DataFrame(tuples))
                 out.clear_output(wait=True)
+                last = time.time()
+        except Exception as e:
+            self.stop_data_fetch()
+            active.value=False
+            raise e
+ 
         self.stop_data_fetch()
+        active.value=False
 
     def get_view_items(self):
         """Get a list of :py:class:`ViewItem` elements associated with this view.
