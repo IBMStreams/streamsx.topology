@@ -66,6 +66,7 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
             buildInfo.add("artifacts", artifacts);
             
             if (!build.getArtifacts().isEmpty()) {
+                report("Downloading bundle");
                 final long startDownloadSabTime = System.currentTimeMillis();
                 for (Artifact artifact : build.getArtifacts()) {
                     File sab = artifact.download(null);
