@@ -1,0 +1,309 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>IBM Streams Python setup &mdash; streamsx 1.9.6 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="streamsx 1.9.6 documentation" href="index.html"/>
+        <link rel="prev" title="IBM Streaming Analytics service" href="service.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.html">streamsx.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.topology.html">streamsx.topology.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.context.html">streamsx.topology.context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.schema.html">streamsx.topology.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester.html">streamsx.topology.tester</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester_runtime.html">streamsx.topology.tester_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.ec.html">streamsx.ec</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.op.html">streamsx.spl.op</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.types.html">streamsx.spl.types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.toolkit.html">streamsx.spl.toolkit</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.spl.html">streamsx.spl.spl</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest.html">streamsx.rest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest_primitives.html">streamsx.rest_primitives</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="scripts/runner.html">streamsx-runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/extract.html">spl-python-extract</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">IBM Streams Python setup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#streaming-analytics-service">Streaming Analytics service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ibm-streams-on-premises">IBM Streams on-premises</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#distributed">Distributed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#standalone">Standalone</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">streamsx</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>IBM Streams Python setup</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/pysetup.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ibm-streams-python-setup">
+<h1>IBM Streams Python setup<a class="headerlink" href="#ibm-streams-python-setup" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="streaming-analytics-service">
+<h2>Streaming Analytics service<a class="headerlink" href="#streaming-analytics-service" title="Permalink to this headline">¶</a></h2>
+<p>The service instance has Anaconda 4.1 installed with Python 3.5 as the
+runtime environment and has <code class="docutils literal"><span class="pre">PYTHONHOME</span></code> Streams application environment variable
+pre-configured.</p>
+<p>Any streaming applications using Python must use Python 3.5 when
+submitted to the service instance.</p>
+</div>
+<div class="section" id="ibm-streams-on-premises">
+<h2>IBM Streams on-premises<a class="headerlink" href="#ibm-streams-on-premises" title="Permalink to this headline">¶</a></h2>
+<p>For a distributed cluster running Streams Python 2.7, 3.5 or 3.6 may
+be used.</p>
+<p>Anaconda may be used as the Python runtime, Anaconda has the advantage of
+being pre-built and including a number of standard packages. Ananconda
+installs may be downloaded at: <a class="reference external" href="https://www.continuum.io/downloads">https://www.continuum.io/downloads</a> .</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">An Anaconda distribution for Python 2.7, 3.5 or 3.6 must be used.</p>
+</div>
+<p>If building Python from source then it must be built to support embedding
+of the runtime with shared libraries (<code class="docutils literal"><span class="pre">--enabled-shared</span></code> option to <cite>configure</cite>).</p>
+<div class="section" id="distributed">
+<h3>Distributed<a class="headerlink" href="#distributed" title="Permalink to this headline">¶</a></h3>
+<p>For distributed the Streams application environment variable
+<code class="docutils literal"><span class="pre">PYTHONHOME</span></code> must be set to the Python install path.</p>
+<p>This is set using <cite>streamtool</cite> as:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">streamtool</span> <span class="n">setproperty</span> <span class="o">--</span><span class="n">application</span><span class="o">-</span><span class="n">ev</span> <span class="n">PYTHONHOME</span><span class="o">=</span><span class="n">path_to_python_install</span>
+</pre></div>
+</div>
+<p>The application environment variable may also be set using the Streams
+console. The <cite>Instance Management</cite> view has an
+<cite>Application Environment Variables</cite> section. Expanding the details
+for that section allows modification of the set of environment
+variables available to Streams applications.</p>
+<p>The Python install path must be accessible on every application resource
+that will execute Python code within a Streams application.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The Python version used to declare and submit the application must match the setting of <code class="docutils literal"><span class="pre">PYTHONHOME</span></code> in the instance. For example, if <code class="docutils literal"><span class="pre">PYTHONHOME</span></code> Streams application instance variable points to a Python 3.6 install, then Python 3.6 must be used to declare and submit the application.</p>
+</div>
+</div>
+<div class="section" id="standalone">
+<h3>Standalone<a class="headerlink" href="#standalone" title="Permalink to this headline">¶</a></h3>
+<p>The environment <code class="docutils literal"><span class="pre">PYTHONHOME</span></code> must be set to the Python install path.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="service.html" class="btn btn-neutral" title="IBM Streaming Analytics service" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2018 IBM Corp..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.9.6',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+streamsx\.topology\.state
+=========================
+
+.. automodule:: streamsx.topology.state
+   
+   ***************
+   Module contents
+   ***************
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :nosignatures:
+   
+      ConsistentRegionConfig
+   
+   
+
+   
+   
+   

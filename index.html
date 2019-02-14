@@ -8,13 +8,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <link rel="stylesheet" href="stylesheets/bootstrap.css" media="screen">
     <link rel="stylesheet" href="stylesheets/bootswatch.min.css">
-
-
-		      <!-- <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
-		      <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
-		      <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
-		      <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen"> -->
-
   </head>
   <body>
 <div class="navbar navbar-default navbar-fixed-top">
@@ -63,122 +56,120 @@
 	    <img src="InfoSphere-Streams-logo_140x140.png" height="140" width="140">
 	    <div class="row">
 	      <div class="col-sm-1">
-	      
 
-		
+
+
 	      </div>
 	    </div>
 	  </div>
 	  <div class="col-sm-10">
 	    <div class="jumbotron">
               <h2>com.ibm.streamsx.topology</h2>
-              <p>Write low latency IBM Streams applications entirely in Python, Java or Scala.</p>
+              <p>Write low-latency IBM Streams&reg; applications entirely in Python, Java, or Scala.</p>
 	  </div>
 	  <div class="col-sm-1">
 	  </div>
 	</div>
-      </div>	    
+      </div>
 	<section class="main-content">
           <h3> Overview </h3>
           <p>
-          The SPL toolkit com.ibm.streamsx.topology provides:
+          This toolkit contains:
           <UL>
-          <LI> APIs to allow creation of Streaming Analytics service and IBM Streams applications in Python, Java or Scala.  </LI>
-          <LI> SPL Python primitive operators.</LI>
-          <LI> Publish-Subscribe stream model to allow integration between streaming applications implemented in different languages (SPL, Python, Java or Scala) using a microservice approach.  </LI>
+          <LI>APIs to create applications with Python, Java, or Scala for IBM Streaming Analytics service and IBM Streams.</LI>
+          <LI>Ability to create SPL Python primitive operators.</LI>
+          <LI>Publish-subscribe stream operators to integrate streaming applications that are implemented in different languages (SPL, Python, Java, or Scala) with a microservice approach.</LI>
+          <LI>Java and Python APIs wrapping the Streaming Analytics and Streams REST APIs.</LI>
           </UL>
           </p>
 
-<h3>Latest Release</h3>
-<a href="#rc160">Python improvements</a> with <a href="http://github.com/IBMStreams/streamsx.topology/releases/tag/v1.6.0"> 1.6 release</a> - 2017/03/27
-<h3> Python Application API </h3>
+<h3> Python language support</h3>
+<TABLE>
+<TR>
+<TD><a href="https://badge.fury.io/py/streamsx"><img src="https://badge.fury.io/py/streamsx.svg" alt="PyPI version" height="18"></a></TD>
+<TD></TD>
+<TD><img src="https://img.shields.io/pypi/pyversions/streamsx.svg"/></TD>
+</TR>
+</TABLE>
+<P>
 <UL>
-<LI>
-<B>Python Application API</B> - allows an application to be built using Python, so that streams are created, processed and sinked using Python callables and tuples are Python objects.
-<UL>
-<LI>
-<a href="http://ibmstreams.github.io/streamsx.documentation/docs/latest/python/python-appapi-devguide/">Getting Started Guide</a>
+<LI><B>Python Application API</B> &mdash; Create streaming applications entirely in Python for IBM Streams or IBM Streaming Analytics service in IBM Bluemix&reg;. The streams are created, processed, and sinked by using Python callables. (Tuples are Python objects when you use this API.)</LI>
+<LI><B>SPL Python primitive operators</B> &mdash; Easily create SPL operators that invoke Python classes or functions.</LI>
+<LI><B>Python Streams REST API</B> &mdash; Easily monitor and manage your streaming application with this REST API.
 </LI>
 </UL>
-</LI>
-<LI><B> SPL Python primitive operators</B> - easily create SPL operators that invoke Python classes or functions.
-</LI>
-<LI><B>Python Streams REST API</B> - Python wrappers for the Streaming Analytics service and IBM Streams REST apis.
-</LI>
-</UL>
-For details see the <a href="doc.html">documentation</a>.
+For more information, see the <code>streamsx.topology</code> <a target="_blank" href="doc.html">documentation</a>.
+<BR>
+Python support can be installed using the <code>streamsx</code> package
+from <a href="https://pypi.python.org/pypi/streamsx">Pypi</a>
+<BR>
+<code>pip install streamsx</code>
 
-</p>
-	  <h3>
-	    <a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span class="octicon octicon-link"></span></a>Java Application API</h3>
-<a href="http://github.com/IBMStreams/streamsx.topology/releases/tag/v1.6.0"> 1.6.0 release</a> - 2017/03/27
-	  <p>The Java Application API enables a developer to create streaming applications entirely in Java and Scala for IBM Streams. The API employs a functional style of programming -- a developer may define a graph's flow and data manipulation simultaneously.
+<h3>Java and Scala language support</h3>
+	  <p>The Java Application API enables a developer to create streaming applications entirely in Java and Scala for IBM Streams. The API employs a functional style of programming—a developer might define a graph's flow and data manipulation simultaneously. 
 	    <div class="row">
 	      <div class="col-sm-7">
 		<pre><code>
 <em style="color: green;">    /*
      * Declare a source stream (hw) with String as tuples that sends two
-     * tuples "Hello" and "World!", and prints them to output.
+     * tuples "Hello" and "World!" and prints them to output.
      */</em>
     Topology topology = new Topology(<em style="color: blue;">"HelloWorld"</em>);
     TStream&lt;String> hw = topology.strings(<em style="color: blue;">"Hello"</em>, <em style="color: blue">"World!"</em>);
     hw.print();
     StreamsContextFactory.getEmbedded().submit(topology).get();
 		</code></pre>
-	      </div>
-	      <div class="col-sm-5">
-		<h3>Open source</h3>
-		    <p>Streamsx.topology is an open source project that <a href="https://github.com/IBMStreams/streamsx.topology">can be found</a> on github.  </p>
-		<h3>Java Application API Quick Start VM</h3>
-	      
-		<p>Get started now with the new Java Application API Quick Start VMware image by following this <a href="gettingstarted.html">getting started guide</a>.</p>      
-	      </div>
-	    </div>
-	  <p>Please refer to the <a href="gettingstarted.html">getting started guide</a>, <a href="FAQ.html">FAQ</a> page, and <a href="doc.html">documentation</a> for help.</p>
+  </div></div>
 
 <h3> Publish-subscribe</h3>
 <P>
-Publish-subscribe provides the abiltity to connect streams between independent IBM Streams applications regardless of their implementation language. This allows
-a <a href="https://developer.ibm.com/streamsdev/2016/09/02/analytics-microservice-architecture-with-ibm-streams/">microservice approach</a> where an Streams application acting as a service publishes one or more streams. Subscriber services then subscribe to those streams without requiring any knowledge of how a stream is published.
+Publish-subscribe operators connect streams between independent IBM Streams applications regardless of their implementation language. This capability allows a <a target="_blank" href="https://developer.ibm.com/streamsdev/2016/09/02/analytics-microservice-architecture-with-ibm-streams/">microservice approach</a> where a Streams application acting as a service publishes one or more streams. Subscriber services then subscribe to those streams without requiring any knowledge of how a stream is published.
 </P>
-<P>
-Publish-subscribe is a simplification of SPL's Import/Export allowing the publisher and subscriber to be totally independent, a subscriber always receives the correct tuples regardless of the number of parallel regions in the publisher or subscriber and regardless of if the publisher allows filters. A stream is published using an topic and its stream type.
-<BR>
-For details see <a href="doc/spldoc/html/tk$com.ibm.streamsx.topology/ns$com.ibm.streamsx.topology.topic.html">com.ibm.streamsx.topology.topic</a>.
+<P>Unlike SPL Import/Export operators, publish-subscribe operators allow the publisher and subscriber to be totally independent. A subscriber always receives the correct tuples regardless of the number of parallel regions in the publisher or subscriber, and regardless of if the publisher allows filters. A stream is published by using a topic and its stream type.
 </P>
+<p>For more information, see <a target="_blank" href="doc/spldoc/html/tk$com.ibm.streamsx.topology/ns$com.ibm.streamsx.topology.topic.html"><code>com.ibm.streamsx.topology.topic</code></a>.</P>
 
-<h3 id="rc160"> 1.6.0 release</h3>
-<a href="http://github.com/IBMStreams/streamsx.topology/releases/tag/v1.6.0"> 1.6.0</a> - 2017/03/27
-<P>
-New Python functionality:
-<UL>
-<LI> Python 2.7 support for Python Application API.</LI>
-<LI> Simplified development with Python Application API by supporting lambda functions, callables defined in the main file and iterables directly as source functions.</LI>
-<LI> New SPL decorators the create stateful or stateless operators with operator parameters and supporting passing SPL tuple attributes by name.</LI>
-<LI> Python access to Streams execution context including custom metrics</LI>
-<LI>
-Python wrapper for the Streams REST api to allow monitoring of Streams instances and running jobs, including accessing the data from views on streams.
-</LI>
-</UL>
+<h3 id="rc196">1.9.6 release (2018/06/12)</h3>
+<P>The <a target="_blank" href="http://github.com/IBMStreams/streamsx.topology/releases/tag/v1.9.6"> 1.9.6 release</a> 1.9 bug fix release, for details see the <a target="_blank" href="http://github.com/IBMStreams/streamsx.topology/releases/tag/v1.9.6">release notes</a>.
 <BR>
-See:
-<UL>
-<LI><a href="http://github.com/IBMStreams/streamsx.topology/releases/tag/v1.6.0"> 1.6.0 release notes</a></LI>
-<LI><a href="doc/releases/1.6/pythondoc/index.html">Python streamsx package</a></LI>
-<LI><a href="doc/releases/1.6/spldoc/html/tk$com.ibm.streamsx.topology/tk$com.ibm.streamsx.topology.html">SPL topology toolkit</a></LI>
-</UL>
+<em>Note: 1.9 requires IBM Streams 4.2 or Streaming Analytics service</em>
+</P>
+<h3 id="rc195">1.9.5 release (2018/05/22)</h3>
+<P>The <a target="_blank" href="http://github.com/IBMStreams/streamsx.topology/releases/tag/v1.9.5"> 1.9.5 release</a> adds new Python and Java/Scala functionality, for details see the <a target="_blank" href="http://github.com/IBMStreams/streamsx.topology/releases/tag/v1.9.5">release notes</a>.
 <BR>
-</P> 
-<P>
-1.6 continues to support functionality in the 1.4 release for Java, Scala and SPL:
+<em>Note: 1.9 requires IBM Streams 4.2 or Streaming Analytics service</em>
+</P>
+<h3 id="rc186">V1.8.6 release (2018/02/22)</h3>
+<P>The <a target="_blank" href="http://github.com/IBMStreams/streamsx.topology/releases/tag/v1.8.6"> 1.8.6 release</a> contains new Python and Java functionality, for details see the <a target="_blank" href="http://github.com/IBMStreams/streamsx.topology/releases/tag/v1.8.6">release notes</a>.
+</P>
+<h3 id="rc174">V1.7.4 release (2017/10/10)</h3>
+<P>The <a target="_blank" href="http://github.com/IBMStreams/streamsx.topology/releases/tag/v1.7.4"> 1.7.4 release</a> is a bug fix release, for details see the <a target="_blank" href="http://github.com/IBMStreams/streamsx.topology/releases/tag/v1.7.4">release notes</a>.
+</P>
+<h3>Documentation links</h3>
+<UL><LI><B>Python</B></LI>
 <UL>
-<LI><a href="doc/releases/1.6/javadoc/index.html">Javadoc</a></LI>
+  <li><a target="_blank" href="http://ibmstreams.github.io/streamsx.documentation/docs/python/1.6/python-appapi-devguide/index.html">Developing IBM Streams Applications with Python</a></li>
+  <li><a target="_blank" href="https://ibmstreams.github.io/streamsx.topology/doc/releases/1.8/pythondoc/index.html">Python <code>streamsx</code> package documentation</a></li>
+  <li><a target="_blank" href="http://ibmstreams.github.io/streamsx.topology/doc/releases/1.8/pythondoc/streamsx.spl.spl.html#python-classes-as-spl-operators">Python classes as SPL operators</a></li>
+</UL>
+<LI><B>Java & Scala</B></LI>
+<UL>
+  <li><a target="_blank" href="http://ibmstreams.github.io/streamsx.topology/gettingstarted.html">Getting Started Guide</a></li>
+  <li><a target="_blank" href="http://ibmstreams.github.io/streamsx.documentation/docs/4.1/java/java-appapi-devguide/">Java Application API Development Guide</a></li>
+  <li><a target="_blank" href="http://ibmstreams.github.io/streamsx.topology/doc/releases/1.8/javadoc/index.html">Javadoc overview</a></li>
+  <li><a target="_blank" href="http://ibmstreams.github.io/streamsx.topology/doc/scaladoc/index.html#package">Scala application support for IBM Streams</a></li>
+</UL>
+<LI><B>SPL</B></LI>
+<UL>
+  <li><a target="_blank" href="https://ibmstreams.github.io/streamsx.topology/doc/releases/1.8/spldoc/html/tk$com.ibm.streamsx.topology/tk$com.ibm.streamsx.topology.html">SPL topology toolkit</a></li>
+</UL>
+  <li><a target="_blank" href="http://ibmstreams.github.io/streamsx.topology/doc/samples/javadoc/index.html">Sample applications</a></li>
+  <li><a target="_blank" href="http://ibmstreams.github.io/streamsx.topology/FAQ.html">streamsx.topology FAQ</a></li>
 </UL>
 </P>
 </section>
-    
 
-    
+
+
 </body>
 </html>
-

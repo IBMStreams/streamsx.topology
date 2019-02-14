@@ -1,0 +1,2024 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx.rest_primitives module &mdash; streamsx 1.7.4 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="streamsx 1.7.4 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.7
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <!-- Local TOC -->
+                <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">streamsx.rest_primitives module</a></li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">streamsx</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>streamsx.rest_primitives module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/streamsx.rest_primitives.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-streamsx.rest_primitives">
+<span id="streamsx-rest-primitives-module"></span><h1>streamsx.rest_primitives module<a class="headerlink" href="#module-streamsx.rest_primitives" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="streamsx.rest_primitives.ActiveService">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">ActiveService</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ActiveService" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>The ActiveService element resource provides access to information about a domain or an instance service.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ActiveService.resourceType">
+<code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.ActiveService.resourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the REST resource type, which is <em>activeService</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ActiveService.leader">
+<code class="descname">leader</code><a class="headerlink" href="#streamsx.rest_primitives.ActiveService.leader" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> &#8211; If <em>True</em>, this service is a standby service.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ActiveService.processId">
+<code class="descname">processId</code><a class="headerlink" href="#streamsx.rest_primitives.ActiveService.processId" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Process ID of this service.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ActiveService.startTime">
+<code class="descname">startTime</code><a class="headerlink" href="#streamsx.rest_primitives.ActiveService.startTime" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>long</em> &#8211; Epoch time when this service started.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ActiveService.status">
+<code class="descname">status</code><a class="headerlink" href="#streamsx.rest_primitives.ActiveService.status" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Status of this service. Some possible values include <em>stopped</em>, <em>running</em>, <em>failed</em>, and
+<em>unknown</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ActiveService.type">
+<code class="descname">type</code><a class="headerlink" href="#streamsx.rest_primitives.ActiveService.type" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Type of this service.</p>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">services</span> <span class="o">=</span> <span class="n">instances</span><span class="o">.</span><span class="n">get_active_services</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">services</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">resourceType</span><span class="p">)</span>
+<span class="go">activeService</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.rest_primitives.ActiveService.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ActiveService.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.ActiveVersion">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">ActiveVersion</code><span class="sig-paren">(</span><em>json_active_version</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ActiveVersion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Contains IBM Streams installation information</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ActiveVersion.architecture">
+<code class="descname">architecture</code><a class="headerlink" href="#streamsx.rest_primitives.ActiveVersion.architecture" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Hardware architecture on which product is installed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ActiveVersion.build_version">
+<code class="descname">build_version</code><a class="headerlink" href="#streamsx.rest_primitives.ActiveVersion.build_version" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Product build ID.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ActiveVersion.edition_name">
+<code class="descname">edition_name</code><a class="headerlink" href="#streamsx.rest_primitives.ActiveVersion.edition_name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Product edition.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ActiveVersion.full_product_version">
+<code class="descname">full_product_version</code><a class="headerlink" href="#streamsx.rest_primitives.ActiveVersion.full_product_version" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Full product version, including any hot fix.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ActiveVersion.minimum_os_base_version">
+<code class="descname">minimum_os_base_version</code><a class="headerlink" href="#streamsx.rest_primitives.ActiveVersion.minimum_os_base_version" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Minimum operating system version requirement.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ActiveVersion.minimum_os_patch_version">
+<code class="descname">minimum_os_patch_version</code><a class="headerlink" href="#streamsx.rest_primitives.ActiveVersion.minimum_os_patch_version" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Minimum operating system patch requirement.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ActiveVersion.product_name">
+<code class="descname">product_name</code><a class="headerlink" href="#streamsx.rest_primitives.ActiveVersion.product_name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Product name.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ActiveVersion.product_version">
+<code class="descname">product_version</code><a class="headerlink" href="#streamsx.rest_primitives.ActiveVersion.product_version" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Product version.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.Domain">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">Domain</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>The domain element resource provides access to information about a Streams domain.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Domain.id">
+<code class="descname">id</code><a class="headerlink" href="#streamsx.rest_primitives.Domain.id" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Unique ID for this domain.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Domain.resourceType">
+<code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.Domain.resourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the REST resource type, which is <em>domain</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Domain.creationTime">
+<code class="descname">creationTime</code><a class="headerlink" href="#streamsx.rest_primitives.Domain.creationTime" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>long</em> &#8211; Epoch time when this domain was created.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Domain.creationuser">
+<code class="descname">creationuser</code><a class="headerlink" href="#streamsx.rest_primitives.Domain.creationuser" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; User ID that created this domain.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Domain.status">
+<code class="descname">status</code><a class="headerlink" href="#streamsx.rest_primitives.Domain.status" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Status of this domain.  Some possible values include <em>running</em>, <em>stopping</em>, <em>stopped</em>,
+<em>starting</em>, <em>removing</em>, and <em>unknown</em>.</p>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">domains</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_domains</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="p">(</span><span class="n">domains</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">resourceType</span><span class="p">)</span>
+<span class="go">domain</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.rest_primitives.Domain.get_active_services">
+<code class="descname">get_active_services</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Domain.get_active_services" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.ActiveService" title="streamsx.rest_primitives.ActiveService"><code class="xref py py-class docutils literal"><span class="pre">ActiveService</span></code></a> elements associated with this domain.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of ActiveService elements associated with this domain.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.ActiveService" title="streamsx.rest_primitives.ActiveService">ActiveService</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Domain.get_hosts">
+<code class="descname">get_hosts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Domain.get_hosts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.Host" title="streamsx.rest_primitives.Host"><code class="xref py py-class docutils literal"><span class="pre">Host</span></code></a> elements associated with this domain.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of Host elements associated with this domain.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.Host" title="streamsx.rest_primitives.Host">Host</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Domain.get_instances">
+<code class="descname">get_instances</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Domain.get_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.Instance" title="streamsx.rest_primitives.Instance"><code class="xref py py-class docutils literal"><span class="pre">Instance</span></code></a> elements associated with this domain.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of Instance elements associated with this domain.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.Instance" title="streamsx.rest_primitives.Instance">Instance</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Domain.get_resource_allocations">
+<code class="descname">get_resource_allocations</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Domain.get_resource_allocations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.ResourceAllocation" title="streamsx.rest_primitives.ResourceAllocation"><code class="xref py py-class docutils literal"><span class="pre">ResourceAllocation</span></code></a> elements associated with this domain.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of ResourceAllocation elements associated with this domain.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.ResourceAllocation" title="streamsx.rest_primitives.ResourceAllocation">ResourceAllocation</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Domain.get_resources">
+<code class="descname">get_resources</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Domain.get_resources" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.Resource" title="streamsx.rest_primitives.Resource"><code class="xref py py-class docutils literal"><span class="pre">Resource</span></code></a> elements associated with this domain.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of Resource elements associated with this domain.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.Resource" title="streamsx.rest_primitives.Resource">Resource</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Domain.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Domain.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.ExportedStream">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">ExportedStream</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ExportedStream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>Exported stream resource represents a stream that has been exported by a job.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ExportedStream.resourceType">
+<code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.ExportedStream.resourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the REST resource type, which is <em>exportedStream</em>.</p>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exportedstreams</span> <span class="o">=</span> <span class="n">instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_exported_streams</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="p">(</span><span class="n">exportedstreams</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">resourceType</span><span class="p">)</span>
+<span class="go">exportedStream</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.rest_primitives.ExportedStream.get_operator_output_port">
+<code class="descname">get_operator_output_port</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ExportedStream.get_operator_output_port" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the output port of this exported stream.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Output port of this exported stream.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.rest_primitives.OperatorOutputPort" title="streamsx.rest_primitives.OperatorOutputPort">OperatorOutputPort</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.ExportedStream.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ExportedStream.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.Host">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">Host</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Host" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>The host element resource provides access to information about a host that is allocated to a domain as a
+resource for running Streams services and applications.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Host.name">
+<code class="descname">name</code><a class="headerlink" href="#streamsx.rest_primitives.Host.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Configuration name for the IBM Streams resource.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Host.resourceType">
+<code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.Host.resourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the REST resource type, which is <em>host</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Host.ipAddress">
+<code class="descname">ipAddress</code><a class="headerlink" href="#streamsx.rest_primitives.Host.ipAddress" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; IP address for the IBM Streams resource.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Host.processorCount">
+<code class="descname">processorCount</code><a class="headerlink" href="#streamsx.rest_primitives.Host.processorCount" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; Number of processors on the IBM Streams resource.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Host.restrictedTags">
+<code class="descname">restrictedTags</code><a class="headerlink" href="#streamsx.rest_primitives.Host.restrictedTags" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list(str)</em> &#8211; Set of resource tags that processing elements (PEs) must have to run on the IBM
+Streams resource.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Host.services">
+<code class="descname">services</code><a class="headerlink" href="#streamsx.rest_primitives.Host.services" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list(dict)</em> &#8211; Name and status of each domain service that is designated to run on the IBM Streams
+resource.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Host.status">
+<code class="descname">status</code><a class="headerlink" href="#streamsx.rest_primitives.Host.status" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Status of the IBM Streams resource.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Host.tag">
+<code class="descname">tag</code><a class="headerlink" href="#streamsx.rest_primitives.Host.tag" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list(str)</em> &#8211; Names of each tag that is assigned to the IBM Streams resource.</p>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">domains</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_domains</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hosts</span> <span class="o">=</span> <span class="n">domains</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_hosts</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="p">(</span><span class="n">hosts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">resourceType</span><span class="p">)</span>
+<span class="go">host</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.rest_primitives.Host.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Host.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.ImportedStream">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">ImportedStream</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ImportedStream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>Imported stream resource represents a stream that has been imported by a job.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ImportedStream.resourceType">
+<code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.ImportedStream.resourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the REST resource type, which is <em>importedStream</em>.</p>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">importedstreams</span> <span class="o">=</span> <span class="n">instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_imported_streams</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="p">(</span><span class="n">importedstreams</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">resourceType</span><span class="p">)</span>
+<span class="go">importedStream</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.rest_primitives.ImportedStream.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ImportedStream.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.Installation">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">Installation</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Installation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>The Installation element resource provides access to information about IBM Streams installations.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Installation.resourceType">
+<code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.Installation.resourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the REST resource type, which is <em>installation</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Installation.architecture">
+<code class="descname">architecture</code><a class="headerlink" href="#streamsx.rest_primitives.Installation.architecture" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Hardware architecture on which product is installed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Installation.buildVersion">
+<code class="descname">buildVersion</code><a class="headerlink" href="#streamsx.rest_primitives.Installation.buildVersion" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Product build ID.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Installation.editionName">
+<code class="descname">editionName</code><a class="headerlink" href="#streamsx.rest_primitives.Installation.editionName" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Product edition.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Installation.fullProductVersion">
+<code class="descname">fullProductVersion</code><a class="headerlink" href="#streamsx.rest_primitives.Installation.fullProductVersion" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Full product version, including any hot fix.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Installation.minimumOSBaseVersion">
+<code class="descname">minimumOSBaseVersion</code><a class="headerlink" href="#streamsx.rest_primitives.Installation.minimumOSBaseVersion" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Minimum operating system version requirement.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Installation.minimumOSPatchVersion">
+<code class="descname">minimumOSPatchVersion</code><a class="headerlink" href="#streamsx.rest_primitives.Installation.minimumOSPatchVersion" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Minimum operating system patch requirement.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Installation.productName">
+<code class="descname">productName</code><a class="headerlink" href="#streamsx.rest_primitives.Installation.productName" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Product name.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Installation.productVersion">
+<code class="descname">productVersion</code><a class="headerlink" href="#streamsx.rest_primitives.Installation.productVersion" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Product version.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Installation.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Installation.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.Instance">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">Instance</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>The instance element resource provides access to information about a Streams instance.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Instance.id">
+<code class="descname">id</code><a class="headerlink" href="#streamsx.rest_primitives.Instance.id" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Unique ID for this instance.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Instance.resourceType">
+<code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.Instance.resourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the REST resource type, which is <em>instance</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Instance.creationTime">
+<code class="descname">creationTime</code><a class="headerlink" href="#streamsx.rest_primitives.Instance.creationTime" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>long</em> &#8211; Epoch time when this instance was created.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Instance.creationuser">
+<code class="descname">creationuser</code><a class="headerlink" href="#streamsx.rest_primitives.Instance.creationuser" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; User ID that created this instance.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Instance.health">
+<code class="descname">health</code><a class="headerlink" href="#streamsx.rest_primitives.Instance.health" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Summarize status of the jobs in the instance. Some possible values include <em>healthy</em>,
+<em>partiallyHealthy</em>, <em>partiallyUnhealthy</em>, <em>unhealthy</em>, and <em>unknown</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Instance.owner">
+<code class="descname">owner</code><a class="headerlink" href="#streamsx.rest_primitives.Instance.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; User ID that owns this instance.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Instance.startTime">
+<code class="descname">startTime</code><a class="headerlink" href="#streamsx.rest_primitives.Instance.startTime" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>long</em> &#8211; Epoch time when this instance was started.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Instance.status">
+<code class="descname">status</code><a class="headerlink" href="#streamsx.rest_primitives.Instance.status" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Status of this instance. Some possible values include <em>running</em>, <em>failed</em>, <em>stopped</em>, and
+<em>unknown</em>.</p>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="p">(</span><span class="n">instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">resourceType</span><span class="p">)</span>
+<span class="go">instance</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.rest_primitives.Instance.get_active_services">
+<code class="descname">get_active_services</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance.get_active_services" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.ActiveService" title="streamsx.rest_primitives.ActiveService"><code class="xref py py-class docutils literal"><span class="pre">ActiveService</span></code></a> elements associated with this instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of ActiveService elements associated with this instance.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.ActiveService" title="streamsx.rest_primitives.ActiveService">ActiveService</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Instance.get_domain">
+<code class="descname">get_domain</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance.get_domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Streams domain that owns this instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Streams domain owning this instance.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.rest_primitives.Domain" title="streamsx.rest_primitives.Domain">Domain</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Instance.get_exported_streams">
+<code class="descname">get_exported_streams</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance.get_exported_streams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.ExportedStream" title="streamsx.rest_primitives.ExportedStream"><code class="xref py py-class docutils literal"><span class="pre">ExportedStream</span></code></a> elements associated with this instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of ExportedStream elements associated with this instance.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.ExportedStream" title="streamsx.rest_primitives.ExportedStream">ExportedStream</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Instance.get_hosts">
+<code class="descname">get_hosts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance.get_hosts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.Host" title="streamsx.rest_primitives.Host"><code class="xref py py-class docutils literal"><span class="pre">Host</span></code></a> element associated with this instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of Host element associated with this instance.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.Host" title="streamsx.rest_primitives.Host">Host</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Instance.get_imported_streams">
+<code class="descname">get_imported_streams</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance.get_imported_streams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.ImportedStream" title="streamsx.rest_primitives.ImportedStream"><code class="xref py py-class docutils literal"><span class="pre">ImportedStream</span></code></a> elements associated with this instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of ImportedStream elements associated with this instance.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.ImportedStream" title="streamsx.rest_primitives.ImportedStream">ImportedStream</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Instance.get_job">
+<code class="descname">get_job</code><span class="sig-paren">(</span><em>id</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance.get_job" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves a job matching the given <cite>id</cite></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>id</strong> (<em>str</em>) &#8211; Job <cite>id</cite> to match.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Job matching the given <cite>id</cite></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.rest_primitives.Job" title="streamsx.rest_primitives.Job">Job</a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> &#8211; No resource matches given <cite>id</cite> or multiple resources matching given <cite>id</cite></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Instance.get_jobs">
+<code class="descname">get_jobs</code><span class="sig-paren">(</span><em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance.get_jobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves jobs running in this instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Only return jobs containing property <strong>name</strong> that matches <cite>name</cite>. <cite>name</cite> can be a
+regular expression. If <cite>name</cite> is not supplied, then all jobs are returned.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of jobs matching the given <cite>name</cite>.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.Job" title="streamsx.rest_primitives.Job">Job</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Instance.get_operator_connections">
+<code class="descname">get_operator_connections</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance.get_operator_connections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.OperatorConnection" title="streamsx.rest_primitives.OperatorConnection"><code class="xref py py-class docutils literal"><span class="pre">OperatorConnection</span></code></a> elements associated with this instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of OperatorConnection elements associated with this instance.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.OperatorConnection" title="streamsx.rest_primitives.OperatorConnection">OperatorConnection</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Instance.get_operators">
+<code class="descname">get_operators</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance.get_operators" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.Operator" title="streamsx.rest_primitives.Operator"><code class="xref py py-class docutils literal"><span class="pre">Operator</span></code></a> elements associated with this instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of Operator elements associated with this instance.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.Operator" title="streamsx.rest_primitives.Operator">Operator</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Instance.get_pe_connections">
+<code class="descname">get_pe_connections</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance.get_pe_connections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.PEConnection" title="streamsx.rest_primitives.PEConnection"><code class="xref py py-class docutils literal"><span class="pre">PEConnection</span></code></a> elements associated with this instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of PEConnection elements associated with this instance.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.PEConnection" title="streamsx.rest_primitives.PEConnection">PEConnection</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Instance.get_pes">
+<code class="descname">get_pes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance.get_pes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.PE" title="streamsx.rest_primitives.PE"><code class="xref py py-class docutils literal"><span class="pre">PE</span></code></a> elements associated with this instance resource.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of PE elements associated with this instance.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.PE" title="streamsx.rest_primitives.PE">PE</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Instance.get_published_topics">
+<code class="descname">get_published_topics</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance.get_published_topics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of published topics for this instance.</p>
+<p>Streams applications publish streams to a a topic that can be subscribed to by other
+applications. This allows a microservice approach where publishers
+and subscribers are independent of each other.</p>
+<p>A published stream has a topic and a schema. It is recommended that a
+topic is only associated with a single schema.</p>
+<p>Streams may be published and subscribed by applications regardless of the
+implementation language. For example a Python application can publish
+a stream of JSON tuples that are subscribed to by SPL and Java applications.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of currently published topics.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.PublishedTopic" title="streamsx.rest_primitives.PublishedTopic">PublishedTopic</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Instance.get_resource_allocations">
+<code class="descname">get_resource_allocations</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance.get_resource_allocations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.ResourceAllocation" title="streamsx.rest_primitives.ResourceAllocation"><code class="xref py py-class docutils literal"><span class="pre">ResourceAllocation</span></code></a> elements associated with this instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of ResourceAllocation elements associated with this instance.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.ResourceAllocation" title="streamsx.rest_primitives.ResourceAllocation">ResourceAllocation</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Instance.get_views">
+<code class="descname">get_views</code><span class="sig-paren">(</span><em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance.get_views" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.View" title="streamsx.rest_primitives.View"><code class="xref py py-class docutils literal"><span class="pre">View</span></code></a> elements associated with this instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Returns view(s) matching <cite>name</cite>.  <cite>name</cite> can be a regular expression.  If <cite>name</cite></li>
+<li><strong>not supplied</strong><strong>, </strong><strong>then all views associated with this instance are returned.</strong> (<em>is</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">List of views matching <cite>name</cite>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list(<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.View" title="streamsx.topology.topology.View">View</a>)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Instance.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Instance.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.Job">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">Job</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Job" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>The job element resource provides access to information about a submitted job within a specified instance.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Job.id">
+<code class="descname">id</code><a class="headerlink" href="#streamsx.rest_primitives.Job.id" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; job ID.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Job.name">
+<code class="descname">name</code><a class="headerlink" href="#streamsx.rest_primitives.Job.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Name of the job.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Job.resourceType">
+<code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.Job.resourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the REST resource type, which is <em>job</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Job.health">
+<code class="descname">health</code><a class="headerlink" href="#streamsx.rest_primitives.Job.health" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Health indicator for the job. Some possible values for this property include <em>healthy</em>,
+<em>partiallyHealthy</em>, <em>partiallyUnhealthy</em>, <em>unhealthy</em>, and <em>unknown</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Job.applicationName">
+<code class="descname">applicationName</code><a class="headerlink" href="#streamsx.rest_primitives.Job.applicationName" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Name of the streams processing application that this job is running.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Job.jobGroup">
+<code class="descname">jobGroup</code><a class="headerlink" href="#streamsx.rest_primitives.Job.jobGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the job group to which this job belongs.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Job.startedBy">
+<code class="descname">startedBy</code><a class="headerlink" href="#streamsx.rest_primitives.Job.startedBy" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the user ID that started this job.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Job.status">
+<code class="descname">status</code><a class="headerlink" href="#streamsx.rest_primitives.Job.status" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Status of this job. Some possible values for this property include <em>canceling</em>, <em>running</em>,
+<em>canceled</em>, and <em>unknown</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Job.submitTime">
+<code class="descname">submitTime</code><a class="headerlink" href="#streamsx.rest_primitives.Job.submitTime" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>long</em> &#8211; Epoch time when this job was submitted.</p>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jobs</span> <span class="o">=</span> <span class="n">instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_jobs</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="p">(</span><span class="n">jobs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">health</span><span class="p">)</span>
+<span class="go">healthy</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.rest_primitives.Job.cancel">
+<code class="descname">cancel</code><span class="sig-paren">(</span><em>force=False</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Job.cancel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cancel this job.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>force</strong> (<em>bool</em><em>, </em><em>optional</em>) &#8211; Forcefully cancel this job.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if the job was cancelled, otherwise False if an error occurred.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Job.get_domain">
+<code class="descname">get_domain</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Job.get_domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Streams domain that owns this job.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Streams domain that owns this job.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.rest_primitives.Domain" title="streamsx.rest_primitives.Domain">Domain</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Job.get_hosts">
+<code class="descname">get_hosts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Job.get_hosts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.Host" title="streamsx.rest_primitives.Host"><code class="xref py py-class docutils literal"><span class="pre">Host</span></code></a> elements associated with this job.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of Host elements associated with this job.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.Host" title="streamsx.rest_primitives.Host">Host</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Job.get_instance">
+<code class="descname">get_instance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Job.get_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Streams instance that owns this job.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Streams instance that owns this job.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.rest_primitives.Instance" title="streamsx.rest_primitives.Instance">Instance</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Job.get_operator_connections">
+<code class="descname">get_operator_connections</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Job.get_operator_connections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.OperatorConnection" title="streamsx.rest_primitives.OperatorConnection"><code class="xref py py-class docutils literal"><span class="pre">OperatorConnection</span></code></a> elements associated with this job.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of OperatorConnection elements associated with this job.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.OperatorConnection" title="streamsx.rest_primitives.OperatorConnection">OperatorConnection</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Job.get_operators">
+<code class="descname">get_operators</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Job.get_operators" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.Operator" title="streamsx.rest_primitives.Operator"><code class="xref py py-class docutils literal"><span class="pre">Operator</span></code></a> elements associated with this job.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of Operator elements associated with this job.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.Operator" title="streamsx.rest_primitives.Operator">Operator</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Job.get_pe_connections">
+<code class="descname">get_pe_connections</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Job.get_pe_connections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.PEConnection" title="streamsx.rest_primitives.PEConnection"><code class="xref py py-class docutils literal"><span class="pre">PEConnection</span></code></a> elements associated with this job.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of PEConnection elements associated with this job.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.PEConnection" title="streamsx.rest_primitives.PEConnection">PEConnection</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Job.get_pes">
+<code class="descname">get_pes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Job.get_pes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.PE" title="streamsx.rest_primitives.PE"><code class="xref py py-class docutils literal"><span class="pre">PE</span></code></a> elements associated with this job.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of PE elements associated with this job.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.PE" title="streamsx.rest_primitives.PE">PE</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Job.get_resource_allocations">
+<code class="descname">get_resource_allocations</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Job.get_resource_allocations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.ResourceAllocation" title="streamsx.rest_primitives.ResourceAllocation"><code class="xref py py-class docutils literal"><span class="pre">ResourceAllocation</span></code></a> elements associated with this job.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of ResourceAllocation elements associated with this job.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.ResourceAllocation" title="streamsx.rest_primitives.ResourceAllocation">ResourceAllocation</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Job.get_views">
+<code class="descname">get_views</code><span class="sig-paren">(</span><em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Job.get_views" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of <a class="reference internal" href="#streamsx.rest_primitives.View" title="streamsx.rest_primitives.View"><code class="xref py py-class docutils literal"><span class="pre">View</span></code></a> elements associated with this job.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Returns view(s) matching <cite>name</cite>.  <cite>name</cite> can be a regular expression.  If <cite>name</cite></li>
+<li><strong>not supplied</strong><strong>, </strong><strong>then all views associated with this instance are returned.</strong> (<em>is</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">List of views matching <cite>name</cite>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list(<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.View" title="streamsx.topology.topology.View">View</a>)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Job.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Job.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.Metric">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">Metric</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Metric" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>Metric resource provides access to information about a Streams metric.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Metric.name">
+<code class="descname">name</code><a class="headerlink" href="#streamsx.rest_primitives.Metric.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Name of this metric.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Metric.resourceType">
+<code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.Metric.resourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the REST resource type, which is <em>metric</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Metric.description">
+<code class="descname">description</code><a class="headerlink" href="#streamsx.rest_primitives.Metric.description" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Describes this metric.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Metric.lastTimeRetrieved">
+<code class="descname">lastTimeRetrieved</code><a class="headerlink" href="#streamsx.rest_primitives.Metric.lastTimeRetrieved" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Epoch time when the metric was most recently retrieved.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Metric.metricKind">
+<code class="descname">metricKind</code><a class="headerlink" href="#streamsx.rest_primitives.Metric.metricKind" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Kind of metric. Some possible values include <em>counter</em>, <em>gauge</em>, <em>time</em> and <em>unknown</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Metric.metricType">
+<code class="descname">metricType</code><a class="headerlink" href="#streamsx.rest_primitives.Metric.metricType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Type of metric. Some possible values include <em>system</em>, <em>custom</em> and <em>unknown</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Metric.value">
+<code class="descname">value</code><a class="headerlink" href="#streamsx.rest_primitives.Metric.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; Value for the metric.</p>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">operators</span> <span class="o">=</span> <span class="n">instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_operators</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metrics</span> <span class="o">=</span> <span class="n">operators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_metrics</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="p">(</span><span class="n">metrics</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">resourceType</span><span class="p">)</span>
+<span class="go">metric</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.rest_primitives.Metric.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Metric.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.Operator">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">Operator</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Operator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>The operator element resource provides access to information about a specific operator in a job.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Operator.name">
+<code class="descname">name</code><a class="headerlink" href="#streamsx.rest_primitives.Operator.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Operator name.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Operator.resourceType">
+<code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.Operator.resourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the REST resource type, which is <em>operator</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Operator.operatorKind">
+<code class="descname">operatorKind</code><a class="headerlink" href="#streamsx.rest_primitives.Operator.operatorKind" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; SPL primitive operator type for this operator.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Operator.indexWithinJob">
+<code class="descname">indexWithinJob</code><a class="headerlink" href="#streamsx.rest_primitives.Operator.indexWithinJob" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; Index of this operator within the job.</p>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">operators</span> <span class="o">=</span> <span class="n">instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_operators</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="p">(</span><span class="n">operators</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">resourceType</span><span class="p">)</span>
+<span class="go">operator</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.rest_primitives.Operator.get_metrics">
+<code class="descname">get_metrics</code><span class="sig-paren">(</span><em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Operator.get_metrics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get metrics for an operator.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Only return metrics matching <cite>name</cite>, where <cite>name</cite> can be a regular expression.  If
+<cite>name</cite> is not supplied, then all metrics for this operator are returned.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">List of matching metrics.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.Metric" title="streamsx.rest_primitives.Metric">Metric</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Operator.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Operator.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.OperatorConnection">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">OperatorConnection</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.OperatorConnection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>The operator connection element resource provides access to information about a connection between two operator
+ports.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.OperatorConnection.id">
+<code class="descname">id</code><a class="headerlink" href="#streamsx.rest_primitives.OperatorConnection.id" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Unique ID of this operator connection within the instance.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.OperatorConnection.resourceType">
+<code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.OperatorConnection.resourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the REST resource type, which is <em>operator</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.OperatorConnection.required">
+<code class="descname">required</code><a class="headerlink" href="#streamsx.rest_primitives.OperatorConnection.required" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> &#8211; Indicates whether the connection is required.</p>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">operatorconnections</span> <span class="o">=</span> <span class="n">instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_operator_connections</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="p">(</span><span class="n">operatorconnections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">resourceType</span><span class="p">)</span>
+<span class="go">operatorConnection</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.rest_primitives.OperatorConnection.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.OperatorConnection.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.OperatorOutputPort">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">OperatorOutputPort</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.OperatorOutputPort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>Operator output port resource provides access to information about an output port
+for a specific operator.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.OperatorOutputPort.name">
+<code class="descname">name</code><a class="headerlink" href="#streamsx.rest_primitives.OperatorOutputPort.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Name of this output port.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.OperatorOutputPort.resourceType">
+<code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.OperatorOutputPort.resourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the REST resource type, which is <em>operatorOutputPort</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.OperatorOutputPort.indexWithinOperator">
+<code class="descname">indexWithinOperator</code><a class="headerlink" href="#streamsx.rest_primitives.OperatorOutputPort.indexWithinOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; Index of the output port within the operator.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.OperatorOutputPort.streamName">
+<code class="descname">streamName</code><a class="headerlink" href="#streamsx.rest_primitives.OperatorOutputPort.streamName" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Name of the stream that is associated with this output port.</p>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exportedstreams</span> <span class="o">=</span> <span class="n">instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_exported_streams</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">operatoroutputport</span> <span class="o">=</span> <span class="n">exportedstreams</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_operator_output_port</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="p">(</span><span class="n">operatoroutputport</span><span class="o">.</span><span class="n">resourceType</span><span class="p">)</span>
+<span class="go">operatorOutputPort</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.rest_primitives.OperatorOutputPort.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.OperatorOutputPort.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.PE">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">PE</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.PE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>The processing element (PE) resource provides access to information about a PE.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PE.id">
+<code class="descname">id</code><a class="headerlink" href="#streamsx.rest_primitives.PE.id" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; PE ID.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PE.resourceType">
+<code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.PE.resourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the REST resource type, which is <em>pe</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PE.health">
+<code class="descname">health</code><a class="headerlink" href="#streamsx.rest_primitives.PE.health" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Health indicator for this PE. Some possible values include <em>healthy</em>, <em>partiallyHealthy</em>,
+<em>partiallyUnhealthy</em>, <em>unhealthy</em>, and <em>unknown</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PE.indexWithinJob">
+<code class="descname">indexWithinJob</code><a class="headerlink" href="#streamsx.rest_primitives.PE.indexWithinJob" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; Index of the PE within the job.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PE.launchCount">
+<code class="descname">launchCount</code><a class="headerlink" href="#streamsx.rest_primitives.PE.launchCount" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; Number of times this PE was started manually or automatically because of failures.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PE.optionalConnections">
+<code class="descname">optionalConnections</code><a class="headerlink" href="#streamsx.rest_primitives.PE.optionalConnections" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Status of optional connections for this PE. Some possible values include <em>connected</em>,
+<em>disconnected</em>, <em>partiallyConnected</em>, and <em>unknown</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PE.pendingTracingLevel">
+<code class="descname">pendingTracingLevel</code><a class="headerlink" href="#streamsx.rest_primitives.PE.pendingTracingLevel" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Describes a pending change to the granularity of the trace information that is
+stored for this PE. Some possible values include <em>off</em>, <em>error</em>, <em>debug</em> and <em>trace</em>.  The value is <em>None</em>,
+if no change is pending.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PE.processId">
+<code class="descname">processId</code><a class="headerlink" href="#streamsx.rest_primitives.PE.processId" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Operating system process ID for this PE.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PE.relocatable">
+<code class="descname">relocatable</code><a class="headerlink" href="#streamsx.rest_primitives.PE.relocatable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> &#8211; Indicates whether this PE can be relocated to a different resource.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PE.requiredConnections">
+<code class="descname">requiredConnections</code><a class="headerlink" href="#streamsx.rest_primitives.PE.requiredConnections" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Status of the required connections for this PE. Some possible values include
+<em>connected</em>, <em>disconnected</em>, <em>partiallyConnected</em>, and <em>unknown</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PE.restartable">
+<code class="descname">restartable</code><a class="headerlink" href="#streamsx.rest_primitives.PE.restartable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> &#8211; Indicates whether this PE can be restarted.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PE.status">
+<code class="descname">status</code><a class="headerlink" href="#streamsx.rest_primitives.PE.status" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Status of this PE.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PE.statusReason">
+<code class="descname">statusReason</code><a class="headerlink" href="#streamsx.rest_primitives.PE.statusReason" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Additional information for the status of this PE.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PE.tracingLevel">
+<code class="descname">tracingLevel</code><a class="headerlink" href="#streamsx.rest_primitives.PE.tracingLevel" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Granularity of the trace information. Some possible values include <em>off</em>, <em>error</em>, <em>debug</em>
+and <em>trace</em>.</p>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pes</span> <span class="o">=</span> <span class="n">instances</span><span class="o">.</span><span class="n">get_pes</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">pes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">resourceType</span><span class="p">)</span>
+<span class="go">pe</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.rest_primitives.PE.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.PE.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.PEConnection">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">PEConnection</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.PEConnection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>The processing element (PE) connection resource provides access to information about a connection between two
+processing element (PE) ports.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PEConnection.id">
+<code class="descname">id</code><a class="headerlink" href="#streamsx.rest_primitives.PEConnection.id" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; PE connection ID.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PEConnection.resourceType">
+<code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.PEConnection.resourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the REST resource type, which is <em>peConnection</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PEConnection.required">
+<code class="descname">required</code><a class="headerlink" href="#streamsx.rest_primitives.PEConnection.required" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> &#8211; Indicates whether this connection is required.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PEConnection.status">
+<code class="descname">status</code><a class="headerlink" href="#streamsx.rest_primitives.PEConnection.status" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Status of this connection. Some possible values include <em>connected</em>, <em>disconnected</em>, and
+<em>unknown</em>.</p>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">peconnections</span> <span class="o">=</span> <span class="n">instances</span><span class="o">.</span><span class="n">get_pe_connections</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">peconnections</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">resourceType</span><span class="p">)</span>
+<span class="go">peConnection</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.rest_primitives.PEConnection.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.PEConnection.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.PublishedTopic">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">PublishedTopic</code><span class="sig-paren">(</span><em>topic</em>, <em>schema</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.PublishedTopic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Metadata for a published topic.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PublishedTopic.topic">
+<code class="descname">topic</code><a class="headerlink" href="#streamsx.rest_primitives.PublishedTopic.topic" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Published topic</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.PublishedTopic.schema">
+<code class="descname">schema</code><a class="headerlink" href="#streamsx.rest_primitives.PublishedTopic.schema" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Schema of topic</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.Resource">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">Resource</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>The Streams resource element provides access to information about a Streams resource.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.Resource.name">
+<code class="descname">name</code><a class="headerlink" href="#streamsx.rest_primitives.Resource.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Resource name.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Resource.get_resource">
+<code class="descname">get_resource</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Resource.get_resource" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.Resource.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.Resource.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.ResourceAllocation">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">ResourceAllocation</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ResourceAllocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>The ResourceAllocation element resource provides access to information about a resource that is allocated to
+an IBM Streams instance.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ResourceAllocation.resourceType">
+<code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.ResourceAllocation.resourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the REST resource type, which is <em>resourceAllocation</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ResourceAllocation.applicationResource">
+<code class="descname">applicationResource</code><a class="headerlink" href="#streamsx.rest_primitives.ResourceAllocation.applicationResource" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> &#8211; Indicates whether this resource is an application resource, which is used to run
+streams processing applications.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ResourceAllocation.schedulerStatus">
+<code class="descname">schedulerStatus</code><a class="headerlink" href="#streamsx.rest_primitives.ResourceAllocation.schedulerStatus" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Indicates whether this resource is schedulable for the instance.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ResourceAllocation.status">
+<code class="descname">status</code><a class="headerlink" href="#streamsx.rest_primitives.ResourceAllocation.status" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Status of this resource for the instance.</p>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">allocations</span> <span class="o">=</span> <span class="n">instances</span><span class="o">.</span><span class="n">get_resource_allocations</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">allocations</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">resourceType</span><span class="p">)</span>
+<span class="go">resourceAllocation</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.rest_primitives.ResourceAllocation.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ResourceAllocation.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.ResourceTag">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">ResourceTag</code><span class="sig-paren">(</span><em>json_resource_tag</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ResourceTag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Contains information for a tag that is defined in a Streams domain</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ResourceTag.definition_format_properties">
+<code class="descname">definition_format_properties</code><a class="headerlink" href="#streamsx.rest_primitives.ResourceTag.definition_format_properties" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> &#8211; Indicates whether the resource definition consists of one or more
+properties.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ResourceTag.description">
+<code class="descname">description</code><a class="headerlink" href="#streamsx.rest_primitives.ResourceTag.description" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Tag description.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ResourceTag.name">
+<code class="descname">name</code><a class="headerlink" href="#streamsx.rest_primitives.ResourceTag.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Tag name.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ResourceTag.properties_definition">
+<code class="descname">properties_definition</code><a class="headerlink" href="#streamsx.rest_primitives.ResourceTag.properties_definition" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list(str)</em> &#8211; Contains the properties of the resource definition. Only present if
+<cite>definition_format_properties</cite> is <em>True</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ResourceTag.reserved">
+<code class="descname">reserved</code><a class="headerlink" href="#streamsx.rest_primitives.ResourceTag.reserved" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> &#8211; If <em>True</em>, this tag is defined by IBM Streams, and cannot be modified.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.StreamingAnalyticsService">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">StreamingAnalyticsService</code><span class="sig-paren">(</span><em>rest_client</em>, <em>credentials</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.StreamingAnalyticsService" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Streaming Analytics service running on IBM Bluemix cloud platform.</p>
+<dl class="method">
+<dt id="streamsx.rest_primitives.StreamingAnalyticsService.cancel_job">
+<code class="descname">cancel_job</code><span class="sig-paren">(</span><em>job_id=None</em>, <em>job_name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.StreamingAnalyticsService.cancel_job" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cancel a running job.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>job_id</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Identifier of job to be canceled.</li>
+<li><strong>job_name</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Name of job to be canceled.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">JSON response for the job cancel operation.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.StreamingAnalyticsService.get_instance_status">
+<code class="descname">get_instance_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.StreamingAnalyticsService.get_instance_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the status the instance for this Streaming Analytics service.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">JSON response for the instance status operation.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.StreamingAnalyticsService.start_instance">
+<code class="descname">start_instance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.StreamingAnalyticsService.start_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the instance for this Streaming Analytics service.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">JSON response for the instance start operation.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.StreamingAnalyticsService.stop_instance">
+<code class="descname">stop_instance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.StreamingAnalyticsService.stop_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop the instance for this Streaming Analytics service.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">JSON response for the instance stop operation.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.View">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">View</code><span class="sig-paren">(</span><em>json_view</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.View" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>The View resource element provides access to information about a view that is associated with an active job, and
+exposes methods to retrieve data from the view&#8217;s stream.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.View.id">
+<code class="descname">id</code><a class="headerlink" href="#streamsx.rest_primitives.View.id" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; An unique identifier for the view.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.View.name">
+<code class="descname">name</code><a class="headerlink" href="#streamsx.rest_primitives.View.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; View name.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.View.description">
+<code class="descname">description</code><a class="headerlink" href="#streamsx.rest_primitives.View.description" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Description of the view.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.View.resourceType">
+<code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.View.resourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the REST resource type, which is <em>view</em>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.View.activateOption">
+<code class="descname">activateOption</code><a class="headerlink" href="#streamsx.rest_primitives.View.activateOption" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Indicate when the view starts buffering data.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.View.maximumTupleRate">
+<code class="descname">maximumTupleRate</code><a class="headerlink" href="#streamsx.rest_primitives.View.maximumTupleRate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; Maximum Number of tuples at which the view collects per second.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.View.logicalOperatorName">
+<code class="descname">logicalOperatorName</code><a class="headerlink" href="#streamsx.rest_primitives.View.logicalOperatorName" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; The logical name of the operator that contains the output port on which the view is
+created.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.View.bufferCapacitySeconds">
+<code class="descname">bufferCapacitySeconds</code><a class="headerlink" href="#streamsx.rest_primitives.View.bufferCapacitySeconds" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; Buffer size measured in seconds.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.View.bufferCapacityTuples">
+<code class="descname">bufferCapacityTuples</code><a class="headerlink" href="#streamsx.rest_primitives.View.bufferCapacityTuples" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; Buffer size measured in number of tuples.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.View.bufferCapacityUnits">
+<code class="descname">bufferCapacityUnits</code><a class="headerlink" href="#streamsx.rest_primitives.View.bufferCapacityUnits" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Indicates whether the buffer capacity for the view is determined by <em>seconds</em>,
+<em>tuples</em> or <em>unknown</em>.</p>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">views</span> <span class="o">=</span> <span class="n">instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_views</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="p">(</span><span class="n">views</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">resourceType</span><span class="p">)</span>
+<span class="go">view</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.rest_primitives.View.get_domain">
+<code class="descname">get_domain</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.View.get_domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Streams domain for the instance that owns this view.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Streams domain for the instance owning this view.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.rest_primitives.Domain" title="streamsx.rest_primitives.Domain">Domain</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.View.get_instance">
+<code class="descname">get_instance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.View.get_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Streams instance that owns this view.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Streams instance owning this view.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.rest_primitives.Instance" title="streamsx.rest_primitives.Instance">Instance</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.View.get_job">
+<code class="descname">get_job</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.View.get_job" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the Streams job that owns this view.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Streams Job owning this view.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.rest_primitives.Job" title="streamsx.rest_primitives.Job">Job</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.View.get_view_items">
+<code class="descname">get_view_items</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.View.get_view_items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of <a class="reference internal" href="#streamsx.rest_primitives.ViewItem" title="streamsx.rest_primitives.ViewItem"><code class="xref py py-class docutils literal"><span class="pre">ViewItem</span></code></a> elements associated with this view.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of ViewItem(s) associated with this view.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list(<a class="reference internal" href="#streamsx.rest_primitives.ViewItem" title="streamsx.rest_primitives.ViewItem">ViewItem</a>)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.View.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.View.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.View.start_data_fetch">
+<code class="descname">start_data_fetch</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.View.start_data_fetch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts a thread that fetches data from the Streams view server.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Queue containing view data.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">queue.Queue</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest_primitives.View.stop_data_fetch">
+<code class="descname">stop_data_fetch</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.View.stop_data_fetch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stops the thread that fetches data from the Streams view server.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.ViewItem">
+<em class="property">class </em><code class="descclassname">streamsx.rest_primitives.</code><code class="descname">ViewItem</code><span class="sig-paren">(</span><em>json_rep</em>, <em>rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ViewItem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>Represents the data of a tuple, its type, and the time when it was collected from the stream.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ViewItem.collectionTime">
+<code class="descname">collectionTime</code><a class="headerlink" href="#streamsx.rest_primitives.ViewItem.collectionTime" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>long</em> &#8211; Epoch time when this viewItem is collected from the stream.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ViewItem.data">
+<code class="descname">data</code><a class="headerlink" href="#streamsx.rest_primitives.ViewItem.data" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>dict</em> &#8211; Content of this viewItem.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.ViewItem.resourceType">
+<code class="descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.ViewItem.resourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; Identifies the REST resource type, which is <em>viewItem</em>.</p>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx</span> <span class="k">import</span> <span class="n">rest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">rest</span><span class="o">.</span><span class="n">StreamingAnalyticsConnection</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">views</span> <span class="o">=</span> <span class="n">instances</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_views</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">viewitems</span> <span class="o">=</span> <span class="n">views</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_view_items</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="p">(</span><span class="n">viewitems</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">resourceType</span><span class="p">)</span>
+<span class="go">viewItem</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.rest_primitives.ViewItem.refresh">
+<code class="descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.ViewItem.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.rest_primitives.get_view_obj">
+<code class="descclassname">streamsx.rest_primitives.</code><code class="descname">get_view_obj</code><span class="sig-paren">(</span><em>_view</em>, <em>rc</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.get_view_obj" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2017 IBM Corp..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.7.4',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,644 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx.rest &mdash; streamsx 1.9.6 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="streamsx 1.9.6 documentation" href="index.html"/>
+        <link rel="next" title="streamsx.rest_primitives" href="streamsx.rest_primitives.html"/>
+        <link rel="prev" title="streamsx.spl.spl" href="streamsx.spl.spl.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.html">streamsx.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.topology.html">streamsx.topology.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.context.html">streamsx.topology.context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.schema.html">streamsx.topology.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester.html">streamsx.topology.tester</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester_runtime.html">streamsx.topology.tester_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.ec.html">streamsx.ec</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.op.html">streamsx.spl.op</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.types.html">streamsx.spl.types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.toolkit.html">streamsx.spl.toolkit</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.spl.html">streamsx.spl.spl</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">streamsx.rest</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#streams-rest-api">Streams REST API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#streaming-analytics-rest-api">Streaming Analytics REST API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest_primitives.html">streamsx.rest_primitives</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="scripts/runner.html">streamsx-runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/extract.html">spl-python-extract</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysetup.html">IBM Streams Python setup</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">streamsx</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>streamsx.rest</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/streamsx.rest.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-streamsx.rest">
+<span id="streamsx-rest"></span><h1>streamsx.rest<a class="headerlink" href="#module-streamsx.rest" title="Permalink to this headline">¶</a></h1>
+<p>REST API bindings for IBM® Streams &amp; Streaming Analytics service.</p>
+<div class="section" id="streams-rest-api">
+<h2>Streams REST API<a class="headerlink" href="#streams-rest-api" title="Permalink to this headline">¶</a></h2>
+<p>The Streams REST API provides programmatic access to configuration and status information for IBM Streams objects such as domains, instances, and jobs.</p>
+<p><a class="reference internal" href="#streamsx.rest.StreamsConnection" title="streamsx.rest.StreamsConnection"><code class="xref py py-class docutils literal"><span class="pre">StreamsConnection</span></code></a> is the entry point to using the Streams REST API
+from Python. Through its functions and the returned objects status information
+can be obtained for items such as <a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Instance" title="streamsx.rest_primitives.Instance"><code class="xref py py-class docutils literal"><span class="pre">instances</span></code></a> and <a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Job" title="streamsx.rest_primitives.Job"><code class="xref py py-class docutils literal"><span class="pre">jobs</span></code></a>.</p>
+</div>
+<div class="section" id="streaming-analytics-rest-api">
+<h2>Streaming Analytics REST API<a class="headerlink" href="#streaming-analytics-rest-api" title="Permalink to this headline">¶</a></h2>
+<p>You can use the Streaming Analytics REST API to manage your service instance and the IBM Streams jobs that are running on the instance. The Streaming Analytics REST API is accessible from IBM Cloud applications that are bound to your service instance or from an application outside of IBM Cloud that is configured with the service instance VCAP information.</p>
+<p><a class="reference internal" href="#streamsx.rest.StreamingAnalyticsConnection" title="streamsx.rest.StreamingAnalyticsConnection"><code class="xref py py-class docutils literal"><span class="pre">StreamingAnalyticsConnection</span></code></a> is the entry point to using the
+Streaming Analytics REST API. The function <a class="reference internal" href="#streamsx.rest.StreamingAnalyticsConnection.get_streaming_analytics" title="streamsx.rest.StreamingAnalyticsConnection.get_streaming_analytics"><code class="xref py py-func docutils literal"><span class="pre">get_streaming_analytics()</span></code></a> returns a <a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.StreamingAnalyticsService" title="streamsx.rest_primitives.StreamingAnalyticsService"><code class="xref py py-class docutils literal"><span class="pre">StreamingAnalyticsService</span></code></a> instance which is the wrapper around the Streaming Analytics REST API. This API allows functions such as <a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.StreamingAnalyticsService.start_instance" title="streamsx.rest_primitives.StreamingAnalyticsService.start_instance"><code class="xref py py-meth docutils literal"><span class="pre">start</span></code></a> and <a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.StreamingAnalyticsService.stop_instance" title="streamsx.rest_primitives.StreamingAnalyticsService.stop_instance"><code class="xref py py-meth docutils literal"><span class="pre">stop</span></code></a> the service instance.</p>
+<p>In addition <cite>StreamingAnalyticsConnection</cite> extends from <a class="reference internal" href="#streamsx.rest.StreamsConnection" title="streamsx.rest.StreamsConnection"><code class="xref py py-class docutils literal"><span class="pre">StreamsConnection</span></code></a> and thus provides access to the Streams REST API for the service instance.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference external" href="https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.0/com.ibm.streams.restapi.doc/doc/restapis.html">IBM Streams REST API overview</a></dt>
+<dd>Reference documentation for the Streams REST API.</dd>
+<dt><a class="reference external" href="https://console.ng.bluemix.net/apidocs/220-streaming-analytics?&amp;language=node#introduction">Streaming Analytics REST API</a></dt>
+<dd>Reference documentation for the Streaming Analytics service REST API.</dd>
+</dl>
+</div>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="service.html#sas-main"><span class="std std-ref">IBM Streaming Analytics service</span></a></p>
+</div>
+</div>
+<div class="section" id="module-contents">
+<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Classes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#streamsx.rest.StreamingAnalyticsConnection" title="streamsx.rest.StreamingAnalyticsConnection"><code class="xref py py-obj docutils literal"><span class="pre">StreamingAnalyticsConnection</span></code></a></td>
+<td>Creates a connection to a running Streaming Analytics service and exposes methods to retrieve the state of the service and its instance.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#streamsx.rest.StreamsConnection" title="streamsx.rest.StreamsConnection"><code class="xref py py-obj docutils literal"><span class="pre">StreamsConnection</span></code></a></td>
+<td>Creates a connection to a running distributed IBM Streams instance and exposes methods to retrieve the state of that instance.</td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="streamsx.rest.StreamingAnalyticsConnection">
+<em class="property">class </em><code class="descclassname">streamsx.rest.</code><code class="descname">StreamingAnalyticsConnection</code><span class="sig-paren">(</span><em>vcap_services=None</em>, <em>service_name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamingAnalyticsConnection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a connection to a running Streaming Analytics service and exposes methods
+to retrieve the state of the service and its instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>vcap_services</strong> (<em>str</em><em>, </em><em>optional</em>) – VCAP services (JSON string or a filename whose content contains a JSON string).
+If not specified, it uses the value of <strong>VCAP_SERVICES</strong> environment variable.</li>
+<li><strong>service_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the Streaming Analytics service.
+If not specified, it uses the value of <strong>STREAMING_ANALYTICS_SERVICE_NAME</strong> environment variable.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Assume environment variable VCAP_SERVICES has correct information</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">StreamingAnalyticsConnection</span><span class="p">(</span><span class="n">service_name</span><span class="o">=</span><span class="s1">&#39;Streaming-Analytics&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sc</span><span class="o">.</span><span class="n">get_streaming_analytics</span><span class="p">()</span><span class="o">.</span><span class="n">get_instance_status</span><span class="p">())</span>
+<span class="go">{&#39;plan&#39;: &#39;Standard&#39;, &#39;state&#39;: &#39;STARTED&#39;, &#39;enabled&#39;: True, &#39;status&#39;: &#39;running&#39;}</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.rest.StreamingAnalyticsConnection.get_domain">
+<code class="descname">get_domain</code><span class="sig-paren">(</span><em>id</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamingAnalyticsConnection.get_domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves available domain matching a specific domain ID</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>id</strong> (<em>str</em>) – domain ID</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Domain matching <cite>id</cite></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Domain" title="streamsx.rest_primitives.Domain"><code class="xref py py-class docutils literal"><span class="pre">Domain</span></code></a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> – No matching domain exists.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest.StreamingAnalyticsConnection.get_domains">
+<code class="descname">get_domains</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamingAnalyticsConnection.get_domains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves available domains.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of available domains</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-obj docutils literal"><span class="pre">list</span></code> of <a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Domain" title="streamsx.rest_primitives.Domain"><code class="xref py py-class docutils literal"><span class="pre">Domain</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest.StreamingAnalyticsConnection.get_installations">
+<code class="descname">get_installations</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamingAnalyticsConnection.get_installations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves a list of all known Streams installations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of all Installation resources.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-obj docutils literal"><span class="pre">list</span></code> of <a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Installation" title="streamsx.rest_primitives.Installation"><code class="xref py py-class docutils literal"><span class="pre">Installation</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest.StreamingAnalyticsConnection.get_instance">
+<code class="descname">get_instance</code><span class="sig-paren">(</span><em>id</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamingAnalyticsConnection.get_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves available instance matching a specific instance ID.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>id</strong> (<em>str</em>) – Instance identifier to retrieve.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Instance matching <cite>id</cite>.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Instance" title="streamsx.rest_primitives.Instance"><code class="xref py py-class docutils literal"><span class="pre">Instance</span></code></a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> – No matching instance exists or multiple matching instances exist.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest.StreamingAnalyticsConnection.get_instances">
+<code class="descname">get_instances</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamingAnalyticsConnection.get_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves available instances.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of available instances</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-obj docutils literal"><span class="pre">list</span></code> of <a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Instance" title="streamsx.rest_primitives.Instance"><code class="xref py py-class docutils literal"><span class="pre">Instance</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest.StreamingAnalyticsConnection.get_resources">
+<code class="descname">get_resources</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamingAnalyticsConnection.get_resources" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves a list of all known Streams high-level REST resources.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of all Streams high-level REST resources.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-obj docutils literal"><span class="pre">list</span></code> of <a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.RestResource" title="streamsx.rest_primitives.RestResource"><code class="xref py py-class docutils literal"><span class="pre">RestResource</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest.StreamingAnalyticsConnection.get_streaming_analytics">
+<code class="descname">get_streaming_analytics</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamingAnalyticsConnection.get_streaming_analytics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a <a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.StreamingAnalyticsService" title="streamsx.rest_primitives.StreamingAnalyticsService"><code class="xref py py-class docutils literal"><span class="pre">StreamingAnalyticsService</span></code></a> to allow further interaction with
+the Streaming Analytics service.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Object for interacting with the Streaming Analytics service.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.StreamingAnalyticsService" title="streamsx.rest_primitives.StreamingAnalyticsService"><code class="xref py py-class docutils literal"><span class="pre">StreamingAnalyticsService</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="streamsx.rest.StreamingAnalyticsConnection.of_definition">
+<em class="property">static </em><code class="descname">of_definition</code><span class="sig-paren">(</span><em>service_def</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamingAnalyticsConnection.of_definition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a connection to a Streaming Analytics service.</p>
+<p>The single service is defined by <cite>service_def</cite> which can be one of</p>
+<blockquote>
+<div><ul class="simple">
+<li>The <cite>service credentials</cite> copied from the <cite>Service credentials</cite> page of the service console (not the Streams console). Credentials are provided in JSON format. They contain such as the API key and secret, as well as connection information for the service.</li>
+<li>A JSON object (<cite>dict</cite>) of the form: <code class="docutils literal"><span class="pre">{</span> <span class="pre">&quot;type&quot;:</span> <span class="pre">&quot;streaming-analytics&quot;,</span> <span class="pre">&quot;name&quot;:</span> <span class="pre">&quot;service</span> <span class="pre">name&quot;,</span> <span class="pre">&quot;credentials&quot;:</span> <span class="pre">{...}</span> <span class="pre">}</span></code> with the <cite>service credentials</cite> as the value of the <code class="docutils literal"><span class="pre">credentials</span></code> key.</li>
+</ul>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>service_def</strong> (<em>dict</em>) – Definition of the service to connect to.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Connection to defined service.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.rest.StreamingAnalyticsConnection" title="streamsx.rest.StreamingAnalyticsConnection">StreamingAnalyticsConnection</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest.StreamingAnalyticsConnection.resource_url">
+<code class="descname">resource_url</code><a class="headerlink" href="#streamsx.rest.StreamingAnalyticsConnection.resource_url" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – Root URL for IBM Streams REST API</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest.StreamsConnection">
+<em class="property">class </em><code class="descclassname">streamsx.rest.</code><code class="descname">StreamsConnection</code><span class="sig-paren">(</span><em>username=None</em>, <em>password=None</em>, <em>resource_url=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a connection to a running distributed IBM Streams instance and exposes methods to retrieve the state of
+that instance.</p>
+<p>Streams maintains information regarding the state of its resources. For example, these resources could include the
+currently running Jobs, Views, PEs, Operators, and Domains. The <a class="reference internal" href="#streamsx.rest.StreamsConnection" title="streamsx.rest.StreamsConnection"><code class="xref py py-class docutils literal"><span class="pre">StreamsConnection</span></code></a> provides methods to
+retrieve that information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>username</strong> (<em>str</em>) – Username of an authorized Streams user. If None, the username is taken from the</li>
+<li><strong>environment variable. If the STREAMS_USERNAME environment variable is not set</strong><strong>,</strong> (<em>STREAMS_USERNAME</em>) – </li>
+<li><strong>default streamsadmin is used.</strong> (<em>the</em>) – </li>
+<li><strong>password</strong> (<em>str</em>) – Password for <cite>username</cite></li>
+<li><strong>None</strong><strong>, </strong><strong>the password is taken from the STREAMS_PASSWORD environment variable. If the</strong> (<em>If</em>) – </li>
+<li><strong>environment variable is not set</strong><strong>, </strong><strong>the default passw0rd is used.</strong> (<em>STREAMS_PASSWORD</em>) – </li>
+<li><strong>resource_url</strong> (<em>str</em><em>, </em><em>optional</em>) – Root URL for IBM Streams REST API.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Example</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">resource_url</span> <span class="o">=</span> <span class="s2">&quot;https://streamsqse.localdomain:8443/streams/rest/resources&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span> <span class="o">=</span> <span class="n">StreamsConnection</span><span class="p">(</span><span class="s2">&quot;streamsadmin&quot;</span><span class="p">,</span> <span class="s2">&quot;passw0rd&quot;</span><span class="p">,</span> <span class="n">resource_url</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sc</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">verify</span><span class="o">=</span><span class="kc">False</span>  <span class="c1"># manually disable SSL verification, if needed</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instances</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get_instances</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jobs_count</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="n">instances</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">jobs_count</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">instance</span><span class="o">.</span><span class="n">get_jobs</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;There are </span><span class="si">{}</span><span class="s2"> jobs across all instances.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jobs_count</span><span class="p">))</span>
+<span class="go">There are 10 jobs across all instances.</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="streamsx.rest.StreamsConnection.session">
+<code class="descname">session</code><a class="headerlink" href="#streamsx.rest.StreamsConnection.session" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-class docutils literal"><span class="pre">requests.Session</span></code> – Requests session object for making REST calls.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest.StreamsConnection.get_domain">
+<code class="descname">get_domain</code><span class="sig-paren">(</span><em>id</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection.get_domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves available domain matching a specific domain ID</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>id</strong> (<em>str</em>) – domain ID</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Domain matching <cite>id</cite></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Domain" title="streamsx.rest_primitives.Domain"><code class="xref py py-class docutils literal"><span class="pre">Domain</span></code></a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> – No matching domain exists.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest.StreamsConnection.get_domains">
+<code class="descname">get_domains</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection.get_domains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves available domains.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of available domains</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-obj docutils literal"><span class="pre">list</span></code> of <a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Domain" title="streamsx.rest_primitives.Domain"><code class="xref py py-class docutils literal"><span class="pre">Domain</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest.StreamsConnection.get_installations">
+<code class="descname">get_installations</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection.get_installations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves a list of all known Streams installations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of all Installation resources.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-obj docutils literal"><span class="pre">list</span></code> of <a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Installation" title="streamsx.rest_primitives.Installation"><code class="xref py py-class docutils literal"><span class="pre">Installation</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest.StreamsConnection.get_instance">
+<code class="descname">get_instance</code><span class="sig-paren">(</span><em>id</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection.get_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves available instance matching a specific instance ID.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>id</strong> (<em>str</em>) – Instance identifier to retrieve.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Instance matching <cite>id</cite>.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Instance" title="streamsx.rest_primitives.Instance"><code class="xref py py-class docutils literal"><span class="pre">Instance</span></code></a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">ValueError</span></code> – No matching instance exists or multiple matching instances exist.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest.StreamsConnection.get_instances">
+<code class="descname">get_instances</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection.get_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves available instances.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of available instances</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-obj docutils literal"><span class="pre">list</span></code> of <a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Instance" title="streamsx.rest_primitives.Instance"><code class="xref py py-class docutils literal"><span class="pre">Instance</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.rest.StreamsConnection.get_resources">
+<code class="descname">get_resources</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest.StreamsConnection.get_resources" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves a list of all known Streams high-level REST resources.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of all Streams high-level REST resources.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-obj docutils literal"><span class="pre">list</span></code> of <a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.RestResource" title="streamsx.rest_primitives.RestResource"><code class="xref py py-class docutils literal"><span class="pre">RestResource</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest.StreamsConnection.resource_url">
+<code class="descname">resource_url</code><a class="headerlink" href="#streamsx.rest.StreamsConnection.resource_url" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – Root URL for IBM Streams REST API</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="streamsx.rest_primitives.html" class="btn btn-neutral float-right" title="streamsx.rest_primitives" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="streamsx.spl.spl.html" class="btn btn-neutral" title="streamsx.spl.spl" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2018 IBM Corp..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.9.6',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

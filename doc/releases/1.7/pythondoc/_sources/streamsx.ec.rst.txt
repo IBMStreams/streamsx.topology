@@ -1,0 +1,7 @@
+streamsx.ec module
+==================
+
+.. automodule:: streamsx.ec
+    :members:
+    :undoc-members:
+    :show-inheritance:

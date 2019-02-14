@@ -1,0 +1,7 @@
+streamsx.spl.toolkit module
+===========================
+
+.. automodule:: streamsx.spl.toolkit
+    :members:
+    :undoc-members:
+    :show-inheritance:

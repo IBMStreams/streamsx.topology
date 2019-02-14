@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="@spl.map"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_page"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>@spl.map</title>
+</head>
+<body id="spldoc_page">
+
+
+<h1 class="title topictitle1">@spl.map</h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.7.4</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$6.html">Creating SPL Operators from Python code</a> &gt; @spl.map</p>
+
+</div>
+
+
+<div class="section">
+<p class="p">Decorator to create a stateful or stateless SPL map operator from a Python callable class or function. A map operator has a single input port and a single output port. For each tuple arriving on the input port zero or more SPL tuples are submitted based upon the value returned from the invocation of the Python callable that is passed the SPL tuple.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Decorated callable class
+</h2>
+
+<p class="p">When a Python <em class="ph i">callable class</em> is decorated with <tt class="ph tt">@spl.map</tt> a stateful SPL map operator is created.
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+@spl.map
+class AddSeq:
+    "Add a sequence number as the last attribute."
+    def __init__(self):
+        self.seq = 0
+
+    def __call__(self, *tuple):
+        id = self.seq
+        self.seq += 1
+        return tuple + (id,)
+</pre>
+
+
+</div>
+
+<p class="p">When the SPL operator is initialized <tt class="ph tt">__init__</tt> is called to create an instance of the class. Subsequent tuple arrivals result in calls to the <tt class="ph tt">__call__</tt> function of this instance.
+</p>
+
+<p class="p">For each tuple arriving at the input port <tt class="ph tt">__call__</tt> is called and its return value is used to submit zero or more tuples on the output port.
+</p>
+
+<p class="p">If the class has instance fields then they are the state of the operator and are private to each invocation of the operator and maintained across calls to its <tt class="ph tt">__call__</tt> function.
+</p>
+
+<p class="p">A map operator is punctuation perserving.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Decorated function
+</h2>
+
+<p class="p">When a Python <em class="ph i">function</em> is decorated with <tt class="ph tt">@spl.map</tt> a stateless SPL map operator is created.
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+@spl.map
+def Noop(*tuple):
+    "Pass the tuple along without any change."
+    return tuple
+</pre>
+
+
+</div>
+
+<p class="p">For each tuple arriving at the input port the decorated function is called and its return value is used to submit zero or more tuples on the output port. 
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">SPL output tuples
+</h2>
+
+<div class="p">When a Python value  does not provide values for all the SPL attributes of the output port, then any unset values are:
+<ul class="ul">
+<li class="li"> set to the value of the matching attribute in the input port if it exists (attributes match by SPL type and name)</li>
+
+<li class="li"> otherwise it is set to the default value for the type, zero, empty string or empty collection.</li>
+
+</ul>
+
+</div>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

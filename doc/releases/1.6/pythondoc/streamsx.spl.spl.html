@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.spl.spl module &mdash; streamsx 1.6.0 documentation</title>
+  <title>streamsx.spl.spl module &mdash; streamsx 1.6.2 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.6.0 documentation" href="index.html"/> 
+    <link rel="top" title="streamsx 1.6.2 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -171,7 +171,7 @@ operator.</p>
 <p class="last">Operator names must be valid SPL identifers,
 SPL identifiers start with an ASCII letter or underscore,
 followed by ASCII letters, digits, or underscores.
-The name also must not be a SPL keyword.</p>
+The name also must not be an SPL keyword.</p>
 </div>
 <p>Once created the operators become part of a toolkit and may be used
 like any other SPL operator.</p>
@@ -200,7 +200,7 @@ are not supported.</p>
 <p>Parameter names must be valid SPL identifers,
 SPL identifiers start with an ASCII letter or underscore,
 followed by ASCII letters, digits, or underscores.
-The name also must not be a SPL keyword.</p>
+The name also must not be an SPL keyword.</p>
 <p class="last">Parameter names <code class="docutils literal"><span class="pre">suppress</span></code> and <code class="docutils literal"><span class="pre">include</span></code> are reserved.</p>
 </div>
 <p>The value of the operator parameters at SPL operator invocation are passed
@@ -291,7 +291,7 @@ In SPL terms this is similar to an SPL Custom operator, where
 the code in the Python function is the custom code. For
 operators with input ports the function is called for each
 input tuple, passing a Python representation of the SPL input tuple.
-For a SPL source operator the function is called to obtain an iterable
+For an SPL source operator the function is called to obtain an iterable
 whose contents will be submitted to the output stream as SPL tuples.</p>
 <p>Operator parameters are not supported.</p>
 <p>An example SPL sink operator that prints each input SPL tuple after
@@ -418,7 +418,7 @@ defaulting to <em>attributes by name</em>. The style value can be set to:</p>
 <strong>always</strong> use <em>attributes by position</em> and do not support <code class="docutils literal"><span class="pre">**kwargs</span></code>.
 They do not support the <code class="docutils literal"><span class="pre">style</span></code> parameter.</p>
 <p class="rubric">Examples</p>
-<p>These examples how a SPL tuple with the schema and value:</p>
+<p>These examples show how an SPL tuple with the schema and value:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="nb">tuple</span><span class="o">&lt;</span><span class="n">rstring</span> <span class="nb">id</span><span class="p">,</span> <span class="n">float64</span> <span class="n">temp</span><span class="p">,</span> <span class="n">boolean</span> <span class="n">increase</span><span class="o">&gt;</span>
 <span class="p">{</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;battery&#39;</span><span class="p">,</span> <span class="n">temp</span><span class="o">=</span><span class="mf">23.7</span><span class="p">,</span> <span class="n">increase</span><span class="o">=</span><span class="n">true</span><span class="p">}</span>
 </pre></div>
@@ -517,7 +517,7 @@ call and the resulting values of the function&#8217;s parameters.</p>
 </div>
 <p>In all cases the SPL tuple must be able to provide all parameters
 required by the function. If the SPL schema is insufficient then
-an error will result, typically a SPL compile time error.</p>
+an error will result, typically an SPL compile time error.</p>
 <p>The SPL schema can provide a subset of the formal parameters if the
 remaining attributes are optional (having a default).</p>
 <p><em>Attributes by name</em> consuming a subset of attributes with an optional parameter not matched by the schema:</p>
@@ -623,7 +623,7 @@ the operator kind:</p>
 </div>
 <div class="section" id="python-dictionary">
 <h4>Python dictionary<a class="headerlink" href="#python-dictionary" title="Permalink to this headline">¶</a></h4>
-<p>A Python dictionary is converted to a SPL tuple for submission to
+<p>A Python dictionary is converted to an SPL tuple for submission to
 the associated output port. An SPL attribute is set from the
 dictionary if the dictionary contains a key equal to the attribute
 name. The value is used to set the attribute, unless the attribute is
@@ -635,7 +635,7 @@ default value depending on the operator kind.</p>
 </div>
 <div class="section" id="python-list">
 <h4>Python list<a class="headerlink" href="#python-list" title="Permalink to this headline">¶</a></h4>
-<p>When a list returned, each value is converted to an SPL tuple and
+<p>When a list is returned, each value is converted to an SPL tuple and
 submitted to the output port, in order of the list starting with the
 first element (position 0). If the list contains <cite>None</cite> at an index
 then no SPL tuple is submitted for that index.</p>
@@ -759,15 +759,14 @@ port, see <a class="reference internal" href="#submit-from-python"><span class="
 <dl class="function">
 <dt id="streamsx.spl.spl.pipe">
 <code class="descclassname">streamsx.spl.spl.</code><code class="descname">pipe</code><span class="sig-paren">(</span><em>wrapped</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.spl.pipe" title="Permalink to this definition">¶</a></dt>
-<dd><p>Decorator to create a SPL operator from a function.</p>
+<dd><p>Decorator to create an SPL operator from a function.</p>
 <p>A pipe SPL operator with a single input port and a single
 output port. For each tuple on the input port the
 function is called passing the contents of the tuple.</p>
 <p>SPL attributes from the tuple are passed by position.</p>
-<p>The value returned from the function defines what is
-submitted to the output port. If None is returned then
-nothing is submitted. If a tuple is returned then it
-is c</p>
+<p>The value returned from the function results in
+zero or more tuples being submitted to the operator output
+port, see <a class="reference internal" href="#submit-from-python"><span class="std std-ref">Submission of SPL tuples from Python</span></a>.</p>
 </dd></dl>
 
 <dl class="function">
@@ -791,7 +790,7 @@ When the SPL operator is invoked the function is called
 and an iteration is created using <code class="docutils literal"><span class="pre">iter(value)</span></code>
 where <code class="docutils literal"><span class="pre">value</span></code> is the return of the function.</p>
 <p>For each value in the iteration SPL zero or more tuples
-are submitted to the output port, dervied from the value,
+are submitted to the output port, derived from the value,
 see <a class="reference internal" href="#submit-from-python"><span class="std std-ref">Submission of SPL tuples from Python</span></a>.</p>
 <p>If the iteration completes then no more tuples
 are submitted and a final punctuation mark
@@ -843,7 +842,7 @@ is submitted to the output port.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.6.0',
+            VERSION:'1.6.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

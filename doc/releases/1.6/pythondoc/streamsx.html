@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx package &mdash; streamsx 1.6.0 documentation</title>
+  <title>streamsx package &mdash; streamsx 1.6.2 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.6.0 documentation" href="index.html"/> 
+    <link rel="top" title="streamsx 1.6.2 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -152,7 +152,14 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="streamsx.spl.html">streamsx.spl package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="streamsx.spl.html#submodules">Submodules</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="streamsx.spl.op.html">streamsx.spl.op module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="streamsx.spl.op.html">streamsx.spl.op module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="streamsx.spl.op.html#invoking-spl-operators">Invoking SPL Operators</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="streamsx.spl.op.html#param-clause">Param clause</a></li>
+<li class="toctree-l5"><a class="reference internal" href="streamsx.spl.op.html#output-clause">Output clause</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="streamsx.spl.spl.html">streamsx.spl.spl module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="streamsx.spl.spl.html#overview">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="streamsx.spl.spl.html#python-classes-as-spl-operators">Python classes as SPL operators</a><ul>
@@ -196,6 +203,7 @@
 <li class="toctree-l3"><a class="reference internal" href="streamsx.topology.mqtt.html">streamsx.topology.mqtt module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="streamsx.topology.schema.html">streamsx.topology.schema module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="streamsx.topology.tester.html">streamsx.topology.tester module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="streamsx.topology.tester_runtime.html">streamsx.topology.tester_runtime module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="streamsx.topology.topology.html">streamsx.topology.topology module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="streamsx.topology.topology.html#overview">Overview</a></li>
 <li class="toctree-l4"><a class="reference internal" href="streamsx.topology.topology.html#topology">Topology</a></li>
@@ -214,6 +222,10 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="streamsx.topology.html#module-streamsx.topology">Module contents</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="streamsx.topology.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="streamsx.topology.html#microservices">Microservices</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="streamsx.topology.html#publish-subscribe-overview">Publish-subscribe overview</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -259,7 +271,7 @@ Applications use Python code to process tuples and tuples are Python objects.</p
 to allow tuple processing using Python in an SPL application.</p>
 <p>SPL (Streams Processing Language) is a domain specific language for streaming
 analytics supported by Streams.</p>
-<p>See <a class="reference internal" href="streamsx.spl.html#module-streamsx.spl" title="streamsx.spl"><code class="xref py py-mod docutils literal"><span class="pre">streamsx.spl</span></code></a></p>
+<p>See <a class="reference internal" href="streamsx.spl.spl.html#module-streamsx.spl.spl" title="streamsx.spl.spl"><code class="xref py py-mod docutils literal"><span class="pre">streamsx.spl.spl</span></code></a></p>
 </div>
 <div class="section" id="streams-python-rest-api">
 <h3>Streams Python REST API<a class="headerlink" href="#streams-python-rest-api" title="Permalink to this headline">¶</a></h3>
@@ -340,7 +352,7 @@ that will execute Python code within a Streams application.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.6.0',
+            VERSION:'1.6.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

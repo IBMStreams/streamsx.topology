@@ -1,0 +1,7 @@
+streamsx.topology.schema module
+===============================
+
+.. automodule:: streamsx.topology.schema
+    :members:
+    :undoc-members:
+    :show-inheritance:

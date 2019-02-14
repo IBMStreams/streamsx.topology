@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="PYTHONHOME"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_page"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>PYTHONHOME</title>
+</head>
+<body id="spldoc_page">
+
+
+<h1 class="title topictitle1">PYTHONHOME</h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.8.2</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$24.html">Executing applications using Python</a> &gt; PYTHONHOME</p>
+
+</div>
+
+
+<div class="section">
+<p class="p">The location of Python at runtime is defined by the environment variable <tt class="ph tt">PYTHONHOME</tt>. The location at runtime can be different to the location used when compiling the Streams application containing Python code.
+</p>
+
+<div class="p">When running in a distributed instance <tt class="ph tt">PYTHONHOME</tt> should be set as an application environment variable. This can be set using the Instance Management capability of the IBM Streams Console or <tt class="ph tt">streamtool</tt> follows:
+<pre class="pre codeblock">
+streamtool setproperty --application-ev PYTHONHOME=/opt/anaconda3
+</pre>
+
+
+</div>
+
+<div class="p">When running standalone <tt class="ph tt">PYTHONHOME</tt> must be set in the user's environment.
+<pre class="pre codeblock">
+export PYTHONHOME=/opt/anaconda3
+</pre>
+
+
+</div>
+
+<p class="p">The application will use <tt class="ph tt">PYTHONHOME</tt> to locate the Python shared library as follows:
+</p>
+
+<div class="p"><em class="ph i">Python 3.5</em>
+<ul class="ul">
+<li class="li"> <tt class="ph tt">$PYTHONHOME/lib/libpython3.5m.so</tt></li>
+
+<li class="li"> <tt class="ph tt">$PYTHONHOME/lib64/libpython3.5m.so</tt> if the path above does not exist.</li>
+
+</ul>
+
+</div>
+
+<div class="p"><em class="ph i">Python 2.7</em>
+<ul class="ul">
+<li class="li"> <tt class="ph tt">$PYTHONHOME/lib/libpython2.7.so</tt></li>
+
+<li class="li"> <tt class="ph tt">$PYTHONHOME/lib64/libpython2.7.so</tt> if the path above does not exist.</li>
+
+</ul>
+
+</div>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

@@ -1,0 +1,29 @@
+streamsx package
+================
+
+Subpackages
+-----------
+
+.. toctree::
+
+    streamsx.scripts
+    streamsx.spl
+    streamsx.topology
+
+Submodules
+----------
+
+.. toctree::
+
+   streamsx.ec
+   streamsx.rest
+   streamsx.rest_errors
+   streamsx.rest_primitives
+
+Module contents
+---------------
+
+.. automodule:: streamsx
+    :members:
+    :undoc-members:
+    :show-inheritance:

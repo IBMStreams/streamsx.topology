@@ -1,0 +1,20 @@
+streamsx.spl package
+====================
+
+Submodules
+----------
+
+.. toctree::
+
+   streamsx.spl.op
+   streamsx.spl.spl
+   streamsx.spl.toolkit
+   streamsx.spl.types
+
+Module contents
+---------------
+
+.. automodule:: streamsx.spl
+    :members:
+    :undoc-members:
+    :show-inheritance:

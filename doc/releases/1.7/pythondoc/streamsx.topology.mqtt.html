@@ -1,0 +1,337 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx.topology.mqtt module &mdash; streamsx 1.7.4 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="streamsx 1.7.4 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.7
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <!-- Local TOC -->
+                <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">streamsx.topology.mqtt module</a></li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">streamsx</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>streamsx.topology.mqtt module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/streamsx.topology.mqtt.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-streamsx.topology.mqtt">
+<span id="streamsx-topology-mqtt-module"></span><h1>streamsx.topology.mqtt module<a class="headerlink" href="#module-streamsx.topology.mqtt" title="Permalink to this headline">¶</a></h1>
+<p>Publish and subscribe to MQTT messages.</p>
+<p>Additional information at <a class="reference external" href="http://mqtt.org">http://mqtt.org</a> and
+<a class="reference external" href="http://ibmstreams.github.io/streamsx.messaging">http://ibmstreams.github.io/streamsx.messaging</a></p>
+<dl class="class">
+<dt id="streamsx.topology.mqtt.MqttStreams">
+<em class="property">class </em><code class="descclassname">streamsx.topology.mqtt.</code><code class="descname">MqttStreams</code><span class="sig-paren">(</span><em>topology</em>, <em>config</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.mqtt.MqttStreams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A simple connector to a MQTT broker for publishing
+string tuples to MQTT topics, and
+subscribing to MQTT topics and creating streams.</p>
+<p>A connector is for a specific MQTT Broker as specified in
+the configuration object config. Any number of  publish()and  subscribe()
+connections may be created from a single mqtt_streams connector.</p>
+<p>Sample use:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">topo</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">(</span><span class="s2">&quot;An MQTT application&quot;</span><span class="p">)</span>
+<span class="c1"># define configuration information</span>
+<span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">&#39;clientID&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;test_MQTTpublishClient&quot;</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">&#39;qos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">)</span> <span class="c1">#(needs to be int vs long)</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">&#39;keepAliveInterval&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span> <span class="p">(</span><span class="n">needs</span> <span class="n">to</span> <span class="n">be</span> <span class="nb">int</span> <span class="n">vs</span> <span class="n">long</span><span class="p">)</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">&#39;commandTimeout&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">30000</span> <span class="p">(</span><span class="n">needs</span> <span class="n">to</span> <span class="n">be</span> <span class="nb">int</span> <span class="n">vs</span> <span class="n">long</span><span class="p">)</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">&#39;period&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5000</span> <span class="p">(</span><span class="n">needs</span> <span class="n">to</span> <span class="n">be</span> <span class="nb">int</span> <span class="n">vs</span> <span class="n">long</span><span class="p">)</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">&#39;messageQueueSize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span> <span class="p">(</span><span class="n">needs</span> <span class="n">to</span> <span class="n">be</span> <span class="nb">int</span> <span class="n">vs</span> <span class="n">long</span><span class="p">)</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">&#39;reconnectionBound&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">&#39;retain&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;foobar&quot;</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">&#39;trustStore&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;/tmp/no-such-trustStore&quot;</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">&#39;trustStorePassword&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;woohoo&quot;</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">&#39;keyStore&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;/tmp/no-such-keyStore&quot;</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">&#39;keyStorePassword&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;woohoo&quot;</span>
+
+<span class="c1"># create the connector&#39;s configuration property map</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">&#39;serverURI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;tcp://localhost:1883&quot;</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">&#39;userID&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;user1id&quot;</span>
+<span class="n">config</span><span class="p">[</span><span class="s1">&#39; password&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;user1passwrd&quot;</span>
+
+<span class="c1"># create the connector</span>
+<span class="n">mqstream</span> <span class="o">=</span> <span class="n">MqttStreams</span><span class="p">(</span><span class="n">topo</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+<span class="c1"># publish a python source stream to the topic &quot;python.topic1&quot;</span>
+<span class="n">topic</span> <span class="o">=</span> <span class="s2">&quot;python.topic1&quot;</span>
+<span class="n">src</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="n">test_functions</span><span class="o">.</span><span class="n">mqtt_publish</span><span class="p">)</span>
+<span class="n">mqs</span> <span class="o">=</span> <span class="n">mqstream</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">topic</span><span class="p">)</span>
+
+<span class="c1"># subscribe to the topic &quot;python.topic1&quot;</span>
+<span class="n">topic</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;python.topic1&quot;</span><span class="p">,</span> <span class="p">]</span>
+<span class="n">mqs</span> <span class="o">=</span> <span class="n">mqstream</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">topic</span><span class="p">)</span>
+<span class="n">mqs</span><span class="o">.</span><span class="n">print</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Configuration properties apply to publish and
+subscribe unless stated otherwise.</p>
+<dl class="docutils">
+<dt>serverURI</dt>
+<dd><blockquote class="first">
+<div>Required String. URI to the MQTT server, either</div></blockquote>
+<p class="last"><a class="reference external" href="tcp:/">tcp:/</a>/&lt;hostid&gt;[:&lt;port&gt;]}
+or ssl://&lt;hostid&gt;[:&lt;port&gt;]}.
+The port defaults to 1883 for &#8220;tcp:&#8221; and 8883 for &#8220;ssl:&#8221; URIs.</p>
+</dd>
+<dt>clientID</dt>
+<dd><blockquote class="first">
+<div>Optional String. A unique identifier for a connection</div></blockquote>
+<p class="last">to the MQTT server.
+he MQTT broker only allows a single
+onnection for a particular  clientID.
+By default a unique client ID is automatically
+generated for each use of  publish() and subscribe().
+The specified clientID is used for the first
+publish() or subscribe() use and
+suffix is added for each subsequent uses.</p>
+</dd>
+<dt>keepAliveInterval</dt>
+<dd>Optional Integer.  Automatically generate a MQTT
+ping message to the server if a message or ping hasn&#8217;t been
+sent or received in the last keelAliveInterval seconds.
+Enables the client to detect if the server is no longer available
+without having to wait for the TCP/IP timeout.
+A value of 0 disables keepalive processing.
+The default is 60.</dd>
+<dt>commandTimeout</dt>
+<dd>Optional Long. The maximum time in milliseconds
+to wait for a MQTT connect or publish action to complete.
+A value of 0 causes the client to wait indefinitely.
+The default is 0.</dd>
+<dt>period</dt>
+<dd>Optional Long. The time in milliseconds before
+attempting to reconnect to the server following a connection failure.
+The default is 60000.</dd>
+<dt>userID</dt>
+<dd>Optional String.  The identifier to use when authenticating
+with a server configured to require that form of authentication.</dd>
+<dt>password</dt>
+<dd>Optional String.  The identifier to use when authenticating
+with server configured to require that form of authentication.</dd>
+<dt>trustStore</dt>
+<dd>Optional String. The pathname to a file containing the
+public certificate of trusted MQTT servers.  If a relative path
+is specified, the path is relative to the application directory.
+Required when connecting to a MQTT server with an
+ssl:/... serverURI.</dd>
+<dt>trustStorePassword</dt>
+<dd>Required String when trustStore is used.
+The password needed to access the encrypted trustStore file.</dd>
+<dt>keyStore</dt>
+<dd>Optional String. The pathname to a file containing the
+MQTT client&#8217;s public private key certificates.
+If a relative path is specified, the path is relative to the
+application directory.
+Required when an MQTT server is configured to use SSL client authentication.</dd>
+<dt>keyStorePassword</dt>
+<dd>Required String when keyStore is used.
+The password needed to access the encrypted keyStore file.</dd>
+<dt>messageQueueSize</dt>
+<dd>[subscribe] Optional Integer. The size, in number
+of messages, of the subscriber&#8217;s internal receive buffer.  Received
+messages are added to the buffer prior to being converted to a
+stream tuple. The receiver blocks when the buffer is full.
+The default is 50.</dd>
+<dt>retain</dt>
+<dd>[publish] Optional Boolean. Indicates if messages should be
+retained on the MQTT server.  Default is false.</dd>
+<dt>qos</dt>
+<dd><dl class="first docutils">
+<dt>Optional Integer. The default</dt>
+<dd>MQTT quality of service used for message handling.</dd>
+</dl>
+<p class="last">The default is 0.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="streamsx.topology.mqtt.MqttStreams.publish">
+<code class="descname">publish</code><span class="sig-paren">(</span><em>pub_stream</em>, <em>topic</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.mqtt.MqttStreams.publish" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.mqtt.MqttStreams.subscribe">
+<code class="descname">subscribe</code><span class="sig-paren">(</span><em>topic</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.mqtt.MqttStreams.subscribe" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2017 IBM Corp..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.7.4',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

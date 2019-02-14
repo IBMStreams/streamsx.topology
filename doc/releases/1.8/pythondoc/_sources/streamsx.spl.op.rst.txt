@@ -1,0 +1,7 @@
+streamsx.spl.op module
+======================
+
+.. automodule:: streamsx.spl.op
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -1,0 +1,583 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx.topology.context module &mdash; streamsx 1.8.2 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="streamsx 1.8.2 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.8
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <!-- Local TOC -->
+                <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">streamsx.topology.context module</a></li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">streamsx</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>streamsx.topology.context module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/streamsx.topology.context.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-streamsx.topology.context">
+<span id="streamsx-topology-context-module"></span><h1>streamsx.topology.context module<a class="headerlink" href="#module-streamsx.topology.context" title="Permalink to this headline">¶</a></h1>
+<p>Context for submission of applications.</p>
+<p>The main function is <a class="reference internal" href="#streamsx.topology.context.submit" title="streamsx.topology.context.submit"><code class="xref py py-func docutils literal"><span class="pre">submit()</span></code></a> to submit
+a <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology" title="streamsx.topology.topology.Topology"><code class="xref py py-class docutils literal"><span class="pre">Topology</span></code></a>
+to a Streaming Analytics service or IBM® Streams instance for execution.</p>
+<dl class="class">
+<dt id="streamsx.topology.context.ConfigParams">
+<em class="property">class </em><code class="descclassname">streamsx.topology.context.</code><code class="descname">ConfigParams</code><a class="headerlink" href="#streamsx.topology.context.ConfigParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Configuration options which may be used as keys in <a class="reference internal" href="#streamsx.topology.context.submit" title="streamsx.topology.context.submit"><code class="xref py py-func docutils literal"><span class="pre">submit()</span></code></a> <cite>config</cite> parameter.</p>
+<dl class="attribute">
+<dt id="streamsx.topology.context.ConfigParams.FORCE_REMOTE_BUILD">
+<code class="descname">FORCE_REMOTE_BUILD</code><em class="property"> = 'topology.forceRemoteBuild'</em><a class="headerlink" href="#streamsx.topology.context.ConfigParams.FORCE_REMOTE_BUILD" title="Permalink to this definition">¶</a></dt>
+<dd><p>Force a remote build of the application.</p>
+<p>When submitting to <code class="xref py py-const docutils literal"><span class="pre">STREAMING_ANALYTICS_SERVICE</span></code> a local build of the Streams application bundle
+will occur if the environment variable <strong>STREAMS_INSTALL</strong> is set. Setting this flag to <cite>True</cite> ignores the
+local Streams install and forces the build to occur remotely using the service.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ConfigParams.JOB_CONFIG">
+<code class="descname">JOB_CONFIG</code><em class="property"> = 'topology.jobConfigOverlays'</em><a class="headerlink" href="#streamsx.topology.context.ConfigParams.JOB_CONFIG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Key for a <a class="reference internal" href="#streamsx.topology.context.JobConfig" title="streamsx.topology.context.JobConfig"><code class="xref py py-class docutils literal"><span class="pre">JobConfig</span></code></a> object representing a job configuration for a submission.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ConfigParams.SERVICE_DEFINITION">
+<code class="descname">SERVICE_DEFINITION</code><em class="property"> = 'topology.service.definition'</em><a class="headerlink" href="#streamsx.topology.context.ConfigParams.SERVICE_DEFINITION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Streaming Analytics service definition.
+Identifies the Streaming Analytics service to use. The definition can be one of</p>
+<blockquote>
+<div><ul class="simple">
+<li>The <cite>service credentials</cite> copied from the <cite>Service credentials</cite> page of the service console (not the Streams console). Credentials are provided in JSON format. They contain such as the API key and secret, as well as connection information for the service.</li>
+<li>A JSON object (<cite>dict</cite>) of the form: <code class="docutils literal"><span class="pre">{</span> <span class="pre">&quot;type&quot;:</span> <span class="pre">&quot;streaming-analytics&quot;,</span> <span class="pre">&quot;name&quot;:</span> <span class="pre">&quot;service</span> <span class="pre">name&quot;,</span> <span class="pre">&quot;credentials&quot;:</span> <span class="pre">{...}</span> <span class="pre">}</span></code> with the <cite>service credentials</cite> as the value of the <code class="docutils literal"><span class="pre">credentials</span></code> key.</li>
+</ul>
+</div></blockquote>
+<p>This key takes precedence over <a class="reference internal" href="#streamsx.topology.context.ConfigParams.VCAP_SERVICES" title="streamsx.topology.context.ConfigParams.VCAP_SERVICES"><code class="xref py py-const docutils literal"><span class="pre">VCAP_SERVICES</span></code></a> and <a class="reference internal" href="#streamsx.topology.context.ConfigParams.SERVICE_NAME" title="streamsx.topology.context.ConfigParams.SERVICE_NAME"><code class="xref py py-const docutils literal"><span class="pre">SERVICE_NAME</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ConfigParams.SERVICE_NAME">
+<code class="descname">SERVICE_NAME</code><em class="property"> = 'topology.service.name'</em><a class="headerlink" href="#streamsx.topology.context.ConfigParams.SERVICE_NAME" title="Permalink to this definition">¶</a></dt>
+<dd><p>Streaming Analytics service name.</p>
+<p>Selects the specific Streaming Analytics service from VCAP service definitions
+defined by the the environment variable <strong>VCAP_SERVICES</strong> or the key <a class="reference internal" href="#streamsx.topology.context.ConfigParams.VCAP_SERVICES" title="streamsx.topology.context.ConfigParams.VCAP_SERVICES"><code class="xref py py-const docutils literal"><span class="pre">VCAP_SERVICES</span></code></a> in the <cite>submit</cite> config.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ConfigParams.STREAMS_CONNECTION">
+<code class="descname">STREAMS_CONNECTION</code><em class="property"> = 'topology.streamsConnection'</em><a class="headerlink" href="#streamsx.topology.context.ConfigParams.STREAMS_CONNECTION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Key for a <code class="xref py py-class docutils literal"><span class="pre">StreamsConnection</span></code> object for connecting to a running IBM Streams instance.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ConfigParams.VCAP_SERVICES">
+<code class="descname">VCAP_SERVICES</code><em class="property"> = 'topology.service.vcap'</em><a class="headerlink" href="#streamsx.topology.context.ConfigParams.VCAP_SERVICES" title="Permalink to this definition">¶</a></dt>
+<dd><p>Streaming Analytics service definitions including credentials in <strong>VCAP_SERVICES</strong> format.</p>
+<p>Provides the connection credentials when connecting to a Streaming Analytics service
+using context type <a class="reference internal" href="#streamsx.topology.context.ContextTypes.STREAMING_ANALYTICS_SERVICE" title="streamsx.topology.context.ContextTypes.STREAMING_ANALYTICS_SERVICE"><code class="xref py py-const docutils literal"><span class="pre">STREAMING_ANALYTICS_SERVICE</span></code></a>.
+The <code class="docutils literal"><span class="pre">streaming-analytics</span></code> service to use within the service definitions is identified
+by name using <a class="reference internal" href="#streamsx.topology.context.ConfigParams.SERVICE_NAME" title="streamsx.topology.context.ConfigParams.SERVICE_NAME"><code class="xref py py-const docutils literal"><span class="pre">SERVICE_NAME</span></code></a>.</p>
+<p>The key overrides the environment variable <strong>VCAP_SERVICES</strong>.</p>
+<dl class="docutils">
+<dt>The value can be:</dt>
+<dd><ul class="first last simple">
+<li>Path to a local file containing a JSON representation of the VCAP services information.</li>
+<li>Dictionary containing the VCAP services information.</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.topology.context.ContextTypes">
+<em class="property">class </em><code class="descclassname">streamsx.topology.context.</code><code class="descname">ContextTypes</code><a class="headerlink" href="#streamsx.topology.context.ContextTypes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Submission context types.</p>
+<p>A <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology" title="streamsx.topology.topology.Topology"><code class="xref py py-class docutils literal"><span class="pre">Topology</span></code></a> is submitted using <a class="reference internal" href="#streamsx.topology.context.submit" title="streamsx.topology.context.submit"><code class="xref py py-func docutils literal"><span class="pre">submit()</span></code></a> and a context type.
+Submision of a <cite>Topology</cite> generally builds the application into a Streams application
+bundle (sab) file and then submits it for execution in the required context.</p>
+<p>The Streams application bundle contains all the artifacts required by an application such
+that it can be executed remotely (e.g. on a Streaming Analytics service), including
+distributing the execution of the application across multiple resources (hosts).</p>
+<p>The context type defines which context is used for submission.</p>
+<p>The main context types result in a running application and are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#streamsx.topology.context.ContextTypes.STREAMING_ANALYTICS_SERVICE" title="streamsx.topology.context.ContextTypes.STREAMING_ANALYTICS_SERVICE"><code class="xref py py-const docutils literal"><span class="pre">STREAMING_ANALYTICS_SERVICE</span></code></a> - Application is submitted to a Streaming Analytics service running on IBM Bluemix cloud platform.</li>
+<li><a class="reference internal" href="#streamsx.topology.context.ContextTypes.DISTRIBUTED" title="streamsx.topology.context.ContextTypes.DISTRIBUTED"><code class="xref py py-const docutils literal"><span class="pre">DISTRIBUTED</span></code></a> - Application is submitted to an IBM Streams instance.</li>
+<li><a class="reference internal" href="#streamsx.topology.context.ContextTypes.STANDALONE" title="streamsx.topology.context.ContextTypes.STANDALONE"><code class="xref py py-const docutils literal"><span class="pre">STANDALONE</span></code></a> - Application is executed as a local process, IBM Streams <cite>standalone</cite> application. Typically this is used during development or testing.</li>
+</ul>
+</div></blockquote>
+<p>The <a class="reference internal" href="#streamsx.topology.context.ContextTypes.BUNDLE" title="streamsx.topology.context.ContextTypes.BUNDLE"><code class="xref py py-const docutils literal"><span class="pre">BUNDLE</span></code></a> context type compiles the application (<cite>Topology</cite>) to produce a
+Streams application bundle (sab file). The bundle is not executed but may subsequently be submitted
+to a Streaming Analytics service or an IBM Streams instance. A bundle may be submitted multiple
+times to services or instances, each resulting in a unique job (running application).</p>
+<dl class="attribute">
+<dt id="streamsx.topology.context.ContextTypes.ANALYTICS_SERVICE">
+<code class="descname">ANALYTICS_SERVICE</code><em class="property"> = 'ANALYTICS_SERVICE'</em><a class="headerlink" href="#streamsx.topology.context.ContextTypes.ANALYTICS_SERVICE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Synonym for <a class="reference internal" href="#streamsx.topology.context.ContextTypes.STREAMING_ANALYTICS_SERVICE" title="streamsx.topology.context.ContextTypes.STREAMING_ANALYTICS_SERVICE"><code class="xref py py-const docutils literal"><span class="pre">STREAMING_ANALYTICS_SERVICE</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ContextTypes.BUILD_ARCHIVE">
+<code class="descname">BUILD_ARCHIVE</code><em class="property"> = 'BUILD_ARCHIVE'</em><a class="headerlink" href="#streamsx.topology.context.ContextTypes.BUILD_ARCHIVE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a build archive.</p>
+<p>This context type produces the intermediate code archive used for bundle creation.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><cite>BUILD_ARCHIVE</cite> is typically only used when diagnosing issues with bundle generation.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ContextTypes.BUNDLE">
+<code class="descname">BUNDLE</code><em class="property"> = 'BUNDLE'</em><a class="headerlink" href="#streamsx.topology.context.ContextTypes.BUNDLE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a Streams application bundle.</p>
+<p>The <cite>Topology</cite> is compiled locally to produce Streams application bundle (sab file).</p>
+<dl class="docutils">
+<dt>The resultant application can be submitted to:</dt>
+<dd><ul class="first last simple">
+<li>Streaming Analytics service using the Streams console or the Streaming Analytics REST api.</li>
+<li>IBM Streams instance using the Streams console, JMX api or command line <code class="docutils literal"><span class="pre">streamtool</span> <span class="pre">submitjob</span></code>.</li>
+<li>Executed standalone for development or testing (when built with IBM Streams 4.2 or later).</li>
+</ul>
+</dd>
+</dl>
+<p>The bundle must be built on the same operating system version and architecture as the intended running
+environment. For Streaming Analytics service this is currently RedHat/CentOS 6 and <cite>x86_64</cite> architecture.</p>
+<dl class="docutils">
+<dt>Environment variables:</dt>
+<dd><p class="first">This environment variables define how the application is built.</p>
+<ul class="last simple">
+<li><strong>STREAMS_INSTALL</strong> - Location of a IBM Streams installation (4.0.1 or later).</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ContextTypes.DISTRIBUTED">
+<code class="descname">DISTRIBUTED</code><em class="property"> = 'DISTRIBUTED'</em><a class="headerlink" href="#streamsx.topology.context.ContextTypes.DISTRIBUTED" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submission to an IBM Streams instance.</p>
+<p>The <cite>Topology</cite> is compiled locally and the resultant Streams application bundle
+(sab file) is submitted to an IBM Streams instance.</p>
+<dl class="docutils">
+<dt>Environment variables:</dt>
+<dd><p class="first">These environment variables define how the application is built and submitted.</p>
+<ul class="last simple">
+<li><strong>STREAMS_INSTALL</strong> - Location of a IBM Streams installation (4.0.1 or later).</li>
+<li><strong>STREAMS_DOMAIN_ID</strong> - Domain identifier for the Streams instance.</li>
+<li><strong>STREAMS_INSTANCE_ID</strong> - Instance identifier.</li>
+<li><strong>STREAMS_ZKCONNECT</strong> - (optional) ZooKeeper connection string for domain (when not using an embedded ZooKeeper)</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ContextTypes.STANDALONE">
+<code class="descname">STANDALONE</code><em class="property"> = 'STANDALONE'</em><a class="headerlink" href="#streamsx.topology.context.ContextTypes.STANDALONE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build and execute locally.</p>
+<p>Compiles and executes the <cite>Topology</cite> locally in IBM Streams standalone mode as a separate sub-process.
+Typically used for devlopment and testing.</p>
+<p>The call to <a class="reference internal" href="#streamsx.topology.context.submit" title="streamsx.topology.context.submit"><code class="xref py py-func docutils literal"><span class="pre">submit()</span></code></a> return when (if) the application completes. An application
+completes when it has finite source streams and all tuples from those streams have been
+processed by the complete topology. If the source streams are infinite (e.g. reading tweets)
+then the standalone application will not complete.</p>
+<dl class="docutils">
+<dt>Environment variables:</dt>
+<dd><p class="first">This environment variables define how the application is built.</p>
+<ul class="last simple">
+<li><strong>STREAMS_INSTALL</strong> - Location of a IBM Streams installation (4.0.1 or later).</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ContextTypes.STANDALONE_BUNDLE">
+<code class="descname">STANDALONE_BUNDLE</code><em class="property"> = 'STANDALONE_BUNDLE'</em><a class="headerlink" href="#streamsx.topology.context.ContextTypes.STANDALONE_BUNDLE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a Streams application bundle for standalone execution.</p>
+<p>The <cite>Topology</cite> is compiled locally to produce Streams standalone application bundle (sab file).</p>
+<dl class="docutils">
+<dt>The resultant application can be submitted to:</dt>
+<dd><ul class="first last simple">
+<li>Executed standalone for development or testing.</li>
+</ul>
+</dd>
+</dl>
+<p>The bundle must be built on the same operating system version and architecture as the intended running
+environment. For Streaming Analytics service this is currently RedHat/CentOS 6 and <cite>x86_64</cite> architecture.</p>
+<dl class="docutils">
+<dt>Environment variables:</dt>
+<dd><p class="first">This environment variables define how the application is built.</p>
+<ul class="last simple">
+<li><strong>STREAMS_INSTALL</strong> - Location of a IBM Streams installation (4.0.1 or 4.1.x).</li>
+</ul>
+</dd>
+</dl>
+<div class="deprecated">
+<p><span class="versionmodified">Deprecated since version IBM: </span>Streams 4.2
+Use <a class="reference internal" href="#streamsx.topology.context.ContextTypes.BUNDLE" title="streamsx.topology.context.ContextTypes.BUNDLE"><code class="xref py py-const docutils literal"><span class="pre">BUNDLE</span></code></a> when compiling with IBM Streams 4.2 or later.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ContextTypes.STREAMING_ANALYTICS_SERVICE">
+<code class="descname">STREAMING_ANALYTICS_SERVICE</code><em class="property"> = 'STREAMING_ANALYTICS_SERVICE'</em><a class="headerlink" href="#streamsx.topology.context.ContextTypes.STREAMING_ANALYTICS_SERVICE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submission to Streaming Analytics service running on IBM Bluemix cloud platform.</p>
+<p>The <cite>Topology</cite> is compiled and the resultant Streams application bundle
+(sab file) is submitted for execution on the Streaming Analytics service.</p>
+<p>When <strong>STREAMS_INSTALL</strong> is not set or the <a class="reference internal" href="#streamsx.topology.context.submit" title="streamsx.topology.context.submit"><code class="xref py py-func docutils literal"><span class="pre">submit()</span></code></a> <cite>config</cite> parameter has
+<a class="reference internal" href="#streamsx.topology.context.ConfigParams.FORCE_REMOTE_BUILD" title="streamsx.topology.context.ConfigParams.FORCE_REMOTE_BUILD"><code class="xref py py-const docutils literal"><span class="pre">FORCE_REMOTE_BUILD</span></code></a> set to <cite>True</cite> the compilation of the application
+occurs remotely by the service. This allows creation and submission of Streams applications
+without a local install of IBM Streams.</p>
+<p>When <strong>STREAMS_INSTALL</strong> is set and the <a class="reference internal" href="#streamsx.topology.context.submit" title="streamsx.topology.context.submit"><code class="xref py py-func docutils literal"><span class="pre">submit()</span></code></a> <cite>config</cite> parameter has
+<a class="reference internal" href="#streamsx.topology.context.ConfigParams.FORCE_REMOTE_BUILD" title="streamsx.topology.context.ConfigParams.FORCE_REMOTE_BUILD"><code class="xref py py-const docutils literal"><span class="pre">FORCE_REMOTE_BUILD</span></code></a> set to <cite>False</cite> or not set then the creation of the
+Streams application bundle occurs locally and the bundle is submitted for execution on the service.</p>
+<dl class="docutils">
+<dt>Environment variables:</dt>
+<dd><p class="first">These environment variables define how the application is built and submitted.</p>
+<ul class="last simple">
+<li><strong>STREAMS_INSTALL</strong> - (optional) Location of a IBM Streams installation (4.0.1 or later). The install must be running on RedHat/CentOS 6 and <cite>x86_64</cite> architecture.</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.ContextTypes.TOOLKIT">
+<code class="descname">TOOLKIT</code><em class="property"> = 'TOOLKIT'</em><a class="headerlink" href="#streamsx.topology.context.ContextTypes.TOOLKIT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an SPL toolkit.</p>
+<p><cite>Topology</cite> applications are translated to SPL applications before compilation into an Streams application
+bundle. This context type produces the intermediate SPL toolkit that is input to the SPL compiler for
+bundle creation.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><cite>TOOLKIT</cite> is typically only used when diagnosing issues with bundle generation.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.topology.context.JobConfig">
+<em class="property">class </em><code class="descclassname">streamsx.topology.context.</code><code class="descname">JobConfig</code><span class="sig-paren">(</span><em>job_name=None</em>, <em>job_group=None</em>, <em>preload=False</em>, <em>data_directory=None</em>, <em>tracing=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.context.JobConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Job configuration.</p>
+<p><cite>JobConfig</cite> allows configuration of job that will result from
+submission of a py:class:<cite>Topology</cite> (application).</p>
+<p>A <cite>JobConfig</cite> is set in the <cite>config</cite> dictionary passed to <a class="reference internal" href="#streamsx.topology.context.submit" title="streamsx.topology.context.submit"><code class="xref py py-func docutils literal"><span class="pre">submit()</span></code></a>
+using the key <a class="reference internal" href="#streamsx.topology.context.ConfigParams.JOB_CONFIG" title="streamsx.topology.context.ConfigParams.JOB_CONFIG"><code class="xref py py-const docutils literal"><span class="pre">JOB_CONFIG</span></code></a>. <a class="reference internal" href="#streamsx.topology.context.JobConfig.add" title="streamsx.topology.context.JobConfig.add"><code class="xref py py-meth docutils literal"><span class="pre">add()</span></code></a> exists as a convenience
+method to add it to a submission configuration.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>job_name</strong> (<em>str</em>) &#8211; The name that is assigned to the job. A job name must be unique within a Streasm instance
+When set to <cite>None</cite> a system generated name is used.</li>
+<li><strong>job_group</strong> (<em>str</em>) &#8211; The job group to use to control permissions for the submitted job.</li>
+<li><strong>preload</strong> (<em>bool</em>) &#8211; Specifies whether to preload the job onto all resources in the instance, even if the job is
+not currently needed on each. Preloading the job can improve PE restart performance if the PEs are
+relocated to a new resource.</li>
+<li><strong>data_directory</strong> (<em>str</em>) &#8211; Specifies the location of the optional data directory. The data directory is a path
+within the cluster that is running the Streams instance.</li>
+<li><strong>tracing</strong> &#8211; Specify the application trace level. See <a class="reference internal" href="#streamsx.topology.context.JobConfig.tracing" title="streamsx.topology.context.JobConfig.tracing"><code class="xref py py-attr docutils literal"><span class="pre">tracing</span></code></a></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Submit a job with the name NewsIngester</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">job_config</span> <span class="o">=</span> <span class="n">JobConfig</span><span class="p">(</span><span class="n">job_name</span><span class="o">=</span><span class="s1">&#39;NewsIngester&#39;</span><span class="p">)</span>
+<span class="n">job_config</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+<span class="n">context</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="s1">&#39;ANALYTICS_SERVICE&#39;</span><span class="p">,</span> <span class="n">topo</span><span class="p">,</span> <span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.topology.context.JobConfig.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>config</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.context.JobConfig.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add this <cite>JobConfig</cite> into a submission configuration object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>config</strong> (<em>dict</em>) &#8211; Submission configuration.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">config.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.JobConfig.target_pe_count">
+<code class="descname">target_pe_count</code><a class="headerlink" href="#streamsx.topology.context.JobConfig.target_pe_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Target processing element count.</p>
+<p>When submitted against a Streams instance <cite>target_pe_count</cite> provides
+a hint to the scheduler as to how to partition the topology
+across processing elements (processes) for the job execution. When a job
+contains multiple processing elements (PEs) then the Streams scheduler can
+distributed the PEs across the resources (hosts) running in the instance.</p>
+<p>When set to <code class="docutils literal"><span class="pre">None</span></code> (the default) no hint is supplied to the scheduler.
+The number of PEs in the submitted job will be determined by the scheduler.</p>
+<p>The value is only a target and may be ignored when the topology contains
+<code class="xref py py-meth docutils literal"><span class="pre">isolate()</span></code> calls.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Only supported in Streaming Analytics service and IBM Streams 4.2 or later.</p>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.context.JobConfig.tracing">
+<code class="descname">tracing</code><a class="headerlink" href="#streamsx.topology.context.JobConfig.tracing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runtime application trace level.</p>
+<p>The runtime application trace level can be a string with value <code class="docutils literal"><span class="pre">error</span></code>, <code class="docutils literal"><span class="pre">warn</span></code>, <code class="docutils literal"><span class="pre">info</span></code>,
+<code class="docutils literal"><span class="pre">debug</span></code> or <code class="docutils literal"><span class="pre">trace</span></code>.</p>
+<p>In addition a level from Python <code class="docutils literal"><span class="pre">logging</span></code> module can be used in with <code class="docutils literal"><span class="pre">CRITICAL</span></code> and <code class="docutils literal"><span class="pre">ERROR</span></code> mapping
+to <code class="docutils literal"><span class="pre">error</span></code>, <code class="docutils literal"><span class="pre">WARNING</span></code> to <code class="docutils literal"><span class="pre">warn</span></code>, <code class="docutils literal"><span class="pre">INFO</span></code> to <code class="docutils literal"><span class="pre">info</span></code> and <code class="docutils literal"><span class="pre">DEBUG</span></code> to <code class="docutils literal"><span class="pre">debug</span></code>.</p>
+<p>Setting tracing to <cite>None</cite> or <code class="docutils literal"><span class="pre">logging.NOTSET</span></code> will result in the job submission using the Streams instance
+application trace level.</p>
+<p>The value of <code class="docutils literal"><span class="pre">tracing</span></code> is the level as a string (<code class="docutils literal"><span class="pre">error</span></code>, <code class="docutils literal"><span class="pre">warn</span></code>, <code class="docutils literal"><span class="pre">info</span></code>, <code class="docutils literal"><span class="pre">debug</span></code> or <code class="docutils literal"><span class="pre">trace</span></code>)
+or None.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.topology.context.SubmissionResult">
+<em class="property">class </em><code class="descclassname">streamsx.topology.context.</code><code class="descname">SubmissionResult</code><span class="sig-paren">(</span><em>results</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.context.SubmissionResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Passed back to the user after a call to submit.
+Allows the user to use dot notation to access dictionary elements.</p>
+<dl class="attribute">
+<dt id="streamsx.topology.context.SubmissionResult.job">
+<code class="descname">job</code><a class="headerlink" href="#streamsx.topology.context.SubmissionResult.job" title="Permalink to this definition">¶</a></dt>
+<dd><p>If able, returns the job associated with the submitted build.
+If a username/password, StreamsConnection, or vcap file was not supplied,
+returns None.</p>
+<p><em>NOTE</em>: The &#64;property tag supersedes __getattr__. In other words, this job method is
+called before __getattr__(self, &#8216;job&#8217;) is called.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.topology.context.submit">
+<code class="descclassname">streamsx.topology.context.</code><code class="descname">submit</code><span class="sig-paren">(</span><em>ctxtype</em>, <em>graph</em>, <em>config=None</em>, <em>username=None</em>, <em>password=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.context.submit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submits a <cite>Topology</cite> (application) using the specified context type.</p>
+<p>Used to submit an application for compilation into a Streams application and
+execution within an Streaming Analytics service or IBM Streams instance.</p>
+<p><cite>ctxtype</cite> defines how the application will be submitted, see <a class="reference internal" href="#streamsx.topology.context.ContextTypes" title="streamsx.topology.context.ContextTypes"><code class="xref py py-class docutils literal"><span class="pre">ContextTypes</span></code></a>.</p>
+<p>The parameters <cite>username</cite> and <cite>password</cite> are only required when submitting to an
+IBM Streams instance and it is required to access the Streams REST API from the
+code performing the submit. Accessing data from views created by
+<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.view" title="streamsx.topology.topology.Stream.view"><code class="xref py py-meth docutils literal"><span class="pre">view()</span></code></a> requires access to the Streams REST API.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ctxtype</strong> (<em>str</em>) &#8211; Type of context the application will be submitted to. A value from <a class="reference internal" href="#streamsx.topology.context.ContextTypes" title="streamsx.topology.context.ContextTypes"><code class="xref py py-class docutils literal"><span class="pre">ContextTypes</span></code></a>.</li>
+<li><strong>graph</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology" title="streamsx.topology.topology.Topology"><em>Topology</em></a>) &#8211; The application topology to be submitted.</li>
+<li><strong>config</strong> (<em>dict</em>) &#8211; Configuration for the submission.</li>
+<li><strong>username</strong> (<em>str</em>) &#8211; Username for the Streams REST api.</li>
+<li><strong>password</strong> (<em>str</em>) &#8211; Password for <cite>username</cite>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Result of the submission. For details of what is contained see the <a class="reference internal" href="#streamsx.topology.context.ContextTypes" title="streamsx.topology.context.ContextTypes"><code class="xref py py-class docutils literal"><span class="pre">ContextTypes</span></code></a>
+constant passed as <cite>ctxtype</cite>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#streamsx.topology.context.SubmissionResult" title="streamsx.topology.context.SubmissionResult">SubmissionResult</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2017 IBM Corp..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.8.2',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

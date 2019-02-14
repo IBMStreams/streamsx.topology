@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.schema module &mdash; streamsx 1.6.0 documentation</title>
+  <title>streamsx.topology.schema module &mdash; streamsx 1.6.2 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="streamsx 1.6.0 documentation" href="index.html"/> 
+    <link rel="top" title="streamsx 1.6.2 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -131,21 +131,26 @@
             
   <div class="section" id="module-streamsx.topology.schema">
 <span id="streamsx-topology-schema-module"></span><h1>streamsx.topology.schema module<a class="headerlink" href="#module-streamsx.topology.schema" title="Permalink to this headline">¶</a></h1>
+<p>Schemas for streams.</p>
+<p>On a structured stream a tuple is a sequence of attributes,
+and an attribute is a named value of a specific type.</p>
+<p>The supported types are defined by IBM Streams Streams Processing Language (SPL).</p>
 <dl class="class">
 <dt id="streamsx.topology.schema.CommonSchema">
 <em class="property">class </em><code class="descclassname">streamsx.topology.schema.</code><code class="descname">CommonSchema</code><a class="headerlink" href="#streamsx.topology.schema.CommonSchema" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">enum.Enum</span></code></p>
 <p>Common stream schemas for interoperability within Streams applications.</p>
 <p>Streams application can publish streams that are subscribed to by other applications.
-Use of common schemas allow streams connections regardless of the implementation</p>
+Use of common schemas allow streams connections regardless of the application implementation language.</p>
 <p>Python applications publish streams using <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.publish" title="streamsx.topology.topology.Stream.publish"><code class="xref py py-meth docutils literal"><span class="pre">publish()</span></code></a>
 and subscribe using <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology.subscribe" title="streamsx.topology.topology.Topology.subscribe"><code class="xref py py-meth docutils literal"><span class="pre">subscribe()</span></code></a>.</p>
 <blockquote>
 <div><ul class="simple">
-<li><a class="reference internal" href="#streamsx.topology.schema.CommonSchema.Python" title="streamsx.topology.schema.CommonSchema.Python"><code class="xref py py-const docutils literal"><span class="pre">Python</span></code></a> - Stream constains Python objects</li>
+<li><a class="reference internal" href="#streamsx.topology.schema.CommonSchema.Python" title="streamsx.topology.schema.CommonSchema.Python"><code class="xref py py-const docutils literal"><span class="pre">Python</span></code></a> - Stream constains Python objects.</li>
 <li><a class="reference internal" href="#streamsx.topology.schema.CommonSchema.Json" title="streamsx.topology.schema.CommonSchema.Json"><code class="xref py py-const docutils literal"><span class="pre">Json</span></code></a> - Stream contains JSON objects.</li>
 <li><a class="reference internal" href="#streamsx.topology.schema.CommonSchema.String" title="streamsx.topology.schema.CommonSchema.String"><code class="xref py py-const docutils literal"><span class="pre">String</span></code></a> - Stream contains strings.</li>
 <li><a class="reference internal" href="#streamsx.topology.schema.CommonSchema.Binary" title="streamsx.topology.schema.CommonSchema.Binary"><code class="xref py py-const docutils literal"><span class="pre">Binary</span></code></a> - Stream contains binary tuples.</li>
+<li><a class="reference internal" href="#streamsx.topology.schema.CommonSchema.XML" title="streamsx.topology.schema.CommonSchema.XML"><code class="xref py py-const docutils literal"><span class="pre">XML</span></code></a> - Stream contains XML documents.</li>
 </ul>
 </div></blockquote>
 <dl class="attribute">
@@ -161,11 +166,17 @@ and subscribe using <a class="reference internal" href="streamsx.topology.topolo
 <dl class="attribute">
 <dt id="streamsx.topology.schema.CommonSchema.Json">
 <code class="descname">Json</code><em class="property"> = &lt;streamsx.topology.schema.StreamSchema object&gt;</em><a class="headerlink" href="#streamsx.topology.schema.CommonSchema.Json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stream where each tuple is a JSON object.</p>
+<dd><p>Stream where each tuple is logically a JSON object.</p>
 <p><cite>Json</cite> can be used as a natural interchange format between Streams applications
 implemented in different programming languages. All languages supported by
 Streams support publishing and subscribing to JSON streams.</p>
-<p>Python objects are converted to JSON objects using <cite>json.dumps(obj)</cite>.</p>
+<p>A Python callable receives each tuple as a <cite>dict</cite> as though it was
+created from <code class="docutils literal"><span class="pre">json.loads(json_formatted_str)</span></code> where <cite>json_formatted_str</cite>
+is the JSON formatted representation of tuple.</p>
+<p>Python objects that are to be converted to JSON objects
+must be supported by <cite>JSONEncoder</cite>. If the object is not a <cite>dict</cite>
+then it will be converted to a JSON object with a single key <cite>payload</cite>
+containing the value.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -182,6 +193,7 @@ Streams support publishing and subscribing to JSON streams.</p>
 <p><cite>String</cite> can be used as a natural interchange format between Streams applications
 implemented in different programming languages. All languages supported by
 Streams support publishing and subscribing to string streams.</p>
+<p>A Python callable receives each tuple as a <cite>str</cite> object.</p>
 <p>Python objects are converted to strings using <cite>str(obj)</cite>.</p>
 </dd></dl>
 
@@ -201,22 +213,61 @@ Streams support publishing and subscribing to string streams.</p>
 <dt id="streamsx.topology.schema.StreamSchema">
 <em class="property">class </em><code class="descclassname">streamsx.topology.schema.</code><code class="descname">StreamSchema</code><span class="sig-paren">(</span><em>schema</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.schema.StreamSchema" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
-<p>SPL stream schema.</p>
+<p>Defines a schema for a structured stream.</p>
+<p>On a structured stream a tuple is a sequence of attributes,
+and an attribute is a named value of a specific type.</p>
+<p>The supported types are defined by IBM Streams Streams Processing
+Language and include such types as <cite>int8</cite>, <cite>int16</cite>, <cite>rstring</cite>
+and <cite>list&lt;float32&gt;</cite>.</p>
+<p>A schema is defined with the syntax <code class="docutils literal"><span class="pre">tuple&lt;type</span> <span class="pre">name</span> <span class="pre">[,...]&gt;</span></code>,
+for example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nb">tuple</span><span class="o">&lt;</span><span class="n">rstring</span> <span class="nb">id</span><span class="p">,</span> <span class="n">timestamp</span> <span class="n">ts</span><span class="p">,</span> <span class="n">float64</span> <span class="n">value</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>represents a schema with three attributes suitable for a sensor reading.</p>
+<p>A <cite>StreamSchema</cite> can be created by passing a string of the
+for <code class="docutils literal"><span class="pre">tuple&lt;...&gt;</span></code> or by passing the name of an SPL type from
+an SPL toolkit, for example <code class="docutils literal"><span class="pre">com.ibm.streamsx.transportation.vehicle::VehicleLocation</span></code>.</p>
+<p>Attribute names must start with an ASCII letter or underscore, followed by ASCII letters, digits, or underscores.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>schema</strong> (<em>str</em>) &#8211; Schema definition. Either a schema definition or the name of an SPL type.</td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="streamsx.topology.schema.StreamSchema.extend">
 <code class="descname">extend</code><span class="sig-paren">(</span><em>schema</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.schema.StreamSchema.extend" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extend a schema by another</p>
+<dd><p>Extend a structured schema by another.</p>
+<p>For example extending <code class="docutils literal"><span class="pre">tuple&lt;rstring</span> <span class="pre">id,</span> <span class="pre">timestamp</span> <span class="pre">ts,</span> <span class="pre">float64</span> <span class="pre">value&gt;</span></code>
+with <code class="docutils literal"><span class="pre">tuple&lt;float32</span> <span class="pre">score&gt;</span></code> results in <code class="docutils literal"><span class="pre">tuple&lt;rstring</span> <span class="pre">id,</span> <span class="pre">timestamp</span> <span class="pre">ts,</span> <span class="pre">float64</span> <span class="pre">value,</span> <span class="pre">float32</span> <span class="pre">score&gt;</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>schema</strong> (<a class="reference internal" href="#streamsx.topology.schema.StreamSchema" title="streamsx.topology.schema.StreamSchema"><em>StreamSchema</em></a>) &#8211; Schema to extend this schema by.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">New schema that is an extension of this schema.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.topology.schema.StreamSchema" title="streamsx.topology.schema.StreamSchema">StreamSchema</a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="streamsx.topology.schema.StreamSchema.schema">
 <code class="descname">schema</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.schema.StreamSchema.schema" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Private method. May be removed at any time.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="streamsx.topology.schema.StreamSchema.spl_json">
 <code class="descname">spl_json</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.schema.StreamSchema.spl_json" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Private method. May be removed at any time.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -254,7 +305,7 @@ Streams support publishing and subscribing to string streams.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.6.0',
+            VERSION:'1.6.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

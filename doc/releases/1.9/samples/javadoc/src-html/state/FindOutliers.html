@@ -1,0 +1,154 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span># Licensed Materials - Property of IBM<a name="line.2"></a>
+<span class="sourceLineNo">003</span># Copyright IBM Corp. 2015  <a name="line.3"></a>
+<span class="sourceLineNo">004</span> */<a name="line.4"></a>
+<span class="sourceLineNo">005</span>package state;<a name="line.5"></a>
+<span class="sourceLineNo">006</span><a name="line.6"></a>
+<span class="sourceLineNo">007</span>import java.util.Random;<a name="line.7"></a>
+<span class="sourceLineNo">008</span><a name="line.8"></a>
+<span class="sourceLineNo">009</span>import org.apache.commons.math.stat.descriptive.moment.Mean;<a name="line.9"></a>
+<span class="sourceLineNo">010</span>import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;<a name="line.10"></a>
+<span class="sourceLineNo">011</span><a name="line.11"></a>
+<span class="sourceLineNo">012</span>import com.ibm.streamsx.topology.TStream;<a name="line.12"></a>
+<span class="sourceLineNo">013</span>import com.ibm.streamsx.topology.Topology;<a name="line.13"></a>
+<span class="sourceLineNo">014</span>import com.ibm.streamsx.topology.context.StreamsContextFactory;<a name="line.14"></a>
+<span class="sourceLineNo">015</span>import com.ibm.streamsx.topology.function.Predicate;<a name="line.15"></a>
+<span class="sourceLineNo">016</span>import com.ibm.streamsx.topology.function.Supplier;<a name="line.16"></a>
+<span class="sourceLineNo">017</span><a name="line.17"></a>
+<span class="sourceLineNo">018</span>/**<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * Finds outliers from a sequence of doubles (e.g. simulating a sensor reading).<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * <a name="line.20"></a>
+<span class="sourceLineNo">021</span> * Demonstrates function logic that maintains state across tuples.<a name="line.21"></a>
+<span class="sourceLineNo">022</span> *<a name="line.22"></a>
+<span class="sourceLineNo">023</span> */<a name="line.23"></a>
+<span class="sourceLineNo">024</span>public class FindOutliers {<a name="line.24"></a>
+<span class="sourceLineNo">025</span><a name="line.25"></a>
+<span class="sourceLineNo">026</span>    public static void main(String[] args) throws Exception {<a name="line.26"></a>
+<span class="sourceLineNo">027</span><a name="line.27"></a>
+<span class="sourceLineNo">028</span>        final double threshold = args.length == 0 ? 2.0 : Double<a name="line.28"></a>
+<span class="sourceLineNo">029</span>                .parseDouble(args[0]);<a name="line.29"></a>
+<span class="sourceLineNo">030</span><a name="line.30"></a>
+<span class="sourceLineNo">031</span>        Topology t = new Topology("StandardDeviationFilter");<a name="line.31"></a>
+<span class="sourceLineNo">032</span><a name="line.32"></a>
+<span class="sourceLineNo">033</span>        final Random rand = new Random();<a name="line.33"></a>
+<span class="sourceLineNo">034</span><a name="line.34"></a>
+<span class="sourceLineNo">035</span>        // Produce a stream of random double values with a normal<a name="line.35"></a>
+<span class="sourceLineNo">036</span>        // distribution, mean 0.0 and standard deviation 1.<a name="line.36"></a>
+<span class="sourceLineNo">037</span>        TStream&lt;Double&gt; values = t.limitedSource(new Supplier&lt;Double&gt;() {<a name="line.37"></a>
+<span class="sourceLineNo">038</span>            private static final long serialVersionUID = 1L;<a name="line.38"></a>
+<span class="sourceLineNo">039</span><a name="line.39"></a>
+<span class="sourceLineNo">040</span>            @Override<a name="line.40"></a>
+<span class="sourceLineNo">041</span>            public Double get() {<a name="line.41"></a>
+<span class="sourceLineNo">042</span>                return rand.nextGaussian();<a name="line.42"></a>
+<span class="sourceLineNo">043</span>            }<a name="line.43"></a>
+<span class="sourceLineNo">044</span><a name="line.44"></a>
+<span class="sourceLineNo">045</span>        }, 100000);<a name="line.45"></a>
+<span class="sourceLineNo">046</span><a name="line.46"></a>
+<span class="sourceLineNo">047</span>        /*<a name="line.47"></a>
+<span class="sourceLineNo">048</span>         * Filters the values based on calculating the mean and standard<a name="line.48"></a>
+<span class="sourceLineNo">049</span>         * deviation from the incoming data. In this case only outliers are<a name="line.49"></a>
+<span class="sourceLineNo">050</span>         * present in the output stream outliers. A outlier is defined as one<a name="line.50"></a>
+<span class="sourceLineNo">051</span>         * more than (threshold*standard deviation) from the mean.<a name="line.51"></a>
+<span class="sourceLineNo">052</span>         * <a name="line.52"></a>
+<span class="sourceLineNo">053</span>         * This demonstrates an anonymous functional logic class that is<a name="line.53"></a>
+<span class="sourceLineNo">054</span>         * stateful. The two fields mean and sd maintain their values across<a name="line.54"></a>
+<span class="sourceLineNo">055</span>         * multiple invocations of the test method, that is for multiple tuples.<a name="line.55"></a>
+<span class="sourceLineNo">056</span>         * <a name="line.56"></a>
+<span class="sourceLineNo">057</span>         * Note both Mean &amp; StandardDeviation classes are serializable.<a name="line.57"></a>
+<span class="sourceLineNo">058</span>         */<a name="line.58"></a>
+<span class="sourceLineNo">059</span>        TStream&lt;Double&gt; outliers = values.filter(new Predicate&lt;Double&gt;() {<a name="line.59"></a>
+<span class="sourceLineNo">060</span><a name="line.60"></a>
+<span class="sourceLineNo">061</span>            private static final long serialVersionUID = 1L;<a name="line.61"></a>
+<span class="sourceLineNo">062</span>            private final Mean mean = new Mean();<a name="line.62"></a>
+<span class="sourceLineNo">063</span>            private final StandardDeviation sd = new StandardDeviation();<a name="line.63"></a>
+<span class="sourceLineNo">064</span><a name="line.64"></a>
+<span class="sourceLineNo">065</span>            @Override<a name="line.65"></a>
+<span class="sourceLineNo">066</span>            public boolean test(Double tuple) {<a name="line.66"></a>
+<span class="sourceLineNo">067</span>                mean.increment(tuple);<a name="line.67"></a>
+<span class="sourceLineNo">068</span>                sd.increment(tuple);<a name="line.68"></a>
+<span class="sourceLineNo">069</span><a name="line.69"></a>
+<span class="sourceLineNo">070</span>                double multpleSd = threshold * sd.getResult();<a name="line.70"></a>
+<span class="sourceLineNo">071</span>                double absMean = Math.abs(mean.getResult());<a name="line.71"></a>
+<span class="sourceLineNo">072</span>                double absTuple = Math.abs(tuple);<a name="line.72"></a>
+<span class="sourceLineNo">073</span><a name="line.73"></a>
+<span class="sourceLineNo">074</span>                return absTuple &gt; absMean + multpleSd;<a name="line.74"></a>
+<span class="sourceLineNo">075</span>            }<a name="line.75"></a>
+<span class="sourceLineNo">076</span>        });<a name="line.76"></a>
+<span class="sourceLineNo">077</span><a name="line.77"></a>
+<span class="sourceLineNo">078</span>        outliers.print();<a name="line.78"></a>
+<span class="sourceLineNo">079</span><a name="line.79"></a>
+<span class="sourceLineNo">080</span>        StreamsContextFactory.getEmbedded().submit(t).get();<a name="line.80"></a>
+<span class="sourceLineNo">081</span>    }<a name="line.81"></a>
+<span class="sourceLineNo">082</span>}<a name="line.82"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

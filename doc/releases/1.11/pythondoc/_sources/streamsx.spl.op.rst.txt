@@ -1,0 +1,38 @@
+streamsx\.spl\.op
+=================
+
+.. automodule:: streamsx.spl.op
+   
+   ***************
+   Module contents
+   ***************
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :nosignatures:
+   
+      main_composite
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :nosignatures:
+   
+      Expression
+      Invoke
+      Map
+      Sink
+      Source
+   
+   
+
+   
+   
+   

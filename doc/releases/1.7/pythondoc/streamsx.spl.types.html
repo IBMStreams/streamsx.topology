@@ -1,0 +1,392 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx.spl.types module &mdash; streamsx 1.7.4 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="streamsx 1.7.4 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.7
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <!-- Local TOC -->
+                <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">streamsx.spl.types module</a></li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">streamsx</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>streamsx.spl.types module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/streamsx.spl.types.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-streamsx.spl.types">
+<span id="streamsx-spl-types-module"></span><h1>streamsx.spl.types module<a class="headerlink" href="#module-streamsx.spl.types" title="Permalink to this headline">¶</a></h1>
+<p>SPL type definitions.</p>
+<p>SPL is strictly typed, thus when invoking SPL operators
+using classes from <code class="docutils literal"><span class="pre">streamsx.spl.op</span></code> then any parameters
+must use the SPL type required by the operator.</p>
+<dl class="class">
+<dt id="streamsx.spl.types.Timestamp">
+<em class="property">class </em><code class="descclassname">streamsx.spl.types.</code><code class="descname">Timestamp</code><span class="sig-paren">(</span><em>seconds</em>, <em>nanoseconds</em>, <em>machine_id=0</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.Timestamp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>SPL naive timestamp type with nanosecond resolution.</p>
+<p>Common usage is to store the seconds and nanoseconds since the Unix Epoch (Jan 1, 1970),
+but this is not enforced by the <cite>Timestamp</cite> class.</p>
+<p>Machine identifier is an application defined identifier for the machine the timestamp
+was created on. It is the responsibility of the application to set the machine identifier
+if required. The machine identifier may be used to detect if two timestamps were created on the same machine,
+as there may be variations in the clocks on different machines.</p>
+<dl class="attribute">
+<dt id="streamsx.spl.types.Timestamp.seconds">
+<code class="descname">seconds</code><a class="headerlink" href="#streamsx.spl.types.Timestamp.seconds" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; Seconds since epoch.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.spl.types.Timestamp.nanoseconds">
+<code class="descname">nanoseconds</code><a class="headerlink" href="#streamsx.spl.types.Timestamp.nanoseconds" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; Nanosecond component.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.spl.types.Timestamp.machine_id">
+<code class="descname">machine_id</code><a class="headerlink" href="#streamsx.spl.types.Timestamp.machine_id" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; Machine identifier.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.types.Timestamp.datetime">
+<code class="descname">datetime</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.Timestamp.datetime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the UTC datetime corresponding to the POSIX timestamp.</p>
+<p>This is identical to <code class="docutils literal"><span class="pre">`datetime.datetime.utcfromtimestamp(self.time())`</span></code>.
+Nanosecond resolution may be lost.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">(datetime.datetime)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="streamsx.spl.types.Timestamp.from_datetime">
+<em class="property">static </em><code class="descname">from_datetime</code><span class="sig-paren">(</span><em>dt</em>, <em>machine_id=0</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.Timestamp.from_datetime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a datetime to an SPL <cite>Timestamp</cite>.
+:param dt: Datetime to be converted.
+:type dt: datetime.datetime
+:param machine_id: Machine identifier.
+:type machine_id: int</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">SPL timestamp value.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.spl.types.Timestamp" title="streamsx.spl.types.Timestamp">Timestamp</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">machine_id</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">nanoseconds</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">seconds</code></dt>
+<dd><p>Seconds value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Seconds value.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.types.Timestamp.time">
+<code class="descname">time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.Timestamp.time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the time in seconds since the epoch.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">time in seconds since the epoch.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.types.Timestamp.tuple">
+<code class="descname">tuple</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.Timestamp.tuple" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return this timestamp as a tuple.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Returns a tuple of <code class="docutils literal"><span class="pre">(seconds,</span> <span class="pre">nanoseconds,</span> <span class="pre">machine_id)</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#streamsx.spl.types.Timestamp.tuple" title="streamsx.spl.types.Timestamp.tuple">tuple</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.spl.types.float32">
+<code class="descclassname">streamsx.spl.types.</code><code class="descname">float32</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.float32" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an SPL <code class="docutils literal"><span class="pre">float32</span></code> value.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.spl.types.float64">
+<code class="descclassname">streamsx.spl.types.</code><code class="descname">float64</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.float64" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an SPL <code class="docutils literal"><span class="pre">float64</span></code> value.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.spl.types.int16">
+<code class="descclassname">streamsx.spl.types.</code><code class="descname">int16</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.int16" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an SPL <code class="docutils literal"><span class="pre">int16</span></code> value.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.spl.types.int32">
+<code class="descclassname">streamsx.spl.types.</code><code class="descname">int32</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.int32" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an SPL <code class="docutils literal"><span class="pre">int32</span></code> value.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.spl.types.int64">
+<code class="descclassname">streamsx.spl.types.</code><code class="descname">int64</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.int64" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an SPL <code class="docutils literal"><span class="pre">int64</span></code> value.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.spl.types.int8">
+<code class="descclassname">streamsx.spl.types.</code><code class="descname">int8</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.int8" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an SPL <code class="docutils literal"><span class="pre">int8</span></code> value.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.spl.types.rstring">
+<code class="descclassname">streamsx.spl.types.</code><code class="descname">rstring</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.rstring" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an SPL <code class="docutils literal"><span class="pre">rstring</span></code> value.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.spl.types.uint16">
+<code class="descclassname">streamsx.spl.types.</code><code class="descname">uint16</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.uint16" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an SPL <code class="docutils literal"><span class="pre">uint16</span></code> value.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.spl.types.uint32">
+<code class="descclassname">streamsx.spl.types.</code><code class="descname">uint32</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.uint32" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an SPL <code class="docutils literal"><span class="pre">uint32</span></code> value.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.spl.types.uint64">
+<code class="descclassname">streamsx.spl.types.</code><code class="descname">uint64</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.uint64" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an SPL <code class="docutils literal"><span class="pre">uint64</span></code> value.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.spl.types.uint8">
+<code class="descclassname">streamsx.spl.types.</code><code class="descname">uint8</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.types.uint8" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an SPL <code class="docutils literal"><span class="pre">uint8</span></code> value.</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2017 IBM Corp..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.7.4',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

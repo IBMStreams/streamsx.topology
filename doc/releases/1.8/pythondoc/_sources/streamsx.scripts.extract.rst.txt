@@ -1,0 +1,7 @@
+streamsx.scripts.extract module
+===============================
+
+.. automodule:: streamsx.scripts.extract
+    :members:
+    :undoc-members:
+    :show-inheritance:
