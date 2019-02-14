@@ -226,28 +226,61 @@ class _StreamsRestClient(object):
 
 
 class _BearerAuthHandler(requests.auth.AuthBase):
-    def __init__(self, token):
-        self._bearer_token = 'Bearer ' + token
+    def __init__(self):
+        # Represents the epoch time in milliseconds at which
+        # the token is no longer valid
+        # Starts at -1 such that the first invocation of a REST request
+        # Retrieves a token
+        self._auth_expiry_time = 0
+
+    @property
+    def token(self):
+        return self._bt
+
+    @token.setter
+    def token(self, token):
+        self._bt = 'Bearer ' + token
 
     def __call__(self, r):
-        r.headers['Authorization'] = self._bearer_token
+        # Convert cur time to milliseconds
+        cur_time = time.time()
+        if cur_time >= self._auth_expiry_time:
+            print('DDDD:', 'REFRESHING TOKEN')
+            last = self._auth_expiry_time
+            if last == 0:
+                last = time.time()
+            self._refresh_auth()
+            print('DDDD:', 'REFRESHED TOKEN', str(self._auth_expiry_time - last))
+        r.headers['Authorization'] = self.token
         return r
 
+class _ICPDAuthHandler(_BearerAuthHandler):
+    def __init__(self, service_name, token):
+        super(_ICPDAuthHandler, self).__init__()
+        self._service_name = service_name
+        if token:
+            self.token = token
+            self._auth_expiry_time = time.time() + 5*60
 
-class _IAMAuthHandler(requests.auth.AuthBase):
+    def _refresh_auth(self):
+        try:
+            from icpd_core import icpd_util
+            cfg = icp_util.get_service_instance_details(name=self._service_name)
+            self._auth_expiry_time = time.time() + 20*60 - 30
+            self.token = cfg['service_token']
+        except Exception:
+            self._auth_expiry_time = time.time() + 5*60
+  
+
+class _IAMAuthHandler(_BearerAuthHandler):
     def __init__(self, credentials):
         """
         Args:
             credentials: The credentials of the Streaming Analytics service.
         """
+        super(_IAMAuthHandler, self).__init__()
         self._credentials = credentials
         self._api_key = self._credentials[_IAMConstants.API_KEY]
-
-        # Represents the epoch time in milliseconds at which
-        # the token is no longer valid
-        # Starts at -1 such that the first invocation of a REST request
-        # Retrieves a token
-        self._auth_expiry_time = -1
 
         # Determine if service is in production or staging/test
         v2url = self._credentials[_IAMConstants.V2_REST_URL]
@@ -258,15 +291,7 @@ class _IAMAuthHandler(requests.auth.AuthBase):
         else:
             self._token_url = _IAMConstants.TOKEN_URL
 
-    def __call__(self, r):
-        # Convert cur time to milliseconds
-        cur_time = time.time()
-        if cur_time >= self._auth_expiry_time:
-            self._refresh_authorization()
-        r.headers['Authorization'] = self._bearer_token
-        return r
-
-    def _refresh_authorization(self):
+    def _refresh_auth(self):
         post_url = self._token_url + '?' + self._get_token_params(self._api_key)
         res = requests.post(post_url, headers = {'Accept' : 'application/json',
                                                  'Content-Type' : 'application/x-www-form-urlencoded'})
@@ -274,10 +299,7 @@ class _IAMAuthHandler(requests.auth.AuthBase):
         res = res.json()
 
         self._auth_expiry_time = int(res[_IAMConstants.EXPIRATION]) - 30
-        self._bearer_token = self._create_bearer_auth(res[_IAMConstants.ACCESS_TOKEN])
-
-    def _create_bearer_auth(self, token):
-        return _IAMConstants.AUTH_BEARER_PREFIX + token
+        self._bearer_token = self.token = res[_IAMConstants.ACCESS_TOKEN]
 
     def _get_token_params(self, api_key):
         return parse.urlencode({_IAMConstants.GRANT_PARAM : _IAMConstants.GRANT_TYPE,
@@ -1427,7 +1449,7 @@ class Instance(_ResourceElement):
         root_url = endpoint.split('/streams/rest/instances/')[0]
         resource_url = root_url + '/streams/rest/resources'
 
-        sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=_BearerAuthHandler(service['service_token']))
+        sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=_ICPDAuthHandler(name, service['service_token']))
         if streamsx.topology.context.ConfigParams.SSL_VERIFY in config:
                 sc.session.verify = config[streamsx.topology.context.ConfigParams.SSL_VERIFY]
         return sc.get_instance(name)
@@ -2149,11 +2171,6 @@ class _IAMConstants(object):
 
     ACCESS_TOKEN = 'access_token'
     """The key of the bearer authentication token in the IAM token response.
-    """
-
-    AUTH_BEARER_PREFIX = 'Bearer '
-    """The prefix to append to the bearer token retrieved from IAM when setting the Authentication 
-    HTTP header.
     """
 
     GRANT_PARAM = 'grant_type'
