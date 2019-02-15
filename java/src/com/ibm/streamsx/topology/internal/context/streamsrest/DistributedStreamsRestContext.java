@@ -15,6 +15,7 @@ import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamsConnection;
+import com.ibm.streamsx.rest.build.BuildService;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
@@ -26,6 +27,16 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
     @Override
     public Type getType() {
         return Type.DISTRIBUTED;
+    }
+    
+    @Override
+    protected BuildService createSubmissionContext(JsonObject deploy) throws Exception {
+        BuildService builder = super.createSubmissionContext(deploy);
+        
+        // Verify the Streams service endpoint has the correct format.
+        StreamsKeys.getStreamsInstanceURL(deploy);
+        
+        return builder;
     }
     
     @Override

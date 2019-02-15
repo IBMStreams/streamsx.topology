@@ -44,7 +44,7 @@ class StreamsBuildService extends AbstractConnection implements BuildService {
 		if (name != null)
 			buildParams.addProperty("name", name);
 		
-		Request post = Request.Post(endpoint + "/streams/rest/builds")	      
+		Request post = Request.Post(endpoint)	      
 		    .addHeader("Authorization", getAuthorization())
 		    .bodyString(buildParams.toString(),
 		                ContentType.APPLICATION_JSON);
