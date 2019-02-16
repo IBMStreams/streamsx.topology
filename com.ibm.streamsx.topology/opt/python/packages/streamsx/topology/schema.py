@@ -356,9 +356,10 @@ class StreamSchema(object) :
         ``complex``                        ``complex64``
         ``bytes``                          ``blob``
         ``streamsx.spl.types.Timestamp``   ``timestamp``
-        ``typing.List<T>``                 ``list<T>``
-        ``typing.Set<T>``                  ``set<T>``
-        ``typing.Mapping<K,V>``            ``map<K,V>``
+        ``typing.List[T]``                 ``list<T>``
+        ``typing.Set[T]``                  ``set<T>``
+        ``typing.Mapping[K,V]``            ``map<K,V>``
+        ``typing.Optional[T]``             ``optional<T>``
         ================================== ================
 
         .. note::
@@ -797,7 +798,13 @@ def _spl_from_type(type_):
             kt = type_.__args__[0]
             vt = type_.__args__[1]
             return 'map<' + _spl_from_type(kt) + ', ' + _spl_from_type(vt) + '>'
-    raise ValueError("Unsupported type: " + type_)
+    if hasattr(type_, '__args__') and len(type_.__args__) == 2:
+        import typing
+        if type(None) in type_.__args__:
+            et = type_.__args__[0] if type_.__args__[1] is type(None) else type_.__args__[1]
+            if typing.Optional[et] == type_:
+                return 'optional<' + _spl_from_type(et) + '>'
+    raise ValueError("Unsupported type: " + str(type_))
 
 def _type_from_spl(type_):
     _init_type_mappings()
@@ -812,6 +819,8 @@ def _type_from_spl(type_):
             return typing.Set[_type_from_spl(type_[1])]
         if type_[0] == 'map':
             return typing.Mapping[_type_from_spl(type_[1][0]), _type_from_spl(type_[1][1])]
+        if type_[0] == 'optional':
+            return typing.Optional[_type_from_spl(type_[1])]
     raise ValueError("Unsupported type: " + type_)
 
 _PYTYPE_TO_SPL = {}
