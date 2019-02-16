@@ -5,6 +5,8 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 
 import java.io.File;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map.Entry;
 
 import com.google.gson.JsonArray;
@@ -49,6 +51,8 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
         String instanceId = path.substring("/streams/rest/instances/".length());
         if (instanceId.endsWith("/"))
             instanceId = instanceId.substring(0, instanceId.length()-1);
+        
+        instanceId = URLDecoder.decode(instanceId, StandardCharsets.UTF_8.name());
         
         URL restUrl = new URL(instanceUrl.getProtocol(), instanceUrl.getHost(), instanceUrl.getPort(),
                 "/streams/rest/resources");
