@@ -5,6 +5,8 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 
 import java.io.File;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map.Entry;
 
 import com.google.gson.JsonArray;
@@ -15,6 +17,7 @@ import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamsConnection;
+import com.ibm.streamsx.rest.build.BuildService;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
@@ -29,6 +32,16 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
     }
     
     @Override
+    protected BuildService createSubmissionContext(JsonObject deploy) throws Exception {
+        BuildService builder = super.createSubmissionContext(deploy);
+        
+        // Verify the Streams service endpoint has the correct format.
+        StreamsKeys.getStreamsInstanceURL(deploy);
+        
+        return builder;
+    }
+    
+    @Override
     protected void postBuildAction(JsonObject deploy, JsonObject jco, JsonObject result) throws Exception {
         
         URL instanceUrl  = new URL(StreamsKeys.getStreamsInstanceURL(deploy));
@@ -38,6 +51,8 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
         String instanceId = path.substring("/streams/rest/instances/".length());
         if (instanceId.endsWith("/"))
             instanceId = instanceId.substring(0, instanceId.length()-1);
+        
+        instanceId = URLDecoder.decode(instanceId, StandardCharsets.UTF_8.name());
         
         URL restUrl = new URL(instanceUrl.getProtocol(), instanceUrl.getHost(), instanceUrl.getPort(),
                 "/streams/rest/resources");
