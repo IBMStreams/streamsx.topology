@@ -298,10 +298,13 @@ class TestSchema(unittest.TestCase):
                 ('sli64', typing.Set[typing.List[int]]),
                 ('ts_spl', streamsx.spl.types.Timestamp),
                 ('binary', bytes),
+                ('oi64', typing.Optional[int]),
+                ('of64', typing.Union[float, None]),
+                ('ob', typing.Union[None, bool]),
                 ])
             nts = _sch._normalize(AllSPLTypes)
             self.assertIsInstance(nts, _sch.StreamSchema)
-            self.assertEqual('tuple<boolean b, int64 i64, float64 f64, complex64 c64, decimal128 d128, rstring s, list<int64> li64, list<float64> lf64, map<int64, boolean> mi64b, list<list<float64>> llf64, map<int64, list<int64>> mi64li64, set<complex64> sc64, set<list<int64>> sli64, timestamp ts_spl, blob binary>', nts._schema)
+            self.assertEqual('tuple<boolean b, int64 i64, float64 f64, complex64 c64, decimal128 d128, rstring s, list<int64> li64, list<float64> lf64, map<int64, boolean> mi64b, list<list<float64>> llf64, map<int64, list<int64>> mi64li64, set<complex64> sc64, set<list<int64>> sli64, timestamp ts_spl, blob binary, optional<int64> oi64, optional<float64> of64, optional<boolean> ob>', nts._schema)
             self.assertEqual('AllSPLTypes', nts.style.__name__)
 
             ont = nts.style
