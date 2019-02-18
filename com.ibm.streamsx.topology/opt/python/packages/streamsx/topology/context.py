@@ -641,6 +641,23 @@ class ContextTypes(object):
     DISTRIBUTED = 'DISTRIBUTED'
     """Submission to an IBM Streams instance.
 
+    **IBM Cloud Private for Data**
+
+    The `Topology` is compiled using the Streams build service and submitted
+    to an IBM Streams service instance running in the ICP for Data environment
+    as the Jupyter notebook declaring the application.
+
+    The instance is specified in the configuration passed into :py:func:`submit`. The configuration may be code injected from the list of services or manually created. The code that selects a service instance by name is::
+
+        from icpd_core import ipcd_util
+        cfg = icpd_util.get_service_details(name='instanceName')
+
+
+    The resultant `cfg` dict may be augmented with other values such as
+    a :py:class:`JobConfig` or keys from :py:class:`ConfigParams`.
+
+    **IBM Streams on-premise**
+
     The `Topology` is compiled locally and the resultant Streams application bundle
     (sab file) is submitted to an IBM Streams instance.
 

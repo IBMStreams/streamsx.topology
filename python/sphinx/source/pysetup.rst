@@ -15,8 +15,6 @@ If already installed upgrade to the latest version is recommended::
 
    pip install --upgrade streamsx
 
-Python 2.7, 3.5 or 3.6 can be used. Python 3.5 is required for submitting streaming applications against the Streaming Analytics service on IBM Cloud.
-
 A local install of IBM Streams is **not** required when:
 
     * Using the Streams and Streaming Analytics REST bindings :py:mod:`streamsx.rest`.
@@ -56,6 +54,19 @@ pre-configured.
 
 Any streaming applications using Python must use Python 3.5 when
 submitted to the service instance.
+
+**************************
+IBM Cloud Private for Data
+**************************
+
+An IBM Streams service instance within ICP for Data has Anaconda installed with Python 3.6 as the
+runtime environment and has ``PYTHONHOME`` Streams application environment variable pre-configured.
+
+Any streaming applications using Python must use Python 3.6 when
+submitted to the service instance.
+
+Streaming applications are submitted through Jupyter notebooks contained in
+ICP for Data projects. The `streamsx` package is preinstalled and applications are sumitted to the :py:const:`~streamsx.topology.context.ContextTypes.DISTRIBUTED` context.
 
 ***********************
 IBM Streams on-premises
