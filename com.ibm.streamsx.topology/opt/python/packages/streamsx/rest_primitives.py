@@ -2299,7 +2299,7 @@ class ApplicationConfiguration(_ResourceElement):
         """Update this application configuration.
 
         To create or update a property provide its key-value
-        pair in `properties.
+        pair in `properties`.
 
         To delete a property provide its key with the value ``None``
         in properties.
