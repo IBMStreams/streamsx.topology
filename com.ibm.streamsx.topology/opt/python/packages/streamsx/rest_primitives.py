@@ -245,12 +245,10 @@ class _BearerAuthHandler(requests.auth.AuthBase):
         # Convert cur time to milliseconds
         cur_time = time.time()
         if cur_time >= self._auth_expiry_time:
-            print('DDDD:', 'REFRESHING TOKEN')
             last = self._auth_expiry_time
             if last == 0:
                 last = time.time()
             self._refresh_auth()
-            print('DDDD:', 'REFRESHED TOKEN', str(self._auth_expiry_time - last))
         r.headers['Authorization'] = self.token
         return r
 
