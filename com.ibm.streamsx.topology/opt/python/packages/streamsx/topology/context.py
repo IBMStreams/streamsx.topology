@@ -794,7 +794,7 @@ class ConfigParams(object):
         when passing a path to a CA_BUNDLE file or directory with
         certificates of trusted CAs.
 
-    .. versionadded: 1.11
+    .. versionadded:: 1.11
     """
     SERVICE_DEFINITION = 'topology.service.definition'
     """Streaming Analytics service definition.
@@ -1152,16 +1152,50 @@ class SubmissionResult(object):
 
     @property
     def job(self):
-        """If able, returns the job associated with the submitted build.
-        If a username/password, StreamsConnection, or vcap file was not supplied,
-        returns None.
+        """REST binding for the job associated with the submitted build.
 
-        *NOTE*: The @property tag supersedes __getattr__. In other words, this job method is
-        called before __getattr__(self, 'job') is called.
+        Returns:
+            Job: REST binding for running job or ``None`` if connection information was not available or no job was submitted.
         """
         if self._submitter and hasattr(self._submitter, '_job_access'):
             return self._submitter._job_access()
         return None
+
+    def cancel_job_button(self, description=None):
+        """Display a button that will cancel the submitted job.
+
+        Used in a Jupyter IPython notebook to provide an interactive
+        mechanism to cancel a job submitted from the notebook.
+
+        Once clicked the button is disabled.
+
+        Args:
+
+            description(str): Text used as the button description, defaults to value based upon the job name.
+
+        .. warning::
+            Behavior when called outside a notebook is undefined.
+
+        .. versionadded:: 1.12
+        """
+        if not hasattr(self, 'jobId'):
+            return
+  
+        try:
+            import ipywidgets as widgets
+            if not description:
+                description = 'Cancel job: '
+                description += self.name if hasattr(self, 'name') else self.job.name
+            button = widgets.Button(description=description,
+                button_style='danger',
+                layout=widgets.Layout(width='40%'))
+            def _cancel_job_click(b):
+                b.disabled=True
+                self.job.cancel()
+            button.on_click(_cancel_job_click)
+            display(button)
+        except:
+            pass
 
     def __getattr__(self, key):
         if key in self.__getattribute__("results"):
