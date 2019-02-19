@@ -138,7 +138,10 @@ class _DependencyResolver(object):
     def _add_dependency(self, module, mn):
         """
         Adds a module to the list of dependencies
-        wihtout handling the modules dependences.
+        without handling the modules dependences.
+
+        Modules in site-packages are excluded from being added into
+        the toolkit. This mimics dill.
         """
         _debug.debug("_add_dependency:module=%s", mn)
 
@@ -168,14 +171,22 @@ class _DependencyResolver(object):
                 # they will be merged in the bundle
                 for top_package_path in reversed(list(top_package.__path__)):
                     top_package_path = os.path.abspath(top_package_path)
+                    if 'site-packages' in top_package_path:
+                        _debug.debug("_add_dependency:site-packages module=%s", mn)
+                        return False
                     self._add_package(top_package_path)
             elif hasattr(top_package, '__file__'):
                 # package that is an individual python file with empty __path__
-                #print ("Adding package that is an individual file", top_package)
+                if 'site-packages' in top_package.__file__:
+                    _debug.debug("_add_dependency:site-packages module=%s", mn)
+                    return False
                 self._add_package(os.path.abspath(top_package.__file__))
         elif hasattr(module, '__file__'):
             # individual Python module
             module_path = os.path.abspath(module.__file__)
+            if 'site-packages' in module_path:
+                _debug.debug("_add_dependency:site-packages module=%s", mn)
+                return False
             self._modules.add(module_path)
             
         self._processed_modules.add(module)
