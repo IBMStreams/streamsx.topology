@@ -187,6 +187,16 @@ _STD_LIB_MODULES = {
     'sndhdr',
     'ossaudiodev',
 
+    # Internationalization
+    'encodings',
+    'gettext',
+    'locale',
+
+    # Program frameworks
+    'turtle',
+    'cmd',
+    'shlex',
+
     # 26 Development tools
     "typing",
     "pydoc",
@@ -194,6 +204,14 @@ _STD_LIB_MODULES = {
     "unittest",
     "2to3",
     "test",
+
+    # Debugging and Profiling
+    'bdb',
+    'faulthandler',
+    'pdb',
+    'timeit',
+    'trace',
+    'tracemalloc',
 
     # 29. Python Runtime Services
     'sys',
@@ -234,4 +252,11 @@ _STD_LIB_MODULES = {
 
     # PEP0365
     "pkg_resources",
+
+    # Superseded Modules
+    'optparse',
+    'imp',
+
+    # Misc
+    'opcode',
 }

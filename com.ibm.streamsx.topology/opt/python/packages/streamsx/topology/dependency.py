@@ -14,6 +14,8 @@ import logging
 from streamsx.topology import _debug
 import streamsx.topology._stdlib as _stdlib
 
+_STD_MODULE_DIR = os.path.abspath(os.path.join(sys.prefix, 'lib', 'python%d.%d' % (sys.version_info[0:2])))
+
 class _DependencyResolver(object):
     """
     Finds dependencies given a module object
@@ -248,6 +250,11 @@ def _is_builtin_module(module):
     if (not hasattr(module, '__file__')) or  module.__name__ in sys.builtin_module_names:
         return True
     if module.__name__ in _stdlib._STD_LIB_MODULES:
+        return True
+    amp = os.path.abspath(module.__file__)
+    if 'site-packages' in amp:
+        return False
+    if amp.startswith(_STD_MODULE_DIR):
         return True
     if not '.' in module.__name__:
         return False
