@@ -197,6 +197,7 @@ class _DependencyResolver(object):
     def _add_package(self, path):
         if path == self._streamsx_topology_dir:
             return None
+        _debug.debug("_add_package: path=%s", path)
         self._packages[path] = None
     
 #####################
@@ -267,6 +268,8 @@ def _is_builtin_module(module):
 def _is_streamsx_module(module):
     if hasattr(module, '__name__'):
         mn = module.__name__
+        if mn == 'streamsx':
+            return True
         if not mn.startswith('streamsx.'):
             return False
         if mn.startswith('streamsx.topology'):
@@ -275,8 +278,14 @@ def _is_streamsx_module(module):
             return True
         if mn.startswith('streamsx.rest'):
             return True
+        if mn.startswith('streamsx.scripts'):
+            return True
+        if mn.startswith('streamsx._streams'):
+            return True
         if mn == 'streamsx.ec':
             return True
         if mn == 'streamsx.st':
+            return True
+        if mn == 'streamsx.types':
             return True
     return False
