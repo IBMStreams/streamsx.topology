@@ -14,6 +14,8 @@ import logging
 from streamsx.topology import _debug
 import streamsx.topology._stdlib as _stdlib
 
+_STD_MODULE_DIR = os.path.abspath(os.path.join(sys.prefix, 'lib', 'python%d.%d' % (sys.version_info[0:2])))
+
 class _DependencyResolver(object):
     """
     Finds dependencies given a module object
@@ -138,7 +140,10 @@ class _DependencyResolver(object):
     def _add_dependency(self, module, mn):
         """
         Adds a module to the list of dependencies
-        wihtout handling the modules dependences.
+        without handling the modules dependences.
+
+        Modules in site-packages are excluded from being added into
+        the toolkit. This mimics dill.
         """
         _debug.debug("_add_dependency:module=%s", mn)
 
@@ -168,14 +173,22 @@ class _DependencyResolver(object):
                 # they will be merged in the bundle
                 for top_package_path in reversed(list(top_package.__path__)):
                     top_package_path = os.path.abspath(top_package_path)
+                    if 'site-packages' in top_package_path:
+                        _debug.debug("_add_dependency:site-packages module=%s", mn)
+                        return False
                     self._add_package(top_package_path)
             elif hasattr(top_package, '__file__'):
                 # package that is an individual python file with empty __path__
-                #print ("Adding package that is an individual file", top_package)
+                if 'site-packages' in top_package.__file__:
+                    _debug.debug("_add_dependency:site-packages module=%s", mn)
+                    return False
                 self._add_package(os.path.abspath(top_package.__file__))
         elif hasattr(module, '__file__'):
             # individual Python module
             module_path = os.path.abspath(module.__file__)
+            if 'site-packages' in module_path:
+                _debug.debug("_add_dependency:site-packages module=%s", mn)
+                return False
             self._modules.add(module_path)
             
         self._processed_modules.add(module)
@@ -184,6 +197,7 @@ class _DependencyResolver(object):
     def _add_package(self, path):
         if path == self._streamsx_topology_dir:
             return None
+        _debug.debug("_add_package: path=%s", path)
         self._packages[path] = None
     
 #####################
@@ -238,6 +252,11 @@ def _is_builtin_module(module):
         return True
     if module.__name__ in _stdlib._STD_LIB_MODULES:
         return True
+    amp = os.path.abspath(module.__file__)
+    if 'site-packages' in amp:
+        return False
+    if amp.startswith(_STD_MODULE_DIR):
+        return True
     if not '.' in module.__name__:
         return False
     mn_top = module.__name__.split('.')[0]
@@ -249,6 +268,8 @@ def _is_builtin_module(module):
 def _is_streamsx_module(module):
     if hasattr(module, '__name__'):
         mn = module.__name__
+        if mn == 'streamsx':
+            return True
         if not mn.startswith('streamsx.'):
             return False
         if mn.startswith('streamsx.topology'):
@@ -257,8 +278,14 @@ def _is_streamsx_module(module):
             return True
         if mn.startswith('streamsx.rest'):
             return True
+        if mn.startswith('streamsx.scripts'):
+            return True
+        if mn.startswith('streamsx._streams'):
+            return True
         if mn == 'streamsx.ec':
             return True
         if mn == 'streamsx.st':
+            return True
+        if mn == 'streamsx.types':
             return True
     return False
