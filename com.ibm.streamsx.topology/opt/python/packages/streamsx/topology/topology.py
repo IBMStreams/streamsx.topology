@@ -389,10 +389,12 @@ class Topology(object):
         self.exclude_packages = set() 
         self._pip_packages = list() 
         self._files = dict()
-        if "Anaconda" in sys.version:
+        if "Anaconda" in sys.version or 'DSX_PROJECT_ID' in os.environ:
             import streamsx.topology.condapkgs
             self.exclude_packages.update(streamsx.topology.condapkgs._CONDA_PACKAGES)
         import streamsx.topology._deppkgs
+        if 'DSX_PROJECT_ID' in os.environ:
+            self.exclude_packages.update(streamsx.topology._deppkgs._ICP4D_NB_PACKAGES)
         self.exclude_packages.update(streamsx.topology._deppkgs._DEP_PACKAGES)
         
         self.graph = streamsx.topology.graph.SPLGraph(self, name, namespace)
