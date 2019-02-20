@@ -8,3 +8,8 @@ _DEP_PACKAGES = [
     "enum34",
     "requests"
  ]
+
+# Notebook packages to be excluded when running in ICP4D
+_ICP4D_NB_PACKAGES = [
+     'pyspark',
+ ]
