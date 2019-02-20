@@ -1184,7 +1184,12 @@ class SubmissionResult(object):
         Used in a Jupyter IPython notebook to provide an interactive
         mechanism to cancel a job submitted from the notebook.
 
-        Once clicked the button is disabled.
+        Once clicked the button is disabled unless the cancel fails.
+
+        A job may be cancelled directly using::
+
+            submission_result = submit(ctx_type, topology, config)
+            submission_result.job.cancel()
 
         Args:
 
@@ -1206,11 +1211,26 @@ class SubmissionResult(object):
             button = widgets.Button(description=description,
                 button_style='danger',
                 layout=widgets.Layout(width='40%'))
+            out = widgets.Output()
+            vb = widgets.VBox([button, out])
+            @out.capture(clear_output=True)
             def _cancel_job_click(b):
                 b.disabled=True
-                self.job.cancel()
+                print('Cancelling job: id=' + str(self.job.id) + ' ...\n', flush=True)
+                try:
+                    rc = self.job.cancel()
+                    out.clear_output()
+                    if rc:
+                        print('Cancelled job: id=' + str(self.job.id) + ' : ' + self.job.name + '\n', flush=True)
+                    else:
+                        print('Job already cancelled: id=' + str(self.job.id) + ' : ' + self.job.name + '\n', flush=True)
+                except:
+                    b.disabled=False
+                    out.clear_output()
+                    raise
+ 
             button.on_click(_cancel_job_click)
-            display(button)
+            display(vb)
         except:
             pass
 

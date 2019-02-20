@@ -17,6 +17,7 @@ from future.builtins import *
 
 import logging
 import requests
+import requests.exceptions
 import queue
 import os
 import threading
@@ -149,8 +150,8 @@ class _ResourceElement(object):
 def _handle_http_errors(res):
     # HTTP error responses are 4xx, server errors are 5xx
     if res.status_code >= 400:
-        logger.error("Response returned with error code: " + str(res.status_code))
-        logger.error(res.text)
+        #logger.error("Response returned with error code: " + str(res.status_code))
+        #logger.error(res.text)
         res.raise_for_status()
 
 
@@ -1992,7 +1993,13 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         return sr['id']
 
     def _cancel_job(self, job, force):
-        return self.cancel_job(job_id=job.id)
+        try:
+            self.cancel_job(job_id=job.id)
+            return True
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 404:
+                return False
+            raise
 
     def _submit_job(self, bundle, job_config):
         sab_name = os.path.basename(bundle)
@@ -2370,4 +2377,12 @@ class _StreamsRestDelegator(object):
         res = self.rest_client.session.delete(cancel_url,
                 headers = {'Accept' : 'application/json'},
                 verify=self.rest_client.session.verify)
-        #TODO return code
+
+        if res.status_code == 204:
+            return True
+        if res.status_code == 404:
+            return False
+
+        res.raise_for_status()
+
+        return False
