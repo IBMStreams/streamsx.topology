@@ -283,6 +283,7 @@ class _BaseSubmitter(object):
     def _setup_views(self):
         # Link each view back to this context.
         for view in self.graph._views:
+            view.stop_data_fetch()
             view._submit_context = self
 
     def streams_connection(self):
