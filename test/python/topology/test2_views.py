@@ -81,7 +81,8 @@ class TestDistributedViews(unittest.TestCase):
         beacon.fixed = beacon.output(spltypes.rstring('FixedValue'))
 
         s = beacon.stream
-        self._ov = s.view()
+        self._ov = s.view(name='DoTwice')
+        self._ov = s.view(name='DoTwice')
         self._expected_type = dict
         
         tester = Tester(topo)
