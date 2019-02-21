@@ -993,7 +993,7 @@ class Stream(_placement._Placement, object):
             view_config['activateOption'] = 'automatic'
         view_stream.oport.operator.addViewConfig(view_config)
         _view = View(name)
-        self.topology.graph.get_views().append(_view)
+        self.topology.graph._views.append(_view)
         return _view
 
     def map(self, func=None, name=None, schema=None):
@@ -1676,23 +1676,21 @@ class View(object):
 
         self._view_object = None
         self._submit_context = None
-        self._job = None
 
     def _initialize_rest(self):
         """Used to initialize the View object on first use.
         """
-        if self._job is None:
-            if self._submit_context is None:
-                raise ValueError("View has not been created.")
-            self._job = self._submit_context._job_access()
-
-        if self._view_object is None:
-            self._view_object = self._job.get_views(name=self.name)[0]
+        if self._submit_context is None:
+            raise ValueError("View has not been created.")
+        job = self._submit_context._job_access()
+        self._view_object = job.get_views(name=self.name)[0]
 
     def stop_data_fetch(self):
         """Terminates the background thread fetching stream data items.
         """
-        self._view_object.stop_data_fetch()
+        if self._view_object:
+            self._view_object.stop_data_fetch()
+            self._view_object = None
 
     def start_data_fetch(self):
         """Starts a background thread which begins accessing data from the remote Stream.
