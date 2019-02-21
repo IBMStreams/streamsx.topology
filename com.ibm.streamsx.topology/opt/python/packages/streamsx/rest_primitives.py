@@ -258,18 +258,19 @@ class _ICPDAuthHandler(_BearerAuthHandler):
         super(_ICPDAuthHandler, self).__init__()
         self._service_name = service_name
         if token:
-            self.token = token
-            self._auth_expiry_time = time.time() + 5*60
+            try:
+                self._refresh_auth()
+            except:
+                self.token = token
+                self._auth_expiry_time = time.time() + 19*60
+            logger.debug("ICP4D:Token expiry:" + time.ctime(self._auth_expiry_time))
 
     def _refresh_auth(self):
-        try:
-            from icpd_core import icpd_util
-            cfg = icp_util.get_service_instance_details(name=self._service_name)
-            self._auth_expiry_time = time.time() + 20*60 - 30
-            self.token = cfg['service_token']
-        except Exception:
-            self._auth_expiry_time = time.time() + 5*60
-  
+        logger.debug("ICP4D:Token refresh:")
+        from icpd_core import icpd_util
+        self.token = icpd_util.generate_token(name=self._service_name)
+        self._auth_expiry_time = time.time() + 19*60
+        logger.debug("ICP4D:Token refreshed:expiry:" + time.ctime(self._auth_expiry_time))
 
 class _IAMAuthHandler(_BearerAuthHandler):
     def __init__(self, credentials):
@@ -1423,7 +1424,12 @@ class Instance(_ResourceElement):
             svc_info = {}
             svc_info['connection_info'] = service['connection_info']
             svc_info['type'] = service['type']
-            svc_info['service_token'] = service['service_token']
+            try:
+                from icpd_core import icpd_util
+                svc_name = service['connection_info']['serviceRestEndpoint'].split('/')[-1]
+                svc_info['service_token'] = icpd_util.generate_token(name=svc_name)
+            except:
+                svc_info['service_token'] = service['service_token']
             if 'user_token' in service:
                 svc_info['user_token'] = service['user_token']
             return svc_info
