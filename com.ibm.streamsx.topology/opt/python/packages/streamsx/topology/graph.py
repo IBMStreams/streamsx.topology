@@ -103,12 +103,6 @@ class SPLGraph(object):
         self._id_gen += 1
         return prefix + str(_id)
 
-    def get_views(self):
-        return self._views
-
-    def add_views(self, view):
-        self._views.append(view)
-
     def _requested_name(self, name, action=None, func=None):
         """Create a unique name for an operator or a stream.
         """
@@ -290,7 +284,7 @@ class SPLGraph(object):
 
 class _SPLInvocation(object):
 
-    def __init__(self, index, kind, function, name, params, graph, view_configs = None, sl=None, stateful=None):
+    def __init__(self, index, kind, function, name, params, graph, sl=None, stateful=None):
         self.index = index
         self.kind = kind
         self.model = None
@@ -310,11 +304,7 @@ class _SPLInvocation(object):
         # Arbitrary JSON for operator
         self._op_def = {}
 
-        if view_configs is None:
-            self.view_configs = []
-        else:
-            self.view_configs = view_configs
-
+        self.view_configs = {}
         self.inputPorts = []
         self.outputPorts = []
         self._layout_hints = {}
@@ -348,11 +338,8 @@ class _SPLInvocation(object):
                 for innerParam in param:
                     self.params[param].append(innerParam)
 
-    def getViewConfig(self):
-        return self.view_configs
-
-    def addViewConfig(self, view_configs):
-        self.view_configs.append(view_configs)
+    def addViewConfig(self, view_config):
+        self.view_configs[view_config['name']] = view_config
 
     def addInputPort(self, outputPort=None, window_config=None, alias=None):
         iPortSchema = CommonSchema.Python    
@@ -396,7 +383,7 @@ class _SPLInvocation(object):
         _op["inputs"] = _inputs
         _op["config"] = self.config
         _op["config"]["streamViewability"] = self.viewable
-        _op["config"]["viewConfigs"] = self.view_configs
+        _op["config"]["viewConfigs"] = list(self.view_configs.values())
         if self._placement:
             _op["config"]["placement"] = self._placement
             if 'resourceTags' in self._placement:

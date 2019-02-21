@@ -993,7 +993,7 @@ class Stream(_placement._Placement, object):
             view_config['activateOption'] = 'automatic'
         view_stream.oport.operator.addViewConfig(view_config)
         _view = View(name)
-        self.topology.graph.get_views().append(_view)
+        self.topology.graph._views.append(_view)
         return _view
 
     def map(self, func=None, name=None, schema=None):
