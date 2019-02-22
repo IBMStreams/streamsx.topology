@@ -793,6 +793,7 @@ class Stream(_placement._Placement, object):
         self._placeable = False
         self._alias = None
         topology._streams[self.oport.name] = self
+        self._json_stream = None
 
     def _op(self):
         if not self._placeable:
@@ -975,10 +976,14 @@ class Stream(_placement._Placement, object):
             name = ''.join(random.choice('0123456789abcdef') for x in range(16))
 
         if self.oport.schema == streamsx.topology.schema.CommonSchema.Python:
-            view_stream = self.as_json(force_object=False)._layout(hidden=True)
-            # colocate map operator with stream that is being viewed.
-            if self._placeable:
-                self._colocate(view_stream, 'view')
+            if self._json_stream:
+                view_stream = self._json_stream
+            else:
+                self._json_stream = self.as_json(force_object=False)._layout(hidden=True)
+                view_stream = self._json_stream
+                # colocate map operator with stream that is being viewed.
+                if self._placeable:
+                    self._colocate(view_stream, 'view')
         else:
             view_stream = self
 

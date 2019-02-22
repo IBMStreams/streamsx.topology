@@ -268,7 +268,7 @@ class _ICPDAuthHandler(_BearerAuthHandler):
     def _refresh_auth(self):
         logger.debug("ICP4D:Token refresh:")
         from icpd_core import icpd_util
-        self.token = icpd_util.generate_token(name=self._service_name)
+        self.token = icpd_util.get_instance_token(name=self._service_name)
         self._auth_expiry_time = time.time() + 19*60
         logger.debug("ICP4D:Token refreshed:expiry:" + time.ctime(self._auth_expiry_time))
 
@@ -1427,7 +1427,7 @@ class Instance(_ResourceElement):
             try:
                 from icpd_core import icpd_util
                 svc_name = service['connection_info']['serviceRestEndpoint'].split('/')[-1]
-                svc_info['service_token'] = icpd_util.generate_token(name=svc_name)
+                svc_info['service_token'] = icpd_util.get_instance_token(name=svc_name)
             except:
                 svc_info['service_token'] = service['service_token']
             if 'user_token' in service:
