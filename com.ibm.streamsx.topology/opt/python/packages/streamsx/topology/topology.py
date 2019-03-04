@@ -635,8 +635,9 @@ class Topology(object):
             requirement(str): Package requirements specifier.
 
         .. warning::
-            Only supported when using the remote build service with
-            the Streaming Analytics service.
+            Only supported when using the build service with
+            a Streams instance in IBM Cloud Private for Data
+            or Streaming Analytics service on IBM Cloud.
 
         .. versionadded:: 1.9
         """
