@@ -225,10 +225,10 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
         ToolkitInfoModelType info = new ToolkitInfoModelType();
         
         info.setIdentity(new IdentityType());
-        info.getIdentity().setName(toolkitRoot.getName());
+        info.getIdentity().setName(GraphKeys.splAppNamespace(jsonGraph) + "." + GraphKeys.splAppName(jsonGraph));
         info.getIdentity().setDescription(new DescriptionType());
         info.getIdentity().setVersion("1.0.0." + System.currentTimeMillis());
-        info.getIdentity().setRequiredProductVersion("4.2.0.0");
+        info.getIdentity().setRequiredProductVersion(jstring(object(jsonGraph, "config"), CFG_STREAMS_VERSION));
               
         DependenciesType dependencies = new DependenciesType();
         
