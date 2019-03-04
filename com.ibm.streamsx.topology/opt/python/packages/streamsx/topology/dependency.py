@@ -171,12 +171,16 @@ class _DependencyResolver(object):
                 # for regular packages, there is one top-level directory
                 # for namespace packages, there can be more than one.
                 # they will be merged in the bundle
+                seen_non_site_package = False
                 for top_package_path in reversed(list(top_package.__path__)):
                     top_package_path = os.path.abspath(top_package_path)
                     if 'site-packages' in top_package_path:
-                        _debug.debug("_add_dependency:site-packages module=%s", mn)
-                        return False
+                        continue
+                    seen_non_site_package = True
                     self._add_package(top_package_path)
+                if not seen_non_site_package:
+                    _debug.debug("_add_dependency:site-packages path module=%s", mn)
+                    return False
             elif hasattr(top_package, '__file__'):
                 # package that is an individual python file with empty __path__
                 if 'site-packages' in top_package.__file__:

@@ -44,7 +44,8 @@ class TestDistributedViews(unittest.TestCase):
         throttle = op.Map('spl.utility::Throttle', s,
             params = {'rate': 25.0})
         s = throttle.stream
-        self._ov = s.view()
+        self._ov = s.view(name='MyPyView')
+        self._ov = s.view(name='MyPyView')
         self._expected_type = float
         
         tester = Tester(topo)
