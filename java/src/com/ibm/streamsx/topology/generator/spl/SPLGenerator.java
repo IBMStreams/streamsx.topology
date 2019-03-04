@@ -789,7 +789,7 @@ public class SPLGenerator {
         if (version == null) {
             version = jstring(graphConfig, CFG_STREAMS_VERSION);
             if (version == null)
-                version = "4.0.1";
+                version = "4.2";
         }
         String[] vrmf = version.split("\\.");
         targetVersion = Integer.valueOf(vrmf[0]);
