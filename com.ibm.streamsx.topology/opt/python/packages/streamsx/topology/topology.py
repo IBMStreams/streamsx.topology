@@ -40,13 +40,19 @@ version of the Python topology that includes application
 specific Python C extensions to optimize performance.
 
 The bundle also includes any required Python packages or modules
-that were used in the declaration of the application. For example
-the Python module containing the callable used in a
-:py:meth:`~Stream.map` invocation. These modules are copied into
-the bundle from their local location. This allows the bundle to
-be self-contained, and thus not the Streams instance have all the required
-Python packages pre-installed. The addition of packages to the bundle
-can be controlled with :py:attr:`Topology.include_packages` and
+that were used in the declaration of the application, excluding
+ones that are in a directory path containing ``site-packages``.
+
+The Python standard package tool ``pip`` uses a directory structure
+including ``site-packages`` when installing packages. Packages installed
+with ``pip`` can be included in the bundle with
+:py:meth:`~Topology.add_pip_package` when using a build service.
+This avoids the requirement to have packages be preinstalled in cloud environments.
+
+Local Python packages and modules containing callables used in transformations
+such as :py:meth:`~Stream.map` are copied into the bundle from their
+local location.  The addition of local packages to the bundle can be controlled
+with :py:attr:`Topology.include_packages` and
 :py:attr:`Topology.exclude_packages`.
 
 The Streams runtime distributes the application's operations
@@ -344,7 +350,7 @@ class Topology(object):
         namespace(str): Namespace of the topology. Defaults to a name dervied from the calling evironment if it can be determined, otherwise a random name.
 
     Attributes:
-        include_packages(set[str]): Python package names to be included in the built application. Any package in this list is copied into the bundle and made available at runtime to the Python callables used in the application. By default a ``Topology`` will automatically discover which packages and modules are required to be copied, this field may be used to add additional packages that were not automatically discovered.
+        include_packages(set[str]): Python package names to be included in the built application. Any package in this list is copied into the bundle and made available at runtime to the Python callables used in the application. By default a ``Topology`` will automatically discover which packages and modules are required to be copied, this field may be used to add additional packages that were not automatically discovered. See also :py:meth:`~Topology.add_pip_package`.
 
         exclude_packages(set[str]): Python top-level package names to be excluded from the built application. Excluding a top-level packages excludes all sub-modules at any level in the package, e.g. `sound` excludes `sound.effects.echo`. Only the top-level package can be defined, e.g. `sound` rather than `sound.filters`. Behavior when adding a module within a package is undefined. When compiling the application using Anaconda this set is pre-loaded with Python packages from the Anaconda pre-loaded set.
 
@@ -605,12 +611,13 @@ class Topology(object):
         of the Streams application bundle (`sab` file).
         The package is expected to be available from `pypi.org`.
 
+
         If the package is already installed on the build system
         then it is not added into the `sab` file.
         The assumption is that the runtime hosts for a Streams
         instance have the same Python packages installed as the
-        build machines. This is always true for the Streaming
-        Analytics service on IBM Cloud.
+        build machines. This is always true for IBM Cloud
+        Private for Data and the Streaming Analytics service on IBM Cloud.
 
         The project name extracted from the requirement
         specifier is added to :py:attr:`~exclude_packages`
@@ -635,8 +642,17 @@ class Topology(object):
             requirement(str): Package requirements specifier.
 
         .. warning::
-            Only supported when using the remote build service with
-            the Streaming Analytics service.
+            Only supported when using the build service with
+            a Streams instance in IBM Cloud Private for Data
+            or Streaming Analytics service on IBM Cloud.
+
+        .. note::
+            Installing packages through `pip` is preferred to
+            the automatic dependency checking performed on local
+            modules. This is because `pip` will perform a full
+            install of the package including any dependent packages
+            and additional files, such as shared libraries, that
+            might be missed by dependency discovery.
 
         .. versionadded:: 1.9
         """
@@ -1149,8 +1165,6 @@ class Stream(_placement._Placement, object):
             Stream
         """
         op = self.topology.graph.addOperator("$LowLatency$")
-        # include_packages=self.include_packages, exclude_packages=self.exclude_packages)
-        # include_packages=self.include_packages, exclude_packages=self.exclude_packages)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
