@@ -17,7 +17,8 @@ IBM Cloud Private for Data
 Within ICPD
 -----------
 
-:py:meth:`~streamsx.rest_primitives.Instance.of_service` is the entry point to using the Streams REST API bindings.
+:py:meth:`~streamsx.rest_primitives.Instance.of_service` is the entry point to using the Streams REST API bindings,
+returning an :py:class:`~streamsx.rest_primitives.Instance`.
 The configuration required to connect is obtained from ``ipcd_util.get_service_details`` passing in
 the IBM Streams service instance name.
 
