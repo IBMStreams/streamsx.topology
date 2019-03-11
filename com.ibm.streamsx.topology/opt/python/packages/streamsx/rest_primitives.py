@@ -253,6 +253,7 @@ class _BearerAuthHandler(requests.auth.AuthBase):
         r.headers['Authorization'] = self.token
         return r
 
+
 class _ICPDAuthHandler(_BearerAuthHandler):
     def __init__(self, service_name, token):
         super(_ICPDAuthHandler, self).__init__()
@@ -1445,6 +1446,34 @@ class Instance(_ResourceElement):
 
     @staticmethod
     def of_service(config):
+        """Connect to an IBM Streams service instance running in IBM Cloud Private for Data.
+
+        The instance is specified in `config`. The configuration may be code injected from the list of services
+        in a Jupyter notebook running in ICPD or manually created. The code that selects a service instance by name is::
+
+            # Two lines are code injected in a Jupyter notebook by selecting the service instance
+            from icpd_core import ipcd_util
+            cfg = icpd_util.get_service_details(name='instanceName')
+
+            instance = Instance.of_service(cfg)
+
+        SSL host verification is disabled by setting :py:const:`~streamsx.topology.context.ConfigParams.SSL_VERIFY`
+        to ``False`` within `config` before calling this method::
+
+            cfg[ConfigParams.SSL_VERIFY] = False
+            instance = Instance.of_service(cfg)
+
+        Args:
+            config(dict): Configuration of IBM Streams service instance.
+
+        Returns:
+            Instance: Instance representing for IBM Streams service instance.
+
+        .. note:: Only supported when running within the ICPD cluster,
+            for example in a Jupyter notebook within a ICPD project.
+
+        .. versionadded:: 1.12
+        """
         service = Instance._find_service_def(config)
         if not service:
             raise ValueError()
