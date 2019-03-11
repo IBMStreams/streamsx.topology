@@ -342,6 +342,10 @@ class Tester(object):
                 raise unittest.SkipTest("Skipped due to no local IBM Streams install")
             return
 
+        icpd_setup = 'STREAMS_REST_URL' in os.environ and 'STREAMS_PASSWORD' in os.environ
+        if icpd_setup:
+            return
+
         raise unittest.SkipTest("No IBM Streams instance definition for DISTRIBUTED")
 
     @staticmethod
