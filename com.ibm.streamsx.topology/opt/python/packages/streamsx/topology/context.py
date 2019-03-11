@@ -426,6 +426,19 @@ class _DistributedSubmitter(_BaseSubmitter):
         self.password = password
         self._job = None
 
+        if self._streams_connection is not None:
+            pass
+        elif 'STREAMS_DOMAIN_ID' in os.environ and 'STREAMS_INSTANCE_ID' in os.environ:
+            pass
+        else:
+            # Look for a service definition
+            svc_info = streamsx.rest_primitives.Instance._find_service_def(config)
+            if not svc_info:
+                # Look for endpoint set by env vars.
+                inst = streamsx.rest_primitives.Instance.of_endpoint(username=username, password=password, verify=config.get(ConfigParams.SSL_VERIFY))
+                if inst is not None:
+                    self._streams_connection = inst.rest_client._sc
+
         # Verify if credential (if supplied) is consistent with those in StreamsConnection
         if self._streams_connection is not None and isinstance(self._streams_connection, streamsx.rest.StreamsConnection):
             if isinstance(self._streams_connection.session.auth, tuple):
