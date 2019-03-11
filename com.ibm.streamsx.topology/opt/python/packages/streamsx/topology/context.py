@@ -427,13 +427,18 @@ class _DistributedSubmitter(_BaseSubmitter):
         self._job = None
 
         # Verify if credential (if supplied) is consistent with those in StreamsConnection
-        if self._streams_connection is not None:
+        if self._streams_connection is not None and isinstance(self._streams_connection, streamsx.rest.StreamsConnection):
             if isinstance(self._streams_connection.session.auth, tuple):
                 self.username = self._streams_connection.session.auth[0]
                 self.password = self._streams_connection.session.auth[1]
                 if ((username is not None and username != self.username) or (password is not None and password != self.password)):
                         raise RuntimeError('Credentials supplied in the arguments differ than '
                                    'those specified in the StreamsConnection object')
+            elif isinstance(self._streams_connection.session.auth, streamsx.rest_primitives._ICPDExternalAuthHandler):
+                svc_info = self._streams_connection.session.auth._cfg
+                self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
+                if  self._streams_connection.session.verify == False:
+                    self._config()[ConfigParams.SSL_VERIFY] = False
         else:
             svc_info =  streamsx.rest_primitives.Instance._find_service_def(config)
             if svc_info:
