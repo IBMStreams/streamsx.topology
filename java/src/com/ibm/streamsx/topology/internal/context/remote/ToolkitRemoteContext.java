@@ -354,13 +354,14 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
     private static void copyDirectory(final File toolkitRoot, File srcDir, final File dstDir) throws IOException {
         final Path targetPath = dstDir.toPath();
         final Path sourcePath = srcDir.toPath();
+        final File canonicalTkRoot = toolkitRoot.getCanonicalFile();
         Files.walkFileTree(sourcePath, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(final Path dir,
                     final BasicFileAttributes attrs) throws IOException {
                 
                 // Avoid recursion.
-                if (dir.equals(toolkitRoot.toPath()))
+                if (canonicalTkRoot.equals(dir.toFile().getCanonicalFile()))
                     return FileVisitResult.SKIP_SUBTREE;
                     
                 Files.createDirectories(targetPath.resolve(sourcePath
