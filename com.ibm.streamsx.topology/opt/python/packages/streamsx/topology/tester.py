@@ -223,7 +223,8 @@ class Tester(object):
             if test.test_ctxtype == stc.ContextTypes.STANDALONE or test.test_ctxtype == stc.ContextTypes.DISTRIBUTED:
                 return Tester._get_streams_product_version()
             if test.test_ctxtype == stc.ContextTypes.STREAMING_ANALYTICS_SERVICE:
-                return '4.2.0.0'
+                sas = Tester._get_sas_conn(test.test_config)
+                return sas.get_instances()[0].activeVersion['productVersion']
         raise ValueError('Tester has not been setup.')
 
     @staticmethod
@@ -796,13 +797,17 @@ class Tester(object):
         self.submission_result = sjr
         self.streams_connection = config.get(ConfigParams.STREAMS_CONNECTION)
         if self.streams_connection is None:
-            vcap_services = config.get(ConfigParams.VCAP_SERVICES)
-            service_name = config.get(ConfigParams.SERVICE_NAME)
-            self.streams_connection = StreamingAnalyticsConnection(vcap_services, service_name)
+            self.streams_connection = Tester._get_sas_conn(config)
         if sjr['return_code'] != 0:
             _logger.error("Failed to submit job to Streaming Analytics instance")
             return False
         return self._distributed_wait_for_result(ctxtype, config)
+
+    @staticmethod
+    def _get_sas_conn(config):
+        vcap_services = config.get(ConfigParams.VCAP_SERVICES)
+        service_name = config.get(ConfigParams.SERVICE_NAME)
+        return StreamingAnalyticsConnection(vcap_services, service_name)
 
     def _distributed_wait_for_result(self, ctxtype, config):
 
