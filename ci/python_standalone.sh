@@ -22,6 +22,7 @@ mkdir -p ${wd}
 # --xunit-file ${xuf} --xunit-testsuite-name="py${pyv}" 
 nosetests --where=${wd} --config=nose.cfg ../../topology ../../spl/tests
 nrc=$?
+echo 'Test run for Python' ${pyv} 'completed'
 # Ensure only test failures just cause an unstable build.
 # Disabled for now since with multiple processes xunit does not
 # collect results correctly
