@@ -105,6 +105,7 @@ from streamsx.topology.context import ConfigParams
 import time
 import json
 import sys
+import warnings
 
 import streamsx.topology.tester_runtime as sttrt
 
@@ -687,6 +688,8 @@ class Tester(object):
              ``STREAMS_USERNAME`` and ``STREAMS_PASSWORD`` to define
              the Streams user.
         """
+        if username or password:
+            warnings.warn("Set username and password with environment variables", DeprecationWarning, stacklevel=2)
         if config is None:
             config = {}
         config['topology.alwaysCollectLogs'] = always_collect_logs

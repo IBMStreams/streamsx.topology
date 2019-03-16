@@ -230,6 +230,7 @@ import inspect
 import logging
 import datetime
 import pkg_resources
+import warnings
 from enum import Enum
 
 logger = logging.getLogger('streamsx.topology')
@@ -909,6 +910,7 @@ class Stream(_placement._Placement, object):
         .. deprecated:: 1.7
             Replaced by :py:meth:`for_each`.
         """
+        warnings.warn("Use Stream.for_each()", DeprecationWarning, stacklevel=2)
         return self.for_each(func, name)
 
     def filter(self, func, name=None):
@@ -1079,6 +1081,7 @@ class Stream(_placement._Placement, object):
         .. deprecated:: 1.7
             Replaced by :py:meth:`map`.
         """
+        warnings.warn("Use Stream.map()", DeprecationWarning, stacklevel=2)
         return self.map(func, name)
              
     def flat_map(self, func=None, name=None):
@@ -1139,6 +1142,7 @@ class Stream(_placement._Placement, object):
         .. deprecated:: 1.7
             Replaced by :py:meth:`flat_map`.
         """
+        warnings.warn("Use Stream.flat_map()", DeprecationWarning, stacklevel=2)
         return self.flat_map(func, name)
 
     def isolate(self):

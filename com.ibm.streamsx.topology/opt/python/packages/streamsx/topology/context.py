@@ -38,6 +38,7 @@ import codecs
 import tempfile
 import copy
 import time
+import warnings
 
 import streamsx.rest
 import streamsx.rest_primitives
@@ -82,6 +83,8 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
 
     if not graph.operators:
         raise ValueError("Topology {0} does not contain any streams.".format(graph.topology.name))
+    if ctxtype == ContextTypes.STANDALONE_BUNDLE:
+        warnings.warn("Use ContextTypes.BUNDLE", DeprecationWarning, stacklevel=2)
 
     context_submitter = _SubmitContextFactory(graph, config, username, password).get_submit_context(ctxtype)
     sr = SubmissionResult(context_submitter.submit())
@@ -754,7 +757,7 @@ class ContextTypes(object):
         * **STREAMS_INSTALL** - Location of a IBM Streams installation (4.0.1 or 4.1.x).
 
     .. deprecated:: IBM Streams 4.2
-        Use :py:const:`BUNDLE` when compiling with IBM Streams 4.2 or later.
+        Use :py:const:`BUNDLE`.
     """
 
 
