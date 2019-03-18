@@ -198,6 +198,12 @@ class Tester(object):
         Tester._log_env(test, verbose)
         test.test_ctxtype = stc.ContextTypes.STANDALONE
         test.test_config = _TestConfig(test)
+        test.addCleanup(Tester._cleanup_config, test)
+
+    @staticmethod
+    def _cleanup_config(test):
+        if hasattr(test, 'test_ctxtype'): del test.test_ctxtype
+        if hasattr(test, 'test_config'): del test.test_config
 
     @staticmethod
     def get_streams_version(test):
