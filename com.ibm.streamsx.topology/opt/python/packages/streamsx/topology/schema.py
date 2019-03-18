@@ -367,7 +367,7 @@ class StreamSchema(object) :
             ``typing.NamedTuple`` instance are passed into callables
             as instance of a named tuple with the the correct field
             names and types. This is not guaranteed to be the same class
-            instance as the one used to declared the schema.
+            instance as the one used to declare the schema.
             
 
     Tuple string:
