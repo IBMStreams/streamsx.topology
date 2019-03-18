@@ -1743,7 +1743,7 @@ class View(object):
         return self._view_object.fetch_tuples(max_tuples, timeout)
 
     def display(self, duration=None, period=2):
-        """Display a view within an Jupyter or IPython notebook.
+        """Display a view within a Jupyter or IPython notebook.
 
         Provides an easy mechanism to visualize data on a stream
         using a view.
@@ -1762,6 +1762,10 @@ class View(object):
         .. note::
             A view is a sampling of data on a stream so tuples that
             are on the stream may not appear in the view.
+
+        .. note::
+            Python modules `ipywidgets` and `pandas` must be installed
+            in the notebook environment.
 
         .. warning::
             Behavior when called outside a notebook is undefined.

@@ -572,7 +572,7 @@ class View(_ResourceElement):
         return tuples
 
     def display(self, duration=None, period=2):
-        """Display a view within an Jupyter or IPython notebook.
+        """Display a view within a Jupyter or IPython notebook.
 
         Provides an easy mechanism to visualize data on a stream
         using a view.
@@ -592,6 +592,10 @@ class View(_ResourceElement):
             A view is a sampling of data on a stream so tuples that
             are on the stream may not appear in the view.
 
+        .. note::
+            Python modules `ipywidgets` and `pandas` must be installed
+            in the notebook environment.
+          
         .. warning::
             Behavior when called outside a notebook is undefined.
 
@@ -610,7 +614,7 @@ class View(_ResourceElement):
     def _display(self, out, duration, period, active):
         import pandas as pd
         import IPython
-        self.start_data_fetch()
+        tqueue = self.start_data_fetch()
         end = time.time() + float(duration) if duration is not None else None
         max_rows = pd.options.display.max_rows
         last = 0
@@ -620,6 +624,17 @@ class View(_ResourceElement):
                 gap = time.time() - last
                 if gap < period:
                     time.sleep(period - gap)
+                # Display latest tuples by removing earlier ones
+                # Avoids display falling behind live data with
+                # large view buffer
+                tqs = tqueue.qsize()
+                if tqs > max_rows:
+                    tqs -= max_rows
+                    for _ in range(tqs):
+                        try:
+                            tqueue.get(block=False)
+                        except queue.Empty:
+                            break
                 tuples = self.fetch_tuples(max_rows, period)
                 if not tuples:
                     if not self._data_fetcher:
