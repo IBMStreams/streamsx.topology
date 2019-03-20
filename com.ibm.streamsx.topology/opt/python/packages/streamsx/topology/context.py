@@ -426,14 +426,32 @@ class _DistributedSubmitter(_BaseSubmitter):
         self.password = password
         self._job = None
 
-        # Verify if credential (if supplied) is consistent with those in StreamsConnection
         if self._streams_connection is not None:
+            pass
+        elif 'STREAMS_DOMAIN_ID' in os.environ and 'STREAMS_INSTANCE_ID' in os.environ:
+            pass
+        else:
+            # Look for a service definition
+            svc_info = streamsx.rest_primitives.Instance._find_service_def(config)
+            if not svc_info:
+                # Look for endpoint set by env vars.
+                inst = streamsx.rest_primitives.Instance.of_endpoint(username=username, password=password, verify=config.get(ConfigParams.SSL_VERIFY))
+                if inst is not None:
+                    self._streams_connection = inst.rest_client._sc
+
+        # Verify if credential (if supplied) is consistent with those in StreamsConnection
+        if self._streams_connection is not None and isinstance(self._streams_connection, streamsx.rest.StreamsConnection):
             if isinstance(self._streams_connection.session.auth, tuple):
                 self.username = self._streams_connection.session.auth[0]
                 self.password = self._streams_connection.session.auth[1]
                 if ((username is not None and username != self.username) or (password is not None and password != self.password)):
                         raise RuntimeError('Credentials supplied in the arguments differ than '
                                    'those specified in the StreamsConnection object')
+            elif isinstance(self._streams_connection.session.auth, streamsx.rest_primitives._ICPDExternalAuthHandler):
+                svc_info = self._streams_connection.session.auth._cfg
+                self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
+                if  self._streams_connection.session.verify == False:
+                    self._config()[ConfigParams.SSL_VERIFY] = False
         else:
             svc_info =  streamsx.rest_primitives.Instance._find_service_def(config)
             if svc_info:
@@ -637,24 +655,55 @@ class ContextTypes(object):
     """
     ANALYTICS_SERVICE = 'ANALYTICS_SERVICE'
     """Synonym for :py:const:`STREAMING_ANALYTICS_SERVICE`.
+
+    .. deprecated:: Use :py:const:`STREAMING_ANALYTICS_SERVICE`.
     """
     DISTRIBUTED = 'DISTRIBUTED'
     """Submission to an IBM Streams instance.
 
     **IBM Cloud Private for Data**
 
+    *Projects (within ICPD cluster)*
+
     The `Topology` is compiled using the Streams build service and submitted
-    to an IBM Streams service instance running in the ICP for Data environment
-    as the Jupyter notebook declaring the application.
+    to an IBM Streams service instance running in the same ICP for
+    Data cluster as the Jupyter notebook declaring the application.
 
     The instance is specified in the configuration passed into :py:func:`submit`. The configuration may be code injected from the list of services or manually created. The code that selects a service instance by name is::
 
         from icpd_core import ipcd_util
         cfg = icpd_util.get_service_details(name='instanceName')
 
-
     The resultant `cfg` dict may be augmented with other values such as
     a :py:class:`JobConfig` or keys from :py:class:`ConfigParams`.
+
+    *External to ICPD cluster*
+
+    The `Topology` is compiled using the Streams build service and submitted
+    to an IBM Streams service instance running in an ICP for Data cluster.
+
+    The IBM Streams instance to connect to is defined by the
+    ``STREAMS_REST_URL`` environment variable which is set to
+    the external Streams REST endpoint for the service instance.
+
+    The endpoint is found through the ICPD console in the
+    *Provisioned instances* tab of the *My Instances* page.
+    Click on *View details* for the Streams service and then
+    copy the ``externalRestEndpoint`` and set that as the value
+    of ``STREAMS_REST_URL``.
+
+    .. figure:: images/icpd_external_endpoint.png
+        :scale: 60%
+        :alt: Endpoints with externalRestEndpoint
+
+        Copy ``externalRestEndpoint`` from `Endpoints` section.
+
+    Environment variables:
+        These environment variables define how the application is built and submitted.
+
+        * **STREAMS_REST_URL** - External endpoint for Streams REST API.
+        * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
+        * **STREAMS_PASSWORD** - Password for authentication.
 
     **IBM Streams on-premise**
 
@@ -664,14 +713,14 @@ class ContextTypes(object):
     Environment variables:
         These environment variables define how the application is built and submitted.
 
-        * **STREAMS_INSTALL** - Location of a IBM Streams installation (4.0.1 or later).
+        * **STREAMS_INSTALL** - Location of a IBM Streams installation (4.2 or later).
         * **STREAMS_DOMAIN_ID** - Domain identifier for the Streams instance.
         * **STREAMS_INSTANCE_ID** - Instance identifier.
         * **STREAMS_ZKCONNECT** - (optional) ZooKeeper connection string for domain (when not using an embedded ZooKeeper)
         * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
 
     .. warning::
-        ``streamtool`` is used to submit the job and requires that ``streamtool`` does not prompt for authentication.  This is achieved by using ``streamtool genkey``.
+        ``streamtool`` is used to submit the job with on-premise 4.2 & 4.3 Streams and requires that ``streamtool`` does not prompt for authentication.  This is achieved by using ``streamtool genkey``.
 
         .. seealso::
             `Generating authentication keys for IBM Streams <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.1/com.ibm.streams.cfg.doc/doc/ibminfospherestreams-user-security-authentication-rsa.html>`_
