@@ -586,6 +586,7 @@ import sys
 import streamsx.ec as ec
 import streamsx._streams._runtime
 import importlib
+import warnings
 
 import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
@@ -679,6 +680,7 @@ def pipe(wrapped):
     """
     if not inspect.isfunction(wrapped):
         raise TypeError('A function is required')
+    warnings.warn("Use @spl.map()", DeprecationWarning, stacklevel=2)
 
     return _wrapforsplop(_OperatorType.Pipe, wrapped, 'position', False)
 
@@ -1109,6 +1111,7 @@ def sink(wrapped):
     """
     if not inspect.isfunction(wrapped):
         raise TypeError('A function is required')
+    warnings.warn("Use @spl.for_each()", DeprecationWarning, stacklevel=2)
 
     return _wrapforsplop(_OperatorType.Sink, wrapped, 'position', False)
 
