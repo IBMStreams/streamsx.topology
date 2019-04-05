@@ -43,7 +43,7 @@
     <exec executable="${streams.install}/bin/sc" failonerror="true">
       <arg value="-M"/>
       <arg value="com.ibm.streamsx.topology.pysamples.apps::NoopSample"/>
-      <arg value="--output-directory=output/com.ibm.streamsx.topology.pysamples.apps.MailSample/BuildConfig"/>
+      <arg value="--output-directory=output/com.ibm.streamsx.topology.pysamples.apps.NoopSample/BuildConfig"/>
       <arg value="--data-directory=data"/>
       <arg value="-a"/>
       <arg value="--no-toolkit-indexing"/>
@@ -51,7 +51,7 @@
     </exec>
   </target>
 
-  <target name="spldoc" description="Make the SPL documentation.">
+  <target name="spldoc" depends="toolkit" description="Make the SPL documentation.">
     <exec executable="${streams.install}/bin/spl-make-doc" failonerror="true">
       <arg value="--include-composite-operator-diagram"/>
       <arg value="-i"/>

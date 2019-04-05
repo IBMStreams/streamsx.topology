@@ -1,7 +1,8 @@
 echo 'WORKSPACE' ${WORKSPACE:?}
 echo 'STREAMS_INSTALL=' $STREAMS_INSTALL
 export JAVA_HOME=$STREAMS_INSTALL/java
+set -x
 streamtool version
 ant -version
 env
-set -x
+sh ${WORKSPACE}/ci/mem.sh

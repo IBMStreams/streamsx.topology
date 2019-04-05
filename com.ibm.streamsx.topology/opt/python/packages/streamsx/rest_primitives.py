@@ -41,6 +41,14 @@ import streamsx.rest
 
 logger = logging.getLogger('streamsx.rest')
 
+def _get_username(username=None):
+    if not username:
+       username = os.environ.get('STREAMS_USERNAME')
+       if not username:
+           import getpass
+           username = getpass.getuser()
+    return username
+
 def _file_name(prefix, id_, suffix):
     return prefix + '_' + id_ + '_' + str(int(time.time())) + suffix
 
@@ -272,6 +280,76 @@ class _ICPDAuthHandler(_BearerAuthHandler):
         self.token = icpd_util.get_instance_token(name=self._service_name)
         self._auth_expiry_time = time.time() + 19*60
         logger.debug("ICP4D:Token refreshed:expiry:" + time.ctime(self._auth_expiry_time))
+
+class _ICPDExternalAuthHandler(_BearerAuthHandler):
+    def __init__(self, endpoint, username, password):
+        super(_ICPDExternalAuthHandler, self).__init__()
+        self._endpoint = endpoint
+        self.__username = username
+        self.__password = password
+        self._cfg = self._create_cfg()
+
+    def _refresh_auth(self):
+        logger.debug("ICP4DExternal:Token refresh:")
+        self._cfg = self._create_cfg()
+        logger.debug("ICP4DExternal:Token refreshed:expiry:" + time.ctime(self._auth_expiry_time))
+
+    def _create_cfg(self):
+        import requests
+        import urllib.parse as up
+        pd = {'username': self.__username, 'password': self.__password}
+
+        es = up.urlsplit(self._endpoint)
+        cluster_ip = es.netloc.split(':')[0]
+
+        auth_url = up.urlunsplit(('https', cluster_ip + ':31843', '/icp4d-api/v1/authorize', None, None))
+        r = requests.post(auth_url, json=pd, verify=False)
+        token = r.json()['token']
+
+        name = es.path.split('/')[-1]
+
+        details_url = up.urlunsplit(
+            ('https', cluster_ip + ':31843', 'zen-data/v2/serviceInstance/details', 'displayName=' + name, None))
+        r = requests.get(details_url,
+                         headers={"Authorization": "Bearer " + token}, verify=False)
+
+        sr = r.json()
+
+        sro = sr['requestObj']
+
+        service_id = sro['ID']
+        service_type = sro['ServiceInstanceType']
+
+        sca = sro['CreateArguments']
+        service_name = sca['metadata']['instance']['id']
+        connection_info = sca['connection-info']
+
+        service_token_url = up.urlunsplit(
+            ('https', cluster_ip + ':31843', 'zen-data/v2/serviceInstance/token', None, None))
+        pd = {"serviceInstanceId": str(service_id)}
+        r = requests.post(service_token_url, json=pd,
+                          headers={"Authorization": "Bearer " + token}, verify=False)
+
+        service_token = r.json()['AccessToken']
+        self.token = service_token
+        self._auth_expiry_time = time.time() + 19 * 60
+
+        # Convert the external endpoints to use the passed in cluster ip.
+        bu = up.urlsplit(connection_info['externalBuildEndpoint'])
+        build_url = up.urlunsplit((bu.scheme, cluster_ip + ':' + str(bu.port), bu.path, None, None))
+
+        cfg = {
+                'type': 'streams',
+                'connection_info': {
+                    'externalClient':True,
+                    'serviceBuildEndpoint': build_url,
+                    'serviceRestEndpoint': self._endpoint},
+                'service_token': service_token,
+                'cluster_ip': cluster_ip,
+                'service_id': service_id
+        }
+
+        return cfg
 
 class _IAMAuthHandler(_BearerAuthHandler):
     def __init__(self, credentials):
@@ -572,7 +650,7 @@ class View(_ResourceElement):
         return tuples
 
     def display(self, duration=None, period=2):
-        """Display a view within an Jupyter or IPython notebook.
+        """Display a view within a Jupyter or IPython notebook.
 
         Provides an easy mechanism to visualize data on a stream
         using a view.
@@ -592,6 +670,10 @@ class View(_ResourceElement):
             A view is a sampling of data on a stream so tuples that
             are on the stream may not appear in the view.
 
+        .. note::
+            Python modules `ipywidgets` and `pandas` must be installed
+            in the notebook environment.
+          
         .. warning::
             Behavior when called outside a notebook is undefined.
 
@@ -610,7 +692,7 @@ class View(_ResourceElement):
     def _display(self, out, duration, period, active):
         import pandas as pd
         import IPython
-        self.start_data_fetch()
+        tqueue = self.start_data_fetch()
         end = time.time() + float(duration) if duration is not None else None
         max_rows = pd.options.display.max_rows
         last = 0
@@ -620,6 +702,17 @@ class View(_ResourceElement):
                 gap = time.time() - last
                 if gap < period:
                     time.sleep(period - gap)
+                # Display latest tuples by removing earlier ones
+                # Avoids display falling behind live data with
+                # large view buffer
+                tqs = tqueue.qsize()
+                if tqs > max_rows:
+                    tqs -= max_rows
+                    for _ in range(tqs):
+                        try:
+                            tqueue.get(block=False)
+                        except queue.Empty:
+                            break
                 tuples = self.fetch_tuples(max_rows, period)
                 if not tuples:
                     if not self._data_fetcher:
@@ -1478,14 +1571,46 @@ class Instance(_ResourceElement):
         if not service:
             raise ValueError()
         endpoint = service['connection_info'].get('serviceRestEndpoint')
-        es = endpoint.split('/')
-        name = es[len(es)-1]
-        root_url = endpoint.split('/streams/rest/instances/')[0]
-        resource_url = root_url + '/streams/rest/resources'
+        resource_url, name = Instance._root_from_endpoint(endpoint)
 
         sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=_ICPDAuthHandler(name, service['service_token']))
         if streamsx.topology.context.ConfigParams.SSL_VERIFY in config:
                 sc.session.verify = config[streamsx.topology.context.ConfigParams.SSL_VERIFY]
+        return sc.get_instance(name)
+
+    @staticmethod
+    def _root_from_endpoint(endpoint):
+        import urllib.parse as up
+        esu = up.urlsplit(endpoint)
+        if not esu.path.startswith('/streams/rest/instances/'):
+            return None, None
+
+        es = endpoint.split('/')
+        name = es[len(es)-1]
+        root_url = endpoint.split('/streams/rest/instances/')[0]
+        resource_url = root_url + '/streams/rest/resources'
+        return resource_url, name
+
+    @staticmethod
+    def of_endpoint(endpoint=None, username=None, password=None, verify=None):
+        if not endpoint:
+            endpoint = os.environ.get('STREAMS_REST_URL')
+        if not endpoint:
+            return None
+        if not password:
+            password = os.environ.get('STREAMS_PASSWORD')
+        if not password:
+            return None
+        username = _get_username(username)
+
+        resource_url, name = Instance._root_from_endpoint(endpoint)
+        if resource_url is None:
+            return None
+        sc = streamsx.rest.StreamsConnection(resource_url=resource_url,
+                                             auth=_ICPDExternalAuthHandler(endpoint, username, password))
+        if verify is not None:
+            sc.rest_client.session.verify = verify
+ 
         return sc.get_instance(name)
 
     def get_operators(self, name=None):
