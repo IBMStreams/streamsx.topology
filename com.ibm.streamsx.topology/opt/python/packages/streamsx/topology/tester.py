@@ -198,6 +198,12 @@ class Tester(object):
         Tester._log_env(test, verbose)
         test.test_ctxtype = stc.ContextTypes.STANDALONE
         test.test_config = _TestConfig(test)
+        test.addCleanup(Tester._cleanup_config, test)
+
+    @staticmethod
+    def _cleanup_config(test):
+        if hasattr(test, 'test_ctxtype'): del test.test_ctxtype
+        if hasattr(test, 'test_config'): del test.test_config
 
     @staticmethod
     def get_streams_version(test):
@@ -217,7 +223,8 @@ class Tester(object):
             if test.test_ctxtype == stc.ContextTypes.STANDALONE or test.test_ctxtype == stc.ContextTypes.DISTRIBUTED:
                 return Tester._get_streams_product_version()
             if test.test_ctxtype == stc.ContextTypes.STREAMING_ANALYTICS_SERVICE:
-                return '4.2.0.0'
+                sas = Tester._get_sas_conn(test.test_config)
+                return sas.get_instances()[0].activeVersion['productVersion']
         raise ValueError('Tester has not been setup.')
 
     @staticmethod
@@ -334,6 +341,10 @@ class Tester(object):
         if domain_instance_setup:
             if not 'STREAMS_INSTALL' in os.environ:
                 raise unittest.SkipTest("Skipped due to no local IBM Streams install")
+            return
+
+        icpd_setup = 'STREAMS_REST_URL' in os.environ and 'STREAMS_PASSWORD' in os.environ
+        if icpd_setup:
             return
 
         raise unittest.SkipTest("No IBM Streams instance definition for DISTRIBUTED")
@@ -786,13 +797,17 @@ class Tester(object):
         self.submission_result = sjr
         self.streams_connection = config.get(ConfigParams.STREAMS_CONNECTION)
         if self.streams_connection is None:
-            vcap_services = config.get(ConfigParams.VCAP_SERVICES)
-            service_name = config.get(ConfigParams.SERVICE_NAME)
-            self.streams_connection = StreamingAnalyticsConnection(vcap_services, service_name)
+            self.streams_connection = Tester._get_sas_conn(config)
         if sjr['return_code'] != 0:
             _logger.error("Failed to submit job to Streaming Analytics instance")
             return False
         return self._distributed_wait_for_result(ctxtype, config)
+
+    @staticmethod
+    def _get_sas_conn(config):
+        vcap_services = config.get(ConfigParams.VCAP_SERVICES)
+        service_name = config.get(ConfigParams.SERVICE_NAME)
+        return StreamingAnalyticsConnection(vcap_services, service_name)
 
     def _distributed_wait_for_result(self, ctxtype, config):
 

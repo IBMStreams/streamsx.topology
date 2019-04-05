@@ -504,6 +504,11 @@ class Topology(object):
         By default a stream is subscribed as :py:const:`~streamsx.topology.schema.CommonSchema.Python` objects
         which connects to streams published to topic by Python Streams applications.
 
+        Structured schemas are subscribed to using an instance of
+        :py:class:`StreamSchema`.  A Streams application publishing
+        structured schema streams may have been implemented in any
+        programming language supported by Streams.
+
         JSON streams are subscribed to using schema :py:const:`~streamsx.topology.schema.CommonSchema.Json`.
         Each tuple on the returned stream will be a Python dictionary
         object created by ``json.loads(tuple)``.
@@ -512,7 +517,7 @@ class Topology(object):
        
         String streams are subscribed to using schema :py:const:`~streamsx.topology.schema.CommonSchema.String`.
         Each tuple on the returned stream will be a Python string object.
-        A Streams application publishing JSON streams may have been implemented in any programming language
+        A Streams application publishing string streams may have been implemented in any programming language
         supported by Streams.
 
         Subscribers can ensure they do not slow down matching publishers
@@ -1184,24 +1189,82 @@ class Stream(_placement._Placement, object):
     
     def parallel(self, width, routing=Routing.ROUND_ROBIN, func=None, name=None):
         """
-        Parallelizes the stream into `width` parallel channels.
-        Tuples are routed to parallel channels such that an even distribution is maintained.
-        Each parallel channel can be thought of as being assigned its own thread.
-        As such, each parallelized stream function are separate instances and operate independently 
-        from one another.
-        
-        parallel() will only parallelize the stream operations performed after the call to parallel() and 
-        before the call to :py:meth:`~Stream.end_parallel`.
-        
-        Parallel regions aren't required to have an output stream, and thus may be used as sinks.
-        In other words, a parallel sink is created by calling parallel() and creating a sink operation.
-        It is not necessary to invoke end_parallel() on parallel sinks.
-        
-        Every call to end_parallel() must have a call to parallel() preceding it.
+        Split stream into channels and start a parallel region.
+
+        Returns a new stream that will contain the contents of
+        this stream with tuples distributed across its channels.
+
+        The returned stream starts a parallel region where all
+        downstream transforms are replicated across `width` channels.
+        A parallel region is terminated by :py:meth:`end_parallel`
+        or :py:meth:`for_each`.
+
+        Any transform (such as :py:meth:`map`, :py:meth:`filter`, etc.) in
+        a parallel region has a copy of its callable executing
+        independently in parallel. Channels remain independent
+        of other channels until the region is terminated.
+
+        For example with this topology fragment a parallel region
+        of width 3 is created::
+
+            s = ...
+            p = s.parallel(3)
+            p = p.filter(F()).map(M())
+            e = p.end_parallel()
+            e.for_each(E())
+
+        Tuples from ``p`` (parallelized ``s``)  are distributed
+        across three channels, 0, 1 & 2
+        and are independently processed by three instances of ``F`` and ``M``.
+        The tuples that pass the filter ``F`` in channel 0 are then mapped
+        by the instance of ``M`` in channel 0, and so on for channels 1 and 2.
+
+        The channels are combined by ``end_parallel`` and so a single instance
+        of ``E`` processes all the tuples from channels 0, 1 & 2.
+
+        This stream instance (the original) is outside of the parallel region
+        and so any downstream transforms are executed normally.
+        Adding this `map` transform would result in tuples
+        on ``s`` being processed by a single instance of ``N``::
+
+            n = s.map(N())
+
+        The number of channels is set by `width` which may be an `int` greater
+        than zero or a submission parameter created by
+        :py:meth:`Topology.create_submission_parameter`.
+
+        With IBM Streams 4.3 or later the number of channels can be
+        dynamically changed at runtime.
+
+        Tuples are routed to channels based upon `routing`, see :py:class:`Routing`.
+
+        A parallel region can have multiple termination points, for
+        example when a stream within the stream has multiple transforms
+        against it::
+
+            s = ...
+            p = s.parallel(3)
+            m1p = p.map(M1())
+            m2p = p.map(M2())
+            p.for_each(E())
+
+            m1 = m1p.end_parallel()
+            m2 = m2p.end_parallel()
+
+        Parallel regions can be nested, for example::
+
+            s = ...
+            m = s.parallel(2).map(MO()).parallel(3).map(MI()).end_parallel().end_parallel()
+
+        In this case there will be two instances of ``MO`` (the outer region) and six (2x3) instances of ``MI`` (the inner region).
+         
+        Streams created by :py:meth:`~Topology.source` or
+        :py:meth:`~Topology.subscribe` are placed in a parallel region
+        by :py:meth:`set_parallel`.
         
         Args:
             width (int): Degree of parallelism.
-            routing(Routing): denotes what type of tuple routing to use.
+            routing(Routing): Denotes what type of tuple routing to use.
             func: Optional function called when :py:const:`Routing.HASH_PARTITIONED` routing is specified.
                 The function provides an integer value to be used as the hash that determines
                 the tuple channel routing.
@@ -1210,6 +1273,7 @@ class Stream(_placement._Placement, object):
         Returns:
             Stream: A stream for which subsequent transformations will be executed in parallel.
 
+        .. seealso:: :py:meth:`set_parallel`, :py:meth:`end_parallel`
         """
         _name = name
         if _name is None:
@@ -1274,6 +1338,8 @@ class Stream(_placement._Placement, object):
 
         Returns:
             Stream: Stream for which subsequent transformations are no longer parallelized.
+
+        .. seealso:: :py:meth:`set_parallel`, :py:meth:`parallel`
         """
         outport = self.oport
         if isinstance(self.oport.operator, streamsx.topology.graph.Marker):
@@ -1289,13 +1355,62 @@ class Stream(_placement._Placement, object):
 
     def set_parallel(self, width, name=None):
         """
-        Indicates that the stream is the start of a parallel region. Should only be invoked on source operators.
+        Set this source stream to be split into multiple channels
+        as the start of a parallel region.
+
+        Calling ``set_parallel`` on a stream created by
+        :py:meth:`~Topology.source` results in the stream
+        having `width` channels, each created by its own instance
+        of the callable::
+
+           s = topo.source(S())
+           s.set_parallel(3)
+           f = s.filter(F())
+           e = f.end_parallel()
+
+        Each channel has independent instances of ``S`` and ``F``. Tuples
+        created by the instance of ``S`` in channel 0 are passed to the
+        instance of ``F`` in channel 0, and so on for channels 1 and 2.
+
+        Callable transforms instances within the channel can use
+        the runtime functions
+        :py:func:`~streamsx.ec.channel`, 
+        :py:func:`~streamsx.ec.local_channel`, 
+        :py:func:`~streamsx.ec.max_channels` &
+        :py:func:`~streamsx.ec.local_max_channels`
+        to adapt to being invoked in parallel. For example a
+        source callable can use its channel number to determine
+        which partition to read from in a partitioned external system.
+
+        Calling ``set_parallel`` on a stream created by
+        :py:meth:`~Topology.subscribe` results in the stream
+        having `width` channels. Subscribe ensures that the
+        stream will contain all published tuples matching the
+        topic subscription and type. A published tuple will appear
+        on one of the channels though the specific channel is not known
+        in advance.
+
+        A parallel region is terminated by :py:meth:`end_parallel`
+        or :py:meth:`for_each`.
+
+        The number of channels is set by `width` which may be an `int` greater
+        than zero or a submission parameter created by
+        :py:meth:`Topology.create_submission_parameter`.
+
+        With IBM Streams 4.3 or later the number of channels can be
+        dynamically changed at runtime.
+
+        Parallel regions are started on non-source streams using
+        :py:meth:`parallel`.
+
         Args:
             width: The degree of parallelism for the parallel region.
             name(str): Name of the parallel region. Defaults to the name of this stream.
 
         Returns:
             Stream: Returns this stream.
+
+        .. seealso:: :py:meth:`parallel`, :py:meth:`end_parallel`
 
         .. versionadded:: 1.9
         .. versionchanged:: 1.11 `name` parameter added.
@@ -1743,7 +1858,7 @@ class View(object):
         return self._view_object.fetch_tuples(max_tuples, timeout)
 
     def display(self, duration=None, period=2):
-        """Display a view within an Jupyter or IPython notebook.
+        """Display a view within a Jupyter or IPython notebook.
 
         Provides an easy mechanism to visualize data on a stream
         using a view.
@@ -1762,6 +1877,10 @@ class View(object):
         .. note::
             A view is a sampling of data on a stream so tuples that
             are on the stream may not appear in the view.
+
+        .. note::
+            Python modules `ipywidgets` and `pandas` must be installed
+            in the notebook environment.
 
         .. warning::
             Behavior when called outside a notebook is undefined.
