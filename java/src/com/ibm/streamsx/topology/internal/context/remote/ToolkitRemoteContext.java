@@ -225,10 +225,10 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
         ToolkitInfoModelType info = new ToolkitInfoModelType();
         
         info.setIdentity(new IdentityType());
-        info.getIdentity().setName(toolkitRoot.getName());
+        info.getIdentity().setName(GraphKeys.splAppNamespace(jsonGraph) + "." + GraphKeys.splAppName(jsonGraph));
         info.getIdentity().setDescription(new DescriptionType());
         info.getIdentity().setVersion("1.0.0." + System.currentTimeMillis());
-        info.getIdentity().setRequiredProductVersion("4.2.0.0");
+        info.getIdentity().setRequiredProductVersion(jstring(object(jsonGraph, "config"), CFG_STREAMS_VERSION));
               
         DependenciesType dependencies = new DependenciesType();
         
@@ -308,7 +308,7 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
                 if (srcFile.isFile())
                     copyFile(srcFile, targetDir);
                 else if (srcFile.isDirectory())
-                    copyDirectoryToDirectory(srcFile, targetDir);
+                    copyDirectoryToDirectory(toolkitRoot, srcFile, targetDir);
             }
             // Create a jar from a classes directory.
             else if (inc.has("classes")) {
@@ -338,11 +338,11 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
      * @param srcDir
      * @param dstDir
      */
-    private static void copyDirectoryToDirectory(File srcDir, File dstDir)
+    private static void copyDirectoryToDirectory(File toolkitRoot, File srcDir, File dstDir)
             throws IOException {
         String dirname = srcDir.getName();
         dstDir = new File(dstDir, dirname);
-        copyDirectory(srcDir, dstDir);
+        copyDirectory(toolkitRoot, srcDir, dstDir);
     }
 
     /**
@@ -351,13 +351,19 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
      * @param srcDir
      * @param dstDir
      */
-    private static void copyDirectory(File srcDir, File dstDir) throws IOException {
+    private static void copyDirectory(final File toolkitRoot, File srcDir, final File dstDir) throws IOException {
         final Path targetPath = dstDir.toPath();
         final Path sourcePath = srcDir.toPath();
+        final File canonicalTkRoot = toolkitRoot.getCanonicalFile();
         Files.walkFileTree(sourcePath, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(final Path dir,
                     final BasicFileAttributes attrs) throws IOException {
+                
+                // Avoid recursion.
+                if (canonicalTkRoot.equals(dir.toFile().getCanonicalFile()))
+                    return FileVisitResult.SKIP_SUBTREE;
+                    
                 Files.createDirectories(targetPath.resolve(sourcePath
                         .relativize(dir)));
                 return FileVisitResult.CONTINUE;

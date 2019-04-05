@@ -4,7 +4,7 @@
 import unittest
 import sys
 
-from streamsx.topology.topology import *
+from streamsx.topology.topology import Topology
 from streamsx.topology.tester import Tester
 
 SKIP=False

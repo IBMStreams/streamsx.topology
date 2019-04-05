@@ -40,13 +40,19 @@ version of the Python topology that includes application
 specific Python C extensions to optimize performance.
 
 The bundle also includes any required Python packages or modules
-that were used in the declaration of the application. For example
-the Python module containing the callable used in a
-:py:meth:`~Stream.map` invocation. These modules are copied into
-the bundle from their local location. This allows the bundle to
-be self-contained, and thus not the Streams instance have all the required
-Python packages pre-installed. The addition of packages to the bundle
-can be controlled with :py:attr:`Topology.include_packages` and
+that were used in the declaration of the application, excluding
+ones that are in a directory path containing ``site-packages``.
+
+The Python standard package tool ``pip`` uses a directory structure
+including ``site-packages`` when installing packages. Packages installed
+with ``pip`` can be included in the bundle with
+:py:meth:`~Topology.add_pip_package` when using a build service.
+This avoids the requirement to have packages be preinstalled in cloud environments.
+
+Local Python packages and modules containing callables used in transformations
+such as :py:meth:`~Stream.map` are copied into the bundle from their
+local location.  The addition of local packages to the bundle can be controlled
+with :py:attr:`Topology.include_packages` and
 :py:attr:`Topology.exclude_packages`.
 
 The Streams runtime distributes the application's operations
@@ -344,7 +350,7 @@ class Topology(object):
         namespace(str): Namespace of the topology. Defaults to a name dervied from the calling evironment if it can be determined, otherwise a random name.
 
     Attributes:
-        include_packages(set[str]): Python package names to be included in the built application. Any package in this list is copied into the bundle and made available at runtime to the Python callables used in the application. By default a ``Topology`` will automatically discover which packages and modules are required to be copied, this field may be used to add additional packages that were not automatically discovered.
+        include_packages(set[str]): Python package names to be included in the built application. Any package in this list is copied into the bundle and made available at runtime to the Python callables used in the application. By default a ``Topology`` will automatically discover which packages and modules are required to be copied, this field may be used to add additional packages that were not automatically discovered. See also :py:meth:`~Topology.add_pip_package`.
 
         exclude_packages(set[str]): Python top-level package names to be excluded from the built application. Excluding a top-level packages excludes all sub-modules at any level in the package, e.g. `sound` excludes `sound.effects.echo`. Only the top-level package can be defined, e.g. `sound` rather than `sound.filters`. Behavior when adding a module within a package is undefined. When compiling the application using Anaconda this set is pre-loaded with Python packages from the Anaconda pre-loaded set.
 
@@ -498,6 +504,11 @@ class Topology(object):
         By default a stream is subscribed as :py:const:`~streamsx.topology.schema.CommonSchema.Python` objects
         which connects to streams published to topic by Python Streams applications.
 
+        Structured schemas are subscribed to using an instance of
+        :py:class:`StreamSchema`.  A Streams application publishing
+        structured schema streams may have been implemented in any
+        programming language supported by Streams.
+
         JSON streams are subscribed to using schema :py:const:`~streamsx.topology.schema.CommonSchema.Json`.
         Each tuple on the returned stream will be a Python dictionary
         object created by ``json.loads(tuple)``.
@@ -506,7 +517,7 @@ class Topology(object):
        
         String streams are subscribed to using schema :py:const:`~streamsx.topology.schema.CommonSchema.String`.
         Each tuple on the returned stream will be a Python string object.
-        A Streams application publishing JSON streams may have been implemented in any programming language
+        A Streams application publishing string streams may have been implemented in any programming language
         supported by Streams.
 
         Subscribers can ensure they do not slow down matching publishers
@@ -605,12 +616,13 @@ class Topology(object):
         of the Streams application bundle (`sab` file).
         The package is expected to be available from `pypi.org`.
 
+
         If the package is already installed on the build system
         then it is not added into the `sab` file.
         The assumption is that the runtime hosts for a Streams
         instance have the same Python packages installed as the
-        build machines. This is always true for the Streaming
-        Analytics service on IBM Cloud.
+        build machines. This is always true for IBM Cloud
+        Private for Data and the Streaming Analytics service on IBM Cloud.
 
         The project name extracted from the requirement
         specifier is added to :py:attr:`~exclude_packages`
@@ -635,8 +647,17 @@ class Topology(object):
             requirement(str): Package requirements specifier.
 
         .. warning::
-            Only supported when using the remote build service with
-            the Streaming Analytics service.
+            Only supported when using the build service with
+            a Streams instance in IBM Cloud Private for Data
+            or Streaming Analytics service on IBM Cloud.
+
+        .. note::
+            Installing packages through `pip` is preferred to
+            the automatic dependency checking performed on local
+            modules. This is because `pip` will perform a full
+            install of the package including any dependent packages
+            and additional files, such as shared libraries, that
+            might be missed by dependency discovery.
 
         .. versionadded:: 1.9
         """
@@ -1149,8 +1170,6 @@ class Stream(_placement._Placement, object):
             Stream
         """
         op = self.topology.graph.addOperator("$LowLatency$")
-        # include_packages=self.include_packages, exclude_packages=self.exclude_packages)
-        # include_packages=self.include_packages, exclude_packages=self.exclude_packages)
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
@@ -1170,24 +1189,82 @@ class Stream(_placement._Placement, object):
     
     def parallel(self, width, routing=Routing.ROUND_ROBIN, func=None, name=None):
         """
-        Parallelizes the stream into `width` parallel channels.
-        Tuples are routed to parallel channels such that an even distribution is maintained.
-        Each parallel channel can be thought of as being assigned its own thread.
-        As such, each parallelized stream function are separate instances and operate independently 
-        from one another.
-        
-        parallel() will only parallelize the stream operations performed after the call to parallel() and 
-        before the call to :py:meth:`~Stream.end_parallel`.
-        
-        Parallel regions aren't required to have an output stream, and thus may be used as sinks.
-        In other words, a parallel sink is created by calling parallel() and creating a sink operation.
-        It is not necessary to invoke end_parallel() on parallel sinks.
-        
-        Every call to end_parallel() must have a call to parallel() preceding it.
+        Split stream into channels and start a parallel region.
+
+        Returns a new stream that will contain the contents of
+        this stream with tuples distributed across its channels.
+
+        The returned stream starts a parallel region where all
+        downstream transforms are replicated across `width` channels.
+        A parallel region is terminated by :py:meth:`end_parallel`
+        or :py:meth:`for_each`.
+
+        Any transform (such as :py:meth:`map`, :py:meth:`filter`, etc.) in
+        a parallel region has a copy of its callable executing
+        independently in parallel. Channels remain independent
+        of other channels until the region is terminated.
+
+        For example with this topology fragment a parallel region
+        of width 3 is created::
+
+            s = ...
+            p = s.parallel(3)
+            p = p.filter(F()).map(M())
+            e = p.end_parallel()
+            e.for_each(E())
+
+        Tuples from ``p`` (parallelized ``s``)  are distributed
+        across three channels, 0, 1 & 2
+        and are independently processed by three instances of ``F`` and ``M``.
+        The tuples that pass the filter ``F`` in channel 0 are then mapped
+        by the instance of ``M`` in channel 0, and so on for channels 1 and 2.
+
+        The channels are combined by ``end_parallel`` and so a single instance
+        of ``E`` processes all the tuples from channels 0, 1 & 2.
+
+        This stream instance (the original) is outside of the parallel region
+        and so any downstream transforms are executed normally.
+        Adding this `map` transform would result in tuples
+        on ``s`` being processed by a single instance of ``N``::
+
+            n = s.map(N())
+
+        The number of channels is set by `width` which may be an `int` greater
+        than zero or a submission parameter created by
+        :py:meth:`Topology.create_submission_parameter`.
+
+        With IBM Streams 4.3 or later the number of channels can be
+        dynamically changed at runtime.
+
+        Tuples are routed to channels based upon `routing`, see :py:class:`Routing`.
+
+        A parallel region can have multiple termination points, for
+        example when a stream within the stream has multiple transforms
+        against it::
+
+            s = ...
+            p = s.parallel(3)
+            m1p = p.map(M1())
+            m2p = p.map(M2())
+            p.for_each(E())
+
+            m1 = m1p.end_parallel()
+            m2 = m2p.end_parallel()
+
+        Parallel regions can be nested, for example::
+
+            s = ...
+            m = s.parallel(2).map(MO()).parallel(3).map(MI()).end_parallel().end_parallel()
+
+        In this case there will be two instances of ``MO`` (the outer region) and six (2x3) instances of ``MI`` (the inner region).
+         
+        Streams created by :py:meth:`~Topology.source` or
+        :py:meth:`~Topology.subscribe` are placed in a parallel region
+        by :py:meth:`set_parallel`.
         
         Args:
             width (int): Degree of parallelism.
-            routing(Routing): denotes what type of tuple routing to use.
+            routing(Routing): Denotes what type of tuple routing to use.
             func: Optional function called when :py:const:`Routing.HASH_PARTITIONED` routing is specified.
                 The function provides an integer value to be used as the hash that determines
                 the tuple channel routing.
@@ -1196,6 +1273,7 @@ class Stream(_placement._Placement, object):
         Returns:
             Stream: A stream for which subsequent transformations will be executed in parallel.
 
+        .. seealso:: :py:meth:`set_parallel`, :py:meth:`end_parallel`
         """
         _name = name
         if _name is None:
@@ -1260,6 +1338,8 @@ class Stream(_placement._Placement, object):
 
         Returns:
             Stream: Stream for which subsequent transformations are no longer parallelized.
+
+        .. seealso:: :py:meth:`set_parallel`, :py:meth:`parallel`
         """
         outport = self.oport
         if isinstance(self.oport.operator, streamsx.topology.graph.Marker):
@@ -1275,13 +1355,62 @@ class Stream(_placement._Placement, object):
 
     def set_parallel(self, width, name=None):
         """
-        Indicates that the stream is the start of a parallel region. Should only be invoked on source operators.
+        Set this source stream to be split into multiple channels
+        as the start of a parallel region.
+
+        Calling ``set_parallel`` on a stream created by
+        :py:meth:`~Topology.source` results in the stream
+        having `width` channels, each created by its own instance
+        of the callable::
+
+           s = topo.source(S())
+           s.set_parallel(3)
+           f = s.filter(F())
+           e = f.end_parallel()
+
+        Each channel has independent instances of ``S`` and ``F``. Tuples
+        created by the instance of ``S`` in channel 0 are passed to the
+        instance of ``F`` in channel 0, and so on for channels 1 and 2.
+
+        Callable transforms instances within the channel can use
+        the runtime functions
+        :py:func:`~streamsx.ec.channel`, 
+        :py:func:`~streamsx.ec.local_channel`, 
+        :py:func:`~streamsx.ec.max_channels` &
+        :py:func:`~streamsx.ec.local_max_channels`
+        to adapt to being invoked in parallel. For example a
+        source callable can use its channel number to determine
+        which partition to read from in a partitioned external system.
+
+        Calling ``set_parallel`` on a stream created by
+        :py:meth:`~Topology.subscribe` results in the stream
+        having `width` channels. Subscribe ensures that the
+        stream will contain all published tuples matching the
+        topic subscription and type. A published tuple will appear
+        on one of the channels though the specific channel is not known
+        in advance.
+
+        A parallel region is terminated by :py:meth:`end_parallel`
+        or :py:meth:`for_each`.
+
+        The number of channels is set by `width` which may be an `int` greater
+        than zero or a submission parameter created by
+        :py:meth:`Topology.create_submission_parameter`.
+
+        With IBM Streams 4.3 or later the number of channels can be
+        dynamically changed at runtime.
+
+        Parallel regions are started on non-source streams using
+        :py:meth:`parallel`.
+
         Args:
             width: The degree of parallelism for the parallel region.
             name(str): Name of the parallel region. Defaults to the name of this stream.
 
         Returns:
             Stream: Returns this stream.
+
+        .. seealso:: :py:meth:`parallel`, :py:meth:`end_parallel`
 
         .. versionadded:: 1.9
         .. versionchanged:: 1.11 `name` parameter added.
@@ -1729,7 +1858,7 @@ class View(object):
         return self._view_object.fetch_tuples(max_tuples, timeout)
 
     def display(self, duration=None, period=2):
-        """Display a view within an Jupyter or IPython notebook.
+        """Display a view within a Jupyter or IPython notebook.
 
         Provides an easy mechanism to visualize data on a stream
         using a view.
@@ -1748,6 +1877,10 @@ class View(object):
         .. note::
             A view is a sampling of data on a stream so tuples that
             are on the stream may not appear in the view.
+
+        .. note::
+            Python modules `ipywidgets` and `pandas` must be installed
+            in the notebook environment.
 
         .. warning::
             Behavior when called outside a notebook is undefined.

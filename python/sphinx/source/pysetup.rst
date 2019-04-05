@@ -75,7 +75,7 @@ IBM Streams on-premises
 For a distributed cluster running Streams Python 2.7, 3.5 or 3.6 may
 be used.
 
-Anaconda or Miniconda distributions may be used as the Python runtime, these hav the advantage of being pre-built and including a number of standard packages.
+Anaconda or Miniconda distributions may be used as the Python runtime, these have the advantage of being pre-built and including a number of standard packages.
 Ananconda installs may be downloaded at: https://www.continuum.io/downloads .
 
 .. note::
