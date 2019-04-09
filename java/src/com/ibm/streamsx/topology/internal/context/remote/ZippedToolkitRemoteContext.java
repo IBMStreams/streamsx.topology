@@ -36,7 +36,6 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
-import com.ibm.streamsx.topology.context.remote.RemoteContext.Type;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 
@@ -129,10 +128,12 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
             if (configSpl != null) {
                 objectArray(configSpl, "toolkits",
                         tk -> {
-                            File tkRoot = new File(jstring(tk, "root"));
-                            String tkRootName = tkRoot.getName();
-                            tkManifest.println(tkRootName);
-                            toolkits.put(tkRoot.toPath(), tkRootName);
+                            if (tk.has("root")) {
+                                File tkRoot = new File(jstring(tk, "root"));
+                                String tkRootName = tkRoot.getName();
+                                tkManifest.println(tkRootName);
+                                toolkits.put(tkRoot.toPath(), tkRootName);
+                            }
                             }
                         );
             }
