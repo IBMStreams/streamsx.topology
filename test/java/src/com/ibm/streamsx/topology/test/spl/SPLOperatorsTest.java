@@ -56,15 +56,20 @@ public class SPLOperatorsTest extends TestTopology {
         params.put("value", 321);        
    
         SPL.addToolkit(tuples, new File(getTestRoot(), "spl/testtk"));
+        SPL.addToolkitDependency(tuples, "com.ibm.streamsx.topology.testing.testtk", "0.9.9");
+        
         SPLStream int32Filtered = SPL.invokeOperator("testspl::Int32Filter", tuples, tuples.getSchema(), params);
 
         Tester tester = topology.getTester();
-        
+                
         Condition<Long> expectedCount = tester.tupleCount(int32Filtered, 2);
         Condition<List<Tuple>> expectedTuples = tester.tupleContents(int32Filtered,
                 SPLStreamsTest.TEST_TUPLES[0],
                 SPLStreamsTest.TEST_TUPLES[2]
                 );
+        
+        if (isStreamingAnalyticsRun())
+            getConfig().put(ContextProperties.FORCE_REMOTE_BUILD, true);
 
         complete(tester, expectedCount, 10, TimeUnit.SECONDS);
 
@@ -88,6 +93,7 @@ public class SPLOperatorsTest extends TestTopology {
         params.put("value", 321);        
    
         SPL.addToolkit(tuples, new File(getTestRoot(), "spl/testtk"));
+        SPL.addToolkitDependency(tuples, "com.ibm.streamsx.topology.testing.testtk", "0.9.9");
         List<SPLStream> outputs = SPL.invokeOperator(
                 topology,
                 "testSPLOperatorMultipleOuptuts",
