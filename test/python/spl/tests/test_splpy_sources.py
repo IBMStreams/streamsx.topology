@@ -35,6 +35,7 @@ class TestSources(unittest.TestCase):
         count = 43
         topo = Topology()
         streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
+        streamsx.spl.toolkit.add_toolkit_dependency(topo, 'spl', '[1.0,2.0)')
         bop = op.Source(topo, "com.ibm.streamsx.topology.pysamples.sources::Range", schema.StreamSchema('tuple<int64 c>').as_tuple(), params={'count':count})
         r = bop.stream
         self.tester = Tester(topo)
@@ -52,3 +53,7 @@ class TestSources(unittest.TestCase):
         self.tester.tuple_count(r, count)
         self.tester.contents(r, list(zip(range(count))))
         self.tester.test(self.test_ctxtype, self.test_config)
+
+class TestSasSources(TestSources):
+    def setUp(self):
+        Tester.setup_streaming_analytics(self, force_remote_build=True)
