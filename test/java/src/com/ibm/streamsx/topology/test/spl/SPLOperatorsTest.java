@@ -115,9 +115,7 @@ public class SPLOperatorsTest extends TestTopology {
         
         TStream<String> output = SPL.invokeOperator("SCO", "testspl::ScOptionTester", single,
                 single.getSchema(), Collections.emptyMap()).toStringStream();
-        
-        output.print();
-        
+               
         if (options != null)
             this.getConfig().put(ContextProperties.SC_OPTIONS, options);
                    
