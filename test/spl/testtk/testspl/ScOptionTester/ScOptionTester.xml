@@ -23,8 +23,8 @@
     <outputPorts>
       <outputPortSet>
         <expressionMode>Expression</expressionMode> 
-        <autoAssignment>true</autoAssignment>
-        <completeAssignment>true</completeAssignment>
+        <autoAssignment>false</autoAssignment>
+        <completeAssignment>false</completeAssignment>
         <rewriteAllowed>true</rewriteAllowed>
         <windowPunctuationOutputMode>Free</windowPunctuationOutputMode>
         <tupleMutationAllowed>true</tupleMutationAllowed>
