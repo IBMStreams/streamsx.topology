@@ -1,0 +1,34 @@
+<%SPL::CodeGen::implementationPrologue($model);%>
+
+// Constructor
+MY_OPERATOR::MY_OPERATOR()
+{
+}
+
+// Destructor
+MY_OPERATOR::~MY_OPERATOR() 
+{
+}
+
+// Tuple processing for non-mutating ports
+void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
+{
+    OPort0Type otuple;
+#if __cplusplus >= 201103L
+    otuple.set_string("CPP11");
+#else
+    otuple.set_string("CPP98");
+#endif
+    submit(otuple, 0);
+
+    OPort0Type otuple2;
+#ifdef SCOPT_TESTING
+    otuple2.set_string("SCOPT");
+#else
+    otuple2.set_string("NOOPT");
+#endif
+    submit(otuple2, 0);
+}
+
+<%SPL::CodeGen::implementationEpilogue($model);%>
+

@@ -1,0 +1,18 @@
+/* Additional includes go here */
+
+<%SPL::CodeGen::headerPrologue($model);%>
+
+class MY_OPERATOR : public MY_BASE_OPERATOR 
+{
+public:
+  // Constructor
+  MY_OPERATOR();
+
+  // Destructor
+  virtual ~MY_OPERATOR(); 
+
+  void process(Tuple const & tuple, uint32_t port);
+}; 
+
+<%SPL::CodeGen::headerEpilogue($model);%>
+
