@@ -4,7 +4,6 @@
  */
 package com.ibm.streamsx.topology.context;
 
-import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.StreamsConnection;
 
 /**
@@ -167,4 +166,26 @@ public interface ContextProperties {
      * @since 1.11
      */
     String SSL_VERIFY = "topology.SSLVerify";
+
+    /**
+     * Options to be passed to IBM Streams sc command.
+     * <BR>
+     * A topology is compiled into a Streams application
+     * bundle ({@code sab}) using the SPL compiler {@code sc}.
+     * <BR>
+     * Additional options to be passed to {@code sc}
+     * may be set using this key. The value can be a
+     * single string option (e.g. {@code --c++std=c++11} to select C++ 11 compilation)
+     * or a list of strings for multiple options.
+     * 
+     * <P>
+     * Options that modify the requested submission context (e.g. setting a different
+     * main composite) or deprecated options should not be specified.
+     * </P>
+     * 
+     * @since 1.12.10
+     * 
+     * @see https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.3.0/com.ibm.streams.ref.doc/doc/sc.html
+     */
+    String SC_OPTIONS = "topology.sc.options";
 }

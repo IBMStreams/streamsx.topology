@@ -10,7 +10,7 @@ import datetime
 import decimal
 import os
 
-from streamsx.topology.schema import StreamSchema
+from streamsx.topology.schema import StreamSchema, CommonSchema
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 import streamsx.topology.context
@@ -225,6 +225,35 @@ class TestSPL(unittest.TestCase):
         tester.tuple_count(ts, 2)
         tester.contents(ts, [{'a':1,'b':'ABC'},{'a':2,'b':'DEF'}])
         tester.test(self.test_ctxtype, self.test_config)
+
+    def _sc_options(self, opts, expected):
+        topo = Topology()
+        this_dir = os.path.dirname(os.path.realpath(__file__))
+        spl_dir = os.path.join(os.path.dirname(os.path.dirname(this_dir)), 'spl')
+        tk_dir = os.path.join(spl_dir, 'testtk')
+        streamsx.spl.toolkit.add_toolkit(topo, tk_dir)
+        s = topo.source(['A'])
+        f = op.Map('testspl::ScOptionTester', s, schema = CommonSchema.String)
+        if opts:
+            self.test_config[streamsx.topology.context.ConfigParams.SC_OPTIONS] = opts
+        tester = Tester(topo)
+        tester.contents(f.stream, expected)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_sc_options_none(self):
+        self._sc_options(None, ['CPP98', 'NOOPT'])
+
+    def test_sc_options_empty(self):
+        self._sc_options([], ['CPP98', 'NOOPT'])
+
+    def test_sc_options_single(self):
+        self._sc_options('--c++std=c++11', ['CPP11', 'NOOPT'])
+
+    def test_sc_options_single_list(self):
+        self._sc_options('--cxx-flags=-DSCOPT_TESTING=1', ['CPP98', 'SCOPT'])
+
+    def test_sc_options_multi(self):
+        self._sc_options(['--cxx-flags=-DSCOPT_TESTING=1', '--c++std=c++11'], ['CPP11', 'SCOPT'])
 
 class TestDistributedSPL(TestSPL):
     def setUp(self):

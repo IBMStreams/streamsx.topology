@@ -874,6 +874,27 @@ class ConfigParams(object):
     .. seealso:: :ref:`sas-service-def`
     """
 
+    SC_OPTIONS = 'topology.sc.options'
+    """
+    Options to be passed to IBM Streams sc command.
+
+    A topology is compiled into a Streams application
+    bundle (`sab`) using the SPL compiler ``sc``.
+
+    Additional options to be passed to ``sc``
+    may be set using this key. The value can be a
+    single string option (e.g. ``--c++std=c++11`` to select C++ 11 compilation)
+    or a list of strings for multiple options.
+
+    Setting ``sc`` options may be required when invoking SPL operators
+    directly or testing SPL applications.
+
+    .. warning::
+        Options that modify the requested submission context (e.g. setting
+        a different main composite) or deprecated options should not be specified.
+    .. versionadded:: 1.12.10
+    """
+
 
 class JobConfig(object):
     """
