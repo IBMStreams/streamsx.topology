@@ -951,6 +951,73 @@ class Stream(_placement._Placement, object):
         oport = op.addOutputPort(schema=self.oport.schema, name=_name)
         return Stream(self.topology, oport)._make_placeable()
 
+    def split(self, into, func, name=None):
+        """
+        Splits tuples from this stream into multiple independent streams
+        using the supplied callable `func`.
+
+        For each tuple on the stream ``int(func(tuple))`` is called, if the
+        return is zero or positive then the (unmodified) tuple will be
+        present on one, and only one, of the output streams.
+        The specific stream will
+        be at index ``int(func(tuple)) % N`` in the returned list,
+        where ``N`` is the number of output
+        streams. If the return is negative then the tuple is dropped.
+
+        ``split`` is used to declare disparate transforms on each
+        split stream. This differs to :py:meth:`parallel` where
+        each channel has the same logic transforms.
+        
+        Args:
+            into(int): Number of streams the input is split into, must be greater than zero.
+            func: Split callable that takes a single parameter for the tuple.
+            name(str): Name of the split transform, defaults to a generated name.
+
+        If invoking ``func`` for a tuple on the stream raises an exception
+        then its processing element will terminate. By default the processing
+        element will automatically restart though tuples may be lost.
+
+        If ``func`` is a callable object then it may suppress exceptions
+        by return a true value from its ``__exit__`` method. When an
+        exception is suppressed no tuple is submitted to the filtered
+        stream corresponding to the input tuple that caused the exception.
+
+        Returns:
+            list(Stream): List of streams this stream is split across.
+
+        Example of splitting a stream based upon message severity, dropping
+        any messages with unknown severity, and then performing different
+        transforms for each severity::
+
+            msgs = topo.source(ReadMessages())
+            SEVS = {'H':0, 'M':1, 'L':2}
+            severities = msg.split(3, lambda SEVS.get(msg.get('SEV'), -1))
+
+            high_severity = severities[0]
+            high_severity.for_each(SendAlert())
+
+            medium_severity = severities[1]
+            medium_severity.for_each(LogMessage())
+
+            low_severity = severities[2]
+            low_severity.for_each(Archive())
+
+        .. versionadded:: 1.13
+        """
+        sl = _SourceLocation(_source_info(), 'split')
+        _name = self.topology.graph._requested_name(name, action="split", func=func)
+        stateful = self._determine_statefulness(func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Split", func, name=_name, sl=sl, stateful=stateful)
+        op.addInputPort(outputPort=self.oport)
+        streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
+        op._layout(kind='Split', name=_name, orig_name=name)
+        streams = []
+        for port_id in range(into):
+            sn = self.topology.graph._requested_name(_name + '_' + str(port_id))
+            oport = op.addOutputPort(schema=self.oport.schema, name=sn)
+            streams.append(Stream(self.topology, oport)._make_placeable())
+        return streams
+
     def _map(self, func, schema, name=None):
         schema = streamsx.topology.schema._normalize(schema)
         _name = self.topology.graph._requested_name(name, action="map", func=func)
