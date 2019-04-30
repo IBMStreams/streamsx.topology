@@ -16,18 +16,22 @@ using namespace streamsx::topology;
  my $inputPort = $model->getInputPortAt(0); 
  my $window = $inputPort->getWindow();
  my $windowCppType = SPL::CodeGen::getWindowCppType($window,"PyObject *");
+ my $windowEventCppType = SPL::CodeGen::getWindowEventCppType($window,"PyObject *"); # TODO optional third param is for partition type.
 %>
 
 #define SPLPY_AGGREGATE_TIME_POLICIES <%=$window->getEvictionPolicyType() == $SPL::Operator::Instance::Window::Time || ($window->hasTriggerPolicy() && $window->getEvictionPolicyType() == $SPL::Operator::Instance::Window::Time) ? 1 : 0%>
 
 @include "../pyspltuple.cgt"
 class MY_OPERATOR : public MY_BASE_OPERATOR,
-      public WindowEvent<PyObject *>
+      public <%=$windowEventCppType%>
 #if SPLPY_OP_STATE_HANDLER == 1
  , public SPL::StateHandler
 #endif
 {
 public:
+  typedef <%=$windowCppType%> WindowType;
+  typedef <%=$windowEventCppType%> WindowEventType;
+
   MY_OPERATOR();
   virtual ~MY_OPERATOR(); 
   void prepareToShutdown(); 
@@ -37,14 +41,14 @@ public:
   
 <% if ($window->isSliding()) {%>
   void onWindowTriggerEvent(
-     Window<PyObject *> & window, Window<PyObject *>::PartitionType const& key);
+     WindowEventType::WindowType & window, WindowEventType::PartitionType const& key);
   void afterTupleEvictionEvent(
-     Window<PyObject *> & window,  Window<PyObject *>::TupleType & tuple,
-     Window<PyObject *>::PartitionType const & partition);
+     WindowEventType::WindowType & window,  WindowEventType::TupleType & tuple,
+     WindowEventType::PartitionType const & partition);
 <%}%>
 <% if ($window->isTumbling()) {%>
   void beforeWindowFlushEvent(
-     Window<PyObject *> & window, Window<PyObject *>::PartitionType const& key);
+     WindowEventType::WindowType & window, WindowEventType::PartitionType const& key);
 <%}%>
 
 #if SPLPY_OP_STATE_HANDLER == 1
@@ -78,7 +82,7 @@ private:
     int32_t occ_;
 
     // Window definition
-    <%=$windowCppType%>  window_;	       
+    WindowType window_;	       
 
 #if SPLPY_AGGREGATE_TIME_POLICIES == 0
     // Locking is through window acquire data when
