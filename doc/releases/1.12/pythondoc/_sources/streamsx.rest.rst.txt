@@ -1,0 +1,28 @@
+streamsx.rest
+=============
+
+.. automodule:: streamsx.rest
+   
+   ***************
+   Module contents
+   ***************
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :nosignatures:
+   
+      StreamingAnalyticsConnection
+      StreamsConnection
+   
+   
+
+   
+   
+   

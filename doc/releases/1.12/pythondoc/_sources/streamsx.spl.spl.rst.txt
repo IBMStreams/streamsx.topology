@@ -1,0 +1,43 @@
+streamsx.spl.spl
+================
+
+.. automodule:: streamsx.spl.spl
+   
+   ***************
+   Module contents
+   ***************
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :nosignatures:
+   
+      extracting
+      ignore
+      pipe
+      sink
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :nosignatures:
+   
+      PrimitiveOperator
+      filter
+      for_each
+      input_port
+      map
+      primitive_operator
+      source
+   
+   
+
+   
+   
+   

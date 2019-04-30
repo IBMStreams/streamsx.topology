@@ -1,0 +1,726 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx.ec &mdash; streamsx 1.12.10 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="streamsx.spl.op" href="streamsx.spl.op.html" />
+    <link rel="prev" title="streamsx.topology.tester_runtime" href="streamsx.topology.tester_runtime.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.12
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.html">streamsx.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.topology.html">streamsx.topology.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.context.html">streamsx.topology.context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.schema.html">streamsx.topology.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.state.html">streamsx.topology.state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester.html">streamsx.topology.tester</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester_runtime.html">streamsx.topology.tester_runtime</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">streamsx.ec</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#distributed">Distributed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#standalone">Standalone</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#application-log-and-trace">Application log and trace</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#application-log">Application log</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#application-trace">Application trace</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#execution-context">Execution Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.op.html">streamsx.spl.op</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.types.html">streamsx.spl.types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.toolkit.html">streamsx.spl.toolkit</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.spl.html">streamsx.spl.spl</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest.html">streamsx.rest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest_primitives.html">streamsx.rest_primitives</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="scripts/runner.html">streamsx-runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/service.html">streamsx-service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/info.html">streamsx-info</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/extract.html">spl-python-extract</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysetup.html">IBM Streams Python setup</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">streamsx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>streamsx.ec</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/streamsx.ec.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-streamsx.ec">
+<span id="streamsx-ec"></span><h1>streamsx.ec<a class="headerlink" href="#module-streamsx.ec" title="Permalink to this headline">¶</a></h1>
+<p>Access to the IBM Streams execution context.</p>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>This module (<cite>streamsx.ec</cite>) provides access to the execution
+context when Python code is running in a Streams application.</p>
+<p>A Streams application runs distributed or standalone.</p>
+<div class="section" id="distributed">
+<h3>Distributed<a class="headerlink" href="#distributed" title="Permalink to this headline">¶</a></h3>
+<p>Distributed is used when an application is submitted
+to the Streaming Analytics service on IBM Cloud
+or a IBM Streams distributed instance.</p>
+<p>With distributed a running application is a <cite>job</cite> that
+contains one or more processing elements (PEs). A PE
+corresponds to a Linux operating system process.
+The PEs in a job may be distributed across the
+resources (hosts) in the Streams instance.</p>
+</div>
+<div class="section" id="standalone">
+<h3>Standalone<a class="headerlink" href="#standalone" title="Permalink to this headline">¶</a></h3>
+<p>Standalone is a mode where the complete application is run
+as a single PE (process) outside of a Streams instance.</p>
+<p>Standalone is typically used for ad-hoc testing of an application.</p>
+</div>
+</div>
+<div class="section" id="application-log-and-trace">
+<span id="streams-app-log-trc"></span><h2>Application log and trace<a class="headerlink" href="#application-log-and-trace" title="Permalink to this headline">¶</a></h2>
+<p>IBM Streams provides application trace and log services.</p>
+<div class="section" id="application-log">
+<h3>Application log<a class="headerlink" href="#application-log" title="Permalink to this headline">¶</a></h3>
+<p>The <cite>Streams application log</cite> service is for application logging, where logging is defined as the recording of serviceability information pertaining to application or operator events. The purpose of logging is to provide an administrator with enough information to do problem determination for items they can potentially control. In general, very few events are logged in the normal running scenario of an application or operator. Events pertinent to the failure or partial failure of application runtime scenarios should be logged.</p>
+<p>When running in distributed or standalone the <cite>com.ibm.streams.log</cite> logger has a handler that records messages to the <cite>Streams application log</cite> service. The level of the logger and its handler are set to the configured application log level at PE start up.</p>
+<p>This logger and handler discard any message with level below <cite>INFO</cite> (20).</p>
+<p>Python application code can log a message suitable for an administrator by using
+the <cite>com.ibm.streams.log</cite> logger or a child logger that has <code class="docutils literal notranslate"><span class="pre">logger.propagate</span></code> evaulating to <code class="docutils literal notranslate"><span class="pre">True</span></code>. Example of logging a file exception:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">numpy</span>
+<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;com.ibm.streams.log&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">raise</span>
+</pre></div>
+</div>
+<p>Application code must not modify the <cite>com.ibm.streams.log</cite> logger, if additional handlers or different levels are required a child logger should be used.</p>
+</div>
+<div class="section" id="application-trace">
+<h3>Application trace<a class="headerlink" href="#application-trace" title="Permalink to this headline">¶</a></h3>
+<p>The <cite>Streams application trace</cite> service is for application tracing, where tracing is defined as the recording of application or operator internal events and data. The purpose of tracing is to allow application or operator developers to debug their applications or operators.</p>
+<p>When running in distributed or standalone the root logger has a handler that records messages to the <cite>Streams application trace</cite> service. The level of the logger and its handler are set to the configured application trace level at PE start up.</p>
+<p>Python application code can trace a message using
+the root logger or a child logger that has <code class="docutils literal notranslate"><span class="pre">logger.propagate</span></code> evaulating to <code class="docutils literal notranslate"><span class="pre">True</span></code>. Example of logging a trace message:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">trace</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="o">...</span>
+
+    <span class="n">trace</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Threshold set to </span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Any existing logging performed by modules will automatically become
+Streams trace messages if the application is using the <cite>logging</cite> package.</p>
+<p>Application code must not modify the root logger, if additional handlers or different levels are required a child logger should be used.</p>
+</div>
+</div>
+<div class="section" id="execution-context">
+<h2>Execution Context<a class="headerlink" href="#execution-context" title="Permalink to this headline">¶</a></h2>
+<p>This module (<cite>streamsx.ec</cite>) provides access to the execution
+context when Python code is running in a Streams application.</p>
+<dl class="docutils">
+<dt>Access is only supported when running:</dt>
+<dd><ul class="first last simple">
+<li>Streams 4.2 or later</li>
+</ul>
+</dd>
+</dl>
+<p>This module may be used by Python functions or classes used
+in a <cite>Topology</cite> or decorated SPL operators.</p>
+<p>Most functionality is only available when a Python class is
+being invoked in a Streams application.</p>
+<div class="versionchanged">
+<p><span class="versionmodified">Changed in version 1.9: </span>Support for Python 2.7</p>
+</div>
+</div>
+<div class="section" id="module-contents">
+<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Functions</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#streamsx.ec.channel" title="streamsx.ec.channel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">channel</span></code></a></td>
+<td>Return the parallel region global channel number <cite>obj</cite> is executing in.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#streamsx.ec.domain_id" title="streamsx.ec.domain_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">domain_id</span></code></a></td>
+<td>Return the instance identifier.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#streamsx.ec.get_application_configuration" title="streamsx.ec.get_application_configuration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_application_configuration</span></code></a></td>
+<td>Get a named application configuration.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#streamsx.ec.get_application_directory" title="streamsx.ec.get_application_directory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_application_directory</span></code></a></td>
+<td>Get the application directory.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#streamsx.ec.instance_id" title="streamsx.ec.instance_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">instance_id</span></code></a></td>
+<td>Return the instance identifier.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#streamsx.ec.is_active" title="streamsx.ec.is_active"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_active</span></code></a></td>
+<td>Tests is code is active within a IBM Streams exection context.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#streamsx.ec.is_standalone" title="streamsx.ec.is_standalone"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_standalone</span></code></a></td>
+<td>Is the execution context standalone.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#streamsx.ec.job_id" title="streamsx.ec.job_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">job_id</span></code></a></td>
+<td>Return the job identifier.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#streamsx.ec.local_channel" title="streamsx.ec.local_channel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">local_channel</span></code></a></td>
+<td>Return the parallel region local channel number <cite>obj</cite> is executing in.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#streamsx.ec.local_max_channels" title="streamsx.ec.local_max_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">local_max_channels</span></code></a></td>
+<td>Return the local maximum number of channels for the parallel region <cite>obj</cite> is executing in.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#streamsx.ec.max_channels" title="streamsx.ec.max_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">max_channels</span></code></a></td>
+<td>Return the global maximum number of channels for the parallel region <cite>obj</cite> is executing in.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#streamsx.ec.pe_id" title="streamsx.ec.pe_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pe_id</span></code></a></td>
+<td>Return the PE identifier.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#streamsx.ec.shutdown" title="streamsx.ec.shutdown"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shutdown</span></code></a></td>
+<td>Return the processing element (PE) shutdown event.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#streamsx.ec.CustomMetric" title="streamsx.ec.CustomMetric"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CustomMetric</span></code></a></td>
+<td>Create a custom metric.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#streamsx.ec.MetricKind" title="streamsx.ec.MetricKind"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MetricKind</span></code></a></td>
+<td>Enumeration for the kind of a metric.</td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="streamsx.ec.CustomMetric">
+<em class="property">class </em><code class="descclassname">streamsx.ec.</code><code class="descname">CustomMetric</code><span class="sig-paren">(</span><em>obj</em>, <em>name</em>, <em>description=None</em>, <em>kind=&lt;MetricKind.Counter: 1&gt;</em>, <em>initialValue=0</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.CustomMetric" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a custom metric.</p>
+<p>A custom metric holds a 64 bit signed integer value that represents
+a <cite>Counter</cite>, <cite>Gauge</cite> or <cite>Time</cite> metric.</p>
+<p>Custom metrics are exposed through the IBM Streams monitoring APIs.</p>
+<p>Metric <code class="docutils literal notranslate"><span class="pre">name</span></code> is unique within the execution context of the
+callable <code class="docutils literal notranslate"><span class="pre">obj</span></code>. Attempts to create multiple metrics with the
+same name but different kinds will raise an exception. Multiple
+creations of a metric of the same name and kind all refer to
+the same metric, the first creation is the only one that will
+set the initial value.</p>
+<p>The metric’s value is assigned through the <code class="docutils literal notranslate"><span class="pre">value</span></code> property
+and can be modified through <code class="docutils literal notranslate"><span class="pre">+=</span></code> and <code class="docutils literal notranslate"><span class="pre">-=</span></code>. <code class="docutils literal notranslate"><span class="pre">CustomMetric</span></code>
+can also be converted to an <code class="docutils literal notranslate"><span class="pre">int</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> – Instance of a class executing within Streams.</li>
+<li><strong>name</strong> (<em>str</em>) – Name of the custom metric.</li>
+<li><strong>kind</strong> (<a class="reference internal" href="#streamsx.ec.MetricKind" title="streamsx.ec.MetricKind"><em>MetricKind</em></a>) – Kind of the metric.</li>
+<li><strong>description</strong> (<em>str</em>) – Description of the metric.</li>
+<li><strong>initialValue</strong> – Initial value of the metric.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Examples:</p>
+<p>Simple example used as an instance to <code class="docutils literal notranslate"><span class="pre">Stream.filter</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyF</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">substring</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">substring</span> <span class="o">=</span> <span class="n">substring</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">substring</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="nb">tuple</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">my_metric</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="c1"># Create the metric when the it is running</span>
+    <span class="c1"># in the Streams execution context</span>
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">my_metric</span> <span class="o">=</span> <span class="n">ec</span><span class="o">.</span><span class="n">CustomMetric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;count_&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">substring</span><span class="p">)</span>
+
+    <span class="c1"># must supply __exit__ if using __enter__</span>
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Remove metric from saved state.</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s1">&#39;my_metric&#39;</span> <span class="ow">in</span> <span class="n">state</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;my_metric&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">state</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="streamsx.ec.CustomMetric.value">
+<code class="descname">value</code><a class="headerlink" href="#streamsx.ec.CustomMetric.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Current value of the metric.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.ec.MetricKind">
+<em class="property">class </em><code class="descclassname">streamsx.ec.</code><code class="descname">MetricKind</code><a class="headerlink" href="#streamsx.ec.MetricKind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enumeration for the kind of a metric.</p>
+<p>The kind of the metric only indicates the behavior of value,
+it does not impose any semantics on the value.
+The kind is typically used by tooling applications.</p>
+<dl class="attribute">
+<dt id="streamsx.ec.MetricKind.Counter">
+<code class="descname">Counter</code><em class="property"> = 1</em><a class="headerlink" href="#streamsx.ec.MetricKind.Counter" title="Permalink to this definition">¶</a></dt>
+<dd><p>A counter metric observes a value that represents a count of an occurrence.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.ec.MetricKind.Gauge">
+<code class="descname">Gauge</code><em class="property"> = 0</em><a class="headerlink" href="#streamsx.ec.MetricKind.Gauge" title="Permalink to this definition">¶</a></dt>
+<dd><p>A gauge metric observes a value that is continuously variable with time.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.ec.MetricKind.Time">
+<code class="descname">Time</code><em class="property"> = 2</em><a class="headerlink" href="#streamsx.ec.MetricKind.Time" title="Permalink to this definition">¶</a></dt>
+<dd><p>A time metric represents a point in time or duration.
+The recommended unit of time is milliseconds, using the standard
+epoch of 00:00:00 Coordinated Universal Time (UTC),
+Thursday, 1 January 1970 to represent a point in time.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.channel">
+<code class="descclassname">streamsx.ec.</code><code class="descname">channel</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.channel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the parallel region global channel number <cite>obj</cite> is executing in.</p>
+<p>The channel number is in the range of 0 to <code class="docutils literal notranslate"><span class="pre">max_channel(obj)</span></code>.</p>
+<p>When the parallel region is not nested this is the same value
+as <code class="docutils literal notranslate"><span class="pre">local_channel(obj)</span></code>.</p>
+<p>If the parallel region is nested the value will be between
+zero and <code class="docutils literal notranslate"><span class="pre">(width*N</span> <span class="pre">-</span> <span class="pre">1)</span></code> where N is the number of times the
+parallel region has been replicated due to nesting.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> – Instance of a class executing within Streams.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Parallel region global channel number or -1 if not located in a parallel region.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.domain_id">
+<code class="descclassname">streamsx.ec.</code><code class="descname">domain_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.domain_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the instance identifier.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.get_application_configuration">
+<code class="descclassname">streamsx.ec.</code><code class="descname">get_application_configuration</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.get_application_configuration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a named application configuration.</p>
+<p>An application configuration is a named set of securely stored properties
+where each key and its value in the property set is a string.</p>
+<p>An application configuration object is used to store information that
+IBM Streams applications require, such as:</p>
+<ul class="simple">
+<li>Database connection data</li>
+<li>Credentials that your applications need to use to access external systems</li>
+<li>Other data, such as the port numbers or URLs of external systems</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em>) – Name of the application configuration.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Dictionary containing the property names and values for the application configuration.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – Application configuration does not exist.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.get_application_directory">
+<code class="descclassname">streamsx.ec.</code><code class="descname">get_application_directory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.get_application_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the application directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The application directory.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.7.</span></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.instance_id">
+<code class="descclassname">streamsx.ec.</code><code class="descname">instance_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.instance_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the instance identifier.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.is_active">
+<code class="descclassname">streamsx.ec.</code><code class="descname">is_active</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.is_active" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests is code is active within a IBM Streams exection context.</p>
+<p>Returns a true value when called from within a
+IBM Streams distributed job or standalone execution.</p>
+<p>Can be used to only run code required at runtime, such as importing
+a module that is only needed at runtime and not topology declaration time.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if running in a IBM Streams context false otherwise.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.11.</span></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.is_standalone">
+<code class="descclassname">streamsx.ec.</code><code class="descname">is_standalone</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.is_standalone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Is the execution context standalone.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if the execution context is standalone, False if it is distributed.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">boolean</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.job_id">
+<code class="descclassname">streamsx.ec.</code><code class="descname">job_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.job_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the job identifier.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.local_channel">
+<code class="descclassname">streamsx.ec.</code><code class="descname">local_channel</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.local_channel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the parallel region local channel number <cite>obj</cite> is executing in.</p>
+<p>The channel number is in the range of zero to <code class="docutils literal notranslate"><span class="pre">local_max_channel(obj)</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> – Instance of a class executing within Streams.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Parallel region local channel number or -1 if not located in a parallel region.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.local_max_channels">
+<code class="descclassname">streamsx.ec.</code><code class="descname">local_max_channels</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.local_max_channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the local maximum number of channels for the parallel
+region <cite>obj</cite> is executing in.</p>
+<p>The maximum number of channels corresponds to the width of the region.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> – Instance of a class executing within Streams.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Parallel region local maximum number of channels or 0 if not located in a parallel region.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.max_channels">
+<code class="descclassname">streamsx.ec.</code><code class="descname">max_channels</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.max_channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the global maximum number of channels for the parallel
+region <cite>obj</cite> is executing in.</p>
+<p>When the parallel region is not nested this is the same value
+as <code class="docutils literal notranslate"><span class="pre">local_max_channels(obj)</span></code>.</p>
+<p>If the parallel region is nested the value will be
+<code class="docutils literal notranslate"><span class="pre">(width*N)</span></code> where N is the number of times the
+parallel region has been replicated due to nesting.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> – Instance of a class executing within Streams.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Parallel region global maximum number of channels or 0 if not located in a parallel region.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.pe_id">
+<code class="descclassname">streamsx.ec.</code><code class="descname">pe_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.pe_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the PE identifier.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.shutdown">
+<code class="descclassname">streamsx.ec.</code><code class="descname">shutdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.shutdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the processing element (PE) shutdown event.</p>
+<p>The event is set when the PE is being shutdown.
+Can be used in source iterators that need to block by sleeping:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Sleep for 60 seconds unless the PE is being shutdown</span>
+<span class="k">if</span> <span class="n">streamsx</span><span class="o">.</span><span class="n">ec</span><span class="o">.</span><span class="n">shutdown</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="mf">60.0</span><span class="p">):</span>
+    <span class="k">return</span> <span class="kc">None</span>
+</pre></div>
+</div>
+<p>Code must not call <code class="docutils literal notranslate"><span class="pre">set()</span></code> on the returned event.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Event object representing PE shutdown.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">threading.Event</td>
+</tr>
+</tbody>
+</table>
+<div class="versionadded">
+<p><span class="versionmodified">New in version 1.11.</span></p>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="streamsx.spl.op.html" class="btn btn-neutral float-right" title="streamsx.spl.op" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="streamsx.topology.tester_runtime.html" class="btn btn-neutral" title="streamsx.topology.tester_runtime" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2018 IBM Corp.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
