@@ -240,6 +240,21 @@ class TestPythonWindowing(unittest.TestCase):
         tester.contents(s, [('b',1), ('c',7)] )
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_structured_as_tuple_partitioned(self):
+        schema = StreamSchema("tuple<rstring a, int32 b>").as_tuple()
+        topo = Topology()
+        s = topo.source([('a',1),('b', 7),('a', 2),('b', 9), ('a', 4), ('a', 5), ('b', 8), ('b', 17)])
+        s = s.map(lambda x: x, schema = schema)
+
+        s = s.last(3).trigger(2).partition('a').aggregate(lambda items: (items[1][0], items[0][1]))
+
+        #s.print()
+        #streamsx.topology.context.submit('TOOLKIT', topo)
+
+        tester = Tester(topo)
+        tester.contents(s, [('a',1), ('b',7), ('a', 2), ('b', 9)] )
+        tester.test(self.test_ctxtype, self.test_config)
+
     def test_structured_as_named_tuple(self):
         schema = StreamSchema("tuple<rstring a, int32 b>").as_tuple(named=True)
         topo = Topology()
@@ -291,7 +306,7 @@ class TestPythonWindowing(unittest.TestCase):
         s = topo.source(lambda : range(20))
         b = s.batch(4)
         r = b.aggregate(lambda items : sum(items))
-
+ 
         tester = Tester(topo)
         tester.contents(r, [0+1+2+3,4+5+6+7,8+9+10+11,12+13+14+15,16+17+18+19])
         tester.tuple_count(r, 5)

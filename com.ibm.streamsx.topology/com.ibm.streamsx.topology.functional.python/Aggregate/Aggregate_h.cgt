@@ -15,8 +15,32 @@ using namespace streamsx::topology;
 # Configure Windowing
  my $inputPort = $model->getInputPortAt(0); 
  my $window = $inputPort->getWindow();
- my $windowCppType = SPL::CodeGen::getWindowCppType($window,"PyObject *");
- my $windowEventCppType = SPL::CodeGen::getWindowEventCppType($window,"PyObject *"); # TODO optional third param is for partition type.
+
+ my $partitionByParam = $model->getParameterByName("pyPartitionBy");
+ my @partitionByTypes = SPL::CodeGen::getParameterCppTypes($partitionByParam);
+ my $windowCppType;
+ my $windowEventCppType;
+ if ($partitionByParam) {
+   if (scalar @partitionByTypes > 1) {
+     SPL::CodeGen::exitln('Only a single partition attribute is allowed.');
+   }
+   else {
+%>
+#define SPLPY_PARTITION_BY_ATTRIBUTE 1
+<%
+     my $partitionByType = $partitionByTypes[0];
+     $windowCppType = SPL::CodeGen::getWindowCppType($window, "PyObject *", $partitionByType);
+
+     $windowEventCppType = SPL::CodeGen::getWindowEventCppType($window, "PyObject *", $partitionByType);
+   }
+ }
+ else {
+%>
+#define SPLPY_PARTITION_BY_ATTRIBUTE 0
+<%
+   $windowCppType = SPL::CodeGen::getWindowCppType($window,"PyObject *");
+   $windowEventCppType = SPL::CodeGen::getWindowEventCppType($window,"PyObject *");
+ }    
 %>
 
 #define SPLPY_AGGREGATE_TIME_POLICIES <%=$window->getEvictionPolicyType() == $SPL::Operator::Instance::Window::Time || ($window->hasTriggerPolicy() && $window->getEvictionPolicyType() == $SPL::Operator::Instance::Window::Time) ? 1 : 0%>
@@ -31,7 +55,10 @@ class MY_OPERATOR : public MY_BASE_OPERATOR,
 public:
   typedef <%=$windowCppType%> WindowType;
   typedef <%=$windowEventCppType%> WindowEventType;
-
+<%if ($partitionByParam) {%>
+  typedef <%=$partitionByTypes[0]%> PartitionByType;
+  typedef <%=$inputPort->getCppTupleType()%> TupleType;
+<%}%>
   MY_OPERATOR();
   virtual ~MY_OPERATOR(); 
   void prepareToShutdown(); 
@@ -66,6 +93,13 @@ private:
     SplpyOp * op() const { return funcop_; }
 <% if ($window->isTumbling()) {%>
    void aggregateRemaining();
+<%}%>
+
+
+<%if ($partitionByParam) {%>
+     PartitionByType const & getPartitionValue(TupleType const & tuple) {
+       return tuple.get_<%=substr $partitionByParam->getValueAt(0)->getSPLExpression(), 1, -1%>();
+     }
 <%}%>
 
     // Members
