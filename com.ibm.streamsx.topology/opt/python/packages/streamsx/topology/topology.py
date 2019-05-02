@@ -1992,6 +1992,22 @@ class Window(object):
         self._config['evictConfig'] = int(duration.total_seconds() * 1000.0)
         self._config['evictTimeUnit'] = 'MILLISECONDS'
 
+    def _partition(self, attribute):
+        # Can we validate this attribute here?  If not, where?
+        self._config['partitioned'] = True
+        self._config['partitionBy'] = attribute
+
+
+    def partition(self, attribute):
+        """Declare a window with this windows eviction and trigger policies,
+           and a partition.
+
+        TODO more docs....
+        """
+        pw = copy.copy(self)
+        pw._partition(attribute)
+        return pw
+
     def trigger(self, when=1):
         """Declare a window with this window's size and a trigger policy.
 
@@ -2083,7 +2099,14 @@ class Window(object):
         sl = _SourceLocation(_source_info(), "aggregate")
         _name = self.topology.graph._requested_name(name, action="aggregate", func=function)
         stateful = self.stream._determine_statefulness(function)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Aggregate", function, name=_name, sl=sl, stateful=stateful)
+
+        params = {}
+        # if _config contains 'partitionBy', add a parameter 'pyPartitionBy'
+        if 'partitionBy' in self._config:
+            params['pyPartitionBy'] = self._config['partitionBy']
+
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Aggregate", function, name=_name, sl=sl, stateful=stateful, params=params)
+            
         op.addInputPort(outputPort=self.stream.oport, window_config=self._config)
         streamsx.topology.schema.StreamSchema._fnop_style(self.stream.oport.schema, op, 'pyStyle')
         oport = op.addOutputPort(schema=schema, name=_name)

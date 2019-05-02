@@ -177,7 +177,12 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
     SPL::AutoPortMutex am(mutex_, *this);
 #endif
 
+#if SPLPY_PARTITION_BY_ATTRIBUTE == 1
+  PartitionType const & partition = getPartitionValue(static_cast<TupleType const &>(tuple));
+  window_.insert(python_value, partition);
+#else
   window_.insert(python_value);
+#endif
 }
 
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
