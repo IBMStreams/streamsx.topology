@@ -14,6 +14,7 @@ import org.apache.http.client.fluent.Executor;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
+import com.ibm.streamsx.rest.internal.RestUtils;
 
 /**
  * Connection to IBM Streams instance
@@ -62,11 +63,11 @@ abstract class AbstractStreamsConnection {
     AbstractStreamsConnection(String resourcesUrl,
             boolean allowInsecure) {
         this.resourcesUrl = resourcesUrl;
-        this.executor = StreamsRestUtils.createExecutor(allowInsecure);
+        this.executor = RestUtils.createExecutor(allowInsecure);
     }
     
     public boolean allowInsecureHosts(boolean allowInsecure) {
-    	this.executor = StreamsRestUtils.createExecutor(allowInsecure);
+    	this.executor = RestUtils.createExecutor(allowInsecure);
     	return allowInsecure;
     }
 

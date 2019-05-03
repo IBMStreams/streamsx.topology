@@ -3,6 +3,9 @@ package com.ibm.streamsx.rest;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.function.Function;
+
+import org.apache.http.client.fluent.Executor;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
@@ -11,10 +14,10 @@ import com.ibm.streamsx.topology.internal.streams.InvokeSubmit;
 
 class StreamsConnectionImpl extends AbstractStreamsConnection {
 
-	private final String authorization;
+	private final Function<Executor, String> authorization;
     private final String userName;
 
-    StreamsConnectionImpl(String userName, String authorization,
+    StreamsConnectionImpl(String userName, Function<Executor, String> authorization,
             String resourcesUrl, boolean allowInsecure) {
         super(resourcesUrl, allowInsecure);
         this.userName = userName;
@@ -23,7 +26,7 @@ class StreamsConnectionImpl extends AbstractStreamsConnection {
 
     @Override
     String getAuthorization() {
-        return authorization;
+        return authorization.apply(this.executor);
     }
     
     @Override

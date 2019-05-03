@@ -4,7 +4,6 @@ import static com.ibm.streamsx.rest.StreamsRestUtils.requestGsonResponse;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
 
 import org.apache.http.auth.AUTH;
 import org.apache.http.client.fluent.Request;
