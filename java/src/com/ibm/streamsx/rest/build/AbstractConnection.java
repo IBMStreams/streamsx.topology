@@ -8,6 +8,8 @@ import java.io.IOException;
 
 import org.apache.http.client.fluent.Executor;
 
+import com.ibm.streamsx.rest.internal.RestUtils;
+
 /**
  * Connection to IBM Streams instance
  */
@@ -27,11 +29,11 @@ abstract class AbstractConnection {
      *            <strong>not</strong> recommended in a production environment
      */
     AbstractConnection(boolean allowInsecure) {
-        this.executor = StreamsRestUtils.createExecutor(allowInsecure);
+        this.executor = RestUtils.createExecutor(allowInsecure);
     }
     
     public boolean allowInsecureHosts(boolean allowInsecure) {
-    	this.executor = StreamsRestUtils.createExecutor(allowInsecure);
+    	this.executor = RestUtils.createExecutor(allowInsecure);
     	return allowInsecure;
     }
 

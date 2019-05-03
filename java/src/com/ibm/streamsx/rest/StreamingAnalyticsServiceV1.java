@@ -29,6 +29,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.rest.internal.RestUtils;
 
 /**
  * Implementation of StreamingAnalyticsService for Version 1.
@@ -42,7 +43,7 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
     StreamingAnalyticsServiceV1(JsonObject service) {
         super(service);
         // Authorization header never changes in V1 once set
-        authorization = StreamsRestUtils.createBasicAuth(credentials());
+        authorization = RestUtils.createBasicAuth(credentials());
     }
 
     @Override

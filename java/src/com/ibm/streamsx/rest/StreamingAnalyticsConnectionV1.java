@@ -4,8 +4,6 @@
  */
 package com.ibm.streamsx.rest;
 
-import static com.ibm.streamsx.rest.StreamsRestUtils.MEMBER_USERID;
-
 import java.io.IOException;
 
 import com.google.gson.JsonObject;
@@ -63,7 +61,6 @@ class StreamingAnalyticsConnectionV1 extends AbstractStreamingAnalyticsConnectio
     		JsonObject service,
             boolean allowInsecure) throws IOException {
         JsonObject credentials = service.get("credentials").getAsJsonObject();
-        String userId = StreamsRestUtils.getRequiredMember(credentials, MEMBER_USERID);
         String restUrl = StreamsRestUtils.getRequiredMember(credentials, "rest_url");
         String sasResourcesUrl = restUrl + StreamsRestUtils.getRequiredMember(credentials, "resources_path");
         JsonObject sasResources = StreamsRestUtils.getServiceResources(actualService.getAuthorization(), sasResourcesUrl);

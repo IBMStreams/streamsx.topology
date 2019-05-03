@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
+import com.ibm.streamsx.rest.internal.RestUtils;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
@@ -76,7 +77,7 @@ public class StreamsConnection {
     public static StreamsConnection ofBearerToken(String url, String bearerToken) {
         
         AbstractStreamsConnection delegate = new StreamsConnectionImpl(null,
-                StreamsRestUtils.createBearerAuth(bearerToken),
+                executor -> RestUtils.createBearerAuth(bearerToken),
                 url, false);
         StreamsConnection sc = new StreamsConnection(delegate);
         return sc;      
@@ -131,7 +132,7 @@ public class StreamsConnection {
     private static AbstractStreamsConnection createDelegate(String userName,
             String authToken, String url) {
         return new StreamsConnectionImpl(userName,
-                    StreamsRestUtils.createBasicAuth(userName, authToken),
+                    executor -> RestUtils.createBasicAuth(userName, authToken),
                     url, false);
     }
 }
