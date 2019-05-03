@@ -268,7 +268,7 @@ class StreamsRestUtils {
             // but if not, provide a better message
             sReturn = EntityUtils.toString(hResponse.getEntity());
             if (sReturn != null && !sReturn.isEmpty()) {
-                throw RESTException.create(rcResponse, sReturn + " for url " + inputString);
+                throw RESTException.create(rcResponse, sReturn);
             } else {
                 String httpError = "HttpStatus is " + rcResponse + " for url " + inputString;
                 throw new RESTException(rcResponse, httpError);

@@ -228,9 +228,7 @@ public class StreamsConnectionTest {
             fail("this job number should not exist");
         } catch (RESTException r) {
             assertEquals(r.toString(), 404, r.getStatusCode());
-            System.err.println("DDD:" + r.getMessage());
-            if (r.getStreamsErrorMessageId() != null)
-                assertEquals("CDISW5000E", r.getStreamsErrorMessageId());
+            assertEquals("CDISW5000E", r.getStreamsErrorMessageId());
         }
     }
 
