@@ -20,6 +20,7 @@ using namespace streamsx::topology;
  my @partitionByTypes = SPL::CodeGen::getParameterCppTypes($partitionByParam);
  my $windowCppType;
  my $windowEventCppType;
+ my $partitionParamName;
  if ($partitionByParam) {
    if (scalar @partitionByTypes > 1) {
      SPL::CodeGen::exitln('Only a single partition attribute is allowed.');
@@ -32,6 +33,13 @@ using namespace streamsx::topology;
      $windowCppType = SPL::CodeGen::getWindowCppType($window, "PyObject *", $partitionByType);
 
      $windowEventCppType = SPL::CodeGen::getWindowEventCppType($window, "PyObject *", $partitionByType);
+
+     # Validate that the tuple type contains an attribute with name 
+     # matching $partitionByParam
+     $partitionParamName = substr $partitionByParam->getValueAt(0)->getSPLExpression(), 1, -1;
+     if (! $inputPort->getAttributeByName($partitionParamName)) {
+     	SPL::CodeGen::exitln("The input port does not contain the parameter \"$partitionParamName\", which has been specified for partitioning");
+     }
    }
  }
  else {
@@ -98,7 +106,7 @@ private:
 
 <%if ($partitionByParam) {%>
      PartitionByType const & getPartitionValue(TupleType const & tuple) {
-       return tuple.get_<%=substr $partitionByParam->getValueAt(0)->getSPLExpression(), 1, -1%>();
+       return tuple.get_<%=$partitionParamName%>();
      }
 <%}%>
 

@@ -1993,16 +1993,34 @@ class Window(object):
         self._config['evictTimeUnit'] = 'MILLISECONDS'
 
     def _partition(self, attribute):
-        # Can we validate this attribute here?  If not, where?
+        # We cannot always get the list of tuple attributes here
+        # because it might be a named type.  Validation of the attribute
+        # will be done in code generation.  We only support partition
+        # by attribute for StreamSchema (not CommonSchema).
+        # Our input schema is the output schema of the previous operator.
+        if not isinstance(self.stream.oport.schema, streamsx.topology.schema.StreamSchema):
+            raise ValueError("Partition by attribute is supported only for a structured schema")
         self._config['partitioned'] = True
         self._config['partitionBy'] = attribute
 
 
     def partition(self, attribute):
-        """Declare a window with this windows eviction and trigger policies,
-           and a partition.
+        """Declare a window with this windows eviction and trigger policies, and a partition.
 
-        TODO more docs....
+        In a partitioned window, a subwindow will be created for each distinct
+        value received for the attribute used for partitioning.  Each subwindow
+        is treated as if it were a separate window, and each subwindow shares
+        the same trigger and eviction policy.
+
+        This method may be used only with a structured schema, and the
+        value of the `attribute` parameter must be the name of a single
+        attribute in the schema.
+
+        Args:
+            attribute: The name of the attribute to be used for partitioning.
+
+        Returns:
+            Window: Window that will be triggered.
         """
         pw = copy.copy(self)
         pw._partition(attribute)
@@ -2036,11 +2054,7 @@ class Window(object):
         .. warning:: A trigger is only supported for a sliding window
             such as one created by :py:meth:`last`.
         """
-        tw = Window(self.stream, self._config['type'])
-        tw._config['evictPolicy'] = self._config['evictPolicy']
-        tw._config['evictConfig'] = self._config['evictConfig']
-        if self._config['evictPolicy'] == 'TIME':
-            tw._config['evictTimeUnit'] = 'MILLISECONDS'
+        tw = copy.copy(self);
 
         if isinstance(when, datetime.timedelta):
             tw._config['triggerPolicy'] = 'TIME'

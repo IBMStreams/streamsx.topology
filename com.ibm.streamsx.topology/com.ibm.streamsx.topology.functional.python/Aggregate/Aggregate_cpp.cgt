@@ -204,13 +204,16 @@ void MY_OPERATOR::aggregateRemaining() {
     SPL::AutoPortMutex am(mutex_, *this);
 #endif
     WindowType::StorageType & storage = window_.getWindowStorage();
-    WindowType::DataType & content = storage[0];
-    if (!content.empty()) {
-        beforeWindowFlushEvent(window_, 0);
+    // Iterate through the partitions.
+    for (WindowType::StorageType::iterator partition = storage.begin(); partition != storage.end(); ++partition) {
+        WindowType::DataType & content = partition->second;
+	if (!content.empty()) {
+            beforeWindowFlushEvent(window_, partition->first);
 
-       // Since we have processed these tuples in batch
-       // don't process them again. 
-       content.clear();
+           // Since we have processed these tuples in batch
+           // don't process them again. 
+           content.clear();
+        }
     }
 }
 <%}%>
