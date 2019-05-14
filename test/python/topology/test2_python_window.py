@@ -291,7 +291,7 @@ class TestPythonWindowing(unittest.TestCase):
         s = topo.source(lambda : range(20))
         b = s.batch(4)
         r = b.aggregate(lambda items : sum(items))
- 
+
         tester = Tester(topo)
         tester.contents(r, [0+1+2+3,4+5+6+7,8+9+10+11,12+13+14+15,16+17+18+19])
         tester.tuple_count(r, 5)
