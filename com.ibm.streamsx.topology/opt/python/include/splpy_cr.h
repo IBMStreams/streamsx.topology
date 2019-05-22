@@ -131,7 +131,6 @@ namespace SPL {
 std::ostream & operator << (std::ostream &ostr, PyObject * obj){
   using namespace streamsx::topology;
   SplpyGIL gil;
-  Py_INCREF(obj);
   PyObject* str = PyObject_Str(obj);
   SPL::rstring s;
   if (str && 0 == pyRStringFromPyObject(s, str)) {
