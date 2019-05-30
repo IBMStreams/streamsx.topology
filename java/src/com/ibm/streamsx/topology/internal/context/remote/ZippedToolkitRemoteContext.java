@@ -24,8 +24,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -33,6 +36,7 @@ import java.util.concurrent.Future;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
@@ -118,6 +122,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         // Avoid multiple concurrent executions overwriting files.
         Path manifestTmp = Files.createTempFile("manifest_tk", "txt");
         Path mainCompTmp = Files.createTempFile("main_composite", "txt");
+        Path scOptsTmp = Files.createTempFile("sc_opts", "txt");
         
         // tkManifest is the list of toolkits contained in the archive
         try (PrintWriter tkManifest = new PrintWriter(manifestTmp.toFile(), "UTF-8")) {
@@ -144,11 +149,38 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         try (PrintWriter mainComposite = new PrintWriter(mainCompTmp.toFile(), "UTF-8")) {
             mainComposite.print(namespace + "::" + name);
         }
+        
+        JsonObject deploy = deploy(submission);
+        
+        
+        if (deploy.has(ContextProperties.SC_OPTIONS)) {
+            List<String> scOptions;
+            JsonElement opts = deploy.get(ContextProperties.SC_OPTIONS);
+            if (opts.isJsonArray()) {
+                scOptions = new ArrayList<>();
+                for (JsonElement e : opts.getAsJsonArray()) {
+                    scOptions.add(e.getAsString());
+                }
+            } else {
+                scOptions = Collections.singletonList(opts.getAsString());
+            }
+            
+            if (!scOptions.isEmpty()) {
+                try (PrintWriter scOptsW = new PrintWriter(scOptsTmp.toFile(), "UTF-8")) {
+                    for (String scOpt : scOptions) {
+                        scOptsW.print(scOpt);
+                        scOptsW.print(" ");
+                    }
+                }
+            }
+        }
+        
                
         Path makefile = topologyToolkit.resolve(Paths.get("opt", "client", "remote", "Makefile.template"));
                       
         paths.put(manifestTmp, "manifest_tk.txt");
         paths.put(mainCompTmp, "main_composite.txt");
+        paths.put(scOptsTmp, "sc_opts.txt");
         paths.put(makefile, "Makefile");
         
         try {
@@ -156,6 +188,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         } finally {
             manifestTmp.toFile().delete();
             mainCompTmp.toFile().delete();
+            scOptsTmp.toFile().delete();
         }
         
         return zipFilePath;
