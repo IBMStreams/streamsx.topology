@@ -71,8 +71,8 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
         ctxtype(str): Type of context the application will be submitted to. A value from :py:class:`ContextTypes`.
         graph(Topology): The application topology to be submitted.
         config(dict): Configuration for the submission.
-        username(str): Username for the Streams REST api.
-        password(str): Password for `username`.
+        username(str): Deprecated: Username for the Streams REST api. Use environment variable ``STREAMS_USERNAME`` if using user-password authentication.
+        password(str): Deprecated: Password for `username`. Use environment variable ``STREAMS_PASSWORD`` if using user-password authentication.
 
     Returns:
         SubmissionResult: Result of the submission. For details of what is contained see the :py:class:`ContextTypes`
@@ -85,6 +85,9 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
         raise ValueError("Topology {0} does not contain any streams.".format(graph.topology.name))
     if ctxtype == ContextTypes.STANDALONE_BUNDLE:
         warnings.warn("Use ContextTypes.BUNDLE", DeprecationWarning, stacklevel=2)
+
+    if username or password:
+        warnings.warn("Use environment variables STREAMS_USERNAME and STREAMS_PASSWORD", DeprecationWarning, stacklevel=2)
 
     context_submitter = _SubmitContextFactory(graph, config, username, password).get_submit_context(ctxtype)
     sr = SubmissionResult(context_submitter.submit())
