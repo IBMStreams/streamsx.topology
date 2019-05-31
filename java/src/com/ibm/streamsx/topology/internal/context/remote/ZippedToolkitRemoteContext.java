@@ -66,21 +66,13 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     public Future<File> _submit(JsonObject submission) throws Exception {
         
         JsonObject deploy = deploy(submission);
-        
-        // Ensure the code archive is assembled in
-        // a clean directory to avoid multiple runs
-        // overwriting each other.
-        if (!deploy.has(ContextProperties.TOOLKIT_DIR)) {
-            
-            Path toolkitDir = Files
-                    .createTempDirectory(Paths.get(""), "tk");
-            
-            deploy.addProperty(ContextProperties.TOOLKIT_DIR, toolkitDir.toString());
-        }
-              
         final File toolkitRoot = super._submit(submission).get();
-        report("Building code archive");
-        return createCodeArchive(toolkitRoot, submission);
+        try {
+              report("Building code archive");
+              return createCodeArchive(toolkitRoot, submission);
+        } finally {
+            deleteToolkit(toolkitRoot, deploy);
+        }
     }
     
     public Future<File> createCodeArchive(File toolkitRoot, JsonObject submission) throws IOException, URISyntaxException {
@@ -93,10 +85,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         	final JsonObject submissionResult = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);
         	submissionResult.addProperty(SubmissionResultsKeys.ARCHIVE_PATH, zipOutPath.toString());
         }
-        
-        JsonObject deployInfo = object(submission, SUBMISSION_DEPLOY);
-        deleteToolkit(toolkitRoot, deployInfo);
-        
+                
         return new CompletedFuture<File>(zipOutPath.toFile());
     }
         
