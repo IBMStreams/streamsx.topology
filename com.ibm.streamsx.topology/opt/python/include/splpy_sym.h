@@ -63,6 +63,7 @@ typedef long (*__splpy_l_p_fp)(PyObject *);
 typedef PyObject * (*__splpy_p_l_fp)(long);
 typedef PyObject * (*__splpy_p_d_fp)(double);
 typedef double (*__splpy_d_p_fp)(PyObject *);
+typedef int (*__splpy_i_p_p_i_fp)(PyObject *, PyObject *, int);
 
 /*
  * GIL State locks
@@ -349,6 +350,8 @@ typedef void * (*__splpy_lavp_fp)(PyObject *);
 
 extern "C" {
   static __splpy_i_p_fp __spl_fp_PyObject_IsTrue;
+  static __splpy_s_p_fp __spl_fp_PyObject_Hash;
+  static __splpy_i_p_p_i_fp __spl_fp_PyObject_RichCompareBool;
   static __splpy_l_p_fp __spl_fp_PyLong_AsLong;
   static __splpy_p_l_fp __spl_fp_PyLong_FromLong;
   static __splpy_laul_fp __spl_fp_PyLong_AsUnsignedLong;
@@ -364,6 +367,12 @@ extern "C" {
 
   static int __spl_fi_PyObject_IsTrue(PyObject *o) {
      return __spl_fp_PyObject_IsTrue(o);
+  }
+  static Py_ssize_t __spl_fi_PyObject_Hash(PyObject *o) {
+    return __spl_fp_PyObject_Hash(o);
+  }
+  static int __spl_fi_PyObject_RichCompareBool(PyObject *o1, PyObject *o2, int i) {
+    return __spl_fp_PyObject_RichCompareBool(o1, o2, i);
   }
   static long __spl_fi_PyLong_AsLong(PyObject *o) {
      return __spl_fp_PyLong_AsLong(o);
@@ -403,6 +412,8 @@ extern "C" {
   }
 }
 #pragma weak PyObject_IsTrue = __spl_fi_PyObject_IsTrue
+#pragma weak PyObject_Hash = __spl_fi_PyObject_Hash
+#pragma weak PyObject_RichCompareBool = __spl_fi_PyObject_RichCompareBool
 #pragma weak PyLong_AsLong = __spl_fi_PyLong_AsLong
 #pragma weak PyLong_FromLong = __spl_fi_PyLong_FromLong
 #pragma weak PyLong_AsUnsignedLong = __spl_fi_PyLong_AsUnsignedLong
@@ -541,6 +552,8 @@ class SplpySym {
      __SPLFIX(PyObject_GetIter, __splpy_p_p_fp);
 
      __SPLFIX(PyObject_IsTrue, __splpy_i_p_fp);
+     __SPLFIX(PyObject_Hash, __splpy_s_p_fp);
+     __SPLFIX(PyObject_RichCompareBool, __splpy_i_p_p_i_fp);
      __SPLFIX(PyLong_AsLong, __splpy_l_p_fp);
      __SPLFIX(PyLong_FromLong, __splpy_p_l_fp);
      __SPLFIX(PyLong_AsUnsignedLong, __splpy_laul_fp);

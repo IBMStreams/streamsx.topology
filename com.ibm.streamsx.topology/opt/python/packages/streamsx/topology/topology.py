@@ -220,6 +220,9 @@ import streamsx.topology.graph
 import streamsx.topology.schema
 import streamsx.topology.functions
 import streamsx.topology.runtime
+import dill
+import types
+import base64
 import json
 import threading
 import queue
@@ -1992,7 +1995,7 @@ class Window(object):
         self._config['evictConfig'] = int(duration.total_seconds() * 1000.0)
         self._config['evictTimeUnit'] = 'MILLISECONDS'
 
-    def _partition(self, attribute):
+    def _partition_by_attribute(self, attribute):
         # We cannot always get the list of tuple attributes here
         # because it might be a named type.  Validation of the attribute
         # will be done in code generation.  We only support partition
@@ -2003,8 +2006,37 @@ class Window(object):
         self._config['partitioned'] = True
         self._config['partitionBy'] = attribute
 
+    def _partition_by_callable(self, function):
+        dilled_callable = None
+        # We may need to duplicate much of graph._addOperatorFunction here.
+        # TODO factor the common code to avoid duplication
+        recurse = None
+        if isinstance(function, types.LambdaType) and function.__name__ == "<lambda>" :
+            function = streamsx.topology.runtime._Callable(function, no_context=True)
+            recurse = True
+        elif function.__module__ == '__main__':
+            # Function/Class defined in main, create a callable wrapping its
+            # dill'ed form
+            function = streamsx.topology.runtime._Callable(function,
+                no_context = True if inspect.isroutine(function) else None)
+            recurse = True
+         
+        if inspect.isroutine(function):
+            # callable is a function
+            name = function.__name__
+        else:
+            # callable is a callable class instance
+            name = function.__class__.__name__
+            # dill format is binary; base64 encode so it is json serializable 
+            dilled_callable = base64.b64encode(dill.dumps(function, recurse=recurse)).decode("ascii")
 
-    def partition(self, attribute):
+        self._config['partitioned'] = True
+        if dilled_callable is not None:
+            self._config['partitionByCallable'] = dilled_callable
+        self._config['partitionByName'] = name
+        self._config['partitionByModule'] = function.__module__
+
+    def partition(self, key):
         """Declare a window with this windows eviction and trigger policies, and a partition.
 
         In a partitioned window, a subwindow will be created for each distinct
@@ -2023,7 +2055,11 @@ class Window(object):
             Window: Window that will be triggered.
         """
         pw = copy.copy(self)
-        pw._partition(attribute)
+
+        if callable(key):
+            pw._partition_by_callable(key)
+        else:
+            pw._partition_by_attribute(key)
         return pw
 
     def trigger(self, when=1):
@@ -2118,6 +2154,12 @@ class Window(object):
         # if _config contains 'partitionBy', add a parameter 'pyPartitionBy'
         if 'partitionBy' in self._config:
             params['pyPartitionBy'] = self._config['partitionBy']
+        if 'partitionByCallable' in self._config:
+            params['pyPartitionByCallable'] = self._config['partitionByCallable']
+        if 'partitionByName' in self._config:
+            params['pyPartitionByName'] = self._config['partitionByName']
+            params['pyPartitionByModule'] = self._config['partitionByModule']
+            params['toolkitDir'] = streamsx.topology.param.toolkit_dir()
 
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Aggregate", function, name=_name, sl=sl, stateful=stateful, params=params)
             

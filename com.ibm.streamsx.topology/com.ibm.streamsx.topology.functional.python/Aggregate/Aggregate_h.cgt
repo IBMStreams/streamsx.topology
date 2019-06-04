@@ -49,6 +49,23 @@ using namespace streamsx::topology;
    $windowCppType = SPL::CodeGen::getWindowCppType($window,"PyObject *");
    $windowEventCppType = SPL::CodeGen::getWindowEventCppType($window,"PyObject *");
  }    
+ # TODO check for both pyPartitionBy and pyPartitionByName.  They cannot
+ # both be specified.
+ my $partitionByName = $model->getParameterByName("pyPartitionByName");
+ my $partitionByCallable = $model->getParameterByName("pyPartitionByCallable");
+ if ($partitionByName) {
+     $windowCppType = SPL::CodeGen::getWindowCppType($window, "PyObject *", "PyObject *");
+
+     $windowEventCppType = SPL::CodeGen::getWindowEventCppType($window, "PyObject *", "PyObject *");
+%>
+#define SPLPY_PARTITION_BY_NAME 1
+<%
+ }
+ if ($partitionByCallable) {
+%>
+#define SPLPY_PARTITION_BY_CALLABLE 1
+<%
+ }   
 %>
 
 #define SPLPY_AGGREGATE_TIME_POLICIES <%=$window->getEvictionPolicyType() == $SPL::Operator::Instance::Window::Time || ($window->hasTriggerPolicy() && $window->getEvictionPolicyType() == $SPL::Operator::Instance::Window::Time) ? 1 : 0%>
@@ -65,6 +82,9 @@ public:
   typedef <%=$windowEventCppType%> WindowEventType;
 <%if ($partitionByParam) {%>
   typedef <%=$partitionByTypes[0]%> PartitionByType;
+  typedef <%=$inputPort->getCppTupleType()%> TupleType;
+<%} elsif ($partitionByName) {%>
+  typedef PyObject * PartitionByType;
   typedef <%=$inputPort->getCppTupleType()%> TupleType;
 <%}%>
   MY_OPERATOR();
@@ -85,6 +105,9 @@ public:
   void beforeWindowFlushEvent(
      WindowEventType::WindowType & window, WindowEventType::PartitionType const& key);
 <%}%>
+#if SPLPY_PARTITION_BY_NAME == 1 || SPL_PARTITION_BY_CALLABLE == 1
+  void onWindowPartitionEviction(WindowEventType::WindowType & window, WindowEventType::PartitionIterator begin, WindowEventType::PartitionIterator end);
+#endif
 
 #if SPLPY_OP_STATE_HANDLER == 1
   virtual void drain();
@@ -103,11 +126,16 @@ private:
    void aggregateRemaining();
 <%}%>
 
+    const SPL::rstring & param(const char *name) {
+        return getParameterValues(name)[0]->getValue();
+    }
 
 <%if ($partitionByParam) {%>
-     PartitionByType const & getPartitionValue(TupleType const & tuple) {
-       return tuple.get_<%=$partitionParamName%>();
-     }
+    PartitionByType const & getPartitionValue(TupleType const & tuple) {
+      return tuple.get_<%=$partitionParamName%>();
+    }
+<%} elsif ($partitionByName) {%>
+    PyObject * getPartitionValue(PyObject * tuple);
 <%}%>
 
     // Members
@@ -130,6 +158,9 @@ private:
     // Locking is through window acquire data when
     // there are time policies
     SPL::Mutex mutex_;
+#endif
+#if SPLPY_PARTITION_BY_NAME == 1
+    PyObject * partitionCallable;
 #endif
 }; 
 
