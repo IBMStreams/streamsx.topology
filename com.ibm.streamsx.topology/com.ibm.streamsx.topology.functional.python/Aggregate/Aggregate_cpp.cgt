@@ -37,6 +37,9 @@ MY_OPERATOR::MY_OPERATOR() :
    loads(NULL),
    occ_(-1),
    window_(<%=$windowCppInitializer%>)
+#if SPLPY_PARTITION_BY_NAME == 1
+   , partitionCallable(NULL)
+#endif
 {
 <% if ($window->isSliding()) {%>
     window_.registerOnWindowTriggerHandler(this);
@@ -45,6 +48,9 @@ MY_OPERATOR::MY_OPERATOR() :
 <% if ($window->isTumbling()) {%>
     window_.registerBeforeWindowFlushHandler(this);
 <%}%>
+#if SPLPY_PARTITION_BY_NAME == 1 || SPLPY_PARTITION_BY_CALLABLE == 1
+    window_.registerOnWindowPartitionEviction(this);
+#endif
 
 #if SPLPY_OP_STATE_HANDLER == 1
     window_.registerSerializationHandler(this);
@@ -96,6 +102,37 @@ MY_OPERATOR::MY_OPERATOR() :
 #if SPLPY_OP_STATE_HANDLER == 1
    this->getContext().registerStateHandler(*this);
 #endif
+
+#if SPLPY_PARTITION_BY_NAME == 1
+    // This is based on SplpyFuncOp::loadAndWrapCallable
+    SplpyGIL lock;
+
+    // TODO this seems unnecessary if pyPartitionByCallable is specified.
+    partitionCallable = 
+        SplpyGeneral::loadFunction(param("pyPartitionByModule"), param("pyPartitionByName"));
+
+    // The object to be called is either partitionCallable for
+    // a function passed into the operator
+    // or a pickled encoded class instance
+    // represented as a string in parameter pyPartitionByCallable
+    
+#if SPLPY_PARTITION_BY_CALLABLE == 1
+    // argument is the serialized callable instance
+    PyObject * appClass = partitionCallable;
+    partitionCallable = pyUnicode_FromUTF8(param("pyPartitionByCallable").c_str());
+    Py_DECREF(appClass);
+
+    // base64.decode
+    PyObject * decoded = SplpyGeneral::callFunction("base64","b64decode",partitionCallable, NULL);
+
+    // dill.loads
+    PyObject * loaded = SplpyGeneral::callFunction("dill", "loads", decoded, NULL);
+
+    partitionCallable = loaded;
+
+#endif // SPLPY_PARTITION_BY_CALLABLE
+
+#endif // SPLPY_PARTITION_BY_NAME
 }
 
 MY_OPERATOR::~MY_OPERATOR() 
@@ -127,7 +164,6 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
   // so we need to do it here.
   
   <%if ($pystyle eq 'pickle'){%>
-
       unsigned char const *data = value.getData();
       unsigned char fmt = *data;
       if (fmt == STREAMSX_TPP_PTR) {
@@ -180,6 +216,9 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 #if SPLPY_PARTITION_BY_ATTRIBUTE == 1
   PartitionType const & partition = getPartitionValue(static_cast<TupleType const &>(tuple));
   window_.insert(python_value, partition);
+#elif SPLPY_PARTITION_BY_NAME == 1
+  PartitionType const & partition = getPartitionValue(python_value);
+  window_.insert(python_value, partition);
 #else
   window_.insert(python_value);
 #endif
@@ -218,6 +257,16 @@ void MY_OPERATOR::aggregateRemaining() {
 }
 <%}%>
 
+#if SPLPY_PARTITION_BY_NAME == 1
+PyObject * MY_OPERATOR::getPartitionValue(PyObject * tuple) {
+    SplpyGIL lock; 
+    PyObject * arg = PyTuple_New(1);
+    Py_INCREF(tuple);
+    PyTuple_SET_ITEM(arg, 0, tuple);
+    PyObject *ret = SplpyGeneral::pyCallObject(partitionCallable, arg);
+    return ret;
+}
+#endif // SPLPY_PARTITION_BY_NAME
 
 // ##############################
 // Window Event Handler Overrides
@@ -247,10 +296,10 @@ void MY_OPERATOR::beforeWindowFlushEvent(
     WindowType::DataType & content = storage[key];
     PyObject *items;
     {
-    SplpyGIL lock;
-    items = PyList_New(content.size());
-    unsigned int idx = 0;
-    for(WindowType::DataType::iterator it=content.begin(); it!=content.end(); ++it) {
+      SplpyGIL lock;
+      items = PyList_New(content.size());
+      unsigned int idx = 0;
+      for(WindowType::DataType::iterator it=content.begin(); it!=content.end(); ++it) {
         PyObject *item = *it;
 <% if ($window->isSliding()) {%>
 	// The list steals a reference, increment such that the window can maintain a copy
@@ -260,13 +309,13 @@ void MY_OPERATOR::beforeWindowFlushEvent(
 <%}%>
 	PyList_SET_ITEM(items, idx, item);
 	++idx;
-    }
+      }
     }
   OPort0Type otuple;
 
   {
     try {
-  
+      SplpyGIL lock;
       if (SPLPY_AGGREGATE(funcop_->callable(), items,
         otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_)){  
         submit(otuple, 0);
@@ -278,6 +327,16 @@ void MY_OPERATOR::beforeWindowFlushEvent(
     submit(Punctuation::WindowMarker, 0);
   }
 }
+
+#if SPLPY_PARTITION_BY_NAME == 1 || SPLPY_PARTITION_BY_CALLABLE == 1
+void MY_OPERATOR::onWindowPartitionEviction(WindowEventType::WindowType & window, WindowEventType::PartitionIterator begin, WindowEventType::PartitionIterator end) {
+  SplpyGIL lock;
+  
+  for (WindowEventType::PartitionIterator it = begin; it != end; ++it) {
+    Py_XDECREF(it->first);
+  }
+}
+#endif
 
 // ##################################
 // End Window Event Handler Overrides

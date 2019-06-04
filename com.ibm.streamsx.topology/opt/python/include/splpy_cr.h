@@ -3,6 +3,7 @@
 
 #include <SPL/Runtime/Operator/State/ConsistentRegionContext.h>
 #include <SPL/Runtime/Operator/State/StateHandler.h>
+#include <SPL/Runtime/Window/WindowCommon.h>
 #include <SPL/Runtime/Utility/Mutex.h>
 
 #include "splpy_general.h"
@@ -57,6 +58,14 @@ namespace SPL {
     static PyObject const * dereference(PyObject const * t) { return t; }
     static PyObject * reference(PyObject * t) { return t; }
     static PyObject const * reference(PyObject const * t) { return t; }
+  };
+
+  template <>
+  struct ObjectPointerDeleter<PyObject *> {
+    static void deletePointer(PyObject * p) {  
+      streamsx::topology::SplpyGIL lock;
+      Py_XDECREF(p);
+    }
   };
 
   ByteBuffer<Checkpoint> & operator<<(ByteBuffer<Checkpoint> & ckpt, PyObject * obj){
@@ -120,7 +129,7 @@ namespace SPL {
 
     return ckpt;
   }
-}
+} // end namespace
 
 // In the SPL window library, there are some cases in which diagnostic 
 // messages with the contents of a window are produced.  For these messages,
@@ -140,5 +149,42 @@ std::ostream & operator << (std::ostream &ostr, PyObject * obj){
   return ostr;
 }
 
+
+// For windowing support, std::tr1::unordered_map requires specializations
+// of std::tr1::hash and std::equal_to.  We need to forward these calls to
+// corresponding calls on the python object.
+namespace std {
+  namespace tr1 {
+    template<>
+    struct hash<PyObject *> {
+      inline size_t operator() (PyObject * object) const {
+        //        if (object) {
+          streamsx::topology::SplpyGIL lock;
+          // TODO test for error
+          return PyObject_Hash(object);
+          //        }
+          //        else {
+          //          std::cerr << "PyObject::hash (0)" << std::endl;
+          //          return 0; // why does this happen anyway?
+          //        }
+      }
+    };
+  } // tr1
+
+  template<>
+  struct equal_to<PyObject*> {
+    inline bool operator () (PyObject * lhs, PyObject * rhs) const {
+      //      if (lhs && rhs) {
+        streamsx::topology::SplpyGIL lock;
+        // TODO test for error
+        return 1 == PyObject_RichCompareBool(lhs, rhs, Py_EQ);
+        //      }
+        //      else {
+        //        std::cerr << "PyObject::equal_to (0)" << std::endl;
+        //        return reinterpret_cast<void*>(lhs) == reinterpret_cast<void*>(rhs);
+        //      }
+    }
+  };
+} // std
 
 #endif // SPL_SPLPY_CR_H_
