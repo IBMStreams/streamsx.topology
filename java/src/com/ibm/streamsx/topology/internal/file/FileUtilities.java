@@ -14,6 +14,9 @@ public class FileUtilities {
      * Delete a directory and all of its files.
      */
     public static void deleteDirectory(File dir) throws IOException {
+        
+        if (!dir.exists())
+            return;
 
         Files.walkFileTree(dir.toPath(), new FileVisitor<Path>() {
 
