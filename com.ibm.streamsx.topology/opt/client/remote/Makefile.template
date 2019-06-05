@@ -5,7 +5,7 @@ else
 endif
 
 ifdef STREAMS_CPU_LIMIT
-    THREAD_OPTION=-j ${STREAMS_CPU_LIMIT}
+    THREAD_OPTION=--num-make-threads ${STREAMS_CPU_LIMIT}
 endif
 
 OUT=output
