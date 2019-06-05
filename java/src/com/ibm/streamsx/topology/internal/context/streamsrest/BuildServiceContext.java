@@ -95,10 +95,20 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
                     // Create a Job Config Overlays file if this is creating
                     // a sab for subsequent distributed deployment
                     // or keepArtifacts is set.
-                    File sabFile = new File(location);
+                    final File sabFile = new File(location);
+                    final String sabBaseName = sabFile.getName().substring(0, sabFile.getName().length()-4);
+                    final int lastDot = sabBaseName.lastIndexOf('.');
+                    final String namespace, name;
+                    if (lastDot == -1) {                      
+                        namespace = null;
+                        name = sabBaseName;
+                    } else {
+                        namespace = sabBaseName.substring(0, lastDot);
+                        name = sabBaseName.substring(lastDot+1);
+                    }
                     if (getClass() == BuildServiceContext.class || jboolean(deploy, KEEP_ARTIFACTS)) {
                         createJobConfigOverlayFile(sabFile.getParentFile(),
-                                jco, "XXX", "YYYY", result);
+                                jco, namespace, name, result);
                     }
 
                 }

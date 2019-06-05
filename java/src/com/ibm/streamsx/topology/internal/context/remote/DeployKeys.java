@@ -148,7 +148,9 @@ public interface DeployKeys {
     
     static File createJobConfigOverlayFile(File dir, JsonObject jco, String namespace, String name,
             JsonObject result) throws IOException {
-        File jcf = new File(dir, namespace + "." + name + "_JobConfig.json");
+        
+        String sabBaseName = namespace == null ? name : namespace + "." + name;
+        File jcf = new File(dir, sabBaseName + "_JobConfig.json");
 
         jco.addProperty("comment",
                 String.format("Job Config Overlays for %s::%s - generated %s", namespace, name, new Date()));
