@@ -282,11 +282,12 @@ class _ICPDAuthHandler(_BearerAuthHandler):
         logger.debug("ICP4D:Token refreshed:expiry:" + time.ctime(self._auth_expiry_time))
 
 class _ICPDExternalAuthHandler(_BearerAuthHandler):
-    def __init__(self, endpoint, username, password):
+    def __init__(self, endpoint, username, password, verify):
         super(_ICPDExternalAuthHandler, self).__init__()
         self._endpoint = endpoint
         self.__username = username
         self.__password = password
+        self._verify = verify
         self._cfg = self._create_cfg()
 
     def _refresh_auth(self):
@@ -311,7 +312,7 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
         details_url = up.urlunsplit(
             ('https', cluster_ip + ':31843', 'zen-data/v2/serviceInstance/details', 'displayName=' + name, None))
         r = requests.get(details_url,
-                         headers={"Authorization": "Bearer " + token}, verify=False)
+                         headers={"Authorization": "Bearer " + token}, verify=self._verify)
 
         sr = r.json()
 
@@ -328,7 +329,7 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
             ('https', cluster_ip + ':31843', 'zen-data/v2/serviceInstance/token', None, None))
         pd = {"serviceInstanceId": str(service_id)}
         r = requests.post(service_token_url, json=pd,
-                          headers={"Authorization": "Bearer " + token}, verify=False)
+                          headers={"Authorization": "Bearer " + token}, verify=self._verify)
 
         service_token = r.json()['AccessToken']
         self.token = service_token
@@ -1607,7 +1608,7 @@ class Instance(_ResourceElement):
         if resource_url is None:
             return None
         sc = streamsx.rest.StreamsConnection(resource_url=resource_url,
-                                             auth=_ICPDExternalAuthHandler(endpoint, username, password))
+                                             auth=_ICPDExternalAuthHandler(endpoint, username, password, verify))
         if verify is not None:
             sc.rest_client.session.verify = verify
  
