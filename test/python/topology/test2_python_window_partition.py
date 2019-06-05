@@ -223,3 +223,36 @@ class TestPythonWindowPartition(unittest.TestCase):
         tester = Tester(topo)
         tester.contents(s, [('a',1), ('b',7), ('a', 2), ('b', 9)] )
         tester.test(self.test_ctxtype, self.test_config)
+
+    # Partition by attribute and by callable (not allowed)
+    def test_partition_by_attribute_and_callable(self):
+
+        schema = StreamSchema("tuple<rstring c, int32 d>").as_tuple()
+        topo = Topology()
+        s = topo.source([('a',1),('b', 7),('a', 2),('b', 9), ('a', 4), ('a', 5), ('b', 8), ('b', 17)])
+        s = s.map(lambda x: x, schema = schema)
+
+        with self.assertRaises(ValueError):
+            s = s.last(3).trigger(2).partition(lambda x: x[0]).partition('c').aggregate(lambda items: (items[1][0], items[0][1]))
+
+    # Partition by attribute twice (not allowed)
+    def test_partition_by_attribute_twice(self):
+
+        schema = StreamSchema("tuple<rstring c, int32 d>").as_tuple()
+        topo = Topology()
+        s = topo.source([('a',1),('b', 7),('a', 2),('b', 9), ('a', 4), ('a', 5), ('b', 8), ('b', 17)])
+        s = s.map(lambda x: x, schema = schema)
+
+        with self.assertRaises(ValueError):
+            s = s.last(3).trigger(2).partition('d').partition('c').aggregate(lambda items: (items[1][0], items[0][1]))
+ 
+    # Partition by attribute twice (not allowed)
+    def test_partition_by_callable_twice(self):
+
+        schema = StreamSchema("tuple<rstring c, int32 d>").as_tuple()
+        topo = Topology()
+        s = topo.source([('a',1),('b', 7),('a', 2),('b', 9), ('a', 4), ('a', 5), ('b', 8), ('b', 17)])
+        s = s.map(lambda x: x, schema = schema)
+
+        with self.assertRaises(ValueError):
+            s = s.last(3).trigger(2).partition(lambda x: x[0]).partition(lambda x: x[1]).aggregate(lambda items: (items[1][0], items[0][1]))

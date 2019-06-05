@@ -107,10 +107,6 @@ MY_OPERATOR::MY_OPERATOR() :
     // This is based on SplpyFuncOp::loadAndWrapCallable
     SplpyGIL lock;
 
-    // TODO this seems unnecessary if pyPartitionByCallable is specified.
-    partitionCallable = 
-        SplpyGeneral::loadFunction(param("pyPartitionByModule"), param("pyPartitionByName"));
-
     // The object to be called is either partitionCallable for
     // a function passed into the operator
     // or a pickled encoded class instance
@@ -118,17 +114,20 @@ MY_OPERATOR::MY_OPERATOR() :
     
 #if SPLPY_PARTITION_BY_CALLABLE == 1
     // argument is the serialized callable instance
-    PyObject * appClass = partitionCallable;
     partitionCallable = pyUnicode_FromUTF8(param("pyPartitionByCallable").c_str());
-    Py_DECREF(appClass);
 
     // base64.decode
-    PyObject * decoded = SplpyGeneral::callFunction("base64","b64decode",partitionCallable, NULL);
+    PyObject * decoded = SplpyGeneral::callFunction("base64","b64decode", partitionCallable, NULL);
 
     // dill.loads
     PyObject * loaded = SplpyGeneral::callFunction("dill", "loads", decoded, NULL);
 
     partitionCallable = loaded;
+
+#else
+
+    partitionCallable = 
+        SplpyGeneral::loadFunction(param("pyPartitionByModule"), param("pyPartitionByName"));
 
 #endif // SPLPY_PARTITION_BY_CALLABLE
 
