@@ -49,8 +49,6 @@ using namespace streamsx::topology;
    $windowCppType = SPL::CodeGen::getWindowCppType($window,"PyObject *");
    $windowEventCppType = SPL::CodeGen::getWindowEventCppType($window,"PyObject *");
  }    
- # TODO check for both pyPartitionBy and pyPartitionByName.  They cannot
- # both be specified.
  my $partitionByName = $model->getParameterByName("pyPartitionByName");
  my $partitionByCallable = $model->getParameterByName("pyPartitionByCallable");
  if ($partitionByName) {

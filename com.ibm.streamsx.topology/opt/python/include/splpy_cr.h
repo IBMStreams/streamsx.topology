@@ -151,40 +151,36 @@ std::ostream & operator << (std::ostream &ostr, PyObject * obj){
 
 
 // For windowing support, std::tr1::unordered_map requires specializations
-// of std::tr1::hash and std::equal_to.  We need to forward these calls to
-// corresponding calls on the python object.
+// of std::tr1::hash and std::equal_to for PythonObject *.  We need to forward 
+// these calls to corresponding calls on the python object.
 namespace std {
   namespace tr1 {
     template<>
     struct hash<PyObject *> {
       inline size_t operator() (PyObject * object) const {
-        //        if (object) {
-          streamsx::topology::SplpyGIL lock;
-          // TODO test for error
-          return PyObject_Hash(object);
-          //        }
-          //        else {
-          //          std::cerr << "PyObject::hash (0)" << std::endl;
-          //          return 0; // why does this happen anyway?
-          //        }
+        using namespace streamsx::topology;
+        SplpyGIL lock;
+        size_t result = PyObject_Hash(object);
+        if (result == static_cast<size_t>(-1)) {
+          throw SplpyExceptionInfo::pythonError("hash");
+        }
+        return result;
       }
     };
-  } // tr1
+  } // namespace tr1
 
   template<>
   struct equal_to<PyObject*> {
     inline bool operator () (PyObject * lhs, PyObject * rhs) const {
-      //      if (lhs && rhs) {
-        streamsx::topology::SplpyGIL lock;
-        // TODO test for error
-        return 1 == PyObject_RichCompareBool(lhs, rhs, Py_EQ);
-        //      }
-        //      else {
-        //        std::cerr << "PyObject::equal_to (0)" << std::endl;
-        //        return reinterpret_cast<void*>(lhs) == reinterpret_cast<void*>(rhs);
-        //      }
+      using namespace streamsx::topology;
+      SplpyGIL lock;
+      int result = PyObject_RichCompareBool(lhs, rhs, Py_EQ);
+      if (result == -1) {
+        throw SplpyExceptionInfo::pythonError("==");
+      }
+      return result == 1;
     }
   };
-} // std
+} // namespace std
 
 #endif // SPL_SPLPY_CR_H_

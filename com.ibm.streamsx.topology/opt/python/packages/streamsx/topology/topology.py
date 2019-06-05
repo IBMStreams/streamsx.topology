@@ -2090,13 +2090,14 @@ class Window(object):
         # Our input schema is the output schema of the previous operator.
         if not isinstance(self.stream.oport.schema, streamsx.topology.schema.StreamSchema):
             raise ValueError("Partition by attribute is supported only for a structured schema")
+
         self._config['partitioned'] = True
         self._config['partitionBy'] = attribute
 
     def _partition_by_callable(self, function):
         dilled_callable = None
-        # We may need to duplicate much of graph._addOperatorFunction here.
-        # TODO factor the common code to avoid duplication
+
+        # This is based on graph._addOperatorFunction.
         recurse = None
         if isinstance(function, types.LambdaType) and function.__name__ == "<lambda>" :
             function = streamsx.topology.runtime._Callable(function, no_context=True)
@@ -2141,6 +2142,10 @@ class Window(object):
         Returns:
             Window: Window that will be triggered.
         """
+
+        if 'partitioned' in self._config and self._config['partitioned']:
+            raise ValueError("Only one partition my be specified")
+
         pw = copy.copy(self)
 
         if callable(key):
