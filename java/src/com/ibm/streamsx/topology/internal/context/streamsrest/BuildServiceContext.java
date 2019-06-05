@@ -4,7 +4,11 @@
  */
 package com.ibm.streamsx.topology.internal.context.streamsrest;
 
+import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.getSPLCompatibleName;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.createJobConfigOverlayFile;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 
 import java.io.File;
 import java.io.IOException;
@@ -80,6 +84,25 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
                 final long endDownloadSabTime = System.currentTimeMillis();
                 build.getMetrics().addProperty(SubmissionResultsKeys.DOWNLOAD_SABS_TIME,
                         (endDownloadSabTime - startDownloadSabTime));
+                
+
+                if (artifacts.size() == 1) {
+                    String location = GsonUtilities
+                            .jstring(artifacts.get(0).getAsJsonObject(), "location");
+                    
+                    result.addProperty(SubmissionResultsKeys.BUNDLE_PATH, location);
+                    
+                    // Create a Job Config Overlays file if this is creating
+                    // a sab for subsequent distributed deployment
+                    // or keepArtifacts is set.
+                    File sabFile = new File(location);
+                    if (getClass() == BuildServiceContext.class || jboolean(deploy, KEEP_ARTIFACTS)) {
+                        createJobConfigOverlayFile(sabFile.getParentFile(),
+                                jco, "XXX", "YYYY", result);
+                    }
+
+                }
+
             }
             
             postBuildAction(deploy, jco, result);

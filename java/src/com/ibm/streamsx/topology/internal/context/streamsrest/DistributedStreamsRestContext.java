@@ -18,6 +18,7 @@ import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.rest.build.BuildService;
+import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
@@ -92,6 +93,8 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
                         new File(GsonUtilities.jstring(artifact, "location")).delete();
                     }
                 }
+                if (result.has(SubmissionResultsKeys.BUNDLE_PATH))
+                    result.remove(SubmissionResultsKeys.BUNDLE_PATH);
             }
         }
     }
