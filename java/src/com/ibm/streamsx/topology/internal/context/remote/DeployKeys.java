@@ -129,11 +129,6 @@ public interface DeployKeys {
 
         if (deploy.has(DeployKeys.JOB_CONFIG_OVERLAYS)) {
             JsonObject graph = graph(submission);
-            JsonObject graphConfig = object(graph, "config");
-
-            boolean jcos_ok = jboolean(graphConfig, "supportsJobConfigOverlays");
-            if (!jcos_ok)
-                return null;
 
             String namespace = splAppNamespace(graph);
             String name = splAppName(graph);
