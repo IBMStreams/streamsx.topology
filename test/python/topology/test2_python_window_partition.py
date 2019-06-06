@@ -7,8 +7,6 @@ from streamsx.topology.state import ConsistentRegionConfig
 from streamsx.topology.tester import Tester
 from streamsx.spl import op
 
-from test2_consistent import TimeCounter, StatefulEvenFilter, StatefulHalfPlusOne, StatefulAverage
-
 def ModTwo(arg):
     return arg % 2;
 
