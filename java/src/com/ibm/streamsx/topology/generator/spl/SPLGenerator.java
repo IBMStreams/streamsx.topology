@@ -766,8 +766,6 @@ public class SPLGenerator {
         
         createCheckpointConfig(graphConfig);
         
-        graphConfig.addProperty("supportsJobConfigOverlays", versionAtLeast(4,2));
-
         String namespace = splAppNamespace(graph);
         if (namespace != null && !namespace.isEmpty()) {
             sb.append("namespace ");
