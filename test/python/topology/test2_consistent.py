@@ -350,6 +350,8 @@ class TestWithoutConsistentRegion(unittest.TestCase):
             tester.resets(reset_count)
         tester.test(self.test_ctxtype, self.test_config)
 
+    # Test the aggregate operator with a partitioned window in a consistent
+    # region.
     def test_aggregate_partitioned(self):
         iterations = 3000
         reset_count = 5
@@ -380,11 +382,6 @@ class TestWithoutConsistentRegion(unittest.TestCase):
         ers = [ sagg(iv[i%2:i+5-i%2:2][-10:]) for i in range(0, 3*int(len(iv)/3), 3) ]
 
         tester.contents(sc, ers)
-
-        # print (ers)
-        # sc.print();
-        # streamsx.topology.context.submit('TOOLKIT', topo)
-
         tester.test(self.test_ctxtype, self.test_config)
 
 class TestDistributedConsistentRegion(TestWithoutConsistentRegion):
