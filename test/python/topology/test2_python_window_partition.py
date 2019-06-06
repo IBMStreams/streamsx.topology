@@ -3,7 +3,6 @@ import unittest
 from streamsx.topology.topology import *
 from streamsx.topology import context
 from streamsx.topology.schema import CommonSchema, StreamSchema
-from streamsx.topology.state import ConsistentRegionConfig
 from streamsx.topology.tester import Tester
 from streamsx.spl import op
 
