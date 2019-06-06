@@ -124,16 +124,16 @@ private:
    void aggregateRemaining();
 <%}%>
 
-    const SPL::rstring & param(const char *name) {
+    const SPL::rstring & param(const char *name) const {
         return getParameterValues(name)[0]->getValue();
     }
 
 <%if ($partitionByParam) {%>
-    PartitionByType const & getPartitionValue(TupleType const & tuple) {
+    PartitionByType const & getPartitionValue(TupleType const & tuple) const {
       return tuple.get_<%=$partitionParamName%>();
     }
 <%} elsif ($partitionByName) {%>
-    PyObject * getPartitionValue(PyObject * tuple);
+    PyObject * getPartitionValue(PyObject * tuple) const;
 <%}%>
 
     // Members
