@@ -257,7 +257,7 @@ void MY_OPERATOR::aggregateRemaining() {
 <%}%>
 
 #if SPLPY_PARTITION_BY_NAME == 1
-PyObject * MY_OPERATOR::getPartitionValue(PyObject * tuple) {
+PyObject * MY_OPERATOR::getPartitionValue(PyObject * tuple) const {
     SplpyGIL lock; 
     PyObject * arg = PyTuple_New(1);
     Py_INCREF(tuple);
