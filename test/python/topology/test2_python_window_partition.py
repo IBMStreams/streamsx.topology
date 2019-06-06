@@ -3,8 +3,11 @@ import unittest
 from streamsx.topology.topology import *
 from streamsx.topology import context
 from streamsx.topology.schema import CommonSchema, StreamSchema
+from streamsx.topology.state import ConsistentRegionConfig
 from streamsx.topology.tester import Tester
 from streamsx.spl import op
+
+from test2_consistent import TimeCounter, StatefulEvenFilter, StatefulHalfPlusOne, StatefulAverage
 
 def ModTwo(arg):
     return arg % 2;
@@ -256,3 +259,20 @@ class TestPythonWindowPartition(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             s = s.last(3).trigger(2).partition(lambda x: x[0]).partition(lambda x: x[1]).aggregate(lambda items: (items[1][0], items[0][1]))
+
+    # To make sure we are partitioning by value and not by object identity,
+    # partition by something other than integer values, characters, or short
+    # strings.
+    def test_partition_by_tuple(self):
+
+        schema = StreamSchema("tuple<rstring c, int32 d>").as_tuple()
+        topo = Topology()
+        s = topo.source([('a',1,2),('b',7,8),('a',2,2),('b',9,19), ('a',1,4), ('a',1,5), ('b',9,7), ('b',7,17)])
+        s = s.map(lambda x: x, schema = schema)
+
+        s = s.last(3).trigger(2).partition(lambda x: (x[0], x[1])).aggregate(lambda items: (items[1][0], items[0][1]))
+ 
+        tester = Tester(topo)
+        tester.contents(s, [('a',1), ('b',9), ('b',7)] )
+        tester.test(self.test_ctxtype, self.test_config)
+ 

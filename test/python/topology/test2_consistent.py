@@ -350,6 +350,42 @@ class TestWithoutConsistentRegion(unittest.TestCase):
             tester.resets(reset_count)
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_aggregate_partitioned(self):
+        iterations = 3000
+        reset_count = 5
+        topo = Topology()
+        # Generate integers from [0,3000)
+        s = topo.source(TimeCounter(iterations=iterations, period=0.01))
+        if (self.is_cr()):
+            s.set_consistent(ConsistentRegionConfig.periodic(5, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
+
+        # Filter the odd ones 
+        s = s.filter(StatefulEvenFilter())
+        # Halve the even ones and add one.  Now have integers [1,(iterations/2))
+        s = s.map(StatefulHalfPlusOne())
+
+        sc = s.last(10).trigger(3).partition(lambda x: x % 2).aggregate(StatefulAverage())
+
+        tester = Tester(topo)
+        if (self.is_cr()):
+            tester.resets(reset_count)
+
+        # Find the expected results.
+        # mimic the processing using Python builtins
+        iv = filter(StatefulEvenFilter(), range(iterations))
+        iv = list(map(StatefulHalfPlusOne(), iv))
+
+        # Expected stateful averages sc,st
+        sagg = StatefulAverage()
+        ers = [ sagg(iv[i%2:i+5-i%2:2][-10:]) for i in range(0, 3*int(len(iv)/3), 3) ]
+
+        tester.contents(sc, ers)
+
+        # print (ers)
+        # sc.print();
+        # streamsx.topology.context.submit('TOOLKIT', topo)
+
+        tester.test(self.test_ctxtype, self.test_config)
 
 class TestDistributedConsistentRegion(TestWithoutConsistentRegion):
     def setUp(self):
