@@ -151,7 +151,7 @@ std::ostream & operator << (std::ostream &ostr, PyObject * obj){
 
 
 // For windowing support, std::tr1::unordered_map requires specializations
-// of std::tr1::hash and std::equal_to for PythonObject *.  We need to forward 
+// of std::tr1::hash and std::equal_to for PythonObject *.  We need to forward
 // these calls to corresponding calls on the python object.
 namespace std {
 
@@ -162,7 +162,7 @@ namespace std {
       SplpyGIL lock;
       int result = PyObject_RichCompareBool(lhs, rhs, Py_EQ);
       if (result == -1) {
-        throw SplpyExceptionInfo::pythonError("==");
+        throw SplpyExceptionInfo::pythonError("==").exception();
       }
       return result == 1;
     }
@@ -172,14 +172,13 @@ namespace std {
     template<>
     struct hash<PyObject *> {
       inline size_t operator() (PyObject * object) const {
-      using namespace streamsx::topology;
-      SplpyGIL lock;
-      size_t result = PyObject_Hash(object);
-      if (result == static_cast<size_t>(-1)) {
-        throw SplpyExceptionInfo::pythonError("hash");
-      }
-      return result;
-
+        using namespace streamsx::topology;
+        SplpyGIL lock;
+        size_t result = PyObject_Hash(object);
+        if (result == static_cast<size_t>(-1)) {
+          throw SplpyExceptionInfo::pythonError("hash").exception();
+        }
+        return result;
       }
     };
   } // namespace tr1

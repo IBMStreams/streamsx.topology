@@ -276,3 +276,18 @@ class TestPythonWindowPartition(unittest.TestCase):
         tester.contents(s, [('a',1), ('b',9), ('b',7)] )
         tester.test(self.test_ctxtype, self.test_config)
  
+    def test_partition_by_callable_json_schema(self):
+        topo = Topology()
+        s = topo.source([{'a':1},{'b':2,'c':3}, {'d': 4, 'e': 5}])
+        
+        # Check the averages of the values of the Json objects
+        s = s.map(lambda x: x, schema = CommonSchema.Json)
+        s = s.last(3).trigger(1).partition(lambda tup: len(tup.keys())).aggregate(lambda tuples: [[set(tup.keys()), sum(tup.values())] for tup in tuples])
+        
+        tester = Tester(topo)
+        tester.contents(s, [ [[{'a'},1]],
+                             [[{'c','b'}, 5]],
+                             [[{'c','b'}, 5], [{'d','e'}, 9]]
+                           ])
+
+        tester.test(self.test_ctxtype, self.test_config)
