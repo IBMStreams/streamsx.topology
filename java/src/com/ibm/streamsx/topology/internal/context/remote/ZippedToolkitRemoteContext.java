@@ -74,6 +74,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
             toolkitRoot = super._submit(submission).get();
         } else {
             // Just a main composite
+            ToolkitRemoteContext.setupJobConfigOverlays(deploy, graph); 
         }
          
         try {
