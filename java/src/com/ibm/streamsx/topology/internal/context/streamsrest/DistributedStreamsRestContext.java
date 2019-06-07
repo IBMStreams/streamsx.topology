@@ -1,3 +1,7 @@
+/*
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2019 
+ */
 package com.ibm.streamsx.topology.internal.context.streamsrest;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
@@ -18,7 +22,10 @@ import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.rest.build.BuildService;
+import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
+import com.ibm.streamsx.rest.internal.RestUtils;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
  * Distributed context that uses the REST api for building
@@ -33,11 +40,20 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
     
     @Override
     protected BuildService createSubmissionContext(JsonObject deploy) throws Exception {
-        BuildService builder = super.createSubmissionContext(deploy);
+        
+        if (!deploy.has(StreamsKeys.SERVICE_DEFINITION)) {
+            // Obtain the ICP4D information from the Streams rest Url.
+            
+            ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(Util.getenv(Util.STREAMS_REST_URL));
+            
+            deploy.add(StreamsKeys.SERVICE_DEFINITION, authenticator.config(RestUtils.createExecutor(!sslVerify(deploy))));
+        }
         
         // Verify the Streams service endpoint has the correct format.
         StreamsKeys.getStreamsInstanceURL(deploy);
         
+        BuildService builder = super.createSubmissionContext(deploy);
+             
         return builder;
     }
     

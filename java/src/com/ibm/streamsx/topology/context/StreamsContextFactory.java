@@ -11,6 +11,7 @@ import com.ibm.streamsx.topology.internal.context.service.RemoteStreamingAnalyti
 import com.ibm.streamsx.topology.internal.context.service.RemoteStreamingAnalyticsTester;
 import com.ibm.streamsx.topology.internal.context.streams.AnalyticsServiceStreamsContext;
 import com.ibm.streamsx.topology.internal.context.streams.BundleStreamsContext;
+import com.ibm.streamsx.topology.internal.context.streams.RemoteDistributedStreamsContext;
 import com.ibm.streamsx.topology.internal.streams.Util;
 import com.ibm.streamsx.topology.internal.messages.Messages;
 
@@ -74,8 +75,13 @@ public class StreamsContextFactory {
             return new BundleStreamsContext(false, true);
         case STANDALONE:
             return newInstance("com.ibm.streamsx.topology.internal.context.streams.StandaloneStreamsContext");
-        case DISTRIBUTED:
+        case DISTRIBUTED: {
+            String si = System.getenv("STREAMS_INSTALL");
+            if (si == null || si.isEmpty())
+                return new RemoteDistributedStreamsContext();
+
             return newInstance("com.ibm.streamsx.topology.internal.context.streams.DistributedStreamsContext");
+        }
         case STANDALONE_TESTER:
             return newInstance("com.ibm.streamsx.topology.internal.context.streams.StandaloneTester");
         case EMBEDDED_TESTER:
@@ -84,11 +90,12 @@ public class StreamsContextFactory {
             return newInstance("com.ibm.streamsx.topology.internal.context.streams.DistributedTester");
         
         case ANALYTICS_SERVICE:
-        case STREAMING_ANALYTICS_SERVICE:
+        case STREAMING_ANALYTICS_SERVICE: {
             String si = System.getenv("STREAMS_INSTALL");
             if (si == null || si.isEmpty())
                 return new RemoteStreamingAnalyticsServiceStreamsContext();
             return new AnalyticsServiceStreamsContext(type);
+        }
             
         case STREAMING_ANALYTICS_SERVICE_TESTER:
             return new RemoteStreamingAnalyticsTester();
