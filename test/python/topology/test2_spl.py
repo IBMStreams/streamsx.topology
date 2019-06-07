@@ -383,6 +383,8 @@ class TestMainComposite(unittest.TestCase):
         rc = streamsx.topology.context.submit('BUNDLE', r[0], cfg)
         self.assertEqual(0, rc['return_code'])
         shutil.rmtree(tkl)
+        self.assertEqual('app.MyMain.sab', os.path.basename(rc['bundlePath']))
+        self.assertEqual('app.MyMain_JobConfig.json', os.path.basename(rc['jobConfigPath']))
         os.remove(rc['bundlePath'])
         os.remove(rc['jobConfigPath'])
 

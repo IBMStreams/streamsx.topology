@@ -147,7 +147,7 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
      * Create a Job Config Overlays structure if it does not exist.
      * Set the deployment from the graph config.
      */
-    private void setupJobConfigOverlays(JsonObject deploy, JsonObject graph) {
+    public static void setupJobConfigOverlays(JsonObject deploy, JsonObject graph) {
         JsonArray jcos = array(deploy, JOB_CONFIG_OVERLAYS);
         if (jcos == null) {
             deploy.add(JOB_CONFIG_OVERLAYS, jcos = new JsonArray());

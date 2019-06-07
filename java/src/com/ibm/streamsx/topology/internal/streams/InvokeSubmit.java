@@ -45,7 +45,7 @@ public class InvokeSubmit {
         if (domainId == null)
         	checkPreconditions();
         
-        File jobidFile = Files.createTempFile("streamsjobid", "txt").toFile();
+        File jobidFile = Files.createTempFile("streamsjobid", ".txt").toFile();
 
         List<String> commands = new ArrayList<>();
 
