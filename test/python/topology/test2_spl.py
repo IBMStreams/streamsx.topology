@@ -356,14 +356,17 @@ import shutil
 import uuid
 import subprocess
 def _index_tk():
-    si = os.environ['STREAMS_INSTALL']
     tkl = 'tkl_mc_' + str(uuid.uuid4().hex)
     this_dir = os.path.dirname(os.path.realpath(__file__))
     shutil.copytree(os.path.join(this_dir, 'spl_mc'), tkl)
-    ri = subprocess.call([os.path.join(si, 'bin', 'spl-make-toolkit'), '-i', tkl])
+    if 'STREAMS_INSTALL' in os.environ:
+        si = os.environ['STREAMS_INSTALL']
+        ri = subprocess.call([os.path.join(si, 'bin', 'spl-make-toolkit'), '-i', tkl])
+    else:
+        ri = 0
     return ri,tkl
 
-@unittest.skipIf('STREAMS_INSTALL' not in os.environ, 'STREAMS_INSTALL not set')
+@unittest.skipIf('STREAMS_INSTALL' not in os.environ and 'STREAMS_REST_URL' not in os.environ, 'STREAMS_INSTALL/STREAMS_REST_URL not set')
 class TestMainComposite(unittest.TestCase):
     def test_main_composite(self):
         ri,tkl = _index_tk()
@@ -372,12 +375,18 @@ class TestMainComposite(unittest.TestCase):
         self.assertIsInstance(r, tuple)
         self.assertIsInstance(r[0], Topology)
         self.assertIsInstance(r[1], op.Invoke)
-        rc = streamsx.topology.context.submit('BUNDLE', r[0])
+
+        cfg = {}
+        if not 'STREAMS_INSTALL' in os.environ:
+            cfg[streamsx.topology.context.ConfigParams.SSL_VERIFY] = False
+
+        rc = streamsx.topology.context.submit('BUNDLE', r[0], cfg)
         self.assertEqual(0, rc['return_code'])
         shutil.rmtree(tkl)
         os.remove(rc['bundlePath'])
         os.remove(rc['jobConfigPath'])
 
+@unittest.skipIf('STREAMS_INSTALL' not in os.environ and 'STREAMS_REST_URL' not in os.environ, 'STREAMS_INSTALL/STREAMS_REST_URL not set')
 class TestParamTypes(unittest.TestCase):
     def test_param_types(self):
         ri,tkl = _index_tk()
@@ -415,7 +424,11 @@ class TestParamTypes(unittest.TestCase):
             p['f64'] = np.float64(78.9)
             snp = op.Invoke(topo, "testtopo::PT", params = p, name="Numpy")
 
-        rc = streamsx.topology.context.submit('BUNDLE', topo)
+        cfg = {}
+        if not 'STREAMS_INSTALL' in os.environ:
+            cfg[streamsx.topology.context.ConfigParams.SSL_VERIFY] = False
+
+        rc = streamsx.topology.context.submit('BUNDLE', topo, cfg)
         self.assertEqual(0, rc['return_code'])
         os.remove(rc['bundlePath'])
         os.remove(rc['jobConfigPath'])

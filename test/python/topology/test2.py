@@ -107,6 +107,7 @@ class TestBuildArchiveMethodsNew(TestToolkitMethodsNew):
 class TestBundleMethodsNew(TestToolkitMethodsNew):
 
     def setUp(self):
+        self.test_config = {}
 
         if not 'STREAMS_INSTALL' in os.environ:
             unittest.skipUnless('STREAMS_REST_URL' in os.environ, "requires STREAMS_INSTALL or STREAMS_REST_URL")
@@ -116,7 +117,6 @@ class TestBundleMethodsNew(TestToolkitMethodsNew):
         self.topo = Topology('test_BundleSource')
         self.topo.source(['Hello', 'Bundle'])
         self.test_ctxtype = 'BUNDLE'
-        self.test_config = {}
         self.result = {}
 
 @unittest.skipUnless('STREAMS_INSTALL' in os.environ, "requires STREAMS_INSTALL")
