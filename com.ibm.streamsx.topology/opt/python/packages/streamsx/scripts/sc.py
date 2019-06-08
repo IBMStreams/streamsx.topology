@@ -28,6 +28,7 @@ def _submit_build(cmd_args, topo):
      cfg[ConfigParams.FORCE_REMOTE_BUILD] = True
      if cmd_args.disable_ssl_verify:
          cfg[ConfigParams.SSL_VERIFY] = False
+         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
      _sc_options(cmd_args, cfg)
      submit('BUNDLE', topo, cfg)
 
@@ -86,7 +87,7 @@ def _parse_args(args):
 def _buildservice_args(cmd_parser):
     rem = cmd_parser.add_argument_group('build service arguments', 'Arguments specific to use of the build service. Not supported by sc.')
 
-    cmd_parser.add_argument('--disable-ssl-verify', action='store_true', help='Generate the facade tuples when it is possible.')
+    cmd_parser.add_argument('--disable-ssl-verify', action='store_true', help='Disable SSL verification.')
 
 def _deprecated_args(cmd_parser):
     dep = cmd_parser.add_argument_group('deprecated arguments', 'Arguments that have been deprecated by sc and are ignored')
