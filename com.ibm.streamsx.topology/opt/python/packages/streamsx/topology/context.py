@@ -671,8 +671,8 @@ class ContextTypes(object):
 
     The instance is specified in the configuration passed into :py:func:`submit`. The configuration may be code injected from the list of services or manually created. The code that selects a service instance by name is::
 
-        from icpd_core import ipcd_util
-        cfg = icpd_util.get_service_details(name='instanceName')
+        from icpd_core import icpd_util
+        cfg = icpd_util.get_service_instance_details(name='instanceName')
 
     The resultant `cfg` dict may be augmented with other values such as
     a :py:class:`JobConfig` or keys from :py:class:`ConfigParams`.
