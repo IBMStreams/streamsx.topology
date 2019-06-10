@@ -1541,7 +1541,7 @@ class Instance(_ResourceElement):
 
     @staticmethod
     def of_service(config):
-        """Connect to an IBM Streams service instance running in IBM Cloud Private for Data.
+        """Connect to an IBM Streams service instance running in Cloud Pak for Data.
 
         The instance is specified in `config`. The configuration may be code injected from the list of services
         in a Jupyter notebook running in ICPD or manually created. The code that selects a service instance by name is::
