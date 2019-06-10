@@ -709,7 +709,7 @@ class Topology(object):
         The assumption is that the runtime hosts for a Streams
         instance have the same Python packages installed as the
         build machines. This is always true for IBM Cloud
-        Private for Data and the Streaming Analytics service on IBM Cloud.
+        Pak for Data and the Streaming Analytics service on IBM Cloud.
 
         The project name extracted from the requirement
         specifier is added to :py:attr:`~exclude_packages`
@@ -735,7 +735,7 @@ class Topology(object):
 
         .. warning::
             Only supported when using the build service with
-            a Streams instance in IBM Cloud Private for Data
+            a Streams instance in Cloud Pak for Data
             or Streaming Analytics service on IBM Cloud.
 
         .. note::

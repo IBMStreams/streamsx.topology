@@ -661,7 +661,7 @@ class ContextTypes(object):
     DISTRIBUTED = 'DISTRIBUTED'
     """Submission to an IBM Streams instance.
 
-    **IBM Cloud Private for Data**
+    **IBM Cloud Pak for Data**
 
     *Projects (within ICPD cluster)*
 
@@ -680,7 +680,7 @@ class ContextTypes(object):
     *External to ICPD cluster*
 
     The `Topology` is compiled using the Streams build service and submitted
-    to an IBM Streams service instance running in an ICP for Data cluster.
+    to an IBM Streams service instance running in a Cloud Pak for Data cluster.
 
     The IBM Streams instance to connect to is defined by the
     ``STREAMS_REST_URL`` environment variable which is set to
