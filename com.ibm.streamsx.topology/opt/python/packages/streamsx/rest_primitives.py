@@ -345,6 +345,7 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
                     'externalClient':True,
                     'serviceBuildEndpoint': build_url,
                     'serviceRestEndpoint': self._endpoint},
+                'serviceTokenEndpoint': service_token_url,
                 'service_token': service_token,
                 'cluster_ip': cluster_ip,
                 'service_id': service_id
