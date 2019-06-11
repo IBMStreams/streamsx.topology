@@ -716,7 +716,7 @@ class ContextTypes(object):
     DISTRIBUTED = 'DISTRIBUTED'
     """Submission to an IBM Streams instance.
 
-    **IBM Cloud Private for Data**
+    **IBM Cloud Pak for Data**
 
     *Projects (within ICPD cluster)*
 
@@ -726,8 +726,8 @@ class ContextTypes(object):
 
     The instance is specified in the configuration passed into :py:func:`submit`. The configuration may be code injected from the list of services or manually created. The code that selects a service instance by name is::
 
-        from icpd_core import ipcd_util
-        cfg = icpd_util.get_service_details(name='instanceName')
+        from icpd_core import icpd_util
+        cfg = icpd_util.get_service_instance_details(name='instanceName')
 
     The resultant `cfg` dict may be augmented with other values such as
     a :py:class:`JobConfig` or keys from :py:class:`ConfigParams`.
@@ -735,7 +735,7 @@ class ContextTypes(object):
     *External to ICPD cluster*
 
     The `Topology` is compiled using the Streams build service and submitted
-    to an IBM Streams service instance running in an ICP for Data cluster.
+    to an IBM Streams service instance running in a Cloud Pak for Data cluster.
 
     The IBM Streams instance to connect to is defined by the
     ``STREAMS_REST_URL`` environment variable which is set to

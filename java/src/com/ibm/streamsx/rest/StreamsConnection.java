@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
+import com.ibm.streamsx.rest.internal.RestUtils;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
@@ -61,6 +62,11 @@ public class StreamsConnection {
     	if (url == null) {
     		url = System.getenv(Util.STREAMS_REST_URL);
     		Objects.requireNonNull(url, "Environment variable " + Util.STREAMS_REST_URL + " is not set");
+    		if (!url.endsWith("/streams/rest/resources") && url.contains("/streams/rest/instances/")) {
+    		    // Streams V5 (ICP4D) style URL.
+    		    int idx = url.indexOf("/streams/rest/instances/");
+    		    url = url.substring(0, idx) + "/streams/rest/resources";
+    		}
     	}
     	
     	AbstractStreamsConnection delegate = createDelegate(userName, authToken, url);
@@ -71,7 +77,7 @@ public class StreamsConnection {
     public static StreamsConnection ofBearerToken(String url, String bearerToken) {
         
         AbstractStreamsConnection delegate = new StreamsConnectionImpl(null,
-                StreamsRestUtils.createBearerAuth(bearerToken),
+                executor -> RestUtils.createBearerAuth(bearerToken),
                 url, false);
         StreamsConnection sc = new StreamsConnection(delegate);
         return sc;      
@@ -126,7 +132,7 @@ public class StreamsConnection {
     private static AbstractStreamsConnection createDelegate(String userName,
             String authToken, String url) {
         return new StreamsConnectionImpl(userName,
-                    StreamsRestUtils.createBasicAuth(userName, authToken),
+                    executor -> RestUtils.createBasicAuth(userName, authToken),
                     url, false);
     }
 }

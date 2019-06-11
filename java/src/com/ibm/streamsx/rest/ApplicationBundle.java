@@ -7,7 +7,6 @@ package com.ibm.streamsx.rest;
 import java.io.IOException;
 
 import com.google.gson.JsonObject;
-import com.google.gson.annotations.Expose;
 
 /**
  * 

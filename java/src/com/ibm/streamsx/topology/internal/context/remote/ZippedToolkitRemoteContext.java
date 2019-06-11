@@ -66,20 +66,31 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     public Future<File> _submit(JsonObject submission) throws Exception {
         
         JsonObject deploy = deploy(submission);
-        final File toolkitRoot = super._submit(submission).get();
+        JsonObject graph = object(submission, SUBMISSION_GRAPH);
+        String mainCompositeKind = jstring(graph, "mainComposite");
+
+        File toolkitRoot = null;
+        if (mainCompositeKind == null) {
+            toolkitRoot = super._submit(submission).get();
+        } else {
+            // Just a main composite
+            ToolkitRemoteContext.setupJobConfigOverlays(deploy, graph); 
+        }
+         
         try {
               report("Building code archive");
-              return createCodeArchive(toolkitRoot, submission);
+              return createCodeArchive(toolkitRoot, submission, mainCompositeKind);
         } finally {
-            deleteToolkit(toolkitRoot, deploy);
+            if (toolkitRoot != null)
+                deleteToolkit(toolkitRoot, deploy);
         }
     }
     
-    public Future<File> createCodeArchive(File toolkitRoot, JsonObject submission) throws IOException, URISyntaxException {
+    private Future<File> createCodeArchive(File toolkitRoot, JsonObject submission, String mainCompositeKind) throws IOException, URISyntaxException {
         
-        String tkName = toolkitRoot.getName();
+        String tkName = toolkitRoot != null ? toolkitRoot.getName() : null;
                 
-        Path zipOutPath = pack(toolkitRoot.toPath(), submission, tkName);
+        Path zipOutPath = pack(toolkitRoot, submission, tkName, mainCompositeKind);
         
         if (keepBuildArchive || keepArtifacts(submission)) {
         	final JsonObject submissionResult = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);
@@ -89,13 +100,17 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         return new CompletedFuture<File>(zipOutPath.toFile());
     }
         
-    private static Path pack(final Path folder, JsonObject submission, String tkName) throws IOException, URISyntaxException {
+    private static Path pack(final File appTkRoot, JsonObject submission, String tkName, String mainCompositeKind) throws IOException, URISyntaxException {
         
         JsonObject graph = graph(submission);
-        String namespace = splAppNamespace(graph);
-        String name = splAppName(graph);
         
-        Path zipFilePath = Paths.get(folder.toAbsolutePath().toString() + ".zip");
+        if (mainCompositeKind == null) {
+            String namespace = splAppNamespace(graph);
+            String name = splAppName(graph);
+            mainCompositeKind = namespace + "::" + name;
+        }
+        
+        Path zipFilePath = Files.createTempFile("code_archive", ".zip");
         
         final Path topologyToolkit = TkInfo.getTopologyToolkitRoot().getAbsoluteFile().toPath(); 
         final String topologyToolkitName = topologyToolkit.getFileName().toString();
@@ -105,17 +120,19 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         
         // Paths to completely copy into the code archive
         Map<Path,String> toolkits = new HashMap<>();
-        toolkits.put(folder, tkName);
+        if (appTkRoot != null)
+            toolkits.put(appTkRoot.toPath(), tkName);
         toolkits.put(topologyToolkit, topologyToolkitName);
         
         // Avoid multiple concurrent executions overwriting files.
-        Path manifestTmp = Files.createTempFile("manifest_tk", "txt");
-        Path mainCompTmp = Files.createTempFile("main_composite", "txt");
-        Path scOptsTmp = Files.createTempFile("sc_opts", "txt");
+        Path manifestTmp = Files.createTempFile("manifest_tk", ".txt");
+        Path mainCompTmp = Files.createTempFile("main_composite", ".txt");
+        Path scOptsTmp = Files.createTempFile("sc_opts", ".txt");
         
         // tkManifest is the list of toolkits contained in the archive
         try (PrintWriter tkManifest = new PrintWriter(manifestTmp.toFile(), "UTF-8")) {
-            tkManifest.println(tkName);
+            if (tkName != null)
+                tkManifest.println(tkName);
             tkManifest.println(topologyToolkitName);
             
             JsonObject configSpl = object(graph, CONFIG, "spl");
@@ -136,7 +153,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         // mainComposite is a string of the namespace and the main composite.
         // This is used by the Makefile
         try (PrintWriter mainComposite = new PrintWriter(mainCompTmp.toFile(), "UTF-8")) {
-            mainComposite.print(namespace + "::" + name);
+            mainComposite.print(mainCompositeKind);
         }
         
         JsonObject deploy = deploy(submission);

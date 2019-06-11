@@ -130,7 +130,7 @@ public class StreamsConnectionTest {
 		    Map<String,Object> cfg = new HashMap<>();
 		    cfg.put(ContextProperties.SSL_VERIFY, sslVerify());
 		    
-			jobId = StreamsContextFactory.getStreamsContext(StreamsContext.Type.DISTRIBUTED).submit(topology).get()
+			jobId = StreamsContextFactory.getStreamsContext(StreamsContext.Type.DISTRIBUTED).submit(topology, cfg).get()
 					.toString();
 		} else if (testType.equals("STREAMING_ANALYTICS_SERVICE")) {
 			jobId = StreamsContextFactory.getStreamsContext(StreamsContext.Type.STREAMING_ANALYTICS_SERVICE)

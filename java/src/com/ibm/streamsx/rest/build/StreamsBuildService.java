@@ -6,6 +6,7 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.rest.internal.RestUtils;
 
 class StreamsBuildService extends AbstractConnection implements BuildService {
 	
@@ -19,7 +20,7 @@ class StreamsBuildService extends AbstractConnection implements BuildService {
 	}
 	
 	private void setAuthorization(String bearerToken) {
-		authorization = StreamsRestUtils.createBearerAuth(bearerToken);
+		authorization = RestUtils.createBearerAuth(bearerToken);
 	}
 	
 	@Override
@@ -31,7 +32,7 @@ class StreamsBuildService extends AbstractConnection implements BuildService {
 	
 	@Override
 	public void allowInsecureHosts() {
-		this.executor = StreamsRestUtils.createExecutor(true);	
+		this.executor = RestUtils.createExecutor(true);	
 	}
 
 	@Override
