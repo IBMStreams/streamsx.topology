@@ -136,7 +136,7 @@ public interface DeployKeys {
             final JsonObject submissionResult = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);
 
             return createJobConfigOverlayFile(dir, copyJobConfigOverlays(deploy),
-                    name, namespace, submissionResult);
+                    namespace, name, submissionResult);
         }
         return null;
     }
