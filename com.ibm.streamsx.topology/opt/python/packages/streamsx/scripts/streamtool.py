@@ -58,7 +58,6 @@ def _lsjobs(instance, cmd_args):
     jobs = instance.get_jobs()
     print("Instance: " + instance.id)
     print("Id State Healthy User Date Name Group \n")
-
     for job in jobs:
         jobtime = str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(job.submitTime/1000))) # job.submitTime/1000 to convert ms to sec
         jobG = job.jobGroup.split("/")[-1]
