@@ -2157,6 +2157,8 @@ class Window(object):
 
         Returns:
             Window: Window that will be triggered.
+
+        .. versionadded:: 1.13
         """
 
         pw = copy.copy(self)
