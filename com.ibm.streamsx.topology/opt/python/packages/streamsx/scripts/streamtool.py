@@ -12,6 +12,7 @@ import argparse
 import requests
 import warnings
 import urllib3
+import time
 
 import streamsx.topology.context
 from streamsx.rest import Instance
@@ -45,6 +46,24 @@ def _job_cancel(instance, job_id=None, job_name=None, force=False):
     job = instance.get_job(id=str(job_id))
     job.cancel(force)
 
+
+###########################################
+# lsjobs
+###########################################
+def _lsjobs_parser(subparsers):
+    job_ls = subparsers.add_parser('lsjobs', help='List the jobs for a given instance')
+
+def _lsjobs(instance, cmd_args):
+    """view jobs"""
+    jobs = instance.get_jobs()
+    print("Instance: " + instance.id)
+    print("Id State Healthy User Date Name Group \n")
+    for job in jobs:
+        jobtime = str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(job.submitTime/1000))) # job.submitTime/1000 to convert ms to sec
+        jobG = job.jobGroup.split("/")[-1]
+        print(job.id + " " + job.status.capitalize() + " " + job.health + " " + job.startedBy + " " + jobtime + " " + job.name + " " + jobG + " ")
+
+
 def run_cmd(args=None):
     cmd_args = _parse_args(args)
 
@@ -53,15 +72,21 @@ def run_cmd(args=None):
 
     instance = Instance.of_endpoint(
         verify=False if cmd_args.disable_ssl_verify else None)
-    
-    if cmd_args.subcmd == 'submitjob':
-        result = _submitjob(instance, cmd_args);
-    elif cmd_args.subcmd == 'canceljob':
-        result = _canceljob(instance, cmd_args)
 
-    return result
+    # if cmd_args.subcmd == 'submitjob':
+    #     result = _submitjob(instance, cmd_args)
+    # elif cmd_args.subcmd == 'canceljob':
+    #     result = _canceljob(instance, cmd_args)
 
-   
+    switch = {
+    "submitjob": _submitjob,
+    "canceljob": _canceljob,
+    "lsjobs": _lsjobs,
+    }
+
+    return switch[cmd_args.subcmd](instance, cmd_args)
+    # return result
+
 def main(args=None):
     """ Mimic streamtool using the REST api for ICP4D.
     """
@@ -83,6 +108,7 @@ def _parse_args(args):
 
     _submitjob_parser(subparsers)
     _canceljob_parser(subparsers)
+    _lsjobs_parser(subparsers)
 
     return cmd_parser.parse_args(args)
 
