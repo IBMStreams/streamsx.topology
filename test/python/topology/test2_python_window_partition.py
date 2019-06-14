@@ -7,7 +7,13 @@ from streamsx.topology.tester import Tester
 from streamsx.spl import op
 
 def ModTwo(arg):
-    return arg % 2;
+    return arg % 2
+
+def FirstElement(arg):
+    return arg[0]
+
+def CrissCross(arg):
+    return (arg[1][0], arg[0][1])
 
 # Test partitioned windows in python topology operators.
 class TestPythonWindowPartition(unittest.TestCase):
@@ -204,7 +210,7 @@ class TestPythonWindowPartition(unittest.TestCase):
         s = topo.source([('a',1),('b', 7),('a', 2),('b', 9), ('a', 4), ('a', 5), ('b', 8), ('b', 17)])
         s = s.map(lambda x: x, schema = schema)
 
-        s = s.last(3).trigger(2).partition(lambda x: x[0]).aggregate(lambda items: (items[1][0], items[0][1]))
+        s = s.last(3).trigger(2).partition(FirstElement).aggregate(lambda items: (items[1][0], items[0][1]))
  
         tester = Tester(topo)
         tester.contents(s, [('a',1), ('b',7), ('a', 2), ('b', 9)] )
@@ -218,44 +224,11 @@ class TestPythonWindowPartition(unittest.TestCase):
         s = topo.source([('a',1),('b', 7),('a', 2),('b', 9), ('a', 4), ('a', 5), ('b', 8), ('b', 17)])
         s = s.map(lambda x: x, schema = schema)
 
-        s = s.last(3).partition(lambda x: x[0]).trigger(2).aggregate(lambda items: (items[1][0], items[0][1]))
+        s = s.last(3).partition(FirstElement).trigger(2).aggregate(lambda items: (items[1][0], items[0][1]))
  
         tester = Tester(topo)
         tester.contents(s, [('a',1), ('b',7), ('a', 2), ('b', 9)] )
         tester.test(self.test_ctxtype, self.test_config)
-
-    # Partition by attribute and by callable (not allowed)
-    def test_partition_by_attribute_and_callable(self):
-
-        schema = StreamSchema("tuple<rstring c, int32 d>").as_tuple()
-        topo = Topology()
-        s = topo.source([('a',1),('b', 7),('a', 2),('b', 9), ('a', 4), ('a', 5), ('b', 8), ('b', 17)])
-        s = s.map(lambda x: x, schema = schema)
-
-        with self.assertRaises(ValueError):
-            s = s.last(3).trigger(2).partition(lambda x: x[0]).partition('c').aggregate(lambda items: (items[1][0], items[0][1]))
-
-    # Partition by attribute twice (not allowed)
-    def test_partition_by_attribute_twice(self):
-
-        schema = StreamSchema("tuple<rstring c, int32 d>").as_tuple()
-        topo = Topology()
-        s = topo.source([('a',1),('b', 7),('a', 2),('b', 9), ('a', 4), ('a', 5), ('b', 8), ('b', 17)])
-        s = s.map(lambda x: x, schema = schema)
-
-        with self.assertRaises(ValueError):
-            s = s.last(3).trigger(2).partition('d').partition('c').aggregate(lambda items: (items[1][0], items[0][1]))
- 
-    # Partition by attribute twice (not allowed)
-    def test_partition_by_callable_twice(self):
-
-        schema = StreamSchema("tuple<rstring c, int32 d>").as_tuple()
-        topo = Topology()
-        s = topo.source([('a',1),('b', 7),('a', 2),('b', 9), ('a', 4), ('a', 5), ('b', 8), ('b', 17)])
-        s = s.map(lambda x: x, schema = schema)
-
-        with self.assertRaises(ValueError):
-            s = s.last(3).trigger(2).partition(lambda x: x[0]).partition(lambda x: x[1]).aggregate(lambda items: (items[1][0], items[0][1]))
 
     # To make sure we are partitioning by value and not by object identity,
     # partition by something other than integer values, characters, or short
@@ -267,7 +240,7 @@ class TestPythonWindowPartition(unittest.TestCase):
         s = topo.source([('a',1,2),('b',7,8),('a',2,2),('b',9,19), ('a',1,4), ('a',1,5), ('b',9,7), ('b',7,17)])
         s = s.map(lambda x: x, schema = schema)
 
-        s = s.last(3).trigger(2).partition(lambda x: (x[0], x[1])).aggregate(lambda items: (items[1][0], items[0][1]))
+        s = s.last(3).trigger(2).partition(lambda x: (x[0], x[1])).aggregate(CrissCross)
  
         tester = Tester(topo)
         tester.contents(s, [('a',1), ('b',9), ('b',7)] )

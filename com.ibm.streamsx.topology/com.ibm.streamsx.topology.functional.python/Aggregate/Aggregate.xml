@@ -138,7 +138,7 @@
       </parameter>
       <parameter>
         <name>pyPartitionByModule</name>
-        <description>The module of the python callable used for partitioning.  If partitionByName is specified, this must also be specified</description>
+        <description>The module of the python callable used for partitioning.  If partitionByName is specified, this must also be specified.</description>
         <optional>true</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>Constant</expressionMode>
@@ -155,6 +155,15 @@
         <type>rstring</type>
         <cardinality>1</cardinality>
         <portScope><port>0</port></portScope>
+      </parameter>
+      <parameter>
+        <name>pyPartitionIsStateful</name>
+        <description>Whether the partition function has state to be saved in checkpointing.</description>
+        <optional>true</optional>
+        <rewriteAllowed>false</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>boolean</type>
+        <cardinality>1</cardinality>
       </parameter>
     </parameters>
     <inputPorts>

@@ -273,6 +273,14 @@ class _SourceLocation(object):
             sl['api.method'] = self.method
         return sl
 
+"""
+Determine whether a callable has state that needs to be saved during
+checkpointing.  
+"""
+def _determine_statefulness(_callable):
+    stateful = not inspect.isroutine(_callable)
+    return stateful
+
 class Routing(Enum):
     """
     Defines how tuples are routed to channels in a
@@ -991,7 +999,7 @@ class Stream(_placement._Placement, object):
         """
         sl = _SourceLocation(_source_info(), 'for_each')
         _name = self.topology.graph._requested_name(name, action='for_each', func=func)
-        stateful = self._determine_statefulness(func)
+        stateful = _determine_statefulness(func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.oport)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
@@ -1033,7 +1041,7 @@ class Stream(_placement._Placement, object):
         """
         sl = _SourceLocation(_source_info(), 'filter')
         _name = self.topology.graph._requested_name(name, action="filter", func=func)
-        stateful = self._determine_statefulness(func)
+        stateful = _determine_statefulness(func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.oport)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
@@ -1044,7 +1052,7 @@ class Stream(_placement._Placement, object):
     def _map(self, func, schema, name=None):
         schema = streamsx.topology.schema._normalize(schema)
         _name = self.topology.graph._requested_name(name, action="map", func=func)
-        stateful = self._determine_statefulness(func)
+        stateful = _determine_statefulness(func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Map", func, name=_name, stateful=stateful)
         op.addInputPort(outputPort=self.oport)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
@@ -1223,7 +1231,7 @@ class Stream(_placement._Placement, object):
      
         sl = _SourceLocation(_source_info(), 'flat_map')
         _name = self.topology.graph._requested_name(name, action='flat_map', func=func)
-        stateful = self._determine_statefulness(func)
+        stateful = _determine_statefulness(func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.oport)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
@@ -1400,7 +1408,7 @@ class Stream(_placement._Placement, object):
 
             if func is not None:
                 keys = ['__spl_hash']
-                stateful = self._determine_statefulness(func)
+                stateful = _determine_statefulness(func)
                 hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::HashAdder", func, stateful=stateful)
                 hash_adder._op_def['hashAdder'] = True
                 hash_adder._layout(hidden=True)
@@ -1871,14 +1879,6 @@ class Stream(_placement._Placement, object):
         self._op()._layout(kind, hidden, name, orig_name)
         return self
 
-    """
-    Determine whether a callable has state that needs to be saved during
-    checkpointing.  
-    """
-    def _determine_statefulness(self, _callable):
-        stateful = not inspect.isroutine(_callable)
-        return stateful
-
 class View(object):
     """
     The View class provides access to a continuously updated sampling of data items on a :py:class:`Stream` after submission.
@@ -2096,6 +2096,8 @@ class Window(object):
 
     def _partition_by_callable(self, function):
         dilled_callable = None
+        
+        stateful = _determine_statefulness(function)
 
         # This is based on graph._addOperatorFunction.
         recurse = None
@@ -2123,6 +2125,7 @@ class Window(object):
             self._config['partitionByCallable'] = dilled_callable
         self._config['partitionByName'] = name
         self._config['partitionByModule'] = function.__module__
+        self._config['partitionIsStateful'] = bool(stateful)
 
     def partition(self, key):
         """Declare a window with this windows eviction and trigger policies, and a partition.
@@ -2132,21 +2135,44 @@ class Window(object):
         is treated as if it were a separate window, and each subwindow shares
         the same trigger and eviction policy.
 
-        This method may be used only with a structured schema, and the
-        value of the `attribute` parameter must be the name of a single
+        The key may either be a string containing the name of an attribute,
+        or a python callable.
+
+        The `key` parameter may be a string only with a structured schema, 
+        and the value of the `key` parameter must be the name of a single
         attribute in the schema.
 
+        The `key` parameter may be a python callable object.  If it is, the
+        callable is evaluated for each tuple, and the return from the callable
+        determines the partition into which the tuple is placed.  The return
+        value must have a ``__hash__`` method.  If checkpointing is enabled, 
+        and the callable object has a state, the state of the callable object 
+        will be saved and restored in checkpoints.  However, ``__enter__`` and
+        ``__exit__`` methods may not be called on the callable object.
+        
+
         Args:
-            attribute: The name of the attribute to be used for partitioning.
+            key: The name of the attribute to be used for partitioning, or
+              the python callable object used for partitioning.
 
         Returns:
             Window: Window that will be triggered.
         """
 
-        if 'partitioned' in self._config and self._config['partitioned']:
-            raise ValueError("Only one partition my be specified")
-
         pw = copy.copy(self)
+
+        # Remove any existing partition.  It will be replaced by the new
+        # partition
+        if 'partitioned' in self._config:
+            del self._config['partitioned']
+        if 'partitionBy' in self._config:
+            del self._config['partitionBy']
+        if 'partitionByName' in self._config:
+            del self._config['partitionByName']
+        if 'partitionByModule' in self._config:
+            del self._config['partitionByModule']
+        if 'partitionIsStateful' in self._config:
+            del self._config['partitionIsStateful']
 
         if callable(key):
             pw._partition_by_callable(key)
@@ -2240,7 +2266,7 @@ class Window(object):
         
         sl = _SourceLocation(_source_info(), "aggregate")
         _name = self.topology.graph._requested_name(name, action="aggregate", func=function)
-        stateful = self.stream._determine_statefulness(function)
+        stateful = _determine_statefulness(function)
 
         params = {}
         # if _config contains 'partitionBy', add a parameter 'pyPartitionBy'
@@ -2251,6 +2277,7 @@ class Window(object):
         if 'partitionByName' in self._config:
             params['pyPartitionByName'] = self._config['partitionByName']
             params['pyPartitionByModule'] = self._config['partitionByModule']
+            params['pyPartitionIsStateful'] = self._config['partitionIsStateful']
             params['toolkitDir'] = streamsx.topology.param.toolkit_dir()
 
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Aggregate", function, name=_name, sl=sl, stateful=stateful, params=params)
