@@ -6,6 +6,7 @@ import sys
 import sysconfig
 import os
 import argparse
+import urllib3
 import streamsx.rest
 from streamsx.spl.op import main_composite
 from streamsx.spl.toolkit import add_toolkit
@@ -73,7 +74,7 @@ def _create_topo(cmd_args):
 def _parse_args(args):
     """ Argument parsing
     """
-    cmd_parser = argparse.ArgumentParser(description='SPL Compile alias for build service.')
+    cmd_parser = argparse.ArgumentParser(description='SPL compiler (sc) alias for build service.')
     cmd_parser.add_argument('--main-composite', '-M', required=True, help='SPL Main composite', metavar='name')
 
     cmd_parser.add_argument('--optimized-code-generation', '-a', action='store_true', help='Generate optimized code with less runtime error checking.')
