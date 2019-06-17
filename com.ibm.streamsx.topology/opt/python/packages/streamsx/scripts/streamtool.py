@@ -57,7 +57,6 @@ def _lsjobs_parser(subparsers):
 
 def _lsjobs(instance, cmd_args):
     """view jobs"""
-    users = None
     jobs = instance.get_jobs()
 
     # If --users argument (ie given list of user ID's), filter jobs by these user ID's
