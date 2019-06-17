@@ -12,7 +12,7 @@ import argparse
 import requests
 import warnings
 import urllib3
-import time
+import datetime
 
 import streamsx.topology.context
 from streamsx.rest import Instance
@@ -57,11 +57,16 @@ def _lsjobs(instance, cmd_args):
     """view jobs"""
     jobs = instance.get_jobs()
     print("Instance: " + instance.id)
-    print("Id State Healthy User Date Name Group \n")
+    print("Id State Healthy User Date Name Group")
+    LOCAL_TIMEZONE = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
+    # utc_offset_sec = time.altzone if time.localtime().tm_isdst else time.timezone
+    # utc_offset = datetime.timedelta(seconds=-utc_offset_sec)
     for job in jobs:
-        jobtime = str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(job.submitTime/1000))) # job.submitTime/1000 to convert ms to sec
-        jobG = job.jobGroup.split("/")[-1]
-        print(job.id + " " + job.status.capitalize() + " " + job.health + " " + job.startedBy + " " + jobtime + " " + job.name + " " + jobG + " ")
+        jobHealth = "yes" if job.health == "healthy" else "no"
+        jobTime = datetime.datetime.fromtimestamp(job.submitTime/1000).replace(tzinfo=LOCAL_TIMEZONE).isoformat() # job.submitTime/1000 to convert ms to sec
+        jobGroup = job.jobGroup.split("/")[-1]
+        # print(job)
+        print(job.id + " " + job.status.capitalize() + " " + jobHealth + " " + job.startedBy + " " + jobTime + " " + job.name + " " + jobGroup)
 
 
 def run_cmd(args=None):
@@ -73,11 +78,6 @@ def run_cmd(args=None):
     instance = Instance.of_endpoint(
         verify=False if cmd_args.disable_ssl_verify else None)
 
-    # if cmd_args.subcmd == 'submitjob':
-    #     result = _submitjob(instance, cmd_args)
-    # elif cmd_args.subcmd == 'canceljob':
-    #     result = _canceljob(instance, cmd_args)
-
     switch = {
     "submitjob": _submitjob,
     "canceljob": _canceljob,
@@ -85,7 +85,6 @@ def run_cmd(args=None):
     }
 
     return switch[cmd_args.subcmd](instance, cmd_args)
-    # return result
 
 def main(args=None):
     """ Mimic streamtool using the REST api for ICP4D.
