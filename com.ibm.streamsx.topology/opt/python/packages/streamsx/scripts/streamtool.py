@@ -59,14 +59,11 @@ def _lsjobs(instance, cmd_args):
     print("Instance: " + instance.id)
     print("Id State Healthy User Date Name Group")
     LOCAL_TIMEZONE = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
-    # utc_offset_sec = time.altzone if time.localtime().tm_isdst else time.timezone
-    # utc_offset = datetime.timedelta(seconds=-utc_offset_sec)
     for job in jobs:
         jobHealth = "yes" if job.health == "healthy" else "no"
         jobTime = datetime.datetime.fromtimestamp(job.submitTime/1000).replace(tzinfo=LOCAL_TIMEZONE).isoformat() # job.submitTime/1000 to convert ms to sec
         # jobGroup = job.jobGroup.split("/")[-1]
         jobGroup = job.jobGroup
-        # print(job)
         print(job.id + " " + job.status.capitalize() + " " + jobHealth + " " + job.startedBy + " " + jobTime + " " + job.name + " " + jobGroup)
 
 
