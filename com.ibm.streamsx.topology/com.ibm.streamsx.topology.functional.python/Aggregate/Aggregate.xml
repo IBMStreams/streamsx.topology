@@ -117,13 +117,53 @@
       </parameter>
       <parameter>
         <name>pyPartitionBy</name>
-        <description>The attribute or python callable used for partitioning.  This is required if the window is partitioned, and ignored if it is not.</description>
+        <description>The attribute used for partitioning.  If the window is partitioned, either this or pyPartitionByName must be specified.</description>
         <optional>true</optional>
+	<!-- we need to inspect this value at code gen time -->
         <rewriteAllowed>false</rewriteAllowed>
         <expressionMode>Constant</expressionMode>
         <type>rstring</type>
         <cardinality>1</cardinality>
         <portScope><port>0</port></portScope>
+      </parameter>
+      <parameter>
+        <name>pyPartitionByName</name>
+        <description>The name of the python callable used for partitioning.  If the window is partitioned, either this or pyPartitionByName must be specified.</description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>rstring</type>
+        <cardinality>1</cardinality>
+        <portScope><port>0</port></portScope>
+      </parameter>
+      <parameter>
+        <name>pyPartitionByModule</name>
+        <description>The module of the python callable used for partitioning.  If partitionByName is specified, this must also be specified.</description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>rstring</type>
+        <cardinality>1</cardinality>
+        <portScope><port>0</port></portScope>
+      </parameter>
+      <parameter>
+        <name>pyPartitionByCallable</name>
+        <description>The the python callable used for partitioning.  If both pyPartitionByName and pyPartitionByCallable are specified, pyPartitionByCallable is used.</description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>rstring</type>
+        <cardinality>1</cardinality>
+        <portScope><port>0</port></portScope>
+      </parameter>
+      <parameter>
+        <name>pyPartitionIsStateful</name>
+        <description>Whether the partition function has state to be saved in checkpointing.</description>
+        <optional>true</optional>
+        <rewriteAllowed>false</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>boolean</type>
+        <cardinality>1</cardinality>
       </parameter>
     </parameters>
     <inputPorts>

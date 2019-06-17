@@ -6,6 +6,15 @@ from streamsx.topology.schema import CommonSchema, StreamSchema
 from streamsx.topology.tester import Tester
 from streamsx.spl import op
 
+def ModTwo(arg):
+    return arg % 2
+
+def FirstElement(arg):
+    return arg[0]
+
+def CrissCross(arg):
+    return (arg[1][0], arg[0][1])
+
 # Test partitioned windows in python topology operators.
 class TestPythonWindowPartition(unittest.TestCase):
     _multiprocess_can_split_ = True
@@ -69,7 +78,7 @@ class TestPythonWindowPartition(unittest.TestCase):
 
         # s.print()
         # streamsx.topology.context.submit('TOOLKIT', topo)
-
+ 
         tester = Tester(topo)
         tester.contents(s, [('a',1), ('b',7), ('a', 2), ('b', 9)] )
         tester.test(self.test_ctxtype, self.test_config)
@@ -169,4 +178,86 @@ class TestPythonWindowPartition(unittest.TestCase):
 
         tester = Tester(topo)
         tester.contents(s, [('a',3), ('b',16), ('a', 9), ('b', 25)])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    # a batch (tumbling) window partitioned by a callable.
+    def test_partition_batch_lambda(self):
+        topo = Topology()
+        s = topo.source([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
+
+        s = s.batch(2).partition(lambda x: x % 2).aggregate(lambda items: (sum(item for item in items)))
+
+        tester = Tester(topo)
+        tester.contents(s, [1+3,2+4,5+7,6+8,9+11,10+12,13+15,14])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    # a batch (tumbling) window partitioned by a callable.
+    def test_partition_batch_func(self):
+        topo = Topology()
+        s = topo.source([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
+
+        s = s.batch(2).partition(ModTwo).aggregate(lambda items: (sum(item for item in items)))
+
+        tester = Tester(topo)
+        tester.contents(s, [1+3,2+4,5+7,6+8,9+11,10+12,13+15,14])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    # Partition using a tuple with a structured schema and a python callable.
+    def test_structured_as_tuple_lambda_partition(self):
+
+        schema = StreamSchema("tuple<rstring c, int32 d>").as_tuple()
+        topo = Topology()
+        s = topo.source([('a',1),('b', 7),('a', 2),('b', 9), ('a', 4), ('a', 5), ('b', 8), ('b', 17)])
+        s = s.map(lambda x: x, schema = schema)
+
+        s = s.last(3).trigger(2).partition(FirstElement).aggregate(lambda items: (items[1][0], items[0][1]))
+ 
+        tester = Tester(topo)
+        tester.contents(s, [('a',1), ('b',7), ('a', 2), ('b', 9)] )
+        tester.test(self.test_ctxtype, self.test_config)
+
+    # partition before trigger using python callable
+    def test_partition_before_trigger_callable(self):
+
+        schema = StreamSchema("tuple<rstring c, int32 d>").as_tuple()
+        topo = Topology()
+        s = topo.source([('a',1),('b', 7),('a', 2),('b', 9), ('a', 4), ('a', 5), ('b', 8), ('b', 17)])
+        s = s.map(lambda x: x, schema = schema)
+
+        s = s.last(3).partition(FirstElement).trigger(2).aggregate(lambda items: (items[1][0], items[0][1]))
+ 
+        tester = Tester(topo)
+        tester.contents(s, [('a',1), ('b',7), ('a', 2), ('b', 9)] )
+        tester.test(self.test_ctxtype, self.test_config)
+
+    # To make sure we are partitioning by value and not by object identity,
+    # partition by something other than integer values, characters, or short
+    # strings.
+    def test_partition_by_tuple(self):
+
+        schema = StreamSchema("tuple<rstring c, int32 d>").as_tuple()
+        topo = Topology()
+        s = topo.source([('a',1,2),('b',7,8),('a',2,2),('b',9,19), ('a',1,4), ('a',1,5), ('b',9,7), ('b',7,17)])
+        s = s.map(lambda x: x, schema = schema)
+
+        s = s.last(3).trigger(2).partition(lambda x: (x[0], x[1])).aggregate(CrissCross)
+ 
+        tester = Tester(topo)
+        tester.contents(s, [('a',1), ('b',9), ('b',7)] )
+        tester.test(self.test_ctxtype, self.test_config)
+ 
+    def test_partition_by_callable_json_schema(self):
+        topo = Topology()
+        s = topo.source([{'a':1},{'b':2,'c':3}, {'d': 4, 'e': 5}])
+        
+        # Check the averages of the values of the Json objects
+        s = s.map(lambda x: x, schema = CommonSchema.Json)
+        s = s.last(3).trigger(1).partition(lambda tup: len(tup.keys())).aggregate(lambda tuples: [[set(tup.keys()), sum(tup.values())] for tup in tuples])
+        
+        tester = Tester(topo)
+        tester.contents(s, [ [[{'a'},1]],
+                             [[{'c','b'}, 5]],
+                             [[{'c','b'}, 5], [{'d','e'}, 9]]
+                           ])
+
         tester.test(self.test_ctxtype, self.test_config)
