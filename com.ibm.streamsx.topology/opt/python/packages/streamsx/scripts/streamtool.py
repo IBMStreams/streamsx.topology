@@ -37,7 +37,6 @@ def _canceljob_parser(subparsers):
 
 def _canceljob(instance, cmd_args):
     """Cancel a job."""
-    print('DDD', cmd_args)
     for job in cmd_args.jobs.split(','):
         _job_cancel(instance, job_id=int(job), force=cmd_args.force)
 
