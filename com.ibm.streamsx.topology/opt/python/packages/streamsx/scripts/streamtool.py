@@ -64,7 +64,8 @@ def _lsjobs(instance, cmd_args):
     for job in jobs:
         jobHealth = "yes" if job.health == "healthy" else "no"
         jobTime = datetime.datetime.fromtimestamp(job.submitTime/1000).replace(tzinfo=LOCAL_TIMEZONE).isoformat() # job.submitTime/1000 to convert ms to sec
-        jobGroup = job.jobGroup.split("/")[-1]
+        # jobGroup = job.jobGroup.split("/")[-1]
+        jobGroup = job.jobGroup
         # print(job)
         print(job.id + " " + job.status.capitalize() + " " + jobHealth + " " + job.startedBy + " " + jobTime + " " + job.name + " " + jobGroup)
 
