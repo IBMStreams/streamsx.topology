@@ -51,18 +51,38 @@ def _job_cancel(instance, job_id=None, job_name=None, force=False):
 ###########################################
 def _lsjobs_parser(subparsers):
     job_ls = subparsers.add_parser('lsjobs', help='List the jobs for a given instance')
+    job_ls.add_argument('--jobs', '-j', help='Specifies a list of job IDs.', metavar='job-id')
+    job_ls.add_argument('--users', '-u')
+    job_ls.add_argument('--jobnames')
 
 def _lsjobs(instance, cmd_args):
     """view jobs"""
+    users = None
     jobs = instance.get_jobs()
+
+    # If --users argument (ie given list of user ID's), filter jobs by these user ID's
+    if (cmd_args.users):
+        users = cmd_args.users.split(",")
+        jobs = [job for job in jobs if job.startedBy in users]
+
+    # If --jobs argument (ie given list of job ID's), filter jobs by these ID's
+    if (cmd_args.jobs):
+        job_ids = cmd_args.jobs.split(",")
+        jobs = [job for job in jobs if job.id in job_ids]
+
+    # If --jobsnames argument (ie given list of job names), filter jobs by these user job names
+    if (cmd_args.jobnames):
+        job_names = cmd_args.jobnames.split(",")
+        jobs = [job for job in jobs if job.name in job_names]
+
     print("Instance: " + instance.id)
     print("Id State Healthy User Date Name Group")
     LOCAL_TIMEZONE = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
     for job in jobs:
         jobHealth = "yes" if job.health == "healthy" else "no"
         jobTime = datetime.datetime.fromtimestamp(job.submitTime/1000).replace(tzinfo=LOCAL_TIMEZONE).isoformat() # job.submitTime/1000 to convert ms to sec
-        # jobGroup = job.jobGroup.split("/")[-1]
-        jobGroup = job.jobGroup
+        jobGroup = job.jobGroup.split("/")[-1]
+        # jobGroup = job.jobGroup
         print(job.id + " " + job.status.capitalize() + " " + jobHealth + " " + job.startedBy + " " + jobTime + " " + job.name + " " + jobGroup)
 
 
