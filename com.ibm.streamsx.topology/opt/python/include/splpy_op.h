@@ -253,12 +253,10 @@ class SplpyOp : public OperatorWithCallable {
   loads = SplpyGeneral::loadFunction("dill", "loads");
   dumps = SplpyGeneral::loadFunction("dill", "dumps");
   
-  if (op->callable()) {
-    pickledInitialCallable = call (dumps, op->callable());
-    if (!pickledInitialCallable) {
-      SplpyGeneral::tracePythonError();
-      throw SplpyExceptionInfo::pythonError("dill.dumps").exception();
-    }
+  pickledInitialCallable = call (dumps, op->callable());
+  if (!pickledInitialCallable) {
+    SplpyGeneral::tracePythonError();
+    throw SplpyExceptionInfo::pythonError("dill.dumps").exception();
   }
  }
 
