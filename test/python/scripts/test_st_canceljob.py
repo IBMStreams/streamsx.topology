@@ -4,6 +4,7 @@ import unittest
 import sys
 import os
 import time
+import requests
 
 from streamsx.topology.topology import Topology
 from streamsx.topology.context import submit, ConfigParams
