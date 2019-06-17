@@ -98,6 +98,11 @@ public class TestTopology {
 				}
 			}
 		}
+		
+		if (Boolean.getBoolean("topology.test.forceRemoteBuild") && 
+		        (getTesterType() == Type.STREAMING_ANALYTICS_SERVICE_TESTER || getTesterType() == Type.DISTRIBUTED_TESTER)) {
+		    getConfig().put(ContextProperties.FORCE_REMOTE_BUILD, true);
+		}
             
         // Look for a different compiler
         String differentCompile = System.getProperty(ContextProperties.COMPILE_INSTALL_DIR);

@@ -55,18 +55,18 @@ pre-configured.
 Any streaming applications using Python must use Python 3.5 when
 submitted to the service instance.
 
-**************************
-IBM Cloud Private for Data
-**************************
+**********************
+IBM Cloud Pak for Data
+**********************
 
-An IBM Streams service instance within ICP for Data has Anaconda installed with Python 3.6 as the
+An IBM Streams service instance within Cloud Pak for Data has Anaconda installed with Python 3.6 as the
 runtime environment and has ``PYTHONHOME`` Streams application environment variable pre-configured.
 
 Any streaming applications using Python must use Python 3.6 when
 submitted to the service instance.
 
-Streaming applications are submitted through Jupyter notebooks contained in
-ICP for Data projects. The `streamsx` package is preinstalled and applications are sumitted to the :py:const:`~streamsx.topology.context.ContextTypes.DISTRIBUTED` context.
+Streaming applications can be submitted through Jupyter notebooks running in
+Cloud Pak for Data projects. The `streamsx` package is preinstalled and applications are sumitted to the :py:const:`~streamsx.topology.context.ContextTypes.DISTRIBUTED` context.
 
 ***********************
 IBM Streams on-premises
