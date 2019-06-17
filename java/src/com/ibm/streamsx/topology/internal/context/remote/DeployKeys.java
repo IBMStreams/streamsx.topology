@@ -132,22 +132,31 @@ public interface DeployKeys {
 
             String namespace = splAppNamespace(graph);
             String name = splAppName(graph);
-
-            File jcf = new File(dir, namespace + "." + name + "_JobConfig.json");
-
-            JsonObject jcos = copyJobConfigOverlays(deploy);
-            jcos.addProperty("comment",
-                    String.format("Job Config Overlays for %s::%s - generated %s", namespace, name, new Date()));
-
-            String jcos_str = gson().toJson(jcos);
-
-            Files.write(jcf.toPath(), jcos_str.getBytes(StandardCharsets.UTF_8));
             
             final JsonObject submissionResult = GsonUtilities.objectCreate(submission, RemoteContext.SUBMISSION_RESULTS);
-            submissionResult.addProperty(SubmissionResultsKeys.JOB_CONFIG_PATH, jcf.getCanonicalPath());
-            
-            return jcf;
+
+            return createJobConfigOverlayFile(dir, copyJobConfigOverlays(deploy),
+                    namespace, name, submissionResult);
         }
         return null;
+    }
+    
+    static File createJobConfigOverlayFile(File dir, JsonObject jco, String namespace, String name,
+            JsonObject result) throws IOException {
+        
+        String sabBaseName = namespace == null ? name : namespace + "." + name;
+        File jcf = new File(dir, sabBaseName + "_JobConfig.json");
+
+        jco.addProperty("comment",
+                String.format("Job Config Overlays for %s::%s - generated %s", namespace, name, new Date()));
+
+        String jcos_str = gson().toJson(jco);
+
+        Files.write(jcf.toPath(), jcos_str.getBytes(StandardCharsets.UTF_8));
+        
+        result.addProperty(SubmissionResultsKeys.JOB_CONFIG_PATH, jcf.getCanonicalPath());
+        
+        return jcf;
+
     }
 }

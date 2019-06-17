@@ -4,7 +4,11 @@
  */
 package com.ibm.streamsx.topology.internal.context.streamsrest;
 
+import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.getSPLCompatibleName;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.createJobConfigOverlayFile;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 
 import java.io.File;
 import java.io.IOException;
@@ -80,6 +84,35 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
                 final long endDownloadSabTime = System.currentTimeMillis();
                 build.getMetrics().addProperty(SubmissionResultsKeys.DOWNLOAD_SABS_TIME,
                         (endDownloadSabTime - startDownloadSabTime));
+                
+
+                if (artifacts.size() == 1) {
+                    String location = GsonUtilities
+                            .jstring(artifacts.get(0).getAsJsonObject(), "location");
+                    
+                    result.addProperty(SubmissionResultsKeys.BUNDLE_PATH, location);
+                    
+                    // Create a Job Config Overlays file if this is creating
+                    // a sab for subsequent distributed deployment
+                    // or keepArtifacts is set.
+                    final File sabFile = new File(location);
+                    final String sabBaseName = sabFile.getName().substring(0, sabFile.getName().length()-4);
+                    final int lastDot = sabBaseName.lastIndexOf('.');
+                    final String namespace, name;
+                    if (lastDot == -1) {                      
+                        namespace = null;
+                        name = sabBaseName;
+                    } else {
+                        namespace = sabBaseName.substring(0, lastDot);
+                        name = sabBaseName.substring(lastDot+1);
+                    }
+                    if (getClass() == BuildServiceContext.class || jboolean(deploy, KEEP_ARTIFACTS)) {
+                        createJobConfigOverlayFile(sabFile.getParentFile(),
+                                jco, namespace, name, result);
+                    }
+
+                }
+
             }
             
             postBuildAction(deploy, jco, result);
