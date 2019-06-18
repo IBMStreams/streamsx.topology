@@ -56,7 +56,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'streamsx'
-copyright = '2015,2018 IBM Corp.'
+copyright = '2015,2019 IBM Corp.'
 author = 'IBM'
 
 # The version info for the project you're documenting, acts as replacement for
