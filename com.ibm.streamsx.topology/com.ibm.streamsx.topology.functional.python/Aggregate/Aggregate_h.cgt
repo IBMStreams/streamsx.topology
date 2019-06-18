@@ -194,7 +194,7 @@ private:
     SPL::Mutex mutex_;
 #endif
 #if SPLPY_PARTITION_IS_STATEFUL == 1
-    streamsx::topology::SplpyOpStateHandlerImpl partitionStateHandler_;
+    streamsx::topology::SplpyOpStateHandlerImpl * partitionStateHandler_;
 #endif
 }; 
 

@@ -38,7 +38,7 @@ MY_OPERATOR::MY_OPERATOR() :
    occ_(-1),
    window_(<%=$windowCppInitializer%>)
 #if SPLPY_PARTITION_IS_STATEFUL == 1
-   , partitionStateHandler_(this)
+   , partitionStateHandler_(NULL)
 #endif
 {
 <% if ($window->isSliding()) {%>
@@ -133,12 +133,20 @@ MY_OPERATOR::MY_OPERATOR() :
 
 #endif // SPLPY_PARTITION_BY_CALLABLE
 
+#if SPLPY_PARTITION_IS_STATEFUL == 1
+    partitionStateHandler_ = new SplpyOpStateHandlerImpl(this);
+#endif
+
 #endif // SPLPY_PARTITION_BY_PYTHON
 }
 
 MY_OPERATOR::~MY_OPERATOR() 
 {
   delete funcop_;
+
+#if SPLPY_PARTITION_IS_STATEFUL == 1
+    delete partitionStateHandler_;
+#endif
 
   <% if (($pystyle eq 'json') || ($pystyle eq 'pickle')) {%>
   {
@@ -388,7 +396,7 @@ void MY_OPERATOR::checkpoint(SPL::Checkpoint & ckpt) {
     window_.checkpoint(ckpt);
 #if SPLPY_PARTITION_IS_STATEFUL == 1
     try {
-        partitionStateHandler_.checkpoint(ckpt);
+        partitionStateHandler_->checkpoint(ckpt);
     }
     catch (SplpyExceptionInfo const & e) {
         throw e.exception();
@@ -405,7 +413,7 @@ void MY_OPERATOR::reset(SPL::Checkpoint & ckpt) {
     window_.reset(ckpt);
 #if SPLPY_PARTITION_IS_STATEFUL == 1
     try {
-        partitionStateHandler_.reset(ckpt);
+        partitionStateHandler_->reset(ckpt);
     }
     catch (SplpyExceptionInfo const & e) {
         throw e.exception();
@@ -422,7 +430,7 @@ void MY_OPERATOR::resetToInitialState() {
     window_.resetToInitialState();
 #if SPLPY_PARTITION_IS_STATEFUL == 1
     try {
-        partitionStateHandler_.resetToInitialState();
+        partitionStateHandler_->resetToInitialState();
     }
     catch (SplpyExceptionInfo const & e) {
         throw e.exception();
