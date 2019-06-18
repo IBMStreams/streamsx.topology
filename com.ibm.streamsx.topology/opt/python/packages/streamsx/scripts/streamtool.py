@@ -85,6 +85,23 @@ def _lsjobs(instance, cmd_args):
         print(job.id + " " + job.status.capitalize() + " " + jobHealth + " " + job.startedBy + " " + jobTime + " " + job.name + " " + jobGroup)
 
 
+###########################################
+# appconfig
+###########################################
+def _lsappconfig_parser(subparsers):
+    appconfig_ls = subparsers.add_parser('lsappconfig', help='List the jobs for a given instance')
+
+def _lsappconfig(instance, cmd_args):
+    """view appconfigs"""
+    configs = instance.get_application_configurations()
+
+    print("Instance: " + instance.id)
+    print('{: <20} {:<20} {:<30} {:<30} {:<20}'.format("Id", "Owner", "Created", "Modified", "Description"))
+    for config in configs:
+        createDate = datetime.datetime.fromtimestamp(config.creationTime/1000).strftime("%m/%d/%Y, %I:%M %p %Z") + "GMT"
+        lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000).strftime("%m/%d/%Y, %I:%M %p %Z") + "GMT"
+        print('{: <20} {:<20} {:<30} {:<30} {:<20}'.format(config.name, config.owner, createDate, lastModifiedDate, config.description))
+
 def run_cmd(args=None):
     cmd_args = _parse_args(args)
 
@@ -98,6 +115,7 @@ def run_cmd(args=None):
     "submitjob": _submitjob,
     "canceljob": _canceljob,
     "lsjobs": _lsjobs,
+    "lsappconfig": _lsappconfig,
     }
 
     return switch[cmd_args.subcmd](instance, cmd_args)
@@ -124,6 +142,7 @@ def _parse_args(args):
     _submitjob_parser(subparsers)
     _canceljob_parser(subparsers)
     _lsjobs_parser(subparsers)
+    _lsappconfig_parser(subparsers)
 
     return cmd_parser.parse_args(args)
 
