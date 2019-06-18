@@ -49,12 +49,14 @@ def _check_operators(tc, ops):
          for out in outs:
              tc.assertIsInstance(out, OperatorOutputPort)
              _check_metrics(tc, out)
+             _check_list(tc, out.get_connections(), OperatorConnection)
 
          ins = op.get_input_ports()
          tc.assertIsInstance(ins, list)
          for in_ in ins:
              tc.assertIsInstance(in_, OperatorInputPort)
              _check_metrics(tc, in_)
+             _check_list(tc, in_.get_connections(), OperatorConnection)
         
          host_op = op.get_host()
          host_pe = pe.get_host()

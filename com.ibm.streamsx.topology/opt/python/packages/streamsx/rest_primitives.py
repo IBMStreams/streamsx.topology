@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016,2017
+# Copyright IBM Corp. 2016,2019
 
 """
 Primitive objects for REST bindings.
@@ -1094,6 +1094,16 @@ class OperatorOutputPort(_ResourceElement):
         """
         return self._get_elements(self.metrics, 'metrics', Metric, name=name)
 
+    def get_connections(self):
+        """Get the list of :py:class:`OperatorConnection` elements associated with this port.
+
+        Returns:
+            list(OperatorConnection): List of OperatorConnection elements associated with this port.
+
+        .. versionadded:: 1.13
+        """
+        return self._get_elements(self.connections, 'connections', OperatorConnection)
+
 class OperatorInputPort(_ResourceElement):
     """Operator input port.
 
@@ -1124,6 +1134,16 @@ class OperatorInputPort(_ResourceElement):
             >>> metrics = input_port.get_metrics(name='*temperatureSensor*')
         """
         return self._get_elements(self.metrics, 'metrics', Metric, name=name)
+
+    def get_connections(self):
+        """Get the list of :py:class:`OperatorConnection` elements associated with this port.
+
+        Returns:
+            list(OperatorConnection): List of OperatorConnection elements associated with this port.
+
+        .. versionadded:: 1.13
+        """
+        return self._get_elements(self.connections, 'connections', OperatorConnection)
 
 
 class Metric(_ResourceElement):
