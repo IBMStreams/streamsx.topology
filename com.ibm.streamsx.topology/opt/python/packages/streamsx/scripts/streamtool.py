@@ -52,8 +52,8 @@ def _job_cancel(instance, job_id=None, job_name=None, force=False):
 def _lsjobs_parser(subparsers):
     job_ls = subparsers.add_parser('lsjobs', help='List the jobs for a given instance')
     job_ls.add_argument('--jobs', '-j', help='Specifies a list of job IDs.', metavar='job-id')
-    job_ls.add_argument('--users', '-u')
-    job_ls.add_argument('--jobnames')
+    job_ls.add_argument('--users', '-u', help='Specifies to select from this list of user IDs')
+    job_ls.add_argument('--jobnames', help='Specifies a list of job names')
 
 def _lsjobs(instance, cmd_args):
     """view jobs"""
@@ -75,21 +75,21 @@ def _lsjobs(instance, cmd_args):
         jobs = [job for job in jobs if job.name in job_names]
 
     print("Instance: " + instance.id)
-    print("Id State Healthy User Date Name Group")
+    print('{: <5} {:<10} {:<10} {:<10} {:<30} {:<40} {:<20}'.format("Id", "State", "Healthy", "User", "Date", "Name", "Group"))
     LOCAL_TIMEZONE = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
     for job in jobs:
         jobHealth = "yes" if job.health == "healthy" else "no"
         jobTime = datetime.datetime.fromtimestamp(job.submitTime/1000).replace(tzinfo=LOCAL_TIMEZONE).isoformat() # job.submitTime/1000 to convert ms to sec
         jobGroup = job.jobGroup.split("/")[-1]
         # jobGroup = job.jobGroup
-        print(job.id + " " + job.status.capitalize() + " " + jobHealth + " " + job.startedBy + " " + jobTime + " " + job.name + " " + jobGroup)
+        print('{: <5} {:<10} {:<10} {:<10} {:<30} {:<40} {:<20}'.format(job.id, job.status.capitalize(), jobHealth, job.startedBy, jobTime, job.name, jobGroup))
 
 
 ###########################################
 # appconfig
 ###########################################
 def _lsappconfig_parser(subparsers):
-    appconfig_ls = subparsers.add_parser('lsappconfig', help='List the jobs for a given instance')
+    appconfig_ls = subparsers.add_parser('lsappconfig', help='Retrieve a list of configurations for making a connection to an external application')
 
 def _lsappconfig(instance, cmd_args):
     """view appconfigs"""
