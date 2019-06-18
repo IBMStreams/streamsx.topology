@@ -51,20 +51,56 @@ def _job_cancel(instance, job_id=None, job_name=None, force=False):
 ###########################################
 def _lsjobs_parser(subparsers):
     job_ls = subparsers.add_parser('lsjobs', help='List the jobs for a given instance')
+    job_ls.add_argument('--jobs', '-j', help='Specifies a list of job IDs.', metavar='job-id')
+    job_ls.add_argument('--users', '-u', help='Specifies to select from this list of user IDs')
+    job_ls.add_argument('--jobnames', help='Specifies a list of job names')
 
 def _lsjobs(instance, cmd_args):
     """view jobs"""
     jobs = instance.get_jobs()
+
+    # If --users argument (ie given list of user ID's), filter jobs by these user ID's
+    if (cmd_args.users):
+        users = cmd_args.users.split(",")
+        jobs = [job for job in jobs if job.startedBy in users]
+
+    # If --jobs argument (ie given list of job ID's), filter jobs by these ID's
+    if (cmd_args.jobs):
+        job_ids = cmd_args.jobs.split(",")
+        jobs = [job for job in jobs if job.id in job_ids]
+
+    # If --jobsnames argument (ie given list of job names), filter jobs by these user job names
+    if (cmd_args.jobnames):
+        job_names = cmd_args.jobnames.split(",")
+        jobs = [job for job in jobs if job.name in job_names]
+
     print("Instance: " + instance.id)
-    print("Id State Healthy User Date Name Group")
+    print('{: <5} {:<10} {:<10} {:<10} {:<30} {:<40} {:<20}'.format("Id", "State", "Healthy", "User", "Date", "Name", "Group"))
     LOCAL_TIMEZONE = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
     for job in jobs:
         jobHealth = "yes" if job.health == "healthy" else "no"
         jobTime = datetime.datetime.fromtimestamp(job.submitTime/1000).replace(tzinfo=LOCAL_TIMEZONE).isoformat() # job.submitTime/1000 to convert ms to sec
-        # jobGroup = job.jobGroup.split("/")[-1]
-        jobGroup = job.jobGroup
-        print(job.id + " " + job.status.capitalize() + " " + jobHealth + " " + job.startedBy + " " + jobTime + " " + job.name + " " + jobGroup)
+        jobGroup = job.jobGroup.split("/")[-1]
+        # jobGroup = job.jobGroup
+        print('{: <5} {:<10} {:<10} {:<10} {:<30} {:<40} {:<20}'.format(job.id, job.status.capitalize(), jobHealth, job.startedBy, jobTime, job.name, jobGroup))
 
+
+###########################################
+# appconfig
+###########################################
+def _lsappconfig_parser(subparsers):
+    appconfig_ls = subparsers.add_parser('lsappconfig', help='Retrieve a list of configurations for making a connection to an external application')
+
+def _lsappconfig(instance, cmd_args):
+    """view appconfigs"""
+    configs = instance.get_application_configurations()
+
+    print("Instance: " + instance.id)
+    print('{: <20} {:<20} {:<30} {:<30} {:<20}'.format("Id", "Owner", "Created", "Modified", "Description"))
+    for config in configs:
+        createDate = datetime.datetime.fromtimestamp(config.creationTime/1000).strftime("%m/%d/%Y, %I:%M %p %Z") + "GMT"
+        lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000).strftime("%m/%d/%Y, %I:%M %p %Z") + "GMT"
+        print('{: <20} {:<20} {:<30} {:<30} {:<20}'.format(config.name, config.owner, createDate, lastModifiedDate, config.description))
 
 def run_cmd(args=None):
     cmd_args = _parse_args(args)
@@ -79,6 +115,7 @@ def run_cmd(args=None):
     "submitjob": _submitjob,
     "canceljob": _canceljob,
     "lsjobs": _lsjobs,
+    "lsappconfig": _lsappconfig,
     }
 
     return switch[cmd_args.subcmd](instance, cmd_args)
@@ -105,6 +142,7 @@ def _parse_args(args):
     _submitjob_parser(subparsers)
     _canceljob_parser(subparsers)
     _lsjobs_parser(subparsers)
+    _lsappconfig_parser(subparsers)
 
     return cmd_parser.parse_args(args)
 
