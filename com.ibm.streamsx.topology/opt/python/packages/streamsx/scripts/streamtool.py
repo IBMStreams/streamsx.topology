@@ -23,6 +23,7 @@ from streamsx.rest import Instance
 def _submitjob_parser(subparsers):
     job_submit = subparsers.add_parser('submitjob', help='Submit an application bundle')
     job_submit.add_argument('sabfile', help='Location of sab file.', metavar='sab-pathname')
+    _user_arg(job_submit)
 
 def _submitjob(instance, cmd_args):
     """Submit a job."""
@@ -35,6 +36,7 @@ def _canceljob_parser(subparsers):
     job_cancel = subparsers.add_parser('canceljob', help='Cancel a job.')
     job_cancel.add_argument('--jobs', '-j', help='Specifies a list of job IDs.', metavar='job-id')
     job_cancel.add_argument('--force', action='store_true', help='Stop the service even if jobs are running.')
+    _user_arg(job_cancel)
 
 def _canceljob(instance, cmd_args):
     """Cancel a job."""
@@ -54,6 +56,7 @@ def _lsjobs_parser(subparsers):
     job_ls.add_argument('--jobs', '-j', help='Specifies a list of job IDs.', metavar='job-id')
     job_ls.add_argument('--users', '-u', help='Specifies to select from this list of user IDs')
     job_ls.add_argument('--jobnames', help='Specifies a list of job names')
+    _user_arg(job_ls)
 
 def _lsjobs(instance, cmd_args):
     """view jobs"""
@@ -90,6 +93,7 @@ def _lsjobs(instance, cmd_args):
 ###########################################
 def _lsappconfig_parser(subparsers):
     appconfig_ls = subparsers.add_parser('lsappconfig', help='Retrieve a list of configurations for making a connection to an external application')
+    _user_arg(appconfig_ls)
 
 def _lsappconfig(instance, cmd_args):
     """view appconfigs"""
@@ -109,6 +113,7 @@ def run_cmd(args=None):
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     instance = Instance.of_endpoint(
+        username=cmd_args.User,
         verify=False if cmd_args.disable_ssl_verify else None)
 
     switch = {
@@ -145,6 +150,9 @@ def _parse_args(args):
     _lsappconfig_parser(subparsers)
 
     return cmd_parser.parse_args(args)
+
+def _user_arg(parser):
+    parser.add_argument('--User', '-U', help='Specifies an IBM Streams user ID that has authority to run the command.', metavar='user')
 
 
 if __name__ == '__main__':

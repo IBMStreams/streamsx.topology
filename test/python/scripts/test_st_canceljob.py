@@ -1,6 +1,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2019
 import unittest
+import unittest.mock
 import sys
 import os
 import time
@@ -47,6 +48,12 @@ class TestCancelJob(unittest.TestCase):
     def test_cancel(self):
         job = self._submit_job()
         self._run_canceljob(args=['--jobs', str(job.id)])
+
+    def test_cancel_user(self):
+        job = self._submit_job()
+        user = os.environ['STREAMS_USERNAME']
+        with unittest.mock.patch.dict(os.environ, {'STREAMS_USERNAME':''}):
+            self._run_canceljob(args=['--jobs', str(job.id), '--User', user])
         self._check_job_cancelled(job)
 
     def test_cancel_multiple(self):
