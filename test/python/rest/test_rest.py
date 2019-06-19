@@ -4,6 +4,7 @@ import unittest
 import time
 import uuid
 import os
+import urllib.parse as urlparse
 from operators import DelayedTupleSourceWithLastTuple
 from requests import exceptions
 
@@ -95,7 +96,7 @@ class TestDistributedRestFeatures(unittest.TestCase):
 
     def _verify_job_refresh(self):
         result = self.tester.submission_result
-        self.job = self.sc.get_instance(result['instanceId']).get_job(result['jobId'])
+        self.job = result.job
 
         self.assertEqual('healthy', self.job.health)
 
@@ -341,5 +342,9 @@ class TestDistributedRestEnv(unittest.TestCase):
         if self._si:
             self.assertNotIn('STREAMS_INSTALL', os.environ)
         sc = _get_distributed_sc()
-        sc.session.verify = False
-        self.assertEqual(self._ru, sc.resource_url)
+        us = urlparse.urlsplit(self._ru)
+        if us.path.startswith('/streams/rest/instances'):
+            scs = urlparse.urlsplit(sc.resource_url)
+            self.assertEqual(us.netloc, scs.netloc)
+        else:
+            self.assertEqual(self._ru, sc.resource_url)
