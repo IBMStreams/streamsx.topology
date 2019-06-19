@@ -2478,10 +2478,11 @@ class ApplicationConfiguration(_ResourceElement):
             cv['name'] = str(name)
         if description:
             cv['description'] = str(description)
-        acp = {}
-        for k,v in properties.items():
-            acp[str(k)] = None if v is None else str(v)
-        cv['properties'] = acp
+        if properties is not None:
+            acp = {}
+            for k,v in properties.items():
+                acp[str(k)] = None if v is None else str(v)
+            cv['properties'] = acp
         return cv
 
     def update(self, properties=None, description=None):
