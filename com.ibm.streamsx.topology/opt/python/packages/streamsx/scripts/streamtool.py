@@ -96,30 +96,62 @@ def _lsjobs(instance, cmd_args):
 # ls-appconfig
 def _lsappconfig_parser(subparsers):
     appconfig_ls = subparsers.add_parser('lsappconfig', help='Retrieve a list of configurations for making a connection to an external application')
+    appconfig_ls.add_argument('--fmt', help='Specifies the presentation format')
     _user_arg(appconfig_ls)
 
 def _lsappconfig(instance, cmd_args):
     """view appconfigs"""
     configs = instance.get_application_configurations()
+    config_format = '%Tf'
 
-    print("Instance: " + instance.id)
-    print('{: <20} {:<20} {:<30} {:<30} {:<20}'.format("Id", "Owner", "Created", "Modified", "Description"))
+    if (cmd_args.fmt): # either %Tf, %Mf, or %Nf, defaults to %Tf
+        config_format = cmd_args.fmt
+
+    if (config_format == "%Tf"): # Format for Tf
+        print('{: <20} {:<20} {:<30} {:<30} {:<20}'.format("Id", "Owner", "Created", "Modified", "Description"))
+
     for config in configs:
         createDate = datetime.datetime.fromtimestamp(config.creationTime/1000).strftime("%m/%d/%Y, %I:%M %p ") + "GMT"
         lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000).strftime("%m/%d/%Y, %I:%M %p ") + "GMT"
-        print('{: <20} {:<20} {:<30} {:<30} {:<20}'.format(config.name, config.owner, createDate, lastModifiedDate, config.description))
+
+        if (config_format == "%Mf"): # Format for Mf
+            print("=================================================")
+            print('{: <15} : {: <20}'.format("Id", config.name))
+            print('{: <15} : {: <20}'.format("Owner", config.owner))
+            print('{: <15} : {: <20}'.format("Created", createDate))
+            print('{: <15} : {: <20}'.format("Modified", lastModifiedDate))
+            print('{: <15} : {: <20}'.format("Description",  config.description))
+
+        elif (config_format == "%Nf"):
+            print('Id: {: <20} Owner: {:<20} Created: {:<30} Modified: {:<30} Description: {:<20}'.format(config.name, config.owner, createDate, lastModifiedDate, config.description))
+        elif (config_format == "%Tf"): # Format for Tf
+            print('{: <20} {:<20} {:<30} {:<30} {:<20}'.format(config.name, config.owner, createDate, lastModifiedDate, config.description))
+
+    if (config_format == "%Mf"):
+            print("=================================================")
 
 # rm-appconfig
 def _rmappconfig_parser(subparsers):
     appconfig_rm = subparsers.add_parser('rmappconfig', help='Removes a configuration that is used for making a connection to an external application')
     appconfig_rm.add_argument('config_name', help='Name of the app config')
+    appconfig_rm.add_argument('--noprompt', help='Specifies to suppress confirmation prompts.', action='store_true')
+
 
 
 def _rmappconfig(instance, cmd_args):
     """remove an appconfig"""
     config_name = cmd_args.config_name
+    configs = instance.get_application_configurations(name = config_name)
+    if (not configs):
+         print("No application configuration by the name {}".format(config_name))
     app_config = instance.get_application_configurations(name = config_name)[0]
-    app_config.delete()
+    # No confirmation required, delete
+    if (cmd_args.noprompt):
+        app_config.delete()
+    else:
+        response = input("Do you want to remove the application configuration {} from the {} instance? Enter 'y' to continue or 'n' to cancel: ".format(config_name, instance.id))
+        if (response == "y"):
+            app_config.delete()
 
 
 # mk-appconfig
@@ -127,6 +159,7 @@ def _mkappconfig_parser(subparsers):
     appconfig_mk = subparsers.add_parser('mkappconfig', help='Creates a configuration that enables connection to an external application')
     appconfig_mk.add_argument('config_name', help='Name of the app config')
     appconfig_mk.add_argument('--property', action='append', help='Specifies a property name and value pair to add to or change in the configuration')
+    appconfig_mk.add_argument('--propfile', help='Specifies the path to a file that contains a list of application configuration properties for connecting to an external application')
     appconfig_mk.add_argument('--description', help='Specifies a description for the application configuration')
 
 def _mkappconfig(instance, cmd_args):
@@ -156,29 +189,42 @@ def _chappconfig(instance, cmd_args):
 # gets config name, properties and description if it has one
 def get_appconfig_details(cmd_args):
     config_name = cmd_args.config_name
-    config_props = None
+    config_props = {}
     config_description = None
 
-    # Create the config properties
-    if (cmd_args.property):
-        config_props = {}
-        prop_list = cmd_args.property
-        # Iterate through list of properties, check if correct format, convert each to name/value pairs add to config_props dict
-        # Ex. good proplist is ['name1=value1', 'name2=value2']
-        # Ex. bad proplist is ['name1=valu=e1', 'name2=value2']
-        for prop in prop_list:
-            name_value_pair = prop.split("=")
-            if (len(name_value_pair) is not 2):
-                print("incorrect property format")
-            config_props[name_value_pair[0]] = name_value_pair[1]
+    # Get props_file if given
+    if (cmd_args.propfile):
+        prop_list = [line.rstrip() for line in open(cmd_args.propfile)]
+        config_props = create_appconfig_props(config_props, prop_list)
 
+    # Get props from command line
+    # Name's specified via command line (ie --property option) override names specified in the prop file
+    if (cmd_args.property):
+        prop_list = cmd_args.property
+        config_props = create_appconfig_props(config_props, prop_list)
 
     # Create the config description
     if (cmd_args.description):
         config_description = cmd_args.description
 
-    print(config_name, config_props, config_description)
+    # If dictionary has no name/value pairs, there is no properties
+    if (not config_props):
+        config_props = None
+
     return config_name, config_props, config_description
+
+# utility function for mk-appconfig and ch-appconfig
+# Create the config properties
+def create_appconfig_props(config_props, prop_list):
+    # Iterate through list of properties, check if correct format, convert each to name/value pairs add to config_props dict
+    # Ex. good proplist is ['name1=value1', 'name2=value2']
+    # Ex. bad proplist is ['name1=valu=e1', 'name2=value2']
+    for prop in prop_list:
+        name_value_pair = prop.split("=")
+        if (len(name_value_pair) is not 2):
+            print("incorrect property format")
+        config_props[name_value_pair[0]] = name_value_pair[1]
+    return config_props
 
 # utility function for mk-appconfig and ch-appconfig
 # if appconfig already exists with name config_name, update/add corresponding name/value pairs
@@ -198,7 +244,7 @@ def _getappconfig(instance, cmd_args):
     configs = instance.get_application_configurations(name = config_name)
     # Check if any configs by that name
     if (not configs):
-        print("No config by the name {}".format(config_name))
+        print("No application configuration by the name {}".format(config_name))
         return
     config = configs[0]
     config_props = config.properties
