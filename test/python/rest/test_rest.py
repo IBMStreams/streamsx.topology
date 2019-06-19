@@ -95,7 +95,7 @@ class TestDistributedRestFeatures(unittest.TestCase):
 
     def _verify_job_refresh(self):
         result = self.tester.submission_result
-        self.job = self.sc.get_instance(result['instanceId']).get_job(result['jobId'])
+        self.job = result.job
 
         self.assertEqual('healthy', self.job.health)
 
