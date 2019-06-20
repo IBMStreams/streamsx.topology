@@ -3,6 +3,8 @@ import json
 import unittest
 import time
 import uuid
+import os
+import urllib.parse as urlparse
 from operators import DelayedTupleSourceWithLastTuple
 from requests import exceptions
 
@@ -10,6 +12,7 @@ from streamsx.topology.tester import Tester
 from streamsx.topology import topology, schema
 from streamsx.topology.context import ConfigParams, JobConfig
 from streamsx.rest import StreamsConnection
+from streamsx.rest_primitives import Instance
 
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
@@ -19,6 +22,15 @@ from streamsx.rest_primitives import *
 import primitives_caller
 
 logger = logging.getLogger('streamsx.test.rest_test')
+
+def _get_distributed_sc():
+    # 4.3 on-prem
+    if 'STREAMS_DOMAIN_ID' in os.environ:
+        sc = StreamsConnection()
+        sc.session.verify = False
+        return sc
+    return Instance.of_endpoint(verify=False).rest_client._sc
+  
 
 class TestDistributedRestFeatures(unittest.TestCase):
     @classmethod
@@ -32,7 +44,7 @@ class TestDistributedRestFeatures(unittest.TestCase):
 
     def setUp(self):
         Tester.setup_distributed(self)
-        self.sc = StreamsConnection()
+        self.sc = _get_distributed_sc()
         self.sc.session.verify = False
         self.test_config[ConfigParams.STREAMS_CONNECTION] = self.sc
 
@@ -84,7 +96,7 @@ class TestDistributedRestFeatures(unittest.TestCase):
 
     def _verify_job_refresh(self):
         result = self.tester.submission_result
-        self.job = self.sc.get_instance(result['instanceId']).get_job(result['jobId'])
+        self.job = result.job
 
         self.assertEqual('healthy', self.job.health)
 
@@ -329,6 +341,10 @@ class TestDistributedRestEnv(unittest.TestCase):
     def test_url_from_env(self):
         if self._si:
             self.assertNotIn('STREAMS_INSTALL', os.environ)
-        sc = StreamsConnection()
-        sc.session.verify = False
-        self.assertEqual(self._ru, sc.resource_url)
+        sc = _get_distributed_sc()
+        us = urlparse.urlsplit(self._ru)
+        if us.path.startswith('/streams/rest/instances'):
+            scs = urlparse.urlsplit(sc.resource_url)
+            self.assertEqual(us.netloc, scs.netloc)
+        else:
+            self.assertEqual(self._ru, sc.resource_url)

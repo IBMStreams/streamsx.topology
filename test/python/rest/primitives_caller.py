@@ -49,12 +49,14 @@ def _check_operators(tc, ops):
          for out in outs:
              tc.assertIsInstance(out, OperatorOutputPort)
              _check_metrics(tc, out)
+             _check_list(tc, out.get_connections(), OperatorConnection)
 
          ins = op.get_input_ports()
          tc.assertIsInstance(ins, list)
          for in_ in ins:
              tc.assertIsInstance(in_, OperatorInputPort)
              _check_metrics(tc, in_)
+             _check_list(tc, in_.get_connections(), OperatorConnection)
         
          host_op = op.get_host()
          host_pe = pe.get_host()
@@ -259,7 +261,7 @@ def _check_app_configs(tc, instance):
     tc.assertEqual({'A':'one', 'B':'2'}, ac.properties)
 
     ac2 = ac.update({'B':None, 'C': 'the sea'})
-    tc.assertSame(ac, ac2)
+    tc.assertIs(ac, ac2)
     tc.assertEqual(name, ac.name)
     tc.assertEqual(description, ac.description)
     tc.assertEqual({'A':'one', 'C':'the sea'}, ac.properties)
@@ -271,19 +273,19 @@ def _check_app_configs(tc, instance):
 
     seen_ac = False
     for rac in instance.get_application_configurations():
-        self.assertIsInstance(rac, ApplicationConfiguration)
+        tc.assertIsInstance(rac, ApplicationConfiguration)
         if rac.name == name:
             seen_ac = True
             break
-    self.assertTrue(seen_ac)
+    tc.assertTrue(seen_ac)
 
     lac = instance.get_application_configurations(name=name)
-    self.assertEqual(1, len(lac))
-    self.assertEqual(name, lac[0].name)
+    tc.assertEqual(1, len(lac))
+    tc.assertEqual(name, lac[0].name)
 
     ac.delete()
     lac = instance.get_application_configurations(name=name)
-    self.assertEqual(0, len(lac))
+    tc.assertEqual(0, len(lac))
 
 def check_domain(tc, domain):
     """Basic test of calls against an Domain """
