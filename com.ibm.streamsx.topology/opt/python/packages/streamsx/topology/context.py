@@ -487,7 +487,7 @@ class _DistributedSubmitter(_BaseSubmitter):
             svc_info = streamsx.rest_primitives.Instance._find_service_def(config)
             if not svc_info:
                 # Look for endpoint set by env vars.
-                inst = streamsx.rest_primitives.Instance.of_endpoint(username=username, password=password, verify=config.get(ConfigParams.SSL_VERIFY))
+                inst = streamsx.rest_primitives.Instance.of_endpoint(username=username, password=password, verify=config.get(ConfigParams.SSL_VERIFY), service_name=os.environ.get('STREAMS_INSTANCE_ID'))
                 if inst is not None:
                     self._streams_connection = inst.rest_client._sc
 

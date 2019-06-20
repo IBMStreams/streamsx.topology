@@ -282,11 +282,12 @@ class _ICPDAuthHandler(_BearerAuthHandler):
         logger.debug("ICP4D:Token refreshed:expiry:" + time.ctime(self._auth_expiry_time))
 
 class _ICPDExternalAuthHandler(_BearerAuthHandler):
-    def __init__(self, endpoint, username, password, verify):
+    def __init__(self, endpoint, username, password, verify, service_name):
         super(_ICPDExternalAuthHandler, self).__init__()
         self._endpoint = endpoint
         self.__username = username
         self.__password = password
+        self._service_name = service_name
         self._verify = verify
         self._cfg = self._create_cfg()
 
@@ -301,16 +302,24 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
         pd = {'username': self.__username, 'password': self.__password}
 
         es = up.urlsplit(self._endpoint)
-        cluster_ip = es.netloc.split(':')[0]
 
-        auth_url = up.urlunsplit(('https', cluster_ip + ':31843', '/icp4d-api/v1/authorize', None, None))
-        r = requests.post(auth_url, json=pd, verify=False)
+        if es.path.startswith('/streams/rest/instances/'):
+            # Default to the default port
+            cluster_port = 31843
+            self._service_name = es.path.split('/')[-1]
+        elif ':' in es.netloc:
+            cluster_port = es.netloc.split(':')[1]
+        else:
+            cluster_port = 443
+
+        cluster_ip = es.netloc.split(':')[0] if ':' in es.netloc else es.netloc
+
+        auth_url = up.urlunsplit(('https', cluster_ip + ':' + str(cluster_port), '/icp4d-api/v1/authorize', None, None))
+        r = requests.post(auth_url, json=pd, verify=self._verify)
         token = r.json()['token']
 
-        name = es.path.split('/')[-1]
-
         details_url = up.urlunsplit(
-            ('https', cluster_ip + ':31843', 'zen-data/v2/serviceInstance/details', 'displayName=' + name, None))
+            ('https', cluster_ip + ':' + str(cluster_port), 'zen-data/v2/serviceInstance/details', 'displayName=' + self._service_name, None))
         r = requests.get(details_url,
                          headers={"Authorization": "Bearer " + token}, verify=self._verify)
 
@@ -326,7 +335,7 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
         connection_info = sca['connection-info']
 
         service_token_url = up.urlunsplit(
-            ('https', cluster_ip + ':31843', 'zen-data/v2/serviceInstance/token', None, None))
+            ('https', cluster_ip + ':' + str(cluster_port), 'zen-data/v2/serviceInstance/token', None, None))
         pd = {"serviceInstanceId": str(service_id)}
         r = requests.post(service_token_url, json=pd,
                           headers={"Authorization": "Bearer " + token}, verify=self._verify)
@@ -339,15 +348,20 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
         bu = up.urlsplit(connection_info['externalBuildEndpoint'])
         build_url = up.urlunsplit((bu.scheme, cluster_ip + ':' + str(bu.port), bu.path, None, None))
 
+        ru = up.urlsplit(connection_info['externalRestEndpoint'])
+        streams_url = up.urlunsplit((bu.scheme, cluster_ip + ':' + str(ru.port), ru.path, None, None))
+
         cfg = {
                 'type': 'streams',
                 'connection_info': {
                     'externalClient':True,
                     'serviceBuildEndpoint': build_url,
-                    'serviceRestEndpoint': self._endpoint},
+                    'serviceRestEndpoint': streams_url},
                 'serviceTokenEndpoint': service_token_url,
                 'service_token': service_token,
+                'service_name': service_name,
                 'cluster_ip': cluster_ip,
+                'cluster_port': cluster_port,
                 'service_id': service_id
         }
 
@@ -1614,7 +1628,7 @@ class Instance(_ResourceElement):
         return resource_url, name
 
     @staticmethod
-    def of_endpoint(endpoint=None, username=None, password=None, verify=None):
+    def of_endpoint(endpoint=None, username=None, password=None, verify=None, service_name=None):
         if not endpoint:
             endpoint = os.environ.get('STREAMS_REST_URL')
         if not endpoint:
@@ -1626,14 +1640,20 @@ class Instance(_ResourceElement):
         username = _get_username(username)
 
         resource_url, name = Instance._root_from_endpoint(endpoint)
-        if resource_url is None:
-            return None
-        sc = streamsx.rest.StreamsConnection(resource_url=resource_url,
-                                             auth=_ICPDExternalAuthHandler(endpoint, username, password, verify))
+        if not resource_url and not service_name:
+            service_name = os.environ.get('STREAMS_INSTANCE_ID')
+            if not service_name:
+                return None
+
+        auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
+        endpoint = auth._cfg['connection_info'].get('serviceRestEndpoint')
+        resource_url, _ = Instance._root_from_endpoint(endpoint)
+
+        sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth)
         if verify is not None:
             sc.rest_client.session.verify = verify
  
-        return sc.get_instance(name)
+        return sc.get_instance(auth._cfg['service_name'])
 
     def get_operators(self, name=None):
         """Get the list of :py:class:`Operator` elements associated with this instance.
