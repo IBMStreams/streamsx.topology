@@ -1628,9 +1628,34 @@ class Instance(_ResourceElement):
         return resource_url, name
 
     @staticmethod
-    def of_endpoint(endpoint=None, username=None, password=None, verify=None, service_name=None):
+    def of_endpoint(endpoint=None, service_name=None, username=None, password=None, verify=None):
+        """
+        Connect to a Cloud Pak for Data IBM Streams instance from
+        outside the cluster.
+
+        Args:
+            endpoint(str): Deployment URL for Cloud Pak for Data, e.g. `https://icp4d_server:31843`. Defaults to the environment variable ``ICP4D_DEPLOYMENT_URL``.
+            service_name(str): Streams instance name. Defaults to the environment variable ``STREAMS_INSTANCE_ID``.
+            username(str): User name to authenticate as. Defaults to the environment variable ``STREAMS_USERNAME`` or the operating system identifier if not set.
+            password(str): Password for authentication. Defaults to the environment variable ``STREAMS_PASSWORD`` or the operating system identifier if not set.
+            verify: SSL verification. Set to ``False`` to disable SSL verification. Defaults to SSL verification being enabled.
+
+        Returns:
+            Instance: Connection to Streams instance or ``None`` of insufficient configuration was provided.
+
+        .. versionadded:: 1.13
+        """
         if not endpoint:
-            endpoint = os.environ.get('STREAMS_REST_URL')
+            endpoint = os.environ.get('ICP4D_DEPLOYMENT_URL')
+            if endpoint:
+                if not service_name:
+                    service_name = os.environ.get('STREAMS_INSTANCE_ID')
+                if not service_name:
+                    return None
+            else:
+                endpoint = os.environ.get('STREAMS_REST_URL')
+                if not endpoint:
+                    return None
         if not endpoint:
             return None
         if not password:
@@ -1639,15 +1664,8 @@ class Instance(_ResourceElement):
             return None
         username = _get_username(username)
 
-        resource_url, name = Instance._root_from_endpoint(endpoint)
-        if not resource_url and not service_name:
-            service_name = os.environ.get('STREAMS_INSTANCE_ID')
-            if not service_name:
-                return None
-
         auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
-        endpoint = auth._cfg['connection_info'].get('serviceRestEndpoint')
-        resource_url, _ = Instance._root_from_endpoint(endpoint)
+        resource_url, _ = Instance._root_from_endpoint(auth._cfg['connection_info'].get('serviceRestEndpoint'))
 
         sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth)
         if verify is not None:

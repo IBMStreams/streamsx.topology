@@ -487,7 +487,7 @@ class _DistributedSubmitter(_BaseSubmitter):
             svc_info = streamsx.rest_primitives.Instance._find_service_def(config)
             if not svc_info:
                 # Look for endpoint set by env vars.
-                inst = streamsx.rest_primitives.Instance.of_endpoint(username=username, password=password, verify=config.get(ConfigParams.SSL_VERIFY), service_name=os.environ.get('STREAMS_INSTANCE_ID'))
+                inst = streamsx.rest_primitives.Instance.of_endpoint(username=username, password=password, verify=config.get(ConfigParams.SSL_VERIFY))
                 if inst is not None:
                     self._streams_connection = inst.rest_client._sc
 
@@ -718,10 +718,10 @@ class ContextTypes(object):
 
     **IBM Cloud Pak for Data**
 
-    *Projects (within ICPD cluster)*
+    *Projects (within cluster)*
 
     The `Topology` is compiled using the Streams build service and submitted
-    to an IBM Streams service instance running in the same ICP for
+    to an Streams service instance running in the same Cloud Pak for
     Data cluster as the Jupyter notebook declaring the application.
 
     The instance is specified in the configuration passed into :py:func:`submit`. The configuration may be code injected from the list of services or manually created. The code that selects a service instance by name is::
@@ -732,33 +732,26 @@ class ContextTypes(object):
     The resultant `cfg` dict may be augmented with other values such as
     a :py:class:`JobConfig` or keys from :py:class:`ConfigParams`.
 
-    *External to ICPD cluster*
+    *External to cluster*
 
     The `Topology` is compiled using the Streams build service and submitted
-    to an IBM Streams service instance running in a Cloud Pak for Data cluster.
-
-    The IBM Streams instance to connect to is defined by the
-    ``STREAMS_REST_URL`` environment variable which is set to
-    the external Streams REST endpoint for the service instance.
-
-    The endpoint is found through the ICPD console in the
-    *Provisioned instances* tab of the *My Instances* page.
-    Click on *View details* for the Streams service and then
-    copy the ``externalRestEndpoint`` and set that as the value
-    of ``STREAMS_REST_URL``.
-
-    .. figure:: images/icpd_external_endpoint.png
-        :scale: 60%
-        :alt: Endpoints with externalRestEndpoint
-
-        Copy ``externalRestEndpoint`` from `Endpoints` section.
+    to a Streams service instance running in Cloud Pak for Data.
 
     Environment variables:
         These environment variables define how the application is built and submitted.
 
-        * **STREAMS_REST_URL** - External endpoint for Streams REST API.
+        * **ICP4D_DEPLOYMENT_URL** - Cloud Pak for Data deployment URL, e.g. `https://icp4d_server:31843`.
+        * **STREAMS_INSTANCE_ID** - Streams service instance name.
         * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
         * **STREAMS_PASSWORD** - Password for authentication.
+
+    For backwards compatibility if the Cloud Pak for Data deployment URL
+    uses the default port 31843 then the Streams instance to connect to
+    can be defined by the ``STREAMS_REST_URL`` environment variable which
+    is set to the external Streams REST endpoint for the service instance.
+
+    Use of the Cloud Pak for Data deployment URL and Streams instance
+    name is recommended.
 
     **IBM Streams on-premise**
 
