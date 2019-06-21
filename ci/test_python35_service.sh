@@ -6,7 +6,8 @@ export PYTHONHOME=${ANACONDA35_HOME:?}
 . ${WORKSPACE}/ci/pysetup
 echo 'Testing Python 3.5 Streaming Analytics service' 
 
-unset STREAMS_INSTALL
+# python/spl tests require a local install to index toolkit atm
+#unset STREAMS_INSTALL
 unset STREAMS_DOMAIN_ID
 unset STREAMS_INSTANCE_ID
 

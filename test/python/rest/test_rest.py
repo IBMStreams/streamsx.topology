@@ -4,6 +4,7 @@ import unittest
 import time
 import uuid
 import os
+import urllib.parse as urlparse
 from operators import DelayedTupleSourceWithLastTuple
 from requests import exceptions
 
@@ -95,7 +96,7 @@ class TestDistributedRestFeatures(unittest.TestCase):
 
     def _verify_job_refresh(self):
         result = self.tester.submission_result
-        self.job = self.sc.get_instance(result['instanceId']).get_job(result['jobId'])
+        self.job = result.job
 
         self.assertEqual('healthy', self.job.health)
 
@@ -318,28 +319,3 @@ class TestSasRestFeatures(TestDistributedRestFeatures):
        
         os.remove(bb['bundlePath'])
         os.remove(bb['jobConfigPath'])
-
-class TestDistributedRestEnv(unittest.TestCase):
-    def setUp(self):
-        self._si = None
-        Tester.setup_distributed(self)
-        if not 'STREAMS_REST_URL' in os.environ:
-            sc = StreamsConnection()
-            self._ru = sc.resource_url
-            self._si = os.environ['STREAMS_INSTALL']
-            del os.environ['STREAMS_INSTALL']
-            os.environ['STREAMS_REST_URL'] = self._ru
-        else:
-            self._ru = os.environ['STREAMS_REST_URL']
-            
-    def tearDown(self):
-        if self._si:
-            del os.environ['STREAMS_REST_URL']
-            os.environ['STREAMS_INSTALL'] = self._si
-
-    def test_url_from_env(self):
-        if self._si:
-            self.assertNotIn('STREAMS_INSTALL', os.environ)
-        sc = _get_distributed_sc()
-        sc.session.verify = False
-        self.assertEqual(self._ru, sc.resource_url)
