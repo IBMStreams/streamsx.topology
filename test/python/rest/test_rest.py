@@ -319,32 +319,3 @@ class TestSasRestFeatures(TestDistributedRestFeatures):
        
         os.remove(bb['bundlePath'])
         os.remove(bb['jobConfigPath'])
-
-class TestDistributedRestEnv(unittest.TestCase):
-    def setUp(self):
-        self._si = None
-        Tester.setup_distributed(self)
-        if not 'STREAMS_REST_URL' in os.environ:
-            sc = StreamsConnection()
-            self._ru = sc.resource_url
-            self._si = os.environ['STREAMS_INSTALL']
-            del os.environ['STREAMS_INSTALL']
-            os.environ['STREAMS_REST_URL'] = self._ru
-        else:
-            self._ru = os.environ['STREAMS_REST_URL']
-            
-    def tearDown(self):
-        if self._si:
-            del os.environ['STREAMS_REST_URL']
-            os.environ['STREAMS_INSTALL'] = self._si
-
-    def test_url_from_env(self):
-        if self._si:
-            self.assertNotIn('STREAMS_INSTALL', os.environ)
-        sc = _get_distributed_sc()
-        us = urlparse.urlsplit(self._ru)
-        if us.path.startswith('/streams/rest/instances'):
-            scs = urlparse.urlsplit(sc.resource_url)
-            self.assertEqual(us.netloc, scs.netloc)
-        else:
-            self.assertEqual(self._ru, sc.resource_url)
