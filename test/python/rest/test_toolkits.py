@@ -98,13 +98,13 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
 
     # Verify that a toolkit with a given name exists.  If a version is
     # specified, also verify that the version matches.
-    def verify_toolkit_exists(self, name, version=None):
+    def assert_toolkit_exists(self, name, version=None):
         matches = self.find_matching_toolkits(name, version)
         self.assertGreaterEqual (len(matches), 1)
 
     # Verify that a toolkit with a given name and optional version does not
     # exist.
-    def verify_toolkit_not_exists(self, name, version=None):
+    def assert_toolkit_not_exists(self, name, version=None):
         matches = self.find_matching_toolkits(name, version)
         self.assertEqual (len(matches), 0)
 
@@ -157,9 +157,7 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
             _handle_http_error(err)
 
 
-    # Post a test toolkit.  First get the toolkits, and verify
-    # that there is not already one matching the test toolkit name.  
-    # Post the toolkits, verify that it succeeded and returned a Toolkit
+    # Post a test toolkit. Verify that it succeeded and returned a Toolkit
     # object, and its attributes are as expected.  Also get the new list
     # of toolkits and verify that the new toolkit is there.  As the testing
     # might be done in a shared environment, we can't verify that there are
@@ -191,7 +189,7 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
             
             # delete the toolkit and verify that it is no longer in the list
             self.assertTrue(bingo.delete())
-            self.verify_toolkit_not_exists(expected_toolkit_name)
+            self.assert_toolkit_not_exists(expected_toolkit_name)
             
             # deleting it a second time should fail
             self.assertFalse(bingo.delete())
@@ -241,8 +239,8 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
             _handle_http_error(err)
 
     # Test posting different versions of a toolkit.  Posting a version
-    # equal or less than one that is currently deployed should fail,
-    # but posting a later version should succeed.
+    # equal to one that is currently deployed should fail,
+    # but posting a different version should succeed.
     def test_post_multiple_versions(self):
         try:
             toolkits = self.sc.get_toolkits()
@@ -265,8 +263,8 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
             
             # Version 1.0.0 is now in the list, and version 1.0.1 is still there
             self.wait_for_toolkit(type(self).bingo_toolkit_name, type(self).bingo_0_version)
-            self.verify_toolkit_exists(type(self).bingo_toolkit_name, type(self).bingo_1_version)
-            self.verify_toolkit_not_exists(type(self).bingo_toolkit_name, type(self).bingo_2_version)
+            self.assert_toolkit_exists(type(self).bingo_toolkit_name, type(self).bingo_1_version)
+            self.assert_toolkit_not_exists(type(self).bingo_toolkit_name, type(self).bingo_2_version)
             
             # post version 1.0.2.  It does not replace version 1.0.1, but they
             # both continue to exist.
@@ -274,8 +272,8 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
             self.assertIsNotNone(bingo2)
             
             self.wait_for_toolkit(type(self).bingo_toolkit_name, type(self).bingo_2_version)
-            self.verify_toolkit_exists(type(self).bingo_toolkit_name, type(self).bingo_1_version)
-            self.verify_toolkit_exists(type(self).bingo_toolkit_name, type(self).bingo_1_version)
+            self.assert_toolkit_exists(type(self).bingo_toolkit_name, type(self).bingo_1_version)
+            self.assert_toolkit_exists(type(self).bingo_toolkit_name, type(self).bingo_1_version)
             
             
             self.assertTrue (bingo0.delete())
@@ -317,6 +315,7 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
         except requests.exceptions.HTTPError as err:
             _handle_http_error(err)
 
+
     # test posting from a bad path
     def test_post_bad_path(self):
         try:
@@ -337,6 +336,7 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
 
         except requests.exceptions.HTTPError as err:
             _handle_http_error(err)
+
 
     # Test getting toolkit by id.
     def test_get_toolkit(self):
