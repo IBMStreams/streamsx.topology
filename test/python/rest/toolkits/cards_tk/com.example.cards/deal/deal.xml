@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+     # Licensed Materials - Property of IBM
+     # Copyright IBM Corp. 2015,2016
+-->
+<operatorModel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.ibm.com/xmlns/prod/streams/spl/operator" xmlns:cmn="http://www.ibm.com/xmlns/prod/streams/spl/common" xsi:schemaLocation="http://www.ibm.com/xmlns/prod/streams/spl/operator operatorModel.xsd">
+  <cppOperatorModel>
+    <context>
+      <description>
+Callable: deal
+
+# Python
+    @spl.source()
+    def deal():
+        deck = list(range(0,52))
+        while True:
+          random.shuffle(deck)
+          for card in deck:
+            suit = int(card / 13)
+            value = card % 13
+            suits = [&#x27;spades&#x27;,&#x27;hearts&#x27;,&#x27;clubs&#x27;,&#x27;diamonds&#x27;]
+            values = [&#x27;ace&#x27;,&#x27;deuce&#x27;,&#x27;three&#x27;,&#x27;four&#x27;,&#x27;five&#x27;,&#x27;six&#x27;,&#x27;seven&#x27;,&#x27;eight&#x27;,&#x27;nine&#x27;,&#x27;ten&#x27;,&#x27;jack&#x27;,&#x27;queen&#x27;,&#x27;king&#x27;]
+            yield &#x27;the &#x27; + values [value] + &#x27; of &#x27; + suits [suit]
+
+      </description>
+      <iconUri size="16">../../opt/.splpy/icons/python-powered16.gif</iconUri>
+      <iconUri size="32">../../opt/.splpy/icons/python-powered32.gif</iconUri>
+      <metrics>
+      </metrics>
+      <libraryDependencies>
+        <library>
+          <cmn:description>SPLPY header</cmn:description>
+          <cmn:managedLibrary>
+            <cmn:includePath>../../opt/.splpy/include</cmn:includePath>
+          </cmn:managedLibrary>
+        </library>
+        <library>
+          <cmn:description>Python libraries.</cmn:description>
+          <cmn:managedLibrary>
+            <cmn:command>../../opt/.splpy/common/pyversion3.sh</cmn:command>
+          </cmn:managedLibrary>
+        </library>
+      </libraryDependencies>
+      <providesSingleThreadedContext>Always</providesSingleThreadedContext>
+      <allowCustomLogic>false</allowCustomLogic>
+    </context>
+    <parameters>
+      <allowAny>false</allowAny>
+      
+    </parameters>
+    <inputPorts/>
+    <outputPorts>
+      <outputPortSet>
+        <expressionMode>Nonexistent</expressionMode>
+        <autoAssignment>true</autoAssignment>
+        <completeAssignment>false</completeAssignment>
+        <rewriteAllowed>true</rewriteAllowed>
+        <windowPunctuationOutputMode>Free</windowPunctuationOutputMode>
+        <tupleMutationAllowed>true</tupleMutationAllowed>
+        <cardinality>1</cardinality>
+        <optional>false</optional>
+      </outputPortSet>
+    </outputPorts>
+  </cppOperatorModel>
+</operatorModel>

@@ -24,11 +24,13 @@ import threading
 import time
 import json
 import re
+import tempfile
 import time
 import xml.etree.ElementTree as ElementTree
 
 from pprint import pformat
 from urllib import parse
+from zipfile import ZipFile
 
 import streamsx.topology.context
 import streamsx.topology.schema
@@ -162,27 +164,9 @@ def _handle_http_errors(res):
         #logger.error("Response returned with error code: " + str(res.status_code))
         #logger.error(res.text)
 
-        # If the response contains text, and if we can parse the text as
-        # json, and find a message in it, we use that message instead
-        # of the standard message for the HTTP error code.
+        res.raise_for_status()
 
-        specific_message = None
-        print (res.__dict__)
-        if res.text:
-            print ("has res.text")
-            try:
-                j=json.loads(res.text)
-                specific_message=j['messages'][0]['message']
-                print ("found message " + specific_message)
-            except:
-                pass
-
-        if specific_message:
-            # TODO Ugh, this stinks.  Need a better way...
-            raise requests.exceptions.HTTPError(res.status_code,res.url,specific_message,res.headers,None)
-        else:
-            res.raise_for_status()
-            
+                
 
 class _StreamsRestClient(object):
     _blocked_ssl_warn = False
@@ -1687,8 +1671,9 @@ class Instance(_ResourceElement):
 
         auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
         resource_url, _ = Instance._root_from_endpoint(auth._cfg['connection_info'].get('serviceRestEndpoint'))
+        build_url, _ = Toolkit._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
 
-        sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth)
+        sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth,build_url=build_url)
         if verify is not None:
             sc.rest_client.session.verify = verify
  
@@ -2644,7 +2629,6 @@ class Toolkit(_ResourceElement):
                 verify=self.rest_client.session.verify)
 
         # 204 is success
-        # TODO better error handling
         if res.status_code == 204:
             return True
         if res.status_code == 404:
@@ -2654,6 +2638,71 @@ class Toolkit(_ResourceElement):
         res.raise_for_status()
 
         return False
+    
+    @staticmethod
+    def _toolkits_url(sc):
+        toolkits_url = None
+        for resource in sc.get_build_resources():
+            if resource.name == 'toolkits':
+                toolkits_url = resource.resource
+                break;
+        else:
+            raise ValueError('The toolkits REST API is not supported by the Streams instance')
+        return toolkits_url
+
+    @classmethod
+    def from_local_toolkit(cls, sc, path):
+        # Handle path does not exist, is not readable, is not a directory
+        if not os.path.isdir(path):
+            raise ValueError('"' + path + '" is not a path or is not readable')
+
+        # Create a named temporary file
+        with tempfile.NamedTemporaryFile(suffix='.zip') as tmpfile:
+            filename = tmpfile.name
+        
+            basedir = os.path.abspath(os.path.join(path, os.pardir))
+
+            with ZipFile(filename, 'w') as zipfile:
+                for root, dirs, files in os.walk(path):
+                    # Write the directory entry
+                    relpath = os.path.relpath(root, basedir)
+                    zipfile.write(root, relpath)
+                    for file in files:
+                        zipfile.write (os.path.join(root, file), os.path.join(relpath, file))
+                zipfile.close()
+            
+                with open(filename, 'rb') as toolkit_fp:
+                    res = sc.rest_client.session.post(Toolkit._toolkits_url(sc),
+                        headers = {'Accept' : 'application/json',
+                                   'Content-Type' : 'application/zip'},
+                        data=toolkit_fp,
+                        verify=sc.rest_client.session.verify)
+                    _handle_http_errors(res)
+
+                    new_toolkits = list(cls(t, sc.rest_client) for t in res.json()['toolkits'])
+
+                    # It may be possible to upload multiple toolkits in one 
+                    # post, but we are only uploading a single toolkit, so the
+                    # list of new toolkits is expected to contain only one 
+                    # element, and we return it.  It is also possible that no 
+                    # new toolkit was returned.
+
+                    if len(new_toolkits) >= 1:
+                        return new_toolkits[0]    
+                    return None
+                 
+    @staticmethod
+    def _root_from_endpoint(endpoint):
+        import urllib.parse as up
+        esu = up.urlsplit(endpoint)
+        if not esu.path.startswith('/streams/rest/builds'):
+            return None, None
+
+        es = endpoint.split('/')
+        name = es[len(es)-1]
+        root_url = endpoint.split('/streams/rest/builds')[0]
+        resource_url = root_url + '/streams/rest/resources'
+        return resource_url, name
 
     class Dependency:
         def __init__(self, name, version):
@@ -2665,6 +2714,7 @@ class Toolkit(_ResourceElement):
            
     @property
     def dependencies(self):
+        deps = []
         index = self.get_index()
         root = ElementTree.fromstring(index)
         toolkit_element = root.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkit}toolkit')
@@ -2672,4 +2722,5 @@ class Toolkit(_ResourceElement):
         for dependency_element in dependency_elements:
             name = dependency_element.find('{http://www.ibm.com/xmlns/prod/streams/spl/common}name').text
             version = dependency_element.find('{http://www.ibm.com/xmlns/prod/streams/spl/common}version').text
-            yield Toolkit.Dependency(name, version)
+            deps.append(Toolkit.Dependency(name, version))
+        return deps

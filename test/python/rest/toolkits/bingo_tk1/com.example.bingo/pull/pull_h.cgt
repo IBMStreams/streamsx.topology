@@ -1,0 +1,61 @@
+/*
+ * # Licensed Materials - Property of IBM
+ * # Copyright IBM Corp. 2015,2018
+ */
+<%
+require "splpy_operator.pm";
+my $pyStateful = splpy_OperatorCallable() eq 'class' ? 1 : 0;
+%>
+@include "../../opt/.splpy/common/py_state.cgt"
+
+#include "splpy.h"
+#include "splpy_pyop.h"
+
+using namespace streamsx::topology;
+
+<%SPL::CodeGen::headerPrologue($model);%>
+
+@include "../../opt/.splpy/common/py_disallow_cr_trigger.cgt"
+
+<%
+  my $oport = $model->getOutputPortAt(0);
+%>
+
+class MY_OPERATOR : public MY_BASE_OPERATOR
+#if SPLPY_OP_STATE_HANDLER == 1
+     , public SPL::StateHandler
+#endif
+{
+public:
+  MY_OPERATOR();
+  virtual ~MY_OPERATOR(); 
+  void allPortsReady(); 
+  void prepareToShutdown(); 
+  void process(uint32_t idx);
+
+#if SPLPY_OP_STATE_HANDLER == 1
+  virtual void checkpoint(SPL::Checkpoint & ckpt);
+  virtual void reset(SPL::Checkpoint & ckpt);
+  virtual void resetToInitialState();
+#endif
+
+private:
+    SplpyOp *op() { return pyop_; }
+
+  // Members
+    SplpyPyOp *pyop_;
+    PyObject *pyOutNames_0;
+
+    void pySubmitTuplesPort0(PyObject * value);
+    void fromPythonToPort0(PyObject * pyTuple, OPort0Type & otuple);
+    void fromPythonDictToPort0(PyObject * pyDict, OPort0Type & otuple);
+    void fromPyTupleToSPLTuple(PyObject *pyDict, OPort0Type & otuple);
+    void fromPyDictToSPLTuple(PyObject *pyTuple, OPort0Type & otuple);
+
+#if SPLPY_OP_STATE_HANDLER == 1
+    SPL::Mutex mutex_;
+#endif
+}; 
+
+<%SPL::CodeGen::headerEpilogue($model);%>
+

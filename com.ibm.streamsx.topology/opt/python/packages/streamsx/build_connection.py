@@ -7,7 +7,7 @@ import shutil
 
 from zipfile import ZipFile
 
-from rest_primitives import (RestResource,_exact_resource,_StreamsRestClient, Toolkit,_handle_http_errors)
+from .rest_primitives import (RestResource,_exact_resource,_StreamsRestClient, Toolkit,_handle_http_errors)
 
 logger = logging.getLogger('streamsx.rest')
 
@@ -113,50 +113,7 @@ class BuildConnection:
 
                     if len(new_toolkits) == 1:
                         return new_toolkits[0]    
-                    return None
-
-                            
-        # tmpfile = tempfile.NamedTemporaryFile(suffix='.zip', delete=False)
-        # filename = tmpfile.name
-        
-        # basedir = os.path.abspath(os.path.join(path, os.pardir))
-
-        # zipfile = ZipFile(filename, 'w')
-        # for root, dirs, files in os.walk(path):
-        #     # Write the directory entry
-        #     relpath = os.path.relpath(root, basedir)
-        #     zipfile.write(root, relpath)
-        #     for file in files:
-        #         zipfile.write (os.path.join(root, file), os.path.join(relpath, file))
-        # zipfile.close()
-
-        # print ("zipfile " + filename + " written")
-        
-        # #         # reference _submit_job or _upload_bundle
-        # #         # This probably should be in a delegator for V5
-            
-        # #         with open(filename, 'rb') as toolkit_fp:
-        # toolkit_fp = open(filename, 'rb')
-
-        # res = self.rest_client.session.post(self.toolkits_url,
-        #                  headers = {'Accept' : 'application/json',
-        #                             'Content-Type' : 'application/zip'},
-        #                  data=toolkit_fp,
-        #                  verify=self.rest_client.session.verify)
-        # print (res.status_code)
-        # print (res.text)
-        # _handle_http_errors(res)
-
-        # new_toolkits = list(Toolkit(t, self.rest_client) for t in res.json()['toolkits'])
-
-        # # It may be possible to upload multiple toolkits in one post,
-        # # but we are only uploading a single toolkit, so the list of 
-        # # new toolkits is expected to contain only one element, and
-        # # we return it.  It is also possible that no new toolkit was
-        # # returned, because the toolkit did not replace an existing one.
-        # if len(new_toolkits) == 1:
-        #     return new_toolkits[0]    
-        # return None
+                    return None                            
 
 
     def get_resources(self):

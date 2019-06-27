@@ -1,0 +1,180 @@
+<%
+# Generates functions in an operator that converts a Python
+# tuple to an SPL tuple for a given port and optional to
+# submit the tuple.
+#
+# $oport must be set on entry to required output port
+# $oport_submission must be set on entry to generate submission methods.
+# $iport can be set to automatically copy input attributes to
+# output attributes when the Python tuple does not supply a value.
+
+  my $itypeparam = "";
+  my $itypearg = "";
+  if (defined $iport) {
+     $itypeparam = ", " . $iport->getCppTupleType() . " const & ituple";
+     $itypearg = ", ituple";
+  }
+%>
+
+<% if ($oport_submission) { %>
+ 
+// Python tuple to SPL tuple with submission to a port
+void MY_OPERATOR::fromPythonToPort<%=$oport->getIndex()%>(PyObject *pyTuple, <%=$oport->getCppTupleType()%> & otuple <%=$itypeparam%>) {
+
+  try {
+    MY_OPERATOR::fromPyTupleToSPLTuple(pyTuple, otuple <%=$itypearg%>);
+  } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+    SPLPY_OP_HANDLE_EXCEPTION_INFO(excInfo);
+    return;
+  }
+
+  STREAMSX_TUPLE_SUBMIT_ALLOW_THREADS(otuple, <%=$oport->getIndex()%>);
+}
+
+// Python dict to SPL tuple with submission to a port.
+void MY_OPERATOR::fromPythonDictToPort<%=$oport->getIndex()%>(PyObject *pyDict, <%=$oport->getCppTupleType()%> & otuple <%=$itypeparam%>) {
+
+  try {
+    MY_OPERATOR::fromPyDictToSPLTuple(pyDict, otuple <%=$itypearg%>);
+  } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+    SPLPY_OP_HANDLE_EXCEPTION_INFO(excInfo);
+    return;
+  }
+
+  STREAMSX_TUPLE_SUBMIT_ALLOW_THREADS(otuple, <%=$oport->getIndex()%>);
+}
+
+<%}%>
+
+<%
+# Ensure we generate function only once for each tuple type
+my $otype = $oport->getCppTupleType();
+if (! exists $cpp_tuple_types{$otype}) {
+    $cpp_tuple_types{$otype} = 1;
+%>
+
+// Python tuple to SPL tuple , conversion only
+void MY_OPERATOR::fromPyTupleToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupleType()%> & otuple  <%=$itypeparam%>) {
+
+  Py_ssize_t frs = PyTuple_GET_SIZE(pyTuple); 
+    
+<%
+  if (defined $iport) {
+    print 'bool setAttr = false;';
+  }
+
+  for (my $ai = 0; $ai < $oport->getNumberOfAttributes(); ++$ai) {
+    
+    my $attribute = $oport->getAttributeAt($ai);
+    my $name = $attribute->getName();
+    my $atype = $attribute->getSPLType();
+    splToPythonConversionCheck($atype);
+    
+    if (defined $iport) {
+             print 'setAttr = false;';
+    }
+%>
+    if (<%=$ai%> < frs) {
+         // Value from the Python function
+         PyObject *pyAttrValue = PyTuple_GET_ITEM(pyTuple, <%=$ai%>);
+         if (!SplpyGeneral::isNone(pyAttrValue)) {
+                  streamsx::topology::pySplValueFromPyObject(
+                               otuple.get_<%=$name%>(), pyAttrValue);
+<%
+    if (defined $iport) {
+             print 'setAttr = true;';
+    }
+%>
+      }
+   }
+<%
+    if (defined $iport) {
+    
+    # Only copy attributes across if they match on name and type,
+    # or on name and input type T and output type optional<T>
+    my $matchInputAttr = $iport->getAttributeByName($name);
+    if (defined $matchInputAttr) {
+        my $inputType = $matchInputAttr->getSPLType();
+        if (($inputType eq $atype) ||
+            (hasOptionalTypesSupport() &&
+             SPL::CodeGen::Type::isOptional($atype) &&
+             ($inputType eq
+              SPL::CodeGen::Type::getUnderlyingType($atype)))) {
+%>
+    if (!setAttr) {
+      // value from the input attribute
+      otuple.set_<%=$name%>(ituple.get_<%=$name%>());
+    }
+<%
+      }
+    }
+   }
+%>
+         
+<%
+}
+ %>
+
+}
+
+
+// Python dict to SPL tuple , conversion only
+void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleType()%> & otuple  <%=$itypeparam%>) {
+
+  Py_ssize_t available = PyDict_Size(pyDict); 
+    
+<%
+  if (defined $iport) {
+    print 'bool setAttr = false;';
+  }
+
+  for (my $ai = $oport->getNumberOfAttributes() - 1; $ai >= 0; --$ai) {
+    
+    my $attribute = $oport->getAttributeAt($ai);
+    my $name = $attribute->getName();
+    my $atype = $attribute->getSPLType();
+    splToPythonConversionCheck($atype);
+    
+    if (defined $iport) {
+             print 'setAttr = false;';
+    }
+%>
+    if (available > 0) {
+         // Value from the Python function
+         PyObject *pyAttrValue = PyDict_GetItem(pyDict, PyTuple_GET_ITEM(pyOutNames_<%=$oport->getIndex()%>, <%=$ai%>));
+         if (pyAttrValue != NULL) {
+             --available;
+             if (!SplpyGeneral::isNone(pyAttrValue)) {
+                  streamsx::topology::pySplValueFromPyObject(
+                               otuple.get_<%=$name%>(), pyAttrValue);
+<%
+    if (defined $iport) {
+             print 'setAttr = true;';
+    }
+%>
+           }
+        }
+   }
+<%
+    if (defined $iport) {
+    
+    # Only copy attributes across if they match on name and type
+    my $matchInputAttr = $iport->getAttributeByName($name);
+    if (defined $matchInputAttr) {
+       if ($matchInputAttr->getSPLType() eq $attribute->getSPLType()) {
+%>
+    if (!setAttr) {
+      // value from the input attribute
+      otuple.set_<%=$name%>(ituple.get_<%=$name%>());
+    }
+<%
+      }
+    }
+   }
+%>
+         
+<%
+}
+ %>
+}
+<% } %>

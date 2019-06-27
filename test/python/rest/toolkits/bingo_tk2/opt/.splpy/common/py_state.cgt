@@ -1,0 +1,28 @@
+<% 
+ # State handling setup for Python operators.
+ # Requires
+ #     $pyStateful is set to 0/1 if the operator's callable is not/stateful
+ #
+ # Sets CPP defines:
+ #     SPLPY_OP_STATE_HANDLER - Set to 1 if the operator needs a state handle.
+ #     SPLPY_OP_CR - Set to 1 is the operator is in a consistent region
+ #     SPLPY_CALLABLE_STATEFUL - Set to 1 if the callable is stateful
+ #     SPLPY_CALLABLE_STATE_HANDLER - Set to 1 if op must preserve callable state
+
+ my $isWindowed = 0;
+ for (my $p = 0; $p < $model->getNumberOfInputPorts(); $p++) {
+   if ($model->getInputPortAt($p)->hasWindow()) {
+      $isWindowed = 1;
+      last;
+   }
+ }
+
+ my $isInConsistentRegion = $model->getContext()->getOptionalContext("ConsistentRegion") ? 1 : 0;
+ my $ckptKind = $model->getContext()->getCheckpointingKind();
+ my $splpy_op_stateful = ($pyStateful or $isWindowed) && ($isInConsistentRegion or $ckptKind ne "none") ? 1 : 0;
+%>
+
+#define SPLPY_OP_STATE_HANDLER <%=$splpy_op_stateful%>
+#define SPLPY_OP_CR <%=$isInConsistentRegion%>
+#define SPLPY_CALLABLE_STATEFUL <%=$pyStateful ? 1 : 0%>
+#define SPLPY_CALLABLE_STATE_HANDLER (SPLPY_OP_STATE_HANDLER && SPLPY_CALLABLE_STATEFUL)

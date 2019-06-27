@@ -1,0 +1,131 @@
+/*
+ * # Licensed Materials - Property of IBM
+ * # Copyright IBM Corp. 2015,2018
+ */
+
+<%SPL::CodeGen::implementationPrologue($model);%>
+
+<% 
+ my $cmnDir = $model->getContext()->getToolkitDirectory()."/opt/.splpy/common/";
+
+ require "splpy_operator.pm";
+ require $cmnDir."/splpy.pm";
+
+ my $module = splpy_Module();
+ my $functionName = splpy_FunctionName();
+ my @packages = splpy_Packages();
+ spl_pip_packages(splpy_PyMajor(), $model, \@packages);
+
+ my $iport;
+ 
+  my $oport = $model->getOutputPortAt(0);
+  my $oport_submission = 1;
+  my $otupleType = $oport->getSPLTupleType();
+  my @onames = SPL::CodeGen::Type::getAttributeNames($otupleType);
+  my @otypes = SPL::CodeGen::Type::getAttributeTypes($otupleType);
+  my %cpp_tuple_types;
+
+  my $skip_set_callable = 1;
+%>
+
+#if SPLPY_OP_STATE_HANDLER == 1
+#include "splpy_sh.h"
+#endif
+
+MY_OPERATOR::MY_OPERATOR() :
+   pyop_(NULL),
+   pyOutNames_0(NULL)
+{
+   PyObject * callable;
+@include  "../../opt/.splpy/common/py_constructor.cgt"
+   
+   {
+      SplpyGIL lock;
+
+      // callable is an instance of the callable class
+      // then when called returns an iterable
+     callable = SplpyGeneral::callFunction(
+             "streamsx.spl.runtime", "_SourceIterable",
+             callable, NULL);   
+     this->pyop_->setCallable(callable);
+     this->pyop_->setup(SPLPY_CALLABLE_STATE_HANDLER);
+
+     pyOutNames_0 = Splpy::pyAttributeNames(getOutputPortAt(0));
+   }
+#if SPLPY_OP_STATE_HANDLER == 1
+   this->getContext().registerStateHandler(*this);
+#endif
+}
+
+MY_OPERATOR::~MY_OPERATOR() 
+{
+   {
+   SplpyGIL lock;
+   Py_CLEAR(pyOutNames_0);
+   }
+   delete pyop_;
+}
+
+void MY_OPERATOR::allPortsReady()
+{
+  createThreads(1);
+}
+
+void MY_OPERATOR::prepareToShutdown() 
+{
+    pyop_->prepareToShutdown();
+}
+
+<%
+  my $call_error_action = "if (PyErr_Occurred() == SplpyErrors::StopIteration) allDone = true; else ";
+%>
+
+void MY_OPERATOR::process(uint32_t idx)
+{
+#if SPLPY_OP_CR == 1
+    SPL::ConsistentRegionContext *crc = static_cast<SPL::ConsistentRegionContext *>(getContext().getOptionalContext(CONSISTENT_REGION));
+#endif
+
+    while(!getPE().getShutdownRequested()) {
+        bool allDone = false;
+#if SPLPY_OP_CR == 1
+        ConsistentRegionPermit crp(crc);
+#endif
+        {
+#if SPLPY_OP_STATE_HANDLER == 1
+            SPL::AutoMutex am(mutex_);
+#endif
+            // GIL is released across submission
+            try {
+                SplpyGIL lock;
+                PyObject *pyTuple = PyTuple_New(0);
+                PyObject *pyDict = NULL;
+
+@include  "../../opt/.splpy/common/py_functionReturnToTuples.cgt"
+
+            } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+                SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+                continue;
+            }
+        }
+
+        if (allDone) {
+             submit(Punctuation::WindowMarker, 0);
+#if SPLPY_OP_CR == 1
+             // Wait until the region becomes consistent
+             // before completing. If a reset occurred
+             // then we need to continue the iterator which
+             // might have been reset, and hence more tuples to submit.
+             if (!crc->makeConsistent())
+                  continue;
+#endif
+            break;
+        }
+    }
+}
+
+// Create member function that converts Python tuple to SPL tuple
+@include  "../../opt/.splpy/common/py_valueToTuples.cgt"
+@include  "../../opt/.splpy/common/py_pyTupleTosplTuple.cgt"
+
+<%SPL::CodeGen::implementationEpilogue($model);%>

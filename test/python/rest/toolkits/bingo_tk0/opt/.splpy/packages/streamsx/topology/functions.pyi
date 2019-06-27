@@ -1,0 +1,6 @@
+# coding=utf-8
+# Licensed Materials - Property of IBM
+# Copyright IBM Corp. 2017
+
+def print_flush(v: Any) -> None: ...
+def identity(t: Any) -> Any: ...

@@ -1,0 +1,18 @@
+<%
+# Perl Variables that need to be set:
+#
+# $iport - input port 
+#
+# $inputAttrs2Py - number of attributes to pass as tuple style
+#
+
+   #Check if a blob exists in the input schema
+   for (my $i = 0; $i < $inputAttrs2Py; ++$i) {
+      if (typeHasBlobs($iport->getAttributeAt($i)->getSPLType())) {
+%>
+   PYSPL_MEMORY_VIEW_CLEANUP();
+<%
+         last;
+      }
+   }
+%>

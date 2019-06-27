@@ -1,0 +1,20 @@
+<%
+ # Python operators generally may be included in a consistent region, and
+ # may be the source operator in a consistent region, but may not be the 
+ # source operator in a consistent-region configured with an operator-driven
+ # trigger.  This is because we currently do not support any way for a python
+ # operator to trigger a consistent region drain cycle.  This file enforces
+ # this rule at compile time, and should be @included in any python operator
+ # unless it is designed to support triggering a consistent region.
+
+
+ my $consistentRegionContext = $model->getContext()->getOptionalContext("ConsistentRegion");
+ if ($consistentRegionContext && $consistentRegionContext->isTriggerOperator()) { 
+   # TODO
+   # For topology operators, the source location here is unhelpful, since
+   # it refers to a location in a generated file that the user generally
+   # cannot see.  It would be better to read the @spl_note containing
+   # the original python source location and report that.
+   SPL::CodeGen::exitln("The " . $model->getContext()->getClass() . " operator may not be a trigger operator for a consistent region.", $model->getContext()->getSourceLocation());
+}  
+%>

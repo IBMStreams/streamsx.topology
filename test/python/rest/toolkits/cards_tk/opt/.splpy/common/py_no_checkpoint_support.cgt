@@ -1,0 +1,17 @@
+<%{ 
+ # Prevent compilation if checkpointing or consistent region are enabled.
+
+ my $isInConsistentRegion = $model->getContext()->getOptionalContext("ConsistentRegion");
+ my $ckptKind = $model->getContext()->getCheckpointingKind();
+
+ my $isCheckpointing = ($isInConsistentRegion or $ckptKind ne "none");
+
+ if ($isCheckpointing) {
+   # TODO
+   # For topology operators, the source location here is unhelpful, since
+   # it refers to a location in a generated file that the user generally
+   # cannot see.  It would be better to read the @spl_note containing
+   # the original python source location and report that.
+   SPL::CodeGen::exitln("Checkpointing is not supported for the " . $model->getContext()->getClass() . " operator.", $model->getContext()->getSourceLocation());
+ }
+}%>
