@@ -164,7 +164,7 @@ def _handle_http_errors(res):
         #logger.error("Response returned with error code: " + str(res.status_code))
         #logger.error(res.text)
         res.raise_for_status()
-                
+
 
 class _StreamsRestClient(object):
     _blocked_ssl_warn = False
