@@ -89,10 +89,6 @@ class TestDistributedRestFeatures(unittest.TestCase):
         # Temporary workaround for Bluemix TLS issue with views
         #stream.publish(schema=schema.CommonSchema.String, topic="__test_topic::test_basic_view_support")
 
-        cfg={}
-        job_config = streamsx.topology.context.JobConfig(tracing='debug')
-        job_config.add(self.test_config)
-
         self.logger.debug("Beginning compilation and submission of basic_view_support topology.")
         tester = Tester(top)
         tester.local_check = self._verify_basic_view
@@ -107,12 +103,6 @@ class TestDistributedRestFeatures(unittest.TestCase):
     def test_job_refresh(self):
         top = topology.Topology()
         src = top.source(['Hello'])
-
-        cfg={}
-        job_config = streamsx.topology.context.JobConfig(tracing='debug')
-        job_config.add(self.test_config)
-
-        # streamsx.topology.context.submit('TOOLKIT', top)
 
         self.tester = Tester(top)
         self.tester.tuple_count(src, 1)
@@ -165,10 +155,6 @@ class TestDistributedRestFeatures(unittest.TestCase):
         src = src.filter(lambda x : True, name='BASICC')
         src.view()
         src = src.map(lambda x : x, name='BASICD')
-
-        cfg={}
-        job_config = streamsx.topology.context.JobConfig(tracing='debug')
-        job_config.add(self.test_config)
 
         self.tester = Tester(top)
         self.tester.tuple_count(src, 2)

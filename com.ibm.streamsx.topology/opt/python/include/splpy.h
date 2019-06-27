@@ -174,26 +174,14 @@ namespace streamsx {
      *  names for a port in order.
      */
     static PyObject * pyAttributeNames(SPL::OperatorPort & port) {
-       SPLAPPTRC(L_DEBUG, "pyAttributeNames: enter", "python");
        SPL::Meta::TupleType const & tt = 
            dynamic_cast<SPL::Meta::TupleType const &>(port.getTupleType());
-       SPLAPPTRC(L_DEBUG, "pyAttributeNames: getNumberOfAttributes", "python");
        uint32_t ac = tt.getNumberOfAttributes();
-       SPLAPPTRC(L_DEBUG, "pyAttributeNames: PyTuple_New(" << ac << ")", "python");
        PyObject * pyNames = PyTuple_New(ac);
-       if (!pyNames) {
-         SplpyGeneral::tracePythonError();
-         std::ostringstream location;
-         location << __FILE__ << ":" << __LINE__; // TODO better location
-         throw SplpyExceptionInfo::pythonError(location.str().c_str()).exception();
-       }
        for (uint32_t i = 0; i < ac; i++) {
-            SPLAPPTRC(L_DEBUG, "pyAttributeNames: getAttributeNames(" << i << ")", "python");
             PyObject * pyName = pyUnicode_FromUTF8(tt.getAttributeName(i));
-            SPLAPPTRC(L_DEBUG, "pyAttributeNames: SET_ITEM", "python");
             PyTuple_SET_ITEM(pyNames, i, pyName);
        }
-       SPLAPPTRC(L_DEBUG, "pyAttributeNames: exit", "python");
        return pyNames;
     }
 

@@ -80,11 +80,9 @@ class SplpyFuncOp : public SplpyOp {
        * by the operator.
       */
       void loadAndWrapCallable(bool needStateHandler, const std::string & wrapfn) {
-          SPLAPPTRC(L_DEBUG, "loadAndWrapCallable: enter", "python");
           SplpyGIL lock;
 
           // pointer to the application function or callable class
-          SPLAPPTRC(L_DEBUG, "loadAndWrapCallable: loadFunction", "python");
           PyObject * appCallable =
              SplpyGeneral::loadFunction(param("pyModule"), param("pyName"));
 
@@ -93,33 +91,22 @@ class SplpyFuncOp : public SplpyOp {
           // or a pickled encoded class instance
           // represented as a string in parameter pyCallable
     
-            SPLAPPTRC(L_DEBUG, "loadAndWrapCallable: calling hasParam", "python");
           if (hasParam("pyCallable")) {
-            SPLAPPTRC(L_DEBUG, "loadAndWrapCallable: hasParam", "python");
              // argument is the serialized callable instance
              PyObject * appClass = appCallable;
-             SPLAPPTRC(L_DEBUG, "loadAndWrapCallable: pyUnicode_FromUTF8", "python");
              appCallable = pyUnicode_FromUTF8(param("pyCallable").c_str());
              Py_DECREF(appClass);
           }
-          else {
-            SPLAPPTRC(L_DEBUG, "loadAndWrapCallable: ! hasParam", "python");
-          }
 
           PyObject *extraArg = NULL;
-            SPLAPPTRC(L_DEBUG, "loadAndWrapCallable: getNumberOfOutputPorts", "python");
           if (op()->getNumberOfOutputPorts() == 1) {
-            SPLAPPTRC(L_DEBUG, "loadAndWrapCallable: pyAttributeNames", "python");
               extraArg = streamsx::topology::Splpy::pyAttributeNames(
                op()->getOutputPortAt(0));
           }
 
-          SPLAPPTRC(L_DEBUG, "loadAndWrapCallable: callFunction", "python");
           setCallable(SplpyGeneral::callFunction(
                "streamsx.topology.runtime", wrapfn, appCallable, extraArg));
-          SPLAPPTRC(L_DEBUG, "loadAndWrapCallable: setup", "python");
           setup(needStateHandler);
-          SPLAPPTRC(L_DEBUG, "loadAndWrapCallable: exit", "python");
       }
 
       /*
