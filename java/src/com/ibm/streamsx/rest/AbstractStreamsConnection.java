@@ -22,11 +22,15 @@ import com.ibm.streamsx.rest.internal.RestUtils;
 abstract class AbstractStreamsConnection {
 
     private static final String INSTANCES_RESOURCE_NAME = "instances";
+    private static final String TOOLKITS_RESOURCE_NAME = "toolkits";
 
     private final String resourcesUrl;
 
     protected Executor executor;
     private String instancesUrl;
+
+    private final String buildUrl;
+    private String toolkitsUrl;
     
     /**
      * Cancel a job.
@@ -61,11 +65,19 @@ abstract class AbstractStreamsConnection {
      *            for example: https://server:port/streams/rest/resources
      */
     AbstractStreamsConnection(String resourcesUrl,
-            boolean allowInsecure) {
+                              boolean allowInsecure) {
         this.resourcesUrl = resourcesUrl;
+        this.buildUrl = null;
         this.executor = RestUtils.createExecutor(allowInsecure);
     }
     
+    AbstractStreamsConnection(String resourcesUrl,
+                              boolean allowInsecure, String buildUrl) {
+        this.resourcesUrl = resourcesUrl;
+        this.buildUrl = buildUrl;
+        this.executor = RestUtils.createExecutor(allowInsecure);
+    }
+
     public boolean allowInsecureHosts(boolean allowInsecure) {
     	this.executor = RestUtils.createExecutor(allowInsecure);
     	return allowInsecure;
@@ -115,7 +127,11 @@ abstract class AbstractStreamsConnection {
             }
         }
     }
-    
+
+    public List<Toolkit> getToolkits() throws IOException {
+        return Toolkit.createToolkitList(this, getToolkitsURL());
+    }
+
     private String getInstancesURL() throws IOException {
     	if (instancesUrl == null) {
             // Query the resourcesUrl to find the instances URL
@@ -135,6 +151,27 @@ abstract class AbstractStreamsConnection {
             }
     	}
     	return instancesUrl;
+    }
+
+    private String getToolkitsURL() throws IOException {
+    	if (toolkitsUrl == null) {
+            // Query the resourcesUrl to find the instances URL
+            String response = getResponseString(buildUrl);
+            ResourcesArray resources = new GsonBuilder()
+                    .excludeFieldsWithoutExposeAnnotation()
+                    .create().fromJson(response, ResourcesArray.class);
+            for (Resource resource : resources.resources) {
+                if (TOOLKITS_RESOURCE_NAME.equals(resource.name)) {
+                    toolkitsUrl = resource.resource;
+                    break;
+                }
+            }
+            if (null == toolkitsUrl) {
+                // If we couldn't find toolkits something is wrong
+                throw new RESTException("Unable to find toolkits resource from resources URL: " + buildUrl);
+            }
+    	}
+    	return toolkitsUrl;
     }
 
     private static class Resource {

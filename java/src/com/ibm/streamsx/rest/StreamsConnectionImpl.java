@@ -19,7 +19,14 @@ class StreamsConnectionImpl extends AbstractStreamsConnection {
 
     StreamsConnectionImpl(String userName, Function<Executor, String> authorization,
             String resourcesUrl, boolean allowInsecure) {
-        super(resourcesUrl, allowInsecure);
+        super(resourcesUrl, allowInsecure, null);
+        this.userName = userName;
+        this.authorization = authorization;
+    }
+
+    StreamsConnectionImpl(String userName, Function<Executor, String> authorization,
+            String resourcesUrl, boolean allowInsecure, String buildUrl) {
+        super(resourcesUrl, allowInsecure, buildUrl);
         this.userName = userName;
         this.authorization = authorization;
     }

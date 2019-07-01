@@ -47,7 +47,7 @@ public class StreamsConnection {
      * @return a connection to IBM Streams
      */
     public static StreamsConnection createInstance(String userName,
-            String authToken, String url) {
+            String authToken, String url, String buildUrl) {
     	if (userName == null) {
     		userName = System.getenv(Util.STREAMS_USERNAME);
     		if (userName == null)
@@ -68,8 +68,15 @@ public class StreamsConnection {
     		    url = url.substring(0, idx) + "/streams/rest/resources";
     		}
     	}
-    	
-    	AbstractStreamsConnection delegate = createDelegate(userName, authToken, url);
+
+        if (buildUrl != null) {
+          if (buildUrl.endsWith("/builds")) {
+            buildUrl = buildUrl.substring(0, buildUrl.length() - "builds".length()) + "resources";
+            System.out.println("Modified build url: " + buildUrl);
+          }
+        }
+
+    	AbstractStreamsConnection delegate = createDelegate(userName, authToken, url, buildUrl);
         StreamsConnection sc = new StreamsConnection(delegate);
         return sc;
     }
@@ -128,11 +135,15 @@ public class StreamsConnection {
         return delegate().getInstances();
     }
 
+    public List<Toolkit> getToolkits() throws IOException {
+        return delegate().getToolkits();
+    }
+
 
     private static AbstractStreamsConnection createDelegate(String userName,
-            String authToken, String url) {
+            String authToken, String url, String buildUrl) {
         return new StreamsConnectionImpl(userName,
                     executor -> RestUtils.createBasicAuth(userName, authToken),
-                    url, false);
+                    url, false, buildUrl);
     }
 }
