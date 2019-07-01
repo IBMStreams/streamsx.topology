@@ -26,17 +26,29 @@ def _submitjob_parser(subparsers):
     job_submit.add_argument('sabfile', help='Location of sab file.', metavar='sab-pathname')
     job_submit.add_argument('--jobConfig', '-g', help='Specifies the name of an external file that defines a job configuration overlay')
     job_submit.add_argument('--jobname', help='Specifies the name of the job.')
-    job_submit.add_argument('--P', '-P', help='Specifies a submission-time parameter and value for the job')
+    job_submit.add_argument('--P', '-P', help='Specifies a submission-time parameter and value for the job', action='append')
     _user_arg(job_submit)
 
 def _submitjob(instance, cmd_args):
     """Submit a job."""
     job_config = None
-    if cmd_args.jobname:
-        job_config = streamsx.topology.context.JobConfig(job_name=cmd_args.jobname)
+
     if cmd_args.jobConfig:
         with open(cmd_args.jobConfig) as fd:
             job_config = streamsx.topology.context.JobConfig.from_overlays(json.load(fd))
+    else:
+        job_config = streamsx.topology.context.JobConfig()
+
+    if cmd_args.jobname:
+        job_config.job_name = cmd_args.jobname
+
+    if (cmd_args.P):
+        for param in cmd_args.P:
+            name_value_pair = param.split("=")
+            if (len(name_value_pair) != 2):
+                print("The format of the following submission-time parameter is not valid: {}. The correct syntax is: <name>=<value>".format(param))
+            else:
+                job_config.submission_parameters[name_value_pair[0]] = name_value_pair[1]
 
     instance.submit_job(bundle=cmd_args.sabfile, job_config=job_config)
 
@@ -102,15 +114,15 @@ def _lsjobs(instance, cmd_args):
         jobs = [job for job in jobs if job.name in job_names]
 
     # If --showtimestamp, give current date
-    timeStamp = None
+    time_stamp = None
     LOCAL_TIMEZONE = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
     if cmd_args.showtimestamp:
-        timeStamp = datetime.datetime.now().replace(microsecond=0).replace(tzinfo=LOCAL_TIMEZONE).isoformat()
+        time_stamp = datetime.datetime.now().replace(microsecond=0).replace(tzinfo=LOCAL_TIMEZONE).isoformat()
 
     # If default output format
     if cmd_args.fmt == '%Tf':
-        if timeStamp:
-            print("Date: " + timeStamp)
+        if time_stamp:
+            print("Date: " + time_stamp)
 
         if instance_id:
             print("Instance: " + instance_id)
@@ -133,7 +145,7 @@ def _lsjobs(instance, cmd_args):
             item.extend((job.id, job.status.capitalize(), jobHealth, job.startedBy, jobTime, job.name, jobGroup))
             data.append(item)
 
-        _print_ls("lsjobs", cmd_args.fmt, headers, data, instance_id=instance_id, Date=timeStamp)
+        _print_ls("lsjobs", cmd_args.fmt, headers, data, instance_id=instance_id, Date=time_stamp)
 
 
 ###########################################
@@ -253,6 +265,7 @@ def _mkappconfig(instance, cmd_args):
         appconfig =  instance.create_application_configuration(name=config_name, properties=config_props, description=config_description)
         if appconfig:
             print("The {} application configuration was created successfully for the {} instance".format(config_name, instance.id))
+            return appconfig
 
 # ch-appconfig
 def _chappconfig_parser(subparsers):
@@ -271,7 +284,7 @@ def _chappconfig(instance, cmd_args):
         newAppconfig = appconfig.update(properties=config_props, description=config_description)
         if (newAppconfig):
             print("The {} application configuration was updated successfully for the {} instance".format(config_name, instance.id))
-
+            return newAppconfig
     else:
         # No appconfig exists by that name
         print("The {} application configuration does not exist in the {} instance".format(config_name, instance.id))
@@ -391,12 +404,13 @@ def main(args=None):
     """
     streamsx._streams._version._mismatch_check('streamsx.topology.context')
     try:
-        sr = run_cmd(args)
-        sr['return_code'] = 0
+        val = run_cmd(args)
+        rc = 0
     except:
+        rc = 1
         # print(sys.exc_info())
-        sr = {'return_code':1, 'error': sys.exc_info()}
-    return sr
+        # sr = {'return_code':1, 'error': sys.exc_info()}
+    return [rc, val]
 
 def _parse_args(args):
     """ Argument parsing
@@ -415,8 +429,6 @@ def _parse_args(args):
     _chappconfig_parser(subparsers)
     _getappconfig_parser(subparsers)
 
-
-
     return cmd_parser.parse_args(args)
 
 def _user_arg(parser):
@@ -425,10 +437,15 @@ def _user_arg(parser):
 
 if __name__ == '__main__':
     sr = main()
-    rc = sr['return_code']
-    del sr['return_code']
-    if rc == 0:
-        print(sr)
+    if sr[0] == 0:
+        print(sr[1])
     else:
-        print(sr['error'][1], file=sys.stderr)
-    sys.exit(rc)
+        print(sr[1], file=sys.stderr)
+
+    # rc = sr['return_code']
+    # del sr['return_code']
+    # if rc == 0:
+    #     print(sr)
+    # else:
+    #     print(sr['error'][1], file=sys.stderr)
+    # sys.exit(rc)
