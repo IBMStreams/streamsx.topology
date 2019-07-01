@@ -17,15 +17,6 @@ import streamsx.scripts.streamtool as streamtool
 from contextlib import contextmanager
 from io import StringIO
 
-
-# Tests streamtool appconfig script.
-# Requires environment setup for a ICP4D Streams instance.
-# @unittest.skipUnless(
-#     "STREAMS_REST_URL" in os.environ
-#     and "STREAMS_USERNAME" in os.environ
-#     and "STREAMS_PASSWORD" in os.environ,
-#     "requires Streams REST API setup",
-# )
 @unittest.skipUnless(
     "ICP4D_DEPLOYMENT_URL" in os.environ
     and "STREAMS_INSTANCE_ID" in os.environ
