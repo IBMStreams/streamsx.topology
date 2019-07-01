@@ -182,7 +182,7 @@ class TestAppconfig(unittest.TestCase):
     def test_mk_4(self):
         name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
         props2 = ["key1=value2", "key2=value3", "key6=value7"]
-        propFile = "temp.txt"
+        propFile = "test_st_appconfig_properties.txt"
 
         self._make_appconfig(name, props=props2, prop_file=propFile)
 
