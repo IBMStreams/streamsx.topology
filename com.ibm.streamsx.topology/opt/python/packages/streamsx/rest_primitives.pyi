@@ -135,4 +135,3 @@ class Toolkit(_ResourceElement):
     def delete(self) -> None: ...
     @staticmethod
     def from_local_toolkit(cls, sc, path): Toolkit
-    
