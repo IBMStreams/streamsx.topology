@@ -69,22 +69,25 @@ public class DistributedStreamsContext extends
     public synchronized Instance createInstance(AppEntity entity) throws IOException {
     	if (!useRestApi())
     		throw new IllegalStateException(/*internal error*/);
-    	    	
-		StreamsConnection conn = getConfigConnection(entity);
+    	
+		StreamsConnection conn = getConfigConnection(entity);        
 		if (conn == null) {
-		    conn = StreamsConnection.createInstance(null, null, null);
+		    boolean verify = true;
+		    if (deploy(entity.submission).has(ContextProperties.SSL_VERIFY))
+		        verify = deploy(entity.submission).get(ContextProperties.SSL_VERIFY).getAsBoolean();
+		    instance = Instance.ofEndpoint(
+		            Util.getenv(Util.ICP4D_DEPLOYMENT_URL),
+		            Util.getenv(Util.STREAMS_INSTANCE_ID),
+		            verify);		    
+		} else {
 		    
-		    if (deploy(entity.submission).has(ContextProperties.SSL_VERIFY)) {		        
-		        Boolean verify = deploy(entity.submission).get(ContextProperties.SSL_VERIFY).getAsBoolean();		        
-		        conn.allowInsecureHosts(!verify);
-		    }
-		}
 
-		String instanceName = System.getenv(Util.STREAMS_INSTANCE_ID);
-		if (instanceName == null)
-			instance = conn.getInstances().get(0);
-		else
-			instance = conn.getInstance(instanceName);
+            String instanceName = System.getenv(Util.STREAMS_INSTANCE_ID);
+            if (instanceName == null)
+                instance = conn.getInstances().get(0);
+            else
+                instance = conn.getInstance(instanceName);
+        }
 		return instance;
 	}
     
@@ -103,7 +106,8 @@ public class DistributedStreamsContext extends
             useRestApi.set(false);
     	} catch (IllegalStateException e) {
     		// See if the REST api is setup.
-    		Util.getenv(Util.STREAMS_REST_URL);
+    	    Util.getenv(Util.ICP4D_DEPLOYMENT_URL);
+    		Util.getenv(Util.STREAMS_INSTANCE_ID);
     		Util.getenv(Util.STREAMS_PASSWORD);
     		useRestApi.set(true);
     	}

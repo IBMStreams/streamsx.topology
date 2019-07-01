@@ -45,7 +45,9 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
         if (!deploy.has(StreamsKeys.SERVICE_DEFINITION)) {
             // Obtain the ICP4D information from the Streams rest Url.
             
-            ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(Util.getenv(Util.STREAMS_REST_URL));
+            ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(
+                    Util.getenv(Util.ICP4D_DEPLOYMENT_URL),
+                    Util.getenv(Util.STREAMS_INSTANCE_ID));
             
             deploy.add(StreamsKeys.SERVICE_DEFINITION, authenticator.config(RestUtils.createExecutor(!sslVerify(deploy))));
         }

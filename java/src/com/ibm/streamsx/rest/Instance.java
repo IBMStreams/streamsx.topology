@@ -4,17 +4,22 @@
  */
 package com.ibm.streamsx.rest;
 
+import static com.ibm.streamsx.topology.internal.context.streamsrest.StreamsKeys.getStreamsInstanceURL;
 import static java.util.Objects.requireNonNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
+import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
+import com.ibm.streamsx.rest.internal.RestUtils;
+import com.ibm.streamsx.topology.internal.context.streamsrest.StreamsKeys;
 
 /**
  * 
@@ -76,6 +81,33 @@ public class Instance extends Element {
     final static List<Instance> createInstanceList(AbstractStreamsConnection sc, String uri)
        throws IOException {        
         return createList(sc, uri, InstancesArray.class);
+    }
+    
+    public static Instance ofEndpoint(String endpoint, String name) throws IOException {
+        return ofEndpoint(endpoint, name, true);
+    }
+    public static Instance ofEndpoint(String endpoint, String name, boolean verify) throws IOException {
+               
+        ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(
+                requireNonNull(endpoint, "endpoint"), requireNonNull(name, "name"));
+        
+        JsonObject deploy = new JsonObject();
+        deploy.add(StreamsKeys.SERVICE_DEFINITION, authenticator.config(RestUtils.createExecutor(!verify)));
+        
+        URL instanceUrl  = new URL(getStreamsInstanceURL(deploy));
+
+        URL restUrl = new URL(instanceUrl.getProtocol(), instanceUrl.getHost(), instanceUrl.getPort(),
+                "/streams/rest/resources");
+                       
+        StreamsConnection conn = StreamsConnection.ofBearerToken(restUrl.toExternalForm(),
+                StreamsKeys.getBearerToken(deploy));
+        
+        if (!verify)
+            conn.allowInsecureHosts(true);
+                
+        Instance instance = conn.getInstance(name);
+
+        return instance;
     }
 
     /**
