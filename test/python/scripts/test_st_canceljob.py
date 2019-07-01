@@ -15,7 +15,7 @@ import streamsx.scripts.streamtool as streamtool
 #
 # Requires environment setup for a ICP4D Streams instance.
 
-@unittest.skipUnless('STREAMS_REST_URL' in os.environ and 'STREAMS_USERNAME' in os.environ and 'STREAMS_PASSWORD' in os.environ , "requires Streams REST API setup")
+@unittest.skipUnless('ICP4D_DEPLOYMENT_URL' in os.environ and 'STREAMS_INSTANCE_ID' in os.environ and 'STREAMS_USERNAME' in os.environ and 'STREAMS_PASSWORD' in os.environ , "requires Streams REST API setup")
 class TestCancelJob(unittest.TestCase):
     def _submit_job(self):
         topo = Topology()
