@@ -2613,6 +2613,25 @@ class _StreamsRestDelegator(object):
         return False
 
 class Toolkit(_ResourceElement):
+    """IBM Streams toolkit.
+
+    Attributes:
+        id(str): Unique ID for this instance.
+        resourceType(str): Identifies the REST resource type, which is *toolkit*. 
+        name(str): The name of the toolkit.
+        version(str): The version of the toolkit.
+        requiredProductVersion(str): The earliest version of Streams required by the toolkit.
+        path(str): The full path to the toolkit.
+
+    Example:
+        >>> from streamsx import rest
+        >>> sc = rest.StreamingAnalyticsConnection()
+        >>> instances = sc.get_toolkits()
+        >>> print (toolkits[0].resourceType)
+        toolkit
+
+        .. versionadded:: 1.13
+    """
     def __init__(self, json_rep, rest_client):
         super(Toolkit, self).__init__(json_rep, rest_client)
 
@@ -2650,6 +2669,21 @@ class Toolkit(_ResourceElement):
 
     @classmethod
     def from_local_toolkit(cls, sc, path):
+        """
+        Upload a toolkit from a directory in the local filesystem to 
+        the Streams instance.
+
+        Multiple versions of a toolkit may be uploaded as long as each has
+        a unique version.  If a toolkit is uploaded with a name and version
+        matching an existing toolkit, it will not replace the existing
+        toolkit, and ``None`` will be returned.
+       
+        Args:
+            sc(StreamsConnection): A connection to the Streams instance.
+            path(str): The path to the toolkit directory in the local filesystem.
+        Returns:
+            Toolkit: The created Toolkit, or ``None`` if it was not uploaded.
+        """
         # Handle path does not exist, is not readable, is not a directory
         if not os.path.isdir(path):
             raise ValueError('"' + path + '" is not a path or is not readable')
@@ -2676,7 +2710,6 @@ class Toolkit(_ResourceElement):
                         data=toolkit_fp,
                         verify=sc.rest_client.session.verify)
                     _handle_http_errors(res)
-
                     new_toolkits = list(cls(t, sc.rest_client) for t in res.json()['toolkits'])
 
                     # It may be possible to upload multiple toolkits in one 
@@ -2703,6 +2736,14 @@ class Toolkit(_ResourceElement):
         return resource_url, name
 
     class Dependency:
+        """
+        The name, and range of versions, of a toolkit required by another
+        toolkit.
+        
+        Attributes:
+            name(str): the name of the required toolkit
+            version(str): the range of versions required of the toolkit
+        """
         def __init__(self, name, version):
             self.name = name
             self.version = version
@@ -2712,6 +2753,13 @@ class Toolkit(_ResourceElement):
            
     @property
     def dependencies(self):
+        """
+        Find all the dependencies for this toolkit.
+        
+        Returns:
+            list(Dependency):  List of dependencies of this toolkit.  If this
+            toolkit does not have any dependencies, this will be an empty list.
+        """
         deps = []
         index = self.get_index()
         root = ElementTree.fromstring(index)
