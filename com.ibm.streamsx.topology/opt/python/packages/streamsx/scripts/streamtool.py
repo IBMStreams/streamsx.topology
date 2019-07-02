@@ -42,11 +42,11 @@ def _submitjob(instance, cmd_args):
     if cmd_args.jobname:
         job_config.job_name = cmd_args.jobname
 
-    if (cmd_args.P):
+    if cmd_args.P:
         for param in cmd_args.P:
             name_value_pair = param.split("=")
             if (len(name_value_pair) != 2):
-                print("The format of the following submission-time parameter is not valid: {}. The correct syntax is: <name>=<value>".format(param))
+                raise Exception("The format of the following submission-time parameter is not valid: {}. The correct syntax is: <name>=<value>".format(param))
             else:
                 job_config.submission_parameters[name_value_pair[0]] = name_value_pair[1]
 
@@ -340,8 +340,7 @@ def _create_appconfig_props(config_props, prop_list):
     for prop in prop_list:
         name_value_pair = prop.split("=")
         if (len(name_value_pair) != 2):
-            print("The format of the following property specification is not valid: {}. The correct syntax is: <name>=<value>".format(prop))
-            exit()
+            raise Exception("The format of the following property specification is not valid: {}. The correct syntax is: <name>=<value>".format(prop))
         config_props[name_value_pair[0]] = name_value_pair[1]
     return config_props
 
@@ -403,12 +402,14 @@ def main(args=None):
     """ Mimic streamtool using the REST api for ICP4D.
     """
     streamsx._streams._version._mismatch_check('streamsx.topology.context')
+    val = None
+    rc = 0
     try:
         val = run_cmd(args)
         rc = 0
     except:
         rc = 1
-        # print(sys.exc_info())
+        sys.exc_info()
         # sr = {'return_code':1, 'error': sys.exc_info()}
     return [rc, val]
 
