@@ -15,6 +15,7 @@
     <ant dir="samples/python" inheritAll="true"/>
     <ant dir="test/java" inheritAll="true"/>
     <ant dir="test/python" inheritAll="true"/>
+    <ant dir="test/python/rest/toolkits" inheritAll="true"/>
   </target>
 
   <target name="clean" >
@@ -24,6 +25,7 @@
   	<ant dir="samples/python" target="clean"/>
     <ant dir="toolkit" target="clean"/>
     <ant dir="test/java" target="clean"/>
+    <ant dir="test/python/rest/toolkits" target="clean"/>
     <delete dir="${tk.doc}/javadoc"/>
     <delete dir="${tk.doc}/spldoc"/>
     <delete dir="${tk.doc}/scaladoc"/>
