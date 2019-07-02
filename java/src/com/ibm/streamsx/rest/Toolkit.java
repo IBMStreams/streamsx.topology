@@ -7,9 +7,11 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.Expose;
 
 /**
@@ -24,10 +26,27 @@ public class Toolkit extends Element {
   private String version;
   // TODO the rest of the attributes
 
+  final static List<Toolkit> createToolkitList(AbstractStreamsConnection sc, JsonObject gsonToolkitString) {
+    if (gsonToolkitString.toString().isEmpty()) {
+      return Collections.emptyList();
+    }
+    try {
+      ToolkitsArray array = gson.fromJson(gsonToolkitString.toString(), ToolkitsArray.class);
+      for (Element e: array.elements()){
+        e.setConnection(sc);
+      }
+      
+      return array.elements();
+    }
+    catch (JsonSyntaxException e) {
+      return Collections.emptyList();
+    }
+  }
+
   final static List<Toolkit> createToolkitList(AbstractStreamsConnection sc, String uri)
        throws IOException {        
         return createList(sc, uri, ToolkitsArray.class);
-  }
+  }  
 
   public String getName() {
     return name;
@@ -37,13 +56,11 @@ public class Toolkit extends Element {
     return version;
   }
 
-  static Toolkit from_path(AbstractStreamsConnection sc, String path) {
-    // TODO verify path is readable, is directory
-    // possibly verify that the directory looks like a toolkit
-
-
+  public boolean delete() {
+    // TODO
+    return false;
   }
-  
+
   /**
    * internal usage to get list of toolkits
    */

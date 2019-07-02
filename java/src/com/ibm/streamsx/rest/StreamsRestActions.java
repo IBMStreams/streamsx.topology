@@ -5,7 +5,11 @@ import static com.ibm.streamsx.rest.StreamsRestUtils.requestGsonResponse;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.http.auth.AUTH;
+import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
@@ -13,6 +17,7 @@ import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.rest.internal.ZipStream;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 
 class StreamsRestActions {
@@ -62,4 +67,20 @@ class StreamsRestActions {
     	// TODO - error handling
     	return true;
     }
+
+  static Toolkit putToolkit(AbstractStreamsConnection connection, File path) throws IOException {
+    // TODO sanity check on path
+    String toolkitsURL = connection.getToolkitsURL();
+    Request post = Request.Post(toolkitsURL);
+    post.bodyStream(ZipStream.fromPath(path.toPath()), ContentType.create("application/zip"));
+
+    JsonObject response = requestGsonResponse(connection.getExecutor(), post);
+    List<Toolkit> toolkitList = Toolkit.createToolkitList(connection, response.toString());
+
+    // We expect a list of zero or one element.
+    if (toolkitList.size() == 0) {
+      return null;
+    }
+    return toolkitList.get(0);
+  }
 }

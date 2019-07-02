@@ -6,6 +6,7 @@ package com.ibm.streamsx.rest;
 
 import static java.util.Objects.requireNonNull;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -46,6 +47,11 @@ public class StreamsConnection {
      *
      * @return a connection to IBM Streams
      */
+    public static StreamsConnection createInstance(String userName,
+            String authToken, String url) {
+      return createInstance(userName, authToken, url, null);
+    }
+
     public static StreamsConnection createInstance(String userName,
             String authToken, String url, String buildUrl) {
     	if (userName == null) {
@@ -137,6 +143,10 @@ public class StreamsConnection {
 
     public List<Toolkit> getToolkits() throws IOException {
         return delegate().getToolkits();
+    }
+
+    public Toolkit putToolkit(File path) throws IOException {
+        return delegate().putToolkit(path);
     }
 
 

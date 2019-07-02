@@ -12,7 +12,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+
+import com.ibm.streamsx.rest.internal.ZipStream;
 
 import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.rest.Instance;
@@ -35,14 +44,14 @@ public class ToolkitAPITest {
     // also maybe @Before?
   }
 
-  @Test
+  //  @Test
   public void testSetupIntance() throws Exception {
     // TODO remove this test, it is useless
     setupInstance();
   }
 
   @Test
-  public void testGetToolkits() throws Exception {
+  public void testGetToolkits() throws Exception {    
     List<Toolkit> toolkits = connection.getToolkits();
     
     // We don't know what toolkits are present on the host, but
@@ -64,10 +73,26 @@ public class ToolkitAPITest {
 
   @Test
   public void testPostToolkit() throws Exception {
-    Toolkit bingo = Toolkit.from_path(connection, bingo_0_path);
+    assumeTrue(false);
+    Toolkit bingo = connection.putToolkit(bingo_0_path);
     assertNotNull(bingo);
-    assertEquals(bingo.getName(), bingo_tookit_name);
+    assertEquals(bingo.getName(), bingo_toolkit_name);
     assertEquals(bingo.getVersion(), bingo_0_version);
+  }
+
+  public InputStream zipFromPath(File tkdir) throws Exception {
+    Path tkpath = tkdir.toPath();
+    return ZipStream.fromPath(tkpath);
+  }
+
+  @Test
+  public void writeZip() throws Exception {
+    assumeTrue(false);
+    Path tkpath = bingo_0_path.toPath();
+    Path target = new File("foo.zip").toPath();
+    try (InputStream is = ZipStream.fromPath(tkpath)) {
+      Files.copy(is, target);
+    }
   }
 
   protected void setupConnection() throws Exception {
@@ -93,6 +118,7 @@ public class ToolkitAPITest {
     }
   }
 
+  // TODO this might not be needed.
   protected void setupInstance() throws Exception {
     setupConnection();
     
@@ -117,7 +143,11 @@ public class ToolkitAPITest {
     return Boolean.valueOf(v);
   }
 
-  private static final String bingo_0_path = "../python/rest/toolkits/bingo_tk0";
+
+  // TODO javaize these names
+  // TODO we can't really use a relative path here, because it is relative
+  // to the location where the test is run.
+  private static final File bingo_0_path = new File("../python/rest/toolkits/bingo_tk0");
   private static final String bingo_toolkit_name = "com.example.bingo";
   private static final String bingo_0_version = "1.0.0";
 }

@@ -132,6 +132,11 @@ abstract class AbstractStreamsConnection {
         return Toolkit.createToolkitList(this, getToolkitsURL());
     }
 
+    public Toolkit putToolkit(File path) throws IOException {
+        // TODO sanity check on path.
+        return StreamsRestActions.putToolkit(this, path);
+    }
+
     private String getInstancesURL() throws IOException {
     	if (instancesUrl == null) {
             // Query the resourcesUrl to find the instances URL
@@ -153,7 +158,8 @@ abstract class AbstractStreamsConnection {
     	return instancesUrl;
     }
 
-    private String getToolkitsURL() throws IOException {
+    // TODO private?
+    public String getToolkitsURL() throws IOException {
     	if (toolkitsUrl == null) {
             // Query the resourcesUrl to find the instances URL
             String response = getResponseString(buildUrl);
