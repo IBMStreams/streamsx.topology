@@ -146,9 +146,13 @@ class StreamsConnection:
     @property
     def build_resource_url(self):
         """str: Endpoint URL for IBM Streams REST build API.  This will be
-        None if the build endpoint is not defined for the remote service."""
+        None if the build endpoint is not defined for the remote service.
+
+        .. versionadded:: 1.13
+        """
         # This is the resource URL of the build API, which differs from
         # the resource URL of the Streams REST API.
+        
         if self._build_url:            
             return re.sub('/builds$','/resources', self._build_url)
         return None
@@ -260,7 +264,9 @@ class StreamsConnection:
         """Retrieves a list of all known Streams high-level Build REST resources.
 
         Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives.RestResource`: List of all Streams high-level REST resources.
+            :py:obj:`list` of :py:class:`~.rest_primitives.RestResource`: List of all Streams high-level Build REST resources.
+
+        .. versionadded:: 1.13
         """
         json_resources = self.rest_client.make_request(self.build_resource_url)['resources']
         return [RestResource(resource, self.rest_client) for resource in json_resources]
@@ -269,7 +275,9 @@ class StreamsConnection:
         """Retrieves a list of all installed Streams Toolkits.
 
         Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives.Installation`: List of all Installation resources.
+            :py:obj:`list` of :py:class:`~.rest_primitives.Toolkit`: List of all Toolkit resources.
+
+        .. versionadded:: 1.13
         """
         return self._get_build_elements('toolkits', Toolkit)
      
@@ -285,6 +293,8 @@ class StreamsConnection:
 
         Raises:
             ValueError: No matching toolkit exists.
+
+        .. versionadded:: 1.13
         """
         return self._get_build_element_by_id('toolkits', Toolkit, id)
 

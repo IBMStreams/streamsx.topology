@@ -1,0 +1,7 @@
+key1=value1
+key2=value2
+key3={"instance_id": "30ce9482-0fee-429e-9bfb-020ff6a176c7", "api_key": "0R7rSFeNVXjpOW6sCDTgaEN1CmvCM"}
+key4=value4
+key5=value5
+key6={"api_key": "0R7rSFeNVXjpOW6sCDTgaEN1CmvCM"}
+
