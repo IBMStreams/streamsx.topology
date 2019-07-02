@@ -23,7 +23,10 @@ import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.internal.context.JSONStreamsContext.AppEntity;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
+import com.ibm.streamsx.topology.internal.context.service.RemoteStreamingAnalyticsServiceStreamsContext;
+import com.ibm.streamsx.topology.internal.context.streamsrest.DistributedStreamsRestContext;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streams.InvokeSubmit;
@@ -66,7 +69,7 @@ public class DistributedStreamsContext extends
     	return instance;
     }
     
-    public synchronized Instance createInstance(AppEntity entity) throws IOException {
+    private synchronized Instance createInstance(AppEntity entity) throws IOException {
     	if (!useRestApi())
     		throw new IllegalStateException(/*internal error*/);
     	
@@ -112,7 +115,33 @@ public class DistributedStreamsContext extends
     		useRestApi.set(true);
     	}
     }
+    
+    @Override
+    protected final Future<BigInteger> action(AppEntity entity) throws Exception {
+        if (useRemoteBuild(entity, e -> 7))
+            return fullRemoteAction(entity);
 
+        return super.action(entity);
+    }
+    
+    /**
+     * Called to build and submit using REST.
+     * V5 path when remote build occurs due to being forced or
+     * non-matching operating system with instance.
+     */
+    protected Future<BigInteger> fullRemoteAction(AppEntity entity) throws Exception {
+        DistributedStreamsRestContext rc = new DistributedStreamsRestContext();
+        rc.submit(entity.submission);
+        JsonObject results = GsonUtilities.objectCreate(entity.submission,
+                RemoteContext.SUBMISSION_RESULTS);
+        String id = GsonUtilities.jstring(results, "id");
+        instance = rc.instance();
+        return new CompletedFuture<>(new BigInteger(id));
+    }
+
+    /**
+     * V4 path with local build and job submission using streamtool.
+     */
     @Override
     Future<BigInteger> invoke(AppEntity entity, File bundle) throws Exception {
         try {
@@ -138,6 +167,10 @@ public class DistributedStreamsContext extends
         }
     }
     
+    /**
+     * V5 path when local build occurred,
+     * (V5 is always job submission using REST).
+     */
     protected BigInteger invokeUsingRest(AppEntity entity, File bundle) throws Exception {
     	
     	Instance instance = createInstance(entity);

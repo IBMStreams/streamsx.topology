@@ -39,6 +39,10 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
         return Type.DISTRIBUTED;
     }
     
+    private Instance instance;
+    
+    public Instance instance() { return instance;}
+    
     @Override
     protected BuildService createSubmissionContext(JsonObject deploy) throws Exception {
         
@@ -81,7 +85,7 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
         if (!sslVerify(deploy))
             conn.allowInsecureHosts(true);
                 
-        Instance instance = conn.getInstance(instanceId);
+        instance = conn.getInstance(instanceId);
         
         JsonArray artifacts = GsonUtilities.array(GsonUtilities.object(result, "build"), "artifacts");
         try {
