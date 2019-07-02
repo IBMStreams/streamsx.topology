@@ -26,6 +26,10 @@ public class DistributedTester extends DistributedStreamsContext {
     		startTester(entity);
     }
     
+    /**
+     * V5 path when local build occurred,
+     * (V5 is always job submission using REST).
+     */
     @Override
     protected BigInteger invokeUsingRest(AppEntity entity, File bundle) throws Exception {
     	final BigInteger jobId = super.invokeUsingRest(entity, bundle);
@@ -33,6 +37,10 @@ public class DistributedTester extends DistributedStreamsContext {
     	return jobId;
     }
     
+    /**
+     * V5 path when remote build occurs due to being forced or
+     * non-matching operating system with instance.
+     */
     @Override
     protected Future<BigInteger> fullRemoteAction(AppEntity entity) throws Exception {
         final Future<BigInteger> job = super.fullRemoteAction(entity);
