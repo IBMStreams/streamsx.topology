@@ -45,8 +45,8 @@ def _submitjob(instance, cmd_args):
     if cmd_args.P:
         for param in cmd_args.P:
             name_value_pair = param.split("=")
-            if (len(name_value_pair) != 2):
-                raise Exception("The format of the following submission-time parameter is not valid: {}. The correct syntax is: <name>=<value>".format(param))
+            if len(name_value_pair) != 2:
+                raise ValueError("The format of the following submission-time parameter is not valid: {}. The correct syntax is: <name>=<value>".format(param))
             else:
                 job_config.submission_parameters[name_value_pair[0]] = name_value_pair[1]
 
@@ -340,7 +340,7 @@ def _create_appconfig_props(config_props, prop_list):
     for prop in prop_list:
         name_value_pair = prop.split("=")
         if (len(name_value_pair) != 2):
-            raise Exception("The format of the following property specification is not valid: {}. The correct syntax is: <name>=<value>".format(prop))
+            raise ValueError("The format of the following property specification is not valid: {}. The correct syntax is: <name>=<value>".format(prop))
         config_props[name_value_pair[0]] = name_value_pair[1]
     return config_props
 
@@ -396,22 +396,22 @@ def run_cmd(args=None):
     "getappconfig": _getappconfig,
     }
 
-    return switch[cmd_args.subcmd](instance, cmd_args)
+    extra_info = None
+    rc = 0
+    try:
+        extra_info = switch[cmd_args.subcmd](instance, cmd_args)
+    except:
+        rc = 1
+        # sys.exc_info()
+    return (rc, extra_info)
 
 def main(args=None):
     """ Mimic streamtool using the REST api for ICP4D.
     """
     streamsx._streams._version._mismatch_check('streamsx.topology.context')
-    val = None
-    rc = 0
-    try:
-        val = run_cmd(args)
-        rc = 0
-    except:
-        rc = 1
-        sys.exc_info()
-        # sr = {'return_code':1, 'error': sys.exc_info()}
-    return [rc, val]
+
+    rc, extra_info = run_cmd(args)
+    return rc
 
 def _parse_args(args):
     """ Argument parsing
@@ -437,16 +437,6 @@ def _user_arg(parser):
 
 
 if __name__ == '__main__':
-    sr = main()
-    if sr[0] == 0:
-        print(sr[1])
-    else:
-        print(sr[1], file=sys.stderr)
+    exit_code = main()
+    sys.exit(exit_code)
 
-    # rc = sr['return_code']
-    # del sr['return_code']
-    # if rc == 0:
-    #     print(sr)
-    # else:
-    #     print(sr['error'][1], file=sys.stderr)
-    # sys.exit(rc)
