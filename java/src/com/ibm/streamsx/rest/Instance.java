@@ -20,6 +20,7 @@ import com.google.gson.annotations.Expose;
 import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
 import com.ibm.streamsx.rest.internal.RestUtils;
 import com.ibm.streamsx.topology.internal.context.streamsrest.StreamsKeys;
+import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
  * 
@@ -131,6 +132,9 @@ public class Instance extends Element {
      */
     public static Instance ofEndpoint(String endpoint, String name, String userName, String password,
             boolean verify) throws IOException {
+        
+        if (name == null)
+            name = Util.getenv(Util.STREAMS_INSTANCE_ID);
                
         ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(
                 endpoint, name, userName, password);
