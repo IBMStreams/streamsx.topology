@@ -22,11 +22,10 @@ import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.rest.build.BuildService;
-import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
 import com.ibm.streamsx.rest.internal.RestUtils;
+import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
-import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
  * Distributed context that uses the REST api for building
@@ -49,9 +48,8 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
         if (!deploy.has(StreamsKeys.SERVICE_DEFINITION)) {
             // Obtain the ICP4D information from the Streams rest Url.
             
-            ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(
-                    Util.getenv(Util.ICP4D_DEPLOYMENT_URL),
-                    Util.getenv(Util.STREAMS_INSTANCE_ID));
+            // Use defaults from env.
+            ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(null, null, null, null);
             
             deploy.add(StreamsKeys.SERVICE_DEFINITION, authenticator.config(RestUtils.createExecutor(!sslVerify(deploy))));
         }
