@@ -60,17 +60,69 @@ def _submitjob(instance, cmd_args):
 def _canceljob_parser(subparsers):
     job_cancel = subparsers.add_parser('canceljob', help='Cancel a job.')
     job_cancel.add_argument('--jobs', '-j', help='Specifies a list of job IDs.', metavar='job-id')
-    job_cancel.add_argument('--force', action='store_true', help='Stop the service even if jobs are running.')
+    job_cancel.add_argument('--force', action='store_true', help='Stop the service even if jobs are running.', default=False)
+    job_cancel.add_argument('--jobnames', help='Specifies a list of job names')
+    job_cancel.add_argument('--file', '-f', help='Specifies the file that contains a list of job IDs, one per line')
+    job_cancel.add_argument('--collectlogs', help='Specifies to collect the log and trace files for each processing element that is associated with the job', action='store_true')
+
     _user_arg(job_cancel)
 
 def _canceljob(instance, cmd_args):
     """Cancel a job."""
-    for job in cmd_args.jobs.split(','):
-        _job_cancel(instance, job_id=int(job), force=cmd_args.force)
+    job_ids_to_cancel = []
+    job_names_to_cancel = []
 
-def _job_cancel(instance, job_id=None, job_name=None, force=False):
+    # if --jobs, get list of job IDs to cancel
+    if cmd_args.jobs:
+        job_ids = cmd_args.jobs.split(',')
+        job_ids_to_cancel.extend(job_ids)
+
+    # if --jobnames, get list of jobnames to cancel
+    if cmd_args.jobnames:
+        job_names = cmd_args.jobnames.split(',')
+        job_names_to_cancel.extend(job_names)
+
+    # if --file, get list of job IDs to cancel from file
+    if cmd_args.file:
+        my_file = open(cmd_args.file)
+        job_ids = [line.rstrip() for line in my_file if not line.isspace()]
+        my_file.close()
+        job_ids_to_cancel.extend(job_ids)
+
+    # Check if job w/ job ID exists, and if so cancel it
+    if job_ids_to_cancel:
+        for x in job_ids:
+            try:
+                job = instance.get_job(id=str(x))
+                _job_cancel(instance, x, cmd_args.collectlogs, cmd_args.force)
+            except:
+                print("The following job ID was not found {}".format(x))
+                print("The following job ID cannot be canncelled: {}. See the previous error message".format(x))
+
+    # Check if job w/ job name exists, and if so cancel it
+    if job_names_to_cancel:
+        for x in job_names_to_cancel:
+            jobs = instance.get_jobs(name=str(x))
+            if jobs:
+                job = jobs[0]
+                _job_cancel(instance, job.id, cmd_args.collectlogs, cmd_args.force)
+            else:
+                print("The following job name is not found: {}. Specify a job name that is valid and try the request again".format(x))
+
+def _job_cancel(instance, job_id=None, collectlogs=False, force=False):
     job = instance.get_job(id=str(job_id))
-    job.cancel(force)
+    if collectlogs:
+        log_path = job.retrieve_log_trace()
+        if log_path:
+            print("The log files for the {} job ID will be collected in the following files: {}".format(job_id, log_path))
+        else:
+            raise Exception("Retrieval of job's logs is not supported in this version of IBM Streams")
+    val = job.cancel(force)
+    # Check if job cancelled succesfully
+    if val:
+        print("The following job ID was canncelled: {}. The job was in the {} instance.".format(job_id, instance.id))
+    else:
+        raise Exception("One or more jobs failed to stop")
 
 
 ###########################################
