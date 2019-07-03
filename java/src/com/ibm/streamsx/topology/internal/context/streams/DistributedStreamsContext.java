@@ -79,8 +79,7 @@ public class DistributedStreamsContext extends
 		    if (deploy(entity.submission).has(ContextProperties.SSL_VERIFY))
 		        verify = deploy(entity.submission).get(ContextProperties.SSL_VERIFY).getAsBoolean();
 		    instance = Instance.ofEndpoint(
-		            Util.getenv(Util.ICP4D_DEPLOYMENT_URL),
-		            Util.getenv(Util.STREAMS_INSTANCE_ID),
+		            (String) null, (String) null, (String) null, (String) null,
 		            verify);		    
 		} else {
 		    

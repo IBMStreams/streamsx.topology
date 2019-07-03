@@ -83,13 +83,57 @@ public class Instance extends Element {
         return createList(sc, uri, InstancesArray.class);
     }
     
-    public static Instance ofEndpoint(String endpoint, String name) throws IOException {
-        return ofEndpoint(endpoint, name, true);
+    /**
+     * Connect to a Streams service REST API.
+     * 
+     * Supported for Cloud Pak for Data. The endpoint is the Cloud Pak for Data
+     * deployment URL.
+     * 
+     * <P>
+     * This call is equivalent to {@link #ofEndpoint(String, String, String, String, boolean)}
+     * passing {@code true} for <em>verify</em>.
+     * </P>
+     * 
+     * @param endpoint Endpoint URL for Streams instance, if {@code null} defaults to environment variable
+     * {@code ICPD_URL}.
+     * @param name Streams service name, if {@code null} defaults to environment variable {@code STREAMS_INSTANCE_NAME}.
+     * @param userName User name, if {@code null} defaults to environment variable {@code STREAMS_USERNAME} if set,
+     *     otherwise the operating user identifier.
+     * @param password Password, if {@code null} defaults to environment variable {@code STREAMS_PASSWORD}.
+
+     * @return Connection to Streams instance using REST API.
+     * @throws IOException Error connecting to instance.
+     * 
+     * @since 1.13
+     */
+    public static Instance ofEndpoint(String endpoint, String name, String userName, String password) throws IOException {
+        return ofEndpoint(endpoint, name, userName, password, true);
     }
-    public static Instance ofEndpoint(String endpoint, String name, boolean verify) throws IOException {
+    
+    /**
+     * Connect to a Streams service REST API.
+     * 
+     * Supported for Cloud Pak for Data. The endpoint is the Cloud Pak for Data
+     * deployment URL.
+     * 
+     * @param endpoint Endpoint URL for Streams instance, if {@code null} defaults to environment variable
+     * {@code ICPD_URL}.
+     * @param name Streams service name, if {@code null} defaults to environment variable {@code STREAMS_INSTANCE_NAME}.
+     * @param userName User name, if {@code null} defaults to environment variable {@code STREAMS_USERNAME} if set,
+     *     otherwise the operating user identifier.
+     * @param password Password, if {@code null} defaults to environment variable {@code STREAMS_PASSWORD}.
+     * @param verify False to disable SSL host verification.
+
+     * @return Connection to Streams instance using REST API.
+     * @throws IOException Error connecting to instance.
+     * 
+     * @since 1.13
+     */
+    public static Instance ofEndpoint(String endpoint, String name, String userName, String password,
+            boolean verify) throws IOException {
                
         ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(
-                requireNonNull(endpoint, "endpoint"), requireNonNull(name, "name"));
+                endpoint, name, userName, password);
         
         JsonObject deploy = new JsonObject();
         deploy.add(StreamsKeys.SERVICE_DEFINITION, authenticator.config(RestUtils.createExecutor(!verify)));
