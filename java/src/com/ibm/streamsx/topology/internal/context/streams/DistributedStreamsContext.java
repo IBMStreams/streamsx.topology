@@ -20,12 +20,9 @@ import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.Result;
-import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
-import com.ibm.streamsx.topology.internal.context.JSONStreamsContext.AppEntity;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
-import com.ibm.streamsx.topology.internal.context.service.RemoteStreamingAnalyticsServiceStreamsContext;
 import com.ibm.streamsx.topology.internal.context.streamsrest.DistributedStreamsRestContext;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
@@ -51,15 +48,15 @@ public class DistributedStreamsContext extends
         return Type.DISTRIBUTED;
     }
     
-    private StreamsConnection getConfigConnection(AppEntity entity) {
-    	
-    	Map<String,Object> config = entity.config;
-    	if (config != null && config.containsKey(ContextProperties.STREAMS_CONNECTION)) {  	    
-    		Object conn = config.get(ContextProperties.STREAMS_CONNECTION);   		
-    		if (conn instanceof StreamsConnection)
-    			return (StreamsConnection) conn;
-    	}
-    	return null;
+    private Instance getConfigInstance(AppEntity entity) {
+        
+        Map<String,Object> config = entity.config;
+        if (config != null && config.containsKey(ContextProperties.STREAMS_INSTANCE)) {       
+            Object instance = config.get(ContextProperties.STREAMS_INSTANCE);         
+            if (instance instanceof Instance)
+                return (Instance) instance;
+        }
+        return null;
     }
     
     public synchronized Instance instance() throws IOException {
@@ -73,23 +70,15 @@ public class DistributedStreamsContext extends
     	if (!useRestApi())
     		throw new IllegalStateException(/*internal error*/);
     	
-		StreamsConnection conn = getConfigConnection(entity);        
-		if (conn == null) {
+		Instance instance = getConfigInstance(entity);        
+		if (instance == null) {
 		    boolean verify = true;
 		    if (deploy(entity.submission).has(ContextProperties.SSL_VERIFY))
 		        verify = deploy(entity.submission).get(ContextProperties.SSL_VERIFY).getAsBoolean();
 		    instance = Instance.ofEndpoint(
 		            (String) null, (String) null, (String) null, (String) null,
 		            verify);		    
-		} else {
-		    
-
-            String instanceName = System.getenv(Util.STREAMS_INSTANCE_ID);
-            if (instanceName == null)
-                instance = conn.getInstances().get(0);
-            else
-                instance = conn.getInstance(instanceName);
-        }
+		}
 		return instance;
 	}
     
@@ -97,8 +86,8 @@ public class DistributedStreamsContext extends
     @Override
     protected void preSubmit(AppEntity entity) {
             	
-    	if (getConfigConnection(entity) != null) {  		
-    	    // Allow the config to provide a connection.
+    	if (getConfigInstance(entity) != null) {  		
+    	    // Allow the config to provide an instance.
     		useRestApi.set(true);
     		return;
     	}
