@@ -38,11 +38,6 @@ def captured_output():
 
 class TestAppconfig(unittest.TestCase):
 
-    instance = os.environ['STREAMS_INSTANCE_ID']
-    stringLength = 10
-    username = os.environ['STREAMS_USERNAME']
-    appConfigs = []
-
     # Create the application config
     def _make_appconfig(
         self, config_name, props=None, prop_file=None, description=None
@@ -112,6 +107,13 @@ class TestAppconfig(unittest.TestCase):
         instance = Instance.of_endpoint(username= self.username, verify=False)
         configs = instance.get_application_configurations(name=name)[0]
         return configs
+
+
+    def setUp(self):
+        self.instance = os.environ['STREAMS_INSTANCE_ID']
+        self.stringLength = 10
+        self.username = os.environ['STREAMS_USERNAME']
+        self.appConfigs = []
 
     ###########################################
     # mkappconfig
