@@ -229,8 +229,7 @@ def _rmappconfig(instance, cmd_args):
     config_name = cmd_args.config_name
     configs = instance.get_application_configurations(name = config_name)
     if (not configs):
-        print("The {} application configuration does not exist in the {} instance".format(config_name, instance.id))
-        return
+        raise NameError("The {} application configuration does not exist in the {} instance".format(config_name, instance.id))
     app_config = instance.get_application_configurations(name = config_name)[0]
 
     # No confirmation required, delete
@@ -259,7 +258,7 @@ def _mkappconfig(instance, cmd_args):
 
     # Check if config exists by that name, if so don't do anything
     if instance.get_application_configurations(config_name):
-        print("The {} application configuration already exists in the following {} instance".format(config_name, instance.id))
+        raise Exception("The {} application configuration already exists in the following {} instance".format(config_name, instance.id))
     else:
         # No appconfig exists by that name, create new one
         appconfig =  instance.create_application_configuration(name=config_name, properties=config_props, description=config_description)
@@ -287,7 +286,7 @@ def _chappconfig(instance, cmd_args):
             return newAppconfig
     else:
         # No appconfig exists by that name
-        print("The {} application configuration does not exist in the {} instance".format(config_name, instance.id))
+        raise NameError("The {} application configuration does not exist in the {} instance".format(config_name, instance.id))
 
 
 def _get_config_details(cmd_args, mk):
@@ -357,13 +356,11 @@ def _getappconfig(instance, cmd_args):
     configs = instance.get_application_configurations(name = config_name)
     # Check if any configs by that name
     if (not configs):
-        print("No application configuration by the name {}".format(config_name))
-        return
+        raise NameError("No application configuration by the name {}".format(config_name))
     config = configs[0]
     config_props = config.properties
     if not config_props:
-        print("The {} application configuration has no properties defined".format(config_name))
-        return
+        raise Exception("The {} application configuration has no properties defined".format(config_name))
 
     for key, value in config_props.items():
         try:
@@ -400,8 +397,9 @@ def run_cmd(args=None):
     rc = 0
     try:
         extra_info = switch[cmd_args.subcmd](instance, cmd_args)
-    except:
+    except Exception as e:
         rc = 1
+        print(e)
         # sys.exc_info()
     return (rc, extra_info)
 
