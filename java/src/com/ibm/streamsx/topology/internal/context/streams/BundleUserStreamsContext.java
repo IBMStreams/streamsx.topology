@@ -90,21 +90,23 @@ abstract class BundleUserStreamsContext<T> extends JSONStreamsContext<T> {
             //
             // cpe:/o:centos:linux:6:GA
             // cpe:/o/redhat:enterprise_linux:7.2:ga:server
-           
+
             File cpeFile = new File("/etc/system-release-cpe");
             if (!cpeFile.isFile())
                 return true;
+            
             List<String> lines = Files.readAllLines(cpeFile.toPath());
             
             String osVendor = null;
             String osVersion = null;
+            @SuppressWarnings("unused")
             String osUpdate = null;
             for (String cpe : lines) {
                 cpe = cpe.trim();
                 if (!cpe.startsWith("cpe:"))
                     continue;
                 String[] comps = cpe.split(":");
-                if (comps.length < 6)
+                if (comps.length < 5)
                     continue;
                 if (!"cpe".equals(comps[0]))
                     continue;  
@@ -114,16 +116,16 @@ abstract class BundleUserStreamsContext<T> extends JSONStreamsContext<T> {
                 if (!comps[2].isEmpty()) {
                     osVendor = comps[2];
                     osVersion = comps[4];
-                    osUpdate = comps[5];
+                    if (comps.length >= 6)
+                        osUpdate = comps[5];
                 }
             }
             
             // If we can' determine the info, force remote
             if (osVendor == null || osVendor.isEmpty())
                 return true;
+
             if (osVersion == null || osVersion.isEmpty())
-                return true;
-            if (osUpdate == null || osUpdate.isEmpty())
                 return true;
             
             if (!"centos".equals(osVendor) && !"redhat".equals(osVendor))
@@ -132,7 +134,6 @@ abstract class BundleUserStreamsContext<T> extends JSONStreamsContext<T> {
             double version = Double.valueOf(osVersion);
             if (version < 6)
                 return true;
-            
             
             if (serviceBaseGetter != null) {
                 // Compare base versions, ir it doesn't exactly match the
@@ -147,7 +148,6 @@ abstract class BundleUserStreamsContext<T> extends JSONStreamsContext<T> {
             // Can't determine information, force remote.
             return true;
         }
-     
         return false;
     }
 }

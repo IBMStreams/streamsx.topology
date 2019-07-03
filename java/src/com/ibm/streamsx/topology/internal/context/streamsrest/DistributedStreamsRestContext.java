@@ -39,13 +39,19 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
         return Type.DISTRIBUTED;
     }
     
+    private Instance instance;
+    
+    public Instance instance() { return instance;}
+    
     @Override
     protected BuildService createSubmissionContext(JsonObject deploy) throws Exception {
         
         if (!deploy.has(StreamsKeys.SERVICE_DEFINITION)) {
             // Obtain the ICP4D information from the Streams rest Url.
             
-            ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(Util.getenv(Util.STREAMS_REST_URL));
+            ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(
+                    Util.getenv(Util.ICP4D_DEPLOYMENT_URL),
+                    Util.getenv(Util.STREAMS_INSTANCE_ID));
             
             deploy.add(StreamsKeys.SERVICE_DEFINITION, authenticator.config(RestUtils.createExecutor(!sslVerify(deploy))));
         }
@@ -79,7 +85,7 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
         if (!sslVerify(deploy))
             conn.allowInsecureHosts(true);
                 
-        Instance instance = conn.getInstance(instanceId);
+        instance = conn.getInstance(instanceId);
         
         JsonArray artifacts = GsonUtilities.array(GsonUtilities.object(result, "build"), "artifacts");
         try {

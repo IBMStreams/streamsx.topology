@@ -4,13 +4,14 @@
  */
 package com.ibm.streamsx.topology.internal.context.streamsrest;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.Objects;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
-interface StreamsKeys {
+public interface StreamsKeys {
     
     String SERVICE_DEFINITION = "topology.service.definition";
     
@@ -32,7 +33,7 @@ interface StreamsKeys {
         
         return url;
     }
-    static String getStreamsInstanceURL(JsonObject deploy) throws Exception {
+    static String getStreamsInstanceURL(JsonObject deploy) throws IOException {
         String url = getConnectionInfo(deploy, STREAMS_REST_ENDPOINT);
         url = Objects.requireNonNull(url);
         URL u = new URL(url);
