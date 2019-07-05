@@ -91,13 +91,13 @@ def _canceljob(instance, cmd_args):
 
     # Check if job w/ job ID exists, and if so cancel it
     if job_ids_to_cancel:
-        for x in job_ids:
+        for x in job_ids_to_cancel:
             try:
                 job = instance.get_job(id=str(x))
                 _job_cancel(instance, x, cmd_args.collectlogs, cmd_args.force)
             except:
                 print("The following job ID was not found {}".format(x))
-                print("The following job ID cannot be canncelled: {}. See the previous error message".format(x))
+                print("The following job ID cannot be canceled: {}. See the previous error message".format(x))
 
     # Check if job w/ job name exists, and if so cancel it
     if job_names_to_cancel:
@@ -117,10 +117,11 @@ def _job_cancel(instance, job_id=None, collectlogs=False, force=False):
             print("The log files for the {} job ID will be collected in the following files: {}".format(job_id, log_path))
         else:
             raise Exception("Retrieval of job's logs is not supported in this version of IBM Streams")
+
+    # Cancel job, and check if successful
     val = job.cancel(force)
-    # Check if job cancelled succesfully
     if val:
-        print("The following job ID was canncelled: {}. The job was in the {} instance.".format(job_id, instance.id))
+        print("The following job ID was canceled: {}. The job was in the {} instance.".format(job_id, instance.id))
     else:
         raise Exception("One or more jobs failed to stop")
 
