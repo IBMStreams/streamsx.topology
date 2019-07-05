@@ -61,6 +61,7 @@ def _canceljob_parser(subparsers):
     job_cancel = subparsers.add_parser('canceljob', help='Cancel a job.')
     job_cancel.add_argument('--force', action='store_true', help='Stop the service even if jobs are running.', default=False)
     job_cancel.add_argument('--collectlogs', help='Specifies to collect the log and trace files for each processing element that is associated with the job', action='store_true')
+    # Only 1 of these arguments --jobs, --jobnames, --file can be specified at any given time when running this command
     g1 = job_cancel.add_argument_group(title='jobs jobnames file group', description='One of these options must be chosen.')
     group = g1.add_mutually_exclusive_group(required=True)
     group.add_argument('--jobs', '-j', help='Specifies a list of job IDs.', metavar='job-id')
@@ -102,7 +103,7 @@ def _canceljob(instance, cmd_args):
                     print("The following job ID was not found {}".format(x))
                     print("The following job ID cannot be canceled: {}. See the previous error message".format(x))
             else:
-                raise ValueError("The following job identifier is not valid: {}. Specify a job identifier that is numeric and try the request again.".format(job_ids))
+                raise ValueError("The following job identifier is not valid: {}. Specify a job identifier that is numeric and try the request again.".format(x))
 
     # Check if job w/ job name exists, and if so cancel it
     if job_names_to_cancel:
