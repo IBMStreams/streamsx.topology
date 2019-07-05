@@ -85,6 +85,7 @@ class TestCancelJob(unittest.TestCase):
         self._check_job_cancelled(job2)
         self._check_job_cancelled(job3)
 
+    # Check all existant jobs cancel properly regaurdless of whether specifying --job <job_id,> or --jobnames <job_names>
     def test_cancel_multiple_mix(self):
         job1 = self._submit_job()
         job2 = self._submit_job()
@@ -105,10 +106,10 @@ class TestCancelJob(unittest.TestCase):
 
         output = output.splitlines()
 
-        self.assertEqual(output[0], self.get_output_message(job1, 1))
-        self.assertEqual(output[1], self.get_output_message(job2, 1))
-        self.assertEqual(output[2], self.get_output_message(job3, 1))
-        self.assertEqual(output[3], self.get_output_message(job4, 1))
+        self.assertEqual(output[0], self.get_canceljob_output_message(job1, 1))
+        self.assertEqual(output[1], self.get_canceljob_output_message(job2, 1))
+        self.assertEqual(output[2], self.get_canceljob_output_message(job3, 1))
+        self.assertEqual(output[3], self.get_canceljob_output_message(job4, 1))
 
         self._check_job_cancelled(job1)
         self._check_job_cancelled(job2)
@@ -116,16 +117,66 @@ class TestCancelJob(unittest.TestCase):
         self._check_job_cancelled(job4)
         self.assertEqual(rc, 0)
 
-    def get_output_message(self, job, returnMessage):
+    def test_cancel_multiple_mix_2(self):
+        job1 = self._submit_job()
+        job2 = self._submit_job()
+        job3 = self._submit_job()
+        job4 = self._submit_job()
+        job5 = self._submit_job()
+        job6 = self._submit_job()
+
+        self.write_file([job5.id, job6.id])
+        self.jobs_to_cancel.extend([job1, job2, job3, job4, job5, job6])
+
+        output, rc = self.get_output(
+            lambda: self._run_canceljob(
+                args=[
+                    "--jobs",
+                    str(job1.id) + "," + str(job2.id),
+                    "--jobnames",
+                    str(job3.name) + "," + str(job4.name),
+                    "--file",
+                    str("test_st_canceljob_tempfile.txt"),
+                ]
+            )
+        )
+
+
+
+        output = output.splitlines()
+        output.sort()
+
+        self.assertEqual(output[0], self.get_canceljob_output_message(job1, 1))
+        self.assertEqual(output[1], self.get_canceljob_output_message(job2, 1))
+        self.assertEqual(output[2], self.get_canceljob_output_message(job3, 1))
+        self.assertEqual(output[3], self.get_canceljob_output_message(job4, 1))
+        self.assertEqual(output[4], self.get_canceljob_output_message(job5, 1))
+        self.assertEqual(output[5], self.get_canceljob_output_message(job6, 1))
+
+
+        self._check_job_cancelled(job1)
+        self._check_job_cancelled(job2)
+        self._check_job_cancelled(job3)
+        self._check_job_cancelled(job4)
+        self._check_job_cancelled(job5)
+        self._check_job_cancelled(job6)
+        self.assertEqual(rc, 0)
+
+    def write_file(self, jobIDs):
+        with open("test_st_canceljob_tempfile.txt", "w") as f:
+            for jobID in jobIDs:
+                f.write("%s\n" % jobID)
+
+    def get_canceljob_output_message(self, job, returnMessage):
         switch = {
-            1: "The following job ID was canncelled: {}. The job was in the {} instance.".format(
+            1: "The following job ID was canceled: {}. The job was in the {} instance.".format(
                 job.id, self.instance
             ),
             2: "The following job name is not found: {}. Specify a job name that is valid and try the request again".format(
                 job.name
             ),
             3: "The following job ID was not found {}".format(job.id),
-            4: "The following job ID cannot be canncelled: {}. See the previous error message".format(
+            4: "The following job ID cannot be canceled: {}. See the previous error message".format(
                 job.id
             ),
         }
@@ -140,6 +191,8 @@ class TestCancelJob(unittest.TestCase):
     def tearDown(self):
         for job in self.jobs_to_cancel:
             job.cancel(force=True)
+        if os.path.exists("test_st_canceljob_tempfile.txt"):
+            os.remove("test_st_canceljob_tempfile.txt")
 
     def get_output(self, my_function):
         """ Helper function that gets the ouput from executing my_function
