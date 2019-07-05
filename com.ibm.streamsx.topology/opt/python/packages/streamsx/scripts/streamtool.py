@@ -59,11 +59,13 @@ def _submitjob(instance, cmd_args):
 ###########################################
 def _canceljob_parser(subparsers):
     job_cancel = subparsers.add_parser('canceljob', help='Cancel a job.')
-    job_cancel.add_argument('--jobs', '-j', help='Specifies a list of job IDs.', metavar='job-id')
     job_cancel.add_argument('--force', action='store_true', help='Stop the service even if jobs are running.', default=False)
-    job_cancel.add_argument('--jobnames', help='Specifies a list of job names')
-    job_cancel.add_argument('--file', '-f', help='Specifies the file that contains a list of job IDs, one per line')
     job_cancel.add_argument('--collectlogs', help='Specifies to collect the log and trace files for each processing element that is associated with the job', action='store_true')
+    g1 = job_cancel.add_argument_group(title='jobs jobnames file group', description='One of these options must be chosen.')
+    group = g1.add_mutually_exclusive_group(required=True)
+    group.add_argument('--jobs', '-j', help='Specifies a list of job IDs.', metavar='job-id')
+    group.add_argument('--jobnames', help='Specifies a list of job names')
+    group.add_argument('--file', '-f', help='Specifies the file that contains a list of job IDs, one per line')
 
     _user_arg(job_cancel)
 
@@ -92,12 +94,15 @@ def _canceljob(instance, cmd_args):
     # Check if job w/ job ID exists, and if so cancel it
     if job_ids_to_cancel:
         for x in job_ids_to_cancel:
-            try:
-                job = instance.get_job(id=str(x))
-                _job_cancel(instance, x, cmd_args.collectlogs, cmd_args.force)
-            except:
-                print("The following job ID was not found {}".format(x))
-                print("The following job ID cannot be canceled: {}. See the previous error message".format(x))
+            if x.isnumeric():
+                try:
+                    job = instance.get_job(id=str(x))
+                    _job_cancel(instance, x, cmd_args.collectlogs, cmd_args.force)
+                except:
+                    print("The following job ID was not found {}".format(x))
+                    print("The following job ID cannot be canceled: {}. See the previous error message".format(x))
+            else:
+                raise ValueError("The following job identifier is not valid: {}. Specify a job identifier that is numeric and try the request again.".format(job_ids))
 
     # Check if job w/ job name exists, and if so cancel it
     if job_names_to_cancel:
