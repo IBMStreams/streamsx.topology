@@ -261,6 +261,31 @@ class TestCancelJob(unittest.TestCase):
         self.assertEqual(rc, 0)
         self._check_job_cancelled(job1)
 
+    def test_cancel_collectlogs(self):
+        job1 = self._submit_job()
+        job2 = self._submit_job()
+        job3 = self._submit_job()
+
+        self.jobs_to_cancel.extend([job1, job2, job3])
+
+        self._run_canceljob(
+            args=["--jobs", str(job1.id) + "," + str(job2.id) + "," + str(job3.id), "--collectlogs"]
+        )
+        self._check_job_cancelled(job1)
+        self._check_job_cancelled(job2)
+        self._check_job_cancelled(job3)
+
+        # Check log files were generated for each job
+        checkFiles = [job1, job2, job3]
+        for job in [job1, job2, job3]:
+            for file in os.listdir("."):
+                if os.path.isfile(file) and file.startswith("job_" + str(job.id)):
+                    if os.path.exists(str(file)):
+                        os.remove(file)
+                        checkFiles.remove(job)
+        self.assertEqual(checkFiles, [])
+
+
     def setUp(self):
         self.instance = os.environ["STREAMS_INSTANCE_ID"]
         self.username = os.environ["STREAMS_USERNAME"]
