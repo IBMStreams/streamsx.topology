@@ -18,6 +18,9 @@ import json
 import streamsx.topology.context
 from streamsx.rest import Instance
 
+# Return code
+_rc = 0
+
 ###########################################
 # submitjob
 ###########################################
@@ -72,6 +75,7 @@ def _canceljob_parser(subparsers):
 
 def _canceljob(instance, cmd_args):
     """Cancel a job."""
+    global _rc
     job_ids_to_cancel = []
     job_names_to_cancel = []
 
@@ -102,6 +106,7 @@ def _canceljob(instance, cmd_args):
                 except:
                     print("The following job ID was not found {}".format(x))
                     print("The following job ID cannot be canceled: {}. See the previous error message".format(x))
+                    _rc = 1
             else:
                 raise ValueError("The following job identifier is not valid: {}. Specify a job identifier that is numeric and try the request again.".format(x))
 
@@ -114,6 +119,7 @@ def _canceljob(instance, cmd_args):
                 _job_cancel(instance, job.id, cmd_args.collectlogs, cmd_args.force)
             else:
                 print("The following job name is not found: {}. Specify a job name that is valid and try the request again".format(x))
+                _rc = 1
 
 def _job_cancel(instance, job_id=None, collectlogs=False, force=False):
     job = instance.get_job(id=str(job_id))
@@ -453,14 +459,15 @@ def run_cmd(args=None):
     }
 
     extra_info = None
-    rc = 0
+    global _rc
+    _rc = 0
     try:
         extra_info = switch[cmd_args.subcmd](instance, cmd_args)
     except Exception as e:
-        rc = 1
+        _rc = 1
         print(e)
         # sys.exc_info()
-    return (rc, extra_info)
+    return (_rc, extra_info)
 
 def main(args=None):
     """ Mimic streamtool using the REST api for ICP4D.
@@ -468,6 +475,7 @@ def main(args=None):
     streamsx._streams._version._mismatch_check('streamsx.topology.context')
 
     rc, extra_info = run_cmd(args)
+    # print(rc)
     return rc
 
 def _parse_args(args):
