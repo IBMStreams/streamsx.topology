@@ -235,7 +235,7 @@ class TestCancelJob(unittest.TestCase):
         self.assertEqual(output[0], self.get_canceljob_output_message("123456", 3))
         self.assertEqual(output[1], self.get_canceljob_output_message("123456", 4))
         self.assertEqual(output[2], self.get_canceljob_output_message(job2.id, 1))
-        self.assertEqual(rc, 0)
+        self.assertEqual(rc, 1)
         self._check_job_cancelled(job2)
 
     # Check invalid jobname error message, then check valid jobname cancellation message
@@ -258,9 +258,10 @@ class TestCancelJob(unittest.TestCase):
         )
         self.assertEqual(output[1], self.get_canceljob_output_message(job1.id, 1))
 
-        self.assertEqual(rc, 0)
+        self.assertEqual(rc, 1)
         self._check_job_cancelled(job1)
 
+    # if --collectlogs given, make sure it generates the logs
     def test_cancel_collectlogs(self):
         job1 = self._submit_job()
         job2 = self._submit_job()
@@ -269,7 +270,11 @@ class TestCancelJob(unittest.TestCase):
         self.jobs_to_cancel.extend([job1, job2, job3])
 
         self._run_canceljob(
-            args=["--jobs", str(job1.id) + "," + str(job2.id) + "," + str(job3.id), "--collectlogs"]
+            args=[
+                "--jobs",
+                str(job1.id) + "," + str(job2.id) + "," + str(job3.id),
+                "--collectlogs",
+            ]
         )
         self._check_job_cancelled(job1)
         self._check_job_cancelled(job2)
@@ -284,7 +289,6 @@ class TestCancelJob(unittest.TestCase):
                         os.remove(file)
                         checkFiles.remove(job)
         self.assertEqual(checkFiles, [])
-
 
     def setUp(self):
         self.instance = os.environ["STREAMS_INSTANCE_ID"]
@@ -302,11 +306,26 @@ class TestCancelJob(unittest.TestCase):
     ###########################################
 
     def write_file(self, jobIDs):
+        """Create a file in the current directory w/ the name test_st_canceljob_tempfile.txt, containing jobIDs, with each jobID on a newline.
+        File should be deleted by teardown method
+
+        Arguments:
+            jobIDs {List} -- List containg JobIDs 
+        """
         with open("test_st_canceljob_tempfile.txt", "w") as f:
             for jobID in jobIDs:
                 f.write("%s\n" % jobID)
 
     def get_canceljob_output_message(self, job_data, returnMessage):
+        """Helper function to retrieve the correct return message for a given canceljob command
+
+        Arguments:
+            job_data {String} -- Either job.id or job.name
+            returnMessage {1} -- The number representing the desired/correct output for the given canceljob command
+
+        Returns:
+            [String] -- the message
+        """
         switch = {
             1: "The following job ID was canceled: {}. The job was in the {} instance.".format(
                 job_data, self.instance
