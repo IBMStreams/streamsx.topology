@@ -134,21 +134,19 @@ public class DistributedStreamsContext extends
     Future<BigInteger> invoke(AppEntity entity, File bundle) throws Exception {
         try {
             if (useRestApi()) {
-                Future<BigInteger> submit = EXECUTOR.submit(() -> invokeUsingRest(entity, bundle));
-                // Wait for it to complete to ensure the results file.
-                submit.get();
-                return submit;
+                final BigInteger jobId = invokeUsingRest(entity, bundle);
+                return new CompletedFuture<>(jobId);
             }
 
             InvokeSubmit submitjob = new InvokeSubmit(bundle);
 
-            BigInteger jobId = submitjob.invoke(deploy(entity.submission), null, null);
+            final BigInteger jobId = submitjob.invoke(deploy(entity.submission), null, null);
             
             final JsonObject submissionResult = GsonUtilities.objectCreate(entity.submission, RemoteContext.SUBMISSION_RESULTS);
             submissionResult.addProperty(SubmissionResultsKeys.JOB_ID, jobId.toString());
             submissionResult.addProperty(SubmissionResultsKeys.INSTANCE_ID, Util.getDefaultInstanceId());
             
-            return new CompletedFuture<BigInteger>(jobId);
+            return new CompletedFuture<>(jobId);
         } finally {
             if (!keepArtifacts(entity.submission))
                 bundle.delete();
@@ -161,15 +159,15 @@ public class DistributedStreamsContext extends
      */
     protected BigInteger invokeUsingRest(AppEntity entity, File bundle) throws Exception {
     	
-    	Instance instance = createInstance(entity);
-
+    	instance = createInstance(entity);
+    	
     	Result<Job, JsonObject> result = instance.submitJob(bundle, deploy(entity.submission));
     	
     	result.getRawResult().addProperty(SubmissionResultsKeys.INSTANCE_ID, instance.getId());
     	final JsonObject submissionResult = GsonUtilities.objectCreate(entity.submission, RemoteContext.SUBMISSION_RESULTS);
     	for (Entry<String, JsonElement> kv : result.getRawResult().entrySet())
     	    submissionResult.add(kv.getKey(), kv.getValue());
-    	
+
     	return new BigInteger(result.getId());
     }
 }
