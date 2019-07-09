@@ -137,6 +137,10 @@ abstract class AbstractStreamsConnection {
         return StreamsRestActions.putToolkit(this, path);
     }
 
+    public boolean deleteToolkit(Toolkit toolkit) throws IOException {
+        return StreamsRestActions.deleteToolkit(toolkit);
+    }
+
     private String getInstancesURL() throws IOException {
     	if (instancesUrl == null) {
             // Query the resourcesUrl to find the instances URL

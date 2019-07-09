@@ -23,6 +23,7 @@
   <property name="testtk" location="../spl/testtk"/>
   <property name="testtk.java" location="${testtk}/impl/java"/>
   <property name="testtkopt" location="../spl/testtkopt"/>
+  <property name="rest.test.tk.dir" location="../python/rest/toolkits"/>
 
 
   <makeurl file="${basedir}/log4j.properties" property="topology.log4j"/>
@@ -387,6 +388,7 @@
            haltonfailure="${topology.test.haltonfailure}" failureproperty="topology.tests.failed">
        <syspropertyset refid="junit.test.props" />
        <sysproperty key="topology.toolkit.release" value="${topology.toolkit.release}"/>
+       <sysproperty key="topology.test.toolkit.dir" value="${rest.test.tk.dir}"/>
        <sysproperty key="log4j.configuration" value="${topology.log4j}"/>
 
        <classpath>

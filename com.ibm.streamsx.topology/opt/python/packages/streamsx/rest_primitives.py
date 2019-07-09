@@ -2691,7 +2691,7 @@ class Toolkit(_ResourceElement):
         # Create a named temporary file
         with tempfile.NamedTemporaryFile(suffix='.zip') as tmpfile:
             filename = tmpfile.name
-        
+
             basedir = os.path.abspath(os.path.join(path, os.pardir))
 
             with ZipFile(filename, 'w') as zipfile:

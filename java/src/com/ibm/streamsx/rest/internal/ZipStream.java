@@ -26,6 +26,7 @@ public class ZipStream {
     InputStream is;
     try (ZipStreamVisitor visitor = new ZipStreamVisitor()) {
       Files.walkFileTree(root, visitor);
+      visitor.close();
       is = visitor.getInputStream();
     }
     return is;
@@ -76,7 +77,7 @@ public class ZipStream {
     }
 
     static private void copy(InputStream is, OutputStream os) throws IOException {
-      byte[] block = new byte[1024];
+      byte[] block = new byte[8192];
       int count = 0;
       while (count != -1) {
         os.write(block, 0, count);
