@@ -162,8 +162,8 @@ def _lsappconfig_parser(subparsers):
 def _lsappconfig(instance, cmd_args):
     """view appconfigs"""
     configs = instance.get_application_configurations()
-    locale.setlocale(locale.LC_ALL, '')
-    LOCAL_TIMEZONE = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
+    locale.setlocale(locale.LC_ALL, '') # Needed to correctly display local date and time format
+    LOCAL_TIMEZONE = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo # Needed to get timezone
 
     # If default output format
     if cmd_args.fmt == '%Tf':
