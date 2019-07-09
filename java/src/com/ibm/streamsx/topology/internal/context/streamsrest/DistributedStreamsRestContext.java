@@ -87,8 +87,10 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
         
         JsonArray artifacts = GsonUtilities.array(GsonUtilities.object(result, "build"), "artifacts");
         try {
-            if (artifacts == null || artifacts.size() != 1)
-                throw new IllegalStateException();
+            if (artifacts == null || artifacts.size() == 0)
+                throw new IllegalStateException("No build artifacts produced.");
+            if (artifacts.size() != 1)
+                throw new IllegalStateException("Multiple build artifacts produced.");
 
             String location = GsonUtilities
                     .jstring(artifacts.get(0).getAsJsonObject(), "location");
