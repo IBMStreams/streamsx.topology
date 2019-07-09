@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ElementTree
 
 from streamsx.topology.tester import Tester
 from streamsx.topology.context import ConfigParams, JobConfig
-from streamsx.rest import StreamsConnection
+from streamsx.build_rest import StreamsBuildConnection
 from streamsx.rest_primitives import *
 
 
@@ -15,10 +15,11 @@ logger = logging.getLogger('streamsx.test.toolkits_test')
 def _get_distributed_sc():
     # 4.3 on-prem
     if 'STREAMS_DOMAIN_ID' in os.environ:
+        # TODO not supported
         sc = StreamsConnection()
         sc.session.verify = False
         return sc
-    return Instance.of_endpoint(verify=False).rest_client._sc
+    return StreamsBuildConnection.of_endpoint(verify=False)
 
 # REST API failures raise HTTPError instance, which, when printed, show
 # the default error message for the status code.  We often have useful
@@ -69,6 +70,7 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
         Tester.setup_distributed(self)
         self.sc = _get_distributed_sc()
         if self.sc.build_resource_url is None:
+            print ("Build REST API is not available")
             self.skipTest("Build REST API is not available")
         else:
 

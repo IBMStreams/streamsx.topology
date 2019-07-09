@@ -66,12 +66,13 @@ __version__ = streamsx._streams._version.__version__
 
 from streamsx import st
 from .rest_primitives import (Domain, Instance, Installation, RestResource, Toolkit, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
-    _exact_resource, _IAMStreamsRestClient, _IAMConstants)
+    _exact_resource, _IAMStreamsRestClient, _IAMConstants, _get_username,
+    _ICPDExternalAuthHandler)
 
 logger = logging.getLogger('streamsx.rest')
 
 
-class StreamsConnection:
+class StreamsBuildConnection:
     """Creates a connection to a running distributed IBM Streams instance and exposes methods to retrieve the state of
     that instance.
 
@@ -109,6 +110,7 @@ class StreamsConnection:
             # resource URL can be obtained via streamtool geturl or REST call
             pass
         elif st._has_local_install:
+            # TODO not this
             # Assume quickstart
             username = os.getenv("STREAMS_USERNAME", "streamsadmin")
             password = os.getenv("STREAMS_PASSWORD", "passw0rd")
@@ -116,10 +118,10 @@ class StreamsConnection:
             raise ValueError("Must supply either a IBM Cloud VCAP Services or a username, password"
                              " to the StreamsConnection constructor.")
 
-        if not resource_url and 'STREAMS_REST_URL' in os.environ:
-            resource_url = os.environ['STREAMS_REST_URL']
+        if not resource_url and 'STREAMS_BUILD_URL' in os.environ:
+            resource_url = os.environ['STREAMS_BUILD_URL']
         
-        self._resource_url = resource_url
+        self._build_url = resource_url
         if auth:
             self.rest_client = _StreamsRestClient(auth)
         else:
@@ -127,23 +129,34 @@ class StreamsConnection:
         self.rest_client._sc = self
         self.session = self.rest_client.session
         self._analytics_service = False
-        self._delegator_impl = None
-        self._domains = None
+        self._delegator_impl = None # TODO probably not needed
+        self._domains = None # TODO probably  not  needed
 
+    # TODO probably not needed
     @property
     def _delegator(self):
         if self._delegator_impl is None:
             self._delegator_impl = _streams_delegator(self)
         return self._delegator_impl
 
+    # TODO just call this resource_url
     @property
-    def resource_url(self):
-        """str: Root URL for IBM Streams REST API"""
-        self._resource_url = self._resource_url or st.get_rest_api()
-        return self._resource_url
+    def build_resource_url(self):
+        """str: Endpoint URL for IBM Streams REST build API.  This will be
+        None if the build endpoint is not defined for the remote service.
 
-    def _get_elements(self, resource_name, eclass, id=None):
-        for resource in self.get_resources():
+        .. versionadded:: 1.13
+        """
+        # This is the resource URL of the build API, which differs from
+        # the resource URL of the Streams REST API.
+        
+        if self._build_url:            
+            return re.sub('/builds$','/resources', self._build_url)
+        return None
+
+
+    def _get_build_elements(self, resource_name, eclass, id=None):
+        for resource in self.get_build_resources():
             if resource.name == resource_name:
                 elements = []
                 for json_element in resource.get_resource()[resource_name]:
@@ -152,79 +165,16 @@ class StreamsConnection:
                     elements.append(eclass(json_element, self.rest_client))
                 return elements
 
-    def _get_element_by_id(self, resource_name, eclass, id):
+    def _get_build_element_by_id(self, resource_name, eclass, id):
         """Get a single element matching an id"""
-        elements = self._get_elements(resource_name, eclass, id=id)
+        elements = self._get_build_elements(resource_name, eclass, id=id)
         if not elements:
             raise ValueError("No resource matching: {0}".format(id))
         if len(elements) == 1:
             return elements[0]
         raise ValueError("Multiple resources matching: {0}".format(id))
 
-    def get_domains(self):
-        """Retrieves available domains.
-
-        Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives.Domain`: List of available domains
-        """
-        # Domains are fixed and actually only one per REST api.
-        if self._domains is None:
-            self._domains = self._get_elements('domains', Domain)
-        return self._domains
-
-    def get_domain(self, id):
-        """Retrieves available domain matching a specific domain ID
-
-        Args:
-            id (str): domain ID
-
-        Returns:
-            :py:class:`~.rest_primitives.Domain`: Domain matching `id`
-
-        Raises:
-            ValueError: No matching domain exists.
-        """
-        return self._get_element_by_id('domains', Domain, id)
-  
-    def get_instances(self):
-        """Retrieves available instances.
-
-        Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives.Instance`: List of available instances
-        """
-        return self._get_elements('instances', Instance)
-
-    def get_instance(self, id):
-        """Retrieves available instance matching a specific instance ID.
-
-        Args:
-            id (str): Instance identifier to retrieve.
-
-        Returns:
-            :py:class:`~.rest_primitives.Instance`: Instance matching `id`.
-
-        Raises:
-            ValueError: No matching instance exists or multiple matching instances exist.
-        """
-        return self._get_element_by_id('instances', Instance, id)
-
-    def get_installations(self):
-        """Retrieves a list of all known Streams installations.
-
-        Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives.Installation`: List of all Installation resources.
-        """
-        return self._get_elements('installations', Installation)
-
-    def get_resources(self):
-        """Retrieves a list of all known Streams high-level REST resources.
-
-        Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives.RestResource`: List of all Streams high-level REST resources.
-        """
-        json_resources = self.rest_client.make_request(self.resource_url)['resources']
-        return [RestResource(resource, self.rest_client) for resource in json_resources]
-
+    # TODO get_resources
     def get_build_resources(self):
         """Retrieves a list of all known Streams high-level Build REST resources.
 
@@ -236,11 +186,86 @@ class StreamsConnection:
         json_resources = self.rest_client.make_request(self.build_resource_url)['resources']
         return [RestResource(resource, self.rest_client) for resource in json_resources]
 
+    def get_toolkits(self):
+        """Retrieves a list of all installed Streams Toolkits.
+
+        Returns:
+            :py:obj:`list` of :py:class:`~.rest_primitives.Toolkit`: List of all Toolkit resources.
+
+        .. versionadded:: 1.13
+        """
+        return self._get_build_elements('toolkits', Toolkit)
+     
+    def get_toolkit(self, id):
+        """Retrieves available toolit matching a specific toolkit ID.
+
+        Args:
+            id (str): Toolkit identifier to retrieve.  This is the name and 
+                      version of a toolkit.  For sample, `com.ibm.streamsx.rabbitmq-1.1.3`
+
+        Returns:
+            :py:class:`~.rest_primitives.Toolkit`: Toolkit matching `id`.
+
+        Raises:
+            ValueError: No matching toolkit exists.
+
+        .. versionadded:: 1.13
+        """
+        return self._get_build_element_by_id('toolkits', Toolkit, id)
+
     def __str__(self):
         return pformat(self.__dict__)
 
+    @staticmethod
+    def of_endpoint(endpoint=None, service_name=None, username=None, password=None, verify=None):
+        """
+        Connect to a Cloud Pak for Data IBM Streams instance from
+        outside the cluster.
 
-class StreamingAnalyticsConnection(StreamsConnection):
+        Args:
+            endpoint(str): Deployment URL for Cloud Pak for Data, e.g. `https://icp4d_server:31843`. Defaults to the environment variable ``ICP4D_DEPLOYMENT_URL``.
+            service_name(str): Streams instance name. Defaults to the environment variable ``STREAMS_INSTANCE_ID``.
+            username(str): User name to authenticate as. Defaults to the environment variable ``STREAMS_USERNAME`` or the operating system identifier if not set.
+            password(str): Password for authentication. Defaults to the environment variable ``STREAMS_PASSWORD`` or the operating system identifier if not set.
+            verify: SSL verification. Set to ``False`` to disable SSL verification. Defaults to SSL verification being enabled.
+
+        Returns:
+            Instance: Connection to Streams instance or ``None`` of insufficient configuration was provided.
+
+        .. versionadded:: 1.13
+        """
+        if not endpoint:
+            endpoint = os.environ.get('ICP4D_DEPLOYMENT_URL')
+            if endpoint:
+                if not service_name:
+                    service_name = os.environ.get('STREAMS_INSTANCE_ID')
+                if not service_name:
+                    return None
+            else:
+                endpoint = os.environ.get('STREAMS_REST_URL')
+                if not endpoint:
+                    return None
+        if not endpoint:
+            return None
+        if not password:
+            password = os.environ.get('STREAMS_PASSWORD')
+        if not password:
+            return None
+        username = _get_username(username)
+
+        auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
+        # TODO move _root_from_endpoint out of Toolkit
+        build_url, _ = Toolkit._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
+
+        print ("Build_url: " + build_url);
+        sc = streamsx.build_rest.StreamsBuildConnection(resource_url=build_url, auth=auth)
+        if verify is not None:
+            sc.rest_client.session.verify = verify
+ 
+        return sc
+
+# TODO is this needed?  If so, a better name is needed.
+class StreamingAnalyticsBuildConnection(StreamsBuildConnection):
     """Creates a connection to a running Streaming Analytics service and exposes methods
     to retrieve the state of the service and its instance.
 
@@ -275,7 +300,7 @@ class StreamingAnalyticsConnection(StreamsConnection):
         self.rest_client._sc = self
         self.session = self.rest_client.session
         self._analytics_service = True
-        self._sas = StreamingAnalyticsService(self.rest_client, self.credentials)
+        self._sas = StreamingAnalyticsBuildService(self.rest_client, self.credentials)
         self._delegator_impl = self._sas._delegator
         self._domains = None
 
@@ -296,7 +321,7 @@ class StreamingAnalyticsConnection(StreamsConnection):
        """
        vcap_services = streamsx.topology.context._vcap_from_service_definition(service_def)
        service_name = streamsx.topology.context._name_from_service_definition(service_def)
-       return StreamingAnalyticsConnection(vcap_services, service_name)
+       return StreamingAnalyticsBuildConnection(vcap_services, service_name)
         
     @property
     def resource_url(self):

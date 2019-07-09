@@ -1669,9 +1669,9 @@ class Instance(_ResourceElement):
 
         auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
         resource_url, _ = Instance._root_from_endpoint(auth._cfg['connection_info'].get('serviceRestEndpoint'))
-        build_url, _ = Toolkit._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
+#       build_url, _ = Toolkit._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
 
-        sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth,build_url=build_url)
+        sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth)
         if verify is not None:
             sc.rest_client.session.verify = verify
  
