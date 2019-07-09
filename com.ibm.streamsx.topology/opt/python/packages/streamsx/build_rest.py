@@ -2,6 +2,8 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2017
 
+# TODO revise all documentation.
+
 """
 REST API bindings for IBM® Streams & Streaming Analytics service.
 
@@ -72,6 +74,8 @@ from .rest_primitives import (Domain, Instance, Installation, RestResource, Tool
 logger = logging.getLogger('streamsx.rest')
 
 
+# TODO pull up an abstract connection containing common features of this
+# and StreamsConnection
 class StreamsBuildConnection:
     """Creates a connection to a running distributed IBM Streams instance and exposes methods to retrieve the state of
     that instance.
@@ -109,11 +113,6 @@ class StreamsBuildConnection:
         elif username and password:
             # resource URL can be obtained via streamtool geturl or REST call
             pass
-        elif st._has_local_install:
-            # TODO not this
-            # Assume quickstart
-            username = os.getenv("STREAMS_USERNAME", "streamsadmin")
-            password = os.getenv("STREAMS_PASSWORD", "passw0rd")
         else:
             raise ValueError("Must supply either a IBM Cloud VCAP Services or a username, password"
                              " to the StreamsConnection constructor.")
@@ -128,18 +127,8 @@ class StreamsBuildConnection:
             self.rest_client = _StreamsRestClient._of_basic(username, password)
         self.rest_client._sc = self
         self.session = self.rest_client.session
-        self._analytics_service = False
-        self._delegator_impl = None # TODO probably not needed
-        self._domains = None # TODO probably  not  needed
+        self._analytics_service = False # TODO What?
 
-    # TODO probably not needed
-    @property
-    def _delegator(self):
-        if self._delegator_impl is None:
-            self._delegator_impl = _streams_delegator(self)
-        return self._delegator_impl
-
-    # TODO just call this resource_url
     @property
     def build_resource_url(self):
         """str: Endpoint URL for IBM Streams REST build API.  This will be
@@ -147,16 +136,13 @@ class StreamsBuildConnection:
 
         .. versionadded:: 1.13
         """
-        # This is the resource URL of the build API, which differs from
-        # the resource URL of the Streams REST API.
-        
         if self._build_url:            
             return re.sub('/builds$','/resources', self._build_url)
         return None
 
 
-    def _get_build_elements(self, resource_name, eclass, id=None):
-        for resource in self.get_build_resources():
+    def _get_elements(self, resource_name, eclass, id=None):
+        for resource in self.get_resources():
             if resource.name == resource_name:
                 elements = []
                 for json_element in resource.get_resource()[resource_name]:
@@ -165,17 +151,16 @@ class StreamsBuildConnection:
                     elements.append(eclass(json_element, self.rest_client))
                 return elements
 
-    def _get_build_element_by_id(self, resource_name, eclass, id):
+    def _get_element_by_id(self, resource_name, eclass, id):
         """Get a single element matching an id"""
-        elements = self._get_build_elements(resource_name, eclass, id=id)
+        elements = self._get_elements(resource_name, eclass, id=id)
         if not elements:
             raise ValueError("No resource matching: {0}".format(id))
         if len(elements) == 1:
             return elements[0]
         raise ValueError("Multiple resources matching: {0}".format(id))
 
-    # TODO get_resources
-    def get_build_resources(self):
+    def get_resources(self):
         """Retrieves a list of all known Streams high-level Build REST resources.
 
         Returns:
@@ -194,7 +179,7 @@ class StreamsBuildConnection:
 
         .. versionadded:: 1.13
         """
-        return self._get_build_elements('toolkits', Toolkit)
+        return self._get_elements('toolkits', Toolkit)
      
     def get_toolkit(self, id):
         """Retrieves available toolit matching a specific toolkit ID.
@@ -211,7 +196,7 @@ class StreamsBuildConnection:
 
         .. versionadded:: 1.13
         """
-        return self._get_build_element_by_id('toolkits', Toolkit, id)
+        return self._get_element_by_id('toolkits', Toolkit, id)
 
     def __str__(self):
         return pformat(self.__dict__)
@@ -242,7 +227,7 @@ class StreamsBuildConnection:
                 if not service_name:
                     return None
             else:
-                endpoint = os.environ.get('STREAMS_REST_URL')
+                endpoint = os.environ.get('STREAMS_BUILD_URL')
                 if not endpoint:
                     return None
         if not endpoint:
@@ -254,192 +239,27 @@ class StreamsBuildConnection:
         username = _get_username(username)
 
         auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
-        # TODO move _root_from_endpoint out of Toolkit
-        build_url, _ = Toolkit._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
 
-        print ("Build_url: " + build_url);
-        sc = streamsx.build_rest.StreamsBuildConnection(resource_url=build_url, auth=auth)
+        build_url, _ = StreamsBuildConnection._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
+
+        sc = StreamsBuildConnection(resource_url=build_url, auth=auth)
         if verify is not None:
             sc.rest_client.session.verify = verify
  
         return sc
 
-# TODO is this needed?  If so, a better name is needed.
-class StreamingAnalyticsBuildConnection(StreamsBuildConnection):
-    """Creates a connection to a running Streaming Analytics service and exposes methods
-    to retrieve the state of the service and its instance.
-
-    Args:
-        vcap_services (str, optional): VCAP services (JSON string or a filename whose content contains a JSON string).
-            If not specified, it uses the value of **VCAP_SERVICES** environment variable.
-        service_name (str, optional): Name of the Streaming Analytics service.
-            If not specified, it uses the value of **STREAMING_ANALYTICS_SERVICE_NAME** environment variable.
-
-    Example:
-        >>> # Assume environment variable VCAP_SERVICES has correct information
-        >>> sc = StreamingAnalyticsConnection(service_name='Streaming-Analytics')
-        >>> print(sc.get_streaming_analytics().get_instance_status())
-        {'plan': 'Standard', 'state': 'STARTED', 'enabled': True, 'status': 'running'}
-
-    .. seealso: :ref:`sas-access`
-    """
-    def __init__(self, vcap_services=None, service_name=None):
-        streamsx._streams._version._mismatch_check(__name__)
-        self.service_name = service_name or os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME')
-        self.credentials = _get_credentials(_get_vcap_services(vcap_services), self.service_name)
-        self._resource_url = None
-
-        self._iam = False
-        if _IAMConstants.V2_REST_URL in self.credentials and not ('userid' in self.credentials and 'password' in self.credentials):
-            self._iam = True
-
-        if self._iam:
-            self.rest_client = _IAMStreamsRestClient._create(self.credentials)
-        else:
-            self.rest_client = _StreamsRestClient._of_basic(self.credentials['userid'], self.credentials['password'])
-        self.rest_client._sc = self
-        self.session = self.rest_client.session
-        self._analytics_service = True
-        self._sas = StreamingAnalyticsBuildService(self.rest_client, self.credentials)
-        self._delegator_impl = self._sas._delegator
-        self._domains = None
-
     @staticmethod
-    def of_definition(service_def):
-       """Create a connection to a Streaming Analytics service.
+    def _root_from_endpoint(endpoint):
+        import urllib.parse as up
+        esu = up.urlsplit(endpoint)
+        if not esu.path.startswith('/streams/rest/builds'):
+            return None, None
 
-       The single service is defined by `service_def` which can be one of
+        es = endpoint.split('/')
+        name = es[len(es)-1]
+        root_url = endpoint.split('/streams/rest/builds')[0]
+        resource_url = root_url + '/streams/rest/resources'
+        return resource_url, name
 
-               * The `service credentials` copied from the `Service credentials` page of the service console (not the Streams console). Credentials are provided in JSON format. They contain such as the API key and secret, as well as connection information for the service. 
-               * A JSON object (`dict`) of the form: ``{ "type": "streaming-analytics", "name": "service name", "credentials": {...} }`` with the `service credentials` as the value of the ``credentials`` key.
-
-       Args:
-           service_def(dict): Definition of the service to connect to.
-
-       Returns:
-           StreamingAnalyticsConnection: Connection to defined service.
-       """
-       vcap_services = streamsx.topology.context._vcap_from_service_definition(service_def)
-       service_name = streamsx.topology.context._name_from_service_definition(service_def)
-       return StreamingAnalyticsBuildConnection(vcap_services, service_name)
-        
-    @property
-    def resource_url(self):
-        """str: Root URL for IBM Streams REST API"""
-        if self._iam:
-            self._resource_url = self._resource_url or _get_iam_rest_api_url_from_creds(self.rest_client, self.credentials)
-        else:
-            self._resource_url = self._resource_url or _get_rest_api_url_from_creds(self.session, self.credentials)
-        return self._resource_url
-
-    def get_streaming_analytics(self):
-        """Returns a :py:class:`~.rest_primitives.StreamingAnalyticsService` to allow further interaction with
-        the Streaming Analytics service.
-
-        Returns:
-            :py:class:`~.rest_primitives.StreamingAnalyticsService`:
-                Object for interacting with the Streaming Analytics service.
-        """
-        return self._sas
-
-
-def _get_vcap_services(vcap_services=None):
-    """Retrieves the VCAP Services information from the `ConfigParams.VCAP_SERVICES` field in the config object. If
-    `vcap_services` is not specified, it takes the information from VCAP_SERVICES environment variable.
-
-    Args:
-        vcap_services (str): Try to parse as a JSON string, otherwise, try open it as a file.
-        vcap_services (dict): Return the dict as is.
-
-    Returns:
-        dict: A dict representation of the VCAP Services information.
-
-    Raises:
-        ValueError:
-            * if `vcap_services` nor VCAP_SERVICES environment variable are specified.
-            * cannot parse `vcap_services` as a JSON string nor as a filename.
-    """
-    vcap_services = vcap_services or os.environ.get('VCAP_SERVICES')
-    if not vcap_services:
-        raise ValueError(
-            "VCAP_SERVICES information must be supplied as a parameter or as environment variable 'VCAP_SERVICES'")
-    # If it was passed to config as a dict, simply return it
-    if isinstance(vcap_services, dict):
-        return vcap_services
-    try:
-        # Otherwise, if it's a string, try to load it as json
-        vcap_services = json.loads(vcap_services)
-    except json.JSONDecodeError:
-        # If that doesn't work, attempt to open it as a file path to the json config.
-        try:
-            with open(vcap_services) as vcap_json_data:
-                vcap_services = json.load(vcap_json_data)
-        except:
-            raise ValueError("VCAP_SERVICES information is not JSON or a file containing JSON:", vcap_services)
-    return vcap_services
-
-
-def _get_credentials(vcap_services, service_name=None):
-    """Retrieves the credentials of the VCAP Service of the specified `service_name`.  If
-    `service_name` is not specified, it takes the information from STREAMING_ANALYTICS_SERVICE_NAME environment
-    variable.
-
-    Args:
-        vcap_services (dict): A dict representation of the VCAP Services information.
-        service_name (str): One of the service name stored in `vcap_services`
-
-    Returns:
-        dict: A dict representation of the credentials.
-
-    Raises:
-        ValueError:  Cannot find `service_name` in `vcap_services`
-    """
-    service_name = service_name or os.environ.get('STREAMING_ANALYTICS_SERVICE_NAME', None)
-    # Get the service corresponding to the SERVICE_NAME
-    services = vcap_services['streaming-analytics']
-    creds = None
-    for service in services:
-        if service['name'] == service_name:
-            creds = service['credentials']
-            break
-
-    # If no corresponding service is found, error
-    if creds is None:
-        raise ValueError("Streaming Analytics service " + str(service_name) + " was not found in VCAP_SERVICES")
-    return creds
-
-
-def _get_rest_api_url_from_creds(session, credentials):
-    """Retrieves the Streams REST API URL from the provided credentials.
-    Args:
-        session (:py:class:`requests.Session`): A Requests session object for making REST calls
-        credentials (dict): A dict representation of the credentials.
-    Returns:
-        str: The remote Streams REST API URL.
-    """
-    resources_url = credentials['rest_url'] + credentials['resources_path']
-    try:
-        response_raw = session.get(resources_url, auth=(credentials['userid'], credentials['password']))
-        response = response_raw.json()
-    except:
-        logger.error("Error while retrieving rest REST url from: " + resources_url)
-        raise
-
-    response_raw.raise_for_status()
-
-    rest_api_url = response['streams_rest_url'] + '/resources'
-    return rest_api_url
-
-def _get_iam_rest_api_url_from_creds(rest_client, credentials):
-    """Retrieves the Streams REST API URL from the provided credentials using iam authentication.
-    Args:
-        rest_client (:py:class:`rest_primitives._IAMStreamsRestClient`): A client  for making REST calls using IAM authentication
-        credentials (dict): A dict representation of the credentials.
-    Returns:
-        str: The remote Streams REST API URL.
-    """
-    res = rest_client.make_request(credentials[_IAMConstants.V2_REST_URL])
-    base = res['streams_self']
-    end = base.find('/instances')
-    return base[:end] + '/resources'
-    
+# TODO is this needed?  If so, a better name is needed.
+# removed StreamingAnalyticsConnection

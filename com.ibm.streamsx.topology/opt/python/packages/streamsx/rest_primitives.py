@@ -1669,7 +1669,6 @@ class Instance(_ResourceElement):
 
         auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
         resource_url, _ = Instance._root_from_endpoint(auth._cfg['connection_info'].get('serviceRestEndpoint'))
-#       build_url, _ = Toolkit._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
 
         sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth)
         if verify is not None:
@@ -2659,7 +2658,7 @@ class Toolkit(_ResourceElement):
     @staticmethod
     def _toolkits_url(sc):
         toolkits_url = None
-        for resource in sc.get_build_resources():
+        for resource in sc.get_resources():
             if resource.name == 'toolkits':
                 toolkits_url = resource.resource
                 break;
@@ -2722,18 +2721,6 @@ class Toolkit(_ResourceElement):
                         return new_toolkits[0]    
                     return None
                  
-    @staticmethod
-    def _root_from_endpoint(endpoint):
-        import urllib.parse as up
-        esu = up.urlsplit(endpoint)
-        if not esu.path.startswith('/streams/rest/builds'):
-            return None, None
-
-        es = endpoint.split('/')
-        name = es[len(es)-1]
-        root_url = endpoint.split('/streams/rest/builds')[0]
-        resource_url = root_url + '/streams/rest/resources'
-        return resource_url, name
 
     class Dependency:
         """

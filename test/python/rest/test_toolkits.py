@@ -70,7 +70,6 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
         Tester.setup_distributed(self)
         self.sc = _get_distributed_sc()
         if self.sc.build_resource_url is None:
-            print ("Build REST API is not available")
             self.skipTest("Build REST API is not available")
         else:
 
