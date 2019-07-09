@@ -101,38 +101,22 @@ class TestCancelJob(unittest.TestCase):
     # Check that you can't use --jobs and --jobnames optional args at the same time
     def test_cancel_multiple_mix(self):
         with self.assertRaises(SystemExit):
-            self.cancel_multiple_mix()
+            self._run_canceljob(args=["--jobs", str("123"), "--jobnames", str("jobName")])
 
-    def cancel_multiple_mix(self):
-        job1 = self._submit_job()
-        job2 = self._submit_job()
-        self.jobs_to_cancel.extend([job1, job2])
-
-        self._run_canceljob(args=["--jobs", str(job1.id), "--jobnames", str(job2.name)])
 
     # Check that you can't use --jobs, --jobnames and --file optional args at the same time
     def test_cancel_multiple_mix2(self):
         with self.assertRaises(SystemExit):
-            self.cancel_multiple_mix2()
-
-    def cancel_multiple_mix2(self):
-        job1 = self._submit_job()
-        job2 = self._submit_job()
-        job3 = self._submit_job()
-
-        self.write_file([job3.id])
-        self.jobs_to_cancel.extend([job1, job2, job3])
-
-        self._run_canceljob(
+            self._run_canceljob(
             args=[
                 "--jobs",
-                str(job1.id),
+                str("123"),
                 "--jobnames",
-                str(job2.name),
+                str("jobName"),
                 "--file",
                 str("test_st_canceljob_tempfile.txt"),
             ]
-        )
+            )
 
     # Check succesfully cancels jobs via --jobnames arg
     def test_cancel_multiple_2(self):

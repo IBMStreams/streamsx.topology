@@ -92,10 +92,9 @@ def _canceljob(instance, cmd_args):
 
     # if --file, get list of job IDs to cancel from file
     if cmd_args.file:
-        my_file = open(cmd_args.file)
-        job_ids = [line.rstrip() for line in my_file if not line.isspace()]
-        my_file.close()
-        job_ids_to_cancel.extend(job_ids)
+        with open(cmd_args.file, 'r') as my_file:
+            job_ids = [line.rstrip() for line in my_file if not line.isspace()]
+            job_ids_to_cancel.extend(job_ids)
 
     # Check if job w/ job ID exists, and if so cancel it
     if job_ids_to_cancel:
