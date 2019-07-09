@@ -67,6 +67,7 @@ import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
 
 from streamsx import st
+from .rest import AbstractStreamsConnection
 from .rest_primitives import (Domain, Instance, Installation, RestResource, Toolkit, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
     _exact_resource, _IAMStreamsRestClient, _IAMConstants, _get_username,
     _ICPDExternalAuthHandler)
@@ -74,9 +75,7 @@ from .rest_primitives import (Domain, Instance, Installation, RestResource, Tool
 logger = logging.getLogger('streamsx.rest')
 
 
-# TODO pull up an abstract connection containing common features of this
-# and StreamsConnection
-class StreamsBuildConnection:
+class StreamsBuildConnection(AbstractStreamsConnection):
     """Creates a connection to a running distributed IBM Streams instance and exposes methods to retrieve the state of
     that instance.
 
@@ -130,7 +129,7 @@ class StreamsBuildConnection:
         self._analytics_service = False # TODO What?
 
     @property
-    def build_resource_url(self):
+    def resource_url(self):
         """str: Endpoint URL for IBM Streams REST build API.  This will be
         None if the build endpoint is not defined for the remote service.
 
@@ -140,26 +139,6 @@ class StreamsBuildConnection:
             return re.sub('/builds$','/resources', self._build_url)
         return None
 
-
-    def _get_elements(self, resource_name, eclass, id=None):
-        for resource in self.get_resources():
-            if resource.name == resource_name:
-                elements = []
-                for json_element in resource.get_resource()[resource_name]:
-                    if not _exact_resource(json_element, id):
-                        continue
-                    elements.append(eclass(json_element, self.rest_client))
-                return elements
-
-    def _get_element_by_id(self, resource_name, eclass, id):
-        """Get a single element matching an id"""
-        elements = self._get_elements(resource_name, eclass, id=id)
-        if not elements:
-            raise ValueError("No resource matching: {0}".format(id))
-        if len(elements) == 1:
-            return elements[0]
-        raise ValueError("Multiple resources matching: {0}".format(id))
-
     def get_resources(self):
         """Retrieves a list of all known Streams high-level Build REST resources.
 
@@ -168,8 +147,7 @@ class StreamsBuildConnection:
 
         .. versionadded:: 1.13
         """
-        json_resources = self.rest_client.make_request(self.build_resource_url)['resources']
-        return [RestResource(resource, self.rest_client) for resource in json_resources]
+        return super().get_resources()
 
     def get_toolkits(self):
         """Retrieves a list of all installed Streams Toolkits.
@@ -197,9 +175,6 @@ class StreamsBuildConnection:
         .. versionadded:: 1.13
         """
         return self._get_element_by_id('toolkits', Toolkit, id)
-
-    def __str__(self):
-        return pformat(self.__dict__)
 
     @staticmethod
     def of_endpoint(endpoint=None, service_name=None, username=None, password=None, verify=None):
@@ -260,6 +235,10 @@ class StreamsBuildConnection:
         root_url = endpoint.split('/streams/rest/builds')[0]
         resource_url = root_url + '/streams/rest/resources'
         return resource_url, name
+
+    def __str__(self):
+        return pformat(self.__dict__)
+
 
 # TODO is this needed?  If so, a better name is needed.
 # removed StreamingAnalyticsConnection
