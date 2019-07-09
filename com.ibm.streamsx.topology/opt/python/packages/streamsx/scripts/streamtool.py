@@ -169,8 +169,8 @@ def _lsappconfig(instance, cmd_args):
     if cmd_args.fmt == '%Tf':
         print('{: <20} {:<20} {:<30} {:<30} {:<20}'.format("Id", "Owner", "Created", "Modified", "Description"))
         for config in configs:
-            createDate = datetime.datetime.fromtimestamp(config.creationTime/1000).replace(tzinfo=LOCAL_TIMEZONE).strftime("%x %X %Z")
-            lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000).replace(tzinfo=LOCAL_TIMEZONE).strftime("%x %X %Z")
+            createDate = datetime.datetime.fromtimestamp(config.creationTime/1000, tz = LOCAL_TIMEZONE).strftime("%x %X %Z")
+            lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000, tz = LOCAL_TIMEZONE).strftime("%x %X %Z")
             print('{: <20} {:<20} {:<30} {:<30} {:<20}'.format(config.name, config.owner, createDate, lastModifiedDate, config.description))
     # non default output format, use helper function
     else:
@@ -178,8 +178,8 @@ def _lsappconfig(instance, cmd_args):
         data = []
         for config in configs:
             item = []
-            createDate = datetime.datetime.fromtimestamp(config.creationTime/1000).replace(tzinfo=LOCAL_TIMEZONE).strftime("%x %X %Z")
-            lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000).replace(tzinfo=LOCAL_TIMEZONE).strftime("%x %X %Z")
+            createDate = datetime.datetime.fromtimestamp(config.creationTime/1000, tz = LOCAL_TIMEZONE).strftime("%x %X %Z")
+            lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000, tz = LOCAL_TIMEZONE).strftime("%x %X %Z")
             item.extend((config.name, config.owner, createDate, lastModifiedDate, config.description))
             data.append(item)
 
