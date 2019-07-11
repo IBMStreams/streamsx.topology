@@ -132,8 +132,22 @@ abstract class AbstractStreamsConnection {
         return Toolkit.createToolkitList(this, getToolkitsURL());
     }
 
+    public Toolkit getToolkit(String toolkitId) throws IOException {
+        if (toolkitId.isEmpty()) {
+            throw new IllegalArgumentException("Empty toolkit id");
+        }
+        else {
+            String query = getToolkitsURL() + "/" + toolkitId;
+            List<Toolkit> toolkits = Toolkit.createToolkitList(this, query);
+            // We expect zero or one toolkits
+             if (toolkits.size() == 1) {
+                return toolkits.get(0);
+            }
+            throw new RESTException (404, "No toolkit with id " + toolkitId);
+        }
+    }
+
     public Toolkit putToolkit(File path) throws IOException {
-        // TODO sanity check on path.
         return StreamsRestActions.putToolkit(this, path);
     }
 

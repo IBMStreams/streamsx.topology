@@ -145,6 +145,10 @@ public class StreamsConnection {
         return delegate().getToolkits();
     }
 
+    public Toolkit getToolkit(String toolkitId) throws IOException {
+      return delegate().getToolkit(requireNonNull(toolkitId));
+    }
+
     public Toolkit putToolkit(File path) throws IOException {
         return delegate().putToolkit(path);
     }

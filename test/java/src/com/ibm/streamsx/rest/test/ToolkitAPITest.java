@@ -305,6 +305,39 @@ public class ToolkitAPITest {
     }
   }
 
+  // Test getting a toolkit by id.
+  @Test
+  public void testGetTookit() throws Exception {
+    Toolkit bingo = connection.putToolkit(bingo1Path);
+    assertNotNull(bingo);
+    waitForToolkit(bingoToolkitName, Optional.of(bingo1Version));
+
+    Toolkit found = connection.getToolkit(bingo.getName());
+    assertNotNull(found);
+    assertEquals (bingoToolkitName, found.getName());
+    assertEquals (bingo1Version, found.getVersion());
+    assertEquals ("4.2", found.getRequiredProductVersion());
+    assertEquals ("toolkit", found.getResourceType());
+
+    // We don't know what value this attribute will have, but it should
+    // have a value
+    assertNotNull(found.getPath());
+
+    // The ID is 'streams-toolkits'/name-version
+    String toolkitId = "streams-toolkits/" + bingoToolkitName + "-" + bingo1Version;
+    found = connection.getToolkit(toolkitId);
+    assertNotNull(found);
+
+    // Using just the name fails
+    toolkitId = "streams-toolkits/" + bingoToolkitName;
+    try {
+      found = connection.getToolkit(toolkitId);
+      fail ("Expected exception");
+    }
+    catch (IOException e) {
+    }
+  }
+
   // Test the zip file creation class.  Zip a directory, then write it to a file,
   // unzip it, and compare it to the original directory.
   @Test
