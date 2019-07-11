@@ -75,7 +75,7 @@ from .rest_primitives import (Domain, Instance, Installation, RestResource, Tool
 logger = logging.getLogger('streamsx.rest')
 
 
-class StreamsBuildConnection(AbstractStreamsConnection):
+class BuildService(AbstractStreamsConnection):
     """Creates a connection to a running distributed IBM Streams instance and exposes methods to retrieve the state of
     that instance.
 
@@ -215,9 +215,9 @@ class StreamsBuildConnection(AbstractStreamsConnection):
 
         auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
 
-        build_url, _ = StreamsBuildConnection._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
+        build_url, _ = BuildService._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
 
-        sc = StreamsBuildConnection(resource_url=build_url, auth=auth)
+        sc = BuildService(resource_url=build_url, auth=auth)
         if verify is not None:
             sc.rest_client.session.verify = verify
  
@@ -239,6 +239,3 @@ class StreamsBuildConnection(AbstractStreamsConnection):
     def __str__(self):
         return pformat(self.__dict__)
 
-
-# TODO is this needed?  If so, a better name is needed.
-# removed StreamingAnalyticsConnection
