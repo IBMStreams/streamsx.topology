@@ -32,7 +32,7 @@ def _submitjob_parser(subparsers):
     job_submit.add_argument('--P', '-P', help='Specifies a submission-time parameter and value for the job', action='append')
     _user_arg(job_submit)
 
-def _submitjob(instance, cmd_args):
+def _submitjob(instance, cmd_args, rc):
     """Submit a job."""
     job_config = None
 
@@ -56,6 +56,7 @@ def _submitjob(instance, cmd_args):
     instance.submit_job(bundle=cmd_args.sabfile, job_config=job_config)
 
 
+    return (rc, None)
 
 ###########################################
 # canceljob
@@ -73,9 +74,8 @@ def _canceljob_parser(subparsers):
 
     _user_arg(job_cancel)
 
-def _canceljob(instance, cmd_args):
+def _canceljob(instance, cmd_args, rc):
     """Cancel a job."""
-    rc = 0
     job_ids_to_cancel = []
     job_names_to_cancel = []
 
@@ -96,30 +96,30 @@ def _canceljob(instance, cmd_args):
             job_ids_to_cancel.extend(job_ids)
 
     # Check if job w/ job ID exists, and if so cancel it
-    if job_ids_to_cancel:
-        for x in job_ids_to_cancel:
-            if x.isnumeric():
-                try:
-                    job = instance.get_job(id=str(x))
-                    _job_cancel(instance, x, cmd_args.collectlogs, cmd_args.force)
-                except:
-                    print("The following job ID was not found {}".format(x))
-                    print("The following job ID cannot be canceled: {}. See the previous error message".format(x))
-                    rc = 1
-            else:
-                raise ValueError("The following job identifier is not valid: {}. Specify a job identifier that is numeric and try the request again.".format(x))
+    for x in job_ids_to_cancel:
+        if x.isnumeric():
+            try:
+                job = instance.get_job(id=str(x))
+                _job_cancel(instance, x, cmd_args.collectlogs, cmd_args.force)
+            except:
+                print("The following job ID was not found {}".format(x))
+                print("The following job ID cannot be canceled: {}. See the previous error message".format(x))
+                rc = 1
+        else:
+            raise ValueError("The following job identifier is not valid: {}. Specify a job identifier that is numeric and try the request again.".format(x))
 
     # Check if job w/ job name exists, and if so cancel it
-    if job_names_to_cancel:
-        for x in job_names_to_cancel:
-            jobs = instance.get_jobs(name=str(x))
-            if jobs:
-                job = jobs[0]
-                _job_cancel(instance, job.id, cmd_args.collectlogs, cmd_args.force)
-            else:
-                print("The following job name is not found: {}. Specify a job name that is valid and try the request again".format(x))
-                rc = 1
-    return rc
+    for x in job_names_to_cancel:
+        jobs = instance.get_jobs(name=str(x))
+        if jobs:
+            job = jobs[0]
+            _job_cancel(instance, job.id, cmd_args.collectlogs, cmd_args.force)
+        else:
+            print("The following job name is not found: {}. Specify a job name that is valid and try the request again".format(x))
+            rc = 1
+
+
+    return (rc, None)
 
 def _job_cancel(instance, job_id=None, collectlogs=False, force=False):
     job = instance.get_job(id=str(job_id))
@@ -153,7 +153,7 @@ def _lsjobs_parser(subparsers):
 
     _user_arg(job_ls)
 
-def _lsjobs(instance, cmd_args):
+def _lsjobs(instance, cmd_args, rc):
     """view jobs"""
     jobs = instance.get_jobs()
     instance_id = instance.id
@@ -212,6 +212,7 @@ def _lsjobs(instance, cmd_args):
 
         _print_ls("lsjobs", cmd_args.fmt, headers, data, instance_id=instance_id, Date=time_stamp)
 
+    return (rc, None)
 
 ###########################################
 # appconfig
@@ -223,7 +224,7 @@ def _lsappconfig_parser(subparsers):
     appconfig_ls.add_argument('--fmt', help='Specifies the presentation format', default='%Tf')
     _user_arg(appconfig_ls)
 
-def _lsappconfig(instance, cmd_args):
+def _lsappconfig(instance, cmd_args, rc):
     """view appconfigs"""
     configs = instance.get_application_configurations()
     locale.setlocale(locale.LC_ALL, '') # Needed to correctly display local date and time format
@@ -248,6 +249,8 @@ def _lsappconfig(instance, cmd_args):
             data.append(item)
 
         _print_ls("lsappconfig", cmd_args.fmt, headers, data)
+
+    return (rc, None)
 
 def _print_ls(command_name, fmt, headers, data, instance_id=None, Date=None):
     """A helper function that prints the output for lsjobs or lsappconfig if the --fmt flag specifies either '%Mf' or '%Nf'.
@@ -291,7 +294,7 @@ def _rmappconfig_parser(subparsers):
     appconfig_rm.add_argument('--noprompt', help='Specifies to suppress confirmation prompts.', action='store_true')
     _user_arg(appconfig_rm)
 
-def _rmappconfig(instance, cmd_args):
+def _rmappconfig(instance, cmd_args, rc):
     """remove an appconfig"""
     config_name = cmd_args.config_name
     configs = instance.get_application_configurations(name = config_name)
@@ -300,15 +303,16 @@ def _rmappconfig(instance, cmd_args):
     app_config = instance.get_application_configurations(name = config_name)[0]
 
     # No confirmation required, delete
-    if (cmd_args.noprompt):
+    if cmd_args.noprompt:
         app_config.delete()
         print("The {} application configuration was removed successfully for the {} instance".format(config_name, instance.id))
     else:
         response = input("Do you want to remove the application configuration {} from the {} instance? Enter 'y' to continue or 'n' to cancel: ".format(config_name, instance.id))
-        if (response == "y"):
+        if response == "y":
             app_config.delete()
             print("The {} application configuration was removed successfully for the {} instance".format(config_name, instance.id))
 
+    return (rc, None)
 
 # mk-appconfig
 def _mkappconfig_parser(subparsers):
@@ -319,9 +323,10 @@ def _mkappconfig_parser(subparsers):
     appconfig_mk.add_argument('--description', help='Specifies a description for the application configuration')
     _user_arg(appconfig_mk)
 
-def _mkappconfig(instance, cmd_args):
+def _mkappconfig(instance, cmd_args, rc):
     """create an appconfig"""
     config_name, config_props, config_description = _get_config_details(cmd_args, mk=True)
+    appconfig = None
 
     # Check if config exists by that name, if so don't do anything
     if instance.get_application_configurations(config_name):
@@ -331,7 +336,11 @@ def _mkappconfig(instance, cmd_args):
         appconfig =  instance.create_application_configuration(name=config_name, properties=config_props, description=config_description)
         if appconfig:
             print("The {} application configuration was created successfully for the {} instance".format(config_name, instance.id))
-            return appconfig
+        else:
+            # Failed to create appconfig
+            rc = 1
+
+    return (rc, appconfig)
 
 # ch-appconfig
 def _chappconfig_parser(subparsers):
@@ -342,18 +351,23 @@ def _chappconfig_parser(subparsers):
     _user_arg(appconfig_ch)
 
 
-def _chappconfig(instance, cmd_args):
+def _chappconfig(instance, cmd_args, rc):
+    """change an appconfig"""
     config_name, config_props, config_description = _get_config_details(cmd_args, mk=False)
+    new_app_config = None
     # Check if config exists by that name, if so update it
     if instance.get_application_configurations(config_name):
         appconfig = instance.get_application_configurations(config_name)[0]
-        newAppconfig = appconfig.update(properties=config_props, description=config_description)
-        if (newAppconfig):
+        new_app_config = appconfig.update(properties=config_props, description=config_description)
+        if new_app_config:
             print("The {} application configuration was updated successfully for the {} instance".format(config_name, instance.id))
-            return newAppconfig
+        else:
+            rc = 1
     else:
         # No appconfig exists by that name
         raise NameError("The {} application configuration does not exist in the {} instance".format(config_name, instance.id))
+
+    return (rc, new_app_config)
 
 
 def _get_config_details(cmd_args, mk):
@@ -417,7 +431,7 @@ def _getappconfig_parser(subparsers):
     _user_arg(appconfig_get)
 
 
-def _getappconfig(instance, cmd_args):
+def _getappconfig(instance, cmd_args, rc):
     """get an appconfig"""
     config_name = cmd_args.config_name
     configs = instance.get_application_configurations(name = config_name)
@@ -436,7 +450,7 @@ def _getappconfig(instance, cmd_args):
         except ValueError:
             json_value = value
         print(key + "=" + json_value)
-    return config_props
+    return (rc, config_props)
 
 
 def run_cmd(args=None):
@@ -463,9 +477,7 @@ def run_cmd(args=None):
     extra_info = None
     rc = 0
     try:
-        extra_info = switch[cmd_args.subcmd](instance, cmd_args)
-        if extra_info == 1:
-            rc = 1
+        rc, extra_info = switch[cmd_args.subcmd](instance, cmd_args, rc)
     except Exception as e:
         rc = 1
         print(e)
