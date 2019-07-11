@@ -14,6 +14,7 @@ import warnings
 import urllib3
 import datetime
 import json
+import locale
 
 import streamsx.topology.context
 from streamsx.rest import Instance
@@ -161,13 +162,15 @@ def _lsappconfig_parser(subparsers):
 def _lsappconfig(instance, cmd_args):
     """view appconfigs"""
     configs = instance.get_application_configurations()
+    locale.setlocale(locale.LC_ALL, '') # Needed to correctly display local date and time format
+    LOCAL_TIMEZONE = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo # Needed to get timezone
 
     # If default output format
     if cmd_args.fmt == '%Tf':
         print('{: <20} {:<20} {:<30} {:<30} {:<20}'.format("Id", "Owner", "Created", "Modified", "Description"))
         for config in configs:
-            createDate = datetime.datetime.fromtimestamp(config.creationTime/1000).strftime("%m/%d/%Y, %I:%M %p ") + "GMT"
-            lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000).strftime("%m/%d/%Y, %I:%M %p ") + "GMT"
+            createDate = datetime.datetime.fromtimestamp(config.creationTime/1000, tz = LOCAL_TIMEZONE).strftime("%x %X %Z")
+            lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000, tz = LOCAL_TIMEZONE).strftime("%x %X %Z")
             print('{: <20} {:<20} {:<30} {:<30} {:<20}'.format(config.name, config.owner, createDate, lastModifiedDate, config.description))
     # non default output format, use helper function
     else:
@@ -175,8 +178,8 @@ def _lsappconfig(instance, cmd_args):
         data = []
         for config in configs:
             item = []
-            createDate = datetime.datetime.fromtimestamp(config.creationTime/1000).strftime("%m/%d/%Y, %I:%M %p ") + "GMT"
-            lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000).strftime("%m/%d/%Y, %I:%M %p ") + "GMT"
+            createDate = datetime.datetime.fromtimestamp(config.creationTime/1000, tz = LOCAL_TIMEZONE).strftime("%x %X %Z")
+            lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000, tz = LOCAL_TIMEZONE).strftime("%x %X %Z")
             item.extend((config.name, config.owner, createDate, lastModifiedDate, config.description))
             data.append(item)
 
