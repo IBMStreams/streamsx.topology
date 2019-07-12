@@ -47,13 +47,9 @@ def _submitjob(instance, cmd_args, rc):
     if cmd_args.jobname:
         job_config.job_name = cmd_args.jobname
 
-    # TODO
-    # if cmd_args.outfile:
-
-    # TODO
-    # if cmd_args.jobgroup:
-    #     # must exist before you run this command, thus need to check if this jobgroup exists
-    #     job_config.job_group = cmd_args.jobgroup
+    if cmd_args.jobgroup:
+        # Will throw a 500 internal error on instance.submit_job if jobgroup doesn't already exist
+        job_config.job_group = cmd_args.jobgroup
 
     if cmd_args.P:
         for param in cmd_args.P:
@@ -65,6 +61,10 @@ def _submitjob(instance, cmd_args, rc):
 
     job = instance.submit_job(bundle=cmd_args.sabfile, job_config=job_config)
 
+    # If --outfile, write jobID to file
+    if cmd_args.outfile:
+        with open(cmd_args.outfile, 'w') as my_file:
+            my_file.write(str(job.id) + '\n')
 
     return (rc, job)
 
@@ -112,8 +112,8 @@ def _canceljob(instance, cmd_args, rc):
                 job = instance.get_job(id=str(x))
                 _job_cancel(instance, x, cmd_args.collectlogs, cmd_args.force)
             except:
-                print("The following job ID was not found {}".format(x))
-                print("The following job ID cannot be canceled: {}. See the previous error message".format(x))
+                print("The following job ID was not found {}".format(x), file=sys.stderr)
+                print("The following job ID cannot be canceled: {}. See the previous error message".format(x), file=sys.stderr)
                 rc = 1
         else:
             raise ValueError("The following job identifier is not valid: {}. Specify a job identifier that is numeric and try the request again.".format(x))
@@ -125,7 +125,7 @@ def _canceljob(instance, cmd_args, rc):
             job = jobs[0]
             _job_cancel(instance, job.id, cmd_args.collectlogs, cmd_args.force)
         else:
-            print("The following job name is not found: {}. Specify a job name that is valid and try the request again".format(x))
+            print("The following job name is not found: {}. Specify a job name that is valid and try the request again".format(x), file=sys.stderr)
             rc = 1
 
 
@@ -490,9 +490,8 @@ def run_cmd(args=None):
         rc, extra_info = switch[cmd_args.subcmd](instance, cmd_args, rc)
     except Exception as e:
         rc = 1
-        print(e)
+        print(e, file=sys.stderr)
         # _handle_http_error(e)
-
         # sys.exc_info()
     return (rc, extra_info)
 
