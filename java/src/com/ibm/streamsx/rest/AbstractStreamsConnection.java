@@ -22,15 +22,12 @@ import com.ibm.streamsx.rest.internal.RestUtils;
 abstract class AbstractStreamsConnection {
 
     private static final String INSTANCES_RESOURCE_NAME = "instances";
-    private static final String TOOLKITS_RESOURCE_NAME = "toolkits";
 
     private final String resourcesUrl;
 
     protected Executor executor;
     private String instancesUrl;
 
-    private final String buildUrl;
-    private String toolkitsUrl;
     
     /**
      * Cancel a job.
@@ -47,7 +44,7 @@ abstract class AbstractStreamsConnection {
     ApplicationBundle uploadBundle(Instance instance, File bundle) throws IOException {
     	return new FileBundle(instance, bundle);
     }
-    
+
     abstract Result<Job,JsonObject> submitJob(ApplicationBundle bundle, JsonObject jco) throws IOException;
 
     abstract String getAuthorization();
@@ -67,17 +64,9 @@ abstract class AbstractStreamsConnection {
     AbstractStreamsConnection(String resourcesUrl,
                               boolean allowInsecure) {
         this.resourcesUrl = resourcesUrl;
-        this.buildUrl = null;
         this.executor = RestUtils.createExecutor(allowInsecure);
     }
     
-    AbstractStreamsConnection(String resourcesUrl,
-                              boolean allowInsecure, String buildUrl) {
-        this.resourcesUrl = resourcesUrl;
-        this.buildUrl = buildUrl;
-        this.executor = RestUtils.createExecutor(allowInsecure);
-    }
-
     public boolean allowInsecureHosts(boolean allowInsecure) {
     	this.executor = RestUtils.createExecutor(allowInsecure);
     	return allowInsecure;
@@ -128,33 +117,6 @@ abstract class AbstractStreamsConnection {
         }
     }
 
-    public List<Toolkit> getToolkits() throws IOException {
-        return Toolkit.createToolkitList(this, getToolkitsURL());
-    }
-
-    public Toolkit getToolkit(String toolkitId) throws IOException {
-        if (toolkitId.isEmpty()) {
-            throw new IllegalArgumentException("Empty toolkit id");
-        }
-        else {
-            String query = getToolkitsURL() + "/" + toolkitId;
-            List<Toolkit> toolkits = Toolkit.createToolkitList(this, query);
-            // We expect zero or one toolkits
-             if (toolkits.size() == 1) {
-                return toolkits.get(0);
-            }
-            throw new RESTException (404, "No toolkit with id " + toolkitId);
-        }
-    }
-
-    public Toolkit putToolkit(File path) throws IOException {
-        return StreamsRestActions.putToolkit(this, path);
-    }
-
-    public boolean deleteToolkit(Toolkit toolkit) throws IOException {
-        return StreamsRestActions.deleteToolkit(toolkit);
-    }
-
     private String getInstancesURL() throws IOException {
     	if (instancesUrl == null) {
             // Query the resourcesUrl to find the instances URL
@@ -174,28 +136,6 @@ abstract class AbstractStreamsConnection {
             }
     	}
     	return instancesUrl;
-    }
-
-    // TODO private?
-    public String getToolkitsURL() throws IOException {
-    	if (toolkitsUrl == null) {
-            // Query the resourcesUrl to find the instances URL
-            String response = getResponseString(buildUrl);
-            ResourcesArray resources = new GsonBuilder()
-                    .excludeFieldsWithoutExposeAnnotation()
-                    .create().fromJson(response, ResourcesArray.class);
-            for (Resource resource : resources.resources) {
-                if (TOOLKITS_RESOURCE_NAME.equals(resource.name)) {
-                    toolkitsUrl = resource.resource;
-                    break;
-                }
-            }
-            if (null == toolkitsUrl) {
-                // If we couldn't find toolkits something is wrong
-                throw new RESTException("Unable to find toolkits resource from resources URL: " + buildUrl);
-            }
-    	}
-    	return toolkitsUrl;
     }
 
     private static class Resource {

@@ -49,11 +49,6 @@ public class StreamsConnection {
      */
     public static StreamsConnection createInstance(String userName,
             String authToken, String url) {
-      return createInstance(userName, authToken, url, null);
-    }
-
-    public static StreamsConnection createInstance(String userName,
-            String authToken, String url, String buildUrl) {
     	if (userName == null) {
     		userName = System.getenv(Util.STREAMS_USERNAME);
     		if (userName == null)
@@ -75,14 +70,7 @@ public class StreamsConnection {
     		}
     	}
 
-        if (buildUrl != null) {
-          if (buildUrl.endsWith("/builds")) {
-            buildUrl = buildUrl.substring(0, buildUrl.length() - "builds".length()) + "resources";
-            System.out.println("Modified build url: " + buildUrl);
-          }
-        }
-
-    	AbstractStreamsConnection delegate = createDelegate(userName, authToken, url, buildUrl);
+    	AbstractStreamsConnection delegate = createDelegate(userName, authToken, url);
         StreamsConnection sc = new StreamsConnection(delegate);
         return sc;
     }
@@ -141,23 +129,10 @@ public class StreamsConnection {
         return delegate().getInstances();
     }
 
-    public List<Toolkit> getToolkits() throws IOException {
-        return delegate().getToolkits();
-    }
-
-    public Toolkit getToolkit(String toolkitId) throws IOException {
-      return delegate().getToolkit(requireNonNull(toolkitId));
-    }
-
-    public Toolkit putToolkit(File path) throws IOException {
-        return delegate().putToolkit(path);
-    }
-
-
     private static AbstractStreamsConnection createDelegate(String userName,
-            String authToken, String url, String buildUrl) {
+            String authToken, String url) {
         return new StreamsConnectionImpl(userName,
                     executor -> RestUtils.createBasicAuth(userName, authToken),
-                    url, false, buildUrl);
+                    url, false);
     }
 }

@@ -1,13 +1,10 @@
-package com.ibm.streamsx.rest;
+package com.ibm.streamsx.rest.build;
 
 import static java.util.Objects.requireNonNull;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -47,7 +44,7 @@ public class Toolkit extends Element {
   @Expose
   private String version;
 
-  final static List<Toolkit> createToolkitList(AbstractStreamsConnection sc, JsonObject gsonToolkitString) {
+  final static List<Toolkit> createToolkitList(AbstractConnection sc, JsonObject gsonToolkitString) {
     if (gsonToolkitString.toString().isEmpty()) {
       return Collections.emptyList();
     }
@@ -56,7 +53,7 @@ public class Toolkit extends Element {
       for (Element e: array.elements()){
         e.setConnection(sc);
       }
-      
+
       return array.elements();
     }
     catch (JsonSyntaxException e) {
@@ -64,10 +61,13 @@ public class Toolkit extends Element {
     }
   }
 
-  final static List<Toolkit> createToolkitList(AbstractStreamsConnection sc, String uri)
-       throws IOException {        
-        return createList(sc, uri, ToolkitsArray.class);
-  }  
+  final static List<Toolkit> createToolkitList(AbstractConnection sc, String uri) throws IOException {   
+    return createList(sc, uri, ToolkitsArray.class);
+  }
+
+  final static Toolkit create(AbstractConnection sc, String uri) throws IOException {
+    return create(sc, uri, Toolkit.class);
+  }
 
   public String getId() {
     return id;
@@ -99,7 +99,7 @@ public class Toolkit extends Element {
   }
 
   public boolean delete() throws IOException {
-    return connection().deleteToolkit(this);
+    return ((StreamsBuildService)connection()).deleteToolkit(this);
   }
 
   public static class Dependency {
@@ -151,9 +151,9 @@ public class Toolkit extends Element {
    */
   private static class ToolkitsArray extends ElementArray<Toolkit> {
     @Expose
-      private ArrayList<Toolkit> toolkits;
-    
+    private ArrayList<Toolkit> toolkits;
+
     @Override
-      List<Toolkit> elements() { return toolkits; }
+    List<Toolkit> elements() { return toolkits; }
   }
 }
