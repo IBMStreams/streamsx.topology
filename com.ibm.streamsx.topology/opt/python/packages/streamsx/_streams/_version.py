@@ -15,6 +15,9 @@ import warnings
 # PYTHONPATH point into an older topology toolkit as
 # is set by default by streamsprofile.sh
 def _mismatch_check(module_name):
+    if sys.version_info.major == 2:
+        warnings.warn("Python 2.7 support is deprecated for module {}.".format(module_name), DeprecationWarning, stacklevel=3)
+
     srp = pkg_resources.working_set.find(pkg_resources.Requirement.parse('streamsx'))
     if srp is None or not srp.has_version():
         spv = pkg_resources.parse_version(__version__)
