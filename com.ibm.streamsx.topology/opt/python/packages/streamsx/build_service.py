@@ -2,16 +2,15 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2017
 
-# TODO revise all documentation.
 
 """
-REST API bindings for IBM® Streams & Streaming Analytics service.
+REST API bindings for IBM® Streams & Streaming Analytics build service.
 
 ****************
-Streams REST API
+Streams Build REST API
 ****************
 
-The Streams REST API provides programmatic access to configuration and status information for IBM Streams objects such as domains, instances, and jobs. 
+The REST Build API provides programmatic support for creating, submitting and managing IBM® Streams builds. You can use the REST Build API from any application that can establish an HTTPS connection to the server that is running the build service.  The current support includes only methods for managing toolkits in the build service.
 
 IBM Cloud Pak for Data
 ======================
@@ -19,37 +18,18 @@ IBM Cloud Pak for Data
 Within ICPD
 -----------
 
-:py:meth:`~streamsx.rest_primitives.Instance.of_service` is the entry point to using the Streams REST API bindings,
-returning an :py:class:`~streamsx.rest_primitives.Instance`.
-The configuration required to connect is obtained from ``ipcd_util.get_service_details`` passing in
-the IBM Streams service instance name.
+:py:meth:`~streamsx.rest_primitives.Instance.of_endpoint` is the entry point to using the Streams Build REST API bindings,
+returning an :py:class:`~streamsx.build_service.BuildService`.
 
-The call to ``ipcd_util.get_service_details`` can be code injected into a Jupyter notebook within
-an ICPD project by selecting the service instance.
 
-IBM Streams On-premises
-=======================
 
-:py:class:`StreamsConnection` is the entry point to using the Streams REST API bindings.
-Through its functions and the returned objects status information
-can be obtained for items such as :py:class:`instances <.rest_primitives.Instance>` and :py:class:`jobs <.rest_primitives.Job>`.
+**********************************
+Streaming Analytics Build REST API
+**********************************
 
-****************************
-Streaming Analytics REST API
-****************************
+You can use the Streaming Analytics build REST API to manage toolkits installed on a build server.  
 
-You can use the Streaming Analytics REST API to manage your service instance and the IBM Streams jobs that are running on the instance. The Streaming Analytics REST API is accessible from IBM Cloud applications that are bound to your service instance or from an application outside of IBM Cloud that is configured with the service instance VCAP information.
-
-:py:class:`StreamingAnalyticsConnection` is the entry point to using the
-Streaming Analytics REST API. The function :py:func:`~StreamingAnalyticsConnection.get_streaming_analytics` returns a :py:class:`~.rest_primitives.StreamingAnalyticsService` instance which is the wrapper around the Streaming Analytics REST API. This API allows functions such as :py:meth:`start <streamsx.rest_primitives.StreamingAnalyticsService.start_instance>` and :py:meth:`stop <streamsx.rest_primitives.StreamingAnalyticsService.stop_instance>` the service instance.
-
-In addition `StreamingAnalyticsConnection` extends from :py:class:`StreamsConnection` and thus provides access to the Streams REST API for the service instance.
-
-.. seealso::
-    `IBM Streams REST API overview <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.0/com.ibm.streams.restapi.doc/doc/restapis.html>`_
-        Reference documentation for the Streams REST API.
-    `Streaming Analytics REST API <https://console.ng.bluemix.net/apidocs/220-streaming-analytics?&language=node#introduction>`_
-        Reference documentation for the Streaming Analytics service REST API.
+:py:class:`BuildService` is a wrapper around the Streaming Analytics Build REST API.  This API allows functions such as :py:meth:`get toolkits <streamsx.build_service.BuildService.get_toolkits>` to list the installed toolkits, and :py:meth:`upload toolkit <streamsx.rest_primitives.Toolkit.from_local_toolkit>` to upload a local toolkit to the build service.
 
 .. seealso:: :ref:`sas-main`
 """
@@ -67,39 +47,32 @@ import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
 
 from streamsx import st
-from .rest import AbstractStreamsConnection
+from .rest import _AbstractStreamsConnection
 from .rest_primitives import (Domain, Instance, Installation, RestResource, Toolkit, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
     _exact_resource, _IAMStreamsRestClient, _IAMConstants, _get_username,
     _ICPDExternalAuthHandler)
 
-logger = logging.getLogger('streamsx.rest')
+logger = logging.getLogger('streamsx.build_service')
 
 
-class BuildService(AbstractStreamsConnection):
-    """Creates a connection to a running distributed IBM Streams instance and exposes methods to retrieve the state of
-    that instance.
-
-    Streams maintains information regarding the state of its resources. For example, these resources could include the
-    currently running Jobs, Views, PEs, Operators, and Domains. The :py:class:`StreamsConnection` provides methods to
-    retrieve that information.
+class BuildService(_AbstractStreamsConnection):
+    """Creates a connection to a running distributed IBM Streams build service and exposes methods to manage the toolkits installed on that build service.
 
     Args:
-        username (str): Username of an authorized Streams user. If ``None``, the username is taken from the ``STREAMS_USERNAME`` environment variable. If the ``STREAMS_USERNAME`` environment variable is not set, the default `streamsadmin` is used.
+        username (str): Username of an authorized Streams user. If ``None``, the username is taken from the ``STREAMS_USERNAME`` environment variable.
 
-        password(str): Password for `username` If ``None``, the password is taken from the ``STREAMS_PASSWORD`` environment variable. If the ``STREAMS_PASSWORD`` environment variable is not set, the default `passw0rd` is used to match the Streams Quick Start edition setup.
+        password(str): Password for `username` If ``None``, the password is taken from the ``STREAMS_PASSWORD`` environment variable.
 
-        resource_url(str): Root URL for IBM Streams REST API. If ``None``, the URL is taken from the ``STREAMS_REST_URL`` environment variable. If the ``REST_URL`` environment variable is not set, then ``streamtool geturl --api`` is used to obtain the URL.
+        resource_url(str): Root URL for IBM Streams REST API. If ``None``, the URL is taken from the ``STREAMS_REST_URL`` environment variable.
 
     Example:
-        >>> resource_url = "https://streamsqse.localdomain:8443/streams/rest/resources"
-        >>> sc = StreamsConnection("streamsadmin", "passw0rd", resource_url)
-        >>> sc.session.verify=False  # manually disable SSL verification, if needed
-        >>> instances = sc.get_instances()
-        >>> jobs_count = 0
-        >>> for instance in instances:
-        >>>     jobs_count += len(instance.get_jobs())
-        >>> print("There are {} jobs across all instances.".format(jobs_count))
-        There are 10 jobs across all instances.
+        >>> from streamsx.build_service import BuildService
+        >>> resource_url = "https://streams.example.com:31843"
+        >>> service_name="StreamsInstance"
+        >>> build_service = BuildService.of_endpoint(resource_url, service_name, "streamsadmin", "passw0rd")
+        >>> toolkits = build_service.get_toolkits()
+        >>> print("There are {} toolkits available.".format(len(toolkits)))
+        There are 10 toolkits available.
 
     Attributes:
         session (:py:class:`requests.Session`): Requests session object for making REST calls.
@@ -110,14 +83,13 @@ class BuildService(AbstractStreamsConnection):
         if auth:
             pass
         elif username and password:
-            # resource URL can be obtained via streamtool geturl or REST call
             pass
         else:
-            raise ValueError("Must supply either a IBM Cloud VCAP Services or a username, password"
-                             " to the StreamsConnection constructor.")
+            raise ValueError("Must supply either an authentication token or a username, password"
+                             " to the BuildService constructor.")
 
-        if not resource_url and 'STREAMS_BUILD_URL' in os.environ:
-            resource_url = os.environ['STREAMS_BUILD_URL']
+        if not resource_url and 'STREAMS_REST_URL' in os.environ:
+            resource_url = os.environ['STREAMS_REST_URL']
         
         self._build_url = resource_url
         if auth:
@@ -126,12 +98,10 @@ class BuildService(AbstractStreamsConnection):
             self.rest_client = _StreamsRestClient._of_basic(username, password)
         self.rest_client._sc = self
         self.session = self.rest_client.session
-        self._analytics_service = False # TODO What?
 
     @property
     def resource_url(self):
-        """str: Endpoint URL for IBM Streams REST build API.  This will be
-        None if the build endpoint is not defined for the remote service.
+        """str: Endpoint URL for IBM Streams REST build API.
 
         .. versionadded:: 1.13
         """
@@ -160,7 +130,7 @@ class BuildService(AbstractStreamsConnection):
         return self._get_elements('toolkits', Toolkit)
      
     def get_toolkit(self, id):
-        """Retrieves available toolit matching a specific toolkit ID.
+        """Retrieves available toolkit matching a specific toolkit ID.
 
         Args:
             id (str): Toolkit identifier to retrieve.  This is the name and 
@@ -190,7 +160,7 @@ class BuildService(AbstractStreamsConnection):
             verify: SSL verification. Set to ``False`` to disable SSL verification. Defaults to SSL verification being enabled.
 
         Returns:
-            Instance: Connection to Streams instance or ``None`` of insufficient configuration was provided.
+            BuildService: Connection to Streams build service or ``None`` of insufficient configuration was provided.
 
         .. versionadded:: 1.13
         """

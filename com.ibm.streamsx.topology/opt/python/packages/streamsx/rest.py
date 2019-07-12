@@ -68,10 +68,11 @@ from streamsx import st
 from .rest_primitives import (Domain, Instance, Installation, RestResource, Toolkit, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
     _exact_resource, _IAMStreamsRestClient, _IAMConstants)
 
+# TODO may need to remove this as it is python 3 only.
 from abc import ABC, abstractmethod
 logger = logging.getLogger('streamsx.rest')
 
-class AbstractStreamsConnection(ABC):
+class _AbstractStreamsConnection(ABC):
     @property
     @abstractmethod
     def resource_url(self):
@@ -105,7 +106,7 @@ class AbstractStreamsConnection(ABC):
             return elements[0]
         raise ValueError("Multiple resources matching: {0}".format(id))
 
-class StreamsConnection(AbstractStreamsConnection):
+class StreamsConnection(_AbstractStreamsConnection):
     """Creates a connection to a running distributed IBM Streams instance and exposes methods to retrieve the state of
     that instance.
 
