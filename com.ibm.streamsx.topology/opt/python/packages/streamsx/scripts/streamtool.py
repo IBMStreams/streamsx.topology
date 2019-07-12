@@ -29,6 +29,8 @@ def _submitjob_parser(subparsers):
     job_submit.add_argument('sabfile', help='Location of sab file.', metavar='sab-pathname')
     job_submit.add_argument('--jobConfig', '-g', help='Specifies the name of an external file that defines a job configuration overlay')
     job_submit.add_argument('--jobname', help='Specifies the name of the job.')
+    job_submit.add_argument('--jobgroup', '-J', help='Specifies the job group')
+    job_submit.add_argument('--outfile', help='Specifies the path and file name of the output file in which the command writes the list of submitted job IDs')
     job_submit.add_argument('--P', '-P', help='Specifies a submission-time parameter and value for the job', action='append')
     _user_arg(job_submit)
 
@@ -45,6 +47,14 @@ def _submitjob(instance, cmd_args, rc):
     if cmd_args.jobname:
         job_config.job_name = cmd_args.jobname
 
+    # TODO
+    # if cmd_args.outfile:
+
+    # TODO
+    # if cmd_args.jobgroup:
+    #     # must exist before you run this command, thus need to check if this jobgroup exists
+    #     job_config.job_group = cmd_args.jobgroup
+
     if cmd_args.P:
         for param in cmd_args.P:
             name_value_pair = param.split("=")
@@ -53,10 +63,10 @@ def _submitjob(instance, cmd_args, rc):
             else:
                 job_config.submission_parameters[name_value_pair[0]] = name_value_pair[1]
 
-    instance.submit_job(bundle=cmd_args.sabfile, job_config=job_config)
+    job = instance.submit_job(bundle=cmd_args.sabfile, job_config=job_config)
 
 
-    return (rc, None)
+    return (rc, job)
 
 ###########################################
 # canceljob
@@ -481,8 +491,22 @@ def run_cmd(args=None):
     except Exception as e:
         rc = 1
         print(e)
+        # _handle_http_error(e)
+
         # sys.exc_info()
     return (rc, extra_info)
+
+def _handle_http_error(err):
+    try:
+        response = err.response
+        text_json = json.loads(response.text)
+        messages = text_json['messages']
+        for message in messages:
+            print (message['message'])
+            logger.error(message['message'])
+    except:
+        pass
+    raise err
 
 def main(args=None):
     """ Mimic streamtool using the REST api for ICP4D.
