@@ -2623,9 +2623,9 @@ class Toolkit(_ResourceElement):
         path(str): The full path to the toolkit.
 
     Example:
-        >>> from streamsx import rest
-        >>> sc = rest.StreamingAnalyticsConnection()
-        >>> toolkits = sc.get_toolkits()
+        >>> from streamsx.build_service import BuildService
+        >>> build_service = BuildService.of_endpoint()
+        >>> toolkits = build_service.get_toolkits()
         >>> print (toolkits[0].resourceType)
         toolkit
 
