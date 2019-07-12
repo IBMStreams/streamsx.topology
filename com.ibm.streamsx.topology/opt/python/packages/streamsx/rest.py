@@ -68,13 +68,12 @@ from streamsx import st
 from .rest_primitives import (Domain, Instance, Installation, RestResource, Toolkit, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
     _exact_resource, _IAMStreamsRestClient, _IAMConstants)
 
-# TODO may need to remove this as it is python 3 only.
-from abc import ABC, abstractmethod
 logger = logging.getLogger('streamsx.rest')
 
-class _AbstractStreamsConnection(ABC):
+class _AbstractStreamsConnection():
+    # This is an abstract property, but there seems to be no way to enforce
+    # that in python 2.7.
     @property
-    @abstractmethod
     def resource_url(self):
         pass
 
