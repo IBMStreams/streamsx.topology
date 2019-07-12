@@ -2625,7 +2625,7 @@ class Toolkit(_ResourceElement):
     Example:
         >>> from streamsx import rest
         >>> sc = rest.StreamingAnalyticsConnection()
-        >>> instances = sc.get_toolkits()
+        >>> toolkits = sc.get_toolkits()
         >>> print (toolkits[0].resourceType)
         toolkit
 
