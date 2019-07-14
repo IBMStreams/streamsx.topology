@@ -28,7 +28,7 @@ def captured_output():
 
 
 @unittest.skipUnless(
-    "ICP4D_DEPLOYMENT_URL" in os.environ
+    "ICPD_URL" in os.environ
     and "STREAMS_INSTANCE_ID" in os.environ
     and "STREAMS_USERNAME" in os.environ
     and "STREAMS_PASSWORD" in os.environ,

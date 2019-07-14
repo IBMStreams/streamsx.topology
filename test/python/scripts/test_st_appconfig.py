@@ -18,13 +18,6 @@ from contextlib import contextmanager
 from io import StringIO
 
 
-@unittest.skipUnless(
-    "ICP4D_DEPLOYMENT_URL" in os.environ
-    and "STREAMS_INSTANCE_ID" in os.environ
-    and "STREAMS_USERNAME" in os.environ
-    and "STREAMS_PASSWORD" in os.environ,
-    "requires Streams REST API setup",
-)
 @contextmanager
 def captured_output():
     new_out, new_err = StringIO(), StringIO()
@@ -36,6 +29,13 @@ def captured_output():
         sys.stdout, sys.stderr = old_out, old_err
 
 
+@unittest.skipUnless(
+    "ICPD_URL" in os.environ
+    and "STREAMS_INSTANCE_ID" in os.environ
+    and "STREAMS_USERNAME" in os.environ
+    and "STREAMS_PASSWORD" in os.environ,
+    "requires Streams REST API setup",
+)
 class TestAppconfig(unittest.TestCase):
 
     # Create the application config
