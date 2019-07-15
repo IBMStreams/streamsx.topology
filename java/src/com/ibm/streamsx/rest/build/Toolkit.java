@@ -25,6 +25,8 @@ import com.google.gson.annotations.Expose;
 /**
  * 
  * An object describing an IBM Streams Toolkit
+ *
+ * @since 1.13
  * 
  */
 public class Toolkit extends Element {
@@ -44,6 +46,8 @@ public class Toolkit extends Element {
   private String restid;
   @Expose
   private String version;
+
+  private Toolkit() {}
 
   final static List<Toolkit> createToolkitList(AbstractConnection sc, JsonObject gsonToolkitString) {
     if (gsonToolkitString.toString().isEmpty()) {
@@ -70,58 +74,121 @@ public class Toolkit extends Element {
     return create(sc, uri, Toolkit.class);
   }
 
+  /**
+   * Gets the id of this toolkit.  The id is a unique identifier that can
+   * be used to get this toolkit using {@link BuildService#getToolkit(String)}.
+   */
   public String getId() {
     return id;
   }
 
+  /**
+   * Gets the name of this toolkit.
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Gets the path to the toolkit on the build service.
+   */
   public String getPath() {
     return path;
   }
 
+  /**
+   * Gets the minimum version of IBM Streams required to use this toolkit.
+   */
   public String getRequiredProductVersion() {
     return requiredProductVersion;
   }
 
+  /**
+   * Identifies the Build REST resource type.
+   *
+   * @return "toolkit"
+   */
   public String getResourceType() {
     return resourceType;
   }
 
+  /**
+   * Gets the version of this toolkit.
+   */
   public String getVersion() {
     return version;
   }
 
+  /**
+   * Gets the index of this toolkit.  This will be a string representation
+   * of an XML document.
+   * @throws IOException
+   */
   public String getIndex() throws IOException {
     String index = connection().getResponseString(this.index);
     return index;
   }
 
+  /**
+   * Delete this toolkit in the build service.  After deleting a toolkit,
+   * this {@link Toolkit} object remains valid, but calls to 
+   * {@link #getIndex} will fail.  
+   *
+   * @return true if the toolkit was deleted, and false if the toolkit
+   * was not found on the build service.
+   * @throws IOException
+   */
   public boolean delete() throws IOException {
     return ((StreamsBuildService)connection()).deleteToolkit(this);
   }
 
+  /**
+   * Install a toolkit in the build service from a local path.  The path
+   * must be a directory containing a single toolkit.  If the toolkit's
+   * name and version exactly match those of a toolkit already in the build
+   * service, the existing toolkit will not be replaced.
+   *
+   * @return A {@link Toolkit} object representing the newly installed toolkit,
+   * or null if the toolkit was not installed.
+   * @throws IOException
+   */
   public static Toolkit fromLocalPath(BuildService connection, File path) throws IOException {
     return ((StreamsBuildService)connection).putToolkit(path);
   }
 
+  /**
+   * A dependency of a toolkit on another toolkit.  This identifies the 
+   * name, and the range of versions, of the other toolkit required by
+   * a toolkit.
+   */
   public static class Dependency {
     public Dependency(String name, String version) {
       this.name = name;
       this.version = version;
     }
+    /**
+     * Gets the name of the dependent {@link Toolkit toolkit}.
+     */
     public String getName() {
       return name;
     }
+    /**
+     * Gets the range of versions of the dependent {@link Toolkit toolkit}.
+     */
     public String getVersion() {
       return version;
     }
-    public String name;
-    public String version;
+    private String name;
+    private String version;
   }
 
+  /**
+   * Gets a list of {@link Toolkit.Dependency dependencies} of this toolkit.
+   * This list may be empty of this toolkit does not depend on any other
+   * toolkit.
+   *
+   * @throws Exception
+   */
   public List<Dependency> getDependencies() throws Exception {
     List<Dependency> dependencies = new ArrayList();
 

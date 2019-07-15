@@ -128,7 +128,7 @@ public abstract class Element {
      * internal usage to get the list of processing elements
      * 
      */
-    protected abstract static class ElementArray<E extends Element> {
+    abstract static class ElementArray<E extends Element> {
         @Expose
         private String resourceType;
         @Expose

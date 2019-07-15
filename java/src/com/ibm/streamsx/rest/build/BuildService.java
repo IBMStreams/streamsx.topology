@@ -50,6 +50,21 @@ public interface BuildService {
 			throws IOException;	
 
 
+	/**
+	 * Gets a list of {@link Toolkit toolkits} installed on the IBM Streams 
+     * build service.
+	 * 
+	 * @since 1.13
+	 */
     public List<Toolkit> getToolkits() throws IOException;
+
+	/**
+	 * Gets a {@link Toolkit toolkit} installed on the IBM Streams build 
+     * service.
+	 * 
+	 * @param toolkitId The ID of the toolkit to retrieve.
+	 * @return The toolkit, or null if no matching toolkit was found.
+	 * @since 1.13
+	 */
     public Toolkit getToolkit(String toolkitId) throws IOException;
 }
