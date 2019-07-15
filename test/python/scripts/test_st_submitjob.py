@@ -8,12 +8,15 @@ import time
 import requests
 import uuid
 import json
+import glob
 
 
 from streamsx.topology.topology import Topology
 from streamsx.topology.context import submit, ConfigParams, JobConfig
 from streamsx.rest import Instance
 import streamsx.scripts.streamtool as streamtool
+import streamsx.ec
+
 
 from contextlib import contextmanager
 from io import StringIO
@@ -32,18 +35,27 @@ def captured_output():
 
 
 @unittest.skipUnless(
-    "ICP4D_DEPLOYMENT_URL" in os.environ
+    "ICPD_URL" in os.environ
     and "STREAMS_INSTANCE_ID" in os.environ
     and "STREAMS_USERNAME" in os.environ
     and "STREAMS_PASSWORD" in os.environ,
     "requires Streams REST API setup",
 )
 class TestSubmitJob(unittest.TestCase):
-
-    def _submitjob(self, args):
+    def _submitjob(self, args, sab=None):
         args.insert(0, "--disable-ssl-verify")
         args.insert(1, "submitjob")
-        args.insert(2, "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/main.sab")
+        if sab:
+            args.insert(2, sab)
+        else:
+            topo = Topology()
+            topo.source([1])
+            cfg = {}
+            cfg[ConfigParams.SSL_VERIFY] = False
+            src = submit("BUNDLE", topo, cfg)
+            sab_path = src["build"]["artifacts"][0]["location"]
+            args.insert(2, sab_path)
+            self.files_to_remove.append(sab_path)
         rc, val = streamtool.run_cmd(args=args)
         return val
 
@@ -52,94 +64,157 @@ class TestSubmitJob(unittest.TestCase):
         self.username = os.environ["STREAMS_USERNAME"]
         self.stringLength = 10
         self.jobs_to_cancel = []
+        self.files_to_remove = []
         self.name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
-        # self.instance = Instance.of_endpoint(username= self.username, verify=False)
 
     def tearDown(self):
         for job in self.jobs_to_cancel:
             job.cancel(force=True)
-        if os.path.exists("jobconfig.json"):
-            os.remove("jobconfig.json")
-        outfile = self.name + '.txt'
-        if os.path.exists(outfile):
-            os.remove(outfile)
+
+        self.files_to_remove.extend(glob.glob("./test_st_submitjob.*.json"))
+
+        for file in self.files_to_remove:
+            if os.path.exists(file):
+                os.remove(file)
 
     # Check --jobname option
     def test_submitjob_name(self):
-        job = self._submitjob(args=['--jobname', self.name])
+        job = self._submitjob(args=["--jobname", self.name])
 
         self.jobs_to_cancel.extend([job])
 
-        self.assertEquals(job.name, self.name)
+        self.assertEqual(job.name, self.name)
 
     # Check --jobgroup option
     def test_submitjob_group(self):
-        with self.assertRaises(Exception):
-            self._submitjob(args=['--jobgroup', str(self.name)])
+        output, error, rc = self.get_output(
+            lambda: self._submitjob(args=["--jobgroup", str(self.name)])
+        )
 
-        jobgroup = "default"
-        job = self._submitjob(args=['--jobgroup', str(jobgroup)])
+        error = error.splitlines()
+
+        if not any(
+            "500 Server Error: Internal Server Error for url" in s for s in error
+        ):
+            self.fail("jobgroup doesn't already exist, should throw 500 error")
+
+        job = self._submitjob([])
 
         self.jobs_to_cancel.extend([job])
-        self.assertEquals(job.jobGroup, jobgroup)
+        jobgroup = job.jobGroup.split("/")[-1]
 
+        self.assertEqual(jobgroup, "default")
 
     # Check --jobConfig option
     def test_submitjob_config(self):
         jc = JobConfig(job_name=self.name)
-        my_file = 'jobconfig.json'
-        with open(my_file, 'w') as f:
+        my_file = "jobconfig.json"
+        with open(my_file, "w") as f:
             json.dump(jc.as_overlays(), f)
 
-        job = self._submitjob(args=['--jobConfig', my_file])
+        job = self._submitjob(args=["--jobConfig", my_file])
 
         self.jobs_to_cancel.extend([job])
+        self.files_to_remove.append(my_file)
 
-        self.assertEquals(job.name, self.name)
+        self.assertEqual(job.name, self.name)
 
     # Check --outfile option
     def test_submitjob_outfile(self):
-        my_file = self.name + '.txt'
+        my_file = self.name + ".txt"
 
-        job = self._submitjob(args=['--outfile', my_file])
+        job = self._submitjob(args=["--outfile", my_file])
 
         self.jobs_to_cancel.extend([job])
+        self.files_to_remove.append(my_file)
 
-        with open(my_file, 'r') as f:
+        with open(my_file, "r") as f:
             job_ids = [line.rstrip() for line in f if not line.isspace()]
-            self.assertEquals(job_ids[0], job.id)
+            self.assertEqual(job_ids[0], job.id)
 
+    # Check -P option
+    def test_submitjob_submission_parameters_simple(self):
+        operator1 = "test1"
+        operator2 = "test2"
 
+        topo = Topology()
+        lower = topo.create_submission_parameter("key1")
+        upper = topo.create_submission_parameter("key2")
 
-    def test_submitjob_submission_parameters(self):
-        key_value_pairs = self.generateRandom()
-        # my_args = []
-        # i = 3
-        # for pair in key_value_pairs:
-        #     my_args.insert(i, "--P")
-        #     i += 1
-        #     my_args.insert(i, pair)
-        #     i += 1
-        # job = self._submitjob(args=my_args)
+        s = topo.source([1])
+        s.for_each(Test_metrics(lower), name=operator1)
+        s.for_each(Test_metrics(upper), name=operator2)
 
-        # self.jobs_to_cancel.extend([job])
+        cfg = {}
+        cfg[ConfigParams.SSL_VERIFY] = False
+        src = submit("BUNDLE", topo, cfg)
+        sab_path = src["build"]["artifacts"][0]["location"]
 
-        # topo = Topology()
-        # lower = topo.create_submission_parameter('lower')
-        # upper = topo.create_submission_parameter('upper')
-        # s = topo.source([1])
-        # s.for_each(MyTestClass())
+        # Submit the job
+        args = ["--jobname", str(self.name), "-P", "key1=val1", "-P", "key2=val2"]
+        my_job = self._submitjob(args, sab=sab_path)
+        self.files_to_remove.append(sab_path)
+        self.jobs_to_cancel.extend([my_job])
 
-        # src = submit('BUNDLE', topo)
-        #submitjob mysab -P A X -P B Y
+        test1 = my_job.get_operators(operator1)[0]
+        test2 = my_job.get_operators(operator2)[0]
+        m1, m2 = None, None
+        for _ in range(100):
+            if m1 and m2:
+                break
+            time.sleep(1)
+            m1 = test1.get_metrics("val1")
+            m2 = test2.get_metrics("val2")
 
+        if not (m1 and m2):
+            self.fail("Submission parameters failed to be created")
 
+    # Check -P option
+    def test_submitjob_submission_parameters_complex(self):
+        paramList1, paramList2 = self.generateRandom()
+        operator1 = "test1"
+        operator2 = "test2"
 
+        topo = Topology()
+        lower = topo.create_submission_parameter(paramList1[0][0])
+        upper = topo.create_submission_parameter(paramList1[1][0])
+
+        s = topo.source([1])
+        s.for_each(Test_metrics(lower), name=operator1)
+        s.for_each(Test_metrics(upper), name=operator2)
+
+        cfg = {}
+        cfg[ConfigParams.SSL_VERIFY] = False
+        src = submit("BUNDLE", topo, cfg)
+        sab_path = src["build"]["artifacts"][0]["location"]
+
+        # Submit the job
+        args = ["--jobname", str(self.name)]
+        for prop in paramList2:
+            args.extend(["-P", prop])
+        my_job = self._submitjob(args, sab=sab_path)
+        self.files_to_remove.append(sab_path)
+        self.jobs_to_cancel.extend([my_job])
+
+        test1 = my_job.get_operators(operator1)[0]
+        test2 = my_job.get_operators(operator2)[0]
+        m1, m2 = None, None
+        for _ in range(100):
+            if m1 and m2:
+                break
+            time.sleep(1)
+            m1 = test1.get_metrics(paramList1[0][1])
+            m2 = test2.get_metrics(paramList1[1][1])
+
+        if not (m1 and m2):
+            self.fail("Submission parameters failed to be created")
 
     def get_output(self, my_function):
         """ Helper function that gets the ouput from executing my_function
+
         Arguments:
             my_function {} -- The function to be executed
+
         Returns:
             Output [String] -- Output of my_function
             Rc [int] -- 0 indicates succces, 1 indicates error or failure
@@ -147,40 +222,36 @@ class TestSubmitJob(unittest.TestCase):
         rc = None
         with captured_output() as (out, err):
             rc = my_function()
-        output = out.getvalue().strip()
-        return output, rc
+        stdout = out.getvalue().strip()
+        stderr = err.getvalue().strip()
+        return stdout, stderr, rc
 
-    def generateRandom(self):
+    def generateRandom(self, num=2):
         """ Helper function that generates random key-value pairs of the form <KEY>=<VALUE> and returns them in a list
 
         Returns:
-            propList [List] -- A list consisting of elements of the form <KEY>=<VALUE> pairs
+            (propList1, propList2) [Tuple] -- A tuple containing 2 lists, the first is of form [(<KEY>, <VALUE>)...],
+            second list is of form [ <KEY>=<VALUE>, ..... ]
         """
-        propList = []
-        for i in range(10):
+        propList1 = []
+        propList2 = []
+        for _ in range(num):
             key = "KEY_" + uuid.uuid4().hex.upper()[0 : self.stringLength]
             value = "VALUE_" + uuid.uuid4().hex.upper()[0 : self.stringLength]
-            propList.append(key + "=" + value)
-        return propList
+            propList2.append(key + "=" + value)
+            propList1.append((key, value))
+        return (propList1, propList2)
 
-class EcDuplicateMetric(object):
+
+class Test_metrics(object):
+    def __init__(self, val):
+        self.val = val
+
     def __enter__(self):
-        self.m1 = streamsx.ec.CustomMetric(self, name='METRIC1', initialValue=37)
-        if int(self.m1.value) != 37:
-            raise ValueError("Expected initial 37 got " + int(self.m1.value))
-        self.m1 = streamsx.ec.CustomMetric(self, name='METRIC1', initialValue=99)
-        if int(self.m1.value) != 37:
-            raise ValueError("Expected 37 got " + int(self.m1.value))
-
-        try:
-            streamsx.ec.CustomMetric(self, name='METRIC1', kind='Gauge')
-            # 4.3 allows metrics of the same name regardless of kind.
-            self.okerror = True
-        except ValueError as e:
-            self.okerror = True
+        self.m1 = streamsx.ec.CustomMetric(self, name=self.val(), initialValue=37)
 
     def __exit__(self, a, b, c):
         pass
 
     def __call__(self, tuple_):
-        return tuple_ + (self.m1.name,self.okerror)
+        return
