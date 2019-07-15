@@ -4,17 +4,23 @@
  */
 package com.ibm.streamsx.rest;
 
+import static com.ibm.streamsx.topology.internal.context.streamsrest.StreamsKeys.getStreamsInstanceURL;
 import static java.util.Objects.requireNonNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
+import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
+import com.ibm.streamsx.rest.internal.RestUtils;
+import com.ibm.streamsx.topology.internal.context.streamsrest.StreamsKeys;
+import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
  * 
@@ -76,6 +82,80 @@ public class Instance extends Element {
     final static List<Instance> createInstanceList(AbstractStreamsConnection sc, String uri)
        throws IOException {        
         return createList(sc, uri, InstancesArray.class);
+    }
+    
+    /**
+     * Connect to a Streams service REST API.
+     * 
+     * Supported for Cloud Pak for Data. The endpoint is the Cloud Pak for Data
+     * deployment URL.
+     * 
+     * <P>
+     * This call is equivalent to {@link #ofEndpoint(String, String, String, String, boolean)}
+     * passing {@code true} for <em>verify</em>.
+     * </P>
+     * 
+     * @param endpoint Endpoint URL for Streams instance, if {@code null} defaults to environment variable
+     * {@code ICPD_URL}.
+     * @param name Streams service name, if {@code null} defaults to environment variable {@code STREAMS_INSTANCE_NAME}.
+     * @param userName User name, if {@code null} defaults to environment variable {@code STREAMS_USERNAME} if set,
+     *     otherwise the operating user identifier.
+     * @param password Password, if {@code null} defaults to environment variable {@code STREAMS_PASSWORD}.
+
+     * @return Connection to Streams instance using REST API.
+     * @throws IOException Error connecting to instance.
+     * 
+     * @since 1.13
+     */
+    public static Instance ofEndpoint(String endpoint, String name, String userName, String password) throws IOException {
+        return ofEndpoint(endpoint, name, userName, password, true);
+    }
+    
+    /**
+     * Connect to a Streams service REST API.
+     * 
+     * Supported for Cloud Pak for Data. The endpoint is the Cloud Pak for Data
+     * deployment URL.
+     * 
+     * @param endpoint Endpoint URL for Streams instance, if {@code null} defaults to environment variable
+     * {@code ICPD_URL}.
+     * @param name Streams service name, if {@code null} defaults to environment variable {@code STREAMS_INSTANCE_NAME}.
+     * @param userName User name, if {@code null} defaults to environment variable {@code STREAMS_USERNAME} if set,
+     *     otherwise the operating user identifier.
+     * @param password Password, if {@code null} defaults to environment variable {@code STREAMS_PASSWORD}.
+     * @param verify False to disable SSL host verification.
+
+     * @return Connection to Streams instance using REST API.
+     * @throws IOException Error connecting to instance.
+     * 
+     * @since 1.13
+     */
+    public static Instance ofEndpoint(String endpoint, String name, String userName, String password,
+            boolean verify) throws IOException {
+        
+        if (name == null)
+            name = Util.getenv(Util.STREAMS_INSTANCE_ID);
+               
+        ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(
+                endpoint, name, userName, password);
+        
+        JsonObject deploy = new JsonObject();
+        deploy.add(StreamsKeys.SERVICE_DEFINITION, authenticator.config(RestUtils.createExecutor(!verify)));
+        
+        URL instanceUrl  = new URL(getStreamsInstanceURL(deploy));
+
+        URL restUrl = new URL(instanceUrl.getProtocol(), instanceUrl.getHost(), instanceUrl.getPort(),
+                "/streams/rest/resources");
+                       
+        StreamsConnection conn = StreamsConnection.ofBearerToken(restUrl.toExternalForm(),
+                StreamsKeys.getBearerToken(deploy));
+        
+        if (!verify)
+            conn.allowInsecureHosts(true);
+                
+        Instance instance = conn.getInstance(name);
+
+        return instance;
     }
 
     /**

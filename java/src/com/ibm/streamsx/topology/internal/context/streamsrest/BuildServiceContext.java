@@ -7,7 +7,6 @@ package com.ibm.streamsx.topology.internal.context.streamsrest;
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.getSPLCompatibleName;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.createJobConfigOverlayFile;
-import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 
 import java.io.File;
@@ -24,6 +23,9 @@ import com.ibm.streamsx.topology.internal.context.remote.BuildRemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
+/**
+ * Streams V5 (ICP4D) build service context.
+ */
 public class BuildServiceContext extends BuildRemoteContext<BuildService> {
     
     @Override
@@ -65,6 +67,10 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
             buildInfo.addProperty("name", build.getName());
 
             build.uploadArchiveAndBuild(buildArchive);
+            
+            if (!"built".equals(build.getStatus())) {
+                throw new IllegalStateException("Error submitting archive for build: " + buildName);
+            }
 
             JsonArray artifacts = new JsonArray();
             buildInfo.add("artifacts", artifacts);
