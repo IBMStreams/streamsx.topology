@@ -70,7 +70,7 @@ class TestSubmitJob(unittest.TestCase):
 
         self.jobs_to_cancel.extend([job])
 
-        self.assertEquals(job.name, name)
+        self.assertEquals(job.name, self.name)
 
     # Check --jobgroup option
     def test_submitjob_group(self):
