@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.internal.context.streamsrest;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import java.io.File;
 import java.net.URL;
@@ -78,7 +79,8 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
         URL restUrl = new URL(instanceUrl.getProtocol(), instanceUrl.getHost(), instanceUrl.getPort(),
                 "/streams/rest/resources");
                        
-        StreamsConnection conn = StreamsConnection.ofAuthorization(restUrl.toExternalForm(), ICP4DAuthenticator.of(deploy));
+        JsonObject serviceDefinition = object(deploy, StreamsKeys.SERVICE_DEFINITION);
+        StreamsConnection conn = StreamsConnection.ofAuthorization(restUrl.toExternalForm(), ICP4DAuthenticator.of(serviceDefinition));
         
         if (!sslVerify(deploy))
             conn.allowInsecureHosts(true);

@@ -1,34 +1,40 @@
 package com.ibm.streamsx.rest.build;
 
-import java.io.IOException;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
+import java.io.IOException;
+import java.util.function.Function;
+
+import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
 import com.ibm.streamsx.rest.internal.RestUtils;
 
 class StreamsBuildService extends AbstractConnection implements BuildService {
+    
+    public static BuildService of(ICP4DAuthenticator authenticator, JsonObject serviceDefinition, boolean verify) throws IOException {
+        
+        String buildServiceEndpoint = jstring(object(serviceDefinition, "connection_info"), "serviceBuildEndpoint");
+        return new StreamsBuildService(buildServiceEndpoint, authenticator, verify);
+    }
 	
 	private String endpoint;
-	private String authorization;
+	private Function<Executor, String> authenticator;
 
-	public StreamsBuildService(String endpoint, String bearerToken) {
-		super(false);
+	private StreamsBuildService(String endpoint, Function<Executor, String> authenticator, boolean verify) {
+		super(!verify);
 		this.endpoint = endpoint;
-		setAuthorization(bearerToken);
-	}
-	
-	private void setAuthorization(String bearerToken) {
-		authorization = RestUtils.createBearerAuth(bearerToken);
+		this.authenticator = authenticator;
 	}
 	
 	@Override
 	String getAuthorization() {
-		return authorization;
+		return authenticator.apply(getExecutor());
 	}
-	
-	
 	
 	@Override
 	public void allowInsecureHosts() {

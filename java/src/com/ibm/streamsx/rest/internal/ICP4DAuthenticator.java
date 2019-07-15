@@ -20,7 +20,6 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.internal.context.streamsrest.StreamsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
@@ -159,9 +158,7 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         return cfg;
     }
     
-    public static ICP4DAuthenticator of(JsonObject deploy) throws MalformedURLException, UnsupportedEncodingException {
-        
-        JsonObject service = deploy.get(StreamsKeys.SERVICE_DEFINITION).getAsJsonObject();
+    public static ICP4DAuthenticator of(JsonObject service) throws MalformedURLException, UnsupportedEncodingException {
         
         String cpd_host = jstring(service, "cluster_ip");
         int cpd_port = GsonUtilities.jint(service, "cluster_port");

@@ -8,6 +8,7 @@ import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.getSPLCompatibleName;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.createJobConfigOverlayFile;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,7 +42,8 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
 
     @Override
     protected BuildService createSubmissionContext(JsonObject deploy) throws Exception {
-        return BuildService.of(StreamsKeys.getBuildServiceURL(deploy), StreamsKeys.getBearerToken(deploy));
+        JsonObject serviceDefinition = object(deploy, StreamsKeys.SERVICE_DEFINITION);
+        return BuildService.ofServiceDefinition(serviceDefinition, sslVerify(deploy));
     }
 
     @Override
