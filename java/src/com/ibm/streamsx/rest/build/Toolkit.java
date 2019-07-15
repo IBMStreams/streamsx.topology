@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -100,6 +101,10 @@ public class Toolkit extends Element {
 
   public boolean delete() throws IOException {
     return ((StreamsBuildService)connection()).deleteToolkit(this);
+  }
+
+  public static Toolkit fromLocalPath(BuildService connection, File path) throws IOException {
+    return ((StreamsBuildService)connection).putToolkit(path);
   }
 
   public static class Dependency {

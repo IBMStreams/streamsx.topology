@@ -126,7 +126,7 @@ public class ToolkitAPITest {
 
   @Test
   public void testPostToolkit() throws Exception {
-    Toolkit bingo = connection.putToolkit(bingo0Path);
+    Toolkit bingo = Toolkit.fromLocalPath(connection, bingo0Path);
     assertNotNull(bingo);
     assertEquals(bingo.getName(), bingoToolkitName);
     assertEquals(bingo.getVersion(), bingo0Version);
@@ -146,7 +146,7 @@ public class ToolkitAPITest {
 
   @Test
   public void testDeleteToolkit() throws Exception {
-    Toolkit bingo = connection.putToolkit(bingo0Path);
+    Toolkit bingo = Toolkit.fromLocalPath(connection, bingo0Path);
     assertNotNull(bingo);
     assertEquals(bingo.getName(), bingoToolkitName);
     assertEquals(bingo.getVersion(), bingo0Version);
@@ -164,7 +164,7 @@ public class ToolkitAPITest {
 
     // Post it again, then find it in the list of toolkits and delete
     // it from the Toolkit object from the list.
-    bingo = connection.putToolkit(bingo0Path);
+    bingo = Toolkit.fromLocalPath(connection, bingo0Path);
     assertNotNull(bingo);
     assertEquals(bingo.getName(), bingoToolkitName);
     assertEquals(bingo.getVersion(), bingo0Version);
@@ -176,7 +176,7 @@ public class ToolkitAPITest {
 
   @Test
   public void testGetIndex() throws Exception {
-    Toolkit bingo = connection.putToolkit(bingo0Path);
+    Toolkit bingo = Toolkit.fromLocalPath(connection, bingo0Path);
     assertNotNull(bingo);
     assertEquals(bingoToolkitName, bingo.getName());
     assertEquals(bingo0Version, bingo.getVersion());
@@ -218,16 +218,16 @@ public class ToolkitAPITest {
     List<Toolkit> toolkits = connection.getToolkits();
    
     // First post version 1.0.1
-    Toolkit bingo1 = connection.putToolkit(bingo1Path);
+    Toolkit bingo1 = Toolkit.fromLocalPath(connection, bingo1Path);
     assertNotNull(bingo1);
     waitForToolkit(bingoToolkitName, Optional.of(bingo1Version));
 
     // Post version 1.0.1 again.  It should return Null
-    assertNull(connection.putToolkit(bingo1Path));
+    assertNull(Toolkit.fromLocalPath(connection, bingo1Path));
 
     // Post verison 1.0.0.  It should succeed as it does not match any
     // existing version.
-    Toolkit bingo0 = connection.putToolkit(bingo0Path);
+    Toolkit bingo0 = Toolkit.fromLocalPath(connection, bingo0Path);
     assertNotNull(bingo0);
     waitForToolkit(bingoToolkitName, Optional.of(bingo0Version));
 
@@ -236,7 +236,7 @@ public class ToolkitAPITest {
     assertToolkitNotExists(bingoToolkitName, Optional.of(bingo2Version));
 
     // Post version 1.0.2.  All three version continue to exist.
-    Toolkit bingo2 = connection.putToolkit(bingo2Path);
+    Toolkit bingo2 = Toolkit.fromLocalPath(connection, bingo2Path);
     assertNotNull(bingo2);
     waitForToolkit(bingoToolkitName, Optional.of(bingo2Version));
     
@@ -253,13 +253,13 @@ public class ToolkitAPITest {
   public void testGetDependencies() throws Exception {
     // Games depends on both cards and bingo.
 
-    Toolkit bingo = connection.putToolkit(bingo0Path);
+    Toolkit bingo = Toolkit.fromLocalPath(connection, bingo0Path);
     assertNotNull(bingo);
 
-    Toolkit cards = connection.putToolkit(cardsPath);
+    Toolkit cards = Toolkit.fromLocalPath(connection, cardsPath);
     assertNotNull(cards);
     
-    Toolkit games = connection.putToolkit(gamesPath);
+    Toolkit games = Toolkit.fromLocalPath(connection, gamesPath);
     assertNotNull(games);
 
     // bingo and cards have no dependencies
@@ -285,7 +285,7 @@ public class ToolkitAPITest {
     // Path does not exist
     File notExists = new File(bingo0Path.getParent(), "fleegle_tk");
     try {
-      connection.putToolkit(notExists);
+      Toolkit.fromLocalPath(connection, notExists);
       fail("IOException expected");
     }
     catch(IllegalArgumentException e) {
@@ -294,7 +294,7 @@ public class ToolkitAPITest {
     // Path is an individual file
     File toolkitXml = new File(bingo0Path, "toolkit.xml");
     try {
-      connection.putToolkit(toolkitXml);
+      Toolkit.fromLocalPath(connection, toolkitXml);
       fail("IOException expected");
     }
     catch(IllegalArgumentException e) {
@@ -303,7 +303,7 @@ public class ToolkitAPITest {
     // Path is malformed garbage
     File garbagePath = new File("./toolkits/bingo_tk0\000/snork");
     try {
-      connection.putToolkit(garbagePath);
+      Toolkit.fromLocalPath(connection, garbagePath);
       fail("IllegalArgumentException expected");
     }
     catch(IllegalArgumentException e) {
@@ -312,7 +312,7 @@ public class ToolkitAPITest {
     // Not a toolkit directory.
     File notToolkit = bingo0Path.getParentFile();
     try {
-      connection.putToolkit(notToolkit);
+      Toolkit.fromLocalPath(connection, notToolkit);
       fail("IOException expected");
     }
     catch(IllegalArgumentException e) {
@@ -322,7 +322,7 @@ public class ToolkitAPITest {
   // Test getting a toolkit by id.
   @Test
   public void testGetTookit() throws Exception {
-    Toolkit bingo = connection.putToolkit(bingo1Path);
+    Toolkit bingo = Toolkit.fromLocalPath(connection, bingo1Path);
     assertNotNull(bingo);
     waitForToolkit(bingoToolkitName, Optional.of(bingo1Version));
 

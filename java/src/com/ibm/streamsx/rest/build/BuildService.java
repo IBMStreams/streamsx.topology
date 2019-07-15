@@ -52,6 +52,4 @@ public interface BuildService {
 
     public List<Toolkit> getToolkits() throws IOException;
     public Toolkit getToolkit(String toolkitId) throws IOException;
-	// TODO move this to Toolkit
-    public Toolkit putToolkit(File path) throws IOException;
 }

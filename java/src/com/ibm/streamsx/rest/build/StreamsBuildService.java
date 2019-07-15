@@ -91,10 +91,12 @@ public class StreamsBuildService extends AbstractConnection implements BuildServ
 	return toolkitsUrl;
     }
 
+    @Override
     public List<Toolkit> getToolkits() throws IOException {
 	return Toolkit.createToolkitList(this, getToolkitsURL());
     }
 
+    @Override
     public Toolkit getToolkit(String toolkitId) throws IOException {
 	if (toolkitId.isEmpty()) {
 		throw new IllegalArgumentException("Empty toolkit id");
@@ -106,11 +108,11 @@ public class StreamsBuildService extends AbstractConnection implements BuildServ
 	}
     }
 
-    public Toolkit putToolkit(File path) throws IOException {
+    Toolkit putToolkit(File path) throws IOException {
 	return StreamsRestActions.putToolkit(this, path);
     }
 
-    public boolean deleteToolkit(Toolkit toolkit) throws IOException {
+    boolean deleteToolkit(Toolkit toolkit) throws IOException {
 	return StreamsRestActions.deleteToolkit(toolkit);
     }
 
