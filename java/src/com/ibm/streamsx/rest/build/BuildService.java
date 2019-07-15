@@ -6,6 +6,8 @@
 package com.ibm.streamsx.rest.build;
 
 import java.io.IOException;
+import java.io.File;
+import java.util.List;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Job;
@@ -46,4 +48,10 @@ public interface BuildService {
 	 */
 	Build createBuild(String buildName, JsonObject buildConfig)
 			throws IOException;	
+
+
+    public List<Toolkit> getToolkits() throws IOException;
+    public Toolkit getToolkit(String toolkitId) throws IOException;
+	// TODO move this to Toolkit
+    public Toolkit putToolkit(File path) throws IOException;
 }

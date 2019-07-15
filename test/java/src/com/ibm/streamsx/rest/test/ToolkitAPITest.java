@@ -41,16 +41,30 @@ import org.w3c.dom.NodeList;
 import com.ibm.streamsx.rest.internal.ZipStream;
 
 import com.ibm.streamsx.rest.RESTException;
-import com.ibm.streamsx.rest.build.StreamsBuildService;
+import com.ibm.streamsx.rest.build.BuildService;
 import com.ibm.streamsx.rest.build.Toolkit;
 
 import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
 import org.apache.http.client.fluent.Executor;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.internal.RestUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.fluent.Request;
+import org.apache.http.entity.ContentType;
+import org.apache.http.client.fluent.Response;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
+import org.apache.http.util.EntityUtils;
+import java.io.Reader;
+import com.google.gson.Gson;
+import java.io.InputStreamReader;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
+import java.net.URI;
+import java.net.URL;
 
 public class ToolkitAPITest {
-  protected StreamsBuildService connection;
+  protected BuildService connection;
   String instanceName;
   String testType;
 
@@ -62,10 +76,10 @@ public class ToolkitAPITest {
   @Before
   public void setup() throws Exception {
     setupConnection();
-    //deleteToolkits();
+    deleteToolkits();
   }
 
-  //@After
+  @After
   public void deleteToolkits() throws Exception {
     Set<String> deleteNames = new HashSet();
     deleteNames.add(gamesToolkitName);
@@ -90,9 +104,6 @@ public class ToolkitAPITest {
   }
 
   @Test
-  public void test() {}
-
-  //@Test
   public void testGetToolkits() throws Exception {    
     List<Toolkit> toolkits = connection.getToolkits();
     
@@ -113,7 +124,7 @@ public class ToolkitAPITest {
     }
   }
 
-  //@Test
+  @Test
   public void testPostToolkit() throws Exception {
     Toolkit bingo = connection.putToolkit(bingo0Path);
     assertNotNull(bingo);
@@ -133,7 +144,7 @@ public class ToolkitAPITest {
     assertTrue(bingo.delete());
   }
 
-  //@Test
+  @Test
   public void testDeleteToolkit() throws Exception {
     Toolkit bingo = connection.putToolkit(bingo0Path);
     assertNotNull(bingo);
@@ -163,7 +174,7 @@ public class ToolkitAPITest {
     assertTrue(foundToolkits.get(0).delete());    
   }
 
-  //@Test
+  @Test
   public void testGetIndex() throws Exception {
     Toolkit bingo = connection.putToolkit(bingo0Path);
     assertNotNull(bingo);
@@ -202,7 +213,7 @@ public class ToolkitAPITest {
   // Test posting different versions of a toolkit.  Posting a version
   // equal to one that is currently deployed should fail,
   // but posting a different version should succeed.
-  //@Test
+  @Test
   public void testPostMultipleVersions() throws Exception {
     List<Toolkit> toolkits = connection.getToolkits();
    
@@ -238,7 +249,7 @@ public class ToolkitAPITest {
   }
 
   // Test getting the dependencies of a toolkit.
-  //@Test
+  @Test
   public void testGetDependencies() throws Exception {
     // Games depends on both cards and bingo.
 
@@ -269,7 +280,7 @@ public class ToolkitAPITest {
   }
 
   // Test posting from a bad path
-  //@Test
+  @Test
   public void testBadPath() throws IOException {
     // Path does not exist
     File notExists = new File(bingo0Path.getParent(), "fleegle_tk");
@@ -309,7 +320,7 @@ public class ToolkitAPITest {
   }
 
   // Test getting a toolkit by id.
-  //@Test
+  @Test
   public void testGetTookit() throws Exception {
     Toolkit bingo = connection.putToolkit(bingo1Path);
     assertNotNull(bingo);
@@ -343,7 +354,7 @@ public class ToolkitAPITest {
 
   // Test the zip file creation class.  Zip a directory, then write it to a file,
   // unzip it, and compare it to the original directory.
-  //@Test
+  @Test
   public void testZip() throws Exception {
     Path tkpath = bingo0Path.toPath();
     File baseDir = new File(System.getProperty("java.io.tmpdir"));
@@ -390,37 +401,105 @@ public class ToolkitAPITest {
   protected void setupConnection() throws Exception {
     if (connection == null) {
       testType = "DISTRIBUTED";
+            
+      String icpdUrl = System.getenv("ICPD_URL");
       
-      instanceName = System.getenv("STREAMS_INSTANCE_ID");
-      if (instanceName != null)
-	System.out.println("InstanceName: " + instanceName);
-      else
-	System.out.println("InstanceName: assuming single instance");
-      
-      
-      // TODO we need to change the way we get the URL for Cloud
-      // pak for data.
-      /*
-      String buildUrl = System.getenv("STREAMS_BUILD_URL");
-      assertNotNull("set STREAMS_BUILD_URL to run this test", buildUrl);
-      System.out.println("build URL: " + buildUrl);
-      connection = new StreamsBuildService(buildUrl, bearerToken);
-      
-      if (!sslVerify())
-	connection.allowInsecureHosts(true);
-      */
-      // Not working because ICP4DAuthenticator has port 31843 hard-coded.
-      String deploymentUrl = System.getenv("STREAMS_REST_URL");
-      String endpoint = deploymentUrl;
-      System.out.println("endpoint " + endpoint);
-      ICP4DAuthenticator auth = ICP4DAuthenticator.of(endpoint);
+      String authUrl = icpdUrl + "/icp4d-api/v1/authorize";
       boolean allowInsecure = true;
       Executor executor = RestUtils.createExecutor(allowInsecure);
-      JsonObject config = auth.config(executor);
-      String token = config.get("service_token").getAsString();
-      System.out.println("token " + token);
+
+      JsonObject authParams = new JsonObject();
+      authParams.addProperty("username","admin");
+      authParams.addProperty("password","password");
+
+      Request request = Request.Post(authUrl)
+        .addHeader("accept", ContentType.APPLICATION_JSON.getMimeType())
+        .bodyString(authParams.toString(), ContentType.APPLICATION_JSON);
+      
+      Response response = executor.execute(request);
+      JsonObject jsonResponse = gsonFromResponse(response.returnResponse());
+     
+
+      //String bearerToken = jsonResponse.get("token").getAsString();
+      String bearerToken = jstring(jsonResponse, "token");
+
+      // This is only the token to get the token.
+      String instanceName = System.getenv("STREAMS_INSTANCE_ID");
+      String detailsUrl = icpdUrl + "/zen-data/v2/serviceInstance/details?displayName=" + instanceName;
+
+
+      request = Request.Get(detailsUrl)
+        .addHeader("accept", ContentType.APPLICATION_JSON.getMimeType())
+        .addHeader("Authorization","Bearer " + bearerToken);
+
+      response = executor.execute(request);
+      JsonObject sr = gsonFromResponse(response.returnResponse());
+      JsonObject sro = jobject(sr, "requestObj");
+      String serviceId = jstring(sro, "ID");
+
+      String serviceTokenUrl = icpdUrl + "/zen-data/v2/serviceInstance/token";
+      
+      JsonObject pd = new JsonObject();
+      pd.addProperty("serviceInstanceId", serviceId);
+      request = Request.Post(serviceTokenUrl)
+        .addHeader("accept", ContentType.APPLICATION_JSON.getMimeType())
+        .addHeader("Authorization","Bearer " + bearerToken)
+        .bodyString(pd.toString(), ContentType.APPLICATION_JSON);
+
+      response = executor.execute(request);
+      jsonResponse = gsonFromResponse(response.returnResponse());
+      String serviceToken = jstring(jsonResponse, "AccessToken");
+      
+      JsonObject sca = jobject(sro, "CreateArguments");
+      JsonObject connectionInfo = jobject(sca, "connection-info");
+      String buildEndpoint = jstring(connectionInfo, "externalBuildEndpoint");
+
+        
+      URI icpdURI = new URI(icpdUrl);
+
+      URI internalURI = new URI(buildEndpoint);
+
+      String externalHost = icpdURI.getHost();
+
+      URI externalURI = new URI(internalURI.getScheme(), 
+                                internalURI.getUserInfo(), 
+                                externalHost, 
+                                internalURI.getPort(), 
+                                internalURI.getPath(),
+                                internalURI.getQuery(), 
+                                internalURI.getFragment());
+
+      String buildUrl = externalURI.toURL().toExternalForm();
+
+      connection = BuildService.of(buildUrl, serviceToken);
+      if (!sslVerify())
+	connection.allowInsecureHosts();      
     }
   }
+
+  // TODO remove this
+    private static JsonObject gsonFromResponse(HttpResponse response) throws IOException {
+        HttpEntity entity = response.getEntity();
+        int statusCode = response.getStatusLine().getStatusCode();
+        if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED) {
+            final String errorInfo;
+            if (entity != null)
+                errorInfo = " -- " + EntityUtils.toString(entity);
+            else
+                errorInfo = "";
+            throw new IllegalStateException(
+                    "Unexpected HTTP resource from service:"
+                            + response.getStatusLine().getStatusCode() + ":" +
+                            response.getStatusLine().getReasonPhrase() + errorInfo);
+        }
+
+        if (entity == null)
+            throw new IllegalStateException("No HTTP resource from service");
+        Reader r = new InputStreamReader(entity.getContent());
+        JsonObject jsonResponse = new Gson().fromJson(r, JsonObject.class);
+        EntityUtils.consume(entity);
+        return jsonResponse;
+    }
 
   public static boolean sslVerify() {
     String v = System.getProperty("topology.test.SSLVerify");

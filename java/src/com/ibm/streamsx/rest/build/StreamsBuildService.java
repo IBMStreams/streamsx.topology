@@ -100,7 +100,7 @@ public class StreamsBuildService extends AbstractConnection implements BuildServ
 		throw new IllegalArgumentException("Empty toolkit id");
 	}
 	else {
-	    String query = getToolkitsURL() + "/" + URLEncoder.encode(toolkitId, StandardCharsets.UTF_8.name());
+		String query = getToolkitsURL() + "/" + URLEncoder.encode(toolkitId, StandardCharsets.UTF_8.name());
 		Toolkit toolkit = Toolkit.create(this, query);
 		return toolkit;
 	}
