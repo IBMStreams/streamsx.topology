@@ -147,8 +147,7 @@ public class Instance extends Element {
         URL restUrl = new URL(instanceUrl.getProtocol(), instanceUrl.getHost(), instanceUrl.getPort(),
                 "/streams/rest/resources");
                        
-        StreamsConnection conn = StreamsConnection.ofBearerToken(restUrl.toExternalForm(),
-                StreamsKeys.getBearerToken(deploy));
+        StreamsConnection conn = StreamsConnection.ofAuthorization(restUrl.toExternalForm(), authenticator);
         
         if (!verify)
             conn.allowInsecureHosts(true);

@@ -20,6 +20,7 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.internal.context.streamsrest.StreamsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
@@ -46,6 +47,8 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         return new ICP4DAuthenticator(icpdUrl, authorizeUrl, detailsUrl, serviceTokenUrl, instanceName, user, password);
     }
     
+
+    
     private final URL icpdUrl;
     private final URL authorizeUrl;
     private final URL detailsUrl;
@@ -53,6 +56,7 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
     private final String instanceName;
     private final String user;
     private final String password;
+    
     private String serviceAuth;
     private long expire;
     
@@ -119,8 +123,7 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         
         serviceAuth = RestUtils.createBearerAuth(serviceToken);
         expire = System.currentTimeMillis() + 19 * 60;
-        
-        
+                
         URL buildEndpoint = new URL(jstring(sci, "externalBuildEndpoint"));
         
         // Ensure the build endpoint matches the fully external ICP4D URL
@@ -147,6 +150,7 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         cfg.addProperty("type", "streams");
         cfg.add("connection_info", connInfo);
         cfg.addProperty("service_token", serviceToken);
+        cfg.addProperty("service_token_expire", expire);
         cfg.addProperty("service_name", serviceName);
         cfg.addProperty("cluster_ip", icpdUrl.getHost());
         cfg.addProperty("cluster_port", icpdUrl.getPort());
@@ -154,13 +158,27 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         
         return cfg;
     }
+    
+    public static ICP4DAuthenticator of(JsonObject deploy) throws MalformedURLException, UnsupportedEncodingException {
+        
+        JsonObject service = deploy.get(StreamsKeys.SERVICE_DEFINITION).getAsJsonObject();
+        
+        String cpd_host = jstring(service, "cluster_ip");
+        int cpd_port = GsonUtilities.jint(service, "cluster_port");
+        URL cpd_url = new URL("https", cpd_host, cpd_port, "");
+        
+        ICP4DAuthenticator auth = ICP4DAuthenticator.of(cpd_url.toExternalForm(), jstring(service, "service_name"), (String) null, (String) null);       
+      
+        String serviceToken = jstring(service, "service_token");
+        if (serviceToken != null) {
+            auth.serviceAuth = RestUtils.createBearerAuth(serviceToken);
+            auth.expire = service.get("service_token_expire").getAsLong();
+        }
+        return auth;
+    }
 
     @Override
-    public String apply(Executor executor) {
-        
-        
-        return null;
-    }
-    
-    
+    public String apply(Executor executor) {   
+        return serviceAuth;
+    }  
 }
