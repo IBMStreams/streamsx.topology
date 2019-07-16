@@ -23,17 +23,6 @@ from io import StringIO
 
 # Tests streamtool submitjob script.
 # Requires environment setup for a ICP4D Streams instance.
-@contextmanager
-def captured_output():
-    new_out, new_err = StringIO(), StringIO()
-    old_out, old_err = sys.stdout, sys.stderr
-    try:
-        sys.stdout, sys.stderr = new_out, new_err
-        yield sys.stdout, sys.stderr
-    finally:
-        sys.stdout, sys.stderr = old_out, old_err
-
-
 @unittest.skipUnless(
     "ICPD_URL" in os.environ
     and "STREAMS_INSTANCE_ID" in os.environ
@@ -57,7 +46,7 @@ class TestSubmitJob(unittest.TestCase):
             args.insert(2, sab_path)
             self.files_to_remove.append(sab_path)
         rc, val = streamtool.run_cmd(args=args)
-        return val
+        return rc, val
 
     def setUp(self):
         self.instance = os.environ["STREAMS_INSTANCE_ID"]
@@ -79,14 +68,16 @@ class TestSubmitJob(unittest.TestCase):
 
     # Check --jobname option
     def test_submitjob_name(self):
-        job = self._submitjob(args=["--jobname", self.name])
+        rc, job = self._submitjob(args=["--jobname", self.name])
 
         self.jobs_to_cancel.extend([job])
-
+        self.assertEqual(rc, 0)
         self.assertEqual(job.name, self.name)
 
     # Check --jobgroup option
     def test_submitjob_group(self):
+
+        # JobGroup name doesn't exist, error should be printed to stderr
         output, error, rc = self.get_output(
             lambda: self._submitjob(args=["--jobgroup", str(self.name)])
         )
@@ -98,11 +89,13 @@ class TestSubmitJob(unittest.TestCase):
         ):
             self.fail("jobgroup doesn't already exist, should throw 500 error")
 
-        job = self._submitjob([])
+        # Check no jobGroup specified results in default jobGroup
+        rc, job = self._submitjob([])
 
         self.jobs_to_cancel.extend([job])
         jobgroup = job.jobGroup.split("/")[-1]
 
+        self.assertEqual(rc, 0)
         self.assertEqual(jobgroup, "default")
 
     # Check --jobConfig option
@@ -112,27 +105,30 @@ class TestSubmitJob(unittest.TestCase):
         with open(my_file, "w") as f:
             json.dump(jc.as_overlays(), f)
 
-        job = self._submitjob(args=["--jobConfig", my_file])
+        rc, job = self._submitjob(args=["--jobConfig", my_file])
 
         self.jobs_to_cancel.extend([job])
         self.files_to_remove.append(my_file)
 
+        self.assertEqual(rc, 0)
         self.assertEqual(job.name, self.name)
 
     # Check --outfile option
     def test_submitjob_outfile(self):
         my_file = self.name + ".txt"
 
-        job = self._submitjob(args=["--outfile", my_file])
+        rc, job = self._submitjob(args=["--outfile", my_file])
 
         self.jobs_to_cancel.extend([job])
         self.files_to_remove.append(my_file)
+
+        self.assertEqual(rc, 0)
 
         with open(my_file, "r") as f:
             job_ids = [line.rstrip() for line in f if not line.isspace()]
             self.assertEqual(job_ids[0], job.id)
 
-    # Check -P option
+    # Check -P option w/ simple key1=value1 submission parameters
     def test_submitjob_submission_parameters_simple(self):
         operator1 = "test1"
         operator2 = "test2"
@@ -152,7 +148,7 @@ class TestSubmitJob(unittest.TestCase):
 
         # Submit the job
         args = ["--jobname", str(self.name), "-P", "key1=val1", "-P", "key2=val2"]
-        my_job = self._submitjob(args, sab=sab_path)
+        rc, my_job = self._submitjob(args, sab=sab_path)
         self.files_to_remove.append(sab_path)
         self.jobs_to_cancel.extend([my_job])
 
@@ -166,10 +162,12 @@ class TestSubmitJob(unittest.TestCase):
             m1 = test1.get_metrics("val1")
             m2 = test2.get_metrics("val2")
 
+        self.assertEqual(rc, 0)
+
         if not (m1 and m2):
             self.fail("Submission parameters failed to be created")
 
-    # Check -P option
+    # Check -P option w/ randomly generated key/value submission parameters
     def test_submitjob_submission_parameters_complex(self):
         paramList1, paramList2 = self.generateRandom()
         operator1 = "test1"
@@ -192,7 +190,7 @@ class TestSubmitJob(unittest.TestCase):
         args = ["--jobname", str(self.name)]
         for prop in paramList2:
             args.extend(["-P", prop])
-        my_job = self._submitjob(args, sab=sab_path)
+        rc, my_job = self._submitjob(args, sab=sab_path)
         self.files_to_remove.append(sab_path)
         self.jobs_to_cancel.extend([my_job])
 
@@ -206,6 +204,8 @@ class TestSubmitJob(unittest.TestCase):
             m1 = test1.get_metrics(paramList1[0][1])
             m2 = test2.get_metrics(paramList1[1][1])
 
+        self.assertEqual(rc, 0)
+
         if not (m1 and m2):
             self.fail("Submission parameters failed to be created")
 
@@ -216,12 +216,13 @@ class TestSubmitJob(unittest.TestCase):
             my_function {} -- The function to be executed
 
         Returns:
-            Output [String] -- Output of my_function
-            Rc [int] -- 0 indicates succces, 1 indicates error or failure
+            stdout [String] -- Output of my_function
+            stderr [String] -- Errors and exceptions from executing my_function
+            rc [int] -- 0 indicates succces, 1 indicates error or failure
         """
         rc = None
         with captured_output() as (out, err):
-            rc = my_function()
+            rc, val = my_function()
         stdout = out.getvalue().strip()
         stderr = err.getvalue().strip()
         return stdout, stderr, rc
@@ -241,6 +242,17 @@ class TestSubmitJob(unittest.TestCase):
             propList2.append(key + "=" + value)
             propList1.append((key, value))
         return (propList1, propList2)
+
+
+@contextmanager
+def captured_output():
+    new_out, new_err = StringIO(), StringIO()
+    old_out, old_err = sys.stdout, sys.stderr
+    try:
+        sys.stdout, sys.stderr = new_out, new_err
+        yield sys.stdout, sys.stderr
+    finally:
+        sys.stdout, sys.stderr = old_out, old_err
 
 
 class Test_metrics(object):

@@ -61,6 +61,9 @@ def _submitjob(instance, cmd_args, rc):
 
     job = instance.submit_job(bundle=cmd_args.sabfile, job_config=job_config)
 
+    if not job:
+        raise Exception("Error in creating Job")
+
     # If --outfile, write jobID to file
     if cmd_args.outfile:
         with open(cmd_args.outfile, 'w') as my_file:
@@ -491,21 +494,7 @@ def run_cmd(args=None):
     except Exception as e:
         rc = 1
         print(e, file=sys.stderr)
-        # _handle_http_error(e)
-        # sys.exc_info()
     return (rc, extra_info)
-
-def _handle_http_error(err):
-    try:
-        response = err.response
-        text_json = json.loads(response.text)
-        messages = text_json['messages']
-        for message in messages:
-            print (message['message'])
-            logger.error(message['message'])
-    except:
-        pass
-    raise err
 
 def main(args=None):
     """ Mimic streamtool using the REST api for ICP4D.
@@ -513,7 +502,6 @@ def main(args=None):
     streamsx._streams._version._mismatch_check('streamsx.topology.context')
 
     rc, extra_info = run_cmd(args)
-    # print(rc)
     return rc
 
 def _parse_args(args):
