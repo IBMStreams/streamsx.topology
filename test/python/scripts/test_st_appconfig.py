@@ -60,10 +60,10 @@ class TestAppconfig(unittest.TestCase):
 
         return streamtool.main(args=args)
 
-    def _ls_appconfig(self):
-        args = []
-        args.insert(0, "--disable-ssl-verify")
-        args.insert(1, "lsappconfig")
+    def _ls_appconfig(self, fmt=None):
+        args = ["--disable-ssl-verify", "lsappconfig"]
+        if fmt:
+            args.insert(3, fmt)
         streamtool.main(args=args)
 
     def _remove_appconfig(self, config_name, noprompt=False):
@@ -100,7 +100,8 @@ class TestAppconfig(unittest.TestCase):
         self.instance = os.environ['STREAMS_INSTANCE_ID']
         self.stringLength = 10
         self.username = os.environ['STREAMS_USERNAME']
-        self.appConfigs = []
+        self.name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
+        self.appconfigs_to_remove = []
 
     ###########################################
     # mkappconfig
@@ -108,16 +109,15 @@ class TestAppconfig(unittest.TestCase):
 
     # Able to create an appconfig w/ no properties or description
     def test_create_simple_appconfig(self):
-        name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
-        output, error, rc = self.get_output(lambda: self._make_appconfig(name))
-        self.appConfigs.append(name)
+        output, error, rc = self.get_output(lambda: self._make_appconfig(self.name))
+        self.appconfigs_to_remove.append(self.name)
         # Check success message
         correctOut = "The {} application configuration was created successfully for the {} instance".format(
-            name, self.instance
+            self.name, self.instance
         )
         self.assertEqual(output, correctOut)
 
-        configs = self._get_configs(name)
+        configs = self._get_configs(self.name)
         self.assertEqual(rc, 0)
 
         # Check correct properties and description
@@ -126,14 +126,13 @@ class TestAppconfig(unittest.TestCase):
 
     # If try to update existing appconfig via mkconfig command (either properties or description), it throws error
     def test_cannot_create_or_update_existing_appconfig(self):
-        name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
-        self._make_appconfig(name)
-        self.appConfigs.append(name)
-        output, error, rc = self.get_output(lambda: self._make_appconfig(name))
+        self._make_appconfig(self.name)
+        self.appconfigs_to_remove.append(self.name)
+        output, error, rc = self.get_output(lambda: self._make_appconfig(self.name))
 
         # Check error message
         correctOut = "The {} application configuration already exists in the following {} instance".format(
-            name, self.instance
+            self.name, self.instance
         )
         error = error.splitlines()
 
@@ -142,10 +141,9 @@ class TestAppconfig(unittest.TestCase):
 
     # mkappconfig with --property can only be used to specify 1 key/value pair
     def test_appconfig_correct_property_format(self):
-        name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
         props = ["key1=value1,key2=value2"]
 
-        output, error, rc = self.get_output(lambda: self._make_appconfig(name, props=props))
+        output, error, rc = self.get_output(lambda: self._make_appconfig(self.name, props=props))
 
         # Check error message
         correctOut = "The format of the following property specification is not valid: {}. The correct syntax is: <name>=<value>".format(
@@ -159,9 +157,8 @@ class TestAppconfig(unittest.TestCase):
 
     # mkappconfig with --property check correct format
     def test_appconfig_correct_property_format_2(self):
-        name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
         props = ["key1=value1", "key1=value1,key2=value2"]
-        output, error, rc = self.get_output(lambda: self._make_appconfig(name, props=props))
+        output, error, rc = self.get_output(lambda: self._make_appconfig(self.name, props=props))
         # Check error message
         correctOut = "The format of the following property specification is not valid: {}. The correct syntax is: <name>=<value>".format(
             props[1]
@@ -173,14 +170,13 @@ class TestAppconfig(unittest.TestCase):
 
     # Test - mkappconfig w/ both prop_file and —property, keys given in --property override ones specified in prop_file
     def test_make_correct_property(self):
-        name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
         props2 = ["key1=value2", "key2=value3", "key6=value7"]
         propFile = "test_st_appconfig_properties.txt"
 
-        rc = self._make_appconfig(name, props=props2, prop_file=propFile)
-        self.appConfigs.append(name)
-        
-        configs = self._get_configs(name)
+        rc = self._make_appconfig(self.name, props=props2, prop_file=propFile)
+        self.appconfigs_to_remove.append(self.name)
+
+        configs = self._get_configs(self.name)
 
         # Check properties are correct
         my_file = open(propFile)
@@ -228,7 +224,7 @@ class TestAppconfig(unittest.TestCase):
             propList [List] -- A list consisting of elements of the form <KEY>=<VALUE> pairs
         """
         propList = []
-        for i in range(10):
+        for _ in range(10):
             key = "KEY_" + uuid.uuid4().hex.upper()[0 : self.stringLength]
             value = "VALUE_" + uuid.uuid4().hex.upper()[0 : self.stringLength]
             propList.append(key + "=" + value)
@@ -257,10 +253,9 @@ class TestAppconfig(unittest.TestCase):
 
     # If no appconfig exists by given name, print out error message
     def test_remove_nonexistant_appconfig(self):
-        name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
-        output, error, rc = self.get_output(lambda: self._remove_appconfig(name))
+        output, error, rc = self.get_output(lambda: self._remove_appconfig(self.name))
         correctOut = "The {} application configuration does not exist in the {} instance".format(
-            name, self.instance
+            self.name, self.instance
         )
 
         error = error.splitlines()
@@ -270,12 +265,11 @@ class TestAppconfig(unittest.TestCase):
 
     # If succesful removal of appconfig, print out success messages
     def test_remove_simple_appconfig(self):
-        name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
-        self._make_appconfig(name)
-        self.appConfigs.append(name)
-        output, error, rc = self.get_output(lambda: self._remove_appconfig(name, noprompt=True))
+        self._make_appconfig(self.name)
+        self.appconfigs_to_remove.append(self.name)
+        output, error, rc = self.get_output(lambda: self._remove_appconfig(self.name, noprompt=True))
         correctOut = "The {} application configuration was removed successfully for the {} instance".format(
-            name, self.instance
+            self.name, self.instance
         )
         self.assertEqual(output, correctOut)
         self.assertEqual(rc, 0)
@@ -286,11 +280,10 @@ class TestAppconfig(unittest.TestCase):
 
     # If trying to update nonexistant appconfig, print out error message
     def test_update_nonexistant_appconfig(self):
-        name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
         props = self.generateRandom()
-        output, error, rc = self.get_output(lambda: self._ch_appconfig(name, props=props))
+        output, error, rc = self.get_output(lambda: self._ch_appconfig(self.name, props=props))
         correctOut = "The {} application configuration does not exist in the {} instance".format(
-            name, self.instance
+            self.name, self.instance
         )
 
         error = error.splitlines()
@@ -301,20 +294,19 @@ class TestAppconfig(unittest.TestCase):
     # Create appconfig with properties and description, update appconfig w/o --property or --description command,
     # make sure doesn’t overwrite/clear existing properties and description
     def test_update_correct_property_and_description(self):
-        name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
         props = self.generateRandom()
         description = uuid.uuid4().hex.upper()[0 : self.stringLength]
 
-        self._make_appconfig(name, props=props, description=description)
-        self.appConfigs.append(name)
-        output, error, rc = self.get_output(lambda: self._ch_appconfig(name))
+        self._make_appconfig(self.name, props=props, description=description)
+        self.appconfigs_to_remove.append(self.name)
+        output, error, rc = self.get_output(lambda: self._ch_appconfig(self.name))
         correctOut = "The {} application configuration was updated successfully for the {} instance".format(
-            name, self.instance
+            self.name, self.instance
         )
 
         self.assertEqual(output, correctOut)
 
-        configs = self._get_configs(name)
+        configs = self._get_configs(self.name)
 
         self.assertEqual(configs.properties, self.create_props_dict(props))
         self.assertEqual(configs.description, description)
@@ -322,27 +314,26 @@ class TestAppconfig(unittest.TestCase):
 
     # Check updated properites and description are correct
     def test_update_correct_property_and_description_2(self):
-        name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
         props = self.generateRandom()
         description = uuid.uuid4().hex.upper()[0 : self.stringLength]
 
         newProps = self.generateRandom()
         newDescription = uuid.uuid4().hex.upper()[0 : self.stringLength]
 
-        self._make_appconfig(name, props=props, description=description)
-        self.appConfigs.append(name)
+        self._make_appconfig(self.name, props=props, description=description)
+        self.appconfigs_to_remove.append(self.name)
 
         output, error, rc = self.get_output(
-            lambda: self._ch_appconfig(name, props=newProps, description=newDescription)
+            lambda: self._ch_appconfig(self.name, props=newProps, description=newDescription)
         )
 
         # Check correct output message
         correctOut = "The {} application configuration was updated successfully for the {} instance".format(
-            name, self.instance
+            self.name, self.instance
         )
         self.assertEqual(output, correctOut)
 
-        configs = self._get_configs(name)
+        configs = self._get_configs(self.name)
 
         propsDict = self.create_props_dict(props=props)
         propsDict = self.create_props_dict(props=newProps, config_props=propsDict)
@@ -359,13 +350,12 @@ class TestAppconfig(unittest.TestCase):
 
     # If config exists, but no properties, print out error message
     def test_get_nonexistant_property(self):
-        name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
-        self._make_appconfig(name)
-        self.appConfigs.append(name)
+        self._make_appconfig(self.name)
+        self.appconfigs_to_remove.append(self.name)
 
-        output, error, rc = self.get_output(lambda: self._get_appconfig(name))
+        output, error, rc = self.get_output(lambda: self._get_appconfig(self.name))
         correctOut = "The {} application configuration has no properties defined".format(
-            name
+            self.name
         )
 
         error = error.splitlines()
@@ -375,12 +365,11 @@ class TestAppconfig(unittest.TestCase):
 
     # getAppconfig outputs corrects property data
     def test_get_correct_property(self):
-        name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
         props = self.generateRandom()
-        self._make_appconfig(name, props=props)
-        self.appConfigs.append(name)
+        self._make_appconfig(self.name, props=props)
+        self.appconfigs_to_remove.append(self.name)
 
-        output, error, rc= self.get_output(lambda: self._get_appconfig(name))
+        output, error, rc= self.get_output(lambda: self._get_appconfig(self.name))
         output = output.splitlines()
 
         self.assertEqual(set(output), set(props))
@@ -390,7 +379,18 @@ class TestAppconfig(unittest.TestCase):
     # lsappconfig
     ###########################################
 
+    # def test_lsappconfig_simple(self):
+    #     props = self.generateRandom()
+    #     self._make_appconfig(name, props=props)
+    #     self.appconfigs_to_remove.append(name)
+
+    #     output, error, rc= self.get_output(lambda: self._get_appconfig(name))
+    #     output = output.splitlines()
+
+    #     self.assertEqual(set(output), set(props))
+    #     self.assertEqual(rc, 0)
+
     def tearDown(self):
-        for app in self.appConfigs:
+        for app in self.appconfigs_to_remove:
             self._remove_appconfig(app, noprompt=True)
-            self.appConfigs.remove(app)
+            self.appconfigs_to_remove.remove(app)
