@@ -1701,21 +1701,21 @@ class Stream(_placement._Placement, object):
         A stream of :py:const:`Python objects <streamsx.topology.schema.CommonSchema.Python>` can be subscribed to by other Streams Python applications.
 
         If a stream is published setting `schema` to
-        :py:const:`~streamsx.topology.schema.CommonSchema.Json`
+        ``json`` or :py:const:`~streamsx.topology.schema.CommonSchema.Json`
         then it is published as a stream of JSON objects.
         Other Streams applications may subscribe to it regardless
         of their implementation language.
 
         If a stream is published setting `schema` to
-        :py:const:`~streamsx.topology.schema.CommonSchema.String`
-        then it is published as strings
+        ``str`` or :py:const:`~streamsx.topology.schema.CommonSchema.String`
+        then it is published as strings.
         Other Streams applications may subscribe to it regardless
         of their implementation language.
 
         Supported values of `schema` are only
-        :py:const:`~streamsx.topology.schema.CommonSchema.Json`
+        ``json``, :py:const:`~streamsx.topology.schema.CommonSchema.Json`
         and
-        :py:const:`~streamsx.topology.schema.CommonSchema.String`.
+        ``str``, :py:const:`~streamsx.topology.schema.CommonSchema.String`.
 
         Args:
             topic(str): Topic to publish this stream to.
@@ -1730,31 +1730,32 @@ class Stream(_placement._Placement, object):
             Now returns a :py:class:`Sink` instance.
         """
         sl = _SourceLocation(_source_info(), 'publish')
+        _name = self.topology.graph._requested_name(name, action="publish")
         schema = streamsx.topology.schema._normalize(schema)
+        group_id = None
         if schema is not None and self.oport.schema.schema() != schema.schema():
             nc = None
             if schema == streamsx.topology.schema.CommonSchema.Json:
-                schema_change = self.as_json()
+                pub_stream = self.as_json()
             elif schema == streamsx.topology.schema.CommonSchema.String:
-                schema_change = self.as_string()
+                pub_stream = self.as_string()
             else:
                 raise ValueError(schema)
-               
+            # See #https://github.com/IBMStreams/streamsx.topology.issues/2161
+            # group_id = pub_stream._op()._layout_group('Publish', name if name else _name)
             if self._placeable:
-                self._colocate(schema_change, 'publish')
-            sp = schema_change.publish(topic, schema=schema, name=name)
-            sp._op().sl = sl
-            return sp
+                self._colocate(pub_stream, 'publish')
+        else:
+            pub_stream = self
 
-        _name = self.topology.graph._requested_name(name, action="publish")
         # publish is never stateful
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl, name=_name, stateful=False)
-        op.addInputPort(outputPort=self.oport)
-        op._layout_group('Publish', name if name else _name)
+        op.addInputPort(outputPort=pub_stream.oport)
+        op._layout_group('Publish', name if name else _name, group_id=group_id)
         sink = Sink(op)
 
-        if self._placeable:
-            self._colocate(sink, 'publish')
+        if pub_stream._placeable:
+            pub_stream._colocate(sink, 'publish')
         return sink
 
     def autonomous(self):
