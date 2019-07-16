@@ -102,6 +102,7 @@ class TestAppconfig(unittest.TestCase):
         self.username = os.environ['STREAMS_USERNAME']
         self.name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
         self.appconfigs_to_remove = []
+        self.appconfigs_to_remove.append(self.name)
 
     ###########################################
     # mkappconfig
@@ -110,7 +111,6 @@ class TestAppconfig(unittest.TestCase):
     # Able to create an appconfig w/ no properties or description
     def test_create_simple_appconfig(self):
         output, error, rc = self.get_output(lambda: self._make_appconfig(self.name))
-        self.appconfigs_to_remove.append(self.name)
         # Check success message
         correctOut = "The {} application configuration was created successfully for the {} instance".format(
             self.name, self.instance
@@ -127,7 +127,6 @@ class TestAppconfig(unittest.TestCase):
     # If try to update existing appconfig via mkconfig command (either properties or description), it throws error
     def test_cannot_create_or_update_existing_appconfig(self):
         self._make_appconfig(self.name)
-        self.appconfigs_to_remove.append(self.name)
         output, error, rc = self.get_output(lambda: self._make_appconfig(self.name))
 
         # Check error message
@@ -174,7 +173,6 @@ class TestAppconfig(unittest.TestCase):
         propFile = "test_st_appconfig_properties.txt"
 
         rc = self._make_appconfig(self.name, props=props2, prop_file=propFile)
-        self.appconfigs_to_remove.append(self.name)
 
         configs = self._get_configs(self.name)
 
@@ -266,7 +264,6 @@ class TestAppconfig(unittest.TestCase):
     # If succesful removal of appconfig, print out success messages
     def test_remove_simple_appconfig(self):
         self._make_appconfig(self.name)
-        self.appconfigs_to_remove.append(self.name)
         output, error, rc = self.get_output(lambda: self._remove_appconfig(self.name, noprompt=True))
         correctOut = "The {} application configuration was removed successfully for the {} instance".format(
             self.name, self.instance
@@ -298,7 +295,6 @@ class TestAppconfig(unittest.TestCase):
         description = uuid.uuid4().hex.upper()[0 : self.stringLength]
 
         self._make_appconfig(self.name, props=props, description=description)
-        self.appconfigs_to_remove.append(self.name)
         output, error, rc = self.get_output(lambda: self._ch_appconfig(self.name))
         correctOut = "The {} application configuration was updated successfully for the {} instance".format(
             self.name, self.instance
@@ -321,7 +317,6 @@ class TestAppconfig(unittest.TestCase):
         newDescription = uuid.uuid4().hex.upper()[0 : self.stringLength]
 
         self._make_appconfig(self.name, props=props, description=description)
-        self.appconfigs_to_remove.append(self.name)
 
         output, error, rc = self.get_output(
             lambda: self._ch_appconfig(self.name, props=newProps, description=newDescription)
@@ -351,7 +346,6 @@ class TestAppconfig(unittest.TestCase):
     # If config exists, but no properties, print out error message
     def test_get_nonexistant_property(self):
         self._make_appconfig(self.name)
-        self.appconfigs_to_remove.append(self.name)
 
         output, error, rc = self.get_output(lambda: self._get_appconfig(self.name))
         correctOut = "The {} application configuration has no properties defined".format(
@@ -367,7 +361,6 @@ class TestAppconfig(unittest.TestCase):
     def test_get_correct_property(self):
         props = self.generateRandom()
         self._make_appconfig(self.name, props=props)
-        self.appconfigs_to_remove.append(self.name)
 
         output, error, rc= self.get_output(lambda: self._get_appconfig(self.name))
         output = output.splitlines()
@@ -380,9 +373,8 @@ class TestAppconfig(unittest.TestCase):
     ###########################################
 
     # def test_lsappconfig_simple(self):
-    #     props = self.generateRandom()
-    #     self._make_appconfig(name, props=props)
-    #     self.appconfigs_to_remove.append(name)
+    #     self._make_appconfig(self.name)
+    #     self.appconfigs_to_remove.append(self.name)
 
     #     output, error, rc= self.get_output(lambda: self._get_appconfig(name))
     #     output = output.splitlines()
@@ -393,4 +385,3 @@ class TestAppconfig(unittest.TestCase):
     def tearDown(self):
         for app in self.appconfigs_to_remove:
             self._remove_appconfig(app, noprompt=True)
-            self.appconfigs_to_remove.remove(app)
