@@ -24,7 +24,7 @@ public interface BuildService {
             boolean verify) throws IOException {
 	    
 	    ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(endpoint, name, userName, password);
-	    JsonObject serviceDefinition = authenticator.config(RestUtils.createExecutor(!verify));
+	    JsonObject serviceDefinition = authenticator.config(verify);
 	    
 	    return StreamsBuildService.of(authenticator, serviceDefinition, verify);
 	    

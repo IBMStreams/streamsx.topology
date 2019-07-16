@@ -24,6 +24,7 @@ public class StreamsConnection {
 
     StreamsConnection(AbstractStreamsConnection delegate) {
         this.delegate = delegate;
+        delegate.setStreamsConnection(this);
     }
     
     private final AbstractStreamsConnection delegate() {
@@ -77,13 +78,20 @@ public class StreamsConnection {
         return sc;
     }
     
-    public static StreamsConnection ofAuthorization(String url, Function<Executor, String> authorization) {
+    public static StreamsConnection ofAuthenticator(String url, Function<Executor, String> authenticator) {
         
         AbstractStreamsConnection delegate = new StreamsConnectionImpl(null,
-                authorization,
+                authenticator,
                 url, false);
         StreamsConnection sc = new StreamsConnection(delegate);
         return sc;      
+    }
+    
+    public Function<Executor, String> getAuthenticator() {
+        Object delegate = delegate();
+        if (delegate instanceof StreamsConnectionImpl)
+            return ((StreamsConnectionImpl) delegate).getAuthenticator();
+        return null;
     }
 
     /**
@@ -104,6 +112,10 @@ public class StreamsConnection {
      */
     public boolean allowInsecureHosts(boolean allowInsecure) {
     	return delegate().allowInsecureHosts(allowInsecure);
+    }
+    
+    public final boolean isVerify() {
+        return delegate().isVerify();
     }
 
     /**

@@ -140,14 +140,14 @@ public class Instance extends Element {
                 endpoint, name, userName, password);
         
         JsonObject deploy = new JsonObject();
-        deploy.add(StreamsKeys.SERVICE_DEFINITION, authenticator.config(RestUtils.createExecutor(!verify)));
+        deploy.add(StreamsKeys.SERVICE_DEFINITION, authenticator.config(verify));
         
         URL instanceUrl  = new URL(getStreamsInstanceURL(deploy));
 
         URL restUrl = new URL(instanceUrl.getProtocol(), instanceUrl.getHost(), instanceUrl.getPort(),
                 "/streams/rest/resources");
                        
-        StreamsConnection conn = StreamsConnection.ofAuthorization(restUrl.toExternalForm(), authenticator);
+        StreamsConnection conn = StreamsConnection.ofAuthenticator(restUrl.toExternalForm(), authenticator);
         
         if (!verify)
             conn.allowInsecureHosts(true);

@@ -70,7 +70,9 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         this.password = password;
     }
     
-    public JsonObject config(Executor executor) throws IOException {
+    public JsonObject config(boolean verify) throws IOException {
+        
+        Executor executor = RestUtils.createExecutor(!verify);
         
         JsonObject namepwd = new JsonObject();
         String[] userPwd = Util.getDefaultUserPassword(user, password);

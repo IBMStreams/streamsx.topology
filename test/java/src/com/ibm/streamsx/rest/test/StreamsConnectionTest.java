@@ -94,6 +94,7 @@ public class StreamsConnectionTest {
 			}
             // don't continue if the instance isn't started
             assumeTrue(instance.getStatus().equals("running"));
+            assertSame(connection, instance.getStreamsConnection());
         }
     }
 
@@ -107,6 +108,8 @@ public class StreamsConnectionTest {
 			assertNotNull(domain.getZooKeeperConnectionString());
 			assertNotNull(domain.getCreationUser());
 			assertTrue(domain.getCreationTime() <= instance.getCreationTime());
+			
+			assertSame(domain.getStreamsConnection(), instance.getStreamsConnection());
 		}
         
         checkResourceAllocations(instance.getResourceAllocations(), false);
@@ -173,6 +176,7 @@ public class StreamsConnectionTest {
             }
         }
         assertTrue(foundJob);
+        assertSame(job.getStreamsConnection(), instance.getStreamsConnection());
 
         // get a specific job
         final Job job2 = instance.getJob(jobId);
@@ -240,8 +244,10 @@ public class StreamsConnectionTest {
         
        List<ProcessingElement> jobpes = job.getPes();
         for (Operator op : operators) {
+            assertSame(this.connection, op.getStreamsConnection());
             ProcessingElement pe = op.getPE();
             assertNotNull(pe);
+            assertSame(this.connection, pe.getStreamsConnection());
             boolean inJobList = false;
             for (ProcessingElement pej : jobpes) {
                 if (pej.getId().equals(pe.getId())) {

@@ -24,7 +24,6 @@ import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.rest.build.BuildService;
 import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
-import com.ibm.streamsx.rest.internal.RestUtils;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
@@ -52,7 +51,7 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
             // Use defaults from env.
             ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(null, null, null, null);
             
-            deploy.add(StreamsKeys.SERVICE_DEFINITION, authenticator.config(RestUtils.createExecutor(!sslVerify(deploy))));
+            deploy.add(StreamsKeys.SERVICE_DEFINITION, authenticator.config(sslVerify(deploy)));
         }
         
         // Verify the Streams service endpoint has the correct format.
@@ -80,7 +79,7 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
                 "/streams/rest/resources");
                        
         JsonObject serviceDefinition = object(deploy, StreamsKeys.SERVICE_DEFINITION);
-        StreamsConnection conn = StreamsConnection.ofAuthorization(restUrl.toExternalForm(), ICP4DAuthenticator.of(serviceDefinition));
+        StreamsConnection conn = StreamsConnection.ofAuthenticator(restUrl.toExternalForm(), ICP4DAuthenticator.of(serviceDefinition));
         
         if (!sslVerify(deploy))
             conn.allowInsecureHosts(true);
