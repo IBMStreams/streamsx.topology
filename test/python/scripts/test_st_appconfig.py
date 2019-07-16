@@ -64,7 +64,7 @@ class TestAppconfig(unittest.TestCase):
         args = ["--disable-ssl-verify", "lsappconfig"]
         if fmt:
             args.insert(3, fmt)
-        streamtool.main(args=args)
+        return streamtool.main(args=args)
 
     def _remove_appconfig(self, config_name, noprompt=False):
         args = ["--disable-ssl-verify", "rmappconfig", config_name]
@@ -101,8 +101,7 @@ class TestAppconfig(unittest.TestCase):
         self.stringLength = 10
         self.username = os.environ['STREAMS_USERNAME']
         self.name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
-        self.appconfigs_to_remove = []
-        self.appconfigs_to_remove.append(self.name)
+        self.appconfigs_to_remove = [self.name]
 
     ###########################################
     # mkappconfig
@@ -372,15 +371,15 @@ class TestAppconfig(unittest.TestCase):
     # lsappconfig
     ###########################################
 
-    # def test_lsappconfig_simple(self):
-    #     self._make_appconfig(self.name)
-    #     self.appconfigs_to_remove.append(self.name)
+    def test_lsappconfig_simple(self):
+        self._make_appconfig(self.name)
 
-    #     output, error, rc= self.get_output(lambda: self._get_appconfig(name))
-    #     output = output.splitlines()
+        output, error, rc= self.get_output(lambda: self._ls_appconfig())
+        output = output.splitlines()
 
-    #     self.assertEqual(set(output), set(props))
-    #     self.assertEqual(rc, 0)
+        print(output)
+
+        self.assertEqual(rc, 0)
 
     def tearDown(self):
         for app in self.appconfigs_to_remove:

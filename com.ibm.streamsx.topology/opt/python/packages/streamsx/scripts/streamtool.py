@@ -197,6 +197,9 @@ def _lsjobs(instance, cmd_args, rc):
     if cmd_args.showtimestamp:
         time_stamp = datetime.datetime.now().replace(microsecond=0).replace(tzinfo=LOCAL_TIMEZONE).isoformat()
 
+    headers = ["Id", "State", "Healthy", "User", "Date", "Name", "Group"]
+    h_length, job_data = _pre_process_lsjobs(jobs, LOCAL_TIMEZONE) # header_length, job_data
+
     # If default output format
     if cmd_args.fmt == '%Tf':
         if time_stamp:
@@ -204,28 +207,65 @@ def _lsjobs(instance, cmd_args, rc):
 
         if instance_id:
             print("Instance: " + instance_id)
-            print('{: <5} {:<10} {:<10} {:<10} {:<30} {:<40} {:<20}'.format("Id", "State", "Healthy", "User", "Date", "Name", "Group"))
-        for job in jobs:
-            jobHealth = "yes" if job.health == "healthy" else "no"
-            jobTime = datetime.datetime.fromtimestamp(job.submitTime/1000).replace(tzinfo=LOCAL_TIMEZONE).isoformat() # job.submitTime/1000 to convert ms to sec
-            jobGroup = job.jobGroup.split("/")[-1]
+            print('{:>{id_w}}  {:<{state_w}}  {:<{health_w}}  {:<{user_w}}  {:<{date_w}}  {:<{name_w}}  {:<{group_w}}'.format(
+                "Id", "State", "Healthy", "User", "Date", "Name", "Group",
+                id_w=h_length[0], state_w=h_length[1],
+                health_w=h_length[2], user_w=h_length[3],
+                date_w=h_length[4], name_w=h_length[5], group_w=h_length[6]))
 
-            print('{: <5} {:<10} {:<10} {:<10} {:<30} {:<40} {:<20}'.format(job.id, job.status.capitalize(), jobHealth, job.startedBy, jobTime, job.name, jobGroup))
-    # non default output format, use helper function
-    else:
-        headers = ["Id", "State", "Healthy", "User", "Date", "Name", "Group"]
-        data = []
-        for job in jobs:
-            item = []
-            jobHealth = "yes" if job.health == "healthy" else "no"
-            jobTime = datetime.datetime.fromtimestamp(job.submitTime/1000).replace(tzinfo=LOCAL_TIMEZONE).isoformat() # job.submitTime/1000 to convert ms to sec
-            jobGroup = job.jobGroup.split("/")[-1]
-            item.extend((job.id, job.status.capitalize(), jobHealth, job.startedBy, jobTime, job.name, jobGroup))
-            data.append(item)
+        for job in job_data:
+            print('{:>{id_w}}  {:<{state_w}}  {:<{health_w}}  {:<{user_w}}  {:<{date_w}}  {:<{name_w}}  {:<{group_w}}'.format(
+                job[0], job[1], job[2], job[3], job[4], job[5], job[6],
+                id_w=h_length[0], state_w=h_length[1],
+                health_w=h_length[2], user_w=h_length[3],
+                date_w=h_length[4], name_w=h_length[5], group_w=h_length[6]))
 
-        _print_ls("lsjobs", cmd_args.fmt, headers, data, instance_id=instance_id, Date=time_stamp)
+    elif cmd_args.fmt == "%Mf":
+        border = '=' * 50
+
+        if instance_id:
+            print(border)
+            if time_stamp:
+                print("Date: " + time_stamp)
+            print("Instance: " + instance_id)
+
+        w1 = len(max(headers, key=len))
+        w2 = max(h_length)
+        for job in job_data:
+            print(border)
+            for header, job_item in zip(headers, job):
+                print('{:{w1}} : {: <{w2}}'.format(header, job_item, w1=w1, w2=w2))
+        print(border)
+
+    elif cmd_args.fmt == "%Nf":
+        for job in job_data:
+            toPrint = ''
+            for header, row in zip(headers, job):
+                toPrint += '{}: {} '.format(header, row)
+            print(toPrint)
 
     return (rc, None)
+
+def _pre_process_lsjobs(jobs, time_zone):
+    maxLength = [len('Id'), len("State"), len("Healthy"), len("User"), len("Date"), len("Name"), len("Group")]
+    job_data = []
+    for job in jobs:
+        jobHealth = "yes" if job.health == "healthy" else "no"
+        jobTime = datetime.datetime.fromtimestamp(job.submitTime/1000, tz = time_zone).isoformat() # job.submitTime/1000 to convert ms to sec
+        jobGroup = job.jobGroup.split("/")[-1]
+        data = [job.id, job.status.capitalize(), jobHealth, job.startedBy, jobTime, job.name, jobGroup]
+        job_data.append(data)
+
+        maxLength[0] = max(len(job.id), maxLength[0])
+        maxLength[1] = max(len(job.status), maxLength[1])
+        maxLength[2] = max(len(jobHealth), maxLength[2])
+        maxLength[3] = max(len(job.startedBy), maxLength[3])
+        maxLength[4] = max(len(jobTime), maxLength[4])
+        maxLength[5] = max(len(job.name), maxLength[5])
+        maxLength[6] = max(len(jobGroup), maxLength[6])
+
+    return maxLength, job_data
+
 
 ###########################################
 # appconfig
@@ -243,63 +283,61 @@ def _lsappconfig(instance, cmd_args, rc):
     locale.setlocale(locale.LC_ALL, '') # Needed to correctly display local date and time format
     LOCAL_TIMEZONE = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo # Needed to get timezone
 
+    headers = ["Id", "Owner", "Created", "Modified", "Description"]
+    h_length, config_data = _pre_process_lsappconfig(configs, LOCAL_TIMEZONE) # header_length, config_data
+
     # If default output format
     if cmd_args.fmt == '%Tf':
-        print('{: <20} {:<20} {:<30} {:<30} {:<20}'.format("Id", "Owner", "Created", "Modified", "Description"))
-        for config in configs:
-            createDate = datetime.datetime.fromtimestamp(config.creationTime/1000, tz = LOCAL_TIMEZONE).strftime("%x %X %Z")
-            lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000, tz = LOCAL_TIMEZONE).strftime("%x %X %Z")
-            print('{: <20} {:<20} {:<30} {:<30} {:<20}'.format(config.name, config.owner, createDate, lastModifiedDate, config.description))
-    # non default output format, use helper function
-    else:
-        headers = ["Id", "Owner", "Created", "Modified", "Description"]
-        data = []
-        for config in configs:
-            item = []
-            createDate = datetime.datetime.fromtimestamp(config.creationTime/1000, tz = LOCAL_TIMEZONE).strftime("%x %X %Z")
-            lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000, tz = LOCAL_TIMEZONE).strftime("%x %X %Z")
-            item.extend((config.name, config.owner, createDate, lastModifiedDate, config.description))
-            data.append(item)
+        print('{:>{id_w}}  {:<{owner_w}}  {:<{created_w}}  {:<{mod_w}}  {:<{desc_w}}'.format(
+            "Id", "Owner", "Created", "Modified", "Description",
+            id_w=h_length[0], owner_w=h_length[1],
+            created_w=h_length[2], mod_w=h_length[3],
+            desc_w=h_length[4]))
 
-        _print_ls("lsappconfig", cmd_args.fmt, headers, data)
+        for config in config_data:
+            print('{:>{id_w}}  {:<{owner_w}}  {:<{created_w}}  {:<{mod_w}}  {:<{desc_w}}'.format(
+            config[0], config[1], config[2], config[3], config[4],
+            id_w=h_length[0], owner_w=h_length[1],
+            created_w=h_length[2], mod_w=h_length[3],
+            desc_w=h_length[4]))
+
+    elif cmd_args.fmt == "%Mf":
+        border = '=' * 50
+
+        w1 = len(max(headers, key=len))
+        w2 = max(h_length)
+        for config in config_data:
+            print(border)
+            for header, config_item in zip(headers, config):
+                print('{:{w1}} : {: <{w2}}'.format(header, config_item, w1=w1, w2=w2))
+        print(border)
+
+    elif cmd_args.fmt == "%Nf":
+        for config in config_data:
+            toPrint = ''
+            for header, row in zip(headers, config):
+                toPrint += '{}: {} '.format(header, row)
+            print(toPrint)
 
     return (rc, None)
 
-def _print_ls(command_name, fmt, headers, data, instance_id=None, Date=None):
-    """A helper function that prints the output for lsjobs or lsappconfig if the --fmt flag specifies either '%Mf' or '%Nf'.
-    The default '%Tf' is handled by each individual function
+def _pre_process_lsappconfig(configs, time_zone):
+    maxLength = [len('Id'), len("Owner"), len("Created"), len("Modified"), len("Description")]
+    config_data = []
+    for config in configs:
+        createDate = datetime.datetime.fromtimestamp(config.creationTime/1000, tz = time_zone).strftime("%x %X %Z")
+        lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000, tz = time_zone).strftime("%x %X %Z")
 
-    Arguments:
-        command_name {String} -- Either 'lsjobs' or 'lsappconfig'
-        fmt {String} -- Describes the format output should be in. Either '%Mf' or '%Nf'
-        headers {List} -- List consisting of strings that describe the headers for the given output of each command
-        data {List} -- A list consisting of list items that each contain the data for either a single job, or a single appconfig
+        data = [config.name, config.owner, createDate, lastModifiedDate, config.description]
+        config_data.append(data)
 
-    Keyword Arguments:
-        instance_id {String} -- (only for lsjobs) Needed to show the instance (default: {None})
-        Date {String} -- (only for lsjobs) Only present if --showtimestamp flag (default: {None})
-    """
-    if fmt == "%Mf":
-        border = '=' * 50
-        if command_name is "lsjobs" and instance_id:
-            print(border)
-            if Date:
-                print("Date: " + Date)
-            print("Instance: " + instance_id)
-            print(border)
+        maxLength[0] = max(len(config.name), maxLength[0])
+        maxLength[1] = max(len(config.owner), maxLength[1])
+        maxLength[2] = max(len(createDate), maxLength[2])
+        maxLength[3] = max(len(lastModifiedDate), maxLength[3])
+        maxLength[4] = max(len(config.description), maxLength[4])
 
-        for item in data:
-            print(border)
-            for header, row in zip(headers, item):
-                print('{: <15} : {: <20}'.format(header, row))
-        print(border)
-
-    elif fmt == "%Nf":
-        for item in data:
-            toPrint = ''
-            for header, row in zip(headers, item):
-                toPrint += '{}: {: <25} '.format(header, row)
-            print(toPrint)
+    return maxLength, config_data
 
 # rm-appconfig
 def _rmappconfig_parser(subparsers):
