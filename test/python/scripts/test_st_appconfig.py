@@ -42,10 +42,7 @@ class TestAppconfig(unittest.TestCase):
     def _make_appconfig(
         self, config_name, props=None, prop_file=None, description=None
     ):
-        args = []
-        args.insert(0, "--disable-ssl-verify")
-        args.insert(1, "mkappconfig")
-        args.insert(2, config_name)
+        args = ["--disable-ssl-verify", "mkappconfig", config_name]
         if description:
             args.insert(3, "--description")
             args.insert(4, description)
@@ -70,27 +67,17 @@ class TestAppconfig(unittest.TestCase):
         streamtool.main(args=args)
 
     def _remove_appconfig(self, config_name, noprompt=False):
-        args = []
-        args.insert(0, "--disable-ssl-verify")
-        args.insert(1, "rmappconfig")
-        args.insert(2, config_name)
+        args = ["--disable-ssl-verify", "rmappconfig", config_name]
         if noprompt:
             args.insert(3, "--noprompt")
         return streamtool.main(args=args)
 
     def _get_appconfig(self, config_name):
-        args = []
-        args.insert(0, "--disable-ssl-verify")
-        args.insert(1, "getappconfig")
-        args.insert(2, config_name)
-
+        args = ["--disable-ssl-verify", "getappconfig", config_name]
         return streamtool.main(args=args)
 
     def _ch_appconfig(self, config_name, props=None, description=None):
-        args = []
-        args.insert(0, "--disable-ssl-verify")
-        args.insert(1, "chappconfig")
-        args.insert(2, config_name)
+        args = ["--disable-ssl-verify", "chappconfig", config_name]
         if description:
             args.insert(3, "--description")
             args.insert(4, description)
@@ -398,6 +385,10 @@ class TestAppconfig(unittest.TestCase):
 
         self.assertEqual(set(output), set(props))
         self.assertEqual(rc, 0)
+
+    ###########################################
+    # lsappconfig
+    ###########################################
 
     def tearDown(self):
         for app in self.appConfigs:

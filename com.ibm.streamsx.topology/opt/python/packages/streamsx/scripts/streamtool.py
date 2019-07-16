@@ -280,18 +280,19 @@ def _print_ls(command_name, fmt, headers, data, instance_id=None, Date=None):
         Date {String} -- (only for lsjobs) Only present if --showtimestamp flag (default: {None})
     """
     if fmt == "%Mf":
+        border = '=' * 50
         if command_name is "lsjobs" and instance_id:
-            print("=================================================")
+            print(border)
             if Date:
                 print("Date: " + Date)
             print("Instance: " + instance_id)
-            print("=================================================")
+            print(border)
 
         for item in data:
-            print("=================================================")
+            print(border)
             for header, row in zip(headers, item):
                 print('{: <15} : {: <20}'.format(header, row))
-        print("=================================================")
+        print(border)
 
     elif fmt == "%Nf":
         for item in data:
