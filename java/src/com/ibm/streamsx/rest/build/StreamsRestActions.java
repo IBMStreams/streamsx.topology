@@ -43,7 +43,7 @@ class StreamsRestActions {
     throw RESTException.create(statusCode, message);
   }
 
-  static Toolkit putToolkit(StreamsBuildService connection, File path) throws IOException {
+  static Toolkit uploadToolkit(StreamsBuildService connection, File path) throws IOException {
     // Make sure it is a directory
     if (! path.isDirectory()) {
       throw new IllegalArgumentException("The specified toolkit path '" + path.toString() + "' is not a directory.");

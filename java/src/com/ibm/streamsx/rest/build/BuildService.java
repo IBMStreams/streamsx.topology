@@ -67,4 +67,16 @@ public interface BuildService {
 	 * @since 1.13
 	 */
     public Toolkit getToolkit(String toolkitId) throws IOException;
+
+	/**
+	 * Install a toolkit in the build service from a local path.  The path
+	 * must be a directory containing a single toolkit.  If the toolkit's
+	 * name and version exactly match those of a toolkit already in the build
+	 * service, the existing toolkit will not be replaced.
+	 *
+	 * @return A {@link Toolkit} object representing the newly installed toolkit,
+	 * or null if the toolkit was not installed.
+	 * @throws IOException
+	 */
+	public Toolkit uploadToolkit(File path) throws IOException;
 }

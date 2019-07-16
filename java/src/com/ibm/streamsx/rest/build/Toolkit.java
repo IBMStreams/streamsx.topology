@@ -143,20 +143,6 @@ public class Toolkit extends Element {
   }
 
   /**
-   * Install a toolkit in the build service from a local path.  The path
-   * must be a directory containing a single toolkit.  If the toolkit's
-   * name and version exactly match those of a toolkit already in the build
-   * service, the existing toolkit will not be replaced.
-   *
-   * @return A {@link Toolkit} object representing the newly installed toolkit,
-   * or null if the toolkit was not installed.
-   * @throws IOException
-   */
-  public static Toolkit fromLocalPath(BuildService connection, File path) throws IOException {
-    return ((StreamsBuildService)connection).putToolkit(path);
-  }
-
-  /**
    * A dependency of a toolkit on another toolkit.  This identifies the 
    * name, and the range of versions, of the other toolkit required by
    * a toolkit.

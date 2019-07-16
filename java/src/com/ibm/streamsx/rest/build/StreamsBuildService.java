@@ -108,8 +108,8 @@ public class StreamsBuildService extends AbstractConnection implements BuildServ
 	}
     }
 
-    Toolkit putToolkit(File path) throws IOException {
-	return StreamsRestActions.putToolkit(this, path);
+    public Toolkit uploadToolkit(File path) throws IOException {
+	return StreamsRestActions.uploadToolkit(this, path);
     }
 
     boolean deleteToolkit(Toolkit toolkit) throws IOException {

@@ -20,8 +20,16 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 
+/**
+ * Given a path to a directory, this class creates an InputStream containing
+ * the contents of the directory, zipped.  Empty directories are included.
+ */
 public class ZipStream {
 
+  /**
+   * Create an InputStream from a directory, containing the contents of
+   * the directory, zipped.
+   */
   static public InputStream fromPath(Path root) throws IOException {
     InputStream is;
     try (ZipStreamVisitor visitor = new ZipStreamVisitor()) {
