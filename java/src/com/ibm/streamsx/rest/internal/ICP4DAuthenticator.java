@@ -59,6 +59,8 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
     private String serviceAuth;
     private long expire;
     
+    private JsonObject cfg;
+    
     ICP4DAuthenticator(URL icpdUrl, URL authorizeUrl, URL detailsUrl, URL serviceTokenUrl,
             String instanceName, String user, String password) {
         this.icpdUrl = icpdUrl;
@@ -71,6 +73,9 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
     }
     
     public JsonObject config(boolean verify) throws IOException {
+        
+        if (cfg != null)
+            return cfg;
         
         Executor executor = RestUtils.createExecutor(!verify);
         
@@ -157,6 +162,7 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         cfg.addProperty("cluster_port", icpdUrl.getPort());
         cfg.addProperty("service_id", serviceId);
         
+        this.cfg = cfg;
         return cfg;
     }
     
@@ -166,13 +172,15 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         int cpd_port = GsonUtilities.jint(service, "cluster_port");
         URL cpd_url = new URL("https", cpd_host, cpd_port, "");
         
-        ICP4DAuthenticator auth = ICP4DAuthenticator.of(cpd_url.toExternalForm(), jstring(service, "service_name"), (String) null, (String) null);       
+        ICP4DAuthenticator auth = ICP4DAuthenticator.of(cpd_url.toExternalForm(), jstring(service, "service_name"), (String) null, (String) null);
+        
       
         String serviceToken = jstring(service, "service_token");
         if (serviceToken != null) {
             auth.serviceAuth = RestUtils.createBearerAuth(serviceToken);
             auth.expire = service.get("service_token_expire").getAsLong();
         }
+        auth.cfg = service;
         return auth;
     }
 
