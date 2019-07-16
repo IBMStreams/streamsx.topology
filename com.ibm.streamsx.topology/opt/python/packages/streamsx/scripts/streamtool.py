@@ -198,7 +198,26 @@ def _lsjobs(instance, cmd_args, rc):
         time_stamp = datetime.datetime.now().replace(microsecond=0).replace(tzinfo=LOCAL_TIMEZONE).isoformat()
 
     headers = ["Id", "State", "Healthy", "User", "Date", "Name", "Group"]
-    h_length, job_data = _pre_process_lsjobs(jobs, LOCAL_TIMEZONE) # header_length, job_data
+
+    # pre process the data so output is formatted nicely
+    h_length = [len(x) for x in headers] # header_length
+    job_data = []
+    for job in jobs:
+        jobHealth = "yes" if job.health == "healthy" else "no"
+        jobTime = datetime.datetime.fromtimestamp(job.submitTime/1000, tz = LOCAL_TIMEZONE).isoformat() # job.submitTime/1000 to convert ms to sec
+        jobGroup = job.jobGroup.split("/")[-1]
+        data = [job.id, job.status.capitalize(), jobHealth, job.startedBy, jobTime, job.name, jobGroup]
+        job_data.append(data)
+
+        h_length[0] = max(len(job.id), h_length[0])
+        h_length[1] = max(len(job.status), h_length[1])
+        h_length[2] = max(len(jobHealth), h_length[2])
+        h_length[3] = max(len(job.startedBy), h_length[3])
+        h_length[4] = max(len(jobTime), h_length[4])
+        h_length[5] = max(len(job.name), h_length[5])
+        h_length[6] = max(len(jobGroup), h_length[6])
+
+    # Output the data
 
     # If default output format
     if cmd_args.fmt == '%Tf':
@@ -246,27 +265,6 @@ def _lsjobs(instance, cmd_args, rc):
 
     return (rc, None)
 
-def _pre_process_lsjobs(jobs, time_zone):
-    maxLength = [len('Id'), len("State"), len("Healthy"), len("User"), len("Date"), len("Name"), len("Group")]
-    job_data = []
-    for job in jobs:
-        jobHealth = "yes" if job.health == "healthy" else "no"
-        jobTime = datetime.datetime.fromtimestamp(job.submitTime/1000, tz = time_zone).isoformat() # job.submitTime/1000 to convert ms to sec
-        jobGroup = job.jobGroup.split("/")[-1]
-        data = [job.id, job.status.capitalize(), jobHealth, job.startedBy, jobTime, job.name, jobGroup]
-        job_data.append(data)
-
-        maxLength[0] = max(len(job.id), maxLength[0])
-        maxLength[1] = max(len(job.status), maxLength[1])
-        maxLength[2] = max(len(jobHealth), maxLength[2])
-        maxLength[3] = max(len(job.startedBy), maxLength[3])
-        maxLength[4] = max(len(jobTime), maxLength[4])
-        maxLength[5] = max(len(job.name), maxLength[5])
-        maxLength[6] = max(len(jobGroup), maxLength[6])
-
-    return maxLength, job_data
-
-
 ###########################################
 # appconfig
 ###########################################
@@ -284,7 +282,24 @@ def _lsappconfig(instance, cmd_args, rc):
     LOCAL_TIMEZONE = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo # Needed to get timezone
 
     headers = ["Id", "Owner", "Created", "Modified", "Description"]
-    h_length, config_data = _pre_process_lsappconfig(configs, LOCAL_TIMEZONE) # header_length, config_data
+
+    # pre process the data so output is formatted nicely
+    h_length = [len(x) for x in headers] # header_length
+    config_data = []
+    for config in configs:
+        createDate = datetime.datetime.fromtimestamp(config.creationTime/1000, tz = LOCAL_TIMEZONE).strftime("%x %X %Z")
+        lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000, tz = LOCAL_TIMEZONE).strftime("%x %X %Z")
+
+        data = [config.name, config.owner, createDate, lastModifiedDate, config.description]
+        config_data.append(data)
+
+        h_length[0] = max(len(config.name), h_length[0])
+        h_length[1] = max(len(config.owner), h_length[1])
+        h_length[2] = max(len(createDate), h_length[2])
+        h_length[3] = max(len(lastModifiedDate), h_length[3])
+        h_length[4] = max(len(config.description), h_length[4])
+
+    # Output the data
 
     # If default output format
     if cmd_args.fmt == '%Tf':
@@ -320,24 +335,6 @@ def _lsappconfig(instance, cmd_args, rc):
             print(toPrint)
 
     return (rc, None)
-
-def _pre_process_lsappconfig(configs, time_zone):
-    maxLength = [len('Id'), len("Owner"), len("Created"), len("Modified"), len("Description")]
-    config_data = []
-    for config in configs:
-        createDate = datetime.datetime.fromtimestamp(config.creationTime/1000, tz = time_zone).strftime("%x %X %Z")
-        lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000, tz = time_zone).strftime("%x %X %Z")
-
-        data = [config.name, config.owner, createDate, lastModifiedDate, config.description]
-        config_data.append(data)
-
-        maxLength[0] = max(len(config.name), maxLength[0])
-        maxLength[1] = max(len(config.owner), maxLength[1])
-        maxLength[2] = max(len(createDate), maxLength[2])
-        maxLength[3] = max(len(lastModifiedDate), maxLength[3])
-        maxLength[4] = max(len(config.description), maxLength[4])
-
-    return maxLength, config_data
 
 # rm-appconfig
 def _rmappconfig_parser(subparsers):
