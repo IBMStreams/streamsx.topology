@@ -25,7 +25,12 @@ import com.ibm.streamsx.topology.internal.streams.Util;
 
 public class ICP4DAuthenticator implements Function<Executor,String> {
     
-    public static ICP4DAuthenticator of(String urlS, String instanceName) throws MalformedURLException, UnsupportedEncodingException {
+    public static ICP4DAuthenticator of(String urlS, String instanceName, String user, String password) throws MalformedURLException, UnsupportedEncodingException {
+
+        if (urlS == null)
+            urlS = Util.getenv(Util.ICP4D_DEPLOYMENT_URL);
+        if (instanceName == null)
+            instanceName = Util.getenv(Util.STREAMS_INSTANCE_ID);
         
         URL icpdUrl = new URL(urlS);
                 
@@ -38,27 +43,34 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         URL serviceTokenUrl = new URL("https", icpdUrl.getHost(), icpdUrl.getPort(),
                 "/zen-data/v2/serviceInstance/token");
         
-        return new ICP4DAuthenticator(icpdUrl, authorizeUrl, detailsUrl, serviceTokenUrl);
+        return new ICP4DAuthenticator(icpdUrl, authorizeUrl, detailsUrl, serviceTokenUrl, instanceName, user, password);
     }
     
     private final URL icpdUrl;
     private final URL authorizeUrl;
     private final URL detailsUrl;
     private final URL serviceTokenUrl;
+    private final String instanceName;
+    private final String user;
+    private final String password;
     private String serviceAuth;
     private long expire;
     
-    ICP4DAuthenticator(URL icpdUrl, URL authorizeUrl, URL detailsUrl, URL serviceTokenUrl) {
+    ICP4DAuthenticator(URL icpdUrl, URL authorizeUrl, URL detailsUrl, URL serviceTokenUrl,
+            String instanceName, String user, String password) {
         this.icpdUrl = icpdUrl;
         this.authorizeUrl = authorizeUrl;
         this.detailsUrl = detailsUrl;
         this.serviceTokenUrl = serviceTokenUrl;
+        this.instanceName = instanceName;
+        this.user = user;
+        this.password = password;
     }
     
     public JsonObject config(Executor executor) throws IOException {
         
         JsonObject namepwd = new JsonObject();
-        String[] userPwd = Util.getDefaultUserPassword();
+        String[] userPwd = Util.getDefaultUserPassword(user, password);
         namepwd.addProperty("username", userPwd[0]);
         namepwd.addProperty("password", userPwd[1]);
         Request post = Request.Post(authorizeUrl.toExternalForm())         
@@ -68,16 +80,36 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         String icp4dToken = GsonUtilities.jstring(resp, "token");
         
         String icpdAuth = RestUtils.createBearerAuth(icp4dToken);
-        resp = RestUtils.getGsonResponse(executor, icpdAuth, detailsUrl);
-        
-        JsonObject sro = object(resp, "requestObj");
-        String serviceId = jstring(sro, "ID");
-        
-        JsonObject sca = object(sro, "CreateArguments");
+
+        String serviceId = null;
+        JsonObject sci = null;
+        JsonObject sca = null;
+        // Occasionally see null for connection-info.
+        for (int i = 0; i < 5; i++) {
+            resp = RestUtils.getGsonResponse(executor, icpdAuth, detailsUrl);
+
+            JsonObject sro = object(resp, "requestObj");
+            serviceId = jstring(sro, "ID");
+
+            sca = object(sro, "CreateArguments");
+
+            sci = object(sca, "connection-info");
+            if (sci != null && !sci.entrySet().isEmpty())
+                break;
+            sci = null;
+            try {
+                Thread.sleep(5);
+            } catch (InterruptedException e) {
+                break;
+            }
+            
+        }
+        if (sci == null)
+            throw new IllegalStateException("Unable to retrieve connection details for Streams instance: " + instanceName);
         
         JsonObject pd = new JsonObject();
         pd.addProperty("serviceInstanceId", serviceId);
-        
+               
         post = Request.Post(serviceTokenUrl.toExternalForm())         
                 .addHeader("Authorization", icpdAuth)
                 .bodyString(pd.toString(), ContentType.APPLICATION_JSON);
@@ -88,7 +120,7 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         serviceAuth = RestUtils.createBearerAuth(serviceToken);
         expire = System.currentTimeMillis() + 19 * 60;
         
-        JsonObject sci = object(sca, "connection-info");
+        
         URL buildEndpoint = new URL(jstring(sci, "externalBuildEndpoint"));
         
         // Ensure the build endpoint matches the fully external ICP4D URL

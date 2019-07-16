@@ -67,6 +67,10 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
             buildInfo.addProperty("name", build.getName());
 
             build.uploadArchiveAndBuild(buildArchive);
+            
+            if (!"built".equals(build.getStatus())) {
+                throw new IllegalStateException("Error submitting archive for build: " + buildName);
+            }
 
             JsonArray artifacts = new JsonArray();
             buildInfo.add("artifacts", artifacts);

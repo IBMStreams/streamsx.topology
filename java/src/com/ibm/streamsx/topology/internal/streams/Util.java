@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.logging.Logger;
 
 import com.google.gson.JsonObject;
@@ -26,7 +25,7 @@ public class Util {
     public static final String STREAMS_USERNAME = "STREAMS_USERNAME";
     public static final String STREAMS_PASSWORD = "STREAMS_PASSWORD";
     public static final String STREAMS_REST_URL = "STREAMS_REST_URL";
-    public static final String ICP4D_DEPLOYMENT_URL = "ICP4D_DEPLOYMENT_URL";
+    public static final String ICP4D_DEPLOYMENT_URL = "ICPD_URL";
     private static String streamsInstall;
     
     /**
@@ -109,12 +108,15 @@ public class Util {
         return Util.getenv(Util.STREAMS_INSTANCE_ID);
     }
     
-    public static String[] getDefaultUserPassword() {
-        String userName = System.getenv(Util.STREAMS_USERNAME);
-        if (userName == null)
-            userName = System.getProperty("user.name");
+    public static String[] getDefaultUserPassword(String userName, String password) {
+        if (userName == null || userName.isEmpty()) {
+            userName = System.getenv(Util.STREAMS_USERNAME);
+            if (userName == null)
+                userName = System.getProperty("user.name");
+        }
 
-        String password = Util.getenv(Util.STREAMS_PASSWORD);
+        if (password == null || password.isEmpty()) 
+            password = Util.getenv(Util.STREAMS_PASSWORD);
 
         return new String[]{userName, password};
     }

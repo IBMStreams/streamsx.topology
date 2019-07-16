@@ -18,11 +18,7 @@ import java.util.concurrent.Future;
 import java.util.function.Function;
 
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.rest.ActiveVersion;
-import com.ibm.streamsx.rest.Instance;
-import com.ibm.streamsx.rest.StreamingAnalyticsService;
 import com.ibm.streamsx.topology.internal.context.JSONStreamsContext;
-import com.ibm.streamsx.topology.internal.context.JSONStreamsContext.AppEntity;
 
 /**
  * A streams context that uses requires a bundle, so the bundle
