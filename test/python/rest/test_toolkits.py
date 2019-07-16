@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ElementTree
 
 from streamsx.topology.tester import Tester
 from streamsx.topology.context import ConfigParams, JobConfig
-from streamsx.rest import StreamsConnection
+from streamsx.build_service import BuildService
 from streamsx.rest_primitives import *
 
 
@@ -15,10 +15,9 @@ logger = logging.getLogger('streamsx.test.toolkits_test')
 def _get_distributed_sc():
     # 4.3 on-prem
     if 'STREAMS_DOMAIN_ID' in os.environ:
-        sc = StreamsConnection()
-        sc.session.verify = False
-        return sc
-    return Instance.of_endpoint(verify=False).rest_client._sc
+        self.skipTest("Build REST API is not available in on-prem")
+
+    return BuildService.of_endpoint(verify=False)
 
 # REST API failures raise HTTPError instance, which, when printed, show
 # the default error message for the status code.  We often have useful
@@ -68,7 +67,7 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)
         self.sc = _get_distributed_sc()
-        if self.sc.build_resource_url is None:
+        if self.sc.resource_url is None:
             self.skipTest("Build REST API is not available")
         else:
 
@@ -360,9 +359,13 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
             
             # We don't know what the values the following attributes will have,
             # but we verify that the expected attributes do at least have values.
+            self.assertIsNotNone(found.path)
+            
+            # These are undocumented.  Note index is the URL of the index,
+            # not the contents of the index, which are exposed through
+            # get_index()
             self.assertIsNotNone(found.id)
             self.assertIsNotNone(found.index)
-            self.assertIsNotNone(found.path)
             self.assertIsNotNone(found.restid)
             self.assertIsNotNone(found.self)
             

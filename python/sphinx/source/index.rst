@@ -72,6 +72,7 @@ service through HTTPS REST APIs.
    :template: streamsx_module.rst
 
    streamsx.rest
+   streamsx.build_service
    streamsx.rest_primitives
 
 *******

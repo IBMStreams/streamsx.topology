@@ -70,8 +70,42 @@ from .rest_primitives import (Domain, Instance, Installation, RestResource, Tool
 
 logger = logging.getLogger('streamsx.rest')
 
+class _AbstractStreamsConnection():
+    # This is an abstract property, but there seems to be no way to enforce
+    # that in python 2.7.
+    @property
+    def resource_url(self):
+        pass
 
-class StreamsConnection:
+    def get_resources(self):
+        """Retrieves a list of all known Streams high-level REST resources.
+
+        Returns:
+            :py:obj:`list` of :py:class:`~.rest_primitives.RestResource`: List of all Streams high-level REST resources.
+        """
+        json_resources = self.rest_client.make_request(self.resource_url)['resources']
+        return [RestResource(resource, self.rest_client) for resource in json_resources]
+
+    def _get_elements(self, resource_name, eclass, id=None):
+        for resource in self.get_resources():
+            if resource.name == resource_name:
+                elements = []
+                for json_element in resource.get_resource()[resource_name]:
+                    if not _exact_resource(json_element, id):
+                        continue
+                    elements.append(eclass(json_element, self.rest_client))
+                return elements
+
+    def _get_element_by_id(self, resource_name, eclass, id):
+        """Get a single element matching an id"""
+        elements = self._get_elements(resource_name, eclass, id=id)
+        if not elements:
+            raise ValueError("No resource matching: {0}".format(id))
+        if len(elements) == 1:
+            return elements[0]
+        raise ValueError("Multiple resources matching: {0}".format(id))
+
+class StreamsConnection(_AbstractStreamsConnection):
     """Creates a connection to a running distributed IBM Streams instance and exposes methods to retrieve the state of
     that instance.
 
@@ -100,7 +134,7 @@ class StreamsConnection:
     Attributes:
         session (:py:class:`requests.Session`): Requests session object for making REST calls.
     """
-    def __init__(self, username=None, password=None, resource_url=None, auth=None, build_url=None):
+    def __init__(self, username=None, password=None, resource_url=None, auth=None):
         """specify username, password, and resource_url"""
         streamsx._streams._version._mismatch_check(__name__)
         if auth:
@@ -120,7 +154,6 @@ class StreamsConnection:
             resource_url = os.environ['STREAMS_REST_URL']
         
         self._resource_url = resource_url
-        self._build_url = build_url
         if auth:
             self.rest_client = _StreamsRestClient(auth)
         else:
@@ -142,59 +175,6 @@ class StreamsConnection:
         """str: Root URL for IBM Streams REST API"""
         self._resource_url = self._resource_url or st.get_rest_api()
         return self._resource_url
-
-    @property
-    def build_resource_url(self):
-        """str: Endpoint URL for IBM Streams REST build API.  This will be
-        None if the build endpoint is not defined for the remote service.
-
-        .. versionadded:: 1.13
-        """
-        # This is the resource URL of the build API, which differs from
-        # the resource URL of the Streams REST API.
-        
-        if self._build_url:            
-            return re.sub('/builds$','/resources', self._build_url)
-        return None
-
-
-    def _get_elements(self, resource_name, eclass, id=None):
-        for resource in self.get_resources():
-            if resource.name == resource_name:
-                elements = []
-                for json_element in resource.get_resource()[resource_name]:
-                    if not _exact_resource(json_element, id):
-                        continue
-                    elements.append(eclass(json_element, self.rest_client))
-                return elements
-
-    def _get_element_by_id(self, resource_name, eclass, id):
-        """Get a single element matching an id"""
-        elements = self._get_elements(resource_name, eclass, id=id)
-        if not elements:
-            raise ValueError("No resource matching: {0}".format(id))
-        if len(elements) == 1:
-            return elements[0]
-        raise ValueError("Multiple resources matching: {0}".format(id))
-
-    def _get_build_elements(self, resource_name, eclass, id=None):
-        for resource in self.get_build_resources():
-            if resource.name == resource_name:
-                elements = []
-                for json_element in resource.get_resource()[resource_name]:
-                    if not _exact_resource(json_element, id):
-                        continue
-                    elements.append(eclass(json_element, self.rest_client))
-                return elements
-
-    def _get_build_element_by_id(self, resource_name, eclass, id):
-        """Get a single element matching an id"""
-        elements = self._get_build_elements(resource_name, eclass, id=id)
-        if not elements:
-            raise ValueError("No resource matching: {0}".format(id))
-        if len(elements) == 1:
-            return elements[0]
-        raise ValueError("Multiple resources matching: {0}".format(id))
 
     def get_domains(self):
         """Retrieves available domains.
@@ -257,46 +237,7 @@ class StreamsConnection:
         Returns:
             :py:obj:`list` of :py:class:`~.rest_primitives.RestResource`: List of all Streams high-level REST resources.
         """
-        json_resources = self.rest_client.make_request(self.resource_url)['resources']
-        return [RestResource(resource, self.rest_client) for resource in json_resources]
-
-    def get_build_resources(self):
-        """Retrieves a list of all known Streams high-level Build REST resources.
-
-        Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives.RestResource`: List of all Streams high-level Build REST resources.
-
-        .. versionadded:: 1.13
-        """
-        json_resources = self.rest_client.make_request(self.build_resource_url)['resources']
-        return [RestResource(resource, self.rest_client) for resource in json_resources]
-
-    def get_toolkits(self):
-        """Retrieves a list of all installed Streams Toolkits.
-
-        Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives.Toolkit`: List of all Toolkit resources.
-
-        .. versionadded:: 1.13
-        """
-        return self._get_build_elements('toolkits', Toolkit)
-     
-    def get_toolkit(self, id):
-        """Retrieves available toolit matching a specific toolkit ID.
-
-        Args:
-            id (str): Toolkit identifier to retrieve.  This is the name and 
-                      version of a toolkit.  For sample, `com.ibm.streamsx.rabbitmq-1.1.3`
-
-        Returns:
-            :py:class:`~.rest_primitives.Toolkit`: Toolkit matching `id`.
-
-        Raises:
-            ValueError: No matching toolkit exists.
-
-        .. versionadded:: 1.13
-        """
-        return self._get_build_element_by_id('toolkits', Toolkit, id)
+        return super().get_resources()
 
     def __str__(self):
         return pformat(self.__dict__)
