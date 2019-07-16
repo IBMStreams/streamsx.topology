@@ -119,9 +119,9 @@ public class ToolkitAPITest {
                             .filter(tk -> tk.getName().equals("spl"))
                             .count());
     
-    for (Toolkit tk: toolkits) {
-      System.out.println(tk.getName() + " " + tk.getVersion());
-    }
+    //for (Toolkit tk: toolkits) {
+    //  System.out.println(tk.getName() + " " + tk.getVersion());
+    //}
   }
 
   @Test
@@ -161,6 +161,14 @@ public class ToolkitAPITest {
 
     // deleting again should fail.
     assertFalse(bingo.delete());
+
+    // RESTException if we try to get index on a deleted toolkit.
+    try {
+      bingo.getIndex();
+      fail ("Expected RESTException");
+    }
+    catch (RESTException e) {
+    }
 
     // Post it again, then find it in the list of toolkits and delete
     // it from the Toolkit object from the list.
