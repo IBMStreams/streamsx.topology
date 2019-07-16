@@ -11,8 +11,8 @@ Streams REST API
 
 The Streams REST API provides programmatic access to configuration and status information for IBM Streams objects such as domains, instances, and jobs. 
 
-IBM Cloud Private for Data
-==========================
+IBM Cloud Pak for Data
+======================
 
 Within ICPD
 -----------

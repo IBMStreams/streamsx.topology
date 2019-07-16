@@ -10,7 +10,7 @@ import datetime
 import decimal
 import os
 
-from streamsx.topology.schema import StreamSchema
+from streamsx.topology.schema import StreamSchema, CommonSchema
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 import streamsx.topology.context
@@ -226,6 +226,35 @@ class TestSPL(unittest.TestCase):
         tester.contents(ts, [{'a':1,'b':'ABC'},{'a':2,'b':'DEF'}])
         tester.test(self.test_ctxtype, self.test_config)
 
+    def _sc_options(self, opts, expected):
+        topo = Topology()
+        this_dir = os.path.dirname(os.path.realpath(__file__))
+        spl_dir = os.path.join(os.path.dirname(os.path.dirname(this_dir)), 'spl')
+        tk_dir = os.path.join(spl_dir, 'testtk')
+        streamsx.spl.toolkit.add_toolkit(topo, tk_dir)
+        s = topo.source(['A'])
+        f = op.Map('testspl::ScOptionTester', s, schema = CommonSchema.String)
+        if opts:
+            self.test_config[streamsx.topology.context.ConfigParams.SC_OPTIONS] = opts
+        tester = Tester(topo)
+        tester.contents(f.stream, expected)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_sc_options_none(self):
+        self._sc_options(None, ['CPP98', 'NOOPT'])
+
+    def test_sc_options_empty(self):
+        self._sc_options([], ['CPP98', 'NOOPT'])
+
+    def test_sc_options_single(self):
+        self._sc_options('--c++std=c++11', ['CPP11', 'NOOPT'])
+
+    def test_sc_options_single_list(self):
+        self._sc_options('--cxx-flags=-DSCOPT_TESTING=1', ['CPP98', 'SCOPT'])
+
+    def test_sc_options_multi(self):
+        self._sc_options(['--cxx-flags=-DSCOPT_TESTING=1', '--c++std=c++11'], ['CPP11', 'SCOPT'])
+
 class TestDistributedSPL(TestSPL):
     def setUp(self):
         Tester.setup_distributed(self)
@@ -327,14 +356,17 @@ import shutil
 import uuid
 import subprocess
 def _index_tk():
-    si = os.environ['STREAMS_INSTALL']
     tkl = 'tkl_mc_' + str(uuid.uuid4().hex)
     this_dir = os.path.dirname(os.path.realpath(__file__))
     shutil.copytree(os.path.join(this_dir, 'spl_mc'), tkl)
-    ri = subprocess.call([os.path.join(si, 'bin', 'spl-make-toolkit'), '-i', tkl])
+    if 'STREAMS_INSTALL' in os.environ:
+        si = os.environ['STREAMS_INSTALL']
+        ri = subprocess.call([os.path.join(si, 'bin', 'spl-make-toolkit'), '-i', tkl])
+    else:
+        ri = 0
     return ri,tkl
 
-@unittest.skipIf('STREAMS_INSTALL' not in os.environ, 'STREAMS_INSTALL not set')
+@unittest.skipIf('STREAMS_INSTALL' not in os.environ and 'STREAMS_REST_URL' not in os.environ, 'STREAMS_INSTALL/STREAMS_REST_URL not set')
 class TestMainComposite(unittest.TestCase):
     def test_main_composite(self):
         ri,tkl = _index_tk()
@@ -343,12 +375,20 @@ class TestMainComposite(unittest.TestCase):
         self.assertIsInstance(r, tuple)
         self.assertIsInstance(r[0], Topology)
         self.assertIsInstance(r[1], op.Invoke)
-        rc = streamsx.topology.context.submit('BUNDLE', r[0])
+
+        cfg = {}
+        if not 'STREAMS_INSTALL' in os.environ:
+            cfg[streamsx.topology.context.ConfigParams.SSL_VERIFY] = False
+
+        rc = streamsx.topology.context.submit('BUNDLE', r[0], cfg)
         self.assertEqual(0, rc['return_code'])
         shutil.rmtree(tkl)
+        self.assertEqual('app.MyMain.sab', os.path.basename(rc['bundlePath']))
+        self.assertEqual('app.MyMain_JobConfig.json', os.path.basename(rc['jobConfigPath']))
         os.remove(rc['bundlePath'])
         os.remove(rc['jobConfigPath'])
 
+@unittest.skipIf('STREAMS_INSTALL' not in os.environ and 'STREAMS_REST_URL' not in os.environ, 'STREAMS_INSTALL/STREAMS_REST_URL not set')
 class TestParamTypes(unittest.TestCase):
     def test_param_types(self):
         ri,tkl = _index_tk()
@@ -386,7 +426,11 @@ class TestParamTypes(unittest.TestCase):
             p['f64'] = np.float64(78.9)
             snp = op.Invoke(topo, "testtopo::PT", params = p, name="Numpy")
 
-        rc = streamsx.topology.context.submit('BUNDLE', topo)
+        cfg = {}
+        if not 'STREAMS_INSTALL' in os.environ:
+            cfg[streamsx.topology.context.ConfigParams.SSL_VERIFY] = False
+
+        rc = streamsx.topology.context.submit('BUNDLE', topo, cfg)
         self.assertEqual(0, rc['return_code'])
         os.remove(rc['bundlePath'])
         os.remove(rc['jobConfigPath'])

@@ -71,8 +71,8 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
         ctxtype(str): Type of context the application will be submitted to. A value from :py:class:`ContextTypes`.
         graph(Topology): The application topology to be submitted.
         config(dict): Configuration for the submission.
-        username(str): Username for the Streams REST api.
-        password(str): Password for `username`.
+        username(str): Deprecated: Username for the Streams REST api. Use environment variable ``STREAMS_USERNAME`` if using user-password authentication.
+        password(str): Deprecated: Password for `username`. Use environment variable ``STREAMS_PASSWORD`` if using user-password authentication.
 
     Returns:
         SubmissionResult: Result of the submission. For details of what is contained see the :py:class:`ContextTypes`
@@ -85,6 +85,9 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
         raise ValueError("Topology {0} does not contain any streams.".format(graph.topology.name))
     if ctxtype == ContextTypes.STANDALONE_BUNDLE:
         warnings.warn("Use ContextTypes.BUNDLE", DeprecationWarning, stacklevel=2)
+
+    if username or password:
+        warnings.warn("Use environment variables STREAMS_USERNAME and STREAMS_PASSWORD", DeprecationWarning, stacklevel=2)
 
     context_submitter = _SubmitContextFactory(graph, config, username, password).get_submit_context(ctxtype)
     sr = SubmissionResult(context_submitter.submit())
@@ -146,7 +149,7 @@ class _BaseSubmitter(object):
         # Otherwise, use the Java version from the streams install
         else:
             jvm = os.path.join(streams_install, "java", "jre", "bin", "java")
-            if ConfigParams.FORCE_REMOTE_BUILD in self.config and self.config[ConfigParams.FORCE_REMOTE_BUILD]:
+            if self.config.get(ConfigParams.FORCE_REMOTE_BUILD):
                 remote_context = True
             cp = cp + ':' + os.path.join(streams_install, "lib", "com.ibm.streams.operator.samples.jar")
 
@@ -416,6 +419,52 @@ class _StreamingAnalyticsSubmitter(_BaseSubmitter):
         env['VCAP_SERVICES'] = json.dumps(vcap)
         return env
 
+class _BundleSubmitter(_BaseSubmitter):
+    """
+    A submitter which supports the BUNDLE context
+    including remote build.
+    """
+    def __init__(self, ctxtype, config, graph):
+        _BaseSubmitter.__init__(self, ctxtype, config, graph)
+        self._remote = config.get(ConfigParams.FORCE_REMOTE_BUILD)
+
+        if not self._remote and 'STREAMS_INSTALL' in os.environ:
+            return
+
+        self._streams_connection = config.get(ConfigParams.STREAMS_CONNECTION)
+
+
+        if self._streams_connection is not None:
+            pass
+        else:
+            # Look for a service definition
+            svc_info = streamsx.rest_primitives.Instance._find_service_def(config)
+            if not svc_info:
+                # Look for endpoint set by env vars.
+                inst = streamsx.rest_primitives.Instance.of_endpoint(verify=config.get(ConfigParams.SSL_VERIFY))
+                if inst is not None:
+                    self._streams_connection = inst.rest_client._sc
+
+        if isinstance(self._streams_connection, streamsx.rest.StreamsConnection):
+            if isinstance(self._streams_connection.session.auth, streamsx.rest_primitives._ICPDExternalAuthHandler):
+                svc_info = self._streams_connection.session.auth._cfg
+                self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
+                if  self._streams_connection.session.verify == False:
+                    self._config()[ConfigParams.SSL_VERIFY] = False
+        else:
+            svc_info =  streamsx.rest_primitives.Instance._find_service_def(config)
+            if svc_info:
+                self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
+                streamsx.rest_primitives.Instance._clear_service_info(self._config())
+
+    def _get_java_env(self):
+        "Set env vars from connection if set"
+        env = super(_BundleSubmitter, self)._get_java_env()
+        env.pop('STREAMS_DOMAIN_ID', None)
+        env.pop('STREAMS_INSTANCE_ID', None)
+        if self._remote:
+            env.pop('STREAMS_INSTALL', None)
+        return env
 
 class _DistributedSubmitter(_BaseSubmitter):
     """
@@ -535,6 +584,9 @@ class _SubmitContextFactory(object):
                 raise RuntimeError("The ANALYTICS_SERVICE context only supports Python version 3.5")
             ctxtype = ContextTypes.STREAMING_ANALYTICS_SERVICE
             return _StreamingAnalyticsSubmitter(ctxtype, self.config, self.graph)
+        elif ctxtype == 'BUNDLE':
+            logger.debug("Selecting the BUNDLE context for submission")
+            return _BundleSubmitter(ctxtype, self.config, self.graph)
         else:
             logger.debug("Using the BaseSubmitter, and passing the context type through to java.")
             return _BaseSubmitter(ctxtype, self.config, self.graph)
@@ -664,49 +716,42 @@ class ContextTypes(object):
     DISTRIBUTED = 'DISTRIBUTED'
     """Submission to an IBM Streams instance.
 
-    **IBM Cloud Private for Data**
+    **IBM Cloud Pak for Data**
 
-    *Projects (within ICPD cluster)*
+    *Projects (within cluster)*
 
     The `Topology` is compiled using the Streams build service and submitted
-    to an IBM Streams service instance running in the same ICP for
+    to an Streams service instance running in the same Cloud Pak for
     Data cluster as the Jupyter notebook declaring the application.
 
     The instance is specified in the configuration passed into :py:func:`submit`. The configuration may be code injected from the list of services or manually created. The code that selects a service instance by name is::
 
-        from icpd_core import ipcd_util
-        cfg = icpd_util.get_service_details(name='instanceName')
+        from icpd_core import icpd_util
+        cfg = icpd_util.get_service_instance_details(name='instanceName')
 
     The resultant `cfg` dict may be augmented with other values such as
     a :py:class:`JobConfig` or keys from :py:class:`ConfigParams`.
 
-    *External to ICPD cluster*
+    *External to cluster*
 
     The `Topology` is compiled using the Streams build service and submitted
-    to an IBM Streams service instance running in an ICP for Data cluster.
-
-    The IBM Streams instance to connect to is defined by the
-    ``STREAMS_REST_URL`` environment variable which is set to
-    the external Streams REST endpoint for the service instance.
-
-    The endpoint is found through the ICPD console in the
-    *Provisioned instances* tab of the *My Instances* page.
-    Click on *View details* for the Streams service and then
-    copy the ``externalRestEndpoint`` and set that as the value
-    of ``STREAMS_REST_URL``.
-
-    .. figure:: images/icpd_external_endpoint.png
-        :scale: 60%
-        :alt: Endpoints with externalRestEndpoint
-
-        Copy ``externalRestEndpoint`` from `Endpoints` section.
+    to a Streams service instance running in Cloud Pak for Data.
 
     Environment variables:
         These environment variables define how the application is built and submitted.
 
-        * **STREAMS_REST_URL** - External endpoint for Streams REST API.
+        * **ICPD_URL** - Cloud Pak for Data deployment URL, e.g. `https://icp4d_server:31843`.
+        * **STREAMS_INSTANCE_ID** - Streams service instance name.
         * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
         * **STREAMS_PASSWORD** - Password for authentication.
+
+    For backwards compatibility if the Cloud Pak for Data deployment URL
+    uses the default port 31843 then the Streams instance to connect to
+    can be defined by the ``STREAMS_REST_URL`` environment variable which
+    is set to the external Streams REST endpoint for the service instance.
+
+    Use of the Cloud Pak for Data deployment URL and Streams instance
+    name is recommended.
 
     **IBM Streams on-premise**
 
@@ -875,6 +920,27 @@ class ConfigParams(object):
     This key takes precedence over :py:const:`VCAP_SERVICES` and :py:const:`SERVICE_NAME`.
 
     .. seealso:: :ref:`sas-service-def`
+    """
+
+    SC_OPTIONS = 'topology.sc.options'
+    """
+    Options to be passed to IBM Streams sc command.
+
+    A topology is compiled into a Streams application
+    bundle (`sab`) using the SPL compiler ``sc``.
+
+    Additional options to be passed to ``sc``
+    may be set using this key. The value can be a
+    single string option (e.g. ``--c++std=c++11`` to select C++ 11 compilation)
+    or a list of strings for multiple options.
+
+    Setting ``sc`` options may be required when invoking SPL operators
+    directly or testing SPL applications.
+
+    .. warning::
+        Options that modify the requested submission context (e.g. setting
+        a different main composite) or deprecated options should not be specified.
+    .. versionadded:: 1.12.10
     """
 
 

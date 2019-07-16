@@ -11,11 +11,13 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.internal.process.ProcessOutputToLogger;
@@ -31,6 +33,7 @@ public class InvokeSc {
     private final String mainComposite;
     private final File applicationDir;
     private final String installDir;
+    private final List<String> scOptions;
 
     public InvokeSc(JsonObject deploy, boolean standalone, String namespace, String mainComposite,
             File applicationDir) throws URISyntaxException, IOException {
@@ -39,8 +42,22 @@ public class InvokeSc {
         this.namespace = namespace;
         this.mainComposite = mainComposite;
         this.applicationDir = applicationDir;
+       
         
         installDir = Util.getStreamsInstall(deploy, ContextProperties.COMPILE_INSTALL_DIR);
+        if (deploy.has(ContextProperties.SC_OPTIONS)) {
+            JsonElement opts = deploy.get(ContextProperties.SC_OPTIONS);
+            if (opts.isJsonArray()) {
+                scOptions = new ArrayList<>();
+                for (JsonElement e : opts.getAsJsonArray()) {
+                    scOptions.add(e.getAsString());
+                }
+            } else {
+                scOptions = Collections.singletonList(opts.getAsString());
+            }
+        } else {
+            scOptions = Collections.emptyList();
+        }
         
         // Version 4.2 onwards deprecates standalone compiler option
         // so don't use it to avoid warnings.
@@ -108,6 +125,10 @@ public class InvokeSc {
 
         commands.add("-t");
         commands.add(getToolkitPath());
+        
+        for (String scOpt : scOptions) {
+            commands.add(scOpt);
+        }
 
         trace.info("Invoking SPL compiler (sc) for main composite: "
                 + mainCompositeName);

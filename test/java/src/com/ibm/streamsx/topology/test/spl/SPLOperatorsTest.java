@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.test.spl;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -24,11 +25,13 @@ import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.Type;
 import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streams.operator.types.RString;
+import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.spl.SPL;
 import com.ibm.streamsx.topology.spl.SPLStream;
+import com.ibm.streamsx.topology.spl.SPLStreams;
 import com.ibm.streamsx.topology.test.TestTopology;
 import com.ibm.streamsx.topology.tester.Condition;
 import com.ibm.streamsx.topology.tester.Tester;
@@ -56,20 +59,80 @@ public class SPLOperatorsTest extends TestTopology {
         params.put("value", 321);        
    
         SPL.addToolkit(tuples, new File(getTestRoot(), "spl/testtk"));
+        SPL.addToolkitDependency(tuples, "com.ibm.streamsx.topology.testing.testtk", "0.9.9");
+        
         SPLStream int32Filtered = SPL.invokeOperator("testspl::Int32Filter", tuples, tuples.getSchema(), params);
 
         Tester tester = topology.getTester();
-        
+                
         Condition<Long> expectedCount = tester.tupleCount(int32Filtered, 2);
         Condition<List<Tuple>> expectedTuples = tester.tupleContents(int32Filtered,
                 SPLStreamsTest.TEST_TUPLES[0],
                 SPLStreamsTest.TEST_TUPLES[2]
                 );
+        
+        if (isStreamingAnalyticsRun())
+            getConfig().put(ContextProperties.FORCE_REMOTE_BUILD, true);
 
         complete(tester, expectedCount, 10, TimeUnit.SECONDS);
 
         assertTrue(expectedCount.toString(), expectedCount.valid());
         assertTrue(expectedTuples.toString(), expectedTuples.valid());
+    }
+    
+    /**
+     * Test we can add options to sc.
+     * A C++ primitive operator is used to
+     * detect C++11 setting and a #defined value
+     */
+    @Test
+    public void testSCoptionsNoOpts() throws Exception {
+        _testSCoptions(null, "CPP98", "NOOPT");
+    }
+    @Test
+    public void testSCoptionsNoOpts2() throws Exception {
+        _testSCoptions(Collections.emptyList(), "CPP98", "NOOPT");
+    }
+    @Test
+    public void testSCoptionsSingle() throws Exception {
+        _testSCoptions("--c++std=c++11", "CPP11", "NOOPT");
+    }
+    @Test
+    public void testSCoptionsSingleList() throws Exception {
+        _testSCoptions(Collections.singletonList("--cxx-flags=-DSCOPT_TESTING=1"), "CPP98", "SCOPT");
+    }
+    @Test
+    public void testSCoptionsMulti() throws Exception {
+        List<String> opts = new ArrayList<>();
+        opts.add("--cxx-flags=-DSCOPT_TESTING=1");
+        opts.add("--c++std=c++11");
+        _testSCoptions(opts, "CPP11", "SCOPT");
+    }
+    
+    private void _testSCoptions(Object options, String e1, String e2) throws Exception {
+        
+        Topology topology = new Topology("testSCoptions"); 
+        
+        SPLStream single = SPLStreams.stringToSPLStream(
+                topology.constants(Collections.singletonList("A")));
+          
+        SPL.addToolkit(topology, new File(getTestRoot(), "spl/testtk"));
+        
+        TStream<String> output = SPL.invokeOperator("SCO", "testspl::ScOptionTester", single,
+                single.getSchema(), Collections.emptyMap()).toStringStream();
+               
+        if (options != null)
+            this.getConfig().put(ContextProperties.SC_OPTIONS, options);
+                   
+        Tester tester = topology.getTester();
+        
+        Condition<Long> optC = tester.tupleCount(output, 2);
+        Condition<List<String>> optV = tester.stringContents(output, e1, e2);
+
+        complete(tester, optC, 10, TimeUnit.SECONDS);
+
+        assertTrue(optC.toString(), optC.valid());
+        assertTrue(optV.toString(), optV.valid());
     }
     
     /**
@@ -88,6 +151,7 @@ public class SPLOperatorsTest extends TestTopology {
         params.put("value", 321);        
    
         SPL.addToolkit(tuples, new File(getTestRoot(), "spl/testtk"));
+        SPL.addToolkitDependency(tuples, "com.ibm.streamsx.topology.testing.testtk", "0.9.9");
         List<SPLStream> outputs = SPL.invokeOperator(
                 topology,
                 "testSPLOperatorMultipleOuptuts",

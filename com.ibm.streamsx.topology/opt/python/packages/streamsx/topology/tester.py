@@ -290,6 +290,28 @@ class Tester(object):
         """
         Set up a unittest.TestCase to run tests using IBM Streams distributed mode.
 
+        Two attributes are set in the test case:
+
+             * test_ctxtype - Context type the test will be run in.
+             * test_config - Test configuration.
+
+        Args:
+            test(unittest.TestCase): Test case to be set up to run tests using Tester
+            verbose(bool): If `true` then the ``streamsx.topology.test`` logger is configured at ``DEBUG`` level with output sent to standard error.
+
+        Returns: None
+
+        .. rubric:: Cloud Pak for Data instance configuration
+
+        These environment variables define how the test is built and submitted.
+
+            * ``ICPD_URL`` - Cloud Pak for Data deployment URL, e.g. `https://icp4d_server:31843`.
+            * ``STREAMS_INSTANCE_ID`` - Streams service instance name.
+            * ``STREAMS_USERNAME`` - (optional) User name to submit the test as, defaulting to the current operating system user name.
+            * ``STREAMS_PASSWORD`` - Password for authentication.
+
+        .. rubric:: Streams 4.2 & 4.3 instance configuration
+
         Requires a local IBM Streams install define by the ``STREAMS_INSTALL``
         environment variable. If ``STREAMS_INSTALL`` is not set then the
         test is skipped.
@@ -315,17 +337,6 @@ class Tester(object):
             .. seealso::
                 `Generating authentication keys for IBM Streams <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.2.1/com.ibm.streams.cfg.doc/doc/ibminfospherestreams-user-security-authentication-rsa.html>`_
 
-        Two attributes are set in the test case:
-
-             * test_ctxtype - Context type the test will be run in.
-             * test_config - Test configuration.
-
-        Args:
-            test(unittest.TestCase): Test case to be set up to run tests using Tester
-            verbose(bool): If `true` then the ``streamsx.topology.test`` logger is configured at ``DEBUG`` level with output sent to standard error.
-
-        Returns: None
-
         """
         Tester._log_env(test, verbose)
         test.test_ctxtype = stc.ContextTypes.DISTRIBUTED
@@ -344,7 +355,7 @@ class Tester(object):
                 raise unittest.SkipTest("Skipped due to no local IBM Streams install")
             return
 
-        icpd_setup = 'STREAMS_REST_URL' in os.environ and 'STREAMS_PASSWORD' in os.environ
+        icpd_setup = 'ICPD_URL' in os.environ and 'STREAMS_INSTANCE_ID' in os.environ and 'STREAMS_PASSWORD' in os.environ
         if icpd_setup:
             return
 

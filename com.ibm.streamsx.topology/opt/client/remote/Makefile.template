@@ -4,6 +4,10 @@ else
     ADDL_TKS=":$(STREAMS_SPLPATH)"
 endif
 
+ifdef STREAMS_CPU_LIMIT
+    THREAD_OPTION=--num-make-threads ${STREAMS_CPU_LIMIT}
+endif
+
 OUT=output
 OUT_PY=${OUT}/etc/streamsx.topology/python
 all:
@@ -20,4 +24,4 @@ all:
             	fi; \
 		${STREAMS_INSTALL}/bin/spl-make-toolkit -i $${toolkit}; \
 	done;
-	${STREAMS_INSTALL}/bin/sc -M `cat main_composite.txt` --no-toolkit-indexing -t ${STREAMS_INSTALL}/toolkits${ADDL_TKS} --output-directory ${OUT}
+	${STREAMS_INSTALL}/bin/sc -M `cat main_composite.txt` --no-toolkit-indexing -t ${STREAMS_INSTALL}/toolkits${ADDL_TKS} --output-directory ${OUT} ${THREAD_OPTION} `cat sc_opts.txt`

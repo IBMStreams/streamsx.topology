@@ -115,10 +115,7 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
         }
                       
         if (!deploy.has(ContextProperties.TOOLKIT_DIR)) {
-            Path tkDir = keepToolkit ?
-                Files.createTempDirectory(Paths.get(""), "tk")
-                :
-                Files.createTempDirectory("tk");
+            Path tkDir = Files.createTempDirectory("tk");
             
             deploy.addProperty(ContextProperties.TOOLKIT_DIR,
                 tkDir.toAbsolutePath().toString());
@@ -150,7 +147,7 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
      * Create a Job Config Overlays structure if it does not exist.
      * Set the deployment from the graph config.
      */
-    private void setupJobConfigOverlays(JsonObject deploy, JsonObject graph) {
+    public static void setupJobConfigOverlays(JsonObject deploy, JsonObject graph) {
         JsonArray jcos = array(deploy, JOB_CONFIG_OVERLAYS);
         if (jcos == null) {
             deploy.add(JOB_CONFIG_OVERLAYS, jcos = new JsonArray());

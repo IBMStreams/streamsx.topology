@@ -476,6 +476,93 @@ class Topology(object):
 
         Returns:
             Stream: A stream whose tuples are the result of the iterable obtained from `func`.
+
+        .. rubric:: Simple examples
+
+        Finite constant source stream containing two tuples
+        ``Hello`` and ``World``::
+
+            topo = Topology()
+            hw = topo.source(['Hello', 'World'])
+
+        Use of builtin `range` to produce a finite source stream
+        containing 100 `int` tuples from 0 to 99::
+
+            topo = Topology()
+            hw = topo.source(range(100))
+
+        Use of `itertools.count` to produce an infinite stream of `int` tuples::
+
+            import itertools
+            topo = Topology()
+            hw = topo.source(lambda : itertools.count())
+
+        Use of `itertools` to produce an infinite stream of tuples
+        with a constant value and a sequence number::
+
+            import itertools
+            topo = Topology()
+            hw = topo.source(lambda : zip(itertools.repeat(), itertools.count()))
+
+        .. rubric:: External system examples
+
+        Typically sources pull data in from external systems, such as files,
+        REST apis, databases, message systems etc. Such a source will typically
+        be implemented as class that when called returns an iterable.
+
+        To allow checkpointing of state standard methods ``__enter__``
+        and  ``__exit__`` are implemented to allow creation of runtime
+        objects that cannot be persisted, for example a file handle.
+
+        At checkpoint time state is preserved through standard pickling
+        using ``__getstate__`` and (optionally) ``__setstate__``.
+
+        Stateless source that polls a REST API every ten seconds to
+        get a JSON object (`dict`) with current time details::
+
+        
+            import requests
+            import time
+
+            class RestJsonReader(object):
+                def __init__(self, url, period):
+                    self.url = url
+                    self.period = period
+                    self.session = None
+
+                def __enter__(self):
+                    self.session = requests.Session()
+                    self.session.headers.update({'Accept': 'application/json'})
+
+                def __exit__(self, exc_type, exc_value, traceback):
+                    if self.session:
+                        self.session.close()
+                        self.session = None
+
+                def __call__(self):
+                    return self
+
+                def __iter__(self):
+                    return self
+
+                def __next__(self):
+                    time.sleep(self.period)
+                    return self.session.get(self.url).json()
+
+                def __getstate__(self):
+                    # Remove the session from the persisted state
+                    return {'url':self.url, 'period':self.period}
+
+            def main():
+                utc_now = 'http://worldclockapi.com/api/json/utc/now'
+                topo = Topology()
+                times = topo.source(RestJsonReader(10, utc_now))
+
+
+        .. warning::
+            Source functions that use generators are not supported
+            when checkpointing or within a consistent region. This
+            is because generators cannot be pickled (even when using `dill`).
         """
         _name = name
         if inspect.isroutine(func):
@@ -623,7 +710,7 @@ class Topology(object):
         The assumption is that the runtime hosts for a Streams
         instance have the same Python packages installed as the
         build machines. This is always true for IBM Cloud
-        Private for Data and the Streaming Analytics service on IBM Cloud.
+        Pak for Data and the Streaming Analytics service on IBM Cloud.
 
         The project name extracted from the requirement
         specifier is added to :py:attr:`~exclude_packages`
@@ -649,7 +736,7 @@ class Topology(object):
 
         .. warning::
             Only supported when using the build service with
-            a Streams instance in IBM Cloud Private for Data
+            a Streams instance in Cloud Pak for Data
             or Streaming Analytics service on IBM Cloud.
 
         .. note::

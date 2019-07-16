@@ -55,36 +55,40 @@ pre-configured.
 Any streaming applications using Python must use Python 3.5 when
 submitted to the service instance.
 
-**************************
-IBM Cloud Private for Data
-**************************
+**********************
+IBM Cloud Pak for Data
+**********************
 
-An IBM Streams service instance within ICP for Data has Anaconda installed with Python 3.6 as the
+An IBM Streams service instance within Cloud Pak for Data has Anaconda installed with Python 3.6 as the
 runtime environment and has ``PYTHONHOME`` Streams application environment variable pre-configured.
 
 Any streaming applications using Python must use Python 3.6 when
 submitted to the service instance.
 
-Streaming applications are submitted through Jupyter notebooks contained in
-ICP for Data projects. The `streamsx` package is preinstalled and applications are sumitted to the :py:const:`~streamsx.topology.context.ContextTypes.DISTRIBUTED` context.
+Streaming applications can be submitted through Jupyter notebooks running in
+Cloud Pak for Data projects. The `streamsx` package is preinstalled and applications are sumitted to the :py:const:`~streamsx.topology.context.ContextTypes.DISTRIBUTED` context.
 
 ***********************
 IBM Streams on-premises
 ***********************
 
-For a distributed cluster running Streams Python 2.7, 3.5 or 3.6 may
-be used.
+For a distributed cluster running Streams Python 3.6, 3.5 or 2.7(deprecated)
+may be used.
 
 Anaconda or Miniconda distributions may be used as the Python runtime, these have the advantage of being pre-built and including a number of standard packages.
 Ananconda installs may be downloaded at: https://www.continuum.io/downloads .
 
 .. note::
     When used by a distributed cluster a distribution matching
-    the required Python 2.7, 3.5 or 3.6 release must be used, rather
+    the required Python 3.6, 3.5 or 2.7 release must be used, rather
     than a conda environment.
 
 If building Python from source then it must be built to support embedding
 of the runtime with shared libraries (``--enabled-shared`` option to `configure`).
+
+.. warning::
+   Support for Python 2.7 is deprecated in 1.13 and will be removed in
+   a future release. Python 2.7 EOL is January 1st, 2020.
 
 Distributed
 ===========

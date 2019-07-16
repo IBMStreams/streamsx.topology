@@ -46,7 +46,7 @@ def assertArchivePath(test, submissionResult):
     test.assertTrue(os.path.isfile(submissionResult['archivePath']))
 
 def verifyArtifacts(test):
-    if test.test_config.get('topology.keepArtifacts', False):
+    if test.test_config.get('topology.keepArtifacts'):
         # KeepArtifacts is True
         assertToolkitRoot(test, test.result)
         if 'TOOLKIT' == test.test_ctxtype:
@@ -56,10 +56,8 @@ def verifyArtifacts(test):
               'STREAMS_INSTALL' not in os.environ or
               'BUILD_ARCHIVE' == test.test_ctxtype):
             assertArchivePath(test, test.result)
-            test.assertNotIn('bundlePath', test.result)
-        else:
+        if 'BUNDLE' == test.test_ctxtype:
             assertBundlePath(test, test.result)
-            test.assertNotIn('archivePath', test.result)
     else:
         # KeepArtifacts is False
         if 'TOOLKIT' == test.test_ctxtype:
@@ -107,14 +105,19 @@ class TestBuildArchiveMethodsNew(TestToolkitMethodsNew):
         self.test_config = {}
         self.result = {}
 
-@unittest.skipUnless('STREAMS_INSTALL' in os.environ, "requires STREAMS_INSTALL")
 class TestBundleMethodsNew(TestToolkitMethodsNew):
 
     def setUp(self):
+        self.test_config = {}
+
+        if not 'STREAMS_INSTALL' in os.environ:
+            unittest.skipUnless('STREAMS_REST_URL' in os.environ, "requires STREAMS_INSTALL or STREAMS_REST_URL")
+            # Test instances tend ot have self-signed certs
+            self.test_config[ConfigParams.SSL_VERIFY] = False
+            
         self.topo = Topology('test_BundleSource')
         self.topo.source(['Hello', 'Bundle'])
         self.test_ctxtype = 'BUNDLE'
-        self.test_config = {}
         self.result = {}
 
 @unittest.skipUnless('STREAMS_INSTALL' in os.environ, "requires STREAMS_INSTALL")

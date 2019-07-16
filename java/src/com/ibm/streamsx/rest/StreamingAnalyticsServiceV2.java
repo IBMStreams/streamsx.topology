@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.logging.Level;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.fluent.Executor;
@@ -27,6 +26,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.rest.internal.RestUtils;
 
 class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
 
@@ -65,7 +65,7 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
         if (null != response) {
             String accessToken = StreamsRestUtils.getToken(response);
             if (null != accessToken) {
-            	authorization = StreamsRestUtils.createBearerAuth(accessToken);
+            	authorization = RestUtils.createBearerAuth(accessToken);
                 authExpiryTime = StreamsRestUtils.getTokenExpiryMillis(response);
             }
         }
