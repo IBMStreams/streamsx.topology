@@ -29,6 +29,8 @@ def _submitjob_parser(subparsers):
     job_submit.add_argument('sabfile', help='Location of sab file.', metavar='sab-pathname')
     job_submit.add_argument('--jobConfig', '-g', help='Specifies the name of an external file that defines a job configuration overlay')
     job_submit.add_argument('--jobname', help='Specifies the name of the job.')
+    job_submit.add_argument('--jobgroup', '-J', help='Specifies the job group')
+    job_submit.add_argument('--outfile', help='Specifies the path and file name of the output file in which the command writes the list of submitted job IDs')
     job_submit.add_argument('--P', '-P', help='Specifies a submission-time parameter and value for the job', action='append')
     _user_arg(job_submit)
 
@@ -45,6 +47,10 @@ def _submitjob(instance, cmd_args, rc):
     if cmd_args.jobname:
         job_config.job_name = cmd_args.jobname
 
+    if cmd_args.jobgroup:
+        # Will throw a 500 internal error on instance.submit_job if jobgroup doesn't already exist
+        job_config.job_group = cmd_args.jobgroup
+
     if cmd_args.P:
         for param in cmd_args.P:
             name_value_pair = param.split("=")
@@ -53,10 +59,17 @@ def _submitjob(instance, cmd_args, rc):
             else:
                 job_config.submission_parameters[name_value_pair[0]] = name_value_pair[1]
 
-    instance.submit_job(bundle=cmd_args.sabfile, job_config=job_config)
+    job = instance.submit_job(bundle=cmd_args.sabfile, job_config=job_config)
 
+    if not job:
+        raise Exception("Error in creating Job")
 
-    return (rc, None)
+    # If --outfile, write jobID to file
+    if cmd_args.outfile:
+        with open(cmd_args.outfile, 'w') as my_file:
+            my_file.write(str(job.id) + '\n')
+
+    return (rc, job)
 
 ###########################################
 # canceljob
@@ -102,8 +115,8 @@ def _canceljob(instance, cmd_args, rc):
                 job = instance.get_job(id=str(x))
                 _job_cancel(instance, x, cmd_args.collectlogs, cmd_args.force)
             except:
-                print("The following job ID was not found {}".format(x))
-                print("The following job ID cannot be canceled: {}. See the previous error message".format(x))
+                print("The following job ID was not found {}".format(x), file=sys.stderr)
+                print("The following job ID cannot be canceled: {}. See the previous error message".format(x), file=sys.stderr)
                 rc = 1
         else:
             raise ValueError("The following job identifier is not valid: {}. Specify a job identifier that is numeric and try the request again.".format(x))
@@ -115,7 +128,7 @@ def _canceljob(instance, cmd_args, rc):
             job = jobs[0]
             _job_cancel(instance, job.id, cmd_args.collectlogs, cmd_args.force)
         else:
-            print("The following job name is not found: {}. Specify a job name that is valid and try the request again".format(x))
+            print("The following job name is not found: {}. Specify a job name that is valid and try the request again".format(x), file=sys.stderr)
             rc = 1
 
 
@@ -480,8 +493,7 @@ def run_cmd(args=None):
         rc, extra_info = switch[cmd_args.subcmd](instance, cmd_args, rc)
     except Exception as e:
         rc = 1
-        print(e)
-        # sys.exc_info()
+        print(e, file=sys.stderr)
     return (rc, extra_info)
 
 def main(args=None):
@@ -490,7 +502,6 @@ def main(args=None):
     streamsx._streams._version._mismatch_check('streamsx.topology.context')
 
     rc, extra_info = run_cmd(args)
-    # print(rc)
     return rc
 
 def _parse_args(args):
