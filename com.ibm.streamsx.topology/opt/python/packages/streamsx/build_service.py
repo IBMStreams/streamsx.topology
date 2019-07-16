@@ -153,7 +153,7 @@ class BuildService(_AbstractStreamsConnection):
         outside the cluster.
 
         Args:
-            endpoint(str): Deployment URL for Cloud Pak for Data, e.g. `https://icp4d_server:31843`. Defaults to the environment variable ``ICP4D_DEPLOYMENT_URL``.
+            endpoint(str): Deployment URL for Cloud Pak for Data, e.g. `https://icp4d_server:31843`. Defaults to the environment variable ``ICPD_URL``.
             service_name(str): Streams instance name. Defaults to the environment variable ``STREAMS_INSTANCE_ID``.
             username(str): User name to authenticate as. Defaults to the environment variable ``STREAMS_USERNAME`` or the operating system identifier if not set.
             password(str): Password for authentication. Defaults to the environment variable ``STREAMS_PASSWORD`` or the operating system identifier if not set.
@@ -165,7 +165,7 @@ class BuildService(_AbstractStreamsConnection):
         .. versionadded:: 1.13
         """
         if not endpoint:
-            endpoint = os.environ.get('ICP4D_DEPLOYMENT_URL')
+            endpoint = os.environ.get('ICPD_URL')
             if endpoint:
                 if not service_name:
                     service_name = os.environ.get('STREAMS_INSTANCE_ID')
