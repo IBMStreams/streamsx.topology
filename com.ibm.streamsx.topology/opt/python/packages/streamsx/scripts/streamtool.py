@@ -162,7 +162,7 @@ def _lsjobs_parser(subparsers):
     job_ls.add_argument('--fmt', help='Specifies the presentation format', default='%Tf')
     job_ls.add_argument('--xheaders', help='Specifies to exclude headings from the report', action='store_true')
     job_ls.add_argument('--long', '-l', help='Reports launch count, full host names, and all of the operator instance names for the PEs.', action='store_true')
-    job_ls.add_argument('--showtimestamp', help='Specifies to show a time stamp in the output to indicate when the command was run.st', action='store_true')
+    job_ls.add_argument('--showtimestamp', help='Specifies to show a time stamp in the output to indicate when the command was run.', action='store_true')
 
     _user_arg(job_ls)
 

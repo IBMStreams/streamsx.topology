@@ -45,8 +45,7 @@ class TestAppconfig(unittest.TestCase):
     ):
         args = ["--disable-ssl-verify", "mkappconfig", config_name]
         if description:
-            args.insert(3, "--description")
-            args.insert(4, description)
+            args.extend(["--description", description])
         i = 5
         if props:
             for prop in props:
@@ -55,17 +54,14 @@ class TestAppconfig(unittest.TestCase):
                 args.insert(i, prop)
                 i += 1
         if prop_file:
-            args.insert(i, "--propfile")
-            i += 1
-            args.insert(i, prop_file)
+            args.extend(["--propfile", prop_file])
 
         return streamtool.main(args=args)
 
     def _ls_appconfig(self, fmt=None):
         args = ["--disable-ssl-verify", "lsappconfig"]
         if fmt:
-            args.insert(3, '--fmt')
-            args.insert(4, fmt)
+            args.extend(["--fmt", fmt])
         return streamtool.main(args=args)
 
     def _remove_appconfig(self, config_name, noprompt=False):
@@ -81,8 +77,7 @@ class TestAppconfig(unittest.TestCase):
     def _ch_appconfig(self, config_name, props=None, description=None):
         args = ["--disable-ssl-verify", "chappconfig", config_name]
         if description:
-            args.insert(3, "--description")
-            args.insert(4, description)
+           args.extend(["--description", description])
         i = 5
         if props:
             for prop in props:
@@ -405,8 +400,6 @@ class TestAppconfig(unittest.TestCase):
 
         output, error, rc= self.get_output(lambda: self._ls_appconfig())
         output = output.splitlines()
-
-        print(output)
 
         # Check headers outputs correctly
         true_headers = ["Id", "Owner", "Created", "Modified", "Description"]
