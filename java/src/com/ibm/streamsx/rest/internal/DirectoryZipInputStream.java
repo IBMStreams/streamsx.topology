@@ -24,7 +24,7 @@ import java.util.zip.ZipOutputStream;
  * Given a path to a directory, this class creates an InputStream containing
  * the contents of the directory, zipped.  Empty directories are included.
  */
-public class ZipStream {
+public class DirectoryZipInputStream {
 
   /**
    * Create an InputStream from a directory, containing the contents of
@@ -40,18 +40,33 @@ public class ZipStream {
     return is;
   }
 
+  // We want to write a bunch of bytes to a ByteArrayOutputStream, then
+  // create a ByteArrayInputStream from the bytes written to the outout stream.
+  // Problem is, ByteArrayOutputStream does not provide a good way to do this.
+  // ByteArrayOutputStream.toByteArray() creates a copy of the byte array,
+  // but we just want to take ownership of the byte array.  After calling
+  // getInputStream(), the output stream probably should not be used.
+  static private class ByteArrayOutputStreamWithInputStream extends ByteArrayOutputStream {
+    public InputStream getInputStream() {
+      InputStream is = new ByteArrayInputStream(this.buf,0,this.count);
+      this.buf = new byte[0];
+      this.count = 0;
+      return is;
+    }
+  }
+
   static private class ZipStreamVisitor extends SimpleFileVisitor<Path> implements Closeable {
-    private ByteArrayOutputStream os;
+    private ByteArrayOutputStreamWithInputStream os;
     private ZipOutputStream zos;
     private Path root;
 
     public ZipStreamVisitor() {
-      os = new ByteArrayOutputStream();
+      os = new ByteArrayOutputStreamWithInputStream();
       zos = new ZipOutputStream(os);
     }
 
     public InputStream getInputStream() {
-      return new ByteArrayInputStream(os.toByteArray());
+      return os.getInputStream();
     }
 
     @Override

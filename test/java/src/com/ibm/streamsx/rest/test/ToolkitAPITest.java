@@ -39,7 +39,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.ibm.streamsx.rest.internal.ZipStream;
+import com.ibm.streamsx.rest.internal.DirectoryZipInputStream;
 
 import com.ibm.streamsx.rest.RESTException;
 import com.ibm.streamsx.rest.build.BuildService;
@@ -63,6 +63,7 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
 import java.net.URI;
 import java.net.URL;
+import static com.ibm.streamsx.topology.internal.streams.Util.getDefaultUserPassword;
 
 public class ToolkitAPITest {
   protected BuildService connection;
@@ -370,7 +371,7 @@ public class ToolkitAPITest {
     Path targetParent = Files.createTempDirectory(baseDir.toPath(), "tz");
     try {
       Path target = new File(targetParent.toFile(),"tk.zip").toPath();
-      try (InputStream is = ZipStream.fromPath(tkpath)) {
+      try (InputStream is = DirectoryZipInputStream.fromPath(tkpath)) {
         Files.copy(is, target);
       }
 
@@ -394,7 +395,7 @@ public class ToolkitAPITest {
     }
     finally {
       // Delete the temp files and contents this when test is done.  
-      Files.walkFileTree(targetParent, new FileDeleter());
+      Files.walkFileTree(targetParent, new DirectoryDeletor());
     }
   }
 
@@ -418,8 +419,9 @@ public class ToolkitAPITest {
       Executor executor = RestUtils.createExecutor(allowInsecure);
 
       JsonObject authParams = new JsonObject();
-      authParams.addProperty("username","admin");
-      authParams.addProperty("password","password");
+      String[] userpass = getDefaultUserPassword();
+      authParams.addProperty("username", userpass[0]);
+      authParams.addProperty("password", userpass[1]);
 
       Request request = Request.Post(authUrl)
         .addHeader("accept", ContentType.APPLICATION_JSON.getMimeType())
@@ -428,11 +430,9 @@ public class ToolkitAPITest {
       Response response = executor.execute(request);
       JsonObject jsonResponse = gsonFromResponse(response.returnResponse());
      
-
-      //String bearerToken = jsonResponse.get("token").getAsString();
       String bearerToken = jstring(jsonResponse, "token");
 
-      // This is only the token to get the token.
+      // This is not the token we want, but it is the token to get the token.
       String instanceName = System.getenv("STREAMS_INSTANCE_ID");
       String detailsUrl = icpdUrl + "/zen-data/v2/serviceInstance/details?displayName=" + instanceName;
 
@@ -470,6 +470,7 @@ public class ToolkitAPITest {
 
       String externalHost = icpdURI.getHost();
 
+      // Copy the URI, replacing the internal host with the external host.
       URI externalURI = new URI(internalURI.getScheme(), 
                                 internalURI.getUserInfo(), 
                                 externalHost, 
@@ -571,7 +572,8 @@ public class ToolkitAPITest {
     assertEquals(0, matches.size());
   }
 
-  private static class FileDeleter extends SimpleFileVisitor<Path> {
+  // Delete a directory including all files and subdirectories.
+  private static class DirectoryDeletor extends SimpleFileVisitor<Path> {
     @Override
     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
       Files.delete(file);

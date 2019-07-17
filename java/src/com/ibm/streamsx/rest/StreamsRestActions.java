@@ -20,7 +20,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.rest.internal.ZipStream;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 
 class StreamsRestActions {

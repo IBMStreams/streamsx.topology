@@ -23,7 +23,7 @@ import org.apache.http.util.EntityUtils;
 import com.google.gson.JsonObject;
 
 import com.ibm.streamsx.rest.RESTException;
-import com.ibm.streamsx.rest.internal.ZipStream;
+import com.ibm.streamsx.rest.internal.DirectoryZipInputStream;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 
 class StreamsRestActions {
@@ -58,7 +58,7 @@ class StreamsRestActions {
     String toolkitsURL = connection.getToolkitsURL();
     Request post = Request.Post(toolkitsURL);
     post.addHeader(AUTH.WWW_AUTH_RESP, connection.getAuthorization());
-    post.bodyStream(ZipStream.fromPath(path.toPath()), ContentType.create("application/zip"));
+    post.bodyStream(DirectoryZipInputStream.fromPath(path.toPath()), ContentType.create("application/zip"));
 
     JsonObject response = requestGsonResponse(connection.getExecutor(), post);
     List<Toolkit> toolkitList = Toolkit.createToolkitList(connection, response);
