@@ -212,6 +212,7 @@ import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
 
 import copy
+import collections
 import random
 import streamsx._streams._placement as _placement
 import streamsx.spl.op
@@ -1038,7 +1039,7 @@ class Stream(_placement._Placement, object):
         oport = op.addOutputPort(schema=self.oport.schema, name=_name)
         return Stream(self.topology, oport)._make_placeable()
 
-    def split(self, into, func, name=None):
+    def split(self, into, func, names=None, name=None):
         """
         Splits tuples from this stream into multiple independent streams
         using the supplied callable `func`.
@@ -1058,6 +1059,7 @@ class Stream(_placement._Placement, object):
         Args:
             into(int): Number of streams the input is split into, must be greater than zero.
             func: Split callable that takes a single parameter for the tuple.
+            names(list[str]): Names of the returned streams, in order. If not supplied or a stream doesn't have an entry in `names` then a generated name is used. Entries are used to generated the field names of the returned named tuple.
             name(str): Name of the split transform, defaults to a generated name.
 
         If invoking ``func`` for a tuple on the stream raises an exception
@@ -1070,7 +1072,7 @@ class Stream(_placement._Placement, object):
         stream corresponding to the input tuple that caused the exception.
 
         Returns:
-            list(Stream): List of streams this stream is split across.
+            namedtuple: Named tuple of streams this stream is split across.
 
         Example of splitting a stream based upon message severity, dropping
         any messages with unknown severity, and then performing different
@@ -1078,15 +1080,16 @@ class Stream(_placement._Placement, object):
 
             msgs = topo.source(ReadMessages())
             SEVS = {'H':0, 'M':1, 'L':2}
-            severities = msg.split(3, lambda SEVS.get(msg.get('SEV'), -1))
+            severities = msg.split(3, lambda SEVS.get(msg.get('SEV'), -1),
+                names=['high','medium','low'], name='SeveritySplit')
 
-            high_severity = severities[0]
+            high_severity = severities.high
             high_severity.for_each(SendAlert())
 
-            medium_severity = severities[1]
+            medium_severity = severities.medium
             medium_severity.for_each(LogMessage())
 
-            low_severity = severities[2]
+            low_severity = severities.low
             low_severity.for_each(Archive())
 
         .. versionadded:: 1.13
@@ -1099,11 +1102,18 @@ class Stream(_placement._Placement, object):
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         op._layout(kind='Split', name=_name, orig_name=name)
         streams = []
+        nt_names = []
+        op_name = name if name else _name
         for port_id in range(into):
-            sn = self.topology.graph._requested_name(_name + '_' + str(port_id))
+            # logical name
+            lsn = names[port_id] if names and len(names) > port_id else op_name + '_' + str(port_id)
+            sn = self.topology.graph._requested_name(lsn)
             oport = op.addOutputPort(schema=self.oport.schema, name=sn)
             streams.append(Stream(self.topology, oport)._make_placeable())
-        return streams
+            nt_names.append(lsn)
+            op._layout(name=sn, orig_name=lsn)
+        nt = collections.namedtuple(op_name, nt_names, rename=True)
+        return nt._make(streams)
 
     def _map(self, func, schema, name=None):
         schema = streamsx.topology.schema._normalize(schema)
