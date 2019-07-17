@@ -17,6 +17,7 @@
  </target>
 
  <target name="toolkits">
+   <exec executable="./random-toolkit-name.sh" vmlauncher="false" failonerror="true"/>
    <antcall target="extract-toolkit">
      <param name="toolkit" value="bingo_tk0"/>
    </antcall>
@@ -39,7 +40,7 @@
    <delete includeemptydirs="true">
      <fileset dir="${streamsx.topology.test.python.rest.toolkits.basedir}">
        <include name="*_tk*/**"/>
-       <exclude name="*/info.xml"/>
+       <exclude name="*/info.xml.tmpl"/>
        <exclude name="*/opt/python/streams/*.py"/>
      </fileset>
    </delete>

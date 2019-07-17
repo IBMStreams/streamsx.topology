@@ -40,6 +40,10 @@
     <pathelement location="${junit.jar}"/>
   </path>
 
+  <propertyset id="junit.test.props">
+      <propertyref prefix="topology.test."/>
+ </propertyset>
+
  <taskdef resource="scala/tools/ant/antlib.xml">
    <classpath>
      <pathelement location="${scala.home}/lib/scala-compiler.jar"   />
@@ -84,12 +88,7 @@
      <junit fork="yes" dir="${topology.test.dir}" printsummary="yes" showoutput="no"
            threads="${topology.test.threads}"
            haltonfailure="yes" failureproperty="topology.tests.failed">
-       <sysproperty key="topology.test.root" value="${topology.test.root}"/>
-       <sysproperty key="topology.test.type" value="${topology.test.type}"/>
-       <sysproperty key="topology.test.sc_ok" value="${topology.test.sc_ok}"/>
-       <sysproperty key="topology.test.perf_ok" value="${topology.test.perf_ok}"/>
-       <sysproperty key="topology.test.resource_dir" file="resources"/>
-
+       <syspropertyset refid="junit.test.props" />
        <sysproperty key="topology.install.compile" value="${topology.install.compile}"/>
        <sysproperty key="log4j.configuration" value="${topology.log4j}"/>
        

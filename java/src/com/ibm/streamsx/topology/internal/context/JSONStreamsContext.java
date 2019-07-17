@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.context;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.STREAMS_CONNECTION;
+import static com.ibm.streamsx.topology.context.ContextProperties.STREAMS_INSTANCE;
 import static com.ibm.streamsx.topology.context.ContextProperties.SUBMISSION_PARAMS;
 import static com.ibm.streamsx.topology.context.ContextProperties.TRACING_LEVEL;
 import static com.ibm.streamsx.topology.context.JobProperties.CONFIG;
@@ -169,7 +170,7 @@ public abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
         // Keys handled by Job Config overlays
         
         // ContextProperties
-        Collections.addAll(CONFIG_SKIP_KEYS, TRACING_LEVEL, SUBMISSION_PARAMS, STREAMS_CONNECTION);
+        Collections.addAll(CONFIG_SKIP_KEYS, TRACING_LEVEL, SUBMISSION_PARAMS, STREAMS_CONNECTION, STREAMS_INSTANCE);
         
         // JobProperties
         Collections.addAll(CONFIG_SKIP_KEYS, CONFIG, NAME, GROUP, DATA_DIRECTORY,

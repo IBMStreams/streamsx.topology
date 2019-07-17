@@ -14,9 +14,12 @@ import warnings
 import urllib3
 import datetime
 import json
+import locale
 
 import streamsx.topology.context
 from streamsx.rest import Instance
+
+
 
 ###########################################
 # submitjob
@@ -26,10 +29,12 @@ def _submitjob_parser(subparsers):
     job_submit.add_argument('sabfile', help='Location of sab file.', metavar='sab-pathname')
     job_submit.add_argument('--jobConfig', '-g', help='Specifies the name of an external file that defines a job configuration overlay')
     job_submit.add_argument('--jobname', help='Specifies the name of the job.')
+    job_submit.add_argument('--jobgroup', '-J', help='Specifies the job group')
+    job_submit.add_argument('--outfile', help='Specifies the path and file name of the output file in which the command writes the list of submitted job IDs')
     job_submit.add_argument('--P', '-P', help='Specifies a submission-time parameter and value for the job', action='append')
     _user_arg(job_submit)
 
-def _submitjob(instance, cmd_args):
+def _submitjob(instance, cmd_args, rc):
     """Submit a job."""
     job_config = None
 
@@ -42,6 +47,10 @@ def _submitjob(instance, cmd_args):
     if cmd_args.jobname:
         job_config.job_name = cmd_args.jobname
 
+    if cmd_args.jobgroup:
+        # Will throw a 500 internal error on instance.submit_job if jobgroup doesn't already exist
+        job_config.job_group = cmd_args.jobgroup
+
     if cmd_args.P:
         for param in cmd_args.P:
             name_value_pair = param.split("=")
@@ -50,27 +59,96 @@ def _submitjob(instance, cmd_args):
             else:
                 job_config.submission_parameters[name_value_pair[0]] = name_value_pair[1]
 
-    instance.submit_job(bundle=cmd_args.sabfile, job_config=job_config)
+    job = instance.submit_job(bundle=cmd_args.sabfile, job_config=job_config)
 
+    if not job:
+        raise Exception("Error in creating Job")
 
+    # If --outfile, write jobID to file
+    if cmd_args.outfile:
+        with open(cmd_args.outfile, 'w') as my_file:
+            my_file.write(str(job.id) + '\n')
+
+    return (rc, job)
 
 ###########################################
 # canceljob
 ###########################################
 def _canceljob_parser(subparsers):
     job_cancel = subparsers.add_parser('canceljob', help='Cancel a job.')
-    job_cancel.add_argument('--jobs', '-j', help='Specifies a list of job IDs.', metavar='job-id')
-    job_cancel.add_argument('--force', action='store_true', help='Stop the service even if jobs are running.')
+    job_cancel.add_argument('--force', action='store_true', help='Stop the service even if jobs are running.', default=False)
+    job_cancel.add_argument('--collectlogs', help='Specifies to collect the log and trace files for each processing element that is associated with the job', action='store_true')
+    # Only 1 of these arguments --jobs, --jobnames, --file can be specified at any given time when running this command
+    g1 = job_cancel.add_argument_group(title='jobs jobnames file group', description='One of these options must be chosen.')
+    group = g1.add_mutually_exclusive_group(required=True)
+    group.add_argument('--jobs', '-j', help='Specifies a list of job IDs.', metavar='job-id')
+    group.add_argument('--jobnames', help='Specifies a list of job names')
+    group.add_argument('--file', '-f', help='Specifies the file that contains a list of job IDs, one per line')
+
     _user_arg(job_cancel)
 
-def _canceljob(instance, cmd_args):
+def _canceljob(instance, cmd_args, rc):
     """Cancel a job."""
-    for job in cmd_args.jobs.split(','):
-        _job_cancel(instance, job_id=int(job), force=cmd_args.force)
+    job_ids_to_cancel = []
+    job_names_to_cancel = []
 
-def _job_cancel(instance, job_id=None, job_name=None, force=False):
+    # if --jobs, get list of job IDs to cancel
+    if cmd_args.jobs:
+        job_ids = cmd_args.jobs.split(',')
+        job_ids_to_cancel.extend(job_ids)
+
+    # if --jobnames, get list of jobnames to cancel
+    if cmd_args.jobnames:
+        job_names = cmd_args.jobnames.split(',')
+        job_names_to_cancel.extend(job_names)
+
+    # if --file, get list of job IDs to cancel from file
+    if cmd_args.file:
+        with open(cmd_args.file, 'r') as my_file:
+            job_ids = [line.rstrip() for line in my_file if not line.isspace()]
+            job_ids_to_cancel.extend(job_ids)
+
+    # Check if job w/ job ID exists, and if so cancel it
+    for x in job_ids_to_cancel:
+        if x.isnumeric():
+            try:
+                job = instance.get_job(id=str(x))
+                _job_cancel(instance, x, cmd_args.collectlogs, cmd_args.force)
+            except:
+                print("The following job ID was not found {}".format(x), file=sys.stderr)
+                print("The following job ID cannot be canceled: {}. See the previous error message".format(x), file=sys.stderr)
+                rc = 1
+        else:
+            raise ValueError("The following job identifier is not valid: {}. Specify a job identifier that is numeric and try the request again.".format(x))
+
+    # Check if job w/ job name exists, and if so cancel it
+    for x in job_names_to_cancel:
+        jobs = instance.get_jobs(name=str(x))
+        if jobs:
+            job = jobs[0]
+            _job_cancel(instance, job.id, cmd_args.collectlogs, cmd_args.force)
+        else:
+            print("The following job name is not found: {}. Specify a job name that is valid and try the request again".format(x), file=sys.stderr)
+            rc = 1
+
+
+    return (rc, None)
+
+def _job_cancel(instance, job_id=None, collectlogs=False, force=False):
     job = instance.get_job(id=str(job_id))
-    job.cancel(force)
+    if collectlogs:
+        log_path = job.retrieve_log_trace()
+        if log_path:
+            print("The log files for the {} job ID will be collected in the following files: {}".format(job_id, log_path))
+        else:
+            raise Exception("Retrieval of job's logs is not supported in this version of IBM Streams")
+
+    # Cancel job, and check if successful
+    val = job.cancel(force)
+    if val:
+        print("The following job ID was canceled: {}. The job was in the {} instance.".format(job_id, instance.id))
+    else:
+        raise Exception("One or more jobs failed to stop")
 
 
 ###########################################
@@ -88,7 +166,7 @@ def _lsjobs_parser(subparsers):
 
     _user_arg(job_ls)
 
-def _lsjobs(instance, cmd_args):
+def _lsjobs(instance, cmd_args, rc):
     """view jobs"""
     jobs = instance.get_jobs()
     instance_id = instance.id
@@ -147,6 +225,7 @@ def _lsjobs(instance, cmd_args):
 
         _print_ls("lsjobs", cmd_args.fmt, headers, data, instance_id=instance_id, Date=time_stamp)
 
+    return (rc, None)
 
 ###########################################
 # appconfig
@@ -158,16 +237,18 @@ def _lsappconfig_parser(subparsers):
     appconfig_ls.add_argument('--fmt', help='Specifies the presentation format', default='%Tf')
     _user_arg(appconfig_ls)
 
-def _lsappconfig(instance, cmd_args):
+def _lsappconfig(instance, cmd_args, rc):
     """view appconfigs"""
     configs = instance.get_application_configurations()
+    locale.setlocale(locale.LC_ALL, '') # Needed to correctly display local date and time format
+    LOCAL_TIMEZONE = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo # Needed to get timezone
 
     # If default output format
     if cmd_args.fmt == '%Tf':
         print('{: <20} {:<20} {:<30} {:<30} {:<20}'.format("Id", "Owner", "Created", "Modified", "Description"))
         for config in configs:
-            createDate = datetime.datetime.fromtimestamp(config.creationTime/1000).strftime("%m/%d/%Y, %I:%M %p ") + "GMT"
-            lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000).strftime("%m/%d/%Y, %I:%M %p ") + "GMT"
+            createDate = datetime.datetime.fromtimestamp(config.creationTime/1000, tz = LOCAL_TIMEZONE).strftime("%x %X %Z")
+            lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000, tz = LOCAL_TIMEZONE).strftime("%x %X %Z")
             print('{: <20} {:<20} {:<30} {:<30} {:<20}'.format(config.name, config.owner, createDate, lastModifiedDate, config.description))
     # non default output format, use helper function
     else:
@@ -175,12 +256,14 @@ def _lsappconfig(instance, cmd_args):
         data = []
         for config in configs:
             item = []
-            createDate = datetime.datetime.fromtimestamp(config.creationTime/1000).strftime("%m/%d/%Y, %I:%M %p ") + "GMT"
-            lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000).strftime("%m/%d/%Y, %I:%M %p ") + "GMT"
+            createDate = datetime.datetime.fromtimestamp(config.creationTime/1000, tz = LOCAL_TIMEZONE).strftime("%x %X %Z")
+            lastModifiedDate = datetime.datetime.fromtimestamp(config.lastModifiedTime/1000, tz = LOCAL_TIMEZONE).strftime("%x %X %Z")
             item.extend((config.name, config.owner, createDate, lastModifiedDate, config.description))
             data.append(item)
 
         _print_ls("lsappconfig", cmd_args.fmt, headers, data)
+
+    return (rc, None)
 
 def _print_ls(command_name, fmt, headers, data, instance_id=None, Date=None):
     """A helper function that prints the output for lsjobs or lsappconfig if the --fmt flag specifies either '%Mf' or '%Nf'.
@@ -224,25 +307,25 @@ def _rmappconfig_parser(subparsers):
     appconfig_rm.add_argument('--noprompt', help='Specifies to suppress confirmation prompts.', action='store_true')
     _user_arg(appconfig_rm)
 
-def _rmappconfig(instance, cmd_args):
+def _rmappconfig(instance, cmd_args, rc):
     """remove an appconfig"""
     config_name = cmd_args.config_name
     configs = instance.get_application_configurations(name = config_name)
     if (not configs):
-        print("The {} application configuration does not exist in the {} instance".format(config_name, instance.id))
-        return
+        raise NameError("The {} application configuration does not exist in the {} instance".format(config_name, instance.id))
     app_config = instance.get_application_configurations(name = config_name)[0]
 
     # No confirmation required, delete
-    if (cmd_args.noprompt):
+    if cmd_args.noprompt:
         app_config.delete()
         print("The {} application configuration was removed successfully for the {} instance".format(config_name, instance.id))
     else:
         response = input("Do you want to remove the application configuration {} from the {} instance? Enter 'y' to continue or 'n' to cancel: ".format(config_name, instance.id))
-        if (response == "y"):
+        if response == "y":
             app_config.delete()
             print("The {} application configuration was removed successfully for the {} instance".format(config_name, instance.id))
 
+    return (rc, None)
 
 # mk-appconfig
 def _mkappconfig_parser(subparsers):
@@ -253,19 +336,24 @@ def _mkappconfig_parser(subparsers):
     appconfig_mk.add_argument('--description', help='Specifies a description for the application configuration')
     _user_arg(appconfig_mk)
 
-def _mkappconfig(instance, cmd_args):
+def _mkappconfig(instance, cmd_args, rc):
     """create an appconfig"""
     config_name, config_props, config_description = _get_config_details(cmd_args, mk=True)
+    appconfig = None
 
     # Check if config exists by that name, if so don't do anything
     if instance.get_application_configurations(config_name):
-        print("The {} application configuration already exists in the following {} instance".format(config_name, instance.id))
+        raise Exception("The {} application configuration already exists in the following {} instance".format(config_name, instance.id))
     else:
         # No appconfig exists by that name, create new one
         appconfig =  instance.create_application_configuration(name=config_name, properties=config_props, description=config_description)
         if appconfig:
             print("The {} application configuration was created successfully for the {} instance".format(config_name, instance.id))
-            return appconfig
+        else:
+            # Failed to create appconfig
+            rc = 1
+
+    return (rc, appconfig)
 
 # ch-appconfig
 def _chappconfig_parser(subparsers):
@@ -276,18 +364,23 @@ def _chappconfig_parser(subparsers):
     _user_arg(appconfig_ch)
 
 
-def _chappconfig(instance, cmd_args):
+def _chappconfig(instance, cmd_args, rc):
+    """change an appconfig"""
     config_name, config_props, config_description = _get_config_details(cmd_args, mk=False)
+    new_app_config = None
     # Check if config exists by that name, if so update it
     if instance.get_application_configurations(config_name):
         appconfig = instance.get_application_configurations(config_name)[0]
-        newAppconfig = appconfig.update(properties=config_props, description=config_description)
-        if (newAppconfig):
+        new_app_config = appconfig.update(properties=config_props, description=config_description)
+        if new_app_config:
             print("The {} application configuration was updated successfully for the {} instance".format(config_name, instance.id))
-            return newAppconfig
+        else:
+            rc = 1
     else:
         # No appconfig exists by that name
-        print("The {} application configuration does not exist in the {} instance".format(config_name, instance.id))
+        raise NameError("The {} application configuration does not exist in the {} instance".format(config_name, instance.id))
+
+    return (rc, new_app_config)
 
 
 def _get_config_details(cmd_args, mk):
@@ -351,19 +444,17 @@ def _getappconfig_parser(subparsers):
     _user_arg(appconfig_get)
 
 
-def _getappconfig(instance, cmd_args):
+def _getappconfig(instance, cmd_args, rc):
     """get an appconfig"""
     config_name = cmd_args.config_name
     configs = instance.get_application_configurations(name = config_name)
     # Check if any configs by that name
     if (not configs):
-        print("No application configuration by the name {}".format(config_name))
-        return
+        raise NameError("No application configuration by the name {}".format(config_name))
     config = configs[0]
     config_props = config.properties
     if not config_props:
-        print("The {} application configuration has no properties defined".format(config_name))
-        return
+        raise Exception("The {} application configuration has no properties defined".format(config_name))
 
     for key, value in config_props.items():
         try:
@@ -372,7 +463,7 @@ def _getappconfig(instance, cmd_args):
         except ValueError:
             json_value = value
         print(key + "=" + json_value)
-    return config_props
+    return (rc, config_props)
 
 
 def run_cmd(args=None):
@@ -399,10 +490,10 @@ def run_cmd(args=None):
     extra_info = None
     rc = 0
     try:
-        extra_info = switch[cmd_args.subcmd](instance, cmd_args)
-    except:
+        rc, extra_info = switch[cmd_args.subcmd](instance, cmd_args, rc)
+    except Exception as e:
         rc = 1
-        # sys.exc_info()
+        print(e, file=sys.stderr)
     return (rc, extra_info)
 
 def main(args=None):

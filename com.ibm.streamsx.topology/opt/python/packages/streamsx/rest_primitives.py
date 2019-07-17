@@ -24,13 +24,11 @@ import threading
 import time
 import json
 import re
-import tempfile
 import time
 import xml.etree.ElementTree as ElementTree
 
 from pprint import pformat
 from urllib import parse
-from zipfile import ZipFile
 
 import streamsx.topology.context
 import streamsx.topology.schema
@@ -1637,7 +1635,7 @@ class Instance(_ResourceElement):
         outside the cluster.
 
         Args:
-            endpoint(str): Deployment URL for Cloud Pak for Data, e.g. `https://icp4d_server:31843`. Defaults to the environment variable ``ICP4D_DEPLOYMENT_URL``.
+            endpoint(str): Deployment URL for Cloud Pak for Data, e.g. `https://icp4d_server:31843`. Defaults to the environment variable ``ICPD_URL``.
             service_name(str): Streams instance name. Defaults to the environment variable ``STREAMS_INSTANCE_ID``.
             username(str): User name to authenticate as. Defaults to the environment variable ``STREAMS_USERNAME`` or the operating system identifier if not set.
             password(str): Password for authentication. Defaults to the environment variable ``STREAMS_PASSWORD`` or the operating system identifier if not set.
@@ -1649,7 +1647,7 @@ class Instance(_ResourceElement):
         .. versionadded:: 1.13
         """
         if not endpoint:
-            endpoint = os.environ.get('ICP4D_DEPLOYMENT_URL')
+            endpoint = os.environ.get('ICPD_URL')
             if endpoint:
                 if not service_name:
                     service_name = os.environ.get('STREAMS_INSTANCE_ID')
@@ -1669,9 +1667,8 @@ class Instance(_ResourceElement):
 
         auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
         resource_url, _ = Instance._root_from_endpoint(auth._cfg['connection_info'].get('serviceRestEndpoint'))
-        build_url, _ = Toolkit._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
 
-        sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth,build_url=build_url)
+        sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth)
         if verify is not None:
             sc.rest_client.session.verify = verify
  
@@ -2624,9 +2621,9 @@ class Toolkit(_ResourceElement):
         path(str): The full path to the toolkit.
 
     Example:
-        >>> from streamsx import rest
-        >>> sc = rest.StreamingAnalyticsConnection()
-        >>> instances = sc.get_toolkits()
+        >>> from streamsx.build_service import BuildService
+        >>> build_service = BuildService.of_endpoint()
+        >>> toolkits = build_service.get_toolkits()
         >>> print (toolkits[0].resourceType)
         toolkit
 
@@ -2659,81 +2656,13 @@ class Toolkit(_ResourceElement):
     @staticmethod
     def _toolkits_url(sc):
         toolkits_url = None
-        for resource in sc.get_build_resources():
+        for resource in sc.get_resources():
             if resource.name == 'toolkits':
                 toolkits_url = resource.resource
                 break;
         else:
             raise ValueError('The toolkits REST API is not supported by the Streams instance')
-        return toolkits_url
-
-    @classmethod
-    def from_local_toolkit(cls, sc, path):
-        """
-        Upload a toolkit from a directory in the local filesystem to 
-        the Streams instance.
-
-        Multiple versions of a toolkit may be uploaded as long as each has
-        a unique version.  If a toolkit is uploaded with a name and version
-        matching an existing toolkit, it will not replace the existing
-        toolkit, and ``None`` will be returned.
-       
-        Args:
-            sc(StreamsConnection): A connection to the Streams instance.
-            path(str): The path to the toolkit directory in the local filesystem.
-        Returns:
-            Toolkit: The created Toolkit, or ``None`` if it was not uploaded.
-        """
-        # Handle path does not exist, is not readable, is not a directory
-        if not os.path.isdir(path):
-            raise ValueError('"' + path + '" is not a path or is not readable')
-
-        # Create a named temporary file
-        with tempfile.NamedTemporaryFile(suffix='.zip') as tmpfile:
-            filename = tmpfile.name
-
-            basedir = os.path.abspath(os.path.join(path, os.pardir))
-
-            with ZipFile(filename, 'w') as zipfile:
-                for root, dirs, files in os.walk(path):
-                    # Write the directory entry
-                    relpath = os.path.relpath(root, basedir)
-                    zipfile.write(root, relpath)
-                    for file in files:
-                        zipfile.write (os.path.join(root, file), os.path.join(relpath, file))
-                zipfile.close()
-            
-                with open(filename, 'rb') as toolkit_fp:
-                    res = sc.rest_client.session.post(Toolkit._toolkits_url(sc),
-                        headers = {'Accept' : 'application/json',
-                                   'Content-Type' : 'application/zip'},
-                        data=toolkit_fp,
-                        verify=sc.rest_client.session.verify)
-                    _handle_http_errors(res)
-                    new_toolkits = list(cls(t, sc.rest_client) for t in res.json()['toolkits'])
-
-                    # It may be possible to upload multiple toolkits in one 
-                    # post, but we are only uploading a single toolkit, so the
-                    # list of new toolkits is expected to contain only one 
-                    # element, and we return it.  It is also possible that no 
-                    # new toolkit was returned.
-
-                    if len(new_toolkits) >= 1:
-                        return new_toolkits[0]    
-                    return None
-                 
-    @staticmethod
-    def _root_from_endpoint(endpoint):
-        import urllib.parse as up
-        esu = up.urlsplit(endpoint)
-        if not esu.path.startswith('/streams/rest/builds'):
-            return None, None
-
-        es = endpoint.split('/')
-        name = es[len(es)-1]
-        root_url = endpoint.split('/streams/rest/builds')[0]
-        resource_url = root_url + '/streams/rest/resources'
-        return resource_url, name
+        return toolkits_url                 
 
     class Dependency:
         """

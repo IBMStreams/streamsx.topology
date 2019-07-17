@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ElementTree
 
 from streamsx.topology.tester import Tester
 from streamsx.topology.context import ConfigParams, JobConfig
-from streamsx.rest import StreamsConnection
+from streamsx.build_service import BuildService
 from streamsx.rest_primitives import *
 
 
@@ -15,10 +15,9 @@ logger = logging.getLogger('streamsx.test.toolkits_test')
 def _get_distributed_sc():
     # 4.3 on-prem
     if 'STREAMS_DOMAIN_ID' in os.environ:
-        sc = StreamsConnection()
-        sc.session.verify = False
-        return sc
-    return Instance.of_endpoint(verify=False).rest_client._sc
+        self.skipTest("Build REST API is not available in on-prem")
+
+    return BuildService.of_endpoint(verify=False)
 
 # REST API failures raise HTTPError instance, which, when printed, show
 # the default error message for the status code.  We often have useful
@@ -65,10 +64,12 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
         cls.is_v2 = None
         cls.logger = logger
 
+        cls.get_toolkit_names()
+
     def setUp(self):
         Tester.setup_distributed(self)
         self.sc = _get_distributed_sc()
-        if self.sc.build_resource_url is None:
+        if self.sc.resource_url is None:
             self.skipTest("Build REST API is not available")
         else:
 
@@ -169,7 +170,7 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
             expected_toolkit_name = type(self).bingo_toolkit_name
             expected_toolkit_version = type(self).bingo_1_version
 
-            bingo = Toolkit.from_local_toolkit(self.sc, toolkit_path)
+            bingo = self.sc.upload_toolkit(toolkit_path)
             self.assertIsNotNone(bingo)
             self.assertEqual(bingo.name, expected_toolkit_name)
             self.assertEqual(bingo.version, expected_toolkit_version)
@@ -196,7 +197,7 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
             
             # post it again, then find it in the list and delete it through the
             # Toolkit object in the list.
-            bingo = Toolkit.from_local_toolkit(self.sc, toolkit_path)
+            bingo = self.sc.upload_toolkit(toolkit_path)
             self.assertIsNotNone(bingo)
             self.assertEqual(expected_toolkit_name, bingo.name)
             self.assertEqual(expected_toolkit_version, bingo.version)
@@ -218,7 +219,7 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
             expected_toolkit_name = type(self).bingo_toolkit_name
             expected_toolkit_version = type(self).bingo_1_version
 
-            bingo = Toolkit.from_local_toolkit(self.sc, toolkit_path)
+            bingo = self.sc.upload_toolkit(toolkit_path)
             self.assertIsNotNone(bingo)
             
             index = bingo.get_index()
@@ -248,17 +249,17 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
             self.assertNotIn(type(self).bingo_toolkit_name, [toolkit.name for toolkit in toolkits])
 
             # first post version 1.0.1
-            bingo1 = Toolkit.from_local_toolkit(self.sc, type(self).bingo_1_path)
+            bingo1 = self.sc.upload_toolkit(type(self).bingo_1_path)
             self.assertIsNotNone(bingo1)
             
             self.wait_for_toolkit(type(self).bingo_toolkit_name, type(self).bingo_1_version)
             
             # post version 1.0.1 again.  It should return None
-            self.assertIsNone(Toolkit.from_local_toolkit(self.sc, type(self).bingo_1_path))
+            self.assertIsNone(self.sc.upload_toolkit(type(self).bingo_1_path))
             
             # post version 1.0.0.  The version does not match any existing
             # version, so it should get posted.
-            bingo0 = Toolkit.from_local_toolkit(self.sc, type(self).bingo_0_path)
+            bingo0 = self.sc.upload_toolkit(type(self).bingo_0_path)
             self.assertIsNotNone(bingo0)
             
             # Version 1.0.0 is now in the list, and version 1.0.1 is still there
@@ -268,7 +269,7 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
             
             # post version 1.0.2.  It does not replace version 1.0.1, but they
             # both continue to exist.
-            bingo2 = Toolkit.from_local_toolkit(self.sc, type(self).bingo_2_path)
+            bingo2 = self.sc.upload_toolkit(type(self).bingo_2_path)
             self.assertIsNotNone(bingo2)
             
             self.wait_for_toolkit(type(self).bingo_toolkit_name, type(self).bingo_2_version)
@@ -288,13 +289,13 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
         try:
             # Games depends on both cards and bingo.
 
-            bingo = Toolkit.from_local_toolkit(self.sc,type(self).bingo_0_path)
+            bingo = self.sc.upload_toolkit(type(self).bingo_0_path)
             self.assertIsNotNone(bingo)
             
-            cards = Toolkit.from_local_toolkit(self.sc,type(self).cards_path)
+            cards = self.sc.upload_toolkit(type(self).cards_path)
             self.assertIsNotNone(cards)
             
-            games = Toolkit.from_local_toolkit(self.sc,type(self).games_path)
+            games = self.sc.upload_toolkit(type(self).games_path)
             self.assertIsNotNone(games)
             
             # bingo and cards have no dependencies
@@ -303,9 +304,9 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
             
             games_dependencies = games.dependencies
             self.assertEqual(len(games_dependencies), 2)
-            self.assertEqual(games_dependencies[0].name, 'com.example.bingo')
+            self.assertEqual(games_dependencies[0].name, type(self).bingo_toolkit_name)
             self.assertEqual(games_dependencies[0].version, '[1.0.0,2.0.0)')
-            self.assertEqual(games_dependencies[1].name, 'com.example.cards')
+            self.assertEqual(games_dependencies[1].name, type(self).cards_toolkit_name)
             self.assertEqual(games_dependencies[1].version, '[1.0.0,1.1.0)')
             
             self.assertTrue(games.delete())
@@ -322,17 +323,17 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
             # path does not exist
             not_exists = 'toolkits/fleegle_tk'
             with self.assertRaises(ValueError):
-                fleegle = Toolkit.from_local_toolkit(self.sc, not_exists)
+                fleegle = self.sc.upload_toolkit(not_exists)
                 
             # path is an individual file
             file_exists = 'toolkits/bingo_tk0/toolkit.xml'
             with self.assertRaises(ValueError):
-                fleegle = Toolkit.from_local_toolkit(self.sc, file_exists)
+                fleegle = self.sc.upload_toolkit(file_exists)
                 
             # path is malformed garbage
             garbage_path = './toolkits/bingo_tk0\000/snork'
             with self.assertRaises(ValueError):
-                fleegle = Toolkit.from_local_toolkit(self.sc, garbage_path)
+                fleegle = self.sc.upload_toolkit(garbage_path)
 
         except requests.exceptions.HTTPError as err:
             _handle_http_error(err)
@@ -345,7 +346,7 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
             expected_toolkit_name = type(self).bingo_toolkit_name
             expected_toolkit_version = type(self).bingo_1_version
             
-            bingo = Toolkit.from_local_toolkit(self.sc, toolkit_path)
+            bingo = self.sc.upload_toolkit(toolkit_path)
             self.assertIsNotNone(bingo)
             
             # verify that the toolkit is now in the list of all toolkits.
@@ -360,9 +361,13 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
             
             # We don't know what the values the following attributes will have,
             # but we verify that the expected attributes do at least have values.
+            self.assertIsNotNone(found.path)
+            
+            # These are undocumented.  Note index is the URL of the index,
+            # not the contents of the index, which are exposed through
+            # get_index()
             self.assertIsNotNone(found.id)
             self.assertIsNotNone(found.index)
-            self.assertIsNotNone(found.path)
             self.assertIsNotNone(found.restid)
             self.assertIsNotNone(found.self)
             
@@ -378,3 +383,16 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
 
         except requests.exceptions.HTTPError as err:
             _handle_http_error(err)
+
+    @classmethod
+    def get_toolkit_name(cls, toolkit_path):
+        root = ElementTree.parse(toolkit_path + "/toolkit.xml")
+        toolkit_element = root.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkit}toolkit')
+        toolkit_name = toolkit_element.attrib['name']
+        return toolkit_name
+
+    @classmethod
+    def get_toolkit_names(cls):
+        cls.bingo_toolkit_name = cls.get_toolkit_name(cls.bingo_0_path)
+        cls.cards_toolkit_name = cls.get_toolkit_name(cls.cards_path)
+        cls.games_toolkit_name = cls.get_toolkit_name(cls.games_path)

@@ -419,7 +419,7 @@ public class ToolkitAPITest {
       Executor executor = RestUtils.createExecutor(allowInsecure);
 
       JsonObject authParams = new JsonObject();
-      String[] userpass = getDefaultUserPassword();
+      String[] userpass = getDefaultUserPassword(null,null);
       authParams.addProperty("username", userpass[0]);
       authParams.addProperty("password", userpass[1]);
 

@@ -22,11 +22,10 @@ import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.rest.build.BuildService;
-import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
 import com.ibm.streamsx.rest.internal.RestUtils;
+import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
-import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
  * Distributed context that uses the REST api for building
@@ -39,13 +38,18 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
         return Type.DISTRIBUTED;
     }
     
+    private Instance instance;
+    
+    public Instance instance() { return instance;}
+    
     @Override
     protected BuildService createSubmissionContext(JsonObject deploy) throws Exception {
         
         if (!deploy.has(StreamsKeys.SERVICE_DEFINITION)) {
             // Obtain the ICP4D information from the Streams rest Url.
             
-            ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(Util.getenv(Util.STREAMS_REST_URL));
+            // Use defaults from env.
+            ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(null, null, null, null);
             
             deploy.add(StreamsKeys.SERVICE_DEFINITION, authenticator.config(RestUtils.createExecutor(!sslVerify(deploy))));
         }
@@ -79,12 +83,14 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
         if (!sslVerify(deploy))
             conn.allowInsecureHosts(true);
                 
-        Instance instance = conn.getInstance(instanceId);
+        instance = conn.getInstance(instanceId);
         
         JsonArray artifacts = GsonUtilities.array(GsonUtilities.object(result, "build"), "artifacts");
         try {
-            if (artifacts == null || artifacts.size() != 1)
-                throw new IllegalStateException();
+            if (artifacts == null || artifacts.size() == 0)
+                throw new IllegalStateException("No build artifacts produced.");
+            if (artifacts.size() != 1)
+                throw new IllegalStateException("Multiple build artifacts produced.");
 
             String location = GsonUtilities
                     .jstring(artifacts.get(0).getAsJsonObject(), "location");
