@@ -151,8 +151,8 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
             toolkits = self.sc.get_toolkits()
             self.assertGreaterEqual(len(toolkits), 1)
             self.assertIsNotNone(toolkits[0].name)
-            #for toolkit in toolkits:
-            #   print(toolkit.name + ' ' + toolkit.version + ": " + toolkit.id)
+            # for toolkit in toolkits:
+            #    print(toolkit.name + ' ' + toolkit.version + ": " + toolkit.id)
 
         except requests.exceptions.HTTPError as err:
             _handle_http_error(err)
