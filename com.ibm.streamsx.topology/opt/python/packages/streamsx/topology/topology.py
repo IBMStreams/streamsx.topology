@@ -1092,6 +1092,9 @@ class Stream(_placement._Placement, object):
             low_severity = severities.low
             low_severity.for_each(Archive())
 
+
+        .. seealso:: :py:meth:`parallel`
+
         .. versionadded:: 1.13
         """
         sl = _SourceLocation(_source_info(), 'split')
@@ -1441,7 +1444,7 @@ class Stream(_placement._Placement, object):
         Returns:
             Stream: A stream for which subsequent transformations will be executed in parallel.
 
-        .. seealso:: :py:meth:`set_parallel`, :py:meth:`end_parallel`
+        .. seealso:: :py:meth:`set_parallel`, :py:meth:`end_parallel`, :py:meth:`split`
         """
         _name = name
         if _name is None:
