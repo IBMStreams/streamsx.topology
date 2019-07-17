@@ -40,7 +40,10 @@ import json
 import logging
 import re
 import requests
+import tempfile
 from pprint import pformat
+from zipfile import ZipFile
+
 import streamsx.topology.context
 
 import streamsx._streams._version
@@ -50,7 +53,7 @@ from streamsx import st
 from .rest import _AbstractStreamsConnection
 from .rest_primitives import (Domain, Instance, Installation, RestResource, Toolkit, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
     _exact_resource, _IAMStreamsRestClient, _IAMConstants, _get_username,
-    _ICPDExternalAuthHandler)
+    _ICPDExternalAuthHandler, _handle_http_errors)
 
 logger = logging.getLogger('streamsx.build_service')
 
@@ -145,6 +148,61 @@ class BuildService(_AbstractStreamsConnection):
         .. versionadded:: 1.13
         """
         return self._get_element_by_id('toolkits', Toolkit, id)
+
+    def upload_toolkit(self, path):
+        """
+        Upload a toolkit from a directory in the local filesystem to 
+        the Streams build service.
+
+        Multiple versions of a toolkit may be uploaded as long as each has
+        a unique version.  If a toolkit is uploaded with a name and version
+        matching an existing toolkit, it will not replace the existing
+        toolkit, and ``None`` will be returned.
+       
+        Args:
+            path(str): The path to the toolkit directory in the local filesystem.
+        Returns:
+            Toolkit: The created Toolkit, or ``None`` if it was not uploaded.
+
+        .. versionadded:: 1.13
+        """
+        # Handle path does not exist, is not readable, is not a directory
+        if not os.path.isdir(path):
+            raise ValueError('"' + path + '" is not a path or is not readable')
+
+        # Create a named temporary file
+        with tempfile.NamedTemporaryFile(suffix='.zip') as tmpfile:
+            filename = tmpfile.name
+        
+            basedir = os.path.abspath(os.path.join(path, os.pardir))
+
+            with ZipFile(filename, 'w') as zipfile:
+                for root, dirs, files in os.walk(path):
+                    # Write the directory entry
+                    relpath = os.path.relpath(root, basedir)
+                    zipfile.write(root, relpath)
+                    for file in files:
+                        zipfile.write (os.path.join(root, file), os.path.join(relpath, file))
+                zipfile.close()
+            
+                with open(filename, 'rb') as toolkit_fp:
+                    res = self.rest_client.session.post(Toolkit._toolkits_url(self),
+                        headers = {'Accept' : 'application/json',
+                                   'Content-Type' : 'application/zip'},
+                        data=toolkit_fp,
+                        verify=self.rest_client.session.verify)
+                    _handle_http_errors(res)
+                    new_toolkits = list(Toolkit(t, self.rest_client) for t in res.json()['toolkits'])
+
+                    # It may be possible to upload multiple toolkits in one 
+                    # post, but we are only uploading a single toolkit, so the
+                    # list of new toolkits is expected to contain only one 
+                    # element, and we return it.  It is also possible that no 
+                    # new toolkit was returned.
+
+                    if len(new_toolkits) >= 1:
+                        return new_toolkits[0]    
+                    return None
 
     @staticmethod
     def of_endpoint(endpoint=None, service_name=None, username=None, password=None, verify=None):
