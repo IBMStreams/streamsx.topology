@@ -6,6 +6,7 @@ import os
 import time
 import requests
 import uuid
+import re 
 
 
 from streamsx.topology.topology import Topology
@@ -63,7 +64,8 @@ class TestAppconfig(unittest.TestCase):
     def _ls_appconfig(self, fmt=None):
         args = ["--disable-ssl-verify", "lsappconfig"]
         if fmt:
-            args.insert(3, fmt)
+            args.insert(3, '--fmt')
+            args.insert(4, fmt)
         return streamtool.main(args=args)
 
     def _remove_appconfig(self, config_name, noprompt=False):
@@ -371,13 +373,186 @@ class TestAppconfig(unittest.TestCase):
     # lsappconfig
     ###########################################
 
+    # Split my_string by 2 or more whitespaces
+    def split_string(self, my_string):
+        return re.split(r'\s{2,}', my_string.strip())
+
     def test_lsappconfig_simple(self):
         self._make_appconfig(self.name)
+        output, error, rc= self.get_output(lambda: self._ls_appconfig())
+        output = output.splitlines()
+
+        # Check headers outputs correctly
+        true_headers = ["Id", "Owner", "Created", "Modified", "Description"]
+        headers = self.split_string(output[0])
+        self.assertEqual(true_headers, headers)
+
+        # Check details of appconfig are correct (only config_name, owner and description can be tested, created and modified are da)
+        appConfig = self.split_string(output[1])
+        true_appconfig = [self.name, self.username, '']
+        self.assertEqual(true_appconfig[0], appConfig[0])
+        self.assertEqual(true_appconfig[1], appConfig[1])
+        self.assertTrue(len(appConfig) == 4)
+        self.assertEqual(rc, 0)
+
+    def test_lsappconfig_complex(self):
+        # Create 2 appconfigs
+        description1 = 'askmdakdlmldkmqwmdlqkwmdlkqdmqwklm'
+        description2 = '394902384902358230952903892304890234820394'
+        self._make_appconfig(self.name, description=description1)
+        self._make_appconfig(self.name + self.name, description=description2)
+        self.appconfigs_to_remove.append(self.name + self.name)
 
         output, error, rc= self.get_output(lambda: self._ls_appconfig())
         output = output.splitlines()
 
         print(output)
+
+        # Check headers outputs correctly
+        true_headers = ["Id", "Owner", "Created", "Modified", "Description"]
+        headers = self.split_string(output[0])
+        self.assertEqual(true_headers, headers)
+
+        # Check details of appconfig1 are correct
+        appConfig1 = self.split_string(output[1])
+        self.assertTrue(len(appConfig1) == 5)
+        self.assertEqual(appConfig1[0], self.name)
+        self.assertEqual(appConfig1[1], self.username)
+        self.assertEqual(appConfig1[4], description1)
+
+        # Check details of appconfig2 are correct
+        appConfig2 = self.split_string(output[2])
+        self.assertTrue(len(appConfig2) == 5)
+        self.assertEqual(appConfig2[0], self.name+self.name)
+        self.assertEqual(appConfig2[1], self.username)
+        self.assertEqual(appConfig2[4], description2)
+
+        self.assertEqual(rc, 0)
+
+    def test_lsappconfig_simple_Mf_fmt(self):
+        self._make_appconfig(self.name)
+        output, error, rc= self.get_output(lambda: self._ls_appconfig(fmt='%Mf'))
+        output = output.splitlines()
+
+        # Check details of appconfig are correct
+        appConfig, output = self.get_lsappconfig_Mf_fmt(output)
+        ids = self.split_string(appConfig[1])
+        owner = self.split_string(appConfig[2])
+        created = self.split_string(appConfig[3])
+        modified = self.split_string(appConfig[4])
+        description = self.split_string(appConfig[5])
+
+        true_headers = ["Id", "Owner", "Created", "Modified", "Description"]
+        headers = [ids[0], owner[0], created[0], modified[0], description[0]]
+        self.assertEqual(true_headers, headers)
+
+        self.assertEqual(ids[2], self.name)
+        self.assertEqual(owner[2], self.username)
+        self.assertTrue(len(description) == 2)
+
+        self.assertEqual(rc, 0)
+
+    # Gets 1 appconfig block from the output when running the lsappconfig in Mf fmt
+    def get_lsappconfig_Mf_fmt(self, output):
+        config = output[:7]
+        output = output[6:]
+        return config, output
+
+    def test_lsappconfig_complex_Mf_fmt(self):
+        # Create 2 appconfigs
+        description1 = 'askmdakdlmldkmqwmdlqkwmdlkqdmqwklm'
+        description2 = '394902384902358230952903892304890234820394'
+        self._make_appconfig(self.name, description=description1)
+        self._make_appconfig(self.name + self.name, description=description2)
+        self.appconfigs_to_remove.append(self.name + self.name)
+        output, error, rc= self.get_output(lambda: self._ls_appconfig(fmt='%Mf'))
+        output = output.splitlines()
+
+        # Check details of appconfig1 are correct
+        appConfig1, output = self.get_lsappconfig_Mf_fmt(output)
+        ids = self.split_string(appConfig1[1])
+        owner = self.split_string(appConfig1[2])
+        created = self.split_string(appConfig1[3])
+        modified = self.split_string(appConfig1[4])
+        description = self.split_string(appConfig1[5])
+
+        true_headers = ["Id", "Owner", "Created", "Modified", "Description"]
+        headers = [ids[0], owner[0], created[0], modified[0], description[0]]
+        self.assertEqual(true_headers, headers)
+        self.assertEqual(ids[2], self.name)
+        self.assertEqual(owner[2], self.username)
+        self.assertEqual(description[2], description1)
+        self.assertTrue(len(description) == 3)
+
+        # Check details of appconfig2 are correct
+        appConfig2, output = self.get_lsappconfig_Mf_fmt(output)
+        ids = self.split_string(appConfig2[1])
+        owner = self.split_string(appConfig2[2])
+        created = self.split_string(appConfig2[3])
+        modified = self.split_string(appConfig2[4])
+        description = self.split_string(appConfig2[5])
+
+        true_headers = ["Id", "Owner", "Created", "Modified", "Description"]
+        headers = [ids[0], owner[0], created[0], modified[0], description[0]]
+        self.assertEqual(true_headers, headers)
+        self.assertEqual(ids[2], self.name+self.name)
+        self.assertEqual(owner[2], self.username)
+        self.assertEqual(description[2], description2)
+        self.assertTrue(len(description) == 3)
+
+        self.assertEqual(rc, 0)
+
+    def test_lsappconfig_simple_Nf_fmt(self):
+        self._make_appconfig(self.name)
+        output, error, rc= self.get_output(lambda: self._ls_appconfig(fmt='%Nf'))
+        output = output.splitlines()
+
+        # Check details of appconfig are correct
+        appconfig1 = output[0]
+        self.assertTrue("Id" in appconfig1)
+        self.assertTrue("Owner" in appconfig1)
+        self.assertTrue("Created" in appconfig1)
+        self.assertTrue("Modified" in appconfig1)
+        self.assertTrue("Description" in appconfig1)
+
+        self.assertTrue(self.name in appconfig1)
+        self.assertTrue(self.username in appconfig1)
+
+        self.assertEqual(rc, 0)
+
+    def test_lsappconfig_complex_Nf_fmt(self):
+        # Create 2 appconfigs
+        description1 = 'askmdakdlmldkmqwmdlqkwmdlkqdmqwklm'
+        description2 = '394902384902358230952903892304890234820394'
+        self._make_appconfig(self.name, description=description1)
+        self._make_appconfig(self.name + self.name, description=description2)
+        self.appconfigs_to_remove.append(self.name + self.name)
+        output, error, rc= self.get_output(lambda: self._ls_appconfig(fmt='%Nf'))
+        output = output.splitlines()
+
+        # Check details of appconfig are correct
+        appconfig1 = output[0]
+        self.assertTrue("Id" in appconfig1)
+        self.assertTrue("Owner" in appconfig1)
+        self.assertTrue("Created" in appconfig1)
+        self.assertTrue("Modified" in appconfig1)
+        self.assertTrue("Description" in appconfig1)
+
+        self.assertTrue(self.name in appconfig1)
+        self.assertTrue(self.username in appconfig1)
+        self.assertTrue(description1 in appconfig1)
+
+        # Check details of appconfig are correct
+        appconfig2 = output[1]
+        self.assertTrue("Id" in appconfig2)
+        self.assertTrue("Owner" in appconfig2)
+        self.assertTrue("Created" in appconfig2)
+        self.assertTrue("Modified" in appconfig2)
+        self.assertTrue("Description" in appconfig2)
+
+        self.assertTrue(self.name in appconfig2)
+        self.assertTrue(self.username in appconfig2)
+        self.assertTrue(description2 in appconfig2)
 
         self.assertEqual(rc, 0)
 

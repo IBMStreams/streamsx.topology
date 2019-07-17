@@ -253,14 +253,14 @@ def _lsjobs(instance, cmd_args, rc):
         for job in job_data:
             print(border)
             for header, job_item in zip(headers, job):
-                print('{:{w1}} : {: <{w2}}'.format(header, job_item, w1=w1, w2=w2))
+                print('{:{w1}}  :  {: <{w2}}'.format(header, job_item, w1=w1, w2=w2))
         print(border)
 
     elif cmd_args.fmt == "%Nf":
         for job in job_data:
             toPrint = ''
             for header, row in zip(headers, job):
-                toPrint += '{}: {} '.format(header, row)
+                toPrint += '{}  :  {} '.format(header, row)
             print(toPrint)
 
     return (rc, None)
@@ -324,14 +324,14 @@ def _lsappconfig(instance, cmd_args, rc):
         for config in config_data:
             print(border)
             for header, config_item in zip(headers, config):
-                print('{:{w1}} : {: <{w2}}'.format(header, config_item, w1=w1, w2=w2))
+                print('{:{w1}}  :  {: <{w2}}'.format(header, config_item, w1=w1, w2=w2))
         print(border)
 
     elif cmd_args.fmt == "%Nf":
         for config in config_data:
             toPrint = ''
             for header, row in zip(headers, config):
-                toPrint += '{}: {} '.format(header, row)
+                toPrint += '{}  :  {} '.format(header, row)
             print(toPrint)
 
     return (rc, None)
