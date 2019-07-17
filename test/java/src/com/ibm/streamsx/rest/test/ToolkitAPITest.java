@@ -16,6 +16,7 @@ import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -277,9 +278,9 @@ public class ToolkitAPITest {
     List<Toolkit.Dependency> gamesDependencies = games.getDependencies();
     assertEquals(2, gamesDependencies.size());
 
-    assertEquals("com.example.bingo", gamesDependencies.get(0).getName());
+    assertEquals(bingoToolkitName, gamesDependencies.get(0).getName());
     assertEquals("[1.0.0,2.0.0)", gamesDependencies.get(0).getVersion());
-    assertEquals("com.example.cards", gamesDependencies.get(1).getName());
+    assertEquals(cardsToolkitName, gamesDependencies.get(1).getName());
     assertEquals("[1.0.0,1.1.0)", gamesDependencies.get(1).getVersion());
 
     assertTrue(games.delete());
@@ -589,15 +590,54 @@ public class ToolkitAPITest {
     }
   }
 
+  // Extract the toolkit name from the toolkit.xml file contained in the
+  // specified directory.
+  static String getToolkitName(File path) throws Exception {
+    File toolkitXmlPath = new File(path, "toolkit.xml");
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    factory.setNamespaceAware(true);
+    assertTrue(factory.isNamespaceAware());
+    DocumentBuilder builder = factory.newDocumentBuilder();
+    try (FileInputStream is = new FileInputStream(toolkitXmlPath)) {
+      Document doc = builder.parse(is);
+        
+      NodeList toolkitModelElementList = doc.getDocumentElement().getElementsByTagNameNS("http://www.ibm.com/xmlns/prod/streams/spl/toolkit", "toolkit");
+      assertNotNull(toolkitModelElementList);
+      assertEquals(1, toolkitModelElementList.getLength());
+      
+      Node toolkitElementNode = toolkitModelElementList.item(0);
+      assertTrue(toolkitElementNode.hasAttributes());
+      NamedNodeMap attributes = toolkitElementNode.getAttributes();
+      assertNotNull(attributes);
+      Node nameNode = attributes.getNamedItem("name");
+      assertNotNull(nameNode);
+      return nameNode.getNodeValue();
+    }
+  }
+
   static {
-    // We can't really use a relative path here, because it is relative
-    // to the location where the test is run.
     String toolkitDir = System.getProperty("topology.test.toolkit.dir", "../python/rest/toolkits/");
-    bingo0Path = new File(toolkitDir, "bingo_tk0");
+    File bp = new File(toolkitDir, "bingo_tk0"); 
+    bingo0Path = bp;
     bingo1Path = new File(toolkitDir, "bingo_tk1");
     bingo2Path = new File(toolkitDir, "bingo_tk2");
-    cardsPath = new File(toolkitDir, "cards_tk");
-    gamesPath = new File(toolkitDir, "games_tk");
+    File cp = new File(toolkitDir, "cards_tk");
+    cardsPath = cp;
+    File gp = new File(toolkitDir, "games_tk");
+    gamesPath = gp;
+
+    // The actual names of the toolkits have been randomized to permit
+    // multiple people to run this test against the same build service
+    // simultaneously.  We need to read the actual names from the toolkit.xml
+    // files.
+    try {
+      bingoToolkitName = getToolkitName(bp);
+      cardsToolkitName = getToolkitName(cp);
+      gamesToolkitName = getToolkitName(gp);
+    }
+    catch (Exception e) {
+      throw new ExceptionInInitializerError(e);
+    }
   }
 
   private static final File bingo0Path;
@@ -605,9 +645,9 @@ public class ToolkitAPITest {
   private static final File bingo2Path;
   private static final File cardsPath;
   private static final File gamesPath;
-  private static final String bingoToolkitName = "com.example.bingo";
-  private static final String cardsToolkitName = "com.example.cards";
-  private static final String gamesToolkitName = "com.example.games";
+  private static final String bingoToolkitName;
+  private static final String cardsToolkitName;
+  private static final String gamesToolkitName;
   private static final String bingo0Version = "1.0.0";
   private static final String bingo1Version = "1.0.1";
   private static final String bingo2Version = "1.0.2";
