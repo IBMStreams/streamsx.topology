@@ -64,6 +64,8 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
         cls.is_v2 = None
         cls.logger = logger
 
+        cls.get_toolkit_names()
+
     def setUp(self):
         Tester.setup_distributed(self)
         self.sc = _get_distributed_sc()
@@ -149,8 +151,8 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
             toolkits = self.sc.get_toolkits()
             self.assertGreaterEqual(len(toolkits), 1)
             self.assertIsNotNone(toolkits[0].name)
-            # for toolkit in toolkits:
-            #    print(toolkit.name + ' ' + toolkit.version + ": " + toolkit.id)
+            #for toolkit in toolkits:
+            #   print(toolkit.name + ' ' + toolkit.version + ": " + toolkit.id)
 
         except requests.exceptions.HTTPError as err:
             _handle_http_error(err)
@@ -302,9 +304,9 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
             
             games_dependencies = games.dependencies
             self.assertEqual(len(games_dependencies), 2)
-            self.assertEqual(games_dependencies[0].name, 'com.example.bingo')
+            self.assertEqual(games_dependencies[0].name, type(self).bingo_toolkit_name)
             self.assertEqual(games_dependencies[0].version, '[1.0.0,2.0.0)')
-            self.assertEqual(games_dependencies[1].name, 'com.example.cards')
+            self.assertEqual(games_dependencies[1].name, type(self).cards_toolkit_name)
             self.assertEqual(games_dependencies[1].version, '[1.0.0,1.1.0)')
             
             self.assertTrue(games.delete())
@@ -381,3 +383,16 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
 
         except requests.exceptions.HTTPError as err:
             _handle_http_error(err)
+
+    @classmethod
+    def get_toolkit_name(cls, toolkit_path):
+        root = ElementTree.parse(toolkit_path + "/toolkit.xml")
+        toolkit_element = root.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkit}toolkit')
+        toolkit_name = toolkit_element.attrib['name']
+        return toolkit_name
+
+    @classmethod
+    def get_toolkit_names(cls):
+        cls.bingo_toolkit_name = cls.get_toolkit_name(cls.bingo_0_path)
+        cls.cards_toolkit_name = cls.get_toolkit_name(cls.cards_path)
+        cls.games_toolkit_name = cls.get_toolkit_name(cls.games_path)
