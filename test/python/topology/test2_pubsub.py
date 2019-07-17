@@ -144,6 +144,6 @@ class TestPubSub(unittest.TestCase):
         self.tester.local_check = self._check_buffer
         self.tester.test(self.test_ctxtype, self.test_config)
 
-class TestBluemixPubSub(TestPubSub):
+class TestSasPubSub(TestPubSub):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
