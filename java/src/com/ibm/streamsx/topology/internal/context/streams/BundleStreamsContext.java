@@ -28,7 +28,9 @@ import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.Topology;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.context.ToolkitStreamsContext;
+import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
+import com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext;
 import com.ibm.streamsx.topology.internal.core.InternalProperties;
 import com.ibm.streamsx.topology.internal.graph.GraphKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
@@ -50,6 +52,7 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
         this.keepBundle = keepBundle;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Type getType() {
         return standalone ? Type.STANDALONE_BUNDLE : Type.BUNDLE;
@@ -65,11 +68,36 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
         
         JsonObject submission = entity.submission;
         
+        JsonObject graph = object(submission, RemoteContext.SUBMISSION_GRAPH);
+        String mainCompositeKind = jstring(graph, "mainComposite");
+        
         JsonObject deploy = deploy(submission);
-        if (deploy.has(APP_DIR))
-            deploy.add(TOOLKIT_DIR, deploy.get(APP_DIR));
-    	
-    	File appDir = super.action(entity).get();
+        
+        File appDir;
+        if (mainCompositeKind == null) {
+            if (deploy.has(APP_DIR))
+                deploy.add(TOOLKIT_DIR, deploy.get(APP_DIR));
+
+            appDir = super.action(entity).get();
+        } else {
+            // Single main composite, no need for a toolkit.
+            String namespace;
+            String name;
+            int sep = mainCompositeKind.indexOf("::");
+            if (sep != -1) {
+                namespace = mainCompositeKind.substring(0, sep);
+                name = mainCompositeKind.substring(sep+2);
+            } else {
+                namespace = null;
+                name = mainCompositeKind;
+            }
+            graph.addProperty(GraphKeys.SPL_NAMESPACE, namespace);
+            graph.addProperty(GraphKeys.SPL_NAME, name);
+            
+            appDir = Files.createTempDirectory("tk").toFile();
+            
+            ToolkitRemoteContext.setupJobConfigOverlays(deploy, graph);
+        }
     	Future<File> bundle = doSPLCompile(appDir, submission);
     	   
     	// Create a Job Config Overlays file if this is creating

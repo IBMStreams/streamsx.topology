@@ -93,6 +93,7 @@ class SPLGraph(object):
         self._layout_group_id = 0
         self._colocate_tag_mapping = {}
         self._id_gen = 0
+        self._main_composite = None
 
     def _unique_id(self, prefix):
         """
@@ -203,6 +204,11 @@ class SPLGraph(object):
             _ops.append(op.generateSPLOperator())
 
         _graph["operators"] = _ops
+
+        # Is this just a single main composite invocation,
+        # If so toolkit generation will be skipped.
+        if self._main_composite and len(_ops) == 1:
+            _graph['mainComposite'] = self._main_composite
         return _graph
 
     def _determine_model(self, graph_cfg):

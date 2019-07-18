@@ -450,6 +450,10 @@ def main_composite(kind, toolkits=None, name=None):
         or output ports any functionality added to the topology cannot
         interact directly with its invocation.
 
+    When `name` is ``None`` and no additions or tests are made to the topology
+    then SPL compilation uses `kind` directly. Otherwise the main
+    composite invocation is invoked within a generated main composite.
+
     Args:
         kind(str): Kind of the main composite operator invocation.
         toolkits(list[str]): Optional list of toolkits the main composite depends on.
@@ -464,12 +468,16 @@ def main_composite(kind, toolkits=None, name=None):
     .. versionadded: 1.11
     """
     if '::' in kind:
-        ns, name = kind.rsplit('::', 1)
+        ns, topo_name = kind.rsplit('::', 1)
         ns += '._spl'
     else:
         raise ValueError('Main composite requires a namespace qualified name: ' + str(kind))
-    topo = streamsx.topology.topology.Topology(name=name, namespace=ns)
+    if name:
+        topo_name = name
+    topo = streamsx.topology.topology.Topology(name=topo_name, namespace=ns)
     if toolkits:
         for tk_path in toolkits:
             streamsx.spl.toolkit.add_toolkit(topo, tk_path)
+    if not name:
+        topo.graph._main_composite = kind
     return topo, Invoke(topo, kind, name=name)

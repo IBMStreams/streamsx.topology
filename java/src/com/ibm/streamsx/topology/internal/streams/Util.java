@@ -25,6 +25,7 @@ public class Util {
     public static final String STREAMS_USERNAME = "STREAMS_USERNAME";
     public static final String STREAMS_PASSWORD = "STREAMS_PASSWORD";
     public static final String STREAMS_REST_URL = "STREAMS_REST_URL";
+    public static final String ICP4D_DEPLOYMENT_URL = "ICPD_URL";
     private static String streamsInstall;
     
     /**
@@ -105,6 +106,19 @@ public class Util {
     }
     public static String getDefaultInstanceId() {
         return Util.getenv(Util.STREAMS_INSTANCE_ID);
+    }
+    
+    public static String[] getDefaultUserPassword(String userName, String password) {
+        if (userName == null || userName.isEmpty()) {
+            userName = System.getenv(Util.STREAMS_USERNAME);
+            if (userName == null)
+                userName = System.getProperty("user.name");
+        }
+
+        if (password == null || password.isEmpty()) 
+            password = Util.getenv(Util.STREAMS_PASSWORD);
+
+        return new String[]{userName, password};
     }
  
     /**
