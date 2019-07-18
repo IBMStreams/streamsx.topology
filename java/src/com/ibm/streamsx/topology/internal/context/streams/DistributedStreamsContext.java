@@ -20,10 +20,13 @@ import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.Result;
+import com.ibm.streamsx.rest.StreamsConnection;
+import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.context.streamsrest.DistributedStreamsRestContext;
+import com.ibm.streamsx.topology.internal.context.streamsrest.StreamsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.process.CompletedFuture;
 import com.ibm.streamsx.topology.internal.streams.InvokeSubmit;
@@ -118,6 +121,23 @@ public class DistributedStreamsContext extends
      * non-matching operating system with instance.
      */
     protected Future<BigInteger> fullRemoteAction(AppEntity entity) throws Exception {
+        
+        Instance cfgInstance = getConfigInstance(entity);
+        if (cfgInstance != null) {
+            StreamsConnection sc = cfgInstance.getStreamsConnection();
+            Object authenticatorO = sc.getAuthenticator();
+            if (authenticatorO instanceof ICP4DAuthenticator) {
+                ICP4DAuthenticator authenticator = (ICP4DAuthenticator) authenticatorO;
+                
+                boolean verify = cfgInstance.getStreamsConnection().isVerify();
+                JsonObject deploy = deploy(entity.submission);
+                deploy.add(StreamsKeys.SERVICE_DEFINITION, authenticator.config(verify));
+                deploy.addProperty(ContextProperties.SSL_VERIFY, verify);
+            } else {
+                throw new IllegalStateException("Invalid Instance for Streams V5: " + cfgInstance);
+            }
+        }
+        
         DistributedStreamsRestContext rc = new DistributedStreamsRestContext();
         rc.submit(entity.submission);
         JsonObject results = GsonUtilities.objectCreate(entity.submission,
