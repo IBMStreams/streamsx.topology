@@ -14,19 +14,23 @@ import com.ibm.streamsx.topology.internal.streams.InvokeSubmit;
 
 class StreamsConnectionImpl extends AbstractStreamsConnection {
 
-	private final Function<Executor, String> authorization;
+	private final Function<Executor, String> authenticator;
     private final String userName;
 
-    StreamsConnectionImpl(String userName, Function<Executor, String> authorization,
+    StreamsConnectionImpl(String userName, Function<Executor, String> authenticator,
             String resourcesUrl, boolean allowInsecure) {
         super(resourcesUrl, allowInsecure);
         this.userName = userName;
-        this.authorization = authorization;
+        this.authenticator = authenticator;
+    }
+    
+    Function<Executor, String> getAuthenticator() {
+        return authenticator;
     }
 
     @Override
     String getAuthorization() {
-        return authorization.apply(this.executor);
+        return authenticator.apply(this.executor);
     }
     
     @Override
