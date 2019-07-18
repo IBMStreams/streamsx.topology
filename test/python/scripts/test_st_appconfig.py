@@ -231,15 +231,16 @@ class TestAppconfig(unittest.TestCase):
             my_function {} -- The function to be executed
 
         Returns:
-            Output [String] -- Output of my_function
-            Rc [int] -- 0 indicates succces, 1 indicates error or failure
+            stdout {String} -- Output of my_function
+            stderr {String} -- Errors and exceptions from executing my_function
+            rc {int} -- 0 indicates succces, 1 indicates error or failure
         """
         rc = None
         with captured_output() as (out, err):
             rc = my_function()
-        output = out.getvalue().strip()
-        error = err.getvalue().strip()
-        return output, error, rc
+        stdout = out.getvalue().strip()
+        stderr = err.getvalue().strip()
+        return stdout, stderr, rc
 
     ###########################################
     # rmappconfig
@@ -368,10 +369,22 @@ class TestAppconfig(unittest.TestCase):
     # lsappconfig
     ###########################################
 
-    # Split my_string by 2 or more whitespaces
     def split_string(self, my_string):
-        return re.split(r'\s{2,}', my_string.strip())
+        """ Helper function that splits my_string by 2 or more whitespaces
 
+        Arguments:
+            my_string {String} -- [description]
+
+        Returns:
+            {List} -- List containing the elements of my_string that are seperated by 2 or more whitespaces
+        """
+        return re.split(r"\s{2,}", my_string.strip())
+
+    ###########################################
+        # Tf fmt
+    ###########################################
+
+    # Create a single appconfig, checkout ouput in default Tf format
     def test_lsappconfig_simple(self):
         self._make_appconfig(self.name)
         output, error, rc= self.get_output(lambda: self._ls_appconfig())
@@ -390,6 +403,7 @@ class TestAppconfig(unittest.TestCase):
         self.assertTrue(len(appConfig) == 4)
         self.assertEqual(rc, 0)
 
+    # Create 2 appconfigs w/ names and descriptions, checkout ouput in default Tf format
     def test_lsappconfig_complex(self):
         # Create 2 appconfigs
         description1 = 'askmdakdlmldkmqwmdlqkwmdlkqdmqwklm'
@@ -422,6 +436,34 @@ class TestAppconfig(unittest.TestCase):
 
         self.assertEqual(rc, 0)
 
+    ###########################################
+        # Mf fmt
+    ###########################################
+
+    def get_lsappconfig_Mf_fmt(self, output):
+        """ Helper function that gets a single appconfig block outputed from lsappconfig in Mf format
+
+        Arguments:
+            output {String} -- A string given by the ouput of lsappconfig in Mf format
+
+        Returns:
+            config {String} -- A string of the form (given below) that represents a single config outputed from lsappconfig in Mf format
+            output {String} -- A string given by the output of lsappconfig in Mf format
+        """
+        # Ex of config
+        # =================================================
+        # Id          : TEST1
+        # Owner       : streamsadmin
+        # Created     : 6/21/19, 11:46:56 AM PDT
+        # Modified    : 6/24/19, 3:16:09 PM PDT
+        # Description : blahbblah
+        # =================================================
+
+        config = output[:7]
+        output = output[6:]
+        return config, output
+
+    # Create a single appconfig, checkout ouput in Mf format
     def test_lsappconfig_simple_Mf_fmt(self):
         self._make_appconfig(self.name)
         output, error, rc= self.get_output(lambda: self._ls_appconfig(fmt='%Mf'))
@@ -445,12 +487,7 @@ class TestAppconfig(unittest.TestCase):
 
         self.assertEqual(rc, 0)
 
-    # Gets 1 appconfig block from the output when running the lsappconfig in Mf fmt
-    def get_lsappconfig_Mf_fmt(self, output):
-        config = output[:7]
-        output = output[6:]
-        return config, output
-
+    # Create 2 appconfigs w/ names and descriptions, checkout ouput in Mf format
     def test_lsappconfig_complex_Mf_fmt(self):
         # Create 2 appconfigs
         description1 = 'askmdakdlmldkmqwmdlqkwmdlkqdmqwklm'
@@ -495,6 +532,11 @@ class TestAppconfig(unittest.TestCase):
 
         self.assertEqual(rc, 0)
 
+    ###########################################
+        # Nf fmt
+    ###########################################
+
+    # Create a single appconfig, checkout ouput in Nf format
     def test_lsappconfig_simple_Nf_fmt(self):
         self._make_appconfig(self.name)
         output, error, rc= self.get_output(lambda: self._ls_appconfig(fmt='%Nf'))
@@ -513,6 +555,7 @@ class TestAppconfig(unittest.TestCase):
 
         self.assertEqual(rc, 0)
 
+    # Create 2 appconfigs w/ names and descriptions, checkout ouput in Nf format
     def test_lsappconfig_complex_Nf_fmt(self):
         # Create 2 appconfigs
         description1 = 'askmdakdlmldkmqwmdlqkwmdlkqdmqwklm'
