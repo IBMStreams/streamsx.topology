@@ -384,7 +384,7 @@ class TestAppconfig(unittest.TestCase):
         # Tf fmt
     ###########################################
 
-    # Create a single appconfig, checkout ouput in default Tf format
+    # Create a single appconfig, check correct ouput in default Tf format
     def test_lsappconfig_simple(self):
         self._make_appconfig(self.name)
         output, error, rc= self.get_output(lambda: self._ls_appconfig())
@@ -403,7 +403,7 @@ class TestAppconfig(unittest.TestCase):
         self.assertTrue(len(appConfig) == 4)
         self.assertEqual(rc, 0)
 
-    # Create 2 appconfigs w/ names and descriptions, checkout ouput in default Tf format
+    # Create 2 appconfigs w/ names and descriptions, check correct ouput in default Tf format
     def test_lsappconfig_complex(self):
         # Create 2 appconfigs
         description1 = 'askmdakdlmldkmqwmdlqkwmdlkqdmqwklm'
@@ -463,7 +463,7 @@ class TestAppconfig(unittest.TestCase):
         output = output[6:]
         return config, output
 
-    # Create a single appconfig, checkout ouput in Mf format
+    # Create a single appconfig, check correct ouput in Mf format
     def test_lsappconfig_simple_Mf_fmt(self):
         self._make_appconfig(self.name)
         output, error, rc= self.get_output(lambda: self._ls_appconfig(fmt='%Mf'))
@@ -487,7 +487,7 @@ class TestAppconfig(unittest.TestCase):
 
         self.assertEqual(rc, 0)
 
-    # Create 2 appconfigs w/ names and descriptions, checkout ouput in Mf format
+    # Create 2 appconfigs w/ names and descriptions, check correct ouput in Mf format
     def test_lsappconfig_complex_Mf_fmt(self):
         # Create 2 appconfigs
         description1 = 'askmdakdlmldkmqwmdlqkwmdlkqdmqwklm'
@@ -536,7 +536,7 @@ class TestAppconfig(unittest.TestCase):
         # Nf fmt
     ###########################################
 
-    # Create a single appconfig, checkout ouput in Nf format
+    # Create a single appconfig, check correct ouput in Nf format
     def test_lsappconfig_simple_Nf_fmt(self):
         self._make_appconfig(self.name)
         output, error, rc= self.get_output(lambda: self._ls_appconfig(fmt='%Nf'))
@@ -555,7 +555,7 @@ class TestAppconfig(unittest.TestCase):
 
         self.assertEqual(rc, 0)
 
-    # Create 2 appconfigs w/ names and descriptions, checkout ouput in Nf format
+    # Create 2 appconfigs w/ names and descriptions, check correct ouput in Nf format
     def test_lsappconfig_complex_Nf_fmt(self):
         # Create 2 appconfigs
         description1 = 'askmdakdlmldkmqwmdlqkwmdlkqdmqwklm'

@@ -122,7 +122,7 @@ class Testlsjobs(unittest.TestCase):
         self.assertEqual(job.jobGroup.split("/")[-1], job_details[6])  # job group
         self.assertTrue(len(job_details) == 7)
 
-    # Create a single job, checkout ouput in default Tf format
+    # Create a single job, check correct ouput in default Tf format
     def test_lsjobs_simple(self):
         rc, job = self._submitjob(args=[])
         output, error, rc = self.get_output(lambda: self._ls_jobs())
@@ -141,7 +141,7 @@ class Testlsjobs(unittest.TestCase):
         self.check_job_Tf_fmt(job, output[2])
         self.assertEqual(rc, 0)
 
-    # Create 2 jobs w/ names, checkout ouput in default Tf format
+    # Create 2 jobs w/ names, check correct ouput in default Tf format
     def test_lsjobs_complex(self):
         rc, job1 = self._submitjob(args=["--jobname", self.name])
         rc, job2 = self._submitjob(args=["--jobname", self.name + self.name])
@@ -364,7 +364,7 @@ class Testlsjobs(unittest.TestCase):
         self.assertEqual(Names[2], job.name)
         self.assertEqual(Groups[2], job.jobGroup.split("/")[-1])
 
-    # Create a single job, checkout ouput in Mf format
+    # Create a single job, check correct ouput in Mf format
     def test_lsjobs_simple_Mf_fmt(self):
         rc, job = self._submitjob(args=[])
         output, error, rc = self.get_output(lambda: self._ls_jobs(fmt="%Mf"))
@@ -381,7 +381,7 @@ class Testlsjobs(unittest.TestCase):
         self.check_job_Mf_fmt(job, job_details)
         self.assertEqual(rc, 0)
 
-    # Create 2 jobs w/ names, checkout ouput in Mf format
+    # Create 2 jobs w/ names, check correct ouput in Mf format
     def test_lsjobs_complex_Mf_fmt(self):
         rc, job1 = self._submitjob(args=["--jobname", self.name])
         rc, job2 = self._submitjob(args=["--jobname", self.name + self.name])
@@ -433,7 +433,7 @@ class Testlsjobs(unittest.TestCase):
         self.assertTrue(job.jobGroup.split("/")[-1] in job_to_check)  # job group
         self.assertTrue("Group" in job_to_check)
 
-    # Create a single job, checkout ouput in Nf format
+    # Create a single job, check correct ouput in Nf format
     def test_lsjobs_simple_Nf_fmt(self):
         rc, job = self._submitjob(args=[])
         output, error, rc = self.get_output(lambda: self._ls_jobs(fmt="%Nf"))
@@ -443,7 +443,7 @@ class Testlsjobs(unittest.TestCase):
         self.check_job_nf_fmt(job, output[0])
         self.assertEqual(rc, 0)
 
-    # Create 2 jobs w/ names, checkout ouput in Nf format
+    # Create 2 jobs w/ names, check correct ouput in Nf format
     def test_lsjobs_complex_Nf_fmt(self):
         rc, job1 = self._submitjob(args=["--jobname", self.name])
         rc, job2 = self._submitjob(args=["--jobname", self.name + self.name])
