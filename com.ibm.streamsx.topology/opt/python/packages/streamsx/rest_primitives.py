@@ -359,6 +359,7 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
                     'serviceRestEndpoint': streams_url},
                 'serviceTokenEndpoint': service_token_url,
                 'service_token': service_token,
+                'service_token_expire': int(self._auth_expiry_time * 1000.0),
                 'service_name': service_name,
                 'cluster_ip': cluster_ip,
                 'cluster_port': cluster_port,

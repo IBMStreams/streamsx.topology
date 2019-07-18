@@ -26,7 +26,10 @@ abstract class AbstractStreamsConnection {
     private final String resourcesUrl;
 
     protected Executor executor;
+    private boolean verify;
     private String instancesUrl;
+    
+    private StreamsConnection streamsConnection;
     
     /**
      * Cancel a job.
@@ -63,12 +66,25 @@ abstract class AbstractStreamsConnection {
     AbstractStreamsConnection(String resourcesUrl,
             boolean allowInsecure) {
         this.resourcesUrl = resourcesUrl;
-        this.executor = RestUtils.createExecutor(allowInsecure);
+        allowInsecureHosts(allowInsecure);
     }
     
     public boolean allowInsecureHosts(boolean allowInsecure) {
     	this.executor = RestUtils.createExecutor(allowInsecure);
+    	verify = !allowInsecure;
     	return allowInsecure;
+    }
+    
+    final boolean isVerify() {
+        return verify;
+    }
+    
+    void setStreamsConnection(StreamsConnection streamsConnection) {
+        this.streamsConnection = streamsConnection;
+    }
+    
+    StreamsConnection getStreamsConnection() {
+        return streamsConnection;
     }
 
     /**
