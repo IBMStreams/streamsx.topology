@@ -173,6 +173,7 @@ class Testlsjobs(unittest.TestCase):
             args=["--jobname", self.name + self.name + self.name]
         )
 
+        # Get jobs job1 and job3 via --jobnames option
         job_names = str(job1.name) + "," + str(job3.name)
         output, error, rc = self.get_output(lambda: self._ls_jobs(jobnames=job_names))
         output = output.splitlines()
@@ -235,6 +236,7 @@ class Testlsjobs(unittest.TestCase):
         output, error, rc = self.get_output(lambda: self._ls_jobs(xheaders=True))
         output = output.splitlines()
 
+        # len 1 bc only 1 job, and xheaders removes all headers
         self.assertTrue(len(output) == 1)
 
         # Check details of job are correct
@@ -247,6 +249,7 @@ class Testlsjobs(unittest.TestCase):
         output, error, rc = self.get_output(lambda: self._ls_jobs(showtimestamp=True))
         output = output.splitlines()
 
+        # len 4 bc date string, instance string, header string, and job string
         self.assertTrue(len(output) == 4)
 
         # Check -- showtimestamp correctly outputs timestamp
@@ -274,6 +277,7 @@ class Testlsjobs(unittest.TestCase):
         )
         output = output.splitlines()
 
+        # len 1 bc only 1 job
         self.assertTrue(len(output) == 1)
 
         # Check details of job are correct
@@ -288,6 +292,7 @@ class Testlsjobs(unittest.TestCase):
         )
         output = output.splitlines()
 
+        # len 2 bc only contains instance string and header string
         self.assertTrue(len(output) == 2)
 
     ###########################################
@@ -338,7 +343,7 @@ class Testlsjobs(unittest.TestCase):
         # Group   : default
         # =================================================
 
-        # Check details of job are correct
+        # Get details of job
         ids = self.split_string(job_to_check[1])
         states = self.split_string(job_to_check[2])
         healths = self.split_string(job_to_check[3])
@@ -347,6 +352,7 @@ class Testlsjobs(unittest.TestCase):
         Names = self.split_string(job_to_check[6])
         Groups = self.split_string(job_to_check[7])
 
+        # Check headers
         true_headers = ["Id", "State", "Healthy", "User", "Date", "Name", "Group"]
         headers = [
             ids[0],
@@ -359,6 +365,7 @@ class Testlsjobs(unittest.TestCase):
         ]
         self.assertEqual(true_headers, headers)
 
+        # Check job details
         self.assertEqual(ids[2], job.id)
         self.assertEqual(Users[2], self.username)
         self.assertEqual(Names[2], job.name)
@@ -374,6 +381,7 @@ class Testlsjobs(unittest.TestCase):
         instance_string = "Instance: " + self.my_instance.id
         self.assertEqual(output[1].strip(), instance_string)
 
+        # Remove instance data from output
         output = output[2:]
 
         # Check details of job are correct
@@ -392,6 +400,7 @@ class Testlsjobs(unittest.TestCase):
         instance_string = "Instance: " + self.my_instance.id
         self.assertEqual(output[1].strip(), instance_string)
 
+        # Remove instance data from output
         output = output[2:]
 
         # Check details of job1 are correct
@@ -427,11 +436,11 @@ class Testlsjobs(unittest.TestCase):
         self.assertTrue("Name" in job_to_check)
         self.assertTrue("Group" in job_to_check)
 
-        self.assertTrue(job.id in job_to_check)  # job ID
-        self.assertTrue(self.username in job_to_check)  # job user
-        self.assertTrue(job.name in job_to_check)  # job name
-        self.assertTrue(job.jobGroup.split("/")[-1] in job_to_check)  # job group
-        self.assertTrue("Group" in job_to_check)
+        # Check job details
+        self.assertTrue(job.id in job_to_check)  # ID
+        self.assertTrue(self.username in job_to_check)  # user
+        self.assertTrue(job.name in job_to_check)  # name
+        self.assertTrue(job.jobGroup.split("/")[-1] in job_to_check)  # group
 
     # Create a single job, check correct ouput in Nf format
     def test_lsjobs_simple_Nf_fmt(self):
@@ -439,7 +448,7 @@ class Testlsjobs(unittest.TestCase):
         output, error, rc = self.get_output(lambda: self._ls_jobs(fmt="%Nf"))
         output = output.splitlines()
 
-        # Check details of appconfig are correct
+        # Check details of job are correct
         self.check_job_nf_fmt(job, output[0])
         self.assertEqual(rc, 0)
 
@@ -451,7 +460,7 @@ class Testlsjobs(unittest.TestCase):
         output, error, rc = self.get_output(lambda: self._ls_jobs(fmt="%Nf"))
         output = output.splitlines()
 
-        # Check details of appconfig are correct
+        # Check details of jobs are correct
         self.check_job_nf_fmt(job1, output[0])
         self.check_job_nf_fmt(job2, output[1])
         self.assertEqual(rc, 0)
