@@ -49,6 +49,10 @@ public abstract class Element {
         this.self = self;
     }
     
+    public StreamsConnection getStreamsConnection() {
+        return connection().getStreamsConnection();
+    }
+    
 
     @Override
     public final String toString() {
