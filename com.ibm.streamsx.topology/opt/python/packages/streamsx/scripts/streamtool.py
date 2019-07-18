@@ -81,6 +81,7 @@ def _canceljob_parser(subparsers):
     # Only 1 of these arguments --jobs, --jobnames, --file can be specified at any given time when running this command
     g1 = job_cancel.add_argument_group(title='jobs jobnames file group', description='One of these options must be chosen.')
     group = g1.add_mutually_exclusive_group(required=True)
+    group.add_argument('jobid', help='Specifies a list of job IDs.', nargs='?')
     group.add_argument('--jobs', '-j', help='Specifies a list of job IDs.', metavar='job-id')
     group.add_argument('--jobnames', help='Specifies a list of job names')
     group.add_argument('--file', '-f', help='Specifies the file that contains a list of job IDs, one per line')
@@ -91,6 +92,11 @@ def _canceljob(instance, cmd_args, rc):
     """Cancel a job."""
     job_ids_to_cancel = []
     job_names_to_cancel = []
+
+    # get list of job IDs to cancel
+    if cmd_args.jobid:
+        job_ids = cmd_args.jobid.split(',')
+        job_ids_to_cancel.extend(job_ids)
 
     # if --jobs, get list of job IDs to cancel
     if cmd_args.jobs:

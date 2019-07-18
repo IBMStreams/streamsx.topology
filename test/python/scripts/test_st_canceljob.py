@@ -87,6 +87,32 @@ class TestCancelJob(unittest.TestCase):
             self._run_canceljob(args=["--jobs", str(job.id), "--User", user])
         self._check_job_cancelled(job)
 
+    # Check that canceljob fails when given no arguments
+    def test_cancel_simple(self):
+        with self.assertRaises(SystemExit):
+            self._run_canceljob(args=[])
+
+    # Check succesfully cancels jobs
+    def test_cancel_simple_1(self):
+        job1 = self._submit_job()
+        self.jobs_to_cancel.extend([job1])
+
+        self._run_canceljob(
+            args=[str(job1.id)]
+        )
+        self._check_job_cancelled(job1)
+
+    # Check succesfully cancels jobs
+    def test_cancel_simple_2(self):
+        job1 = self._submit_job()
+        job2 = self._submit_job()
+
+        self._run_canceljob(
+            args=[str(job1.id) + ',' + str(job2.id)]
+        )
+        self._check_job_cancelled(job1)
+        self._check_job_cancelled(job2)
+
     def test_cancel_multiple(self):
         job1 = self._submit_job()
         job2 = self._submit_job()
@@ -102,7 +128,6 @@ class TestCancelJob(unittest.TestCase):
     def test_cancel_multiple_mix(self):
         with self.assertRaises(SystemExit):
             self._run_canceljob(args=["--jobs", str("123"), "--jobnames", str("jobName")])
-
 
     # Check that you can't use --jobs, --jobnames and --file optional args at the same time
     def test_cancel_multiple_mix2(self):
