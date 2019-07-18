@@ -395,12 +395,11 @@ class TestAppconfig(unittest.TestCase):
         headers = self.split_string(output[0])
         self.assertEqual(true_headers, headers)
 
-        # Check details of appconfig are correct (only config_name, owner and description can be tested, created and modified are da)
+        # Check details of appconfig are correct
         appConfig = self.split_string(output[1])
-        true_appconfig = [self.name, self.username, '']
-        self.assertEqual(true_appconfig[0], appConfig[0])
-        self.assertEqual(true_appconfig[1], appConfig[1])
-        self.assertTrue(len(appConfig) == 4)
+        self.assertEqual(self.name, appConfig[0])
+        self.assertEqual(self.username, appConfig[1])
+        self.assertTrue(len(appConfig) == 4) # len 4 bc no description given
         self.assertEqual(rc, 0)
 
     # Create 2 appconfigs w/ names and descriptions, check correct ouput in default Tf format
@@ -422,14 +421,14 @@ class TestAppconfig(unittest.TestCase):
 
         # Check details of appconfig1 are correct
         appConfig1 = self.split_string(output[1])
-        self.assertTrue(len(appConfig1) == 5)
+        self.assertTrue(len(appConfig1) == 5) # bc appconfig has 5 columns
         self.assertEqual(appConfig1[0], self.name)
         self.assertEqual(appConfig1[1], self.username)
         self.assertEqual(appConfig1[4], description1)
 
         # Check details of appconfig2 are correct
         appConfig2 = self.split_string(output[2])
-        self.assertTrue(len(appConfig2) == 5)
+        self.assertTrue(len(appConfig2) == 5) # bc appconfig has 5 columns
         self.assertEqual(appConfig2[0], self.name+self.name)
         self.assertEqual(appConfig2[1], self.username)
         self.assertEqual(appConfig2[4], description2)
@@ -512,7 +511,7 @@ class TestAppconfig(unittest.TestCase):
         self.assertEqual(ids[2], self.name)
         self.assertEqual(owner[2], self.username)
         self.assertEqual(description[2], description1)
-        self.assertTrue(len(description) == 3)
+        self.assertTrue(len(description) == 3) # len 3 bc after 'Description  :  asdasdasda' is split by 2 whitespaces, we get 3 elements
 
         # Check details of appconfig2 are correct
         appConfig2, output = self.get_lsappconfig_Mf_fmt(output)
@@ -528,7 +527,7 @@ class TestAppconfig(unittest.TestCase):
         self.assertEqual(ids[2], self.name+self.name)
         self.assertEqual(owner[2], self.username)
         self.assertEqual(description[2], description2)
-        self.assertTrue(len(description) == 3)
+        self.assertTrue(len(description) == 3) # len 3 bc after 'Description  :  asdasdasda' is split by 2 whitespaces, we get 3 elements
 
         self.assertEqual(rc, 0)
 
@@ -586,7 +585,7 @@ class TestAppconfig(unittest.TestCase):
         self.assertTrue("Modified" in appconfig2)
         self.assertTrue("Description" in appconfig2)
 
-        self.assertTrue(self.name in appconfig2)
+        self.assertTrue(self.name + self.name in appconfig2)
         self.assertTrue(self.username in appconfig2)
         self.assertTrue(description2 in appconfig2)
 
