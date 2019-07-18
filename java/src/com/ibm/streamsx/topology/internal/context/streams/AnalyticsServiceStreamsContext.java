@@ -4,20 +4,14 @@
  */
 package com.ibm.streamsx.topology.internal.context.streams;
 
-import static com.ibm.streamsx.topology.context.ContextProperties.FORCE_REMOTE_BUILD;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
 import static com.ibm.streamsx.topology.internal.context.remote.RemoteBuildAndSubmitRemoteContext.streamingAnalyticServiceFromDeploy;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices.getVCAPService;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.OperatingSystemMXBean;
 import java.math.BigInteger;
-import java.nio.file.Files;
-import java.util.List;
 import java.util.concurrent.Future;
 
 import com.google.gson.JsonObject;
@@ -51,7 +45,7 @@ public class AnalyticsServiceStreamsContext extends
     
     @Override
     protected Future<BigInteger> action(AppEntity entity) throws Exception {
-        if (useRemoteBuild(entity)) {
+        if (useRemoteBuild(entity, AnalyticsServiceStreamsContext::getSasServiceBase)) {
             RemoteStreamingAnalyticsServiceStreamsContext rc = new RemoteStreamingAnalyticsServiceStreamsContext();
             return rc.submit(entity.submission);
         }
@@ -60,103 +54,27 @@ public class AnalyticsServiceStreamsContext extends
     }
     
     /**
-     * See if the remote build service should be used.
-     * If STREAMS_INSTALL was not set is handled elsewhere,
-     * so this path assumes that STREAMS_INSTALL is set and not empty.
-     * 
-     * Remote build if:
-     *  - FORCE_REMOTE_BUILD is set to true.
-     *  - Architecture cannot be determined as x86_64. (assumption that service is always x86_64)
-     *  - OS is not Linux.
-     *  - OS is not centos or redhat
-     *  - OS is less than version 6.
-     *  - OS service base does not match local os version
+     * Get the SAS OS version base.
      */
-    private boolean useRemoteBuild(AppEntity entity) {
-        
-        assert System.getenv("STREAMS_INSTALL") != null;
-        assert !System.getenv("STREAMS_INSTALL").isEmpty();
-        
-        final JsonObject deploy = deploy(entity.submission);        
-        if (jboolean(deploy, FORCE_REMOTE_BUILD))
-            return true;
-        
-        try {
-            final OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
-            
-            final String arch = os.getArch();
-            boolean x86_64 = "x86_64".equalsIgnoreCase(arch) || "amd64".equalsIgnoreCase(arch);
-            if (!x86_64)
-                return true;
-            
-            if (!"Linux".equalsIgnoreCase(os.getName()))
-                return true; 
-                        
-            // /etc/system-release-cpe examples
-            //
-            // cpe:/o:centos:linux:6:GA
-            // cpe:/o/redhat:enterprise_linux:7.2:ga:server
-           
-            File cpeFile = new File("/etc/system-release-cpe");
-            if (!cpeFile.isFile())
-                return true;
-            List<String> lines = Files.readAllLines(cpeFile.toPath());
-            
-            String osVendor = null;
-            String osVersion = null;
-            String osUpdate = null;
-            for (String cpe : lines) {
-                cpe = cpe.trim();
-                if (!cpe.startsWith("cpe:"))
-                    continue;
-                String[] comps = cpe.split(":");
-                if (comps.length < 6)
-                    continue;
-                if (!"cpe".equals(comps[0]))
-                    continue;  
-                if (!"/o".equals(comps[1]))
-                    continue;
-                
-                if (!comps[2].isEmpty()) {
-                    osVendor = comps[2];
-                    osVersion = comps[4];
-                    osUpdate = comps[5];
-                }
-            }
-            
-            // If we can' determine the info, force remote
-            if (osVendor == null || osVendor.isEmpty())
-                return true;
-            if (osVersion == null || osVersion.isEmpty())
-                return true;
-            if (osUpdate == null || osUpdate.isEmpty())
-                return true;
-            
-            if (!"centos".equals(osVendor) && !"redhat".equals(osVendor))
-                return true;
-
-            double version = Double.valueOf(osVersion);
-            if (version < 6)
-                return true;
-            
+    private static int getSasServiceBase(AppEntity entity) {
+                 
             // Need to interrogate the service to figure out
             // the os version of the service.
-            StreamingAnalyticsService sas = sas(entity);
-            Instance instance = sas.getInstance();
-            ActiveVersion ver = instance.getActiveVersion();
-            
-            // Compare base versions, ir it doesn't exactly match the
-            // service force remote build.
-            int serviceBase = Integer.valueOf(ver.getMinimumOSBaseVersion());
-            if (((int) version) != serviceBase)
-                return true;          
-            
-        } catch (SecurityException | IOException | NumberFormatException e) {
-            // Can't determine information, force remote.
-            return true;
-        }
-     
-        return false;
+            StreamingAnalyticsService sas;
+            try {
+                sas = sas(entity);
+                Instance instance = sas.getInstance();
+                ActiveVersion ver = instance.getActiveVersion();
+                
+                // Compare base versions, ir it doesn't exactly match the
+                // service force remote build.
+                return Integer.valueOf(ver.getMinimumOSBaseVersion());
+
+            } catch (IOException e) {
+                ;
+            }
+
+            return -1;
     }
     
     
@@ -191,7 +109,7 @@ public class AnalyticsServiceStreamsContext extends
     /**
      * Get the connection to the service and check it is running.
      */
-    private StreamingAnalyticsService sas(AppEntity entity) throws IOException {
+    private static StreamingAnalyticsService sas(AppEntity entity) throws IOException {
         
         StreamingAnalyticsService sas = (StreamingAnalyticsService)
                 entity.getSavedObject(StreamingAnalyticsService.class);

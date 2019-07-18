@@ -34,6 +34,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.StreamsRestUtils.StreamingAnalyticsServiceVersion;
+import com.ibm.streamsx.rest.internal.RestUtils;
 import com.ibm.streamsx.topology.internal.context.remote.BuildConfigKeys;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
@@ -135,7 +136,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
 
     @Override
     public Result<Job, JsonObject> submitJob(File bundle, JsonObject jco) throws IOException {
-        final CloseableHttpClient httpClient = StreamsRestUtils.createHttpClient();
+        final CloseableHttpClient httpClient = RestUtils.createHttpClient();
         try {
 
             Util.STREAMS_LOGGER.info("Streaming Analytics service (" + serviceName + "): Submitting bundle : " + bundle.getName() + " to " + serviceName);
@@ -161,7 +162,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     
     @Override
     public Result<StreamingAnalyticsService, JsonObject> checkStatus(boolean requireRunning) throws IOException {
-        final CloseableHttpClient httpClient = StreamsRestUtils.createHttpClient();
+        final CloseableHttpClient httpClient = RestUtils.createHttpClient();
         try {
             JsonObject response = getServiceStatus(httpClient);
 
@@ -193,7 +194,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         JsonObject metrics = new JsonObject();
         metrics.addProperty(SubmissionResultsKeys.SUBMIT_ARCHIVE_SIZE, archive.length());
            	
-        CloseableHttpClient httpclient = StreamsRestUtils.createHttpClient();
+        CloseableHttpClient httpclient = RestUtils.createHttpClient();
         try {
             // Set up the build name
             if (null == buildName) {

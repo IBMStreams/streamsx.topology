@@ -11,7 +11,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.net.URL;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -33,7 +35,10 @@ public class StreamsOnlyConnectionTest {
         
         URL badUrl = new URL(correctUrl.getProtocol(), correctUrl.getHost(),
         		     correctUrl.getPort(), "/streams/re");      
-        System.err.println("BAD1:" + badUrl.toExternalForm());
+        
+        Set<Integer> okErrs = new HashSet<>();
+        okErrs.add(404);
+        okErrs.add(405);
         
 
         // send in wrong url
@@ -42,20 +47,19 @@ public class StreamsOnlyConnectionTest {
         try {
             badConn.getInstances();
         } catch (RESTException r) {
-            assertEquals(r.toString(), 404, r.getStatusCode());
+            assertTrue(r.toString(),okErrs.contains(r.getStatusCode()));
         }
 
         // send in url too long
         badUrl = new URL(correctUrl.getProtocol(), correctUrl.getHost(),
    		     correctUrl.getPort(), "/streams/rest/resourcesTooLong");      
-        System.err.println("BAD2:" + badUrl.toExternalForm());
 
         badConn = StreamsConnection.createInstance(null, null, badUrl.toExternalForm());
         badConn.allowInsecureHosts(true);
         try {
             badConn.getInstances();
         } catch (RESTException r) {
-            assertEquals(r.toString(), 404, r.getStatusCode());
+            assertTrue(r.toString(),okErrs.contains(r.getStatusCode()));
         }
 
         // send in bad iName

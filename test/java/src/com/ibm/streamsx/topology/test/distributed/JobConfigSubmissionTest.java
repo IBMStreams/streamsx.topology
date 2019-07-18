@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
+import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.topology.TStream;
 import com.ibm.streamsx.topology.Topology;
@@ -48,20 +49,20 @@ public class JobConfigSubmissionTest extends TestTopology {
     }
     
     @Test
-    public void testSubmitUsingConnection() throws Exception {
+    public void testSubmitUsingInstance() throws Exception {
     	
     	assumeTrue(getTesterContext().getType() == Type.DISTRIBUTED_TESTER);
-    	assumeTrue(System.getenv("STREAMS_REST_URL") != null);
+    	assumeTrue(System.getenv("ICPD_URL") != null);
         
         JobConfig config = new JobConfig();
         String jobName = "nameSC" + System.currentTimeMillis();
         config.setJobName(jobName);
         
-        StreamsConnection conn = StreamsConnection.createInstance(null, null, null);
-        conn.allowInsecureHosts(true);
-        getConfig().put(ContextProperties.STREAMS_CONNECTION, conn);
+        Instance instance = Instance.ofEndpoint((String) null, (String) null,
+                (String) null, (String) null, false);
+        getConfig().put(ContextProperties.STREAMS_INSTANCE, instance);
         
-        testItDirect("testNameJobConfig", config, "<jobId>", jobName, "default", "<empty>");
+        testItDirect("testSubmitUsingInstance", config, "<jobId>", jobName, "default", "<empty>");
     }
     
     @Test
@@ -71,7 +72,7 @@ public class JobConfigSubmissionTest extends TestTopology {
         String jobName = "nameDD" + System.currentTimeMillis();
         config.setJobName(jobName);
         config.setDataDirectory("/tmp/some/dir");
-        testItDirect("testNameJobConfig", config, "<jobId>", jobName, "default", "/tmp/some/dir");
+        testItDirect("testDataDirJobConfig", config, "<jobId>", jobName, "default", "/tmp/some/dir");
     }
     
     private void testItDirect(String topologyName, JobConfig config, String ...expected)
