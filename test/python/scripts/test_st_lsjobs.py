@@ -280,6 +280,16 @@ class Testlsjobs(unittest.TestCase):
         self.check_job_Tf_fmt(job, output[0])
         self.assertEqual(rc, 0)
 
+    # Create a single job, and check that if --users w/ blank string (ie shouldn't be any users like this), it correctly returns no jobs
+    def test_lsjobs_simple_5(self):
+        rc, job = self._submitjob(args=[])
+        output, error, rc = self.get_output(
+            lambda: self._ls_jobs(users=' ')
+        )
+        output = output.splitlines()
+
+        self.assertTrue(len(output) == 2)
+
     ###########################################
     # Mf fmt
     ###########################################
