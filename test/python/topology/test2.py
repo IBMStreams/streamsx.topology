@@ -220,9 +220,14 @@ class TestTopologyMethodsNew(unittest.TestCase):
         T = N*1000*2
         topo = Topology()
         s = topo.source(lambda : itertools.islice(iter(lambda : random.randint(-T, T), None), T))
-        streams = s.split(N, lambda x : x+2)
+        streams = s.split(N, lambda x : x+2, names=['high','medium','low'])
         self.assertEqual(N, len(streams))
+        self.assertIsInstance(streams, tuple)
+        self.assertEqual(('high','medium','low'), type(streams)._fields)
 
+        self.assertIs(streams.high, streams[0])
+        self.assertIs(streams.medium, streams[1])
+        self.assertIs(streams.low, streams[2])
 
         tester = Tester(topo)
         for i in range(N):
