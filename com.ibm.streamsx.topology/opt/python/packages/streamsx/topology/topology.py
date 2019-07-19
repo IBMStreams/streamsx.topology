@@ -2055,7 +2055,19 @@ class PendingStream(object):
 class Window(object):
     """Declaration of a window of tuples on a `Stream`.
 
-    A `Window` can be passed as the input of an SPL
+    A `Window` enables transforms against collection (or window)
+    of tuples on a stream rather than per-tuple transforms.
+    Windows are created against a stream using :py:meth:`Stream.batch`
+    or :py:meth:`Stream.last`.
+
+    Supported transforms are:
+
+        * :py:meth:`aggregate` - Aggregate the window contents into a single tuple.
+
+    A window is optionally :py:meth:`partitioned <partition>` to create
+    independent sub-windows per partition key.
+ 
+    A `Window` can be also passed as the input of an SPL
     operator invocation to indicate the operator's
     input port is windowed.
 
@@ -2129,7 +2141,7 @@ class Window(object):
         self._config['partitionIsStateful'] = bool(stateful)
 
     def partition(self, key):
-        """Declare a window with this windows eviction and trigger policies, and a partition.
+        """Declare a window with this window's eviction and trigger policies, and a partition.
 
         In a partitioned window, a subwindow will be created for each distinct
         value received for the attribute used for partitioning.  Each subwindow
@@ -2233,11 +2245,27 @@ class Window(object):
         items in the list are the order in which they were each received by the 
         window. If the function's return value is not `None` then the result will
         be submitted as a tuple on the returned stream. If the return value is 
-        `None` then no tuple submission will occur. For example, a window that 
-        calculates a moving average of the last 10 tuples could be written as follows::
+        `None` then no tuple submission will occur.
+
+        For example, a window that calculates a moving average of the
+        last 10 tuples could be written as follows::
         
             win = s.last(10).trigger(1)
             moving_averages = win.aggregate(lambda tuples: sum(tuples)/len(tuples))
+
+        When the window is :py:meth:`partitioned <partition>`
+        then each partition is triggered and aggregated using
+        `function` independently.
+
+        For example, this partitioned window aggregation will independently
+        call ``summarize_sensors`` with ten tuples all having the same `id`
+        when triggered. Each partition triggers independently so that
+        ``summarize_sensors`` is invoked for a specific `id` every time 
+        two tuples with that `id` have been inserted into the window partition::
+        
+            win = s.last(10).trigger(2).partition(key='id')
+            moving_averages = win.aggregate(summarize_sensors)
+        
 
         .. note:: If a tumbling (:py:meth:`~Stream.batch`) window's stream
             is finite then a final aggregation is performed if the
@@ -2264,6 +2292,7 @@ class Window(object):
 
         .. versionadded:: 1.8
         .. versionchanged:: 1.11 Support for aggregation of streams with structured schemas.
+        .. versionchanged:: 1.13 Support for partitioned aggregation.
         """
         schema = streamsx.topology.schema.CommonSchema.Python
         
