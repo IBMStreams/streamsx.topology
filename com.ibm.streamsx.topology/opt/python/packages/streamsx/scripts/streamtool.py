@@ -95,11 +95,10 @@ def _canceljob(instance, cmd_args, rc):
 
     # get list of job IDs to cancel
     if cmd_args.jobid:
-        job_ids = cmd_args.jobid.strip()
         if ',' in cmd_args.jobid:
-            job_ids = job_ids.split(',')
+            job_ids = cmd_args.jobid.split(',')
         else:
-            job_ids = cmd_args.jobid.strip().split(' ')
+            job_ids = cmd_args.jobid.split(' ')
         job_ids_to_cancel.extend(job_ids)
 
     # if --jobs, get list of job IDs to cancel

@@ -98,7 +98,7 @@ class TestCancelJob(unittest.TestCase):
         self.jobs_to_cancel.extend([job1])
 
         self._run_canceljob(
-            args=[str(job1.id) + ' ']
+            args=[str(job1.id)]
         )
         self._check_job_cancelled(job1)
 
