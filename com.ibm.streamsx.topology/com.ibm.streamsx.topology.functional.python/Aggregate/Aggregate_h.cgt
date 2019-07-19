@@ -188,6 +188,8 @@ private:
     // Window definition
     WindowType window_;	       
 
+    Metric& _partitionCount;
+
 #if SPLPY_AGGREGATE_TIME_POLICIES == 0
     // Locking is through window acquire data when
     // there are time policies

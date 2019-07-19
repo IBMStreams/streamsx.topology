@@ -1,4 +1,5 @@
 import unittest
+import time
 
 from streamsx.topology.topology import *
 from streamsx.topology import context
@@ -21,6 +22,10 @@ class TestPythonWindowPartition(unittest.TestCase):
 
     def setUp(self):
         Tester.setup_standalone(self)
+
+    def _partition_count_check(self):
+        # Can't check metrics in standalone
+        pass
 
     # Partition by attribute not supported for common schema
     def test_common_schema_python(self):
@@ -240,11 +245,13 @@ class TestPythonWindowPartition(unittest.TestCase):
         s = topo.source([('a',1,2),('b',7,8),('a',2,2),('b',9,19), ('a',1,4), ('a',1,5), ('b',9,7), ('b',7,17)])
         s = s.map(lambda x: x, schema = schema)
 
-        s = s.last(3).trigger(2).partition(lambda x: (x[0], x[1])).aggregate(CrissCross)
+        s = s.last(3).trigger(2).partition(lambda x: (x[0], x[1])).aggregate(CrissCross, name='PartAgg')
  
-        tester = Tester(topo)
-        tester.contents(s, [('a',1), ('b',9), ('b',7)] )
-        tester.test(self.test_ctxtype, self.test_config)
+        self.tester = Tester(topo)
+        self.expected_partition_count = 4
+        self.tester.local_check = self._partition_count_check
+        self.tester.contents(s, [('a',1), ('b',9), ('b',7)] )
+        self.tester.test(self.test_ctxtype, self.test_config)
  
     def test_partition_by_callable_json_schema(self):
         topo = Topology()
@@ -252,12 +259,40 @@ class TestPythonWindowPartition(unittest.TestCase):
         
         # Check the averages of the values of the Json objects
         s = s.map(lambda x: x, schema = CommonSchema.Json)
-        s = s.last(3).trigger(1).partition(lambda tup: len(tup.keys())).aggregate(lambda tuples: [[set(tup.keys()), sum(tup.values())] for tup in tuples])
+        s = s.last(3).trigger(1).partition(lambda tup: len(tup.keys())).aggregate(lambda tuples: [[set(tup.keys()), sum(tup.values())] for tup in tuples], name='PartAgg')
         
-        tester = Tester(topo)
-        tester.contents(s, [ [[{'a'},1]],
+        self.tester = Tester(topo)
+        self.expected_partition_count = 2
+        self.tester.local_check = self._partition_count_check
+        self.tester.contents(s, [ [[{'a'},1]],
                              [[{'c','b'}, 5]],
                              [[{'c','b'}, 5], [{'d','e'}, 9]]
                            ])
 
-        tester.test(self.test_ctxtype, self.test_config)
+        self.tester.test(self.test_ctxtype, self.test_config)
+
+class TestDistributedPythonWindowPartition(TestPythonWindowPartition):
+
+    def setUp(self):
+        Tester.setup_distributed(self)
+
+    # Tests nCurrentPartitions metric reaches an eventual value
+    def _partition_count_check(self):
+        job = self.tester.submission_result.job
+        op = job.get_operators(name='.*PartAgg$')[0]
+
+        while not op.get_metrics(name='nCurrentPartitions'):
+            time.sleep(1)
+
+        ncp = op.get_metrics(name='nCurrentPartitions')[0]
+        if ncp.value == self.expected_partition_count:
+            return
+
+        for i in range(10):
+            time.sleep(1)
+            ncp.refresh()
+            if ncp.value == self.expected_partition_count:
+                return
+
+        self.asserEqual(self.expected_partition_count, ncp.value,
+            msg='Incorrect partition count')

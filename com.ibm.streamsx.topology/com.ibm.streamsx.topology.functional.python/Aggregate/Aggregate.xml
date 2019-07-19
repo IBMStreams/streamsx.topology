@@ -9,15 +9,13 @@
       <description>Python Windowing Operation</description>
       <iconUri size="16">../opt/icons/aggregate_16.gif</iconUri>
       <iconUri size="32">f../opt/icons/aggregate_32.gif</iconUri>
-
-      <!-- some optional elements
       <metrics>
         <metric>
-          <name>metricName</name>
-          <description>Metric description</description>
-          <kind>Counter</kind>
+          <name>nCurrentPartitions</name>
+          <description>The number of partitions in the window.</description>
+          <kind>Gauge</kind>
         </metric>
-      </metrics>-->
+      </metrics>
       <libraryDependencies>
         <library>
           <cmn:description>SPL Python includes</cmn:description>
