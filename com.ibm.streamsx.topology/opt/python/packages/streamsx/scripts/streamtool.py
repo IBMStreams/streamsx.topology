@@ -92,7 +92,7 @@ def _canceljob(instance, cmd_args, rc):
     """Cancel a job."""
     job_ids_to_cancel = []
     job_names_to_cancel = []
-
+    
     # get list of job IDs to cancel
     if cmd_args.jobid:
         if ',' in cmd_args.jobid:
