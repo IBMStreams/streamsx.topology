@@ -78,8 +78,8 @@ def _canceljob_parser(subparsers):
     job_cancel = subparsers.add_parser('canceljob', help='Cancel a job.')
     job_cancel.add_argument('--force', action='store_true', help='Stop the service even if jobs are running.', default=False)
     job_cancel.add_argument('--collectlogs', help='Specifies to collect the log and trace files for each processing element that is associated with the job', action='store_true')
-    # Only 1 of these arguments --jobs, --jobnames, --file can be specified at any given time when running this command
-    g1 = job_cancel.add_argument_group(title='jobs jobnames file group', description='One of these options must be chosen.')
+    # Only 1 of these arguments jobid, --jobs, --jobnames, --file can be specified at any given time when running this command
+    g1 = job_cancel.add_argument_group(title='jobid jobs jobnames file group', description='One of these options must be chosen.')
     group = g1.add_mutually_exclusive_group(required=True)
     group.add_argument('jobid', help='Specifies a list of job IDs.', nargs='?')
     group.add_argument('--jobs', '-j', help='Specifies a list of job IDs.', metavar='job-id')
@@ -95,7 +95,11 @@ def _canceljob(instance, cmd_args, rc):
 
     # get list of job IDs to cancel
     if cmd_args.jobid:
-        job_ids = cmd_args.jobid.split(',')
+        job_ids = cmd_args.jobid.strip()
+        if ',' in cmd_args.jobid:
+            job_ids = job_ids.split(',')
+        else:
+            job_ids = cmd_args.jobid.strip().split(' ')
         job_ids_to_cancel.extend(job_ids)
 
     # if --jobs, get list of job IDs to cancel

@@ -98,17 +98,29 @@ class TestCancelJob(unittest.TestCase):
         self.jobs_to_cancel.extend([job1])
 
         self._run_canceljob(
-            args=[str(job1.id)]
+            args=[str(job1.id) + ' ']
         )
         self._check_job_cancelled(job1)
 
-    # Check succesfully cancels jobs
+    # Check succesfully cancels jobs seperated by ','
     def test_cancel_simple_2(self):
         job1 = self._submit_job()
         job2 = self._submit_job()
 
         self._run_canceljob(
             args=[str(job1.id) + ',' + str(job2.id)]
+        )
+        self._check_job_cancelled(job1)
+        self._check_job_cancelled(job2)
+
+    # Check succesfully cancels jobs seperated by ' '
+    def test_cancel_simple_3(self):
+        job1 = self._submit_job()
+        job2 = self._submit_job()
+        self.jobs_to_cancel.extend([job1])
+
+        self._run_canceljob(
+            args=[str(job1.id) + ' ' + str(job2.id)]
         )
         self._check_job_cancelled(job1)
         self._check_job_cancelled(job2)
