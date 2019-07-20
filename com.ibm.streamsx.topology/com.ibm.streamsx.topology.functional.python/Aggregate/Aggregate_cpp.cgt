@@ -36,7 +36,9 @@ MY_OPERATOR::MY_OPERATOR() :
    pyInStyleObj_(NULL),
    loads(NULL),
    occ_(-1),
-   window_(<%=$windowCppInitializer%>)
+   window_(<%=$windowCppInitializer%>),
+   _partitionCount(getContext().getMetrics().getCustomMetricByName("nCurrentPartitions"))
+   
 #if SPLPY_PARTITION_IS_STATEFUL == 1
    , partitionStateHandler_(NULL)
 #endif
@@ -85,6 +87,7 @@ MY_OPERATOR::MY_OPERATOR() :
     
  }
 %>
+    _partitionCount.setValueNoLock(0);
 
     funcop_ = new SplpyFuncOp(this, SPLPY_CALLABLE_STATE_HANDLER, out_wrapfn);
 
@@ -235,6 +238,8 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 #else
   window_.insert(python_value);
 #endif
+
+  _partitionCount.setValueNoLock(window_.getWindowStorage().size());
 }
 
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
