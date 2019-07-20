@@ -60,7 +60,11 @@ class TestPythonWindowPartition(unittest.TestCase):
         s = topo.source([('a',1),('b', 7),('a', 2),('b', 9), ('a', 4), ('a', 5), ('b', 8), ('b', 17)])
         s = s.map(lambda x: x, schema = "tuple<rstring c, int32 d>")
 
-        s = s.last(3).trigger(2).partition('c').aggregate(lambda items: (items[1]['c'],items[0]['d']))
+        w = s.last(3).trigger(2).partition('c')
+        # ensure creating new partition leaves the original ok.
+        wx = w.partition('x')
+        self.assertIsNot(w, wx)
+        s = w.aggregate(lambda items: (items[1]['c'],items[0]['d']))
 
         tester = Tester(topo)
         tester.contents(s, [('a',1), ('b',7), ('a', 2), ('b', 9)] )

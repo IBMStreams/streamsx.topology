@@ -2086,6 +2086,11 @@ class Window(object):
         self.stream = stream
         self._config = {'type': window_type}
 
+    def _copy(self):
+        wc = Window(self.stream, None)
+        wc._config.update(self._config)
+        return wc
+
     def _evict_count(self, size):
         self._config['evictPolicy'] = 'COUNT'
         self._config['evictConfig'] = size
@@ -2174,20 +2179,12 @@ class Window(object):
         .. versionadded:: 1.13
         """
 
-        pw = copy.copy(self)
+        pw = self._copy()
 
         # Remove any existing partition.  It will be replaced by the new
         # partition
-        if 'partitioned' in self._config:
-            del self._config['partitioned']
-        if 'partitionBy' in self._config:
-            del self._config['partitionBy']
-        if 'partitionByName' in self._config:
-            del self._config['partitionByName']
-        if 'partitionByModule' in self._config:
-            del self._config['partitionByModule']
-        if 'partitionIsStateful' in self._config:
-            del self._config['partitionIsStateful']
+        for k in {'partitioned','partitionBy','partitionByName','partitionByModule','partitionIsStateful'}:
+            pw._config.pop(k, None)
 
         if callable(key):
             pw._partition_by_callable(key)
@@ -2223,7 +2220,7 @@ class Window(object):
         .. warning:: A trigger is only supported for a sliding window
             such as one created by :py:meth:`last`.
         """
-        tw = copy.copy(self);
+        tw = self._copy();
 
         if isinstance(when, datetime.timedelta):
             tw._config['triggerPolicy'] = 'TIME'
