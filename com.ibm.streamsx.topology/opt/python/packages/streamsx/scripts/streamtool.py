@@ -78,10 +78,10 @@ def _canceljob_parser(subparsers):
     job_cancel = subparsers.add_parser('canceljob', help='Cancel a job.')
     job_cancel.add_argument('--force', action='store_true', help='Stop the service even if jobs are running.', default=False)
     job_cancel.add_argument('--collectlogs', help='Specifies to collect the log and trace files for each processing element that is associated with the job', action='store_true')
-    # Only 1 of these arguments jobid, --jobs, --jobnames, --file can be specified at any given time when running this command
-    g1 = job_cancel.add_argument_group(title='jobid jobs jobnames file group', description='One of these options must be chosen.')
-    group = g1.add_mutually_exclusive_group(required=True)
-    group.add_argument('jobid', help='Specifies a list of job IDs.', nargs='?')
+    job_cancel.add_argument('jobid', help='Specifies a list of job IDs.', nargs='*')
+    # Only 1 of these arguments --jobs, --jobnames, --file can be specified at any given time when running this command
+    g1 = job_cancel.add_argument_group(title='jobs jobnames file group', description='One of these options must be chosen.')
+    group = g1.add_mutually_exclusive_group(required=False)
     group.add_argument('--jobs', '-j', help='Specifies a list of job IDs.', metavar='job-id')
     group.add_argument('--jobnames', help='Specifies a list of job names')
     group.add_argument('--file', '-f', help='Specifies the file that contains a list of job IDs, one per line')
@@ -92,14 +92,19 @@ def _canceljob(instance, cmd_args, rc):
     """Cancel a job."""
     job_ids_to_cancel = []
     job_names_to_cancel = []
-    
+
+    # Check for mutually exclusive arguments, just in case argparse doesn't catch it
+    temp = len(list(filter(None, [cmd_args.jobid, cmd_args.jobs, cmd_args.jobnames, cmd_args.file])))
+    if temp > 1:
+        raise ValueError("Arguments jobid, --jobs, --jobnames, --file are mutually exclusive")
+
     # get list of job IDs to cancel
     if cmd_args.jobid:
-        if ',' in cmd_args.jobid:
-            job_ids = cmd_args.jobid.split(',')
-        else:
-            job_ids = cmd_args.jobid.split(' ')
-        job_ids_to_cancel.extend(job_ids)
+        for x in cmd_args.jobid:
+            job_ids = x.split(',')
+            job_ids = [job.strip() for job in job_ids]
+            job_ids_to_cancel.extend(job_ids)
+    job_ids_to_cancel = list(filter(None, job_ids_to_cancel))
 
     # if --jobs, get list of job IDs to cancel
     if cmd_args.jobs:
@@ -116,6 +121,9 @@ def _canceljob(instance, cmd_args, rc):
         with open(cmd_args.file, 'r') as my_file:
             job_ids = [line.rstrip() for line in my_file if not line.isspace()]
             job_ids_to_cancel.extend(job_ids)
+
+    if not job_ids_to_cancel and not job_names_to_cancel:
+        raise Exception("No jobs provided")
 
     # Check if job w/ job ID exists, and if so cancel it
     for x in job_ids_to_cancel:
@@ -139,7 +147,6 @@ def _canceljob(instance, cmd_args, rc):
         else:
             print("The following job name is not found: {}. Specify a job name that is valid and try the request again".format(x), file=sys.stderr)
             rc = 1
-
 
     return (rc, None)
 
@@ -408,7 +415,6 @@ def _chappconfig_parser(subparsers):
     appconfig_ch.add_argument('--description', help='Specifies a description for the application configuration')
     _user_arg(appconfig_ch)
 
-
 def _chappconfig(instance, cmd_args, rc):
     """change an appconfig"""
     config_name, config_props, config_description = _get_config_details(cmd_args, mk=False)
@@ -487,7 +493,6 @@ def _getappconfig_parser(subparsers):
     appconfig_get = subparsers.add_parser('getappconfig', help='Displays the properties of a configuration that enables connection to an external application')
     appconfig_get.add_argument('config_name', help='Name of the app config')
     _user_arg(appconfig_get)
-
 
 def _getappconfig(instance, cmd_args, rc):
     """get an appconfig"""
