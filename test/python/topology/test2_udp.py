@@ -68,7 +68,6 @@ class TestUDP(unittest.TestCase):
       s = s.map(lambda x: x)
       s = s.end_parallel()
       s = s.end_parallel()
-      s.print()
       
       tester = Tester(topo)
       tester.contents(s, [1 for i in range(25)])
