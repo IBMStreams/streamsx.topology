@@ -64,7 +64,7 @@ def _submitjob(instance, cmd_args, rc):
     if not job:
         raise Exception("Error in creating Job")
     else:
-        print("The following number of applications were submitted to the {} instance: {}.".format(job.id, instance.id))
+        print("The following number of applications were submitted to the {} instance: {}.".format(instance.id, 1))
         print("Submitted job IDs: {}".format(job.id), file=sys.stderr)
 
     # If --outfile, write jobID to file
