@@ -87,6 +87,7 @@ The `streamsx` package provides a number of command line scripts.
    scripts/service.rst
    scripts/info.rst
    scripts/extract.rst
+   scripts/streamtool.rst
 
 ************
 Environments
