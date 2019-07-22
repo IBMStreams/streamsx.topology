@@ -1110,7 +1110,7 @@ class Stream(_placement._Placement, object):
         """
         sl = _SourceLocation(_source_info(), 'split')
         _name = self.topology.graph._requested_name(name, action="split", func=func)
-        stateful = self._determine_statefulness(func)
+        stateful = _determine_statefulness(func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Split", func, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.oport)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
