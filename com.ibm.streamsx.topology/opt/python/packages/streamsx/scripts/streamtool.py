@@ -61,11 +61,11 @@ def _submitjob(instance, cmd_args, rc):
 
     job = instance.submit_job(bundle=cmd_args.sabfile, job_config=job_config)
 
-    if not job:
-        raise Exception("Error in creating Job")
-    else:
+    if job:
         print("The following number of applications were submitted to the {} instance: {}.".format(instance.id, 1))
         print("Submitted job IDs: {}".format(job.id), file=sys.stderr)
+    else:
+        raise Exception("Error in creating Job")
 
     # If --outfile, write jobID to file
     if cmd_args.outfile:
