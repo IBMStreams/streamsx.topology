@@ -104,7 +104,6 @@ def _canceljob(instance, cmd_args, rc):
             job_ids = x.split(',')
             job_ids = [job.strip() for job in job_ids]
             job_ids_to_cancel.extend(job_ids)
-    job_ids_to_cancel = list(filter(None, job_ids_to_cancel))
 
     # if --jobs, get list of job IDs to cancel
     if cmd_args.jobs:
@@ -122,6 +121,12 @@ def _canceljob(instance, cmd_args, rc):
             job_ids = [line.rstrip() for line in my_file if not line.isspace()]
             job_ids_to_cancel.extend(job_ids)
 
+    # Filter out any blank/empty strings in job_ids_to_cancel and job_names_to_cancel
+    # Ex. 'canceljob job1.id , job2.id' -> job_ids_to_cancel = ['job1.id', '', '', 'job2.id'], should be = ['job1.id', 'job2.id']
+    job_ids_to_cancel = list(filter(None, job_ids_to_cancel))
+    job_names_to_cancel = list(filter(None, job_names_to_cancel))
+
+    # If no jobs to cancel, raise error
     if not job_ids_to_cancel and not job_names_to_cancel:
         raise Exception("No jobs provided")
 
@@ -140,12 +145,17 @@ def _canceljob(instance, cmd_args, rc):
 
     # Check if job w/ job name exists, and if so cancel it
     for x in job_names_to_cancel:
+        # if jobname contains a space, its invalid
+        if ' ' in x:
+            print("{} is not a valid job name. Either its size is longer than 1024 characters or it includes some invalid characters.".format(x), file=sys.stderr)
+            rc = 1
+            continue
         jobs = instance.get_jobs(name=str(x))
         if jobs:
             job = jobs[0]
             _job_cancel(instance, job.id, cmd_args.collectlogs, cmd_args.force)
         else:
-            print("The following job name is not found: {}. Specify a job name that is valid and try the request again".format(x), file=sys.stderr)
+            print("The following job name is not found: {}. Specify a job name that is valid and try the request again.".format(x), file=sys.stderr)
             rc = 1
 
     return (rc, None)
