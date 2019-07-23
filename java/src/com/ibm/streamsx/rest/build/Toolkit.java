@@ -170,8 +170,8 @@ public class Toolkit extends Element {
 
   /**
    * Gets a list of {@link Toolkit.Dependency dependencies} of this toolkit.
-   * This list may be empty of this toolkit does not depend on any other
-   * toolkit.
+   * If this toolkit does not depend on any other tookit, the returned list 
+   * will be empty.
    *
    * @throws Exception
    */
