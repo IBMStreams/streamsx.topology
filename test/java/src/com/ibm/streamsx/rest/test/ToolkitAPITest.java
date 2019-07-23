@@ -45,26 +45,6 @@ import com.ibm.streamsx.rest.RESTException;
 import com.ibm.streamsx.rest.build.BuildService;
 import com.ibm.streamsx.rest.build.Toolkit;
 
-import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
-import org.apache.http.client.fluent.Executor;
-import com.google.gson.JsonObject;
-import com.ibm.streamsx.rest.internal.RestUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.entity.ContentType;
-import org.apache.http.client.fluent.Response;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpStatus;
-import org.apache.http.util.EntityUtils;
-import java.io.Reader;
-import com.google.gson.Gson;
-import java.io.InputStreamReader;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jobject;
-import java.net.URI;
-import java.net.URL;
-import static com.ibm.streamsx.topology.internal.streams.Util.getDefaultUserPassword;
-
 public class ToolkitAPITest {
   protected BuildService connection;
   String instanceName;
@@ -411,105 +391,10 @@ public class ToolkitAPITest {
   protected void setupConnection() throws Exception {
     if (connection == null) {
       testType = "DISTRIBUTED";
-            
-      String icpdUrl = System.getenv("ICPD_URL");
-      
-      String authUrl = icpdUrl + "/icp4d-api/v1/authorize";
-      boolean allowInsecure = true;
-      Executor executor = RestUtils.createExecutor(allowInsecure);
-
-      JsonObject authParams = new JsonObject();
-      String[] userpass = getDefaultUserPassword(null,null);
-      authParams.addProperty("username", userpass[0]);
-      authParams.addProperty("password", userpass[1]);
-
-      Request request = Request.Post(authUrl)
-        .addHeader("accept", ContentType.APPLICATION_JSON.getMimeType())
-        .bodyString(authParams.toString(), ContentType.APPLICATION_JSON);
-      
-      Response response = executor.execute(request);
-      JsonObject jsonResponse = gsonFromResponse(response.returnResponse());
-     
-      String bearerToken = jstring(jsonResponse, "token");
-
-      // This is not the token we want, but it is the token to get the token.
-      String instanceName = System.getenv("STREAMS_INSTANCE_ID");
-      String detailsUrl = icpdUrl + "/zen-data/v2/serviceInstance/details?displayName=" + instanceName;
-
-
-      request = Request.Get(detailsUrl)
-        .addHeader("accept", ContentType.APPLICATION_JSON.getMimeType())
-        .addHeader("Authorization","Bearer " + bearerToken);
-
-      response = executor.execute(request);
-      JsonObject sr = gsonFromResponse(response.returnResponse());
-      JsonObject sro = jobject(sr, "requestObj");
-      String serviceId = jstring(sro, "ID");
-
-      String serviceTokenUrl = icpdUrl + "/zen-data/v2/serviceInstance/token";
-      
-      JsonObject pd = new JsonObject();
-      pd.addProperty("serviceInstanceId", serviceId);
-      request = Request.Post(serviceTokenUrl)
-        .addHeader("accept", ContentType.APPLICATION_JSON.getMimeType())
-        .addHeader("Authorization","Bearer " + bearerToken)
-        .bodyString(pd.toString(), ContentType.APPLICATION_JSON);
-
-      response = executor.execute(request);
-      jsonResponse = gsonFromResponse(response.returnResponse());
-      String serviceToken = jstring(jsonResponse, "AccessToken");
-      
-      JsonObject sca = jobject(sro, "CreateArguments");
-      JsonObject connectionInfo = jobject(sca, "connection-info");
-      String buildEndpoint = jstring(connectionInfo, "externalBuildEndpoint");
-
-        
-      URI icpdURI = new URI(icpdUrl);
-
-      URI internalURI = new URI(buildEndpoint);
-
-      String externalHost = icpdURI.getHost();
-
-      // Copy the URI, replacing the internal host with the external host.
-      URI externalURI = new URI(internalURI.getScheme(), 
-                                internalURI.getUserInfo(), 
-                                externalHost, 
-                                internalURI.getPort(), 
-                                internalURI.getPath(),
-                                internalURI.getQuery(), 
-                                internalURI.getFragment());
-
-      String buildUrl = externalURI.toURL().toExternalForm();
-
-      connection = BuildService.of(buildUrl, serviceToken);
-      if (!sslVerify())
-	connection.allowInsecureHosts();      
+      connection = BuildService.ofEndpoint((String) null, (String) null,
+          (String) null, (String) null, sslVerify());
     }
   }
-
-  // TODO remove this
-    private static JsonObject gsonFromResponse(HttpResponse response) throws IOException {
-        HttpEntity entity = response.getEntity();
-        int statusCode = response.getStatusLine().getStatusCode();
-        if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED) {
-            final String errorInfo;
-            if (entity != null)
-                errorInfo = " -- " + EntityUtils.toString(entity);
-            else
-                errorInfo = "";
-            throw new IllegalStateException(
-                    "Unexpected HTTP resource from service:"
-                            + response.getStatusLine().getStatusCode() + ":" +
-                            response.getStatusLine().getReasonPhrase() + errorInfo);
-        }
-
-        if (entity == null)
-            throw new IllegalStateException("No HTTP resource from service");
-        Reader r = new InputStreamReader(entity.getContent());
-        JsonObject jsonResponse = new Gson().fromJson(r, JsonObject.class);
-        EntityUtils.consume(entity);
-        return jsonResponse;
-    }
 
   public static boolean sslVerify() {
     String v = System.getProperty("topology.test.SSLVerify");
