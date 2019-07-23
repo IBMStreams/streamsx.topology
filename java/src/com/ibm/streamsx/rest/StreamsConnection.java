@@ -6,7 +6,6 @@ package com.ibm.streamsx.rest;
 
 import static java.util.Objects.requireNonNull;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -73,7 +72,7 @@ public class StreamsConnection {
     		    url = url.substring(0, idx) + "/streams/rest/resources";
     		}
     	}
-
+    	
     	AbstractStreamsConnection delegate = createDelegate(userName, authToken, url);
         StreamsConnection sc = new StreamsConnection(delegate);
         return sc;
@@ -143,6 +142,7 @@ public class StreamsConnection {
     public List<Instance> getInstances() throws IOException {
         return delegate().getInstances();
     }
+
 
     private static AbstractStreamsConnection createDelegate(String userName,
             String authToken, String url) {

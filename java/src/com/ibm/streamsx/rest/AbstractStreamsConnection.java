@@ -65,7 +65,7 @@ abstract class AbstractStreamsConnection {
      *            for example: https://server:port/streams/rest/resources
      */
     AbstractStreamsConnection(String resourcesUrl,
-                              boolean allowInsecure) {
+            boolean allowInsecure) {
         this.resourcesUrl = resourcesUrl;
         allowInsecureHosts(allowInsecure);
     }
