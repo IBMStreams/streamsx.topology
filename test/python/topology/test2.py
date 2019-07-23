@@ -5,6 +5,7 @@ import sys
 import itertools
 import os
 import shutil
+import random
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
@@ -163,7 +164,6 @@ class TestBluemixSubmitMethodsNew(unittest.TestCase):
         self.assertEqual(result.return_code, 0)
         result.job.cancel()
 
-
 class TestTopologyMethodsNew(unittest.TestCase):
 
     def setUp(self):
@@ -214,6 +214,37 @@ class TestTopologyMethodsNew(unittest.TestCase):
         tester.contents(s2, 'WorldCup2018')
         tester.tuple_count(s2, 12)
         tester.test(self.test_ctxtype, self.test_config)
+
+    def test_split(self):
+        N = 3
+        T = N*1000*2
+        topo = Topology()
+        s = topo.source(lambda : itertools.islice(iter(lambda : random.randint(-T, T), None), T))
+        streams = s.split(N, lambda x : x+2, names=['high','medium','low'])
+        self.assertEqual(N, len(streams))
+        self.assertIsInstance(streams, tuple)
+        self.assertEqual(('high','medium','low'), type(streams)._fields)
+
+        self.assertIs(streams.high, streams[0])
+        self.assertIs(streams.medium, streams[1])
+        self.assertIs(streams.low, streams[2])
+
+        tester = Tester(topo)
+        for i in range(N):
+            tester.tuple_count(streams[i], 500, exact=False)
+
+        tester.tuple_check(streams[0], lambda x : (x+2) >= 0 and (x+2)%N == 0)
+        tester.tuple_check(streams[1], lambda x : (x+2) >= 0 and (x+2)%N == 1)
+        tester.tuple_check(streams[2], lambda x : (x+2) >= 0 and (x+2)%N == 2)
+
+        single = s.split(1, lambda x : x)
+        self.assertEqual(1, len(single))
+        tester.tuple_count(single[0], 1000, exact=False)
+        tester.tuple_check(single[0], lambda x : x >= 0)
+        
+        tester.tuple_count(s, T, exact=False)
+        tester.test(self.test_ctxtype, self.test_config)
+       
 
     def test_TopologySourceItertools(self):
         topo = Topology('test_TopologySourceItertools')

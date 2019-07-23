@@ -10,6 +10,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
+
+import org.apache.http.client.fluent.Executor;
 
 import com.ibm.streamsx.rest.internal.RestUtils;
 import com.ibm.streamsx.topology.internal.streams.Util;
@@ -22,6 +25,7 @@ public class StreamsConnection {
 
     StreamsConnection(AbstractStreamsConnection delegate) {
         this.delegate = delegate;
+        delegate.setStreamsConnection(this);
     }
     
     private final AbstractStreamsConnection delegate() {
@@ -75,13 +79,20 @@ public class StreamsConnection {
         return sc;
     }
     
-    public static StreamsConnection ofBearerToken(String url, String bearerToken) {
+    public static StreamsConnection ofAuthenticator(String url, Function<Executor, String> authenticator) {
         
         AbstractStreamsConnection delegate = new StreamsConnectionImpl(null,
-                executor -> RestUtils.createBearerAuth(bearerToken),
+                authenticator,
                 url, false);
         StreamsConnection sc = new StreamsConnection(delegate);
         return sc;      
+    }
+    
+    public Function<Executor, String> getAuthenticator() {
+        Object delegate = delegate();
+        if (delegate instanceof StreamsConnectionImpl)
+            return ((StreamsConnectionImpl) delegate).getAuthenticator();
+        return null;
     }
 
     /**
@@ -102,6 +113,10 @@ public class StreamsConnection {
      */
     public boolean allowInsecureHosts(boolean allowInsecure) {
     	return delegate().allowInsecureHosts(allowInsecure);
+    }
+    
+    public final boolean isVerify() {
+        return delegate().isVerify();
     }
 
     /**

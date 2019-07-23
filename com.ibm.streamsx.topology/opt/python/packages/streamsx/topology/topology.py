@@ -212,6 +212,7 @@ import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
 
 import copy
+import collections
 import random
 import streamsx._streams._placement as _placement
 import streamsx.spl.op
@@ -1038,6 +1039,85 @@ class Stream(_placement._Placement, object):
         oport = op.addOutputPort(schema=self.oport.schema, name=_name)
         return Stream(self.topology, oport)._make_placeable()
 
+    def split(self, into, func, names=None, name=None):
+        """
+        Splits tuples from this stream into multiple independent streams
+        using the supplied callable `func`.
+
+        For each tuple on the stream ``int(func(tuple))`` is called, if the
+        return is zero or positive then the (unmodified) tuple will be
+        present on one, and only one, of the output streams.
+        The specific stream will
+        be at index ``int(func(tuple)) % N`` in the returned list,
+        where ``N`` is the number of output
+        streams. If the return is negative then the tuple is dropped.
+
+        ``split`` is used to declare disparate transforms on each
+        split stream. This differs to :py:meth:`parallel` where
+        each channel has the same logic transforms.
+        
+        Args:
+            into(int): Number of streams the input is split into, must be greater than zero.
+            func: Split callable that takes a single parameter for the tuple.
+            names(list[str]): Names of the returned streams, in order. If not supplied or a stream doesn't have an entry in `names` then a generated name is used. Entries are used to generated the field names of the returned named tuple.
+            name(str): Name of the split transform, defaults to a generated name.
+
+        If invoking ``func`` for a tuple on the stream raises an exception
+        then its processing element will terminate. By default the processing
+        element will automatically restart though tuples may be lost.
+
+        If ``func`` is a callable object then it may suppress exceptions
+        by return a true value from its ``__exit__`` method. When an
+        exception is suppressed no tuple is submitted to the filtered
+        stream corresponding to the input tuple that caused the exception.
+
+        Returns:
+            namedtuple: Named tuple of streams this stream is split across.
+
+        Example of splitting a stream based upon message severity, dropping
+        any messages with unknown severity, and then performing different
+        transforms for each severity::
+
+            msgs = topo.source(ReadMessages())
+            SEVS = {'H':0, 'M':1, 'L':2}
+            severities = msg.split(3, lambda SEVS.get(msg.get('SEV'), -1),
+                names=['high','medium','low'], name='SeveritySplit')
+
+            high_severity = severities.high
+            high_severity.for_each(SendAlert())
+
+            medium_severity = severities.medium
+            medium_severity.for_each(LogMessage())
+
+            low_severity = severities.low
+            low_severity.for_each(Archive())
+
+
+        .. seealso:: :py:meth:`parallel`
+
+        .. versionadded:: 1.13
+        """
+        sl = _SourceLocation(_source_info(), 'split')
+        _name = self.topology.graph._requested_name(name, action="split", func=func)
+        stateful = self._determine_statefulness(func)
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Split", func, name=_name, sl=sl, stateful=stateful)
+        op.addInputPort(outputPort=self.oport)
+        streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
+        op._layout(kind='Split', name=_name, orig_name=name)
+        streams = []
+        nt_names = []
+        op_name = name if name else _name
+        for port_id in range(into):
+            # logical name
+            lsn = names[port_id] if names and len(names) > port_id else op_name + '_' + str(port_id)
+            sn = self.topology.graph._requested_name(lsn)
+            oport = op.addOutputPort(schema=self.oport.schema, name=sn)
+            streams.append(Stream(self.topology, oport)._make_placeable())
+            nt_names.append(lsn)
+            op._layout(name=sn, orig_name=lsn)
+        nt = collections.namedtuple(op_name, nt_names, rename=True)
+        return nt._make(streams)
+
     def _map(self, func, schema, name=None):
         schema = streamsx.topology.schema._normalize(schema)
         _name = self.topology.graph._requested_name(name, action="map", func=func)
@@ -1364,7 +1444,7 @@ class Stream(_placement._Placement, object):
         Returns:
             Stream: A stream for which subsequent transformations will be executed in parallel.
 
-        .. seealso:: :py:meth:`set_parallel`, :py:meth:`end_parallel`
+        .. seealso:: :py:meth:`set_parallel`, :py:meth:`end_parallel`, :py:meth:`split`
         """
         _name = name
         if _name is None:
@@ -1701,21 +1781,21 @@ class Stream(_placement._Placement, object):
         A stream of :py:const:`Python objects <streamsx.topology.schema.CommonSchema.Python>` can be subscribed to by other Streams Python applications.
 
         If a stream is published setting `schema` to
-        :py:const:`~streamsx.topology.schema.CommonSchema.Json`
+        ``json`` or :py:const:`~streamsx.topology.schema.CommonSchema.Json`
         then it is published as a stream of JSON objects.
         Other Streams applications may subscribe to it regardless
         of their implementation language.
 
         If a stream is published setting `schema` to
-        :py:const:`~streamsx.topology.schema.CommonSchema.String`
-        then it is published as strings
+        ``str`` or :py:const:`~streamsx.topology.schema.CommonSchema.String`
+        then it is published as strings.
         Other Streams applications may subscribe to it regardless
         of their implementation language.
 
         Supported values of `schema` are only
-        :py:const:`~streamsx.topology.schema.CommonSchema.Json`
+        ``json``, :py:const:`~streamsx.topology.schema.CommonSchema.Json`
         and
-        :py:const:`~streamsx.topology.schema.CommonSchema.String`.
+        ``str``, :py:const:`~streamsx.topology.schema.CommonSchema.String`.
 
         Args:
             topic(str): Topic to publish this stream to.
@@ -1730,31 +1810,32 @@ class Stream(_placement._Placement, object):
             Now returns a :py:class:`Sink` instance.
         """
         sl = _SourceLocation(_source_info(), 'publish')
+        _name = self.topology.graph._requested_name(name, action="publish")
         schema = streamsx.topology.schema._normalize(schema)
+        group_id = None
         if schema is not None and self.oport.schema.schema() != schema.schema():
             nc = None
             if schema == streamsx.topology.schema.CommonSchema.Json:
-                schema_change = self.as_json()
+                pub_stream = self.as_json()
             elif schema == streamsx.topology.schema.CommonSchema.String:
-                schema_change = self.as_string()
+                pub_stream = self.as_string()
             else:
                 raise ValueError(schema)
-               
+            # See #https://github.com/IBMStreams/streamsx.topology.issues/2161
+            # group_id = pub_stream._op()._layout_group('Publish', name if name else _name)
             if self._placeable:
-                self._colocate(schema_change, 'publish')
-            sp = schema_change.publish(topic, schema=schema, name=name)
-            sp._op().sl = sl
-            return sp
+                self._colocate(pub_stream, 'publish')
+        else:
+            pub_stream = self
 
-        _name = self.topology.graph._requested_name(name, action="publish")
         # publish is never stateful
         op = self.topology.graph.addOperator("com.ibm.streamsx.topology.topic::Publish", params={'topic': topic}, sl=sl, name=_name, stateful=False)
-        op.addInputPort(outputPort=self.oport)
-        op._layout_group('Publish', name if name else _name)
+        op.addInputPort(outputPort=pub_stream.oport)
+        op._layout_group('Publish', name if name else _name, group_id=group_id)
         sink = Sink(op)
 
-        if self._placeable:
-            self._colocate(sink, 'publish')
+        if pub_stream._placeable:
+            pub_stream._colocate(sink, 'publish')
         return sink
 
     def autonomous(self):

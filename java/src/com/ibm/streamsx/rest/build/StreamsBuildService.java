@@ -1,12 +1,17 @@
 package com.ibm.streamsx.rest.build;
 
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
+
 import java.io.IOException;
 import java.io.File;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
+import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 
@@ -17,30 +22,33 @@ import com.google.gson.annotations.Expose;
 import com.ibm.streamsx.rest.RESTException;
 import com.ibm.streamsx.rest.internal.RestUtils;
 
-public class StreamsBuildService extends AbstractConnection implements BuildService {
+import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
+
+class StreamsBuildService extends AbstractConnection implements BuildService {
+    
+    public static BuildService of(ICP4DAuthenticator authenticator, JsonObject serviceDefinition, boolean verify) throws IOException {
+        
+        String buildServiceEndpoint = jstring(object(serviceDefinition, "connection_info"), "serviceBuildEndpoint");
+        return new StreamsBuildService(buildServiceEndpoint, authenticator, verify);
+    }
 	
 	private static final String TOOLKITS_RESOURCE_NAME = "toolkits";
 
 	private String endpoint;
 	private String authorization;
 	private String toolkitsUrl;
+	private Function<Executor, String> authenticator;
 
-	public StreamsBuildService(String endpoint, String bearerToken) {
-		super(false);
+	private StreamsBuildService(String endpoint, Function<Executor, String> authenticator, boolean verify) {
+		super(!verify);
 		this.endpoint = endpoint;
-		setAuthorization(bearerToken);
-	}
-	
-	private void setAuthorization(String bearerToken) {
-		authorization = RestUtils.createBearerAuth(bearerToken);
+		this.authenticator = authenticator;
 	}
 	
 	@Override
 	String getAuthorization() {
-		return authorization;
+		return authenticator.apply(getExecutor());
 	}
-	
-	
 	
 	@Override
 	public void allowInsecureHosts() {
@@ -66,67 +74,67 @@ public class StreamsBuildService extends AbstractConnection implements BuildServ
 		return build;
 	}
 
-    String getToolkitsURL() throws IOException {
-	if (toolkitsUrl == null) {
-		String resourcesUrl = endpoint;
-		if (resourcesUrl.endsWith("/builds")) {
-			resourcesUrl = resourcesUrl.replaceFirst("builds$", "resources");
-		}
-		// Query the resourcesUrl to find the instances URL
-		String response = getResponseString(resourcesUrl);
-		ResourcesArray resources = new GsonBuilder()
-		    .excludeFieldsWithoutExposeAnnotation()
-		    .create().fromJson(response, ResourcesArray.class);
-		for (Resource resource : resources.resources) {
-			if (TOOLKITS_RESOURCE_NAME.equals(resource.name)) {
-				toolkitsUrl = resource.resource;
-				break;
+	String getToolkitsURL() throws IOException {
+		if (toolkitsUrl == null) {
+			String resourcesUrl = endpoint;
+			if (resourcesUrl.endsWith("/builds")) {
+				resourcesUrl = resourcesUrl.replaceFirst("builds$", "resources");
+			}
+			// Query the resourcesUrl to find the resources URL
+			String response = getResponseString(resourcesUrl);
+			ResourcesArray resources = new GsonBuilder()
+				.excludeFieldsWithoutExposeAnnotation()
+				.create().fromJson(response, ResourcesArray.class);
+			for (Resource resource : resources.resources) {
+				if (TOOLKITS_RESOURCE_NAME.equals(resource.name)) {
+					toolkitsUrl = resource.resource;
+					break;
+				}
+			}
+			if (toolkitsUrl == null) {
+				// If we couldn't find toolkits something is wrong
+				throw new RESTException("Unable to find toolkits resource from resources URL: " + resourcesUrl);
 			}
 		}
-		if (toolkitsUrl == null) {
-			// If we couldn't find toolkits something is wrong
-			throw new RESTException("Unable to find toolkits resource from resources URL: " + resourcesUrl);
+		return toolkitsUrl;
+	}
+
+	@Override
+	public List<Toolkit> getToolkits() throws IOException {
+		return Toolkit.createToolkitList(this, getToolkitsURL());
+	}
+
+	@Override
+	public Toolkit getToolkit(String toolkitId) throws IOException {
+		if (toolkitId.isEmpty()) {
+			throw new IllegalArgumentException("Empty toolkit id");
+		}
+		else {
+			String query = getToolkitsURL() + "/" + URLEncoder.encode(toolkitId, StandardCharsets.UTF_8.name());
+			Toolkit toolkit = Toolkit.create(this, query);
+			return toolkit;
 		}
 	}
-	return toolkitsUrl;
-    }
 
-    @Override
-    public List<Toolkit> getToolkits() throws IOException {
-	return Toolkit.createToolkitList(this, getToolkitsURL());
-    }
-
-    @Override
-    public Toolkit getToolkit(String toolkitId) throws IOException {
-	if (toolkitId.isEmpty()) {
-		throw new IllegalArgumentException("Empty toolkit id");
+	public Toolkit uploadToolkit(File path) throws IOException {
+		return StreamsRestActions.uploadToolkit(this, path);
 	}
-	else {
-		String query = getToolkitsURL() + "/" + URLEncoder.encode(toolkitId, StandardCharsets.UTF_8.name());
-		Toolkit toolkit = Toolkit.create(this, query);
-		return toolkit;
+
+	boolean deleteToolkit(Toolkit toolkit) throws IOException {
+		return StreamsRestActions.deleteToolkit(toolkit);
 	}
-    }
 
-    public Toolkit uploadToolkit(File path) throws IOException {
-	return StreamsRestActions.uploadToolkit(this, path);
-    }
+	private static class Resource {
+		@Expose
+		public String name;
 
-    boolean deleteToolkit(Toolkit toolkit) throws IOException {
-	return StreamsRestActions.deleteToolkit(toolkit);
-    }
+		@Expose
+		public String resource;
+	}
 
-    private static class Resource {
-	@Expose
-	public String name;
-
-	@Expose
-	public String resource;
-    }
-
-    private static class ResourcesArray {
-	@Expose
-	public ArrayList<Resource> resources;
-    }
+	private static class ResourcesArray {
+		@Expose
+		public ArrayList<Resource> resources;
+	}
 
 }

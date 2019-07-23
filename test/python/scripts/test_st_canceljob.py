@@ -87,7 +87,85 @@ class TestCancelJob(unittest.TestCase):
             self._run_canceljob(args=["--jobs", str(job.id), "--User", user])
         self._check_job_cancelled(job)
 
+    # Check that canceljob fails when given no arguments
+    def test_cancel_simple(self):
+        output, error, rc = self.get_output(
+            lambda: self._run_canceljob(args=[])
+        )
+        self.assertTrue('No jobs provided' in error.splitlines())
+
+    # Check succesfully cancels jobs
+    def test_cancel_simple_1(self):
+        # 'canceljob job1.id' -> args = ['job1.id'] # of args = 1
+        job1 = self._submit_job()
+        self.jobs_to_cancel.extend([job1])
+
+        self._run_canceljob(
+            args=[str(job1.id)]
+        )
+        self._check_job_cancelled(job1)
+
+    # Check succesfully cancels jobs seperated by ','
+    def test_cancel_simple_2(self):
+        # 'canceljob job1.id,job2.id' -> args = ['job1.id,job2.id'] # of args = 1
+        job1 = self._submit_job()
+        job2 = self._submit_job()
+
+        self._run_canceljob(
+            args=[str(job1.id) + ',' + str(job2.id)]
+        )
+        self._check_job_cancelled(job1)
+        self._check_job_cancelled(job2)
+
+    # Check succesfully cancels jobs seperated by ' '
+    def test_cancel_simple_3(self):
+        # 'canceljob job1.id job2.id' -> args = ['job1.id', 'job2.id'] # of args = 2
+        job1 = self._submit_job()
+        job2 = self._submit_job()
+
+        self._run_canceljob(
+            args=[str(job1.id), str(job2.id)]
+        )
+        self._check_job_cancelled(job1)
+        self._check_job_cancelled(job2)
+
+    # Check succesfully cancels jobs seperated by ' ' or ','
+    def test_cancel_simple_4(self):
+        # 'canceljob job1.id,job2.id job3.id job4.id' -> args = ['job1.id,job2.id', 'job3.id', 'job4.id'] # of args = 3
+        # Should succesfully cancel jobs1 to 4
+        job1 = self._submit_job()
+        job2 = self._submit_job()
+        job3 = self._submit_job()
+        job4 = self._submit_job()
+        self.jobs_to_cancel.extend([job1, job2, job3, job4])
+
+        self._run_canceljob(
+            args=[str(job1.id) + ',' + str(job2.id), str(job3.id), str(job4.id)]
+        )
+
+        self._check_job_cancelled(job1)
+        self._check_job_cancelled(job2)
+        self._check_job_cancelled(job3)
+        self._check_job_cancelled(job4)
+
+    def test_cancel_simple_5(self):
+        # Check 'canceljob job1.id , job2.id' -> args = ['job1.id', ' , ', 'job2.id'] # of args = 3
+        # Should just ignore the ' , ' and cancel job1 and job2
+
+        job1 = self._submit_job()
+        job2 = self._submit_job()
+
+        self._run_canceljob(
+            args=[str(job1.id), ' , ', str(job2.id)]
+        )
+
+        self._check_job_cancelled(job1)
+        self._check_job_cancelled(job2)
+
     def test_cancel_multiple(self):
+        # 'canceljob --jobs job1.id,job2.id,job3.id' -> args = ['--jobs', 'job1.id', 'job2.id', 'job3.id'] # of args = 4
+        # Should succesfully cancel jobs1 to 3
+
         job1 = self._submit_job()
         job2 = self._submit_job()
         job3 = self._submit_job()
@@ -100,12 +178,14 @@ class TestCancelJob(unittest.TestCase):
 
     # Check that you can't use --jobs and --jobnames optional args at the same time
     def test_cancel_multiple_mix(self):
+        # 'canceljob --jobs 123 --jobnames jobName' -> args = ['--jobs', '123', '--jobnames', 'jobName'] # of args = 4
         with self.assertRaises(SystemExit):
             self._run_canceljob(args=["--jobs", str("123"), "--jobnames", str("jobName")])
 
-
     # Check that you can't use --jobs, --jobnames and --file optional args at the same time
     def test_cancel_multiple_mix2(self):
+        # 'canceljob --jobs 123 --jobnames jobName --file test_st_canceljob_tempfile.txt'
+        # -> args = ['--jobs', '123', '--jobnames', 'jobName', '--file' , 'test_st_canceljob_tempfile.txt] # of args = 6
         with self.assertRaises(SystemExit):
             self._run_canceljob(
             args=[
@@ -120,6 +200,7 @@ class TestCancelJob(unittest.TestCase):
 
     # Check succesfully cancels jobs via --jobnames arg
     def test_cancel_multiple_2(self):
+        # 'canceljob --jobnames job1.name,job2.name,job3.name' -> args = ['--jobnames', 'job1.id', 'job2.id', 'job3.id'] # of args = 4
         job1 = self._submit_job()
         job2 = self._submit_job()
         job3 = self._submit_job()
@@ -146,6 +227,22 @@ class TestCancelJob(unittest.TestCase):
         self._check_job_cancelled(job3)
 
         self.assertEqual(rc, 0)
+
+    # Check jobID and --jobnames arg triggers mutually exclusive error
+    def test_cancel_multiple_3(self):
+        # 'canceljob --jobnames job1.name, job2.name' -> args = ['--jobnames', 'job1.name,', 'job2.name'] # of args = 3
+        # Job2.name should be treated as using the jobID command, and thus should fail bc --jobnames and jobID are mutually exclusive
+        output, error, rc = self.get_output(
+            lambda: self._run_canceljob(
+                args=[
+                    "--jobnames",
+                    str('job1.name,'), str('job2.name')
+                ]
+            )
+        )
+        error = error.splitlines()
+        self.assertTrue('Arguments jobid, --jobs, --jobnames, --file are mutually exclusive' in error)
+        self.assertEqual(rc, 1)
 
     # Check able to canceljob via jobsIDS from file
     def test_cancel_multiple_from_file(self):
@@ -181,6 +278,7 @@ class TestCancelJob(unittest.TestCase):
         job2 = self._submit_job()
 
         self.jobs_to_cancel.extend([job1, job2])
+        # 'canceljob --jobs FAKE_JOB_ID,job1.id' -> args = ['--jobs', 'FAKE_JOB_ID,job1.id'] # of args = 2
 
         # Check invalid/non-numeric ID followed by valid ID - Should print error message regarding invalid one, then do nothing (ie valid one still running)
         output, error, rc = self.get_output(
@@ -192,6 +290,8 @@ class TestCancelJob(unittest.TestCase):
         # self.assertEqual(error[-1], self.get_canceljob_output_message("FAKE_JOB_ID", 5))
         self.assertEqual(rc, 1)
         self._check_job_running(job1)
+
+        # 'canceljob --jobs job1.id,FAKE_JOB_ID' -> args = ['--jobs', 'job1.id,FAKE_JOB_ID'] # of args = 2
 
         # Check validID followed by invalid/non-numeric ID - Should cancel valid one w/ success message, then print error message regarding invalid one
         output, error, rc = self.get_output(
@@ -206,6 +306,8 @@ class TestCancelJob(unittest.TestCase):
         # self.assertEqual(error[-1], self.get_canceljob_output_message("FAKE_JOB_ID", 5))
         self.assertEqual(rc, 1)
         self._check_job_cancelled(job1)
+
+        # 'canceljob --jobs 123456,job2.id' -> args = ['--jobs', '123456,job2.id'] # of args = 2
 
         # Try cancelling invalid/numeric ID followed by valid id - Should print 2 error messages regarding invalid, then cancel valid one and print success message
         output, error, rc = self.get_output(
@@ -224,8 +326,9 @@ class TestCancelJob(unittest.TestCase):
 
     # Check invalid jobname error message, then check valid jobname cancellation message
     def test_cancel_nonexistant2(self):
-        job1 = self._submit_job()
+        # 'canceljob --jobnames FAKE_JOB_NAME,job1.name' -> args = ['--jobs', 'FAKE_JOB_NAME,job1.name'] # of args = 2
 
+        job1 = self._submit_job()
         self.jobs_to_cancel.extend([job1])
 
         output, error, rc = self.get_output(

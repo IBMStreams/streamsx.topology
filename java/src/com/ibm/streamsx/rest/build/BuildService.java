@@ -12,6 +12,8 @@ import java.util.List;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.Result;
+import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
+import com.ibm.streamsx.rest.internal.RestUtils;
 
 /**
  * Access to a IBM Streams build service.
@@ -20,9 +22,22 @@ import com.ibm.streamsx.rest.Result;
  */
 public interface BuildService {
 	
-	static BuildService of(String endpoint, String bearerToken) {
-		return new StreamsBuildService(endpoint, bearerToken);
+	public static BuildService ofEndpoint(String endpoint, String name, String userName, String password,
+            boolean verify) throws IOException {
+	    
+	    ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(endpoint, name, userName, password);
+	    JsonObject serviceDefinition = authenticator.config(verify);
+	    
+	    return StreamsBuildService.of(authenticator, serviceDefinition, verify);
+	    
 	}
+
+    public static BuildService ofServiceDefinition(JsonObject serviceDefinition, boolean verify) throws IOException {
+
+        ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(serviceDefinition);
+
+        return StreamsBuildService.of(authenticator, serviceDefinition, verify);
+    }
 	
 	void allowInsecureHosts();
 
