@@ -228,6 +228,10 @@ def _lsjobs(instance, cmd_args, rc):
 
     headers = ["Id", "State", "Healthy", "User", "Date", "Name", "Group"]
 
+    # If --long option, add productVersion to the headers and get the corresponding value for each job
+    if cmd_args.long:
+        headers.append('ProductVersion')
+
     # pre process the data so output is formatted nicely
     h_length = [len(x) for x in headers] # header_length
     job_data = []
@@ -236,7 +240,6 @@ def _lsjobs(instance, cmd_args, rc):
         jobTime = datetime.datetime.fromtimestamp(job.submitTime/1000, tz = LOCAL_TIMEZONE).isoformat() # job.submitTime/1000 to convert ms to sec
         jobGroup = job.jobGroup.split("/")[-1]
         data = [job.id, job.status.capitalize(), jobHealth, job.startedBy, jobTime, job.name, jobGroup]
-        job_data.append(data)
 
         h_length[0] = max(len(job.id), h_length[0])
         h_length[1] = max(len(job.status), h_length[1])
@@ -245,6 +248,13 @@ def _lsjobs(instance, cmd_args, rc):
         h_length[4] = max(len(jobTime), h_length[4])
         h_length[5] = max(len(job.name), h_length[5])
         h_length[6] = max(len(jobGroup), h_length[6])
+
+        # If --long option, add productVersion to the job data
+        if cmd_args.long:
+            prod_version = job.json_rep['productVersion']
+            h_length[7] = max(len(prod_version), h_length[7])
+            data.append(prod_version)
+        job_data.append(data)
 
     # Output the data
 
@@ -255,18 +265,30 @@ def _lsjobs(instance, cmd_args, rc):
 
         if instance_id:
             print("Instance: " + instance_id)
-            print('{:>{id_w}}  {:<{state_w}}  {:<{health_w}}  {:<{user_w}}  {:<{date_w}}  {:<{name_w}}  {:<{group_w}}'.format(
+            # String that represents the header w/ formatting for nice output
+            header_string = '{:>{id_w}}  {:<{state_w}}  {:<{health_w}}  {:<{user_w}}  {:<{date_w}}  {:<{name_w}}  {:<{group_w}}'.format(
                 "Id", "State", "Healthy", "User", "Date", "Name", "Group",
                 id_w=h_length[0], state_w=h_length[1],
                 health_w=h_length[2], user_w=h_length[3],
-                date_w=h_length[4], name_w=h_length[5], group_w=h_length[6]))
+                date_w=h_length[4], name_w=h_length[5], group_w=h_length[6])
+
+            # If --long option, we also want the header to display ProductVersion
+            if cmd_args.long:
+                header_string += '  {:<{prod_w}}'.format("ProductVersion", prod_w=h_length[7])
+            print(header_string)
 
         for job in job_data:
-            print('{:>{id_w}}  {:<{state_w}}  {:<{health_w}}  {:<{user_w}}  {:<{date_w}}  {:<{name_w}}  {:<{group_w}}'.format(
+            # String that represents a job w/ formatting for nice output
+            job_string = '{:>{id_w}}  {:<{state_w}}  {:<{health_w}}  {:<{user_w}}  {:<{date_w}}  {:<{name_w}}  {:<{group_w}}'.format(
                 job[0], job[1], job[2], job[3], job[4], job[5], job[6],
                 id_w=h_length[0], state_w=h_length[1],
                 health_w=h_length[2], user_w=h_length[3],
-                date_w=h_length[4], name_w=h_length[5], group_w=h_length[6]))
+                date_w=h_length[4], name_w=h_length[5], group_w=h_length[6])
+
+            # If --long option, we also want the job to display ProductVersion
+            if cmd_args.long:
+                job_string += '  {:<{prod_w}}'.format(job[7], prod_w=h_length[7])
+            print(job_string)
 
     elif cmd_args.fmt == "%Mf":
         border = '=' * 50

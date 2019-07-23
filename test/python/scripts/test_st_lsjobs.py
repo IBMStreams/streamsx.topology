@@ -54,6 +54,7 @@ class Testlsjobs(unittest.TestCase):
         fmt=None,
         xheaders=False,
         showtimestamp=False,
+        long=False
     ):
         args = ["--disable-ssl-verify", "lsjobs"]
         if jobs:
@@ -68,6 +69,8 @@ class Testlsjobs(unittest.TestCase):
             args.append("--xheaders")
         if showtimestamp:
             args.append("--showtimestamp")
+        if long:
+            args.append("--long")
 
         return streamtool.run_cmd(args=args)
 
@@ -105,12 +108,13 @@ class Testlsjobs(unittest.TestCase):
     # Tf fmt
     ###########################################
 
-    def check_job_Tf_fmt(self, job, job_to_check):
+    def check_job_Tf_fmt(self, job, job_to_check, long=False):
         """ Helper function that tests whether a single job outputed from lsjobs in Tf format is correct
 
         Arguments:
             job {Job_object} -- A job object as returned by _submitjob()
             job_to_check {String} -- A string of the form (given below) that represents a single job outputed from lsjobs in Tf format
+            long {bool} -- Represents the optional arg that displays 'ProductVersion', if true, check this is value is correct
         """
         # Ex of job_to_check
         # 7  Running  yes     streamsadmin  2019-07-17T14:49:25-0700  KF_TEST_12345  default
@@ -120,7 +124,13 @@ class Testlsjobs(unittest.TestCase):
         self.assertEqual(self.username, job_details[3])  # job user
         self.assertEqual(job.name, job_details[5])  # job name
         self.assertEqual(job.jobGroup.split("/")[-1], job_details[6])  # job group
-        self.assertTrue(len(job_details) == 7)
+        # if long option, job_to_check contains an extra value, the productVersion
+        if long:
+            self.assertTrue(len(job_details) == 8)
+            prod_version = job.json_rep['productVersion']
+            self.assertEqual(prod_version, job_details[7])  # job productVersions
+        else:
+            self.assertTrue(len(job_details) == 7)
 
     # Create a single job, check correct ouput in default Tf format
     def test_lsjobs_simple(self):
@@ -295,15 +305,35 @@ class Testlsjobs(unittest.TestCase):
         # len 2 bc only contains instance string and header string
         self.assertTrue(len(output) == 2)
 
+    # Test that --long option works
+    def test_lsjobs_simple_long(self):
+        rc, job = self._submitjob(args=[])
+        output, error, rc = self.get_output(lambda: self._ls_jobs(long=True))
+        output = output.splitlines()
+
+        # Check instance data output correctly
+        instance_string = "Instance: " + self.my_instance.id
+        self.assertEqual(output[0].strip(), instance_string)
+
+        # Check headers outputs correctly
+        true_headers = ["Id", "State", "Healthy", "User", "Date", "Name", "Group", "ProductVersion"]
+        headers = self.split_string(output[1])
+        self.assertEqual(true_headers, headers)
+
+        # Check details of job are correct
+        self.check_job_Tf_fmt(job, output[2], long=True)
+        self.assertEqual(rc, 0)
+
     ###########################################
     # Mf fmt
     ###########################################
 
-    def get_job_Mf_fmt(self, output):
+    def get_job_Mf_fmt(self, output, long=False):
         """ Helper function that gets a single job block outputed from lsjobs in Mf format
 
         Arguments:
             output {String} -- A string given by the ouput of lsjobs in Mf format
+            long {bool} -- Represents the optional arg that displays 'ProductVersion', if true, need to get 1 extra row
 
         Returns:
             job_details {String} -- A string of the form (given below) that represents a single job outputed from lsjobs in Mf format
@@ -311,36 +341,43 @@ class Testlsjobs(unittest.TestCase):
         """
         # Ex of job_details
         # =================================================
-        # Id      : 7
-        # State   : Running
-        # Healthy : yes
-        # User    : streamsadmin
-        # Date    : 2019-07-17T14:49:25-0700
-        # Name    : KF_TEST_12345
-        # Group   : default
+        # Id              : 7
+        # State           : Running
+        # Healthy         : yes
+        # User            : streamsadmin
+        # Date            : 2019-07-17T14:49:25-0700
+        # Name            : KF_TEST_12345
+        # Group           : default
+        # ProductVersion  : blahblah                           <--- This row only present if long is true
         # =================================================
 
-        job_details = output[:9]
-        output = output[8:]
+        job_details = None
+        if long:
+            job_details = output[:10]
+            output = output[9:]
+        else:
+            job_details = output[:9]
+            output = output[8:]
         return job_details, output
 
-    def check_job_Mf_fmt(self, job, job_to_check):
+    def check_job_Mf_fmt(self, job, job_to_check, long=False):
         """ Helper function that tests whether a single job outputed from lsjobs in Mf format is correct
 
         Arguments:
             job {Job_object} -- A job object as returned by _submitjob()
             job_to_check {String} -- A string of the form (given below) that represents a single job outputed from lsjobs in Mf format
-
+            long {bool} -- Represents the optional arg that displays 'ProductVersion', if true, check this is value is correct 
         """
         # Ex of job_to_check
         # =================================================
-        # Id      : 7
-        # State   : Running
-        # Healthy : yes
-        # User    : streamsadmin
-        # Date    : 2019-07-17T14:49:25-0700
-        # Name    : KF_TEST_12345
-        # Group   : default
+        # Id              : 7
+        # State           : Running
+        # Healthy         : yes
+        # User            : streamsadmin
+        # Date            : 2019-07-17T14:49:25-0700
+        # Name            : KF_TEST_12345
+        # Group           : default
+        # ProductVersion  : blahblah                           <--- This row only present if long is true
         # =================================================
 
         # Get details of job
@@ -363,6 +400,14 @@ class Testlsjobs(unittest.TestCase):
             Names[0],
             Groups[0],
         ]
+
+        # if long, need to check corresponding value is correct
+        if long:
+            true_headers.append('ProductVersion')
+            prod_version = self.split_string(job_to_check[8])
+            headers.append(prod_version[0])
+            self.assertTrue(prod_version[1])
+
         self.assertEqual(true_headers, headers)
 
         # Check job details
@@ -413,16 +458,36 @@ class Testlsjobs(unittest.TestCase):
 
         self.assertEqual(rc, 0)
 
+    # Test that --long option works
+    def test_lsjobs_simple_Mf_fmt_long(self):
+        rc, job = self._submitjob(args=[])
+        output, error, rc = self.get_output(lambda: self._ls_jobs(fmt="%Mf", long=True))
+        output = output.splitlines()
+
+        # Check instance data output correctly
+        instance_string = "Instance: " + self.my_instance.id
+        self.assertEqual(output[1].strip(), instance_string)
+
+        # Remove instance data from output
+        output = output[2:]
+
+        # Check details of job are correct
+        job_details, output = self.get_job_Mf_fmt(output, long=True)
+        self.check_job_Mf_fmt(job, job_details, long=True)
+        self.assertEqual(rc, 0)
+
     ###########################################
     # Nf fmt
     ###########################################
 
-    def check_job_nf_fmt(self, job, job_to_check):
+    def check_job_nf_fmt(self, job, job_to_check, long=False):
         """ Helper function that tests whether a single job outputed from lsjobs in Nf format is correct
 
         Arguments:
             job {Job_object} -- A job object as returned by _submitjob()
             job_to_check {String} -- A string of the form (given below) that represents a single job outputed from lsjobs in Nf format
+            long {bool} -- Represents the optional arg that displays 'ProductVersion', if true, check this is value is correct
+
         """
         # Ex of job_to_check
         # Id: 7 State: Running Healthy: yes User: streamsadmin Date: 2019-07-17T14:49:25-0700 Name: KF_TEST_12345 Group: default
@@ -435,6 +500,12 @@ class Testlsjobs(unittest.TestCase):
         self.assertTrue("Date" in job_to_check)
         self.assertTrue("Name" in job_to_check)
         self.assertTrue("Group" in job_to_check)
+
+        # if long, need to check its in the job
+        if long:
+            self.assertTrue("ProductVersion" in job_to_check)
+            prod_version = job.json_rep['productVersion']
+            self.assertTrue(prod_version in job_to_check)
 
         # Check job details
         self.assertTrue(job.id in job_to_check)  # ID
@@ -463,6 +534,16 @@ class Testlsjobs(unittest.TestCase):
         # Check details of jobs are correct
         self.check_job_nf_fmt(job1, output[0])
         self.check_job_nf_fmt(job2, output[1])
+        self.assertEqual(rc, 0)
+
+    # Test that --long option works in Nf format
+    def test_lsjobs_simple_Nf_fmt_long(self):
+        rc, job = self._submitjob(args=[])
+        output, error, rc = self.get_output(lambda: self._ls_jobs(fmt="%Nf", long=True))
+        output = output.splitlines()
+
+        # Check details of job are correct
+        self.check_job_nf_fmt(job, output[0])
         self.assertEqual(rc, 0)
 
     def get_output(self, my_function):

@@ -202,6 +202,10 @@ Options and arguments
     -\--xheaders:
         Specifies to exclude headings from the report.
 
+    -l,--long:
+        Reports launch count, full host names, and all of the operator
+        instance names for the PEs.
+
     -\--fmt:
         Specifies the presentation format. The command supports the following
         values:
