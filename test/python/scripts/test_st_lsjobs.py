@@ -127,7 +127,7 @@ class Testlsjobs(unittest.TestCase):
         # if long option, job_to_check contains an extra value, the productVersion
         if long:
             self.assertTrue(len(job_details) == 8)
-            prod_version = job.json_rep['productVersion']
+            prod_version = job.productVersion
             self.assertEqual(prod_version, job_details[7])  # job productVersions
         else:
             self.assertTrue(len(job_details) == 7)
@@ -504,7 +504,7 @@ class Testlsjobs(unittest.TestCase):
         # if long, need to check its in the job
         if long:
             self.assertTrue("ProductVersion" in job_to_check)
-            prod_version = job.json_rep['productVersion']
+            prod_version = job.productVersion
             self.assertTrue(prod_version in job_to_check)
 
         # Check job details

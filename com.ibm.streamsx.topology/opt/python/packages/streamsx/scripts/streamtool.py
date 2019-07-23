@@ -251,7 +251,7 @@ def _lsjobs(instance, cmd_args, rc):
 
         # If --long option, add productVersion to the job data
         if cmd_args.long:
-            prod_version = job.json_rep['productVersion']
+            prod_version = job.productVersion
             h_length[7] = max(len(prod_version), h_length[7])
             data.append(prod_version)
         job_data.append(data)
