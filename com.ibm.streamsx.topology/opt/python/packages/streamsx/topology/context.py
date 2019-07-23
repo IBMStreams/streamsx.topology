@@ -132,6 +132,13 @@ class _BaseSubmitter(object):
             logger.error("Error writing json graph to file.")
             raise
 
+        try:
+            return self._submit_exec()
+        finally:
+            _delete_json(self)
+
+    def _submit_exec(self):
+
         tk_root = self._get_toolkit_root()
 
         cp = os.path.join(tk_root, "lib", "com.ibm.streamsx.topology.jar")
@@ -226,7 +233,6 @@ class _BaseSubmitter(object):
         else:
             progress_fn(False)
 
-        _delete_json(self)
         results_json['return_code'] = process.returncode
         self._augment_submission_result(results_json)
         self.submission_results = results_json
@@ -595,7 +601,7 @@ class _SubmitContextFactory(object):
 # Used to delete the JSON file after it is no longer needed.
 def _delete_json(submitter):
     for fn in [submitter.fn, submitter.results_file]:
-        if os.path.isfile(fn):
+        if fn and os.path.isfile(fn):
             os.remove(fn)
 
 
