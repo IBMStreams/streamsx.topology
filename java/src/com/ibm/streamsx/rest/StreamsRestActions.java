@@ -5,19 +5,12 @@ import static com.ibm.streamsx.rest.StreamsRestUtils.requestGsonResponse;
 import java.io.File;
 import java.io.IOException;
 
-import java.util.Collections;
-import java.util.List;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.auth.AUTH;
-import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.util.EntityUtils;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;

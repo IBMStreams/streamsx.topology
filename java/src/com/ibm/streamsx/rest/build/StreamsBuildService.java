@@ -68,7 +68,7 @@ class StreamsBuildService extends AbstractConnection implements BuildService {
 		Request post = Request.Post(endpoint)	      
 		    .addHeader("Authorization", getAuthorization())
 		    .bodyString(buildParams.toString(),
-				ContentType.APPLICATION_JSON);
+		                ContentType.APPLICATION_JSON);
 		
 		Build build = Build.create(this, this, StreamsRestUtils.requestGsonResponse(executor, post));
 		return build;

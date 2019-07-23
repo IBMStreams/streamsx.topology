@@ -28,7 +28,6 @@ abstract class AbstractStreamsConnection {
     protected Executor executor;
     private boolean verify;
     private String instancesUrl;
-
     
     private StreamsConnection streamsConnection;
     
@@ -47,7 +46,7 @@ abstract class AbstractStreamsConnection {
     ApplicationBundle uploadBundle(Instance instance, File bundle) throws IOException {
     	return new FileBundle(instance, bundle);
     }
-
+    
     abstract Result<Job,JsonObject> submitJob(ApplicationBundle bundle, JsonObject jco) throws IOException;
 
     abstract String getAuthorization();
@@ -132,7 +131,7 @@ abstract class AbstractStreamsConnection {
             }
         }
     }
-
+    
     private String getInstancesURL() throws IOException {
     	if (instancesUrl == null) {
             // Query the resourcesUrl to find the instances URL
