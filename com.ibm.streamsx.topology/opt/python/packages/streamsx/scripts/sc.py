@@ -11,6 +11,8 @@ import streamsx.rest
 from streamsx.spl.op import main_composite
 from streamsx.spl.toolkit import add_toolkit
 from streamsx.topology.context import submit, ConfigParams
+import xml.etree.ElementTree as ET
+
 
 _FACADE=['--prefer-facade-tuples', '-k']
 
@@ -19,9 +21,32 @@ def main(args=None):
     """
     cmd_args = _parse_args(args)
     topo = _create_topo(cmd_args)
+
+    # print(cmd_args)
+    # Can assume info.xml is present in cwd
+    # Parse info.xml for dependencies
+    dependencies = parse_dependencies()
+
+    tool_kits = None
+    if cmd_args.spl_path:
+        tool_kits = cmd_args.spl_path.split(':')
+    exit()
+
     _add_toolkits(cmd_args, topo)
     _submit_build(cmd_args, topo)
     return 0
+
+def parse_dependencies():
+    deps = []
+    root = ET.parse('info.xml').getroot()
+    info = '{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}'
+    common = '{http://www.ibm.com/xmlns/prod/streams/spl/common}'
+    dependency_elements = root.find(info + 'dependencies').findall(info + 'toolkit')
+    for dependency_element in dependency_elements:
+        name = dependency_element.find(common + 'name').text
+        version = dependency_element.find(common + 'version').text
+        deps.append(name)
+    return deps
 
 def _submit_build(cmd_args, topo):
      cfg = {}
@@ -77,6 +102,7 @@ def _parse_args(args):
     cmd_parser = argparse.ArgumentParser(description='SPL compiler (sc) alias for build service.')
     cmd_parser.add_argument('--main-composite', '-M', required=True, help='SPL Main composite', metavar='name')
 
+    cmd_parser.add_argument('--spl-path', '-t', help='Set the toolkit lookup paths. Separate multiple paths with :. Each path is a toolkit directory, a directory of toolkit directories, or a toolkitList XML file. This path overrides the STREAMS_SPLPATH environment variable.')
     cmd_parser.add_argument('--optimized-code-generation', '-a', action='store_true', help='Generate optimized code with less runtime error checking.')
     cmd_parser.add_argument('--no-optimized-code-generation', action='store_true', help='Generate non-optimized code with more runtime error checking. Do not use with the --optimized-code-generation option.')
     cmd_parser.add_argument(*_FACADE, action='store_true', help='Generate the facade tuples when it is possible.')
