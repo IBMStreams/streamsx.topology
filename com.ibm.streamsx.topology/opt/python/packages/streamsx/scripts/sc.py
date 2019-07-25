@@ -12,6 +12,7 @@ from streamsx.spl.op import main_composite
 from streamsx.spl.toolkit import add_toolkit
 from streamsx.topology.context import submit, ConfigParams
 import xml.etree.ElementTree as ET
+from glob import glob
 
 
 _FACADE=['--prefer-facade-tuples', '-k']
@@ -22,15 +23,14 @@ def main(args=None):
     cmd_args = _parse_args(args)
     topo = _create_topo(cmd_args)
 
-    # print(cmd_args)
     # Can assume info.xml is present in cwd
     # Parse info.xml for dependencies
     dependencies = parse_dependencies()
 
-    tool_kits = None
     if cmd_args.spl_path:
         tool_kits = cmd_args.spl_path.split(':')
-    exit()
+        # Check if any dependencies are in the passed in toolkits, if so add them
+        add_local_toolkits(tool_kits, dependencies, topo)
 
     _add_toolkits(cmd_args, topo)
     _submit_build(cmd_args, topo)
@@ -47,6 +47,50 @@ def parse_dependencies():
         version = dependency_element.find(common + 'version').text
         deps.append(name)
     return deps
+
+def add_local_toolkits(toolkits, dependencies, topo):
+    """ A helper function that given the local toolkit paths, and the dependencies (ie toolkits that the apps depends on),
+    checks and adds the local toolkit if it is one of the dependencies
+
+    Arguments:
+        toolkits {List} -- A list of local toolkit directories, each could be a toolkit directory (has info.xml directly inside),
+                or a directory consisting of toolkits (no info.xml directly inside)
+        dependencies {List} -- A list consisting of the names of the dependencies of our current app
+        topo {topology Object} -- [description]
+    """
+    local_toolkits = {} # name - path
+    #  For each path, need to check if its a SPL toolkit (has info.xml directly inside) or a directory consisting of toolkits (no info.xml directly inside)
+    for x in toolkits:
+        if _is_toolkit_(x):
+            local_toolkits[_get_toolkit_name(x)] = x
+        else:
+            # directory consisting of toolkits (no info.xml directly inside), get list and check which are local_toolkits, add them
+            toolkit_dirs = glob(x + "*/")
+            for y in toolkit_dirs:
+                if _is_toolkit_(y):
+                    local_toolkits[_get_toolkit_name(y)] = y
+
+    # Have all local toolkits from the passed in locations
+    for toolkit_name, toolkit_path in local_toolkits.items():
+        print(toolkit_name)
+        if toolkit_name in dependencies:
+            add_toolkit(topo, toolkit_path)
+
+    exit()
+
+def _get_toolkit_name(path):
+    root = ET.parse(path + "/info.xml").getroot()
+    identity = root.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}identity')
+    name = identity.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}name')
+    toolkit_name = name.text
+    return toolkit_name
+
+def _is_toolkit_(tkdir):
+    # Checks if tkdir is a toolkit (return True) or if it isn't or is directory containing multiple toolkit directories (returns)
+    for fn in ['toolkit.xml', 'info.xml']:
+        if os.path.isfile(os.path.join(tkdir, fn)):
+            return True
+    return False
 
 def _submit_build(cmd_args, topo):
      cfg = {}
