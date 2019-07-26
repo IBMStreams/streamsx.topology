@@ -21,7 +21,7 @@ from io import StringIO
 
 
 @unittest.skipUnless(
-    "ICPD_URL" in os.environ
+    "CP4D_URL" in os.environ
     and "STREAMS_INSTANCE_ID" in os.environ
     and "STREAMS_USERNAME" in os.environ
     and "STREAMS_PASSWORD" in os.environ,

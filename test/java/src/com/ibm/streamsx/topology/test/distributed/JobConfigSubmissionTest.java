@@ -54,7 +54,7 @@ public class JobConfigSubmissionTest extends TestTopology {
     public void testSubmitUsingInstance() throws Exception {
     	
     	assumeTrue(getTesterContext().getType() == Type.DISTRIBUTED_TESTER);
-    	assumeTrue(System.getenv("ICPD_URL") != null);
+    	assumeTrue(System.getenv("CP4D_URL") != null);
         
         JobConfig config = new JobConfig();
         String jobName = "nameSC" + System.currentTimeMillis();
@@ -72,13 +72,13 @@ public class JobConfigSubmissionTest extends TestTopology {
         getConfig().put(ContextProperties.STREAMS_INSTANCE, instance);
         getConfig().remove(ContextProperties.SSL_VERIFY);
 
-        final String cpd_url = setEnv("ICPD_URL", null);
+        final String cpd_url = setEnv("CP4D_URL", null);
         final String sid = setEnv("STREAMS_INSTANCE_ID", null);
         
         try {
             testItDirect("testSubmitUsingInstance", config, "<jobId>", jobName, "default", "<empty>");
         } finally {
-            setEnv("ICPD_URL", cpd_url);
+            setEnv("CP4D_URL", cpd_url);
             setEnv("STREAMS_INSTANCE_ID", sid);
         }
     }
@@ -86,7 +86,7 @@ public class JobConfigSubmissionTest extends TestTopology {
     public void testSubmitUsingInstanceWithRemoteBuild() throws Exception {
     	
     	assumeTrue(getTesterContext().getType() == Type.DISTRIBUTED_TESTER);
-    	assumeTrue(System.getenv("ICPD_URL") != null);
+    	assumeTrue(System.getenv("CP4D_URL") != null);
         
         JobConfig config = new JobConfig();
         String jobName = "nameSC" + System.currentTimeMillis();
@@ -102,16 +102,16 @@ public class JobConfigSubmissionTest extends TestTopology {
         getConfig().put(ContextProperties.FORCE_REMOTE_BUILD, true);
         getConfig().remove(ContextProperties.SSL_VERIFY);
 
-        final String cpd_url = setEnv("ICPD_URL", null);
+        final String cpd_url = setEnv("CP4D_URL", null);
         final String sid = setEnv("STREAMS_INSTANCE_ID", null);
         
-        assertNull(System.getenv("ICPD_URL"));
+        assertNull(System.getenv("CP4D_URL"));
         assertNull(System.getenv("STREAMS_INSTANCE_ID"));
         
         try {
             testItDirect("testSubmitUsingInstanceWithRemoteBuild", config, "<jobId>", jobName, "default", "<empty>");
         } finally {
-            setEnv("ICPD_URL", cpd_url);
+            setEnv("CP4D_URL", cpd_url);
             setEnv("STREAMS_INSTANCE_ID", sid);
         }
     }
