@@ -56,6 +56,7 @@ from future.builtins import *
 import os
 import json
 import logging
+import re
 import requests
 from pprint import pformat
 import streamsx.topology.context
@@ -64,13 +65,47 @@ import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
 
 from streamsx import st
-from .rest_primitives import (Domain, Instance, Installation, RestResource, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
+from .rest_primitives import (Domain, Instance, Installation, RestResource, Toolkit, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
     _exact_resource, _IAMStreamsRestClient, _IAMConstants)
 
 logger = logging.getLogger('streamsx.rest')
 
+class _AbstractStreamsConnection():
+    # This is an abstract property, but there seems to be no way to enforce
+    # that in python 2.7.
+    @property
+    def resource_url(self):
+        pass
 
-class StreamsConnection:
+    def get_resources(self):
+        """Retrieves a list of all known Streams high-level REST resources.
+
+        Returns:
+            :py:obj:`list` of :py:class:`~.rest_primitives.RestResource`: List of all Streams high-level REST resources.
+        """
+        json_resources = self.rest_client.make_request(self.resource_url)['resources']
+        return [RestResource(resource, self.rest_client) for resource in json_resources]
+
+    def _get_elements(self, resource_name, eclass, id=None):
+        for resource in self.get_resources():
+            if resource.name == resource_name:
+                elements = []
+                for json_element in resource.get_resource()[resource_name]:
+                    if not _exact_resource(json_element, id):
+                        continue
+                    elements.append(eclass(json_element, self.rest_client))
+                return elements
+
+    def _get_element_by_id(self, resource_name, eclass, id):
+        """Get a single element matching an id"""
+        elements = self._get_elements(resource_name, eclass, id=id)
+        if not elements:
+            raise ValueError("No resource matching: {0}".format(id))
+        if len(elements) == 1:
+            return elements[0]
+        raise ValueError("Multiple resources matching: {0}".format(id))
+
+class StreamsConnection(_AbstractStreamsConnection):
     """Creates a connection to a running distributed IBM Streams instance and exposes methods to retrieve the state of
     that instance.
 
@@ -141,25 +176,6 @@ class StreamsConnection:
         self._resource_url = self._resource_url or st.get_rest_api()
         return self._resource_url
 
-    def _get_elements(self, resource_name, eclass, id=None):
-        for resource in self.get_resources():
-            if resource.name == resource_name:
-                elements = []
-                for json_element in resource.get_resource()[resource_name]:
-                    if not _exact_resource(json_element, id):
-                        continue
-                    elements.append(eclass(json_element, self.rest_client))
-                return elements
-
-    def _get_element_by_id(self, resource_name, eclass, id):
-        """Get a single element matching an id"""
-        elements = self._get_elements(resource_name, eclass, id=id)
-        if not elements:
-            raise ValueError("No resource matching: {0}".format(id))
-        if len(elements) == 1:
-            return elements[0]
-        raise ValueError("Multiple resources matching: {0}".format(id))
-
     def get_domains(self):
         """Retrieves available domains.
 
@@ -221,8 +237,7 @@ class StreamsConnection:
         Returns:
             :py:obj:`list` of :py:class:`~.rest_primitives.RestResource`: List of all Streams high-level REST resources.
         """
-        json_resources = self.rest_client.make_request(self.resource_url)['resources']
-        return [RestResource(resource, self.rest_client) for resource in json_resources]
+        return super().get_resources()
 
     def __str__(self):
         return pformat(self.__dict__)

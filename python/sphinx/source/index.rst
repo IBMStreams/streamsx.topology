@@ -72,6 +72,7 @@ service through HTTPS REST APIs.
    :template: streamsx_module.rst
 
    streamsx.rest
+   streamsx.build_service
    streamsx.rest_primitives
 
 *******
@@ -86,6 +87,7 @@ The `streamsx` package provides a number of command line scripts.
    scripts/service.rst
    scripts/info.rst
    scripts/extract.rst
+   scripts/streamtool.rst
 
 ************
 Environments

@@ -1,0 +1,50 @@
+<project name="streamsx.topology.test.python.rest.toolkits" default="all"
+    xmlns:unless="ant:unless"
+  >
+  <description>
+    Build toolkits used in some Python tests.
+  </description>
+
+  <import file="../../../../common-build.xml"/>
+
+  <target name="extract-toolkit">
+   <exec unless:blank="${topology.test.python}" executable="${topology.test.python}">
+     <arg value="${tk}/bin/spl-python-extract.py"/>
+     <arg value="-i"/>
+     <arg value="${toolkit}"/>
+     <arg value="--make-toolkit"/>
+   </exec>
+ </target>
+
+ <target name="toolkits">
+   <exec executable="./random-toolkit-name.sh" vmlauncher="false" failonerror="true"/>
+   <antcall target="extract-toolkit">
+     <param name="toolkit" value="bingo_tk0"/>
+   </antcall>
+   <antcall target="extract-toolkit">
+     <param name="toolkit" value="bingo_tk1"/>
+   </antcall>
+   <antcall target="extract-toolkit">
+     <param name="toolkit" value="bingo_tk2"/>
+   </antcall>
+   <antcall target="extract-toolkit">
+     <param name="toolkit" value="cards_tk"/>
+   </antcall>
+   <antcall target="extract-toolkit">
+     <param name="toolkit" value="games_tk"/>
+   </antcall>
+ </target>
+
+ <target name="clean">
+   <dirname property="streamsx.topology.test.python.rest.toolkits.basedir" file="${ant.file.streamsx.topology.test.python.rest.toolkits}"/>
+   <delete includeemptydirs="true">
+     <fileset dir="${streamsx.topology.test.python.rest.toolkits.basedir}">
+       <include name="*_tk*/**"/>
+       <exclude name="*/info.xml.tmpl"/>
+       <exclude name="*/opt/python/streams/*.py"/>
+     </fileset>
+   </delete>
+ </target>
+
+ <target name="all" depends="toolkits"/>
+</project>

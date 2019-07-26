@@ -25,6 +25,7 @@ import time
 import json
 import re
 import time
+import xml.etree.ElementTree as ElementTree
 
 from pprint import pformat
 from urllib import parse
@@ -2608,3 +2609,94 @@ class _StreamsRestDelegator(object):
         res.raise_for_status()
 
         return False
+
+class Toolkit(_ResourceElement):
+    """IBM Streams toolkit.
+
+    Attributes:
+        id(str): Unique ID for this instance.
+        resourceType(str): Identifies the REST resource type, which is *toolkit*. 
+        name(str): The name of the toolkit.
+        version(str): The version of the toolkit.
+        requiredProductVersion(str): The earliest version of Streams required by the toolkit.
+        path(str): The full path to the toolkit.
+
+    Example:
+        >>> from streamsx.build_service import BuildService
+        >>> build_service = BuildService.of_endpoint()
+        >>> toolkits = build_service.get_toolkits()
+        >>> print (toolkits[0].resourceType)
+        toolkit
+
+        .. versionadded:: 1.13
+    """
+    def __init__(self, json_rep, rest_client):
+        super(Toolkit, self).__init__(json_rep, rest_client)
+
+    def get_index(self):
+        res = self.rest_client.make_raw_streaming_request(self.index, 'text/xml')
+        _handle_http_errors(res)
+        return res.text        
+
+    def delete(self):
+        res = self.rest_client.session.delete(self.self, 
+                headers = {'Accept' : 'application/json'},
+                verify=self.rest_client.session.verify)
+
+        # 204 is success
+        if res.status_code == 204:
+            return True
+        if res.status_code == 404:
+            # not found
+            return False
+
+        res.raise_for_status()
+
+        return False
+    
+    @staticmethod
+    def _toolkits_url(sc):
+        toolkits_url = None
+        for resource in sc.get_resources():
+            if resource.name == 'toolkits':
+                toolkits_url = resource.resource
+                break;
+        else:
+            raise ValueError('The toolkits REST API is not supported by the Streams instance')
+        return toolkits_url                 
+
+    class Dependency:
+        """
+        The name, and range of versions, of a toolkit required by another
+        toolkit.
+        
+        Attributes:
+            name(str): the name of the required toolkit
+            version(str): the range of versions required of the toolkit
+        """
+        def __init__(self, name, version):
+            self.name = name
+            self.version = version
+
+        def __str__(self):
+            return self.name  + ' ' + self.version
+           
+    @property
+    def dependencies(self):
+        """
+        Find all the dependencies for this toolkit.
+        
+        Returns:
+            list(Dependency):  List of dependencies of this toolkit.  If this
+            toolkit does not have any dependencies, this will be an empty list.
+        """
+        deps = []
+        index = self.get_index()
+        root = ElementTree.fromstring(index)
+        toolkit_element = root.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkit}toolkit')
+        dependency_elements = toolkit_element.findall('{http://www.ibm.com/xmlns/prod/streams/spl/toolkit}dependency')
+        for dependency_element in dependency_elements:
+            name = dependency_element.find('{http://www.ibm.com/xmlns/prod/streams/spl/common}name').text
+            version = dependency_element.find('{http://www.ibm.com/xmlns/prod/streams/spl/common}version').text
+            deps.append(Toolkit.Dependency(name, version))
+        return deps

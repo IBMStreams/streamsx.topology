@@ -6,6 +6,8 @@
 package com.ibm.streamsx.rest.build;
 
 import java.io.IOException;
+import java.io.File;
+import java.util.List;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Job;
@@ -61,4 +63,35 @@ public interface BuildService {
 	 */
 	Build createBuild(String buildName, JsonObject buildConfig)
 			throws IOException;	
+
+
+	/**
+	 * Gets a list of {@link Toolkit toolkits} installed on the IBM Streams 
+	 * build service.
+	 * 
+	 * @since 1.13
+	 */
+	public List<Toolkit> getToolkits() throws IOException;
+
+	/**
+	 * Gets a {@link Toolkit toolkit} installed on the IBM Streams build 
+	 * service.
+	 * 
+	 * @param toolkitId The ID of the toolkit to retrieve.
+	 * @return The toolkit, or null if no matching toolkit was found.
+	 * @since 1.13
+	 */
+	public Toolkit getToolkit(String toolkitId) throws IOException;
+
+	/**
+	 * Install a toolkit in the build service from a local path.  The path
+	 * must be a directory containing a single toolkit.  If the toolkit's
+	 * name and version exactly match those of a toolkit already in the build
+	 * service, the existing toolkit will not be replaced.
+	 *
+	 * @return A {@link Toolkit} object representing the newly installed toolkit,
+	 * or null if the toolkit was not installed.
+	 * @throws IOException
+	 */
+	public Toolkit uploadToolkit(File path) throws IOException;
 }
