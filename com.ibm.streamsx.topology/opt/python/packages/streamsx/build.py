@@ -1,10 +1,10 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016,2017
+# Copyright IBM Corp. 2019
 
 
 """
-REST API bindings for IBM® Streams Cloud Pak for Data & Streaming Analytics build service.
+REST API bindings for IBM® Streams Cloud Pak for Data build service.
 
 **********************
 Streams Build REST API
@@ -16,15 +16,8 @@ Cloud Pak for Data
 ==================
 
 :py:meth:`~streamsx.rest_primitives.Instance.of_endpoint` is the entry point to using the Streams Build REST API bindings,
-returning an :py:class:`~streamsx.build_service.BuildService`.
+returning an :py:class:`~streamsx.build.BuildService`.
 
-**********************************
-Streaming Analytics Build REST API
-**********************************
-
-You can use the Streaming Analytics build REST API to manage toolkits installed on a build server.  
-
-:py:class:`BuildService` is a wrapper around the Streaming Analytics Build REST API.  This API allows functions such as :py:meth:`get toolkits <streamsx.build_service.BuildService.get_toolkits>` to list the installed toolkits, and :py:meth:`upload toolkit <streamsx.rest_primitives.Toolkit.from_local_toolkit>` to upload a local toolkit to the build service.
 
 .. seealso:: :ref:`sas-main`
 """
@@ -50,7 +43,7 @@ from .rest_primitives import (Domain, Instance, Installation, RestResource, Tool
     _exact_resource, _IAMStreamsRestClient, _IAMConstants, _get_username,
     _ICPDExternalAuthHandler, _handle_http_errors)
 
-logger = logging.getLogger('streamsx.build_service')
+logger = logging.getLogger('streamsx.build')
 
 
 class BuildService(_AbstractStreamsConnection):
@@ -64,16 +57,16 @@ class BuildService(_AbstractStreamsConnection):
         resource_url(str): Root URL for IBM Streams REST API. If ``None``, the URL is taken from the ``STREAMS_REST_URL`` environment variable.
 
     Example:
-        >>> from streamsx.build_service import BuildService
-        >>> resource_url = "https://streams.example.com:31843"
-        >>> service_name="StreamsInstance"
-        >>> build_service = BuildService.of_endpoint(resource_url, service_name, "streamsadmin", "passw0rd")
+        >>> from streamsx.build import BuildService
+        >>> build_service = BuildService.of_endpoint("https://icpd_server:31843", "StreamsInstance", "streamsadmin", "passw0rd")
         >>> toolkits = build_service.get_toolkits()
         >>> print("There are {} toolkits available.".format(len(toolkits)))
         There are 10 toolkits available.
 
     Attributes:
         session (:py:class:`requests.Session`): Requests session object for making REST calls.
+
+    .. versionadded:: 1.13
     """
     def __init__(self, username=None, password=None, resource_url=None, auth=None):
         """specify username, password, and resource_url"""
@@ -101,7 +94,6 @@ class BuildService(_AbstractStreamsConnection):
     def resource_url(self):
         """str: Endpoint URL for IBM Streams REST build API.
 
-        .. versionadded:: 1.13
         """
         if self._build_url:            
             return re.sub('/builds$','/resources', self._build_url)
@@ -113,7 +105,6 @@ class BuildService(_AbstractStreamsConnection):
         Returns:
             :py:obj:`list` of :py:class:`~.rest_primitives.RestResource`: List of all Streams high-level Build REST resources.
 
-        .. versionadded:: 1.13
         """
         return super().get_resources()
 
@@ -123,7 +114,6 @@ class BuildService(_AbstractStreamsConnection):
         Returns:
             :py:obj:`list` of :py:class:`~.rest_primitives.Toolkit`: List of all Toolkit resources.
 
-        .. versionadded:: 1.13
         """
         return self._get_elements('toolkits', Toolkit)
      
@@ -140,7 +130,6 @@ class BuildService(_AbstractStreamsConnection):
         Raises:
             ValueError: No matching toolkit exists.
 
-        .. versionadded:: 1.13
         """
         return self._get_element_by_id('toolkits', Toolkit, id)
 
@@ -159,7 +148,6 @@ class BuildService(_AbstractStreamsConnection):
         Returns:
             Toolkit: The created Toolkit, or ``None`` if it was not uploaded.
 
-        .. versionadded:: 1.13
         """
         # Handle path does not exist, is not readable, is not a directory
         if not os.path.isdir(path):
@@ -215,7 +203,6 @@ class BuildService(_AbstractStreamsConnection):
         Returns:
             BuildService: Connection to Streams build service or ``None`` of insufficient configuration was provided.
 
-        .. versionadded:: 1.13
         """
         if not endpoint:
             endpoint = os.environ.get('ICPD_URL')

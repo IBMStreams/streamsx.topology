@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ElementTree
 
 from streamsx.topology.tester import Tester
 from streamsx.topology.context import ConfigParams, JobConfig
-from streamsx.build_service import BuildService
+from streamsx.build import BuildService
 from streamsx.rest_primitives import *
 
 
