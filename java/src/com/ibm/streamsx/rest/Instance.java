@@ -96,7 +96,7 @@ public class Instance extends Element {
      * </P>
      * 
      * @param endpoint Endpoint URL for Streams instance, if {@code null} defaults to environment variable
-     * {@code ICPD_URL}.
+     * {@code CP4D_URL}.
      * @param name Streams service name, if {@code null} defaults to environment variable {@code STREAMS_INSTANCE_NAME}.
      * @param userName User name, if {@code null} defaults to environment variable {@code STREAMS_USERNAME} if set,
      *     otherwise the operating user identifier.
@@ -118,7 +118,7 @@ public class Instance extends Element {
      * deployment URL.
      * 
      * @param endpoint Endpoint URL for Streams instance, if {@code null} defaults to environment variable
-     * {@code ICPD_URL}.
+     * {@code CP4D_URL}.
      * @param name Streams service name, if {@code null} defaults to environment variable {@code STREAMS_INSTANCE_NAME}.
      * @param userName User name, if {@code null} defaults to environment variable {@code STREAMS_USERNAME} if set,
      *     otherwise the operating user identifier.

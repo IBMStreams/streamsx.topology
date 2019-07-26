@@ -21,7 +21,7 @@ Cloud Pak for Data configuration
 
 The Streams instance and authentication are defined through environment variables:
 
-    * **ICPD_URL** - Cloud Pak for Data deployment URL, e.g. `https://icp4d_server:31843`.
+    * **CP4D_URL** - Cloud Pak for Data deployment URL, e.g. `https://icp4d_server:31843`.
     * **STREAMS_INSTANCE_ID** - Streams service instance name.
     * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name. Overridden by the ``--User`` option.
     * **STREAMS_PASSWORD** - Password for authentication.

@@ -746,7 +746,7 @@ class ContextTypes(object):
     Environment variables:
         These environment variables define how the application is built and submitted.
 
-        * **ICPD_URL** - Cloud Pak for Data deployment URL, e.g. `https://icp4d_server:31843`.
+        * **CP4D_URL** - Cloud Pak for Data deployment URL, e.g. `https://icp4d_server:31843`.
         * **STREAMS_INSTANCE_ID** - Streams service instance name.
         * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
         * **STREAMS_PASSWORD** - Password for authentication.
