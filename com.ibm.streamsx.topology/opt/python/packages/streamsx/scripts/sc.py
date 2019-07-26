@@ -13,6 +13,7 @@ from streamsx.spl.toolkit import add_toolkit
 from streamsx.topology.context import submit, ConfigParams
 import xml.etree.ElementTree as ET
 from glob import glob
+import re
 
 
 _FACADE=['--prefer-facade-tuples', '-k']
@@ -32,14 +33,15 @@ def main(args=None):
         tool_kits = cmd_args.spl_path.split(':')
         # Check if any dependencies are in the passed in toolkits, if so add them
         add_local_toolkits(tool_kits, dependencies, topo)
-
     _add_toolkits(cmd_args, topo)
     _submit_build(cmd_args, topo)
     return 0
 
+#------------------------------------------------------------------------------------
+
 def parse_dependencies():
     # Find the dependencies of the app you want to build sab file for
-    deps = []
+    deps = {}
     root = ET.parse('info.xml').getroot()
     info = '{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}'
     common = '{http://www.ibm.com/xmlns/prod/streams/spl/common}'
@@ -47,7 +49,7 @@ def parse_dependencies():
     for dependency_element in dependency_elements:
         name = dependency_element.find(common + 'name').text
         version = dependency_element.find(common + 'version').text
-        deps.append(name)
+        deps[name] = version
     return deps
 
 def add_local_toolkits(toolkits, dependencies, topo):
@@ -57,33 +59,45 @@ def add_local_toolkits(toolkits, dependencies, topo):
     Arguments:
         toolkits {List} -- A list of local toolkit directories, each could be a toolkit directory (has info.xml directly inside),
                 or a directory consisting of toolkits (no info.xml directly inside)
-        dependencies {List} -- A list consisting of the names of the dependencies of our current app
+        dependencies {Dictionary} -- A dictionary where the key is the names of the dependencies, and the value is its version.
         topo {topology Object} -- [description]
     """
-    local_toolkits = {} # name - path
+    local_toolkits = [] # toolkit objects
     #  For each path, check if its a SPL toolkit (has info.xml directly inside) or a directory consisting of toolkits (no info.xml directly inside)
     for x in toolkits:
         if _is_toolkit_(x):
-            local_toolkits[_get_toolkit_name(x)] = x
+            tk = _get_toolkit(x)
+            local_toolkits.append(tk)
         else:
             # directory consisting of toolkits, get list and check which are local_toolkits, add them
             sub_directories = glob(x + "*/")
             for y in sub_directories:
                 if _is_toolkit_(y):
-                    local_toolkits[_get_toolkit_name(y)] = y
+                    tk = _get_toolkit(y)
+                    local_toolkits.append(tk)
 
     # Once we have all local toolkits, check if they correspond to any dependencies that we have, if so, add them
-    for toolkit_name, toolkit_path in local_toolkits.items():
-        if toolkit_name in dependencies:
-            add_toolkit(topo, toolkit_path)
+    for toolkit in local_toolkits:
+        if toolkit.name in dependencies:
+            # dep_version = dependencies[toolkit.name]
+            # dep_version = re.sub('[()\[\]]', '', dep_version)
+            # dep_version = dep_version.split(',')
+            # dep_version = list(map(float, dep_version))
+            # print(dep_version)
+            # print(toolkit.name, dep_version)
+            print(toolkit.name, toolkit.path)
+            add_toolkit(topo, toolkit.path)
 
-def _get_toolkit_name(path):
-    # Get the name of the toolkit that is in the directory PATH
+def _get_toolkit(path):
+    # Get the name & version of the toolkit that is in the directory PATH
     root = ET.parse(path + "/info.xml").getroot()
     identity = root.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}identity')
     name = identity.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}name')
+    version = identity.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}version')
+
     toolkit_name = name.text
-    return toolkit_name
+    toolkit_version = version.text
+    return toolkit(toolkit_name, toolkit_version, path)
 
 def _is_toolkit_(tkdir):
     # Checks if tkdir is a toolkit (contains toolkit.xml or info.xml)
@@ -92,6 +106,14 @@ def _is_toolkit_(tkdir):
         if os.path.isfile(os.path.join(tkdir, fn)):
             return True
     return False
+
+class toolkit:
+  def __init__(self, name, version, path):
+    self.name = name
+    self.version = version
+    self.path = path
+
+# ------------------------------------------------------------------------------------
 
 def _submit_build(cmd_args, topo):
      cfg = {}
