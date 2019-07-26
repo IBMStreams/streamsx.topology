@@ -592,7 +592,7 @@ def main(args=None):
 def _parse_args(args):
     """ Argument parsing
     """
-    cmd_parser = argparse.ArgumentParser(description='Control commands for a Streaming Analytics service.')
+    cmd_parser = argparse.ArgumentParser(description='IBM Streams command line interface using REST.')
     cmd_parser.add_argument('--disable-ssl-verify', action='store_true', help='Disable SSL verification.')
 
     subparsers = cmd_parser.add_subparsers(help='Supported commands', dest='subcmd')
