@@ -27,21 +27,19 @@ def main(args=None):
     # Can assume info.xml is present in cwd
     # Parse info.xml for dependencies
     dependencies = parse_dependencies()
-
     # if -t arg, find & add local toolkits
     if cmd_args.spl_path:
         tool_kits = cmd_args.spl_path.split(':')
         # Check if any dependencies are in the passed in toolkits, if so add them
         add_local_toolkits(tool_kits, dependencies, topo)
+
     _add_toolkits(cmd_args, topo)
     _submit_build(cmd_args, topo)
     return 0
 
-#------------------------------------------------------------------------------------
-
 def parse_dependencies():
     # Find the dependencies of the app you want to build sab file for
-    deps = {}
+    deps = {} # name - version 
     root = ET.parse('info.xml').getroot()
     info = '{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}'
     common = '{http://www.ibm.com/xmlns/prod/streams/spl/common}'
@@ -79,13 +77,7 @@ def add_local_toolkits(toolkits, dependencies, topo):
     # Once we have all local toolkits, check if they correspond to any dependencies that we have, if so, add them
     for toolkit in local_toolkits:
         if toolkit.name in dependencies:
-            # dep_version = dependencies[toolkit.name]
-            # dep_version = re.sub('[()\[\]]', '', dep_version)
-            # dep_version = dep_version.split(',')
-            # dep_version = list(map(float, dep_version))
-            # print(dep_version)
-            # print(toolkit.name, dep_version)
-            print(toolkit.name, toolkit.path)
+            # print(toolkit.name, toolkit.path)
             add_toolkit(topo, toolkit.path)
 
 def _get_toolkit(path):
