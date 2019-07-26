@@ -4,24 +4,19 @@
 
 
 """
-REST API bindings for IBM® Streams & Streaming Analytics build service.
+REST API bindings for IBM® Streams Cloud Pak for Data & Streaming Analytics build service.
 
-****************
+**********************
 Streams Build REST API
-****************
+**********************
 
-The REST Build API provides programmatic support for creating, submitting and managing IBM® Streams builds. You can use the REST Build API from any application that can establish an HTTPS connection to the server that is running the build service.  The current support includes only methods for managing toolkits in the build service.
+The REST Build API provides programmatic support for creating, submitting and managing Streams builds. You can use the REST Build API from any application that can establish an HTTPS connection to the server that is running the build service.  The current support includes only methods for managing toolkits in the build service.
 
-IBM Cloud Pak for Data
-======================
-
-Within ICPD
------------
+Cloud Pak for Data
+==================
 
 :py:meth:`~streamsx.rest_primitives.Instance.of_endpoint` is the entry point to using the Streams Build REST API bindings,
 returning an :py:class:`~streamsx.build_service.BuildService`.
-
-
 
 **********************************
 Streaming Analytics Build REST API
