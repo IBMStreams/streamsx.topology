@@ -83,10 +83,10 @@ The `streamsx` package provides a number of command line scripts.
 
 .. toctree::
 
+   scripts/extract.rst
+   scripts/info.rst
    scripts/runner.rst
    scripts/service.rst
-   scripts/info.rst
-   scripts/extract.rst
    scripts/streamtool.rst
 
 ************
