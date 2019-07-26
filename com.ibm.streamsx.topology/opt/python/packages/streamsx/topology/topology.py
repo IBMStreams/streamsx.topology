@@ -221,6 +221,9 @@ import streamsx.topology.graph
 import streamsx.topology.schema
 import streamsx.topology.functions
 import streamsx.topology.runtime
+import dill
+import types
+import base64
 import json
 import threading
 import queue
@@ -270,6 +273,14 @@ class _SourceLocation(object):
         if self.method:
             sl['api.method'] = self.method
         return sl
+
+"""
+Determine whether a callable has state that needs to be saved during
+checkpointing.  
+"""
+def _determine_statefulness(_callable):
+    stateful = not inspect.isroutine(_callable)
+    return stateful
 
 class Routing(Enum):
     """
@@ -989,7 +1000,7 @@ class Stream(_placement._Placement, object):
         """
         sl = _SourceLocation(_source_info(), 'for_each')
         _name = self.topology.graph._requested_name(name, action='for_each', func=func)
-        stateful = self._determine_statefulness(func)
+        stateful = _determine_statefulness(func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.oport)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
@@ -1031,7 +1042,7 @@ class Stream(_placement._Placement, object):
         """
         sl = _SourceLocation(_source_info(), 'filter')
         _name = self.topology.graph._requested_name(name, action="filter", func=func)
-        stateful = self._determine_statefulness(func)
+        stateful = _determine_statefulness(func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.oport)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
@@ -1099,7 +1110,7 @@ class Stream(_placement._Placement, object):
         """
         sl = _SourceLocation(_source_info(), 'split')
         _name = self.topology.graph._requested_name(name, action="split", func=func)
-        stateful = self._determine_statefulness(func)
+        stateful = _determine_statefulness(func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Split", func, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.oport)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
@@ -1121,7 +1132,7 @@ class Stream(_placement._Placement, object):
     def _map(self, func, schema, name=None):
         schema = streamsx.topology.schema._normalize(schema)
         _name = self.topology.graph._requested_name(name, action="map", func=func)
-        stateful = self._determine_statefulness(func)
+        stateful = _determine_statefulness(func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Map", func, name=_name, stateful=stateful)
         op.addInputPort(outputPort=self.oport)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
@@ -1300,7 +1311,7 @@ class Stream(_placement._Placement, object):
      
         sl = _SourceLocation(_source_info(), 'flat_map')
         _name = self.topology.graph._requested_name(name, action='flat_map', func=func)
-        stateful = self._determine_statefulness(func)
+        stateful = _determine_statefulness(func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.oport)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
@@ -1477,7 +1488,7 @@ class Stream(_placement._Placement, object):
 
             if func is not None:
                 keys = ['__spl_hash']
-                stateful = self._determine_statefulness(func)
+                stateful = _determine_statefulness(func)
                 hash_adder = self.topology.graph.addOperator(self.topology.opnamespace+"::HashAdder", func, stateful=stateful)
                 hash_adder._op_def['hashAdder'] = True
                 hash_adder._layout(hidden=True)
@@ -1949,14 +1960,6 @@ class Stream(_placement._Placement, object):
         self._op()._layout(kind, hidden, name, orig_name)
         return self
 
-    """
-    Determine whether a callable has state that needs to be saved during
-    checkpointing.  
-    """
-    def _determine_statefulness(self, _callable):
-        stateful = not inspect.isroutine(_callable)
-        return stateful
-
 class View(object):
     """
     The View class provides access to a continuously updated sampling of data items on a :py:class:`Stream` after submission.
@@ -2132,7 +2135,19 @@ class PendingStream(object):
 class Window(object):
     """Declaration of a window of tuples on a `Stream`.
 
-    A `Window` can be passed as the input of an SPL
+    A `Window` enables transforms against collection (or window)
+    of tuples on a stream rather than per-tuple transforms.
+    Windows are created against a stream using :py:meth:`Stream.batch`
+    or :py:meth:`Stream.last`.
+
+    Supported transforms are:
+
+        * :py:meth:`aggregate` - Aggregate the window contents into a single tuple.
+
+    A window is optionally :py:meth:`partitioned <partition>` to create
+    independent sub-windows per partition key.
+ 
+    A `Window` can be also passed as the input of an SPL
     operator invocation to indicate the operator's
     input port is windowed.
 
@@ -2151,6 +2166,11 @@ class Window(object):
         self.stream = stream
         self._config = {'type': window_type}
 
+    def _copy(self):
+        wc = Window(self.stream, None)
+        wc._config.update(self._config)
+        return wc
+
     def _evict_count(self, size):
         self._config['evictPolicy'] = 'COUNT'
         self._config['evictConfig'] = size
@@ -2159,6 +2179,98 @@ class Window(object):
         self._config['evictPolicy'] = 'TIME'
         self._config['evictConfig'] = int(duration.total_seconds() * 1000.0)
         self._config['evictTimeUnit'] = 'MILLISECONDS'
+
+    def _partition_by_attribute(self, attribute):
+        # We cannot always get the list of tuple attributes here
+        # because it might be a named type.  Validation of the attribute
+        # will be done in code generation.  We only support partition
+        # by attribute for StreamSchema (not CommonSchema).
+        # Our input schema is the output schema of the previous operator.
+        if not isinstance(self.stream.oport.schema, streamsx.topology.schema.StreamSchema):
+            raise ValueError("Partition by attribute is supported only for a structured schema")
+
+        self._config['partitioned'] = True
+        self._config['partitionBy'] = attribute
+
+    def _partition_by_callable(self, function):
+        dilled_callable = None
+        
+        stateful = _determine_statefulness(function)
+
+        # This is based on graph._addOperatorFunction.
+        recurse = None
+        if isinstance(function, types.LambdaType) and function.__name__ == "<lambda>" :
+            function = streamsx.topology.runtime._Callable(function, no_context=True)
+            recurse = True
+        elif function.__module__ == '__main__':
+            # Function/Class defined in main, create a callable wrapping its
+            # dill'ed form
+            function = streamsx.topology.runtime._Callable(function,
+                no_context = True if inspect.isroutine(function) else None)
+            recurse = True
+         
+        if inspect.isroutine(function):
+            # callable is a function
+            name = function.__name__
+        else:
+            # callable is a callable class instance
+            name = function.__class__.__name__
+            # dill format is binary; base64 encode so it is json serializable 
+            dilled_callable = base64.b64encode(dill.dumps(function, recurse=recurse)).decode("ascii")
+
+        self._config['partitioned'] = True
+        if dilled_callable is not None:
+            self._config['partitionByCallable'] = dilled_callable
+        self._config['partitionByName'] = name
+        self._config['partitionByModule'] = function.__module__
+        self._config['partitionIsStateful'] = bool(stateful)
+
+    def partition(self, key):
+        """Declare a window with this window's eviction and trigger policies, and a partition.
+
+        In a partitioned window, a subwindow will be created for each distinct
+        value received for the attribute used for partitioning.  Each subwindow
+        is treated as if it were a separate window, and each subwindow shares
+        the same trigger and eviction policy.
+
+        The key may either be a string containing the name of an attribute,
+        or a python callable.
+
+        The `key` parameter may be a string only with a structured schema, 
+        and the value of the `key` parameter must be the name of a single
+        attribute in the schema.
+
+        The `key` parameter may be a python callable object.  If it is, the
+        callable is evaluated for each tuple, and the return from the callable
+        determines the partition into which the tuple is placed.  The return
+        value must have a ``__hash__`` method.  If checkpointing is enabled, 
+        and the callable object has a state, the state of the callable object 
+        will be saved and restored in checkpoints.  However, ``__enter__`` and
+        ``__exit__`` methods may not be called on the callable object.
+        
+
+        Args:
+            key: The name of the attribute to be used for partitioning, or
+              the python callable object used for partitioning.
+
+        Returns:
+            Window: Window that will be triggered.
+
+        .. versionadded:: 1.13
+        """
+
+        pw = self._copy()
+
+        # Remove any existing partition.  It will be replaced by the new
+        # partition
+        for k in {'partitioned','partitionBy','partitionByName','partitionByModule','partitionIsStateful'}:
+            pw._config.pop(k, None)
+
+        if callable(key):
+            pw._partition_by_callable(key)
+        else:
+            pw._partition_by_attribute(key)
+        return pw
 
     def trigger(self, when=1):
         """Declare a window with this window's size and a trigger policy.
@@ -2188,11 +2300,7 @@ class Window(object):
         .. warning:: A trigger is only supported for a sliding window
             such as one created by :py:meth:`last`.
         """
-        tw = Window(self.stream, self._config['type'])
-        tw._config['evictPolicy'] = self._config['evictPolicy']
-        tw._config['evictConfig'] = self._config['evictConfig']
-        if self._config['evictPolicy'] == 'TIME':
-            tw._config['evictTimeUnit'] = 'MILLISECONDS'
+        tw = self._copy();
 
         if isinstance(when, datetime.timedelta):
             tw._config['triggerPolicy'] = 'TIME'
@@ -2214,11 +2322,27 @@ class Window(object):
         items in the list are the order in which they were each received by the 
         window. If the function's return value is not `None` then the result will
         be submitted as a tuple on the returned stream. If the return value is 
-        `None` then no tuple submission will occur. For example, a window that 
-        calculates a moving average of the last 10 tuples could be written as follows::
+        `None` then no tuple submission will occur.
+
+        For example, a window that calculates a moving average of the
+        last 10 tuples could be written as follows::
         
             win = s.last(10).trigger(1)
             moving_averages = win.aggregate(lambda tuples: sum(tuples)/len(tuples))
+
+        When the window is :py:meth:`partitioned <partition>`
+        then each partition is triggered and aggregated using
+        `function` independently.
+
+        For example, this partitioned window aggregation will independently
+        call ``summarize_sensors`` with ten tuples all having the same `id`
+        when triggered. Each partition triggers independently so that
+        ``summarize_sensors`` is invoked for a specific `id` every time 
+        two tuples with that `id` have been inserted into the window partition::
+        
+            win = s.last(10).trigger(2).partition(key='id')
+            moving_averages = win.aggregate(summarize_sensors)
+        
 
         .. note:: If a tumbling (:py:meth:`~Stream.batch`) window's stream
             is finite then a final aggregation is performed if the
@@ -2245,13 +2369,28 @@ class Window(object):
 
         .. versionadded:: 1.8
         .. versionchanged:: 1.11 Support for aggregation of streams with structured schemas.
+        .. versionchanged:: 1.13 Support for partitioned aggregation.
         """
         schema = streamsx.topology.schema.CommonSchema.Python
         
         sl = _SourceLocation(_source_info(), "aggregate")
         _name = self.topology.graph._requested_name(name, action="aggregate", func=function)
-        stateful = self.stream._determine_statefulness(function)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Aggregate", function, name=_name, sl=sl, stateful=stateful)
+        stateful = _determine_statefulness(function)
+
+        params = {}
+        # if _config contains 'partitionBy', add a parameter 'pyPartitionBy'
+        if 'partitionBy' in self._config:
+            params['pyPartitionBy'] = self._config['partitionBy']
+        if 'partitionByCallable' in self._config:
+            params['pyPartitionByCallable'] = self._config['partitionByCallable']
+        if 'partitionByName' in self._config:
+            params['pyPartitionByName'] = self._config['partitionByName']
+            params['pyPartitionByModule'] = self._config['partitionByModule']
+            params['pyPartitionIsStateful'] = self._config['partitionIsStateful']
+            params['toolkitDir'] = streamsx.topology.param.toolkit_dir()
+
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Aggregate", function, name=_name, sl=sl, stateful=stateful, params=params)
+            
         op.addInputPort(outputPort=self.stream.oport, window_config=self._config)
         streamsx.topology.schema.StreamSchema._fnop_style(self.stream.oport.schema, op, 'pyStyle')
         oport = op.addOutputPort(schema=schema, name=_name)

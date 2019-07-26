@@ -9,15 +9,13 @@
       <description>Python Windowing Operation</description>
       <iconUri size="16">../opt/icons/aggregate_16.gif</iconUri>
       <iconUri size="32">f../opt/icons/aggregate_32.gif</iconUri>
-
-      <!-- some optional elements
       <metrics>
         <metric>
-          <name>metricName</name>
-          <description>Metric description</description>
-          <kind>Counter</kind>
+          <name>nCurrentPartitions</name>
+          <description>The number of partitions in the window.</description>
+          <kind>Gauge</kind>
         </metric>
-      </metrics>-->
+      </metrics>
       <libraryDependencies>
         <library>
           <cmn:description>SPL Python includes</cmn:description>
@@ -110,6 +108,56 @@
         <name>pyStateful</name>
         <description>Whether the operator has state to be saved in checkpointing.</description>
         <optional>false</optional>
+        <rewriteAllowed>false</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>boolean</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
+        <name>pyPartitionBy</name>
+        <description>The attribute used for partitioning.  If the window is partitioned, either this or pyPartitionByName must be specified.</description>
+        <optional>true</optional>
+	<!-- we need to inspect this value at code gen time -->
+        <rewriteAllowed>false</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>rstring</type>
+        <cardinality>1</cardinality>
+        <portScope><port>0</port></portScope>
+      </parameter>
+      <parameter>
+        <name>pyPartitionByName</name>
+        <description>The name of the python callable used for partitioning.  If the window is partitioned, either this or pyPartitionByName must be specified.</description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>rstring</type>
+        <cardinality>1</cardinality>
+        <portScope><port>0</port></portScope>
+      </parameter>
+      <parameter>
+        <name>pyPartitionByModule</name>
+        <description>The module of the python callable used for partitioning.  If partitionByName is specified, this must also be specified.</description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>rstring</type>
+        <cardinality>1</cardinality>
+        <portScope><port>0</port></portScope>
+      </parameter>
+      <parameter>
+        <name>pyPartitionByCallable</name>
+        <description>The the python callable used for partitioning.  If both pyPartitionByName and pyPartitionByCallable are specified, pyPartitionByCallable is used.</description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>rstring</type>
+        <cardinality>1</cardinality>
+        <portScope><port>0</port></portScope>
+      </parameter>
+      <parameter>
+        <name>pyPartitionIsStateful</name>
+        <description>Whether the partition function has state to be saved in checkpointing.</description>
+        <optional>true</optional>
         <rewriteAllowed>false</rewriteAllowed>
         <expressionMode>Constant</expressionMode>
         <type>boolean</type>

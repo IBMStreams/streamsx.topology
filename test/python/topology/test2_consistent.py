@@ -107,6 +107,7 @@ class StatefulEvenFilter(object):
     def __call__(self, x):
         return x % 2 == 0
 
+
 # Map x -> x / 2 + 1.  Again this is stateful although it does not have
 # meaningful state.
 class StatefulHalfPlusOne(object):
@@ -202,10 +203,37 @@ class ListIterator(object):
 
     def next(self):
         return __next__(self)
-    
+
+# Length of the collatz sequence starting at n.  Use with strictly positive
+# integer values only.
+def CollatzLength(n):
+    m = n
+    length = 1
+    while m != 1:
+        length += 1
+        if m % 2 == 1:
+            m = 3 * m + 1
+        else:
+            m = m / 2
+    return length
+
+# A partition function that tracks the greatest value received.
+# For each new value, if it is strictly greater than the previous greatest
+# value, it is placed in partition 0, and the greatest value is increased
+# to the new values.  All other values are placed in partition 1.
+# This is meant to work on positive integers.
+class GreatestSoFar(object):
+    def __init__(self):
+        self.greatest_so_far = 0
+    def __call__(self, n):
+        if n > self.greatest_so_far:
+            self.greatest_so_far = n
+            return 0
+        else:
+            return 1
 
 # Consistent region is not supported in standalone.  Note that neither
-# checkpointing nor consistent region can be used in standalone, but 
+# checkpointing nor consistent region can be used in standalone, but
 # if checkpointing is enabled in standalone, there is a warning message
 # but the application runs, while if consistent region is enabled, there
 # is an error and the application stops.  There is an inconsistency about
@@ -350,6 +378,79 @@ class TestWithoutConsistentRegion(unittest.TestCase):
             tester.resets(reset_count)
         tester.test(self.test_ctxtype, self.test_config)
 
+    # Test the aggregate operator with a partitioned window in a consistent
+    # region.
+    def test_aggregate_partitioned(self):
+        iterations = 3000
+        reset_count = 5
+        topo = Topology()
+        # Generate integers from [0,3000)
+        s = topo.source(TimeCounter(iterations=iterations, period=0.01))
+        if (self.is_cr()):
+            s.set_consistent(ConsistentRegionConfig.periodic(5, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
+
+        # Filter the odd ones 
+        s = s.filter(StatefulEvenFilter())
+        # Halve the even ones and add one.  Now have integers [1,(iterations/2))
+        s = s.map(StatefulHalfPlusOne())
+
+        sc = s.last(10).trigger(3).partition(lambda x: x % 2).aggregate(StatefulAverage())
+
+        tester = Tester(topo)
+        if (self.is_cr()):
+            tester.resets(reset_count)
+
+        # Find the expected results.
+        # mimic the processing using Python builtins
+        iv = filter(StatefulEvenFilter(), range(iterations))
+        iv = list(map(StatefulHalfPlusOne(), iv))
+
+        # Expected stateful averages sc,st
+        sagg = StatefulAverage()
+        ers = [ sagg(iv[i%2:i+5-i%2:2][-10:]) for i in range(0, 3*int(len(iv)/3), 3) ]
+
+        tester.contents(sc, ers)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    # Test the aggregate operator with a partitioned window in a consistent
+    # region. The partition function is stateful.
+    def test_aggregate_partitioned_stateful(self):
+        iterations = 3000
+        reset_count = 5
+        topo = Topology()
+        # Generate integers from [0,3000)
+        s = topo.source(TimeCounter(iterations=iterations, period=0.01))
+        if (self.is_cr()):
+            s.set_consistent(ConsistentRegionConfig.periodic(5, drain_timeout=40, reset_timeout=40, max_consecutive_attempts=6))
+
+        # Find the collatz (hotpo) sequence length
+        s = s.map(lambda x: CollatzLength(x + 1))
+        
+        count=10
+        trigger=3
+        sc = s.last(count).trigger(trigger).partition(GreatestSoFar()).aggregate(max) 
+
+        #sc.print()
+        #streamsx.topology.context.submit('TOOLKIT', topo)
+
+        tester = Tester(topo)
+        if (self.is_cr()):
+            tester.resets(reset_count)
+
+        # Find the expected results.
+        # mimic the processing using Python builtins
+        iv = list(map(lambda x: CollatzLength(x+1), range(iterations)))
+        def q(l):
+            partitions=[[],[]]
+            gsf=GreatestSoFar()
+            for i in l:
+                partition=gsf(i)
+                partitions[partition].append(i)
+                if len(partitions[partition]) % trigger == 0:
+                    yield max(partitions[partition][-count:])
+
+        tester.contents(sc, q(iv))
+        tester.test(self.test_ctxtype, self.test_config)
 
 class TestDistributedConsistentRegion(TestWithoutConsistentRegion):
     def setUp(self):

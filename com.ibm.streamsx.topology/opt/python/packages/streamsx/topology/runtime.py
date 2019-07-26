@@ -9,6 +9,7 @@ import sys
 import pickle
 import inspect
 import logging
+import importlib
 from past.builtins import basestring
 
 import streamsx.ec as ec
@@ -441,11 +442,25 @@ class _IterableInstance(streamsx._streams._runtime._WrapOpLogic):
 # defined in __main__
 # Instance of _WrapInstance so used at declaration time
 class _Callable(streamsx._streams._runtime._WrapOpLogic):
-    def __init__(self, callable_, no_context=None):
+    def __init__(self, callable_, no_context=None, modules=None):
         super(_Callable, self).__init__(callable_, no_context)
+        self._modules = modules
 
     def __call__(self, *args, **kwargs):
         return self._callable.__call__(*args, **kwargs)
+
+    def __getstate__(self):
+        return self.__dict__
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+        # Patch the lambda/in-line function's globals
+        # to include any modules it references.
+        if self._modules:
+            for mn in self._modules:
+                if mn not in self._callable.__globals__:
+                    self._callable.__globals__[mn] = importlib.import_module(mn)
 
 def _spl_boolean_to_bool(v):
     return not v == 'false'

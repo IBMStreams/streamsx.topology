@@ -3,6 +3,7 @@
 
 #include <SPL/Runtime/Operator/State/ConsistentRegionContext.h>
 #include <SPL/Runtime/Operator/State/StateHandler.h>
+#include <SPL/Runtime/Window/WindowCommon.h>
 #include <SPL/Runtime/Utility/Mutex.h>
 
 #include "splpy_general.h"
@@ -57,6 +58,14 @@ namespace SPL {
     static PyObject const * dereference(PyObject const * t) { return t; }
     static PyObject * reference(PyObject * t) { return t; }
     static PyObject const * reference(PyObject const * t) { return t; }
+  };
+
+  template <>
+  struct ObjectPointerDeleter<PyObject *> {
+    static void deletePointer(PyObject * p) {  
+      streamsx::topology::SplpyGIL lock;
+      Py_XDECREF(p);
+    }
   };
 
   ByteBuffer<Checkpoint> & operator<<(ByteBuffer<Checkpoint> & ckpt, PyObject * obj){
@@ -120,7 +129,7 @@ namespace SPL {
 
     return ckpt;
   }
-}
+} // namespace SPL
 
 // In the SPL window library, there are some cases in which diagnostic 
 // messages with the contents of a window are produced.  For these messages,
@@ -140,5 +149,40 @@ std::ostream & operator << (std::ostream &ostr, PyObject * obj){
   return ostr;
 }
 
+
+// For windowing support, std::tr1::unordered_map requires specializations
+// of std::tr1::hash and std::equal_to for PythonObject *.  We need to forward
+// these calls to corresponding calls on the python object.
+namespace std {
+
+  template<>
+  struct equal_to<PyObject*> {
+    inline bool operator () (PyObject * lhs, PyObject * rhs) const {
+      using namespace streamsx::topology;
+      SplpyGIL lock;
+      int result = PyObject_RichCompareBool(lhs, rhs, Py_EQ);
+      if (result == -1) {
+        throw SplpyExceptionInfo::pythonError("==").exception();
+      }
+      return result == 1;
+    }
+  };
+  
+  namespace tr1 {
+    template<>
+    struct hash<PyObject *> {
+      inline size_t operator() (PyObject * object) const {
+        using namespace streamsx::topology;
+        SplpyGIL lock;
+        size_t result = PyObject_Hash(object);
+        if (result == static_cast<size_t>(-1)) {
+          throw SplpyExceptionInfo::pythonError("hash").exception();
+        }
+        return result;
+      }
+    };
+  } // namespace tr1
+
+} // namespace std
 
 #endif // SPL_SPLPY_CR_H_

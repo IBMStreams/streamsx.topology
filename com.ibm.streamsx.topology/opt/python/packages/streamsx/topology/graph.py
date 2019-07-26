@@ -287,6 +287,16 @@ class SPLGraph(object):
             _graph["config"]["checkpoint"]["period"] = self.topology.checkpoint_period * 1000 * 1000 # Seconds to microseconds
             _graph["config"]["checkpoint"]["unit"] = unit
 
+def _inline_modules(fn):
+    if sys.version_info.major == 2:
+        return None
+    modules = []
+    cvs = inspect.getclosurevars(fn)
+    for mk in cvs.globals.keys():
+        if isinstance(cvs.globals[mk], types.ModuleType):
+            modules.append(mk)
+    return modules
+
 
 class _SPLInvocation(object):
 
@@ -466,13 +476,16 @@ class _SPLInvocation(object):
         # Wrap a lambda as a callable class instance
         recurse = None
         if isinstance(function, types.LambdaType) and function.__name__ == "<lambda>" :
-            function = streamsx.topology.runtime._Callable(function, no_context=True)
+            function = streamsx.topology.runtime._Callable(function,
+                no_context=True,
+                modules=_inline_modules(function))
             recurse = True
         elif function.__module__ == '__main__':
             # Function/Class defined in main, create a callable wrapping its
             # dill'ed form
             function = streamsx.topology.runtime._Callable(function,
-                no_context = True if inspect.isroutine(function) else None)
+                no_context = True if inspect.isroutine(function) else None,
+                modules=_inline_modules(function))
             recurse = True
          
         if inspect.isroutine(function):
@@ -482,7 +495,7 @@ class _SPLInvocation(object):
             # callable is a callable class instance
             self.params["pyName"] = function.__class__.__name__
             # dill format is binary; base64 encode so it is json serializable 
-            self.params["pyCallable"] = base64.b64encode(dill.dumps(function, recurse=recurse)).decode("ascii")
+            self.params["pyCallable"] = base64.b64encode(dill.dumps(function, recurse=recurse if sys.version_info.major == 2 else None )).decode("ascii")
 
         if stateful is not None:
             self.params['pyStateful'] = bool(stateful)
