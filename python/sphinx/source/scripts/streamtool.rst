@@ -14,7 +14,7 @@ Usage
 
 .. code-block:: none
 
-    streamx-streamtool submitjob [<sab-pathname>]
+    streamsx-streamtool submitjob [<sab-pathname>]
             [-g,--jobConfig <file-name>]
             [-P,--P <parameter-name>]
             [-J,--jobgroup <jobgroup-name>]
@@ -22,27 +22,27 @@ Usage
             [--outfile <file-name>]
             [-U,--User <user>] [-h,--help]
 
-    streamx-streamtool canceljob {[-f,--file <file-name>] | [-j,--jobs <job-id>,...] |
+    streamsx-streamtool canceljob {[-f,--file <file-name>] | [-j,--jobs <job-id>,...] |
             [--jobnames <job-names>,...] | [<jobid> ... | <jobid>,...]}
             [--collectlogs] [--force] [-U,--User <user>] [-h,--help]
 
-    streamx-streamtool lsjobs [-j,--jobs <job-id>,...] [--jobnames <job-names>,...]
+    streamsx-streamtool lsjobs [-j,--jobs <job-id>,...] [--jobnames <job-names>,...]
             [-u,--users <user>,...] [--xheaders] [-l,--long] [--fmt <format-spec>]
             [--showtimestamp] [-U,--User <user>] [-h,--help]
 
-    streamx-streamtool lsappconfig [--fmt <format-spec>] [-U,--User <user>]
+    streamsx-streamtool lsappconfig [--fmt <format-spec>] [-U,--User <user>]
             [-h,--help]
 
-    streamx-streamtool mkappconfig [--description <description>]
+    streamsx-streamtool mkappconfig [--description <description>]
             [--property <name=value>] [--propfile <property-file>] [-U,--User <user>]
             [-h,--help] <config-name>
 
-    streamx-streamtool rmappconfig [--noprompt] [-U,--User <user>] <config-name>
+    streamsx-streamtool rmappconfig [--noprompt] [-U,--User <user>] <config-name>
 
-    streamx-streamtool chappconfig [--description <description>]
+    streamsx-streamtool chappconfig [--description <description>]
             [--property <name=value>] [-U,--User <user>] [-h,--help] <config-name>
 
-    streamx-streamtool getappconfig [-U,--User <user>]  <config-name>
+    streamsx-streamtool getappconfig [-U,--User <user>]  <config-name>
 
 
 *****************************************
@@ -63,7 +63,7 @@ Jobs remain in the system until they are canceled or the instance is stopped.
 
 .. code-block:: none
 
-    streamx-streamtool submitjob [<sab-pathname>]
+    streamsx-streamtool submitjob [<sab-pathname>]
             [-g,--jobConfig <file-name>]
             [-P,--P <parameter-name>]
             [-J,--jobgroup <jobgroup-name>]
@@ -127,7 +127,7 @@ job to cancel.
 
 .. code-block:: none
 
-    streamx-streamtool canceljob {[-f,--file <file-name>] | [-j,--jobs <job-id>,...] |
+    streamsx-streamtool canceljob {[-f,--file <file-name>] | [-j,--jobs <job-id>,...] |
             [--jobnames <job-names>,...] | [<jobid> ... | <jobid>,...]}
             [--collectlogs] [--force] [-U,--User <user>] [-h,--help]
 
@@ -183,7 +183,7 @@ the job or its processing elements (PEs).
 
 .. code-block:: none
 
-    streamx-streamtool lsjobs [-j,--jobs <job-id>,...] [--jobnames <job-names>,...]
+    streamsx-streamtool lsjobs [-j,--jobs <job-id>,...] [--jobnames <job-names>,...]
             [-u,--users <user>,...] [--xheaders] [-l,--long] [--fmt <format-spec>]
             [--showtimestamp] [-U,--User <user>] [-h,--help]
 
@@ -234,7 +234,7 @@ application.
 
 .. code-block:: none
 
-    streamx-streamtool lsappconfig [--fmt <format-spec>] [-U,--User <user>]
+    streamsx-streamtool lsappconfig [--fmt <format-spec>] [-U,--User <user>]
             [-h,--help]
 
 Options and arguments
@@ -269,7 +269,7 @@ property file using a name=value syntax.
 
 .. code-block:: none
 
-    streamx-streamtool mkappconfig [--description <description>]
+    streamsx-streamtool mkappconfig [--description <description>]
             [--property <name=value>] [--propfile <property-file>] [-U,--User <user>]
             [-h,--help] <config-name>
 
@@ -314,7 +314,7 @@ external application.
 
 .. code-block:: none
 
-    streamx-streamtool rmappconfig [--noprompt] [-U,--User <user>] <config-name>
+    streamsx-streamtool rmappconfig [--noprompt] [-U,--User <user>] <config-name>
 
 Options and arguments
 
@@ -339,7 +339,7 @@ application. You can change the values of properties or add new properties.
 
 .. code-block:: none
 
-    streamx-streamtool chappconfig [--description <description>]
+    streamsx-streamtool chappconfig [--description <description>]
             [--property <name=value>] [-U,--User <user>] [-h,--help] <config-name>
 
 Options and arguments
@@ -374,7 +374,7 @@ for connecting to an external application.
 
 .. code-block:: none
 
-    streamx-streamtool getappconfig [-U,--User <user>]  <config-name>
+    streamsx-streamtool getappconfig [-U,--User <user>]  <config-name>
 
 Options and arguments
 
