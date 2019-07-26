@@ -27,6 +27,7 @@ def main(args=None):
     # Parse info.xml for dependencies
     dependencies = parse_dependencies()
 
+    # if -t arg, find & add local toolkits
     if cmd_args.spl_path:
         tool_kits = cmd_args.spl_path.split(':')
         # Check if any dependencies are in the passed in toolkits, if so add them
@@ -37,6 +38,7 @@ def main(args=None):
     return 0
 
 def parse_dependencies():
+    # Find the dependencies of the app you want to build sab file for
     deps = []
     root = ET.parse('info.xml').getroot()
     info = '{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}'
@@ -59,26 +61,24 @@ def add_local_toolkits(toolkits, dependencies, topo):
         topo {topology Object} -- [description]
     """
     local_toolkits = {} # name - path
-    #  For each path, need to check if its a SPL toolkit (has info.xml directly inside) or a directory consisting of toolkits (no info.xml directly inside)
+    #  For each path, check if its a SPL toolkit (has info.xml directly inside) or a directory consisting of toolkits (no info.xml directly inside)
     for x in toolkits:
         if _is_toolkit_(x):
             local_toolkits[_get_toolkit_name(x)] = x
         else:
-            # directory consisting of toolkits (no info.xml directly inside), get list and check which are local_toolkits, add them
-            toolkit_dirs = glob(x + "*/")
-            for y in toolkit_dirs:
+            # directory consisting of toolkits, get list and check which are local_toolkits, add them
+            sub_directories = glob(x + "*/")
+            for y in sub_directories:
                 if _is_toolkit_(y):
                     local_toolkits[_get_toolkit_name(y)] = y
 
-    # Have all local toolkits from the passed in locations
+    # Once we have all local toolkits, check if they correspond to any dependencies that we have, if so, add them
     for toolkit_name, toolkit_path in local_toolkits.items():
-        print(toolkit_name)
         if toolkit_name in dependencies:
             add_toolkit(topo, toolkit_path)
 
-    exit()
-
 def _get_toolkit_name(path):
+    # Get the name of the toolkit that is in the directory PATH
     root = ET.parse(path + "/info.xml").getroot()
     identity = root.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}identity')
     name = identity.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}name')
@@ -86,7 +86,8 @@ def _get_toolkit_name(path):
     return toolkit_name
 
 def _is_toolkit_(tkdir):
-    # Checks if tkdir is a toolkit (return True) or if it isn't or is directory containing multiple toolkit directories (returns)
+    # Checks if tkdir is a toolkit (contains toolkit.xml or info.xml)
+    # or if it isn't or is directory containing multiple toolkit directories (returns)
     for fn in ['toolkit.xml', 'info.xml']:
         if os.path.isfile(os.path.join(tkdir, fn)):
             return True
