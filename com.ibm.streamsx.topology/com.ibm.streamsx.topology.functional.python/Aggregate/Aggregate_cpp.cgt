@@ -36,7 +36,12 @@ MY_OPERATOR::MY_OPERATOR() :
    pyInStyleObj_(NULL),
    loads(NULL),
    occ_(-1),
-   window_(<%=$windowCppInitializer%>)
+   window_(<%=$windowCppInitializer%>),
+   _partitionCount(getContext().getMetrics().getCustomMetricByName("nCurrentPartitions"))
+   
+#if SPLPY_PARTITION_IS_STATEFUL == 1
+   , partitionStateHandler_(NULL)
+#endif
 {
 <% if ($window->isSliding()) {%>
     window_.registerOnWindowTriggerHandler(this);
@@ -45,6 +50,9 @@ MY_OPERATOR::MY_OPERATOR() :
 <% if ($window->isTumbling()) {%>
     window_.registerBeforeWindowFlushHandler(this);
 <%}%>
+#if SPLPY_PARTITION_BY_PYTHON == 1
+    window_.registerOnWindowPartitionEviction(this);
+#endif
 
 #if SPLPY_OP_STATE_HANDLER == 1
     window_.registerSerializationHandler(this);
@@ -79,6 +87,7 @@ MY_OPERATOR::MY_OPERATOR() :
     
  }
 %>
+    _partitionCount.setValueNoLock(0);
 
     funcop_ = new SplpyFuncOp(this, SPLPY_CALLABLE_STATE_HANDLER, out_wrapfn);
 
@@ -96,16 +105,60 @@ MY_OPERATOR::MY_OPERATOR() :
 #if SPLPY_OP_STATE_HANDLER == 1
    this->getContext().registerStateHandler(*this);
 #endif
+
+#if SPLPY_PARTITION_BY_PYTHON == 1
+    // This is based on SplpyFuncOp::loadAndWrapCallable
+    SplpyGIL lock;
+    setOp(this);
+
+    // The object to be called is either partitionCallable for
+    // a function passed into the operator
+    // or a pickled encoded class instance
+    // represented as a string in parameter pyPartitionByCallable
+    
+#if SPLPY_PARTITION_BY_CALLABLE == 1
+
+    // argument is the serialized callable instance
+    PyObject * partitionCallable = pyUnicode_FromUTF8(param("pyPartitionByCallable").c_str());
+
+    // base64.decode
+    PyObject * decoded = SplpyGeneral::callFunction("base64","b64decode", partitionCallable, NULL);
+
+    // dill.loads
+    PyObject * loaded = SplpyGeneral::callFunction("dill", "loads", decoded, NULL);
+       
+    setCallable(loaded);
+
+#else
+    
+    setCallable( 
+        SplpyGeneral::loadFunction(param("pyPartitionByModule"), param("pyPartitionByName")));
+
+#endif // SPLPY_PARTITION_BY_CALLABLE
+
+#if SPLPY_PARTITION_IS_STATEFUL == 1
+    partitionStateHandler_ = new SplpyOpStateHandlerImpl(this);
+#endif
+
+#endif // SPLPY_PARTITION_BY_PYTHON
 }
 
 MY_OPERATOR::~MY_OPERATOR() 
 {
   delete funcop_;
 
+#if SPLPY_PARTITION_IS_STATEFUL == 1
+    delete partitionStateHandler_;
+#endif
+
   <% if (($pystyle eq 'json') || ($pystyle eq 'pickle')) {%>
   {
       SplpyGIL lock;
       Py_CLEAR(loads);
+#if SPLPY_PARTITION_BY_PYTHON == 1 
+      clearOp();
+      clearCallable();
+#endif
   }
   <% } %>
 }
@@ -127,7 +180,6 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
   // so we need to do it here.
   
   <%if ($pystyle eq 'pickle'){%>
-
       unsigned char const *data = value.getData();
       unsigned char fmt = *data;
       if (fmt == STREAMSX_TPP_PTR) {
@@ -177,7 +229,17 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
     SPL::AutoPortMutex am(mutex_, *this);
 #endif
 
+#if SPLPY_PARTITION_BY_ATTRIBUTE == 1
+  PartitionType const & partition = getPartitionValue(static_cast<TupleType const &>(tuple));
+  window_.insert(python_value, partition);
+#elif SPLPY_PARTITION_BY_PYTHON == 1
+  PartitionType const & partition = getPartitionValue(python_value);
+  window_.insert(python_value, partition);
+#else
   window_.insert(python_value);
+#endif
+
+  _partitionCount.setValueNoLock(window_.getWindowStorage().size());
 }
 
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
@@ -192,24 +254,46 @@ void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
 <% if ($window->isTumbling()) {%>
 void MY_OPERATOR::aggregateRemaining() {
 #if SPLPY_AGGREGATE_TIME_POLICIES == 1
-    SPL::AutoWindowDataAcquirer<PyObject *> awd(window_);
+    SPL::AutoWindowDataAcquirer<WindowType::TupleType, WindowType::PartitionType, WindowType::DataType, WindowType::StorageType> awd(window_);
 #elif SPLPY_OP_STATE_HANDLER == 1
     SPL::AutoMutex am(mutex_);
 #else
     SPL::AutoPortMutex am(mutex_, *this);
 #endif
-    Window<PyObject *>::StorageType & storage = window_.getWindowStorage();
-    Window<PyObject *>::DataType & content = storage[0];
-    if (!content.empty()) {
-        beforeWindowFlushEvent(window_, 0);
+    WindowType::StorageType & storage = window_.getWindowStorage();
+    // Iterate through the partitions.
+    for (WindowType::StorageType::iterator partition = storage.begin(); partition != storage.end(); ++partition) {
+        WindowType::DataType & content = partition->second;
+	if (!content.empty()) {
+            beforeWindowFlushEvent(window_, partition->first);
 
-       // Since we have processed these tuples in batch
-       // don't process them again. 
-       content.clear();
+           // Since we have processed these tuples in batch
+           // don't process them again. 
+           content.clear();
+        }
     }
 }
 <%}%>
 
+#if SPLPY_PARTITION_BY_PYTHON == 1
+PyObject * MY_OPERATOR::getPartitionValue(PyObject * tuple) const {
+    SPLAPPTRC(L_DEBUG, "getPartitionValue: enter", SPLPY_SH_ASPECT);
+    SplpyGIL lock; 
+    PyObject * arg = PyTuple_New(1);
+    Py_INCREF(tuple);
+    PyTuple_SET_ITEM(arg, 0, tuple);
+    SPLAPPTRC(L_DEBUG, "getPartitionValue: pyCallObject", SPLPY_SH_ASPECT);
+    PyObject *ret = SplpyGeneral::pyCallObject(callable(), arg);
+
+    if (!ret) {
+        SplpyGeneral::tracePythonError();        
+        throw SplpyExceptionInfo::pythonError("partition").exception();
+    }
+
+    SPLAPPTRC(L_DEBUG, "getPartitionValue: exit", SPLPY_SH_ASPECT);
+    return ret;
+}
+#endif // SPLPY_PARTITION_BY_PYTHON
 
 // ##############################
 // Window Event Handler Overrides
@@ -218,7 +302,7 @@ void MY_OPERATOR::aggregateRemaining() {
 <% if ($window->isSliding()) {%>
 
 void MY_OPERATOR::afterTupleEvictionEvent(
-     Window<PyObject *> & window,  Window<PyObject *>::TupleType & tuple,  Window<PyObject *>::PartitionType const & partition) {
+     WindowEventType::WindowType & window,  WindowEventType::TupleType & tuple,  WindowEventType::PartitionType const & partition) {
      // Drop reference to tuple after it is removed from the window.
      SplpyGIL lock;
      Py_DECREF(tuple);
@@ -233,16 +317,17 @@ void MY_OPERATOR::onWindowTriggerEvent(
 <% if ($window->isTumbling()) {%>
 void MY_OPERATOR::beforeWindowFlushEvent(
 <%}%>
-    Window<PyObject *> & window, Window<PyObject *>::PartitionType const & key){    
-    Window<PyObject *>::StorageType & storage = window.getWindowStorage();
+    WindowEventType::WindowType & window, WindowEventType::PartitionType const & key){    
+    SPLAPPTRC(L_DEBUG, "aggregation: enter", SPLPY_SH_ASPECT);
+    WindowType::StorageType & storage = window.getWindowStorage();
 
-    Window<PyObject *>::DataType & content = storage[key];
+    WindowType::DataType & content = storage[key];
     PyObject *items;
     {
-    SplpyGIL lock;
-    items = PyList_New(content.size());
-    unsigned int idx = 0;
-    for(WindowType::DataType::iterator it=content.begin(); it!=content.end(); ++it) {
+      SplpyGIL lock;
+      items = PyList_New(content.size());
+      unsigned int idx = 0;
+      for(WindowType::DataType::iterator it=content.begin(); it!=content.end(); ++it) {
         PyObject *item = *it;
 <% if ($window->isSliding()) {%>
 	// The list steals a reference, increment such that the window can maintain a copy
@@ -252,24 +337,41 @@ void MY_OPERATOR::beforeWindowFlushEvent(
 <%}%>
 	PyList_SET_ITEM(items, idx, item);
 	++idx;
-    }
+      }
     }
   OPort0Type otuple;
 
   {
     try {
-  
+      SplpyGIL lock;
+      SPLAPPTRC(L_DEBUG, "aggregation: call", SPLPY_SH_ASPECT);
       if (SPLPY_AGGREGATE(funcop_->callable(), items,
         otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_)){  
+        SPLAPPTRC(L_DEBUG, "aggregation: submit", SPLPY_SH_ASPECT);
         submit(otuple, 0);
-      }  
+      } 
+      else {
+        SPLAPPTRC(L_DEBUG, "aggregation: fail", SPLPY_SH_ASPECT);
+      }	    
     } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+      SPLAPPTRC(L_DEBUG, "aggregation: caught", SPLPY_SH_ASPECT);
       SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
       return;
     }
     submit(Punctuation::WindowMarker, 0);
   }
+  SPLAPPTRC(L_DEBUG, "aggregation: exit", SPLPY_SH_ASPECT);
 }
+
+#if SPLPY_PARTITION_BY_PYTHON == 1
+void MY_OPERATOR::onWindowPartitionEviction(WindowEventType::WindowType & window, WindowEventType::PartitionIterator begin, WindowEventType::PartitionIterator end) {
+  SplpyGIL lock;
+  
+  for (WindowEventType::PartitionIterator it = begin; it != end; ++it) {
+    Py_XDECREF(it->first);
+  }
+}
+#endif
 
 // ##################################
 // End Window Event Handler Overrides
@@ -297,6 +399,14 @@ void MY_OPERATOR::checkpoint(SPL::Checkpoint & ckpt) {
     SPL::AutoMutex am(mutex_);
 #endif
     window_.checkpoint(ckpt);
+#if SPLPY_PARTITION_IS_STATEFUL == 1
+    try {
+        partitionStateHandler_->checkpoint(ckpt);
+    }
+    catch (SplpyExceptionInfo const & e) {
+        throw e.exception();
+    }
+#endif	
     SPLAPPTRC(L_DEBUG, "checkpoint-Aggregate: exit", SPLPY_SH_ASPECT);
 }
 
@@ -306,6 +416,14 @@ void MY_OPERATOR::reset(SPL::Checkpoint & ckpt) {
     SPL::AutoMutex am(mutex_);
 #endif
     window_.reset(ckpt);
+#if SPLPY_PARTITION_IS_STATEFUL == 1
+    try {
+        partitionStateHandler_->reset(ckpt);
+    }
+    catch (SplpyExceptionInfo const & e) {
+        throw e.exception();
+    }
+#endif
     SPLAPPTRC(L_DEBUG, "reset-Aggregate: exit", SPLPY_SH_ASPECT);
 }
 
@@ -315,8 +433,32 @@ void MY_OPERATOR::resetToInitialState() {
     SPL::AutoMutex am(mutex_);
 #endif
     window_.resetToInitialState();
+#if SPLPY_PARTITION_IS_STATEFUL == 1
+    try {
+        partitionStateHandler_->resetToInitialState();
+    }
+    catch (SplpyExceptionInfo const & e) {
+        throw e.exception();
+    }
+#endif
     SPLAPPTRC(L_DEBUG, "resetToInitialState-Aggregate: exit", SPLPY_SH_ASPECT);
 }
+
+#endif
+
+#if SPLPY_PARTITION_BY_PYTHON == 1
+  void MY_OPERATOR::setCallable(PyObject * callable) {
+    SPLAPPTRC(L_DEBUG, "setCallable: enter", SPLPY_SH_ASPECT);
+    Py_CLEAR(callable_);
+    callable_ = callable;
+    Py_INCREF(callable);
+    SPLAPPTRC(L_DEBUG, "setCallable: exit", SPLPY_SH_ASPECT);
+  } 
+  void MY_OPERATOR::clearCallable() {
+    SPLAPPTRC(L_DEBUG, "clearCallable: enter", SPLPY_SH_ASPECT);
+    Py_CLEAR(callable_);
+    SPLAPPTRC(L_DEBUG, "clearCallable: exit", SPLPY_SH_ASPECT);
+  }
 
 #endif
 

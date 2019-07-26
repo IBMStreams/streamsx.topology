@@ -31,7 +31,29 @@
 namespace streamsx {
   namespace topology {
 
-class SplpyOp;
+/**
+ * An operator that has a python callable object that can
+ * saved and restored in checkpoints.  This defines the methods used
+ * by SplpyOpStateHandlerImpl to save and restore a python callable in
+ * a checkpoint.
+ */
+class OperatorWithCallable {
+ public:
+  OperatorWithCallable();
+  virtual ~OperatorWithCallable();
+
+  virtual void clearCallable();
+  virtual void setCallable(PyObject * callable);
+  inline PyObject * callable() const { return callable_; }
+  
+  void clearOp();
+  void setOp(SPL::Operator * op);
+  PyObject * opc() const;
+
+ protected:
+  PyObject * callable_;  
+  PyObject * opc_;
+};
 
 /**
  * Support for saving an operator's state to checkpoints, and restoring
@@ -39,51 +61,47 @@ class SplpyOp;
  */
  class SplpyOpStateHandlerImpl : public SPL::StateHandler {
  public:
-  SplpyOpStateHandlerImpl(SplpyOp * pyop, PyObject * pickledCallable);
+  SplpyOpStateHandlerImpl(OperatorWithCallable * pyop);
   virtual ~SplpyOpStateHandlerImpl();
   virtual void checkpoint(SPL::Checkpoint & ckpt);
   virtual void reset(SPL::Checkpoint & ckpt);
   virtual void resetToInitialState();
+
  private:
+
   static PyObject * call(PyObject * callable, PyObject * arg);
-  SplpyOp * op;
+
+  OperatorWithCallable * op;
   PyObject * loads;
   PyObject * dumps;
   PyObject * pickledInitialCallable;
 };
 
-class SplpyOp {
+class SplpyOp : public OperatorWithCallable {
   public:
       SplpyOp(SPL::Operator *op, const char * spl_setup_py) :
           op_(op),
-          callable_(NULL),
           pydl_(NULL),
           exc_suppresses(NULL),
           ckpts_(NULL),
           resets_(NULL),
-          opc_(NULL),
           stateHandler(NULL)
       {
           pydl_ = SplpySetup::loadCPython(spl_setup_py);
-
           SplpyGIL lock;
           SPL::rstring outDir(op->getPE().getOutputDirectory());
           PyObject * pyOutDir = pySplValueToPyObject(outDir);
           SplpyGeneral::callVoidFunction(
                "streamsx._streams._runtime", "_setup", pyOutDir, NULL);
-          opc_ = PyLong_FromVoidPtr((void*)op);
-          if (opc_ == NULL)
-              throw SplpyGeneral::pythonException("capsule");
+          setOp(op);
       }
 
       virtual ~SplpyOp()
       {
         {
           SplpyGIL lock;
-
           clearCallable();
-          Py_CLEAR(opc_);
-
+          clearOp();
           SplpyGeneral::flush_PyErrPyOut();
         }
         if (pydl_ != NULL)
@@ -98,32 +116,6 @@ class SplpyOp {
       }
 
       /**
-       * Set or clear the callable for this operator. 
-       *
-      */
-      void setCallable(PyObject * callable) {
-          callable_ = callable;
-          // Enter the context manager for the callable.
-          Py_INCREF(callable);
-          SplpyGeneral::callVoidFunction(
-             "streamsx._streams._runtime", "_call_enter", callable, opc());
-      }
-      void clearCallable() {
-        if (callable_) {
-             PyObject *cleared = callable_;
-             callable_ = NULL;
-             // Exit the context manager and release it
-             // THe function call steals the operator's reference
-             SplpyGeneral::callVoidFunction(
-               "streamsx._streams._runtime", "_call_exit", cleared, NULL);
-        }
-      }
-
-      PyObject * callable() {
-          return callable_;
-      }
-
-      /**
        * perform any common setup for a Python callable.
        * 
        * - If the callable as an __enter__/__exit__ pair
@@ -132,8 +124,8 @@ class SplpyOp {
        *   by __exit__
        */
       void setup(bool needStateHandler) {
-          if (PyObject_HasAttrString(callable_, "_streamsx_ec_context")) {
-              PyObject *hasContext = PyObject_GetAttrString(callable_, "_streamsx_ec_context");
+          if (PyObject_HasAttrString(callable(), "_streamsx_ec_context")) {
+              PyObject *hasContext = PyObject_GetAttrString(callable(), "_streamsx_ec_context");
               if (PyObject_IsTrue(hasContext)) {
                   SPL::OperatorMetrics & metrics = op_->getContext().getMetrics();
                   SPL::Metric &cm = metrics.createCustomMetric(
@@ -169,11 +161,11 @@ class SplpyOp {
       }
 
       int exceptionRaised(const SplpyExceptionInfo& exInfo) {
-          if (callable_) {
+          if (callable()) {
              // callFunction steals the reference to callable_
-             Py_INCREF(callable_);
+             Py_INCREF(callable());
              PyObject *ignore = SplpyGeneral::callFunction(
-               "streamsx._streams._runtime", "_call_exit", callable_, exInfo.asTuple());
+               "streamsx._streams._runtime", "_call_exit", callable(), exInfo.asTuple());
              int ignoreException = PyObject_IsTrue(ignore);
              Py_DECREF(ignore);
              if (ignoreException && exc_suppresses)
@@ -181,12 +173,6 @@ class SplpyOp {
              return ignoreException;
           }
           return 0;
-      }
-
-      // Get the capture with a new ref
-      PyObject * opc() {
-         Py_INCREF(opc_);
-         return opc_;
       }
      
       /**
@@ -205,14 +191,9 @@ class SplpyOp {
         if (consistentRegion)
           SPLAPPTRC(L_DEBUG, "consistent region enabled", SPLPY_SH_ASPECT);
 
-        // Save the initial callable.
-        SplpyGIL lock;
-        Py_INCREF(callable());
-        PyObject *pickledCallable = SplpyGeneral::callFunction("dill", "dumps", callable(), NULL);
-
         SPLAPPTRC(L_DEBUG, "Creating state handler", SPLPY_SH_ASPECT);
-        // pickledCallable reference stolen here.
-        stateHandler = new SplpyOpStateHandlerImpl(this, pickledCallable);
+
+        stateHandler = new SplpyOpStateHandlerImpl(this);
 
         createStateMetrics(consistentRegion);
       }
@@ -253,9 +234,6 @@ class SplpyOp {
    private:
       SPL::Operator *op_;
 
-      // Python object used to process tuples
-      PyObject *callable_;
-
       // Handle to libpythonX.Y.so
       void * pydl_;
 
@@ -264,18 +242,22 @@ class SplpyOp {
       SPL::Metric *ckpts_;
       SPL::Metric *resets_;
 
-      // PyLong of op_
-      PyObject *opc_;
-
       SPL::StateHandler * stateHandler;
 };
 
  // Steals reference to pickledCallable
- SplpyOpStateHandlerImpl::SplpyOpStateHandlerImpl(SplpyOp * pyop, PyObject * pickledCallable) : op(pyop), loads(), dumps(), pickledInitialCallable(pickledCallable) {
+ SplpyOpStateHandlerImpl::SplpyOpStateHandlerImpl(OperatorWithCallable * pyop) : op(pyop), loads(), dumps(), pickledInitialCallable() {
+
   // Load pickle.loads and pickle.dumps
   SplpyGIL lock;
   loads = SplpyGeneral::loadFunction("dill", "loads");
   dumps = SplpyGeneral::loadFunction("dill", "dumps");
+  
+  pickledInitialCallable = call (dumps, op->callable());
+  if (!pickledInitialCallable) {
+    SplpyGeneral::tracePythonError();
+    throw SplpyExceptionInfo::pythonError("dill.dumps").exception();
+  }
  }
 
  SplpyOpStateHandlerImpl::~SplpyOpStateHandlerImpl() {
@@ -329,7 +311,6 @@ class SplpyOp {
    op->setCallable(callable); // reference to ret stolen by op
    SPLAPPTRC(L_DEBUG, "reset-callable: exit", SPLPY_SH_ASPECT);
  }
-
  void SplpyOpStateHandlerImpl::resetToInitialState() {
    SPLAPPTRC(L_DEBUG, "resetToInitialState-callable: enter", SPLPY_SH_ASPECT);
    SplpyGIL lock;
@@ -358,7 +339,66 @@ class SplpyOp {
    return ret;
  }
 
+ /**
+  * Set or clear the callable for this operator. 
+  *
+  */
+ // This constructor may be called before python has been loaded,
+ // so it cannot safely use the python API.
+ OperatorWithCallable::OperatorWithCallable() : callable_(NULL), opc_(NULL) {}
+ // This destructor may be called after python has been unloaded,
+ // so it cannot safely use the python API.
+ OperatorWithCallable::~OperatorWithCallable() {}
+
+ void OperatorWithCallable::setOp(SPL::Operator * op) {
+   SPLAPPTRC(L_DEBUG, "OperatorWithCallable::setOp enter", SPLPY_SH_ASPECT);
+   SplpyGIL lock;
+   opc_ = PyLong_FromVoidPtr(static_cast<void*>(op));
+   if (opc_ == NULL) {
+     SPLAPPTRC(L_DEBUG, "OperatorWithCallable::setOp", SPLPY_SH_ASPECT);
+     SplpyGeneral::tracePythonError();        
+     throw SplpyExceptionInfo::pythonError("capsule").exception();
+   }
+   SPLAPPTRC(L_DEBUG, "OperatorWithCallable::setOp exit", SPLPY_SH_ASPECT);
+ }
+ void OperatorWithCallable::clearOp() {
+   SPLAPPTRC(L_DEBUG, "OperatorWithCallable::clearOp enter", SPLPY_SH_ASPECT);
+   SplpyGIL lock;
+   Py_CLEAR(opc_);  
+   SPLAPPTRC(L_DEBUG, "OperatorWithCallable::clearOp exit", SPLPY_SH_ASPECT);
+ }
+ // Get the capture with a new ref
+ PyObject * OperatorWithCallable::opc() const {
+   SPLAPPTRC(L_DEBUG, "OperatorWithCallable::opc enter", SPLPY_SH_ASPECT);
+   Py_INCREF(opc_);
+   SPLAPPTRC(L_DEBUG, "OperatorWithCallable::opc exit", SPLPY_SH_ASPECT);
+   return opc_;
+ }
+   
+ void OperatorWithCallable::setCallable(PyObject * callable) {
+   SPLAPPTRC(L_DEBUG, "OperatorWithCallable::setCallable enter", SPLPY_SH_ASPECT);
+   Py_CLEAR(callable_);
+   callable_ = callable;
+   // Enter the context manager for the callable.
+   Py_INCREF(callable);
+   SplpyGeneral::callVoidFunction(
+     "streamsx._streams._runtime", "_call_enter", callable, opc());
+   SPLAPPTRC(L_DEBUG, "OperatorWithCallable::setCallable exit", SPLPY_SH_ASPECT);
+ }
+ void OperatorWithCallable::clearCallable() {
+   SPLAPPTRC(L_DEBUG, "OperatorWithCallable::clearCallable enter", SPLPY_SH_ASPECT);
+   if (callable_) {
+     PyObject *cleared = callable_;
+     callable_ = NULL;
+     // Exit the context manager and release it
+     // The function call steals the operator's reference
+     SplpyGeneral::callVoidFunction(
+       "streamsx._streams._runtime", "_call_exit", cleared, NULL);
+   }
+   SPLAPPTRC(L_DEBUG, "OperatorWithCallable::clearCallable exit", SPLPY_SH_ASPECT);
+ } 
 }}
+
 
 #endif
 
