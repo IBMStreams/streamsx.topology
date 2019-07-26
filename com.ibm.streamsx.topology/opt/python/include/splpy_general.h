@@ -59,7 +59,7 @@ namespace streamsx {
     inline int pyRStringFromPyObject(SPL::rstring & attr, PyObject * value) {
       Py_ssize_t size = 0;
       PyObject * converted = NULL;
-      char * bytes = NULL;
+      const char * bytes = NULL;
 
 #if PY_MAJOR_VERSION == 3
       // Python 3 character strings are unicode objects
@@ -70,7 +70,7 @@ namespace streamsx {
           // Create a string from the object
           value = converted = PyObject_Str(value);
       }
-      bytes = PyUnicode_AsUTF8AndSize(value, &size);
+      bytes = (const char *) PyUnicode_AsUTF8AndSize(value, &size);
 #else
       // Python 2 supports Unicode and byte character strings 
       // Default is byte character strings.
@@ -96,7 +96,7 @@ namespace streamsx {
       }
 
       // This copies from bytes into the rstring.
-      attr.assign((const char *)bytes, (size_t) size);
+      attr.assign(bytes, (size_t) size);
 
       // Need to decrement the reference after we
       // have copied the bytes out as bytes points
