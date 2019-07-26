@@ -71,8 +71,8 @@ service through HTTPS REST APIs.
    :toctree: .
    :template: streamsx_module.rst
 
+   streamsx.build
    streamsx.rest
-   streamsx.build_service
    streamsx.rest_primitives
 
 *******
