@@ -6,7 +6,25 @@ streamsx-streamtool
 Overview
 ********
 
-Showcases REST API commands for the Streaming Analytics service.
+Command line interface for IBM Streams running on IBM Cloud Pak for Data.
+
+``streamsx-streamtool`` replicates a sub-set of Streams ``streamtool``
+commands focusing on supporting DevOps for streaming applications.
+
+``streamsx-streamtool`` is supported for Streams instances running
+on Cloud Pak for Data. A local install of Streams is **not** required,
+simply the installation of the `streamsx` package. All functionality
+is implemented through the Cloud Pak for Data and Streams REST apis.
+
+Cloud Pak for Data configuration
+================================
+
+The Streams instance and authentication are defined through environment variables:
+
+    * **ICPD_URL** - Cloud Pak for Data deployment URL, e.g. `https://icp4d_server:31843`.
+    * **STREAMS_INSTANCE_ID** - Streams service instance name.
+    * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name. Overridden by the ``--User`` option.
+    * **STREAMS_PASSWORD** - Password for authentication.
 
 *****
 Usage
