@@ -105,8 +105,6 @@ class toolkit:
     self.version = version
     self.path = path
 
-# ------------------------------------------------------------------------------------
-
 def _submit_build(cmd_args, topo):
      cfg = {}
      # Only supported for remote builds.
