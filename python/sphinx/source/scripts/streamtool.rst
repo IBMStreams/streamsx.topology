@@ -1,6 +1,6 @@
-###############
+###################
 streamsx-streamtool
-###############
+###################
 
 ********
 Overview
@@ -227,6 +227,7 @@ Options and arguments
     -\--fmt:
         Specifies the presentation format. The command supports the following
         values:
+
             * %Mf: Multiline record format. One line per field. 
             * %Nf: Name prefixed field table format. One line per job. 
             * %Tf: Standard table format, which is the default. One line per job.
@@ -260,10 +261,10 @@ Options and arguments
     -\--fmt:
         Specifies the presentation format. The command supports the following
         values:
+
             * %Mf: Multiline record format. One line per field.
             * %Nf: Name prefixed field table format. One line per cfgname.
-            * %Tf: Standard table format, which is the default. One line per
-            cfgname.
+            * %Tf: Standard table format, which is the default. One line per cfgname.
 
     -U,--User:
         Specifies an IBM Streams user ID that has authority to run the
