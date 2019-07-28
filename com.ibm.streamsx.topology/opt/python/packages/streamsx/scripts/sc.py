@@ -24,33 +24,33 @@ def main(args=None):
     cmd_args = _parse_args(args)
     topo = _create_topo(cmd_args)
 
-    # Can assume info.xml is present in cwd
-    # Parse info.xml for dependencies
-    dependencies = parse_dependencies()
-    # if -t arg, find & add local toolkits
-    if cmd_args.spl_path:
+    # Get dependencies for app, if any at all
+    dependencies = _parse_dependencies()
+    # if dependencies and if -t arg, find & add local toolkits
+    if dependencies and cmd_args.spl_path:
         tool_kits = cmd_args.spl_path.split(':')
         # Check if any dependencies are in the passed in toolkits, if so add them
-        add_local_toolkits(tool_kits, dependencies, topo)
+        _add_local_toolkits(tool_kits, dependencies, topo)
 
     _add_toolkits(cmd_args, topo)
     _submit_build(cmd_args, topo)
     return 0
 
-def parse_dependencies():
-    # Find the dependencies of the app you want to build sab file for
-    deps = {} # name - version 
-    root = ET.parse('info.xml').getroot()
-    info = '{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}'
-    common = '{http://www.ibm.com/xmlns/prod/streams/spl/common}'
-    dependency_elements = root.find(info + 'dependencies').findall(info + 'toolkit')
-    for dependency_element in dependency_elements:
-        name = dependency_element.find(common + 'name').text
-        version = dependency_element.find(common + 'version').text
-        deps[name] = version
+def _parse_dependencies():
+    # Parse info.xml for the dependencies of the app you want to build sab file for
+    deps = {} # name - version
+    if os.path.exists('info.xml') and os.path.isfile('info.xml'):
+        root = ET.parse('info.xml').getroot()
+        info = '{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}'
+        common = '{http://www.ibm.com/xmlns/prod/streams/spl/common}'
+        dependency_elements = root.find(info + 'dependencies').findall(info + 'toolkit')
+        for dependency_element in dependency_elements:
+            name = dependency_element.find(common + 'name').text
+            version = dependency_element.find(common + 'version').text
+            deps[name] = version
     return deps
 
-def add_local_toolkits(toolkits, dependencies, topo):
+def _add_local_toolkits(toolkits, dependencies, topo):
     """ A helper function that given the local toolkit paths, and the dependencies (ie toolkits that the apps depends on),
     checks and adds the local toolkit if it is one of the dependencies
 
@@ -63,14 +63,14 @@ def add_local_toolkits(toolkits, dependencies, topo):
     local_toolkits = [] # toolkit objects
     #  For each path, check if its a SPL toolkit (has info.xml directly inside) or a directory consisting of toolkits (no info.xml directly inside)
     for x in toolkits:
-        if _is_toolkit_(x):
+        if _is_local_toolkit(x):
             tk = _get_toolkit(x)
             local_toolkits.append(tk)
         else:
             # directory consisting of toolkits, get list and check which are local_toolkits, add them
             sub_directories = glob(x + "*/")
             for y in sub_directories:
-                if _is_toolkit_(y):
+                if _is_local_toolkit(y):
                     tk = _get_toolkit(y)
                     local_toolkits.append(tk)
 
@@ -89,21 +89,20 @@ def _get_toolkit(path):
 
     toolkit_name = name.text
     toolkit_version = version.text
-    return toolkit(toolkit_name, toolkit_version, path)
+    return _LocalToolkit(toolkit_name, toolkit_version, path)
 
-def _is_toolkit_(tkdir):
-    # Checks if tkdir is a toolkit (contains toolkit.xml or info.xml)
-    # or if it isn't or is directory containing multiple toolkit directories (returns)
+def _is_local_toolkit(dir):
+    # Checks if dir is a toolkit (contains toolkit.xml or info.xml)
     for fn in ['toolkit.xml', 'info.xml']:
-        if os.path.isfile(os.path.join(tkdir, fn)):
+        if os.path.isfile(os.path.join(dir, fn)):
             return True
     return False
 
-class toolkit:
-  def __init__(self, name, version, path):
-    self.name = name
-    self.version = version
-    self.path = path
+class _LocalToolkit:
+    def __init__(self, name, version, path):
+        self.name = name
+        self.version = version
+        self.path = path
 
 def _submit_build(cmd_args, topo):
      cfg = {}
@@ -128,16 +127,15 @@ def _add_toolkits(cmd_args, topo):
 
 def _add_cwd(cmd_args, topo):
     cwd = os.getcwd()
-    if _is_toolkit(cwd):
+    if _is_likely_toolkit(cwd):
         add_toolkit(topo, cwd)
 
-def _is_toolkit(tkdir):
+def _is_likely_toolkit(tkdir):
     """
     Determine if a directory looks like an SPL toolkit.
     """
-    for fn in ['toolkit.xml', 'info.xml']:
-        if os.path.isfile(os.path.join(tkdir, fn)):
-            return True
+    if _is_local_toolkit(tkdir):
+        return True
     for dirpath, dirnames, filenames in os.walk(tkdir):
         for fn in filenames:
             if fn.endswith('.spl'):
