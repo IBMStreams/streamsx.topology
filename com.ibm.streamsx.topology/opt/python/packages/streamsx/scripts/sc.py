@@ -14,6 +14,7 @@ from streamsx.topology.context import submit, ConfigParams
 import xml.etree.ElementTree as ET
 from glob import glob
 import re
+from packaging import version
 
 
 _FACADE=['--prefer-facade-tuples', '-k']
@@ -129,34 +130,36 @@ def _check_satisfies_version(toolkit, dependency_range, topo):
     else:
         right_inclusive = False
 
-    # Remove parenthesis, brackets, and '.' from range and split by ',' to get lower and upper bounds, then convert to int
-    # Ex '[3.0.0,4.0.0)' -> [300, 400]
-    bounds = re.sub('[()\[\].]', '', dependency_range).split(',')
-    bounds = list(map(int, bounds))
+    # Remove parenthesis and brackets from range and split by ',' to get lower and upper bounds, then convert to version
+    # Version also handles the case '[4.5.6,5.2)' where 5.2 > 4.5.6
+    bounds = re.sub('[()\[\]]', '', dependency_range).split(',')
+    left_bound = version.parse(bounds[0])
+    right_bound = version.parse(bounds[1])
 
-    # Remove '.' from version, and convert it to a number
-    # Ex '3.1.0' -> 310
-    toolkit_ver = int(re.sub('[.]', '', toolkit.version))
+    # Remove '.' from version, and convert it to version
+    toolkit_ver = version.parse(toolkit.version)
 
     # Check that toolkit_ver satisfies its left and right bounds
     # if left is '[' check that version satisfies it
     if left_inclusive:
-        if toolkit_ver >= bounds[0]:
+        if toolkit_ver >= left_bound:
             satisfies_left = True
     else: # left is '('
-        if toolkit_ver > bounds[0]:
+        if toolkit_ver > left_bound:
             satisfies_left = True
     # if right is ']' check that version satisfies it
     if right_inclusive:
-        if toolkit_ver <= bounds[1]:
+        if toolkit_ver <= right_bound:
             satisfies_right = True
     else: # right is ')'
-        if toolkit_ver < bounds[1]:
+        if toolkit_ver < right_bound:
             satisfies_right = True
 
     # If toolkit.version satisfies left and right bound, then its a valid toolkit dependency, add it
     if satisfies_left and satisfies_right:
         add_toolkit(topo, toolkit.path)
+    else:
+        print("Dependency {} with version {} was not in range".format(toolkit.name, toolkit.version), file=sys.stderr)
 
 def _submit_build(cmd_args, topo):
      cfg = {}
