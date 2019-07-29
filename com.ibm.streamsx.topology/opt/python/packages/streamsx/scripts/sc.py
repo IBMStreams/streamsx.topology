@@ -130,7 +130,7 @@ def _check_satisfies_dependency(toolkit, dependency_range, topo):
         right_inclusive = False
 
     # Remove parenthesis, brackets, and '.' from range and split by ',' to get lower and upper bounds, then convert to int
-    # Ex [3.0.0,4.0.0) -> [300, 400]
+    # Ex '[3.0.0,4.0.0)' -> [300, 400]
     bounds = re.sub('[()\[\].]', '', dependency_range).split(',')
     bounds = list(map(int, bounds))
 
