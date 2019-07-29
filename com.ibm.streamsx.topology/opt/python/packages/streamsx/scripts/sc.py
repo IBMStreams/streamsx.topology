@@ -77,7 +77,7 @@ def _add_local_toolkits(toolkits, dependencies, topo):
     # Once we have all local toolkits, check if they correspond to any dependencies that we have, if so, add them
     for toolkit in local_toolkits:
         if toolkit.name in dependencies:
-            _check_satisfies_dependency(toolkit, dependencies[toolkit.name], topo)
+            _check_satisfies_version(toolkit, dependencies[toolkit.name], topo)
 
 def _get_toolkit(path):
     # Get the name & version of the toolkit that is in the directory PATH
@@ -103,7 +103,7 @@ class _LocalToolkit:
         self.version = version
         self.path = path
 
-def _check_satisfies_dependency(toolkit, dependency_range, topo):
+def _check_satisfies_version(toolkit, dependency_range, topo):
     """ Checks if toolkit's version satisfies the dependency_range, if yes, can use it to build main app (ie add it)
 
     Arguments:
