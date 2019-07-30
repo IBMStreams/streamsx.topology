@@ -27,11 +27,11 @@ from streamsx.rest import Instance
 def _submitjob_parser(subparsers):
     job_submit = subparsers.add_parser('submitjob', help='Submit an application bundle')
     job_submit.add_argument('sabfile', help='Location of sab file.', metavar='sab-pathname')
-    job_submit.add_argument('--jobConfig', '-g', help='Specifies the name of an external file that defines a job configuration overlay')
-    job_submit.add_argument('--jobname', help='Specifies the name of the job.')
-    job_submit.add_argument('--jobgroup', '-J', help='Specifies the job group')
-    job_submit.add_argument('--outfile', help='Specifies the path and file name of the output file in which the command writes the list of submitted job IDs')
-    job_submit.add_argument('--P', '-P', help='Specifies a submission-time parameter and value for the job', action='append')
+    job_submit.add_argument('--jobConfig', '-g', help='Specifies the name of an external file that defines a job configuration overlay', metavar='file-name')
+    job_submit.add_argument('--jobname', help='Specifies the name of the job.', metavar='job-name')
+    job_submit.add_argument('--jobgroup', '-J', help='Specifies the job group', metavar='jobgroup-name')
+    job_submit.add_argument('--outfile', help='Specifies the path and file name of the output file in which the command writes the list of submitted job IDs', metavar='file-name')
+    job_submit.add_argument('--P', '-P', help='Specifies a submission-time parameter and value for the job', action='append', metavar='parameter-name')
     _user_arg(job_submit)
 
 def _submitjob(instance, cmd_args, rc):
@@ -81,13 +81,13 @@ def _canceljob_parser(subparsers):
     job_cancel = subparsers.add_parser('canceljob', help='Cancel a job.')
     job_cancel.add_argument('--force', action='store_true', help='Stop the service even if jobs are running.', default=False)
     job_cancel.add_argument('--collectlogs', help='Specifies to collect the log and trace files for each processing element that is associated with the job', action='store_true')
-    job_cancel.add_argument('jobid', help='Specifies a list of job IDs.', nargs='*')
+    job_cancel.add_argument('jobid', help='Specifies a list of job IDs.', nargs='*', metavar='jobid')
     # Only 1 of these arguments --jobs, --jobnames, --file can be specified at any given time when running this command
     g1 = job_cancel.add_argument_group(title='jobs jobnames file group', description='One of these options must be chosen.')
     group = g1.add_mutually_exclusive_group(required=False)
     group.add_argument('--jobs', '-j', help='Specifies a list of job IDs.', metavar='job-id')
-    group.add_argument('--jobnames', help='Specifies a list of job names')
-    group.add_argument('--file', '-f', help='Specifies the file that contains a list of job IDs, one per line')
+    group.add_argument('--jobnames', help='Specifies a list of job names', metavar='job-names')
+    group.add_argument('--file', '-f', help='Specifies the file that contains a list of job IDs, one per line', metavar='file-name')
 
     _user_arg(job_cancel)
 
@@ -186,9 +186,9 @@ def _job_cancel(instance, job_id=None, collectlogs=False, force=False):
 def _lsjobs_parser(subparsers):
     job_ls = subparsers.add_parser('lsjobs', help='List the jobs for a given instance')
     job_ls.add_argument('--jobs', '-j', help='Specifies a list of job IDs.', metavar='job-id')
-    job_ls.add_argument('--users', '-u', help='Specifies to select from this list of user IDs')
-    job_ls.add_argument('--jobnames', help='Specifies a list of job names')
-    job_ls.add_argument('--fmt', help='Specifies the presentation format', default='%Tf')
+    job_ls.add_argument('--users', '-u', help='Specifies to select from this list of user IDs', metavar='user')
+    job_ls.add_argument('--jobnames', help='Specifies a list of job names', metavar='job-names')
+    job_ls.add_argument('--fmt', help='Specifies the presentation format', default='%Tf', metavar='format-spec')
     job_ls.add_argument('--xheaders', help='Specifies to exclude headings from the report', action='store_true')
     job_ls.add_argument('--long', '-l', help='Reports launch count, full host names, and all of the operator instance names for the PEs.', action='store_true')
     job_ls.add_argument('--showtimestamp', help='Specifies to show a time stamp in the output to indicate when the command was run.', action='store_true')
@@ -323,7 +323,7 @@ def _lsjobs(instance, cmd_args, rc):
 # ls-appconfig
 def _lsappconfig_parser(subparsers):
     appconfig_ls = subparsers.add_parser('lsappconfig', help='Retrieve a list of configurations for making a connection to an external application')
-    appconfig_ls.add_argument('--fmt', help='Specifies the presentation format', default='%Tf')
+    appconfig_ls.add_argument('--fmt', help='Specifies the presentation format', default='%Tf', metavar='format-spec')
     _user_arg(appconfig_ls)
 
 def _lsappconfig(instance, cmd_args, rc):
@@ -390,7 +390,7 @@ def _lsappconfig(instance, cmd_args, rc):
 # rm-appconfig
 def _rmappconfig_parser(subparsers):
     appconfig_rm = subparsers.add_parser('rmappconfig', help='Removes a configuration that is used for making a connection to an external application')
-    appconfig_rm.add_argument('config_name', help='Name of the app config')
+    appconfig_rm.add_argument('config_name', help='Name of the app config', metavar='config-name')
     appconfig_rm.add_argument('--noprompt', help='Specifies to suppress confirmation prompts.', action='store_true')
     _user_arg(appconfig_rm)
 
@@ -417,10 +417,10 @@ def _rmappconfig(instance, cmd_args, rc):
 # mk-appconfig
 def _mkappconfig_parser(subparsers):
     appconfig_mk = subparsers.add_parser('mkappconfig', help='Creates a configuration that enables connection to an external application')
-    appconfig_mk.add_argument('config_name', help='Name of the app config')
-    appconfig_mk.add_argument('--property', action='append', help='Specifies a property name and value pair to add to or change in the configuration')
-    appconfig_mk.add_argument('--propfile', help='Specifies the path to a file that contains a list of application configuration properties for connecting to an external application')
-    appconfig_mk.add_argument('--description', help='Specifies a description for the application configuration')
+    appconfig_mk.add_argument('config_name', help='Name of the app config', metavar='config-name')
+    appconfig_mk.add_argument('--property', action='append', help='Specifies a property name and value pair to add to or change in the configuration', metavar='name=value')
+    appconfig_mk.add_argument('--propfile', help='Specifies the path to a file that contains a list of application configuration properties for connecting to an external application', metavar='property-file')
+    appconfig_mk.add_argument('--description', help='Specifies a description for the application configuration', metavar='description')
     _user_arg(appconfig_mk)
 
 def _mkappconfig(instance, cmd_args, rc):
@@ -445,9 +445,9 @@ def _mkappconfig(instance, cmd_args, rc):
 # ch-appconfig
 def _chappconfig_parser(subparsers):
     appconfig_ch = subparsers.add_parser('chappconfig', help='Change the configuration properties that are used to make a connection to an external application')
-    appconfig_ch.add_argument('config_name', help='Name of the app config')
-    appconfig_ch.add_argument('--property', action='append', help='Specifies a property name and value pair to add to or change in the configuration')
-    appconfig_ch.add_argument('--description', help='Specifies a description for the application configuration')
+    appconfig_ch.add_argument('config_name', help='Name of the app config', metavar='config-name')
+    appconfig_ch.add_argument('--property', action='append', help='Specifies a property name and value pair to add to or change in the configuration', metavar='name=value')
+    appconfig_ch.add_argument('--description', help='Specifies a description for the application configuration', metavar='description')
     _user_arg(appconfig_ch)
 
 def _chappconfig(instance, cmd_args, rc):
@@ -526,7 +526,7 @@ def _create_appconfig_props(config_props, prop_list):
 # get-appconfig
 def _getappconfig_parser(subparsers):
     appconfig_get = subparsers.add_parser('getappconfig', help='Displays the properties of a configuration that enables connection to an external application')
-    appconfig_get.add_argument('config_name', help='Name of the app config')
+    appconfig_get.add_argument('config_name', help='Name of the app config', metavar='config-name')
     _user_arg(appconfig_get)
 
 def _getappconfig(instance, cmd_args, rc):
