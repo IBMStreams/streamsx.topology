@@ -116,8 +116,8 @@ def _check_satisfies_version(toolkit, dependency_range, topo):
     toolkit_ver = version.parse(toolkit.version)
 
     # Check if dependency_range is a single # or a range (single # won't contain brackets or parenthesis)
-    a = ['(', ')', '[', ']']
-    if not any(x in dependency_range for x in a):
+    temp = ['(', ')', '[', ']']
+    if not any(x in dependency_range for x in temp):
         required_version = version.parse(dependency_range)
         if required_version == toolkit_ver:
             add_toolkit(topo, toolkit.path)
@@ -125,7 +125,7 @@ def _check_satisfies_version(toolkit, dependency_range, topo):
             print("Dependency {} with version {} is not the required version {}".format(toolkit.name, toolkit.version, dependency_range), file=sys.stderr)
         return
 
-    # Dependency_range is a confirmed to be a range, check if left & right bound is inclusive or exclusive
+    # Dependency_range is confirmed to be a range, check if left & right bound is inclusive or exclusive
     left_inclusive = None
     right_inclusive = None
 
