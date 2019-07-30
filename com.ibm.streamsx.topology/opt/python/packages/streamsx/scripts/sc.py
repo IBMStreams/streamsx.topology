@@ -108,23 +108,35 @@ def _check_satisfies_version(toolkit, dependency_range, topo):
     """ Checks if toolkit's version satisfies the dependency_range, if yes, can use it to build main app (ie add it)
 
     Arguments:
-        toolkit {_LocalToolkit} -- A _LocalToolkit object, that we need to check if its version
-        dependency_range {String} -- A string of the form '[3.0.0,4.0.0)' that represents the range of versions that is acceptable
+        toolkit {_LocalToolkit} -- A _LocalToolkit object, that we need to check if its version is equal to or is contained in dependency_range
+        dependency_range {String} -- A string of the form '1.2.3' or [3.0.0,4.0.0)' that represents a version or range of versions that is acceptable
         topo {[type]} -- [description]
     """
+    # Convert it to version
+    toolkit_ver = version.parse(toolkit.version)
+
+    # Check if dependency_range is a single # or a range (single # won't contain brackets or parenthesis)
+    temp = ['(', ')', '[', ']']
+    if not any(x in dependency_range for x in temp):
+        required_version = version.parse(dependency_range)
+        if required_version == toolkit_ver:
+            add_toolkit(topo, toolkit.path)
+        return
+
+    # Dependency_range is confirmed to be a range, check if left & right bound is inclusive or exclusive
     left_inclusive = None
     right_inclusive = None
 
     satisfies_left = False
     satisfies_right = False
 
-    # Check if left bound is inclusive or exclusive
+    # Check left bound
     if dependency_range[0] == '[':
         left_inclusive = True
     else:
         left_inclusive = False
 
-    # Check if right bound is inclusive or exclusive
+    # Check right bound
     if dependency_range[-1] == ']':
         right_inclusive = True
     else:
@@ -135,9 +147,6 @@ def _check_satisfies_version(toolkit, dependency_range, topo):
     bounds = re.sub('[()\[\]]', '', dependency_range).split(',')
     left_bound = version.parse(bounds[0])
     right_bound = version.parse(bounds[1])
-
-    # Remove '.' from version, and convert it to version
-    toolkit_ver = version.parse(toolkit.version)
 
     # Check that toolkit_ver satisfies its left and right bounds
     # if left is '[' check that version satisfies it
@@ -158,8 +167,6 @@ def _check_satisfies_version(toolkit, dependency_range, topo):
     # If toolkit.version satisfies left and right bound, then its a valid toolkit dependency, add it
     if satisfies_left and satisfies_right:
         add_toolkit(topo, toolkit.path)
-    else:
-        print("Dependency {} with version {} was not in range".format(toolkit.name, toolkit.version), file=sys.stderr)
 
 def _submit_build(cmd_args, topo):
      cfg = {}
