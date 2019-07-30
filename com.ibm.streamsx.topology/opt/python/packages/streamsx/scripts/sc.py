@@ -14,6 +14,7 @@ from streamsx.topology.context import submit, ConfigParams
 import xml.etree.ElementTree as ET
 from glob import glob
 import re
+from packaging import version
 
 
 _FACADE=['--prefer-facade-tuples', '-k']
@@ -39,7 +40,7 @@ def main(args=None):
 def _parse_dependencies():
     # Parse info.xml for the dependencies of the app you want to build sab file for
     deps = {} # name - version
-    if os.path.exists('info.xml') and os.path.isfile('info.xml'):
+    if os.path.isfile('info.xml'):
         root = ET.parse('info.xml').getroot()
         info = '{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}'
         common = '{http://www.ibm.com/xmlns/prod/streams/spl/common}'
@@ -77,8 +78,7 @@ def _add_local_toolkits(toolkits, dependencies, topo):
     # Once we have all local toolkits, check if they correspond to any dependencies that we have, if so, add them
     for toolkit in local_toolkits:
         if toolkit.name in dependencies:
-            # print(toolkit.name, toolkit.path)
-            add_toolkit(topo, toolkit.path)
+            _check_satisfies_version(toolkit, dependencies[toolkit.name], topo)
 
 def _get_toolkit(path):
     # Get the name & version of the toolkit that is in the directory PATH
@@ -103,6 +103,63 @@ class _LocalToolkit:
         self.name = name
         self.version = version
         self.path = path
+
+def _check_satisfies_version(toolkit, dependency_range, topo):
+    """ Checks if toolkit's version satisfies the dependency_range, if yes, can use it to build main app (ie add it)
+
+    Arguments:
+        toolkit {_LocalToolkit} -- A _LocalToolkit object, that we need to check if its version
+        dependency_range {String} -- A string of the form '[3.0.0,4.0.0)' that represents the range of versions that is acceptable
+        topo {[type]} -- [description]
+    """
+    left_inclusive = None
+    right_inclusive = None
+
+    satisfies_left = False
+    satisfies_right = False
+
+    # Check if left bound is inclusive or exclusive
+    if dependency_range[0] == '[':
+        left_inclusive = True
+    else:
+        left_inclusive = False
+
+    # Check if right bound is inclusive or exclusive
+    if dependency_range[-1] == ']':
+        right_inclusive = True
+    else:
+        right_inclusive = False
+
+    # Remove parenthesis and brackets from range and split by ',' to get lower and upper bounds, then convert to version
+    # Version also handles the case '[4.5.6,5.2)' where 5.2 > 4.5.6
+    bounds = re.sub('[()\[\]]', '', dependency_range).split(',')
+    left_bound = version.parse(bounds[0])
+    right_bound = version.parse(bounds[1])
+
+    # Remove '.' from version, and convert it to version
+    toolkit_ver = version.parse(toolkit.version)
+
+    # Check that toolkit_ver satisfies its left and right bounds
+    # if left is '[' check that version satisfies it
+    if left_inclusive:
+        if toolkit_ver >= left_bound:
+            satisfies_left = True
+    else: # left is '('
+        if toolkit_ver > left_bound:
+            satisfies_left = True
+    # if right is ']' check that version satisfies it
+    if right_inclusive:
+        if toolkit_ver <= right_bound:
+            satisfies_right = True
+    else: # right is ')'
+        if toolkit_ver < right_bound:
+            satisfies_right = True
+
+    # If toolkit.version satisfies left and right bound, then its a valid toolkit dependency, add it
+    if satisfies_left and satisfies_right:
+        add_toolkit(topo, toolkit.path)
+    else:
+        print("Dependency {} with version {} was not in range".format(toolkit.name, toolkit.version), file=sys.stderr)
 
 def _submit_build(cmd_args, topo):
      cfg = {}
