@@ -355,7 +355,6 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
         cfg = {
                 'type': 'streams',
                 'connection_info': {
-                    'externalClient':True,
                     'serviceBuildEndpoint': build_url,
                     'serviceRestEndpoint': streams_url},
                 'serviceTokenEndpoint': service_token_url,
@@ -364,7 +363,8 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
                 'service_name': service_name,
                 'cluster_ip': cluster_ip,
                 'cluster_port': cluster_port,
-                'service_id': service_id
+                'service_id': service_id,
+                'externalClient':True,
         }
 
         return cfg
@@ -1556,12 +1556,18 @@ class Instance(_ResourceElement):
             svc_info = {}
             svc_info['connection_info'] = service['connection_info']
             svc_info['type'] = service['type']
+            svc_name = service['connection_info']['serviceRestEndpoint'].split('/')[-1]
+            svc_info['service_name'] = svc_name
             try:
+                # Get a new token as we don't know how much
+                # time has passed since the cell containing
+                # get_service_instance_details was run
                 from icpd_core import icpd_util
-                svc_name = service['connection_info']['serviceRestEndpoint'].split('/')[-1]
                 svc_info['service_token'] = icpd_util.get_instance_token(name=svc_name)
+                svc_info['service_token_expire'] = int((time.time() + 19 * 60)*1000)
             except:
                 svc_info['service_token'] = service['service_token']
+                svc_info['service_token_expire'] = int((time.time() + 5 * 60)*1000)
             if 'user_token' in service:
                 svc_info['user_token'] = service['user_token']
             return svc_info

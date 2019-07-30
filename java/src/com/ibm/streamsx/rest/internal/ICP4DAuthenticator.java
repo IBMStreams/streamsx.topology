@@ -4,6 +4,7 @@
  */
 package com.ibm.streamsx.rest.internal;
 
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
@@ -146,14 +147,14 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         String serviceName = jstring(instance, "id");
        
         // Return object matches one created in Python.
-        JsonObject connInfo = new JsonObject();
-        connInfo.addProperty("externalClient", true);
+        JsonObject connInfo = new JsonObject();       
         connInfo.addProperty("serviceRestEndpoint", streamsUrl.toExternalForm());
         connInfo.addProperty("serviceBuildEndpoint", buildUrl.toExternalForm());
 
         JsonObject cfg = new JsonObject();
       
         cfg.addProperty("type", "streams");
+        cfg.addProperty("externalClient", true);
         cfg.add("connection_info", connInfo);
         cfg.addProperty("service_token", serviceToken);
         cfg.addProperty("service_token_expire", expire);
@@ -168,14 +169,20 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
     
     public static ICP4DAuthenticator of(JsonObject service) throws MalformedURLException, UnsupportedEncodingException {
         
-        String cpd_host = jstring(service, "cluster_ip");
-        int cpd_port = GsonUtilities.jint(service, "cluster_port");
-        URL cpd_url = new URL("https", cpd_host, cpd_port, "");
-        
-        ICP4DAuthenticator auth = ICP4DAuthenticator.of(cpd_url.toExternalForm(), jstring(service, "service_name"), (String) null, (String) null);
-        
-      
+        String serviceName = jstring(service, "service_name");
+        final ICP4DAuthenticator auth;
+        if (jboolean(service, "externalClient")) {
+            // Set externally
+            String cpd_host = jstring(service, "cluster_ip");
+            int cpd_port = GsonUtilities.jint(service, "cluster_port");
+            URL cpd_url = new URL("https", cpd_host, cpd_port, "");
+            auth = ICP4DAuthenticator.of(cpd_url.toExternalForm(), serviceName, (String) null, (String) null);
+        } else {
+            auth = new ICP4DAuthenticator(null, null, null, null, serviceName, null, null);
+        }
+    
         String serviceToken = jstring(service, "service_token");
+
         if (serviceToken != null) {
             auth.serviceAuth = RestUtils.createBearerAuth(serviceToken);
             auth.expire = service.get("service_token_expire").getAsLong();
