@@ -32,34 +32,36 @@ Usage
 
 .. code-block:: none
 
-    streamsx-streamtool submitjob [-h] [--jobConfig JOBCONFIG]
-            [--jobname JOBNAME] [--jobgroup JOBGROUP]
-            [--outfile OUTFILE] [--P P] [--User user]
+    streamsx-streamtool submitjob [-h] [--jobConfig file-name]
+            [--jobname job-name] [--jobgroup jobgroup-name]
+            [--outfile file-name] [--P parameter-name]
+            [--User user]
             sab-pathname
 
     streamsx-streamtool canceljob [-h] [--force] [--collectlogs]
-            [--jobs job-id | --jobnames JOBNAMES | --file FILE]
+            [--jobs job-id | --jobnames job-names | --file file-name]
             [--User user]
             [jobid [jobid ...]]
 
-    streamsx-streamtool lsjobs [-h] [--jobs job-id] [--users USERS]
-            [--jobnames JOBNAMES] [--fmt FMT] [--xheaders]
-            [--long] [--showtimestamp] [--User user]
+    streamsx-streamtool lsjobs [-h] [--jobs job-id] [--users user]
+            [--jobnames job-names] [--fmt format-spec]
+            [--xheaders] [--long] [--showtimestamp]
+            [--User user]
 
-    streamsx-streamtool lsappconfig [-h] [--fmt FMT] [--User user]
+    streamsx-streamtool lsappconfig [-h] [--fmt format-spec] [--User user]
 
-    streamsx-streamtool mkappconfig [-h] [--property PROPERTY]
-            [--propfile PROPFILE]
-            [--description DESCRIPTION] [--User user]
-            config_name
+    streamsx-streamtool mkappconfig [-h] [--property name=value]
+            [--propfile property-file]
+            [--description description] [--User user]
+            config-name
 
-    streamsx-streamtool rmappconfig [-h] [--noprompt] [--User user] config_name
+    streamsx-streamtool rmappconfig [-h] [--noprompt] [--User user] config-name
 
-    streamsx-streamtool chappconfig [-h] [--property PROPERTY]
-            [--description DESCRIPTION] [--User user]
-            config_name
+    streamsx-streamtool chappconfig [-h] [--property name=value]
+            [--description description] [--User user]
+            config-name
 
-    streamsx-streamtool getappconfig [-h] [--User user] config_name
+    streamsx-streamtool getappconfig [-h] [--User user] config-name
 
 
 *****************************************
@@ -80,9 +82,10 @@ Jobs remain in the system until they are canceled or the instance is stopped.
 
 .. code-block:: none
 
-    streamsx-streamtool submitjob [-h] [--jobConfig JOBCONFIG]
-            [--jobname JOBNAME] [--jobgroup JOBGROUP]
-            [--outfile OUTFILE] [--P P] [--User user]
+    streamsx-streamtool submitjob [-h] [--jobConfig file-name]
+            [--jobname job-name] [--jobgroup jobgroup-name]
+            [--outfile file-name] [--P parameter-name]
+            [--User user]
             sab-pathname
 
 Options and arguments
@@ -142,7 +145,7 @@ job to cancel.
 .. code-block:: none
 
     streamsx-streamtool canceljob [-h] [--force] [--collectlogs]
-            [--jobs job-id | --jobnames JOBNAMES | --file FILE]
+            [--jobs job-id | --jobnames job-names | --file file-name]
             [--User user]
             [jobid [jobid ...]]
 
@@ -199,9 +202,10 @@ the job or its processing elements (PEs).
 
 .. code-block:: none
 
-    streamsx-streamtool lsjobs [-h] [--jobs job-id] [--users USERS]
-            [--jobnames JOBNAMES] [--fmt FMT] [--xheaders]
-            [--long] [--showtimestamp] [--User user]
+    streamsx-streamtool lsjobs [-h] [--jobs job-id] [--users user]
+            [--jobnames job-names] [--fmt format-spec]
+            [--xheaders] [--long] [--showtimestamp]
+            [--User user]
 
 Options and arguments
 
@@ -251,8 +255,7 @@ application.
 
 .. code-block:: none
 
-    streamsx-streamtool lsappconfig [-h] [--fmt FMT] [--User user]
-
+    streamsx-streamtool lsappconfig [-h] [--fmt format-spec] [--User user]
 
 Options and arguments
 
@@ -286,14 +289,14 @@ property file using a name=value syntax.
 
 .. code-block:: none
 
-    streamsx-streamtool mkappconfig [-h] [--property PROPERTY]
-            [--propfile PROPFILE]
-            [--description DESCRIPTION] [--User user]
-            config_name
+    streamsx-streamtool mkappconfig [-h] [--property name=value]
+            [--propfile property-file]
+            [--description description] [--User user]
+            config-name
 
 Options and arguments
 
-    config_name:
+    config-name:
         Name of the app config
 
     -\--description:
@@ -335,11 +338,11 @@ external application.
 
 .. code-block:: none
 
-    streamsx-streamtool rmappconfig [-h] [--noprompt] [--User user] config_name
+    streamsx-streamtool rmappconfig [-h] [--noprompt] [--User user] config-name
 
 Options and arguments
 
-    config_name:
+    config-name:
         Name of the app config
 
     -\--noprompt:
@@ -363,13 +366,13 @@ application. You can change the values of properties or add new properties.
 
 .. code-block:: none
 
-    streamsx-streamtool chappconfig [-h] [--property PROPERTY]
-            [--description DESCRIPTION] [--User user]
-            config_name
+    streamsx-streamtool chappconfig [-h] [--property name=value]
+            [--description description] [--User user]
+            config-name
 
 Options and arguments
 
-    config_name:
+    config-name:
         Name of the app config
 
     -\--description:
@@ -402,11 +405,11 @@ for connecting to an external application.
 
 .. code-block:: none
 
-    streamsx-streamtool getappconfig [-h] [--User user] config_name
+    streamsx-streamtool getappconfig [-h] [--User user] config-name
 
 Options and arguments
 
-    config_name:
+    config-name:
         Name of the app config
 
     -U,--User:
