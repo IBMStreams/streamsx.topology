@@ -119,7 +119,7 @@ public abstract class JSONStreamsContext<T> extends StreamsContextImpl<T> {
      * Create JSON form of the submission from a topology and config.
      * @throws Exception 
      */
-    private void createSubmission(AppEntity entity) throws Exception {
+    protected void createSubmission(AppEntity entity) throws Exception {
         assert entity.submission == null;
         
         JsonObject submission = new JsonObject();
