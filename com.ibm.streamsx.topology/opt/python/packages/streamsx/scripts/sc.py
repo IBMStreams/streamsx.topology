@@ -82,22 +82,26 @@ def _add_local_toolkits(toolkit_paths, dependencies, topo, verify_arg):
             continue
 
         # Toolkit with the highest verion that still satisfies the dependency_version
-        latest_compatible_toolkit = matching_toolkits[0]
+        latest_compatible_toolkit = None
 
         # Go through all toolkits, find the highest/latest version, given by latest_compatible_toolkit
         for tk in matching_toolkits:
             # Check if current toolkit tk satisfies the version requirement
             if _check_correct_version(tk, dependency_version):
-                # if it satisfies, compare it against the highest version we have seen thus far
-                latest_version_so_far = version.parse(latest_compatible_toolkit.version)
-                curr_tk_version = version.parse(tk.version)
+                # if we have a toolkit that already satisfies the version requirement, and tk also satisfies its
+                # compare tk against the highest version we have seen thus far
+                if latest_compatible_toolkit:
+                    latest_version_so_far = version.parse(latest_compatible_toolkit.version)
+                    curr_tk_version = version.parse(tk.version)
 
-                # if it is a later version, update our toolkit
-                if curr_tk_version > latest_version_so_far:
+                    # if it is a later version, update our toolkit
+                    if curr_tk_version > latest_version_so_far:
+                        latest_compatible_toolkit = tk
+                else:
                     latest_compatible_toolkit = tk
 
         # Check if latest_compatible_toolkit is local, bc we then need to add it
-        if latest_compatible_toolkit in local_toolkits:
+        if isinstance(latest_compatible_toolkit, _LocalToolkit):
             # Latest toolkit is local, upload it
             add_toolkit(topo, latest_compatible_toolkit.path)
             # print("Latest dependency {} with version {} is not on buildserver, adding it".format(latest_compatible_toolkit.name, latest_compatible_toolkit.version))
