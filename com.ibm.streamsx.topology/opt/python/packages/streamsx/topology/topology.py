@@ -2416,3 +2416,49 @@ class Sink(_placement._Placement, object):
 
     def _op(self):
         return self.__op
+
+
+class Catch(object):
+    """Catch runtime exceptions in transforms.
+
+    By default any uncaught exception that is thrown while processing
+    a tuple on a :py:class:`Stream` causes the containing
+    processing element (PE) to fail (and potentially restart).
+
+    For example the transform ``s.map(lambda(tuple_ : int(tuple_)))`` will
+    cause the PE to fail if `tuple_` cannot be converted to an integer.
+
+    `Catch` is a topology declaration time context manager that
+    allows continued processing after uncaught exceptions during
+    runtime tuple processing.
+
+    """
+
+    _ACTIVE = threading.local()
+    _ACTIVE._catcher = None
+
+    def __init__(self, exceptions, streams=True, trace_tuples=False, stack_trace=False):
+        self.exceptions = exceptions
+        self.streams = streams
+        self.trace_tuples = trace_tuples
+        self.stack_trace = stack_trace
+
+    def __enter__(self):
+        if Catch._ACTIVE._catcher:
+            Catch._ACTIVE._catcher.append(self)
+        else:
+            Catch._ACTIVE._catcher = [self]
+        return None
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        Catch._ACTIVE._catcher.pop()
+
+    @staticmethod
+    def _annotation():
+        if Catch._ACTIVE._catcher:
+            catcher = Catch._ACTIVE._catcher[-1]
+            return {'name':'catch', 'properties': {
+                'exception':str(catcher.exceptions),
+                'tupleTrace':bool(catcher.trace_tuples),
+                'stackTrace':bool(catcher.stack_trace),
+                }}

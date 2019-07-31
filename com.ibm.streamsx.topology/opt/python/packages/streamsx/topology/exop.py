@@ -24,6 +24,7 @@ def _single_schema(schemas):
 class ExtensionOperator(object):
     def __init__(self,topology,kind,inputs=None,schemas=None,params=None,name=None):
         self.topology = topology
+        self._annotations = []
         if params is None:
             params = dict()
         self.__op = topology.graph.addOperator(kind=kind,name=name)
@@ -60,6 +61,10 @@ class ExtensionOperator(object):
                 # not iterable, single input
                 self._add_input(inputs)
 
+            catch_ann = streamsx.topology.topology.Catch._annotation()
+            if catch_ann:
+                self._add_annotation(**catch_ann)
+
     def __outputs(self, schemas):
         self.outputs = []
         if schemas:
@@ -72,3 +77,15 @@ class ExtensionOperator(object):
                     schema = streamsx.topology.schema._normalize(schema, False)
                     oport = self._op().addOutputPort(schema=schema)
                     self.outputs.append(streamsx.topology.topology.Stream(self.topology, oport)._make_placeable())
+
+    def _add_annotation(self, name, properties):
+        self._annotations.append({'type':name, 'properties':properties})
+
+    def _generate(self, opjson):
+        self._add_annotations(opjson)
+
+    def _add_annotations(self, opjson):
+        if self._annotations:
+            if not 'annotations' in opjson:
+                opjson['annotations'] = []
+            opjson['annotations'].extend(self._annotations)

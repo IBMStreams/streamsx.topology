@@ -184,6 +184,18 @@ class TestSPL(unittest.TestCase):
         tester.contents(s, [{'seq':0, 'b':'str!'}, {'seq':1, 'b':'str!'}, {'seq':2, 'b':'str!'}, {'seq':3, 'b':'str!'}, {'seq':4, 'b':'str!'}])
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_catch(self):
+        topo = Topology()
+        s = topo.source(['1', '2', 'x', '3'])
+        s = s.as_string()
+        with Catch(exceptions='streams', trace_tuples=True, stack_trace=False):
+            f = op.Map('spl.relational::Functor', s, schema='tuple<int32 a>')
+        f.a = f.output('(int32) string')
+
+        tester = Tester(topo)
+        tester.contents(f.stream, [{'a':1}, {'a':2}, {'a':3}])
+        tester.test(self.test_ctxtype, self.test_config)
+
     def test_timestamp(self):
         ts_schema = StreamSchema('tuple<int32 a, timestamp ts>').as_tuple(named=True)
 

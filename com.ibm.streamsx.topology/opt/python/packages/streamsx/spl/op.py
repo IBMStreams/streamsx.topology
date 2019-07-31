@@ -254,6 +254,7 @@ class Invoke(streamsx._streams._placement._Placement, streamsx.topology.exop.Ext
         return e
 
     def _generate(self, opjson):
+        super(Invoke, self)._generate(opjson)
 
         # For any attribute that is an expression
         # set it as an output clause assignment
