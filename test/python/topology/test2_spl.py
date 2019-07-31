@@ -192,8 +192,14 @@ class TestSPL(unittest.TestCase):
             f = op.Map('spl.relational::Functor', s, schema='tuple<int32 a>')
         f.a = f.output('(int32) string')
 
+        # Nested, first (outer) doesn't catch and should be hidden by second (inner)
+        with Catch(exceptions='none', trace_tuples=True, stack_trace=False), Catch(exceptions='streams', trace_tuples=False, stack_trace=False):
+                n = op.Map('spl.relational::Functor', s, schema='tuple<int32 a>')
+        n.a = n.output('(int32) string')
+
         tester = Tester(topo)
         tester.contents(f.stream, [{'a':1}, {'a':2}, {'a':3}])
+        tester.contents(n.stream, [{'a':1}, {'a':2}, {'a':3}])
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_timestamp(self):
