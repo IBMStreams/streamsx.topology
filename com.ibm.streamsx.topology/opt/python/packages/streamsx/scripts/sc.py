@@ -74,6 +74,7 @@ def _add_local_toolkits(toolkit_paths, dependencies, topo):
             continue
         # Dependency w/ correct version not in buildserver, check locally
         else:
+            # print("Dependency {} not on buildserver, check locally".format(dependency_name))
             toolkit = _get_local_toolkit(dependency_name, dependency_version, local_toolkits)
             if toolkit:
                 # Dependency w/ correct version exists locally, add it
