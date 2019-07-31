@@ -77,7 +77,8 @@ def _add_local_toolkits(toolkit_paths, dependencies, topo):
             toolkit = _get_local_toolkit(dependency_name, dependency_version, local_toolkits)
             if toolkit:
                 # Dependency w/ correct version exists locally, add it
-                add_toolkit(topo, toolkit)
+                add_toolkit(topo, toolkit.path)
+            # If dependency is not on buildserver or local, let SPL compiler throw error
 
 def _get_all_local_toolkits(toolkit_paths):
     """ A helper function that given the local toolkit paths, creates and returns a list of local toolkit objects
