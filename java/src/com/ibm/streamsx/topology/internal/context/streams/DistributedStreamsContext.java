@@ -10,7 +10,6 @@ import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepA
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -51,17 +50,6 @@ public class DistributedStreamsContext extends
         return Type.DISTRIBUTED;
     }
     
-    private Instance getConfigInstance(AppEntity entity) {
-        
-        Map<String,Object> config = entity.config;
-        if (config != null && config.containsKey(ContextProperties.STREAMS_INSTANCE)) {       
-            Object instance = config.get(ContextProperties.STREAMS_INSTANCE);         
-            if (instance instanceof Instance)
-                return (Instance) instance;
-        }
-        return null;
-    }
-    
     public synchronized Instance instance() throws IOException {
     	if (!useRestApi())
     		throw new IllegalStateException(/*internal error*/);
@@ -73,7 +61,7 @@ public class DistributedStreamsContext extends
     	if (!useRestApi())
     		throw new IllegalStateException(/*internal error*/);
     	
-		Instance instance = getConfigInstance(entity);        
+		Instance instance = RemoteDistributedStreamsContext.getConfigInstance(entity);        
 		if (instance == null) {
 		    boolean verify = true;
 		    if (deploy(entity.submission).has(ContextProperties.SSL_VERIFY))
@@ -89,7 +77,7 @@ public class DistributedStreamsContext extends
     @Override
     protected void preSubmit(AppEntity entity) {
             	
-    	if (getConfigInstance(entity) != null) {  		
+    	if (RemoteDistributedStreamsContext.getConfigInstance(entity) != null) {  		
     	    // Allow the config to provide an instance.
     		useRestApi.set(true);
     		return;
@@ -121,22 +109,8 @@ public class DistributedStreamsContext extends
      * non-matching operating system with instance.
      */
     protected Future<BigInteger> fullRemoteAction(AppEntity entity) throws Exception {
-        
-        Instance cfgInstance = getConfigInstance(entity);
-        if (cfgInstance != null) {
-            StreamsConnection sc = cfgInstance.getStreamsConnection();
-            Object authenticatorO = sc.getAuthenticator();
-            if (authenticatorO instanceof ICP4DAuthenticator) {
-                ICP4DAuthenticator authenticator = (ICP4DAuthenticator) authenticatorO;
-                
-                boolean verify = cfgInstance.getStreamsConnection().isVerify();
-                JsonObject deploy = deploy(entity.submission);
-                deploy.add(StreamsKeys.SERVICE_DEFINITION, authenticator.config(verify));
-                deploy.addProperty(ContextProperties.SSL_VERIFY, verify);
-            } else {
-                throw new IllegalStateException("Invalid Instance for Streams V5: " + cfgInstance);
-            }
-        }
+
+        RemoteDistributedStreamsContext.setSubmissionInstance(entity);
         
         DistributedStreamsRestContext rc = new DistributedStreamsRestContext();
         rc.submit(entity.submission);
