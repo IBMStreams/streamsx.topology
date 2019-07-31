@@ -54,34 +54,54 @@ def _parse_dependencies():
 
 def _add_local_toolkits(toolkit_paths, dependencies, topo, verify_arg):
     """ A helper function that given the local toolkit paths, and the dependencies (ie toolkits that the apps depends on),
-    first checks whether the dependency w/ correct version already exists on the remote buildserver, and if not checks
-    whether the dependency w/ correct version exists locally, and if so adds it
+    finds the latest dependency w/ correct version (could be local or on the buildserver) and checks whether it exists locally, and if so adds it.
+    If the latest dependency w/ correct version is located on the buildserver, don't need to do anything
 
     Arguments:
         toolkit_paths {List} -- A list of local toolkit directories, each could be a toolkit directory (has info.xml directly inside),
                 or a directory consisting of toolkits (no info.xml directly inside)
         dependencies {Dictionary} -- A dictionary consisting of elements where the key is the name of the dependency, and the value is its version.
         topo {topology Object} -- [description]
-        verify {type} -- [description]
+        verify_arg {type} -- Disable SSL verification.
     """
     build_server = BuildService.of_endpoint(verify=verify_arg)
 
     local_toolkits = _get_all_local_toolkits(toolkit_paths)
     remote_toolkits = build_server.get_toolkits()
 
+    all_toolkits = local_toolkits + remote_toolkits
+
     # Iterate through all dependencies (toolkits) needed to build sab file, and check if the dependency already exist on the build server
     for dependency_name, dependency_version in dependencies.items():
-        if _check_toolkit_on_buildserver(dependency_name, dependency_version, remote_toolkits):
-            # Dependency w/ correct version is already on buildserver, thus don't need to do anything
+
+        # All the toolkits that match dependency_name regardless of version
+        matching_toolkits = [toolkit for toolkit in all_toolkits if toolkit.name == dependency_name]
+
+        if not matching_toolkits:
+            # No toolkits exists on the remote buildserver or locally that can satsify this dependency, continue and let SPL compiler throw error
             continue
-        # Dependency w/ correct version not in buildserver, check locally
-        else:
-            # print("Dependency {} not on buildserver, check locally".format(dependency_name))
-            toolkit = _get_local_toolkit(dependency_name, dependency_version, local_toolkits)
-            if toolkit:
-                # Dependency w/ correct version exists locally, add it
-                add_toolkit(topo, toolkit.path)
-            # If dependency is not on buildserver or local, let SPL compiler throw error
+
+        # Toolkit with the highest verion that still satisfies the dependency_version
+        latest_compatible_toolkit = matching_toolkits[0]
+
+        # Go through all toolkits, find the highest/latest version, given by latest_compatible_toolkit
+        for tk in matching_toolkits:
+            # Check if current toolkit tk satisfies the version requirement
+            if _check_correct_version(tk, dependency_version):
+                # if it satisfies, compare it against the highest version we have seen thus far
+                latest_version_so_far = version.parse(latest_compatible_toolkit.version)
+                curr_tk_version = version.parse(tk.version)
+
+                # if it is a later version, update our toolkit
+                if curr_tk_version > latest_version_so_far:
+                    latest_compatible_toolkit = tk
+
+        # Check if latest_compatible_toolkit is local, bc we then need to add it
+        if latest_compatible_toolkit in local_toolkits:
+            # Latest toolkit is local, upload it
+            add_toolkit(topo, latest_compatible_toolkit.path)
+            # print("Latest dependency {} with version {} is not on buildserver, adding it".format(latest_compatible_toolkit.name, latest_compatible_toolkit.version))
+        # latest_compatible_toolkit exists on buildserver, thus don't need to do anything
 
 def _get_all_local_toolkits(toolkit_paths):
     """ A helper function that given the local toolkit paths, creates and returns a list of local toolkit objects
@@ -125,25 +145,6 @@ def _get_all_local_toolkits(toolkit_paths):
 
     return local_toolkits
 
-def _get_local_toolkit(dependency_name, dependency_version, local_toolkits):
-    """ Helper function that given a required dependency, and a list of local toolkits, finds and returns the local toolkit of the same name,
-    if it satisfies the required dependency version, else returns None.
-
-    Arguments:
-        dependency_name {String} -- The name of the required dependency
-        dependency_version {String} -- The version # or version range of the required dependency
-        local_toolkits {List} -- A list of _LocalToolkit objects, giving all local toolkits
-
-    Returns:
-        _LocalToolkit -- The matching local toolkit, or None if it doesn't exist
-    """
-    # Get all local toolkits that have the same name as our dependency
-    matching_toolkits = [toolkit for toolkit in local_toolkits if toolkit.name == dependency_name]
-    # For each toolkit that matches the name
-    for tk in matching_toolkits:
-        if _check_correct_version(tk, dependency_version):
-            return tk
-
 def _is_local_toolkit(dir):
     # Checks if dir is a toolkit (contains toolkit.xml or info.xml)
     for fn in ['toolkit.xml', 'info.xml']:
@@ -158,7 +159,7 @@ class _LocalToolkit:
         self.path = path
 
 def _check_correct_version(toolkit, dependency_range):
-    """ Checks if toolkit's version satisfies the dependency_range, if yes, return true, else false
+    """ Checks if toolkit's version satisfies the dependency_range, if yes return true, else false
 
     Arguments:
         toolkit {_LocalToolkit} -- A _LocalToolkit object, that we need to check if its version is equal to or is contained in dependency_range
@@ -216,28 +217,9 @@ def _check_correct_version(toolkit, dependency_range):
         if toolkit_ver < right_bound:
             satisfies_right = True
 
-    # If toolkit.version satisfies left and right bound, then its a valid toolkit dependency, add it
+    # If toolkit.version satisfies left and right bound, then its a valid toolkit dependency, return True
     if satisfies_left and satisfies_right:
         return True
-    return False
-
-def _check_toolkit_on_buildserver(dependency_name, dependency_version, remote_toolkits):
-    """ Helper function that given a required dependency, checks if it already exists on the remote buildserver
-
-    Arguments:
-        dependency_name {String} -- The name of the required dependency
-        dependency_version {String} -- The version # or version range of the required dependency
-        remote_toolkits {List} -- A list of remote toolkits
-
-    Returns:
-        [Boolean] -- True if it exists remotely, False if it doesn't
-    """
-    # Check if toolkit/dependency already exists remotely in buildserver w/ correct version
-    toolkits = [toolkit for toolkit in remote_toolkits if toolkit.name == dependency_name]
-    for rmt_tk in toolkits:
-        if _check_correct_version(rmt_tk, dependency_version):
-            # Dependency w/ correct version is already in buildserver, don't need to do anything
-            return True
     return False
 
 
