@@ -67,17 +67,17 @@ def _add_local_toolkits(toolkit_paths, dependencies, topo):
 
     local_toolkits = _get_all_local_toolkits(toolkit_paths)
 
-    # Iterate through all dependencies (toolkits) needed to build sab file, and check if the dependencies already exist on the build server
+    # Iterate through all dependencies (toolkits) needed to build sab file, and check if the dependency already exist on the build server
     for dependency_name, dependency_version in dependencies.items():
         if _check_toolkit_on_buildserver(dependency_name, dependency_version, sc):
-            # Dependency w/ correct version is already in buildserver, go on to next dependency
+            # Dependency w/ correct version is already on buildserver, thus don't need to do anything
             continue
         # Dependency w/ correct version not in buildserver, check locally
         else:
             toolkit = _get_local_toolkit(dependency_name, dependency_version, local_toolkits)
             if toolkit:
+                # Dependency w/ correct version exists locally, add it
                 add_toolkit(topo, toolkit)
-                continue
 
 def _get_all_local_toolkits(toolkit_paths):
     """ A helper function that given the local toolkit paths, creates and returns a list of local toolkit objects
@@ -105,6 +105,7 @@ def _get_all_local_toolkits(toolkit_paths):
                 if _is_local_toolkit(y):
                     local_toolkits_paths.append(y)
 
+    # For each direct path to a toolkit, parse the name & version, and convert it to a _LocalToolkit object
     for tk_path in local_toolkits_paths:
         # Get the name & version of the toolkit that is in the directory tk_path
         root = ET.parse(tk_path + "/info.xml").getroot()
@@ -136,7 +137,7 @@ def _get_local_toolkit(dependency_name, dependency_version, local_toolkits):
     temp = [x for x in local_toolkits if x.name == dependency_name]
     # For each toolkit that matches the name
     for x in temp:
-        if _check_satisfies_version(x, dependency_version):
+        if _check_correct_version(x, dependency_version):
             return x
 
 def _is_local_toolkit(dir):
@@ -158,7 +159,7 @@ def _get_remote_toolkits(sc, name):
     toolkits = sc.get_toolkits()
     return [toolkit for toolkit in toolkits if toolkit.name == name]
 
-def _check_satisfies_version(toolkit, dependency_range):
+def _check_correct_version(toolkit, dependency_range):
     """ Checks if toolkit's version satisfies the dependency_range, if yes, return true, else false
 
     Arguments:
@@ -231,12 +232,12 @@ def _check_toolkit_on_buildserver(dependency_name, dependency_version, sc):
         sc {[type]} -- [description]
 
     Returns:
-        [bool] -- True if it exists remotely, False if it doesn't
+        [Boolean] -- True if it exists remotely, False if it doesn't
     """
     # Check if toolkit/dependency already exists remotely in buildserver w/ correct version
     remote_toolkits = _get_remote_toolkits(sc, dependency_name)
     for rmt_tk in remote_toolkits:
-        if _check_satisfies_version(rmt_tk, dependency_version):
+        if _check_correct_version(rmt_tk, dependency_version):
             # Dependency w/ correct version is already in buildserver, don't need to do anything
             return True
     return False
