@@ -11,6 +11,7 @@ import streamsx.rest
 from streamsx.spl.op import main_composite
 from streamsx.spl.toolkit import add_toolkit
 from streamsx.topology.context import submit, ConfigParams
+from streamsx.build import BuildService
 import xml.etree.ElementTree as ET
 from glob import glob
 import re
@@ -31,7 +32,7 @@ def main(args=None):
     if dependencies and cmd_args.spl_path:
         tool_kits = cmd_args.spl_path.split(':')
         # Check if any dependencies are in the passed in toolkits, if so add them
-        _add_local_toolkits(tool_kits, dependencies, topo)
+        _add_local_toolkits(tool_kits, dependencies, topo, verify_arg = False if cmd_args.disable_ssl_verify else None)
 
     _add_toolkits(cmd_args, topo)
     _submit_build(cmd_args, topo)
@@ -51,45 +52,102 @@ def _parse_dependencies():
             deps[name] = version
     return deps
 
-def _add_local_toolkits(toolkits, dependencies, topo):
+def _add_local_toolkits(toolkit_paths, dependencies, topo, verify_arg):
     """ A helper function that given the local toolkit paths, and the dependencies (ie toolkits that the apps depends on),
-    checks and adds the local toolkit if it is one of the dependencies
+    finds the latest dependency w/ correct version (could be local or on the buildserver) and checks whether it exists locally, and if so adds it.
+    If the latest dependency w/ correct version is located on the buildserver, don't need to do anything
 
     Arguments:
-        toolkits {List} -- A list of local toolkit directories, each could be a toolkit directory (has info.xml directly inside),
+        toolkit_paths {List} -- A list of local toolkit directories, each could be a toolkit directory (has info.xml directly inside),
                 or a directory consisting of toolkits (no info.xml directly inside)
-        dependencies {Dictionary} -- A dictionary where the key is the names of the dependencies, and the value is its version.
+        dependencies {Dictionary} -- A dictionary consisting of elements where the key is the name of the dependency, and the value is its version.
         topo {topology Object} -- [description]
+        verify_arg {type} -- Disable SSL verification.
     """
+    build_server = BuildService.of_endpoint(verify=verify_arg)
+
+    local_toolkits = _get_all_local_toolkits(toolkit_paths)
+    remote_toolkits = build_server.get_toolkits()
+
+    all_toolkits = local_toolkits + remote_toolkits
+
+    # Iterate through all dependencies (toolkits) needed to build sab file, and check if the dependency already exist on the build server
+    for dependency_name, dependency_version in dependencies.items():
+
+        # All the toolkits that match dependency_name regardless of version
+        matching_toolkits = [toolkit for toolkit in all_toolkits if toolkit.name == dependency_name]
+
+        if not matching_toolkits:
+            # No toolkits exists on the remote buildserver or locally that can satsify this dependency, continue and let SPL compiler throw error
+            continue
+
+        # Toolkit with the highest verion that still satisfies the dependency_version
+        latest_compatible_toolkit = None
+
+        # Go through all toolkits, find the highest/latest version, given by latest_compatible_toolkit
+        for tk in matching_toolkits:
+            # Check if current toolkit tk satisfies the version requirement
+            if _check_correct_version(tk, dependency_version):
+                # if we have a toolkit that already satisfies the version requirement, and tk also satisfies its
+                # compare tk against the highest version we have seen thus far
+                if latest_compatible_toolkit:
+                    latest_version_so_far = version.parse(latest_compatible_toolkit.version)
+                    curr_tk_version = version.parse(tk.version)
+
+                    # if it is a later version, update our toolkit
+                    if curr_tk_version > latest_version_so_far:
+                        latest_compatible_toolkit = tk
+                else:
+                    latest_compatible_toolkit = tk
+
+        # Check if latest_compatible_toolkit is local, bc we then need to add it
+        if isinstance(latest_compatible_toolkit, _LocalToolkit):
+            # Latest toolkit is local, upload it
+            add_toolkit(topo, latest_compatible_toolkit.path)
+            # print("Latest dependency {} with version {} is not on buildserver, adding it".format(latest_compatible_toolkit.name, latest_compatible_toolkit.version))
+        # latest_compatible_toolkit exists on buildserver, thus don't need to do anything
+
+def _get_all_local_toolkits(toolkit_paths):
+    """ A helper function that given the local toolkit paths, creates and returns a list of local toolkit objects
+
+    Arguments:
+        toolkit_paths {List} -- A list of local toolkit directories, each could be a toolkit directory (has info.xml directly inside),
+            or a directory consisting of toolkits (no info.xml directly inside)
+
+    Returns:
+        local_toolkits {List} -- list of local toolkit objects
+    """
+
+    local_toolkits_paths = [] # toolkit paths
     local_toolkits = [] # toolkit objects
-    #  For each path, check if its a SPL toolkit (has info.xml directly inside) or a directory consisting of toolkits (no info.xml directly inside)
-    for x in toolkits:
+
+    #  For each path, check if its a SPL toolkit (has info.xml directly inside)
+    #  or a directory consisting of toolkits (no info.xml directly inside)
+    for x in toolkit_paths:
         if _is_local_toolkit(x):
-            tk = _get_toolkit(x)
-            local_toolkits.append(tk)
+            local_toolkits_paths.append(x)
         else:
             # directory consisting of toolkits, get list and check which are local_toolkits, add them
             sub_directories = glob(x + "*/")
             for y in sub_directories:
                 if _is_local_toolkit(y):
-                    tk = _get_toolkit(y)
-                    local_toolkits.append(tk)
+                    local_toolkits_paths.append(y)
 
-    # Once we have all local toolkits, check if they correspond to any dependencies that we have, if so, add them
-    for toolkit in local_toolkits:
-        if toolkit.name in dependencies:
-            _check_satisfies_version(toolkit, dependencies[toolkit.name], topo)
+    # For each direct path to a toolkit, parse the name & version, and convert it to a _LocalToolkit object
+    for tk_path in local_toolkits_paths:
+        # Get the name & version of the toolkit that is in the directory tk_path
+        root = ET.parse(tk_path + "/info.xml").getroot()
+        identity = root.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}identity')
+        name = identity.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}name')
+        version = identity.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}version')
 
-def _get_toolkit(path):
-    # Get the name & version of the toolkit that is in the directory PATH
-    root = ET.parse(path + "/info.xml").getroot()
-    identity = root.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}identity')
-    name = identity.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}name')
-    version = identity.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}version')
+        toolkit_name = name.text
+        toolkit_version = version.text
 
-    toolkit_name = name.text
-    toolkit_version = version.text
-    return _LocalToolkit(toolkit_name, toolkit_version, path)
+        tk = _LocalToolkit(toolkit_name, toolkit_version, tk_path)
+        local_toolkits.append(tk)
+
+    return local_toolkits
 
 def _is_local_toolkit(dir):
     # Checks if dir is a toolkit (contains toolkit.xml or info.xml)
@@ -104,13 +162,12 @@ class _LocalToolkit:
         self.version = version
         self.path = path
 
-def _check_satisfies_version(toolkit, dependency_range, topo):
-    """ Checks if toolkit's version satisfies the dependency_range, if yes, can use it to build main app (ie add it)
+def _check_correct_version(toolkit, dependency_range):
+    """ Checks if toolkit's version satisfies the dependency_range, if yes return true, else false
 
     Arguments:
         toolkit {_LocalToolkit} -- A _LocalToolkit object, that we need to check if its version is equal to or is contained in dependency_range
         dependency_range {String} -- A string of the form '1.2.3' or [3.0.0,4.0.0)' that represents a version or range of versions that is acceptable
-        topo {[type]} -- [description]
     """
     # Convert it to version
     toolkit_ver = version.parse(toolkit.version)
@@ -120,8 +177,8 @@ def _check_satisfies_version(toolkit, dependency_range, topo):
     if not any(x in dependency_range for x in temp):
         required_version = version.parse(dependency_range)
         if required_version == toolkit_ver:
-            add_toolkit(topo, toolkit.path)
-        return
+            return True
+        return False
 
     # Dependency_range is confirmed to be a range, check if left & right bound is inclusive or exclusive
     left_inclusive = None
@@ -164,9 +221,11 @@ def _check_satisfies_version(toolkit, dependency_range, topo):
         if toolkit_ver < right_bound:
             satisfies_right = True
 
-    # If toolkit.version satisfies left and right bound, then its a valid toolkit dependency, add it
+    # If toolkit.version satisfies left and right bound, then its a valid toolkit dependency, return True
     if satisfies_left and satisfies_right:
-        add_toolkit(topo, toolkit.path)
+        return True
+    return False
+
 
 def _submit_build(cmd_args, topo):
      cfg = {}
