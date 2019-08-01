@@ -185,6 +185,10 @@ class TestSPL(unittest.TestCase):
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_catch(self):
+        self.assertEqual('none', Catch.NONE)
+        self.assertEqual('streams', Catch.STREAMS)
+        self.assertEqual('std', Catch.STD)
+        self.assertEqual('all', Catch.ALL)
         topo = Topology()
         s = topo.source(['1', '2', 'x', '3'])
         s = s.as_string()
@@ -193,7 +197,7 @@ class TestSPL(unittest.TestCase):
         f.a = f.output('(int32) string')
 
         # Nested, first (outer) doesn't catch and should be hidden by second (inner)
-        with Catch(exceptions='none', trace_tuples=True, stack_trace=False), Catch(exceptions='streams', trace_tuples=False, stack_trace=False):
+        with Catch(exceptions=Catch.NONE, trace_tuples=True, stack_trace=False), Catch(exceptions='streams', trace_tuples=False, stack_trace=False):
                 n = op.Map('spl.relational::Functor', s, schema='tuple<int32 a>')
         n.a = n.output('(int32) string')
 

@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015,2017
+# Copyright IBM Corp. 2015,2019
 
 """
 Streaming application definition.
@@ -2425,19 +2425,76 @@ class Catch(object):
     a tuple on a :py:class:`Stream` causes the containing
     processing element (PE) to fail (and potentially restart).
 
-    For example the transform ``s.map(lambda(tuple_ : int(tuple_)))`` will
+    For example the transform ``s.map(lambda tuple_ : int(tuple_))`` will
     cause the PE to fail if `tuple_` cannot be converted to an integer.
 
     `Catch` is a topology declaration time context manager that
     allows continued processing after uncaught exceptions during
     runtime tuple processing.
 
+    For example, by declaring the transform within a `Catch` context
+    manager using the ``with`` statement, any values that are not
+    convertable to integers will be dropped::
+
+        topo = Topology()
+        s = topo.source([1,2,'x',3.1])
+        with Catch(exceptions='streams', stack_trace=False):
+            s = s.map(lambda tuple_ : int(tuple_))
+        s.print()
+
+    With this example ``1``, ``2``, ``3`` will be printed. The uncaught
+    exception thrown when trying to convert ``x`` is caught and ignored
+    by the Streams runtime.
+
+    The Streams runtime will catch uncaught exceptions during tuple
+    processing for any transform declared within the scope of the
+    `Catch` context manager (``with`` statement) according to the
+    value of `exceptions`.
+
+    `Catch` context managers may be nested.
+
+    Args:
+
+        exceptions(str): Class of exceptions to catch. Valid values are :py:const:`NONE`, :py:const:`STREAMS`, :py:const:`STD` and :py:const:`ALL`.
+        streams(str): TBD
+        trace_tuples(bool): Enables (true) or disables (false) the tracing of tuples whose processing resulted in an uncaught exception. Tracing of data can be enabled when tuples do not contain sensitive data and the data can show up into PE logs. Tuples are logged to the trace facility with the ERROR trace level.
+        stack_trace(bool): Enables (true) or disables (false) the printout of the stack trace to the Streams trace facility. Stack traces are printed to the Streams trace facility with the trace level ERROR. 
+
+    .. versionadded:: 1.13
     """
 
     _ACTIVE = threading.local()
     _ACTIVE._catcher = None
 
-    def __init__(self, exceptions, streams=True, trace_tuples=False, stack_trace=False):
+    NONE = 'none'
+    """
+    No exceptions of any type are caught.
+
+    Passed as a value for `exceptions` in the constructor.
+    """
+
+    STREAMS = 'streams'
+    """
+    Only Streams exceptions are caught. This includes exceptions that are thrown by SPL native functions from the standard toolkit, other exceptions that extend from the C++ ``SPL::SPLRuntimeException``, and exceptions that extend from the Java™ ``com.ibm.streams.operator.DataException`` (extending from ``java.lang.RuntimeException``).
+
+    Passed as a value for `exceptions` in the constructor.
+    """
+
+    STD = 'std'
+    """
+    Both Streams and standard exceptions are caught. For C++ primitive operators, standard exception means ``std::exception``. For Java, standard exception means all checked exceptions that inherit from ``java.lang.Exception``.
+
+    Passed as a value for `exceptions` in the constructor.
+    """
+
+    ALL = 'all'
+    """
+    In C++, any thrown exception is caught. For Java, any checked and unchecked exception that inherits from ``java.lang.Exception`` is caught.
+
+    Passed as a value for `exceptions` in the constructor.
+    """
+
+    def __init__(self, exceptions, streams=True, trace_tuples=False, stack_trace=True):
         self.exceptions = exceptions
         self.streams = streams
         self.trace_tuples = trace_tuples
