@@ -2,7 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2018
 """
-Integration of SPL operators.
+Invocation of SPL operators within a `Topology`.
 
 **********************
 Invoking SPL Operators
@@ -136,6 +136,25 @@ For example, invoking an SPL `Beacon` operator using an output function to set t
 
     # Set the ts attribute using an SPL function that returns the current time
     beacon.ts = beacon.output('getTimestamp()')
+
+Catching exceptions
+-------------------
+
+Uncaught exceptions during tuple processing can be caught using
+:py:class:`~streamsx.topology.topology.Catch`. This automatically
+applies the SPL ``@catch`` annotation to operator invocations.
+
+For example, with a input stream ``s`` of string tuples any uncaught
+exceptions due to the `Functor's` output ``int32`` cast will be traced
+to the application log but processing will continue::
+
+    with Catch(exceptions='streams', trace_tuples=True, stack_trace=False):
+        f = op.Map('spl.relational::Functor', s, schema='tuple<int32 a>')
+    f.a = f.output('(int32) string')
+
+Typically `Catch` is used to continue processing a stream that may contain
+incorrectly formatted tuples. Processing is continued effectively dropping
+the tuple without causing a PE restart.
 
 .. seealso::
     `Streams Processing Language (SPL) Reference <https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.0/com.ibm.streams.ref.doc/doc/spl-container.html>`_
