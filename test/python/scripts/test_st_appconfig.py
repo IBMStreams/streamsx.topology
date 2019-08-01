@@ -401,7 +401,7 @@ class TestAppconfig(unittest.TestCase):
             if self.name in line:
                 config = line
 
-        # If we can't find our jobID in the output, should fail
+        # If we can't find our appconfig in the output, should fail
         if not config :
             self.fail("Config should be in output")
 
@@ -439,8 +439,8 @@ class TestAppconfig(unittest.TestCase):
             elif name2 in line:
                 config2 = line
 
-        # If we can't find our jobID in the output, should fail
-        if not config1 and not config2 :
+        # If we can't find our appconfig in the output, should fail
+        if not config1 or not config2 :
             self.fail("Configs should be in output")
 
         # Check details of appconfig1 are correct
@@ -499,6 +499,7 @@ class TestAppconfig(unittest.TestCase):
         output, error, rc= self.get_output(lambda: self._ls_appconfig(fmt='%Mf'))
         output = output.splitlines()
 
+        # Iterate through each config block in output till we find the config we want check
         appConfig = None
         while output:
             config, output = self.get_lsappconfig_Mf_fmt(output)
@@ -539,17 +540,16 @@ class TestAppconfig(unittest.TestCase):
 
 
         # Can't assume this is the only appconfig, find the line w/ our appconfig, then do checks
-        config_output = None
+        appconfig1 = None
         for line in output:
             if self.name in line:
-                config_output = line
+                appconfig1 = line
 
         # If we can't find our appconfig in the output, should fail
-        if not config_output :
+        if not appconfig1 :
             self.fail("config should be in output")
 
         # Check details of appconfig are correct
-        appconfig1 = config_output
         self.assertTrue("Id" in appconfig1)
         self.assertTrue("Owner" in appconfig1)
         self.assertTrue("Created" in appconfig1)
@@ -575,20 +575,19 @@ class TestAppconfig(unittest.TestCase):
 
 
         # Can't assume this is the only appconfig, find the line w/ our appconfig, then do checks
-        config1_output = None
-        config2_output = None
+        appconfig1 = None
+        appconfig2 = None
         for line in output:
             if self.name in line:
-                config1_output = line
+                appconfig1 = line
             elif name2 in line:
-                config2_output = line
+                appconfig2 = line
 
         # If we can't find our appconfig in the output, should fail
-        if not config1_output and not config2_output:
+        if not appconfig1 or not appconfig2:
             self.fail("configs should be in output")
 
         # Check details of appconfig are correct
-        appconfig1 = config1_output
         self.assertTrue("Id" in appconfig1)
         self.assertTrue("Owner" in appconfig1)
         self.assertTrue("Created" in appconfig1)
@@ -600,7 +599,6 @@ class TestAppconfig(unittest.TestCase):
         self.assertTrue(description1 in appconfig1)
 
         # Check details of appconfig are correct
-        appconfig2 = config2_output
         self.assertTrue("Id" in appconfig2)
         self.assertTrue("Owner" in appconfig2)
         self.assertTrue("Created" in appconfig2)

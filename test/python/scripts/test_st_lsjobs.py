@@ -159,7 +159,7 @@ class Testlsjobs(unittest.TestCase):
                 job2_output = line
 
         # If we can't find our jobID in the output, should fail
-        if not job1_output and not job2_output :
+        if not job1_output or not job2_output :
             self.fail("Jobs should be in output")
 
         # Check details of job1 are correct
@@ -202,7 +202,7 @@ class Testlsjobs(unittest.TestCase):
                 job3_output = line
 
         # If we can't find our jobID in the output, should fail
-        if not job1_output and not job3_output :
+        if not job1_output or not job3_output :
             self.fail("Jobs should be in output")
 
         # Check details of job1 are correct
@@ -244,7 +244,7 @@ class Testlsjobs(unittest.TestCase):
                 job3_output = line
 
         # If we can't find our jobID in the output, should fail
-        if not job1_output and not job3_output :
+        if not job1_output or not job3_output :
             self.fail("Jobs should be in output")
 
         # Check details of job1 are correct
@@ -319,7 +319,7 @@ class Testlsjobs(unittest.TestCase):
         )
         output = output.splitlines()
 
-        # len 1 bc only 1 job
+        # len 1 bc only 1 job (since we are filtering by this jobID)
         self.assertTrue(len(output) == 1)
 
         # Check details of job are correct
@@ -553,7 +553,7 @@ class Testlsjobs(unittest.TestCase):
                 job2_output = line
 
         # If we can't find our jobID in the output, should fail
-        if not job1_output and not job2_output :
+        if not job1_output or not job2_output :
             self.fail("Jobs should be in output")
 
         # Check details of jobs are correct
