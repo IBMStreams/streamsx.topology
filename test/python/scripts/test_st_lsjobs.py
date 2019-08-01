@@ -132,27 +132,8 @@ class Testlsjobs(unittest.TestCase):
         else:
             self.assertTrue(len(job_details) == 7)
 
-    # Create a single job, check correct ouput in default Tf format
-    def test_lsjobs_simple(self):
-        rc, job = self._submitjob(args=[])
-        output, error, rc = self.get_output(lambda: self._ls_jobs())
-        output = output.splitlines()
-
-        # Check instance data output correctly
-        instance_string = "Instance: " + self.my_instance.id
-        self.assertEqual(output[0].strip(), instance_string)
-
-        # Check headers outputs correctly
-        true_headers = ["Id", "State", "Healthy", "User", "Date", "Name", "Group"]
-        headers = self.split_string(output[1])
-        self.assertEqual(true_headers, headers)
-
-        # Check details of job are correct
-        self.check_job_Tf_fmt(job, output[2])
-        self.assertEqual(rc, 0)
-
     # Create 2 jobs w/ names, check correct ouput in default Tf format
-    def test_lsjobs_complex(self):
+    def test_lsjobs_simple(self):
         rc, job1 = self._submitjob(args=["--jobname", self.name])
         rc, job2 = self._submitjob(args=["--jobname", self.name + self.name])
         output, error, rc = self.get_output(lambda: self._ls_jobs())
@@ -167,16 +148,30 @@ class Testlsjobs(unittest.TestCase):
         headers = self.split_string(output[1])
         self.assertEqual(true_headers, headers)
 
+        # Can't assume this is the only job running, find the line w/ our jobID, then do checks
+        job1_output = None
+        job2_output = None
+        for line in output:
+            if job1.id in line:
+                job1_output = line
+
+            elif job2.id in line:
+                job2_output = line
+
+        # If we can't find our jobID in the output, should fail
+        if not job1_output and not job2_output :
+            self.fail("Jobs should be in output")
+
         # Check details of job1 are correct
-        self.check_job_Tf_fmt(job1, output[2])
+        self.check_job_Tf_fmt(job1, job1_output)
 
         # Check details of job2 are correct
-        self.check_job_Tf_fmt(job2, output[3])
+        self.check_job_Tf_fmt(job2, job2_output)
 
         self.assertEqual(rc, 0)
 
     # Create 3 jobs w/ names, and check --jobnames option correctly returns desired jobnames
-    def test_lsjobs_complex_2(self):
+    def test_lsjobs_complex_1(self):
         rc, job1 = self._submitjob(args=["--jobname", self.name])
         rc, job2 = self._submitjob(args=["--jobname", self.name + self.name])
         rc, job3 = self._submitjob(
@@ -188,9 +183,6 @@ class Testlsjobs(unittest.TestCase):
         output, error, rc = self.get_output(lambda: self._ls_jobs(jobnames=job_names))
         output = output.splitlines()
 
-        # Check it printed out the correct # of jobs (+2 bc it also includes the instance string and the header string)
-        self.assertTrue(len(output) == 4)
-
         # Check instance data output correctly
         instance_string = "Instance: " + self.my_instance.id
         self.assertEqual(output[0].strip(), instance_string)
@@ -200,16 +192,29 @@ class Testlsjobs(unittest.TestCase):
         headers = self.split_string(output[1])
         self.assertEqual(true_headers, headers)
 
+        # Filtering by job_names but can't assume output order, thus find jobs then do checks
+        job1_output = None
+        job3_output = None
+        for line in output:
+            if job1.id in line:
+                job1_output = line
+            elif job3.id in line:
+                job3_output = line
+
+        # If we can't find our jobID in the output, should fail
+        if not job1_output and not job3_output :
+            self.fail("Jobs should be in output")
+
         # Check details of job1 are correct
-        self.check_job_Tf_fmt(job1, output[2])
+        self.check_job_Tf_fmt(job1, job1_output)
 
         # Check details of job3 are correct
-        self.check_job_Tf_fmt(job3, output[3])
+        self.check_job_Tf_fmt(job3, job3_output)
 
         self.assertEqual(rc, 0)
 
     # Create 3 jobs w/ names, and check --jobs option correctly returns desired jobnames
-    def test_lsjobs_complex_3(self):
+    def test_lsjobs_complex_2(self):
         rc, job1 = self._submitjob(args=["--jobname", self.name])
         rc, job2 = self._submitjob(args=["--jobname", self.name + self.name])
         rc, job3 = self._submitjob(
@@ -220,9 +225,6 @@ class Testlsjobs(unittest.TestCase):
         output, error, rc = self.get_output(lambda: self._ls_jobs(jobs=job_ids))
         output = output.splitlines()
 
-        # Check it printed out the correct # of jobs (+2 bc it also includes the instance string and the header string)
-        self.assertTrue(len(output) == 4)
-
         # Check instance data output correctly
         instance_string = "Instance: " + self.my_instance.id
         self.assertEqual(output[0].strip(), instance_string)
@@ -232,11 +234,24 @@ class Testlsjobs(unittest.TestCase):
         headers = self.split_string(output[1])
         self.assertEqual(true_headers, headers)
 
+        # Filtering by jobs_ids but can't assume output order, thus find jobs then do checks
+        job1_output = None
+        job3_output = None
+        for line in output:
+            if job1.id in line:
+                job1_output = line
+            elif job3.id in line:
+                job3_output = line
+
+        # If we can't find our jobID in the output, should fail
+        if not job1_output and not job3_output :
+            self.fail("Jobs should be in output")
+
         # Check details of job1 are correct
-        self.check_job_Tf_fmt(job1, output[2])
+        self.check_job_Tf_fmt(job1, job1_output)
 
         # Check details of job3 are correct
-        self.check_job_Tf_fmt(job3, output[3])
+        self.check_job_Tf_fmt(job3, job3_output)
 
         self.assertEqual(rc, 0)
 
@@ -246,11 +261,19 @@ class Testlsjobs(unittest.TestCase):
         output, error, rc = self.get_output(lambda: self._ls_jobs(xheaders=True))
         output = output.splitlines()
 
-        # len 1 bc only 1 job, and xheaders removes all headers
-        self.assertTrue(len(output) == 1)
+        # Can't assume this is the only job running, find the line w/ our jobID, then do checks
+        job_output = None
+        for line in output:
+            if job.id in line:
+                job_output = line
+                break
+
+        # If we can't find our jobID in the output, should fail
+        if not job_output:
+            self.fail("Job should be in output")
 
         # Check details of job are correct
-        self.check_job_Tf_fmt(job, output[0])
+        self.check_job_Tf_fmt(job, job_output)
         self.assertEqual(rc, 0)
 
     # Create a single job, and check --showtimestamp option correctly shows the timestamp
@@ -258,9 +281,6 @@ class Testlsjobs(unittest.TestCase):
         rc, job = self._submitjob(args=[])
         output, error, rc = self.get_output(lambda: self._ls_jobs(showtimestamp=True))
         output = output.splitlines()
-
-        # len 4 bc date string, instance string, header string, and job string
-        self.assertTrue(len(output) == 4)
 
         # Check -- showtimestamp correctly outputs timestamp
         Date_string = "Date: "
@@ -275,15 +295,27 @@ class Testlsjobs(unittest.TestCase):
         headers = self.split_string(output[2])
         self.assertEqual(true_headers, headers)
 
+        # Can't assume this is the only job running, find the line w/ our jobID, then do checks
+        job_output = None
+        for line in output:
+            if job.id in line:
+                job_output = line
+                break
+
+        # If we can't find our jobID in the output, should fail
+        if not job_output:
+            self.fail("Job should be in output")
+
         # Check details of job are correct
-        self.check_job_Tf_fmt(job, output[3])
+        self.check_job_Tf_fmt(job, job_output)
         self.assertEqual(rc, 0)
 
     # Create a single job, and check that if --xheaders and --showtimestamp option, --xheaders option still removes all headers
     def test_lsjobs_simple_4(self):
         rc, job = self._submitjob(args=[])
+        job_ids = str(job.id)
         output, error, rc = self.get_output(
-            lambda: self._ls_jobs(xheaders=True, showtimestamp=True)
+            lambda: self._ls_jobs(jobs=job_ids, xheaders=True, showtimestamp=True)
         )
         output = output.splitlines()
 
@@ -320,8 +352,19 @@ class Testlsjobs(unittest.TestCase):
         headers = self.split_string(output[1])
         self.assertEqual(true_headers, headers)
 
+        # Can't assume this is the only job running, find the line w/ our jobID, then do checks
+        job_output = None
+        for line in output:
+            if job.id in line:
+                job_output = line
+                break
+
+        # If we can't find our jobID in the output, should fail
+        if not job_output:
+            self.fail("Job should be in output")
+
         # Check details of job are correct
-        self.check_job_Tf_fmt(job, output[2], long=True)
+        self.check_job_Tf_fmt(job, job_output, long=True)
         self.assertEqual(rc, 0)
 
     ###########################################
@@ -416,29 +459,11 @@ class Testlsjobs(unittest.TestCase):
         self.assertEqual(Names[2], job.name)
         self.assertEqual(Groups[2], job.jobGroup.split("/")[-1])
 
-    # Create a single job, check correct ouput in Mf format
+    # Create a job check correct ouput in Mf format
     def test_lsjobs_simple_Mf_fmt(self):
-        rc, job = self._submitjob(args=[])
-        output, error, rc = self.get_output(lambda: self._ls_jobs(fmt="%Mf"))
-        output = output.splitlines()
-
-        # Check instance data output correctly
-        instance_string = "Instance: " + self.my_instance.id
-        self.assertEqual(output[1].strip(), instance_string)
-
-        # Remove instance data from output
-        output = output[2:]
-
-        # Check details of job are correct
-        job_details, output = self.get_job_Mf_fmt(output)
-        self.check_job_Mf_fmt(job, job_details)
-        self.assertEqual(rc, 0)
-
-    # Create 2 jobs w/ names, check correct ouput in Mf format
-    def test_lsjobs_complex_Mf_fmt(self):
         rc, job1 = self._submitjob(args=["--jobname", self.name])
-        rc, job2 = self._submitjob(args=["--jobname", self.name + self.name])
-        output, error, rc = self.get_output(lambda: self._ls_jobs(fmt="%Mf"))
+        job_ids = str(job1.id)
+        output, error, rc = self.get_output(lambda: self._ls_jobs(jobs=job_ids, fmt="%Mf"))
         output = output.splitlines()
 
         # Check instance data output correctly
@@ -452,16 +477,13 @@ class Testlsjobs(unittest.TestCase):
         job_details1, output = self.get_job_Mf_fmt(output)
         self.check_job_Mf_fmt(job1, job_details1)
 
-        # Check details of job1 are correct
-        job_details2, output = self.get_job_Mf_fmt(output)
-        self.check_job_Mf_fmt(job2, job_details2)
-
         self.assertEqual(rc, 0)
 
     # Test that --long option works
     def test_lsjobs_simple_Mf_fmt_long(self):
         rc, job = self._submitjob(args=[])
-        output, error, rc = self.get_output(lambda: self._ls_jobs(fmt="%Mf", long=True))
+        job_ids = str(job.id)
+        output, error, rc = self.get_output(lambda: self._ls_jobs(jobs=job_ids, fmt="%Mf", long=True))
         output = output.splitlines()
 
         # Check instance data output correctly
@@ -513,27 +535,30 @@ class Testlsjobs(unittest.TestCase):
         self.assertTrue(job.name in job_to_check)  # name
         self.assertTrue(job.jobGroup.split("/")[-1] in job_to_check)  # group
 
-    # Create a single job, check correct ouput in Nf format
-    def test_lsjobs_simple_Nf_fmt(self):
-        rc, job = self._submitjob(args=[])
-        output, error, rc = self.get_output(lambda: self._ls_jobs(fmt="%Nf"))
-        output = output.splitlines()
-
-        # Check details of job are correct
-        self.check_job_nf_fmt(job, output[0])
-        self.assertEqual(rc, 0)
-
     # Create 2 jobs w/ names, check correct ouput in Nf format
-    def test_lsjobs_complex_Nf_fmt(self):
+    def test_lsjobs_simple_Nf_fmt(self):
         rc, job1 = self._submitjob(args=["--jobname", self.name])
         rc, job2 = self._submitjob(args=["--jobname", self.name + self.name])
-
         output, error, rc = self.get_output(lambda: self._ls_jobs(fmt="%Nf"))
         output = output.splitlines()
 
+        # Can't assume this is the only job running, find the line w/ our jobID, then do checks
+        job1_output = None
+        job2_output = None
+        for line in output:
+            if job1.id in line:
+                job1_output = line
+
+            elif job2.id in line:
+                job2_output = line
+
+        # If we can't find our jobID in the output, should fail
+        if not job1_output and not job2_output :
+            self.fail("Jobs should be in output")
+
         # Check details of jobs are correct
-        self.check_job_nf_fmt(job1, output[0])
-        self.check_job_nf_fmt(job2, output[1])
+        self.check_job_nf_fmt(job1, job1_output)
+        self.check_job_nf_fmt(job2, job2_output)
         self.assertEqual(rc, 0)
 
     # Test that --long option works in Nf format
@@ -542,8 +567,19 @@ class Testlsjobs(unittest.TestCase):
         output, error, rc = self.get_output(lambda: self._ls_jobs(fmt="%Nf", long=True))
         output = output.splitlines()
 
+        # Can't assume this is the only job running, find the line w/ our jobID, then do checks
+        job_output = None
+        for line in output:
+            if job.id in line:
+                job_output = line
+                break
+
+        # If we can't find our jobID in the output, should fail
+        if not job_output:
+            self.fail("Jobs should be in output")
+
         # Check details of job are correct
-        self.check_job_nf_fmt(job, output[0])
+        self.check_job_nf_fmt(job, job_output)
         self.assertEqual(rc, 0)
 
     def get_output(self, my_function):

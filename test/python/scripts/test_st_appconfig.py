@@ -395,8 +395,18 @@ class TestAppconfig(unittest.TestCase):
         headers = self.split_string(output[0])
         self.assertEqual(true_headers, headers)
 
+        # Can't assume this is the only appconfig , find the line w/ our config, then do checks
+        config = None
+        for line in output:
+            if self.name in line:
+                config = line
+
+        # If we can't find our jobID in the output, should fail
+        if not config :
+            self.fail("Config should be in output")
+
         # Check details of appconfig are correct
-        appConfig = self.split_string(output[1])
+        appConfig = self.split_string(config)
         self.assertEqual(self.name, appConfig[0])
         self.assertEqual(self.username, appConfig[1])
         self.assertTrue(len(appConfig) == 4) # len 4 bc no description given
@@ -408,8 +418,9 @@ class TestAppconfig(unittest.TestCase):
         description1 = 'askmdakdlmldkmqwmdlqkwmdlkqdmqwklm'
         description2 = '394902384902358230952903892304890234820394'
         self._make_appconfig(self.name, description=description1)
-        self._make_appconfig(self.name + self.name, description=description2)
-        self.appconfigs_to_remove.append(self.name + self.name)
+        name2 = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
+        self._make_appconfig(name2, description=description2)
+        self.appconfigs_to_remove.append(name2)
 
         output, error, rc= self.get_output(lambda: self._ls_appconfig())
         output = output.splitlines()
@@ -419,17 +430,30 @@ class TestAppconfig(unittest.TestCase):
         headers = self.split_string(output[0])
         self.assertEqual(true_headers, headers)
 
+        # Can't assume this is the only appconfig , find the line w/ our config, then do checks
+        config1 = None
+        config2 = None
+        for line in output:
+            if self.name in line:
+                config1 = line
+            elif name2 in line:
+                config2 = line
+
+        # If we can't find our jobID in the output, should fail
+        if not config1 and not config2 :
+            self.fail("Configs should be in output")
+
         # Check details of appconfig1 are correct
-        appConfig1 = self.split_string(output[1])
+        appConfig1 = self.split_string(config1)
         self.assertTrue(len(appConfig1) == 5) # bc appconfig has 5 columns
         self.assertEqual(appConfig1[0], self.name)
         self.assertEqual(appConfig1[1], self.username)
         self.assertEqual(appConfig1[4], description1)
 
         # Check details of appconfig2 are correct
-        appConfig2 = self.split_string(output[2])
+        appConfig2 = self.split_string(config2)
         self.assertTrue(len(appConfig2) == 5) # bc appconfig has 5 columns
-        self.assertEqual(appConfig2[0], self.name+self.name)
+        self.assertEqual(appConfig2[0], name2)
         self.assertEqual(appConfig2[1], self.username)
         self.assertEqual(appConfig2[4], description2)
 
@@ -458,8 +482,15 @@ class TestAppconfig(unittest.TestCase):
         # Description : blahbblah
         # =================================================
 
-        config = output[:7]
-        output = output[6:]
+
+        # Check if output is only 1 config, then there is no more output after that
+        if len(output) == 7:
+            config = output
+            output = None
+        else:
+            config = output[:7]
+            output = output[6:]
+
         return config, output
 
     # Create a single appconfig, check correct ouput in Mf format
@@ -468,8 +499,17 @@ class TestAppconfig(unittest.TestCase):
         output, error, rc= self.get_output(lambda: self._ls_appconfig(fmt='%Mf'))
         output = output.splitlines()
 
+        appConfig = None
+        while output:
+            config, output = self.get_lsappconfig_Mf_fmt(output)
+            if any(self.name in substring for substring in config):
+                appConfig = config
+                break
+
+        if not appConfig:
+            self.fail("Config should be in output")
+
         # Check details of appconfig are correct
-        appConfig, output = self.get_lsappconfig_Mf_fmt(output)
         ids = self.split_string(appConfig[1])
         owner = self.split_string(appConfig[2])
         created = self.split_string(appConfig[3])
@@ -486,50 +526,6 @@ class TestAppconfig(unittest.TestCase):
 
         self.assertEqual(rc, 0)
 
-    # Create 2 appconfigs w/ names and descriptions, check correct ouput in Mf format
-    def test_lsappconfig_complex_Mf_fmt(self):
-        # Create 2 appconfigs
-        description1 = 'askmdakdlmldkmqwmdlqkwmdlkqdmqwklm'
-        description2 = '394902384902358230952903892304890234820394'
-        self._make_appconfig(self.name, description=description1)
-        self._make_appconfig(self.name + self.name, description=description2)
-        self.appconfigs_to_remove.append(self.name + self.name)
-        output, error, rc= self.get_output(lambda: self._ls_appconfig(fmt='%Mf'))
-        output = output.splitlines()
-
-        # Check details of appconfig1 are correct
-        appConfig1, output = self.get_lsappconfig_Mf_fmt(output)
-        ids = self.split_string(appConfig1[1])
-        owner = self.split_string(appConfig1[2])
-        created = self.split_string(appConfig1[3])
-        modified = self.split_string(appConfig1[4])
-        description = self.split_string(appConfig1[5])
-
-        true_headers = ["Id", "Owner", "Created", "Modified", "Description"]
-        headers = [ids[0], owner[0], created[0], modified[0], description[0]]
-        self.assertEqual(true_headers, headers)
-        self.assertEqual(ids[2], self.name)
-        self.assertEqual(owner[2], self.username)
-        self.assertEqual(description[2], description1)
-        self.assertTrue(len(description) == 3) # len 3 bc after 'Description  :  asdasdasda' is split by 2 whitespaces, we get 3 elements
-
-        # Check details of appconfig2 are correct
-        appConfig2, output = self.get_lsappconfig_Mf_fmt(output)
-        ids = self.split_string(appConfig2[1])
-        owner = self.split_string(appConfig2[2])
-        created = self.split_string(appConfig2[3])
-        modified = self.split_string(appConfig2[4])
-        description = self.split_string(appConfig2[5])
-
-        true_headers = ["Id", "Owner", "Created", "Modified", "Description"]
-        headers = [ids[0], owner[0], created[0], modified[0], description[0]]
-        self.assertEqual(true_headers, headers)
-        self.assertEqual(ids[2], self.name+self.name)
-        self.assertEqual(owner[2], self.username)
-        self.assertEqual(description[2], description2)
-        self.assertTrue(len(description) == 3) # len 3 bc after 'Description  :  asdasdasda' is split by 2 whitespaces, we get 3 elements
-
-        self.assertEqual(rc, 0)
 
     ###########################################
         # Nf fmt
@@ -541,8 +537,19 @@ class TestAppconfig(unittest.TestCase):
         output, error, rc= self.get_output(lambda: self._ls_appconfig(fmt='%Nf'))
         output = output.splitlines()
 
+
+        # Can't assume this is the only appconfig, find the line w/ our appconfig, then do checks
+        config_output = None
+        for line in output:
+            if self.name in line:
+                config_output = line
+
+        # If we can't find our appconfig in the output, should fail
+        if not config_output :
+            self.fail("config should be in output")
+
         # Check details of appconfig are correct
-        appconfig1 = output[0]
+        appconfig1 = config_output
         self.assertTrue("Id" in appconfig1)
         self.assertTrue("Owner" in appconfig1)
         self.assertTrue("Created" in appconfig1)
@@ -560,13 +567,28 @@ class TestAppconfig(unittest.TestCase):
         description1 = 'askmdakdlmldkmqwmdlqkwmdlkqdmqwklm'
         description2 = '394902384902358230952903892304890234820394'
         self._make_appconfig(self.name, description=description1)
-        self._make_appconfig(self.name + self.name, description=description2)
-        self.appconfigs_to_remove.append(self.name + self.name)
+        name2 = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
+        self._make_appconfig(name2, description=description2)
+        self.appconfigs_to_remove.append(name2)
         output, error, rc= self.get_output(lambda: self._ls_appconfig(fmt='%Nf'))
         output = output.splitlines()
 
+
+        # Can't assume this is the only appconfig, find the line w/ our appconfig, then do checks
+        config1_output = None
+        config2_output = None
+        for line in output:
+            if self.name in line:
+                config1_output = line
+            elif name2 in line:
+                config2_output = line
+
+        # If we can't find our appconfig in the output, should fail
+        if not config1_output and not config2_output:
+            self.fail("configs should be in output")
+
         # Check details of appconfig are correct
-        appconfig1 = output[0]
+        appconfig1 = config1_output
         self.assertTrue("Id" in appconfig1)
         self.assertTrue("Owner" in appconfig1)
         self.assertTrue("Created" in appconfig1)
@@ -578,14 +600,14 @@ class TestAppconfig(unittest.TestCase):
         self.assertTrue(description1 in appconfig1)
 
         # Check details of appconfig are correct
-        appconfig2 = output[1]
+        appconfig2 = config2_output
         self.assertTrue("Id" in appconfig2)
         self.assertTrue("Owner" in appconfig2)
         self.assertTrue("Created" in appconfig2)
         self.assertTrue("Modified" in appconfig2)
         self.assertTrue("Description" in appconfig2)
 
-        self.assertTrue(self.name + self.name in appconfig2)
+        self.assertTrue(name2 in appconfig2)
         self.assertTrue(self.username in appconfig2)
         self.assertTrue(description2 in appconfig2)
 
