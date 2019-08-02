@@ -44,6 +44,7 @@ class Testlsjobs(unittest.TestCase):
             self.files_to_remove.append(sab_path)
         rc, job = streamtool.run_cmd(args=args)
         self.jobs_to_cancel.append(job)
+        assert job is not None
         return rc, job
 
     def _ls_jobs(
@@ -152,10 +153,10 @@ class Testlsjobs(unittest.TestCase):
         job1_output = None
         job2_output = None
         for line in output:
-            if job1.id in line:
+            if job1.id in line and job1.name in line:
                 job1_output = line
 
-            elif job2.id in line:
+            elif job2.id in line and job2.name in line:
                 job2_output = line
 
         # If we can't find our jobID in the output, should fail
@@ -196,9 +197,9 @@ class Testlsjobs(unittest.TestCase):
         job1_output = None
         job3_output = None
         for line in output:
-            if job1.id in line:
+            if job1.id in line and job1.name in line:
                 job1_output = line
-            elif job3.id in line:
+            elif job3.id in line and job3.name in line:
                 job3_output = line
 
         # If we can't find our jobID in the output, should fail
@@ -238,9 +239,9 @@ class Testlsjobs(unittest.TestCase):
         job1_output = None
         job3_output = None
         for line in output:
-            if job1.id in line:
+            if job1.id in line and job1.name in line:
                 job1_output = line
-            elif job3.id in line:
+            elif job3.id in line and job3.name in line:
                 job3_output = line
 
         # If we can't find our jobID in the output, should fail
@@ -264,7 +265,7 @@ class Testlsjobs(unittest.TestCase):
         # Can't assume this is the only job running, find the line w/ our jobID, then do checks
         job_output = None
         for line in output:
-            if job.id in line:
+            if job.id in line and job.name in line:
                 job_output = line
                 break
 
@@ -298,7 +299,7 @@ class Testlsjobs(unittest.TestCase):
         # Can't assume this is the only job running, find the line w/ our jobID, then do checks
         job_output = None
         for line in output:
-            if job.id in line:
+            if job.id in line and job.name in line:
                 job_output = line
                 break
 
@@ -355,7 +356,7 @@ class Testlsjobs(unittest.TestCase):
         # Can't assume this is the only job running, find the line w/ our jobID, then do checks
         job_output = None
         for line in output:
-            if job.id in line:
+            if job.id in line and job.name in line:
                 job_output = line
                 break
 
@@ -546,10 +547,10 @@ class Testlsjobs(unittest.TestCase):
         job1_output = None
         job2_output = None
         for line in output:
-            if job1.id in line:
+            if job1.id in line and job1.name in line:
                 job1_output = line
 
-            elif job2.id in line:
+            elif job2.id in line and job2.name in line:
                 job2_output = line
 
         # If we can't find our jobID in the output, should fail
@@ -570,7 +571,7 @@ class Testlsjobs(unittest.TestCase):
         # Can't assume this is the only job running, find the line w/ our jobID, then do checks
         job_output = None
         for line in output:
-            if job.id in line:
+            if job.id in line and job.name in line:
                 job_output = line
                 break
 
