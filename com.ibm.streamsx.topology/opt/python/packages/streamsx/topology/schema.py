@@ -786,18 +786,21 @@ def _spl_from_type(type_):
     if type_ in _PYTYPE_TO_SPL:
         return _PYTYPE_TO_SPL[type_]
 
-    if isinstance(type_, type):
+    # See https://bugs.python.org/issue34568
+    # isinstance,issubclass no longer work in Python 3.7
+    if hasattr(type_, '__origin__') and hasattr(type_, '__args__'):
         import typing
-        if issubclass(type_, typing.List):
+        if len(type_.__args__) == 1:
             et = type_.__args__[0]
-            return 'list<' + _spl_from_type(et) + '>'
-        if issubclass(type_, typing.Set):
-            et = type_.__args__[0]
-            return 'set<' + _spl_from_type(et) + '>'
-        if issubclass(type_, typing.Mapping):
+            if typing.List[et] == type_:
+                return 'list<' + _spl_from_type(et) + '>'
+            if typing.Set[et] == type_:
+                return 'set<' + _spl_from_type(et) + '>'
+        elif len(type_.__args__) == 2:
             kt = type_.__args__[0]
             vt = type_.__args__[1]
-            return 'map<' + _spl_from_type(kt) + ', ' + _spl_from_type(vt) + '>'
+            if typing.Mapping[kt, vt] == type_:
+                return 'map<' + _spl_from_type(kt) + ', ' + _spl_from_type(vt) + '>'
     if hasattr(type_, '__args__') and len(type_.__args__) == 2:
         import typing
         if type(None) in type_.__args__:
