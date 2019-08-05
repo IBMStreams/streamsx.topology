@@ -1,0 +1,18 @@
+// ************************************************************************
+// * Copyright (C)2014,2015, International Business Machines Corporation and
+// * others. All Rights Reserved.
+// ************************************************************************
+
+/**
+ * Integration of NextBus® Public XML feed with IBM Streams.
+ * Terms and conditions for use of the feed is documented here:
+ * [http://www.nextbus.com/xmlFeedDocs/NextBusXMLFeed.pdf]
+ * 
+ * Note NextBus states: *All polling commands such as for obtaining vehicle locations should 
+only be run at the most once every 10 seconds*.
+ *
+ * The full description of the feed is at:
+ * [http://www.nextbus.com/xmlFeedDocs/NextBusXMLFeed.pdf].
+ */
+
+namespace com.ibm.streamsx.transportation.nextbus;

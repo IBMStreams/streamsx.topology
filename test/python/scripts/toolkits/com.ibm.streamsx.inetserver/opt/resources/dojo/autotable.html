@@ -1,0 +1,75 @@
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>Auto Live Table</title>
+
+<link rel="stylesheet" href="/streamsx.inet.dojo/dojo/resources/dojo.css">
+<link rel="stylesheet" href="/streamsx.inet.dojo/dijit/themes/claro/claro.css">
+<link rel="stylesheet" href="/streamsx.inet.dojo/dojox/grid/resources/claroGrid.css">
+<script src="/streamsx.inet.dojo/dojo/dojo.js"></script>
+<script src="../utils.js"></script>
+<script src="dojoutils.js"></script>
+
+<script>
+createGrid = function() {
+ require(["dojox/grid/DataGrid", "dojo/number"],
+   function(DataGrid, number) {
+ 
+     var qp = getQueryParameters();
+     var raw = qp["raw"];
+
+     var urlinfo = qp["info"];
+     dojo.xhrGet({ url: urlinfo, handleAs: "json", load: function(portInfo) {
+
+  document.title = portInfo.operatorName + '.' + portInfo.portName;
+
+  var cells = [];
+  var attrs = portInfo.attributes;
+  for (var i = 0; i < attrs.length; i++) {
+      cells.push({name: attrs[i].name, field: attrs[i].name});
+      if (raw === 'false') {
+           if (attrs[i].type === 'timestamp') {
+                cells[i].formatter = localTimestampString;
+           }
+           if (attrs[i].type === 'int64') {
+               // If this looks like a TimeMillis based upon the attribute name
+               if (attrs[i].name.toLowerCase().indexOf("time") != -1)
+                   cells[i].formatter = localTimeMillisString;
+           }
+           else if (attrs[i].type === 'float32' || attrs[i].type === 'float64') {
+               cells[i].formatter = function(x) { return x.toFixed(2);};
+               cells[i].datatype = "number";
+               cells[i].styles = 'text-align: right;'
+           }
+      }
+  }
+  var layout = [cells];
+  var grid = new DataGrid(
+	    {  store: emptyDataStore, structure: layout, autoWidth: true},
+						"ag");
+	grid.startup();
+
+     var urldata = qp["json"];
+
+     periodicUpdateGrid(urldata, 1, grid);
+}
+
+});
+}
+)
+}
+</script>
+
+<style type="text/css">
+#ag {
+	width: 98%;
+	height: 85%;
+	margin:1em auto; 
+}
+</style>
+    <base target="_top">
+	</head>
+	<body class="claro" onload="createGrid()">
+		<h1 id="agh" style="text-align:center">Auto Live Table</h1>
+		<div id="ag" ></div>
+	</body>
+</html>

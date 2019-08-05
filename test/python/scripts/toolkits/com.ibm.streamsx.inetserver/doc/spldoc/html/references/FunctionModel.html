@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="SPL Function Model"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_reference_function_model"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>SPL Function Model</title>
+</head>
+<body id="spldoc_reference_function_model">
+
+
+<h1 class="title topictitle1">SPL Function Model</h1>
+
+<div class="body refbody">
+<div class="section" id="spldoc_reference_function_model__overview">
+<p class="p">
+The function model file is structured as a sequence of one or more functionSet elements.
+The functionSet element represents the set of native functions declared within or included
+from a C++ header file.
+</p>
+
+</div>
+
+<div class="section" id="spldoc_reference_function_model__functionset">
+<dl class="dl">
+   
+    <dt class="dt dlterm"><a name="spldoc_reference_function_model__functionset__headerfilename"><!-- --></a>Header File Name</dt>
+
+    <dd class="dd">Contains the name of the header file that declares the C++ functions or 
+includes other header files that declare them. 
+    </dd>
+
+  
+   
+    <dt class="dt dlterm"><a name="spldoc_reference_function_model__functionset__cppnamespacename"><!-- --></a>CPP Namespace Name (Optional)</dt>
+
+    <dd class="dd">The second (optional) element is named cppNamespacename, which gives the
+C++ namespace for the functions. If the cppNamespacename element is not present, the SPL namespace,
+with "." converted to "::" is used. 
+    </dd>
+
+  
+   
+    <dt class="dt dlterm"><a name="spldoc_reference_function_model__functionset__functions"><!-- --></a>Functions</dt>
+
+    <dd class="dd">A sequence of one or more function elements, each representing a native function signature in SPL format.
+      <dl class="dl">
+        
+          <dt class="dt dlterm"><a name="spldoc_reference_function_model__functionset__functions__description"><!-- --></a>Description</dt>
+
+          <dd class="dd">A description of the function</dd>
+
+        
+        
+          <dt class="dt dlterm"><a name="spldoc_reference_function_model__functionset__functions__prototype"><!-- --></a>Prototype</dt>
+
+          <dd class="dd">The prototype of the native function.  Native function prototypes are declared with SPL syntax,
+which is described in the  <em class="ph i">IBMStreams Processing Language Specification.</em></dd>
+
+        
+        
+          <dt class="dt dlterm"><a name="spldoc_reference_function_model__functionset__functions__cppname"><!-- --></a>CPP Name (Optional)</dt>
+
+          <dd class="dd">Specifies the C++ name of the function. If not present, the SPL function name is used. 
+          </dd>
+
+        
+      </dl>
+
+    </dd>
+
+  
+   
+    <dt class="dt dlterm"><a name="spldoc_reference_function_model__functionset__dependencies"><!-- --></a>Dependencies (Optional)</dt>
+
+    <dd class="dd">A sequence of one or more library elements, each representing a library dependency. 
+The library element format is exactly the same as the one used for operator models.
+     <dl class="dl">
+        
+          <dt class="dt dlterm"><a name="spldoc_reference_function_model__functionset__dependencies__description"><!-- --></a>Description (Optional)</dt>
+
+          <dd class="dd">A description of the library
+          </dd>
+
+        
+        
+          <dt class="dt dlterm"><a name="spldoc_reference_function_model__functionset__dependencies__managedlibrary"><!-- --></a>Managed Library</dt>
+
+          <dd class="dd">Specifies the details of the individual library artifacts. The paths can
+contain environment variables embedded between @ signs (for example: <tt class="ph tt">@FOO_FFT_HOME@/lib</tt>),
+which will be fully resolved by the SPL compiler at compile time.
+            <dl class="dl">
+              
+                <dt class="dt dlterm"><a name="spldoc_reference_function_model__functionset__dependencies__managedlibrary_lib"><!-- --></a>lib (Optional)</dt>
+
+                <dd class="dd">Specifies a name to be passed to C++ compiler's <tt class="ph tt">-l</tt> argument 
+(such as <tt class="ph tt">fft</tt> which will be translated into <tt class="ph tt">-lfft</tt> when passed to the linker)
+                </dd>
+
+              
+              
+                <dt class="dt dlterm"><a name="spldoc_reference_function_model__functionset__dependencies__managedlibrary_libPath"><!-- --></a>libPath (Optional)</dt>
+
+                <dd class="dd">Specifies a path to be passed to C++ compiler's <tt class="ph tt">-L</tt> argument.
+                </dd>
+
+              
+              
+                <dt class="dt dlterm"><a name="spldoc_reference_function_model__functionset__dependencies__managedlibrary_includePath"><!-- --></a>includePath (Optional)</dt>
+
+                <dd class="dd">Specifies a path to be passed to C++ compiler's <tt class="ph tt">-I</tt> argument. 
+                </dd>
+
+              
+              
+                <dt class="dt dlterm"><a name="spldoc_reference_function_model__functionset__dependencies__managedlibrary_command"><!-- --></a>command (Optional)</dt>
+
+                <dd class="dd">A path to a program that will be executed to retrieve <tt class="ph tt">includePath, libPath</tt>, and <tt class="ph tt">lib</tt>
+information. If the path to the program is relative, it is assumed to be rooted at the directory of the
+operator model. The program is executed three times, each time with a different argument, namely <tt class="ph tt">lib, 
+libPath</tt>, and <tt class="ph tt">includePath</tt>. The standard output from these executions will be read and each line 
+(trimmed of white spaces) will be added to one of the <tt class="ph tt">lib, libPath</tt>, and <tt class="ph tt">includePath</tt> elements, depending
+on the type of the execution. A line that begins with # will be ignored. Relative paths are assumed to
+be rooted at the directory where the operator model XML document resides.
+                </dd>
+
+              
+            </dl>
+
+          </dd>
+
+        
+    </dl>
+
+    </dd>
+
+  
+</dl>
+
+</div>
+
+<div class="section" id="spldoc_reference_function_model__example"><h2 class="title sectiontitle splhead-1">Example</h2>
+  
+  
+  <pre class="pre">
+  &lt;functionModel 
+   xmlns="http://www.ibm.com/xmlns/prod/streams/spl/function" 
+   xmlns:cmn="http://www.ibm.com/xmlns/prod/streams/spl/common" 
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+   xsi:schemaLocation="http://www.ibm.com/xmlns/prod/streams/spl/function functionModel.xsd"&gt; 
+  &lt;functionSet&gt; 
+    &lt;!-- header file to include from within C++ code --&gt; 
+    &lt;headerFileName&gt;Sample.h&lt;/headerFileName&gt; 
+    &lt;!-- functions lists the SPL prototypes of the functions implemented in this library --&gt; 
+    &lt;functions&gt; 
+      &lt;!-- use of CDATA allows easy use of &lt; in the prototypyes --&gt; 
+      &lt;function&gt;
+        &lt;description&gt;Increment all list elements by a given amount&lt;/description&gt;
+        &lt;prototype cppName="increment_by"&gt;&lt;![CDATA[ void incrementBy(mutable list&lt;int32&gt; l, int32 incr) ]]&gt;&lt;/prototype&gt;
+      &lt;/function&gt;
+      &lt;function&gt;
+        &lt;description&gt;Join two lists&lt;/description&gt;
+        &lt;prototype&gt;&lt;![CDATA[ list&lt;int32&gt; joinLists(list&lt;int32&gt; a, list&lt;int32&gt; b) ]]&gt;&lt;/prototype&gt;
+      &lt;/function&gt;
+    &lt;/functions&gt; 
+    &lt;dependencies&gt; 
+      &lt;!-- This library can have several dependencies. We only use one here --&gt; 
+      &lt;library&gt; 
+        &lt;!-- A description for this library --&gt; 
+        &lt;cmn:description&gt;Sample-Functions&lt;/cmn:description&gt; 
+        &lt;cmn:managedLibrary&gt; 
+          &lt;!-- the name of the library for linking. Will be used as -lSample --&gt; 
+          &lt;cmn:lib&gt;Sample&lt;/cmn:lib&gt; 
+          &lt;!-- Where to find the library. Relative to the current directory. 
+               Will be used as -L&lt;dir&gt;/lib --&gt; 
+          &lt;cmn:libPath&gt;lib&lt;/cmn:libPath&gt; 
+          &lt;!-- Where to find the include file. Relative to the current directory. 
+               Will be used as -I&lt;dir&gt; --&gt; 
+          &lt;cmn:includePath&gt;./&lt;/cmn:includePath&gt; 
+        &lt;/cmn:managedLibrary&gt; 
+      &lt;/library&gt; 
+    &lt;/dependencies&gt; 
+  &lt;/functionSet&gt; 
+&lt;/functionModel&gt;
+</pre>
+
+
+</div>
+
+</div>
+
+
+</body>
+</html>

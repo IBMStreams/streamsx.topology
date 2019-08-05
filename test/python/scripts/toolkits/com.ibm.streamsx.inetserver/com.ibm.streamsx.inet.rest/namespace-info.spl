@@ -1,0 +1,97 @@
+/**
+ * A set of operators using HTTP REST apis to interact with
+ * streaming data.
+ *
+ * These operators all embed an instance of Eclipse Jetty
+ * to provide an web-server embedded within the operator.
+ * 
+ * Access to streaming data is provided through
+ * the [HTTPTupleView] and [HTTPXMLView] operators.
+ * These two operators support `HTTP GET` requests
+ * to fetch the latest version of the streaming data in
+ * the operator's state.
+ *
+ * Data can be injected into a stream through 
+ * [HTTPTupleInjection] and [HTTPXMLInjection] operators.
+ * Each operators extracts data from an `HTTP POST` and
+ * submits a tuple on an output port.
+ *
+ * [WebContext] provides a mechanism to serve files
+ * at a fixed web context, a fixed path relative to the
+ * root URL of the web server. Note that all the operators
+ * also support a fixed context using the `context` and
+ * `contextResourceBase` operator parameters. 
+ *
+ * Multiple operators share a single web-server by being
+ * partition colocated in the same partition (fused in the same proccessing element).
+ * This allows operators to expose streams through the same webserver
+ * without having to be connected in the SPL graph.
+ *
+ * Overall, these set of operators allow a complete web-application
+ * to be self-contained within an SPL application. In addition to
+ * the operators the webserver will serve up HTML and Javascript
+ * files. Javascript can be used with the JSON data provided
+ * by [HTTPTupleView] to visual live data using graphical
+ * packages such as [http://dojotoolkit.org|DOJO] and 
+ * [http://d3js.org|D3].
+ * 
+ * Meta-data for the streams connected to the operators is also available through `HTTP GET` requests,
+ * to allow JavaScript applications to self-discover the format of the data.
+ * 
+ * These fixed contexts are provided by the operators:
+ * * `streamsx.inet.resources` Utilities provided by the operators.
+ * * `streamsx.inet.dojo` The Dojo Javascript library located at `$STREAMS_INSTALL/ext/dojo`. 
+ * 
+ * [HTTPTupleView] provides automatic visualization of tuples on its input ports.
+ * These are available through the URL `streamsx.inet.resources/dojo/viewall.html`.
+ * 
+ * This provides a table containing links for all the ports connected to all HTTPTupleView
+ * operators using the same Jetty webserver: The columns in the table are:
+ * * *Info* - Link to the JSON meta data about the port, including the names and types of the attributes.
+ * * *Live Table* - Link to a live table of the current viewable data. Some automatic formatting is applied based upon the name and type of an attribute.
+ * * *Live Table (Raw)* - Link to a live table of the current viewable data, with no formatting.
+ * * *JSON Data* - Link that provides the raw JSON data.
+ * This tables use the Dojo Javascript library from the Steams install, and thus do
+ * not require external internet connectivity.
+ *
+ * + HTTPS Support
+ * Overview of HTTP and HTTPS support for
+ * `com.ibm.streamsx.inet.rest` operators.
+ * # HTTP Support
+ * By default the REST operators provide open ports with no authentication
+ * or encryption. This mode is useful for development, testing, proof-of-concept
+ * applications and demonstrations. The only configuration is
+ * the port number for the HTTP server, which defaults to 8080.
+ * # HTTPS Support
+ * HTTPS (SSL/TLS encryption) is supported for all of the operators in
+ * `com.ibm.streamsx.inet.rest`. To use HTTPS, the operators are
+ * configured to use a certificate from a Java key store. Specifying a
+ * certificate enables HTTPS, using TLSv1.2, TLSv1.1 or TLSv1.0.
+ * A certificate is specified using these parameters:
+ * * `keyStore` - URL to the key store containing the certificate. If a relative file path then it is taken as relative to the application directory.
+ * * `keyStorePassword` - Password to the key store.
+ * * `certificateAlias` - Alias of the certificate to use in the key store.
+ * * `keyPassword` - Password to the certificate. If not provided, defaults to the value of `keyStorePassword`.
+ *
+ * All password parameters accept the Jetty obfuscated password style,
+ * which provides protection from casual viewing only. If the password
+ * values starts with `OBF:` then it is assumed to be already obfuscated,
+ * otherwise it is obfuscated before being passed to Jetty. The
+ * Jetty utility `org.eclipse.jetty.util.security.Password` may be
+ * used to obfuscate passwords, for example when passing them as
+ * submission time values. In addition the SPL function [obfuscate(T)]
+ * is provided as an option to obfuscate values.
+ *
+ * The port number can be specified, and defaults to 8080.
+ *
+ * Note that a single Jetty instance (potentially shared by multiple
+ * operators) either uses HTTPS or HTTP, not both.
+ * # Certificate client authentication
+ * Once HTTPS is enabled, then certificate client authentication is enabled by using these parameters:
+ * * `trustStore` - URL to the key store containing trusted client certificates. If a relative file path then it is taken as relative to the application directory.
+ * * `trustStorePassword` - Password to the trust store.
+ *
+*/
+
+namespace com.ibm.streamsx.inet.rest;
+

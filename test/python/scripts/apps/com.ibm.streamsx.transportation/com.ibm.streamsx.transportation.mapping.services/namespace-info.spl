@@ -1,0 +1,11 @@
+// ************************************************************************
+// * Copyright (C) 2016, International Business Machines Corporation and
+// * others. All Rights Reserved.
+// ************************************************************************
+
+/**
+ * Microservices for mapping transportation data.
+ * 
+ */
+
+namespace com.ibm.streamsx.transportation.mapping.services;

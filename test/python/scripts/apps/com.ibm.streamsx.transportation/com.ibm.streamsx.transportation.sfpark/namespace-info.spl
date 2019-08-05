@@ -1,0 +1,37 @@
+// ************************************************************************
+// * Copyright (C)2014,2015, International Business Machines Corporation and
+// * others. All Rights Reserved.
+// ************************************************************************
+
+/**
+ * Integration of SFpark with IBM Streams.
+ * 
+ * SFpark ([http://sfpark.org/]) provides parking data for parking spaces in
+ * San Francisco, California. 
+ * Terms and conditions for use of the service are documented here:
+ * [http://sfpark.org/sfpark-org-terms-of-use/]
+ * 
+ * SFpark encourages independent developers and researchers to use its public API, open data and open source
+ * code to create new apps and data visualizations that support the project’s goal of making parking more readily available.
+ * 
+ * Note the [http://sfpark.org/developer-faqs/|Developer FAQ] says:
+ * 
+ * Q: How often can I call the API?
+ * 
+ * A: There are currently no limits on the use of the API service. However, please be mindful that it is a shared resource
+ * and throttling may occur if usage is at unacceptable levels. We recommend that you call the service no more than once per minute.
+ *
+ * The full description of the open data is at:
+ * [http://sfpark.org/how-it-works/open-data-page/].
+ * 
+ * # Java Application API for SFpark data
+ * 
+ * The Java package `com.ibm.streamsx.transportation.sfpark` provides Java classes representing parking spaces
+ * and the `SFParkStreams` class that provides utility methods to create streams using the
+ * [http://ibmstreams.github.io/streamsx.topology/|IBM Streams Java Application API].
+ * 
+ * **Note:** *Currently the code is present but not yet tied into a build or has javadoc created
+ * for it, thus it is currently a work in progress.*
+ */
+
+namespace com.ibm.streamsx.transportation.sfpark;

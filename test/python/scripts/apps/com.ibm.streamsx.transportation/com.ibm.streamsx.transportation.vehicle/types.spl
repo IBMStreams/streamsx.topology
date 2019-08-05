@@ -1,0 +1,16 @@
+namespace com.ibm.streamsx.transportation.vehicle;
+
+// ************************************************************************
+// * Copyright (C)2014,2015, International Business Machines Corporation and
+// * others. All Rights Reserved.
+// ************************************************************************
+
+use com.ibm.streamsx.datetime::TimeMillis ;
+
+/**
+ * Generic type to represent the position of a vehicle
+ * using an rstring id and float64 latitude and longitude.
+ */
+type VehicleLocation = tuple<rstring id,
+     TimeMillis reportTime,
+     float64 latitude, float64 longitude>;

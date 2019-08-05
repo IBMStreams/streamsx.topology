@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="SPL File map.spl"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_compilationunit"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>SPL File map.spl</title>
+</head>
+<body id="spldoc_compilationunit">
+
+
+<h1 class="title topictitle1">SPL File <tt class="ph tt">map.spl</tt></h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">IBMStreams com.ibm.streamsx.inetserver Toolkit</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.inetserver.html">com.ibm.streamsx.inetserver 3.0.0</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.inet.rest.html">com.ibm.streamsx.inet.rest</a> &gt; map.spl</p>
+
+</div>
+
+<div class="section">
+
+<div class="p"><a class="xref" href="op$com.ibm.streamsx.inet.rest$HTTPTupleView.html">HTTPTupleView</a> provides default mapping visualization of tuple data that contains latitude and longitude. Each tuple in the window represents an object to be mapped and must include these attributes (as SPL or JSON attributes):
+<ul class="ul">
+<li class="li"> <tt class="ph tt">id</tt> - A unique identifier for the object being mapped. The identifier must be unique within its layer.</li>
+
+<li class="li"> <tt class="ph tt">float64 longitude</tt> - Longitude of the object's location.</li>
+
+<li class="li"> <tt class="ph tt">float64 latitude</tt> - Latitude of the object's location.</li>
+
+</ul>
+
+</div>
+
+<div class="p">These attributes are optional:
+<ul class="ul">
+<li class="li"> <tt class="ph tt">layer</tt> - Identifier for the layer the item will be placed on. If not set a default layer of <tt class="ph tt">Markers</tt> is used. Type is <tt class="ph tt">rstring</tt> or <tt class="ph tt">ustring</tt>.</li>
+
+<li class="li"> <tt class="ph tt">markerType</tt> - Marker used at the item's position on the map. Can be of type <a class="xref" href="spl$com.ibm.streamsx.inet.rest$map.html#spldoc_compilationunit__type__MarkerType">MarkerType</a> or an <tt class="ph tt">rstring</tt> containing the enumeration's values (e.g. <tt class="ph tt">GREEN</tt>) or a path to an icon file. If this attribute is not present in the tuple then <tt class="ph tt">BLUE</tt> is used.</li>
+
+<li class="li"> <tt class="ph tt">note</tt> - HTML for the popup that appears when the item's position marker is clicked. If this attribute is not present then the popup contains a string representation of the tuple.</li>
+
+</ul>
+
+</div>
+
+<div class="p">When <tt class="ph tt">markerType</tt> is an path to an icon file there are three options:
+<ul class="ul">
+<li class="li"> A path within a context specified by the <tt class="ph tt">context</tt> parameters. Note that any context can be used as long as the operator that specifies it has been fused with the <a class="xref" href="op$com.ibm.streamsx.inet.rest$HTTPTupleView.html">HTTPTupleView</a> operator and is using the same <tt class="ph tt">port</tt>. For example the <tt class="ph tt">com.ibm.streamsx.transportation</tt> toolkit might provide an <a class="xref" href="op$com.ibm.streamsx.inet.rest$WebContext.html">WebContext</a> operator that defines a <tt class="ph tt">streamsx.transportation</tt> context containing bus icon at <tt class="ph tt">/streamsx.transportation/icons/bus.png</tt>.</li>
+
+<li class="li"> A path within the application's default context which maps to <tt class="ph tt">application_dir/opt/html</tt>. For example if the application directory contains <tt class="ph tt">opt/html/icons/drone.png</tt> then the path <tt class="ph tt">/icons/drone.png</tt> will map to that icon.</li>
+
+<li class="li"> A external URL.</li>
+
+</ul>
+
+</div>
+
+<p class="p">Access to the map is provided by the auto visualization table located at the URL <tt class="ph tt">streamsx.inet.resources/dojo/viewall.html</tt>. Locate the link in the table corresponding to the input port containing the mappable data.
+</p>
+
+<p class="p">Mapping is provided using <tt class="ph tt">http://www.openlayers.org/api/OpenLayers.js</tt> thus  internet connectivity is required to use the default mapping. Note only when the mapping is accessed through its URLs is internet connectivity required. 
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle splhead-1">Content</h2>
+  
+  <dl class="dl">
+    <dt class="dt dlterm"/>
+<dd class="dd"/>
+
+    
+      <dt class="dt dlterm splhead-2">Types</dt>
+
+      <dd class="dd">
+<ul class="sl simple">
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.inet.rest$map.html#spldoc_compilationunit__type__MappedPosition">MappedPosition</a></strong>: Convenience type that corresponds to the expected attributes for the default mapping visualization.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.inet.rest$map.html#spldoc_compilationunit__type__MappedPositionIcon">MappedPositionIcon</a></strong>: Convenience type that corresponds to the expected attributes for default mapping visualization using icon path for markers and a note.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.inet.rest$map.html#spldoc_compilationunit__type__MappedPositionIconLayer">MappedPositionIconLayer</a></strong>: Convenience type that corresponds to the expected attributes for default mapping visualization using a layer, icon path for markers and a note.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.inet.rest$map.html#spldoc_compilationunit__type__MappedPositionMarker">MappedPositionMarker</a></strong>: Convenience type that corresponds to the expected attributes for default mapping visualization using the pre-defined markers and a note.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.inet.rest$map.html#spldoc_compilationunit__type__MappedPositionMarkerLayer">MappedPositionMarkerLayer</a></strong>: Convenience type that corresponds to the expected attributes for default mapping visualization using a layer, pre-defined markers and a note.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.inet.rest$map.html#spldoc_compilationunit__type__MarkerType">MarkerType</a></strong>: Type of the marker to display for a point on the default map visualization by <a class="xref" href="op$com.ibm.streamsx.inet.rest$HTTPTupleView.html">HTTPTupleView</a>.
+</li>
+
+</ul>
+
+      </dd>
+
+    
+  </dl>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle splhead-1">Types</h2>
+  
+</div>
+
+<div class="section" id="spldoc_compilationunit__type__MarkerType"><h2 class="title sectiontitle splpart">MarkerType</h2>
+  
+</div>
+<div class="section">
+
+<p class="p">Type of the marker to display for a point on the default map visualization by <a class="xref" href="op$com.ibm.streamsx.inet.rest$HTTPTupleView.html">HTTPTupleView</a>.
+</p>
+
+<div class="p">
+<ul class="ul">
+<li class="li"> <br/><img class="image" src="file:///home/joergboe/git/streamsx.inetserver/com.ibm.streamsx.inetserver/com.ibm.streamsx.inet.rest/../opt/resources/openlayers/marker-blue.png" alt="BLUE"/><br/> BLUE - Default when no <tt class="ph tt">markerType</tt> attribute exists.</li>
+
+<li class="li"> <br/><img class="image" src="file:///home/joergboe/git/streamsx.inetserver/com.ibm.streamsx.inetserver/com.ibm.streamsx.inet.rest/../opt/resources/openlayers/marker-green.png" alt="GREEN"/><br/> GREEN</li>
+
+<li class="li"> <br/><img class="image" src="file:///home/joergboe/git/streamsx.inetserver/com.ibm.streamsx.inetserver/com.ibm.streamsx.inet.rest/../opt/resources/openlayers/marker-gold.png" alt="YELLOW"/><br/> YELLOW</li>
+
+<li class="li"> <br/><img class="image" src="file:///home/joergboe/git/streamsx.inetserver/com.ibm.streamsx.inetserver/com.ibm.streamsx.inet.rest/../opt/resources/openlayers/marker-red.png" alt="RED"/><br/> RED</li>
+
+<li class="li"> <br/><img class="image" src="file:///home/joergboe/git/streamsx.inetserver/com.ibm.streamsx.inetserver/com.ibm.streamsx.inet.rest/../opt/resources/openlayers/marker-warning.png" alt="WARNING"/><br/> WARNING</li>
+
+<li class="li"> <br/><img class="image" src="file:///home/joergboe/git/streamsx.inetserver/com.ibm.streamsx.inetserver/com.ibm.streamsx.inet.rest/../opt/resources/openlayers/marker-award.png" alt="AWARD"/><br/> AWARD </li>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="section">
+   <p class="p">
+<tt class="ph tt">MarkerType = enum { BLUE, GREEN, YELLOW, RED, WARNING, AWARD };</tt>
+   </p>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__type__MappedPosition"><h2 class="title sectiontitle splpart">MappedPosition</h2>
+  
+</div>
+<div class="section">
+
+<p class="p">Convenience type that corresponds to the expected attributes for the default mapping visualization. 
+</p>
+
+</div>
+
+<div class="section">
+   <p class="p">
+<tt class="ph tt">MappedPosition = tuple&lt;rstring id, float64 latitude, float64 longitude&gt;;</tt>
+   </p>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__type__MappedPositionMarker"><h2 class="title sectiontitle splpart">MappedPositionMarker</h2>
+  
+</div>
+<div class="section">
+
+<p class="p">Convenience type that corresponds to the expected attributes for default mapping visualization using the pre-defined markers and a note. 
+</p>
+
+</div>
+
+<div class="section">
+   <p class="p">
+<tt class="ph tt">MappedPositionMarker = MappedPosition, tuple&lt;MarkerType markerType, rstring note&gt;;</tt>
+   </p>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__type__MappedPositionIcon"><h2 class="title sectiontitle splpart">MappedPositionIcon</h2>
+  
+</div>
+<div class="section">
+
+<p class="p">Convenience type that corresponds to the expected attributes for default mapping visualization using icon path for markers and a note. 
+</p>
+
+</div>
+
+<div class="section">
+   <p class="p">
+<tt class="ph tt">MappedPositionIcon = MappedPosition, tuple&lt;rstring markerType, rstring note&gt;;</tt>
+   </p>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__type__MappedPositionMarkerLayer"><h2 class="title sectiontitle splpart">MappedPositionMarkerLayer</h2>
+  
+</div>
+<div class="section">
+
+<p class="p">Convenience type that corresponds to the expected attributes for default mapping visualization using a layer, pre-defined markers and a note. 
+</p>
+
+</div>
+
+<div class="section">
+   <p class="p">
+<tt class="ph tt">MappedPositionMarkerLayer = MappedPositionMarker, tuple&lt;rstring layer&gt;;</tt>
+   </p>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__type__MappedPositionIconLayer"><h2 class="title sectiontitle splpart">MappedPositionIconLayer</h2>
+  
+</div>
+<div class="section">
+
+<p class="p">Convenience type that corresponds to the expected attributes for default mapping visualization using a layer, icon path for markers and a note. 
+</p>
+
+</div>
+
+<div class="section">
+   <p class="p">
+<tt class="ph tt">MappedPositionIconLayer = MappedPositionIcon, tuple&lt;rstring layer&gt;;</tt>
+   </p>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

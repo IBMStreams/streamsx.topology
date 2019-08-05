@@ -1,0 +1,18 @@
+namespace com.ibm.streamsx.inet.rest;
+
+/** 
+ *  Output and Input schema, web request output from HTTPRequestProcess operator and corresponding 
+    response on the input port are returned to the web. The key forms the correlation.  
+ *  * key - correlation id generated on request, must appear on the response.
+ *  * request - request from the web
+ *  * response - response to the web.
+ *  * contentType - of the request
+ *  * header - populated on request, returned on response. 
+ *  * method - method of request, possible values : (PUT, GET, POST, DELETE)
+ *  * pathInfo - requests path beyond the context's base
+ *  * status - indicates of the request completion. 
+ *  * statusMessage - on request, only populated if status is > 300.  
+ */
+type HTTPRequest = int64 key, rstring request, rstring contentType, map<rstring,
+            rstring> header, rstring response, rstring method, rstring pathInfo,
+            int32 status, rstring statusMessage ;

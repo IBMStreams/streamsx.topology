@@ -25,7 +25,6 @@ def main(args=None):
     """
     cmd_args = _parse_args(args)
     topo = _create_topo(cmd_args)
-
     # Get dependencies for app, if any at all
     dependencies = _parse_dependencies()
     # if dependencies and if -t arg, find & add local toolkits

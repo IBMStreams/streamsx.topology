@@ -1,0 +1,53 @@
+/**
+ * A set of operators that interact with external HTTP servers.
+ * 
+ * To dispatch arbitrary requests to an http server use operator [HTTPRequest]. Additionally the C++ Native Functions may be used
+ * to dispatch requests form a SPL-Custom operator.
+ * 
+ * The operator [HTTPGetXMLContent] periodically connects to an HTTP endpoint to GET XML content as a single tuple.
+ * 
+ * The operator [HTTPParallelRequest] issues HTTP requests in parallel asynchronously from the input stream
+ * 
+ * + HTTPS Support
+ * Overview of HTTP and HTTPS support for `com.ibm.streamsx.inet.http` operators.
+ * 
+ * # HTTPRequest
+ * HTTPS (SSL/TLS encryption) is supported for this operator.
+ * The operator is able to dispatch HTTPS request using TLSv1.2, TLSv1.1 or TLSv1.0.
+ * By default the operator uses the default truststore of the java ssl engine (`$STREAMS_INSTALL/java/jre/lib/security/cacerts`).
+ * The operator can be customized to use separate key and trust stores by using these parameters:
+ * * `sslTrustStoreFile` - URL to the trust store containing the certificate(s). If a relative file path then it is taken as relative to the application directory.
+ * * `sslTrustStorePassword` - Password to the trust store.
+ * * `sslKeyStoreFile` - URL to the key store containing the client certificate. If a relative file path then it is taken as relative to the application directory.
+ * * `sslKeyPassword` - Password for the client key.
+ * * `setSslKeyStorePassword`- Password for the key store. If the password for the store differs from the key password, use this parameter.
+ * 
+ * # Procedure to Generate Keys and Certificates
+ * 
+ * # Server Key and Certificate
+ * 
+ * To generate a server key pair use the following command: 
+ *     keytool -genkeypair -keyalg RSA -alias mykey -keypass changeit -storepass changeit -validity 1000 -keystore etc/keystore.jks -dname "CN=<name/hostname>, OU=<org unit>, O=<organization>, L=<locality>, ST=<state>, C=<two-letter country code>"
+ * 
+ * Check the content of an keystore file:
+ *     keytool -list -v -keystore etc/keystore.jks
+ * 
+ * Extract the certificate for the client trust manager:
+ *     keytool -export -rfc -alias mykey -file etc/servercert.pem -storepass changeit -keystore etc/keystore.jks
+ * 
+ * Insert the the certificate into a new truststore at the client site:
+ *     keytool -import -file etc/servercert.pem -alias mykey -keystore etc/cacert.jks -storepass changeit -trustcacerts'
+ * 
+ * # Client Key and Certificate
+ * 
+ * The `dname` of an client key must match to the `dname` of the server key. To generate a client key use the following commands:
+ *     keytool -genkeypair -keyalg RSA -alias myclientkey -keypass changeit -storepass changeit -keystore etc/clientkey.jks -dname '<the dname string from the server certificate>'
+ * 
+ * Extract the certificate for the server trust manager:
+ *     keytool -export -rfc -alias myclientkey -file etc/clientkey.pem -keystore etc/clientkey.jks -storepass changeit -keypass changeit
+ * 
+ * Insert the the certificate into a new truststore at the srver site:
+ *     keytool -import -file etc/clientkey.pem -alias myclientkey -keystore etc/cacert.jks -storepass changeit -trustcacerts
+ */
+ 
+namespace com.ibm.streamsx.inet.http;

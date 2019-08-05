@@ -1,0 +1,52 @@
+namespace com.ibm.streamsx.transportation.mapping.services;
+
+// ************************************************************************
+// * Copyright (C)2014,2016 International Business Machines Corporation and
+// * others. All Rights Reserved.
+// ************************************************************************
+
+use com.ibm.streamsx.inet.rest::HTTPTupleView ;
+use com.ibm.streamsx.datetime.convert::*;
+use com.ibm.streamsx.topology.topic::Subscribe;
+use com.ibm.streamsx.inet.rest::MappedPositionIconLayer;
+
+/**
+ * Microservice that subscribes to location streams and
+ * provides default visualization.
+ *
+ * The default visualization is currently just the default location
+ * and marker visualization provided by `HTTPTupleView`.
+ *
+ * Publishes:
+ *  * topic: `streamsx/transportation/mapping/locations`
+ *  * type: `com.ibm.streamsx.inet.rest::MappedPositionIconLayer`
+ *
+ * @param ageOutTime Time in seconds when an entity with a location is
+ *  removed from visualization after the last position update. Defaults to
+ *  15 minutes.
+ * @param port Port for the HTTP server. Defaults to 8080.
+ */
+public composite MappingService
+{
+    param
+          expression<float64> $ageOutTime : minutes(15);
+          expression<int32> $port : 8080;
+
+	graph
+           stream<MappedPositionIconLayer> Locations = Subscribe() {
+              param
+               topic: "streamsx/transportation/mapping/locations";
+               streamType: MappedPositionIconLayer;
+           }
+
+	() as LocationsViewer = HTTPTupleView(Locations)
+	{
+           window Locations : sliding, count(1), count(1),
+                         partitioned, partitionAge($ageOutTime);
+	   param
+             port: $port;
+	     partitionKey: "id";
+	   config
+             placement: partitionColocation("jetty");
+	}
+}

@@ -1,0 +1,642 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="Operator HTTPTupleView"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_operator"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>Operator HTTPTupleView</title>
+</head>
+<body id="spldoc_operator">
+
+
+<h1 class="title topictitle1">Operator <tt class="ph tt">HTTPTupleView</tt></h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">IBMStreams com.ibm.streamsx.inetserver Toolkit</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.inetserver.html">com.ibm.streamsx.inetserver 3.0.0</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.inet.rest.html">com.ibm.streamsx.inet.rest</a> &gt; HTTPTupleView</p>
+
+</div>
+
+<div class="section splprimop">
+  <embed class="image" src="../../image/tk$com.ibm.streamsx.inetserver/op$com.ibm.streamsx.inet.rest$HTTPTupleView.svg" width="872" height="112"/>
+</div>
+
+<div class="section">
+
+<div class="p">REST HTTP or HTTPS API to view tuples from windowed input ports. Embeds a Jetty web server to provide HTTP REST access to the collection of tuples in the input port window at the time of the last eviction for tumbling windows, or last trigger for sliding windows. The URLs defined by this operator are:
+<ul class="ul">
+<li class="li"> <em class="ph i">prefix</em><tt class="ph tt">/ports/input/</tt><em class="ph i">port index</em><tt class="ph tt">/tuples</tt> - Returns the set of tuples as a array of the tuples in JSON format (content type <tt class="ph tt">application/json</tt>).</li>
+
+<li class="li"> <em class="ph i">prefix</em><tt class="ph tt">/ports/input/</tt><em class="ph i">port index</em><tt class="ph tt">/info</tt> - Output port meta-data including the stream attribute names and types (content type <tt class="ph tt">application/json</tt>).</li>
+
+</ul>
+
+</div>
+
+<div class="p">The <em class="ph i">prefix</em> for the URLs is:
+<ul class="ul">
+<li class="li"> <em class="ph i">context path</em><tt class="ph tt">/</tt><em class="ph i">base operator name</em> - When the <tt class="ph tt">context</tt> parameter is set.</li>
+
+<li class="li"> <em class="ph i">full operator name</em> - When the <tt class="ph tt">context</tt> parameter is <strong class="ph b">not</strong> set.</li>
+
+</ul>
+
+</div>
+
+<div class="p">The <tt class="ph tt">/tuples</tt> URL accepts these optional query parameters:
+<ul class="ul">
+<li class="li"> <tt class="ph tt">partition</tt> – When the window is partitioned defines the partition to be extracted from the window. When partitionKey contains multiple attributes, partition must contain the same number of values as attributes and in the same order, e.g. <tt class="ph tt">?partition=John&amp;partition=Smith</tt>. would match the SPL partitionKey setting of: <tt class="ph tt">partitionKey: “firstName”, “lastName”;</tt>. When a window is partitioned and no partition query parameter is provided the data for all partitions is returned.</li>
+
+<li class="li"> <tt class="ph tt">attribute</tt> – Restricts the returned data to the named attributes. Data is returned in the order the attribute names are provided. When not provided, all attributes in the input tuples are returned. E.g. <tt class="ph tt">?format=json&amp;attribute=lastName&amp;attribute=city</tt> will return only the <tt class="ph tt">lastName</tt> and <tt class="ph tt">city</tt> attributes in that order with <tt class="ph tt">lastName</tt> first.</li>
+
+<li class="li"> <tt class="ph tt">suppress</tt> – Suppresses the named attributes from the output. When not provided, no attributes are suppressed. suppress is applied after applying the query parameter attribute. E.g. <tt class="ph tt">?suppress=firstName&amp;suppress=lastName</tt> will not include lastName or firstName in the returned data.</li>
+
+<li class="li"> <tt class="ph tt">callback</tt> – Wrappers the returned JSON in a call to callbackvalue(...json...); to enable JSONP processing.</li>
+
+</ul>
+Query parameters are ignored if the input port's schema is <tt class="ph tt">tuple&lt;rstring jsonString&gt;</tt>.
+</div>
+
+<p class="p">The fixed URL <tt class="ph tt">/ports/info</tt> returns meta-data (using JSON) about all of the Streams ports that have associated URLs.
+</p>
+
+<div class="p">Tuples are converted to JSON using the <tt class="ph tt">JSONEncoding</tt> support from the Streams Java Operator API, except for: 
+<ul class="ul">
+<li class="li"> If the input port's schema is <tt class="ph tt">tuple&lt;rstring jsonString&gt;</tt> then value is taken as is serialized JSON  and the resultant JSON is returned as the tuple's JSON value.</li>
+
+<li class="li"> Within a tuple any attribute that is <tt class="ph tt">rstring jsonString</tt>, then the value is taken as serialized JSON and it is placed into the tuple's JSON object as its deserialized JSON with key <tt class="ph tt">jsonString</tt>.</li>
+
+</ul>
+
+</div>
+
+<p class="p"><tt class="ph tt">HTTPTupleView</tt>, <a class="xref" href="op$com.ibm.streamsx.inet.rest$HTTPTupleInjection.html">HTTPTupleInjection</a>, <a class="xref" href="op$com.ibm.streamsx.inet.rest$HTTPXMLInjection.html">HTTPXMLInjection</a> and <a class="xref" href="op$com.ibm.streamsx.inet.rest$WebContext.html">WebContext</a> embed a Jetty webserver and all operator invocations in an SPL application that are co-located/fused in same partition (PE) will share a common Jetty instance. Thus by fusing these operators together with a common port value, a single web-server serving a single SPL application can be created. This sharing of the web-server by fusing multiple operators allows the operators to be logically connected in the SPL graph, rather than a single operator with multiple unrelated streams being connected to it.
+</p>
+
+<p class="p">Static content in the sub-directory <tt class="ph tt">html</tt> of the application's <tt class="ph tt">opt</tt> directory will also be served by the embedded web-server, thus allowing a complete web-application with live data to be served by an SPL application. The default URL for the web-server resolves to <tt class="ph tt">{application_dir}/opt/html/index.html</tt>.
+</p>
+
+<p class="p">Operators that support the <tt class="ph tt">context</tt> and <tt class="ph tt">contextResourceBase</tt> SPL parameters will serve static files from the <tt class="ph tt">contextResourceBase</tt> directory rooted at the supplied context path.
+</p>
+
+<div class="p"><strong class="ph b">Limitations</strong>:
+<ul class="ul">
+<li class="li"> Error handling is limited, incorrect URLs can crash the application, e.g. providing the wrong number of partition values.</li>
+
+<li class="li"> By default no security access is provided to the data, HTTPS must be explicitly configured. </li>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle splhead-1">Summary</h2>
+
+<dl class="dl" compact="compact">
+ 
+  <dt class="dt dlterm">Ports</dt>
+
+  <dd class="dd">This operator has 1 or more input ports and 0 output ports.</dd>
+
+ 
+ 
+  <dt class="dt dlterm">Windowing</dt>
+
+  <dd class="dd">This operator requires a windowing configuration.</dd>
+
+ 
+ 
+  <dt class="dt dlterm">Parameters</dt>
+
+  <dd class="dd">This operator supports 11 parameters.
+<p class="p"> Optional: 
+<a class="xref" href="#spldoc_operator__parameter__certificateAlias">certificateAlias</a>, <a class="xref" href="#spldoc_operator__parameter__context">context</a>, <a class="xref" href="#spldoc_operator__parameter__contextResourceBase">contextResourceBase</a>, <a class="xref" href="#spldoc_operator__parameter__headers">headers</a>, <a class="xref" href="#spldoc_operator__parameter__keyPassword">keyPassword</a>, <a class="xref" href="#spldoc_operator__parameter__keyStore">keyStore</a>, <a class="xref" href="#spldoc_operator__parameter__keyStorePassword">keyStorePassword</a>, <a class="xref" href="#spldoc_operator__parameter__partitionKey">partitionKey</a>, <a class="xref" href="#spldoc_operator__parameter__port">port</a>, <a class="xref" href="#spldoc_operator__parameter__trustStore">trustStore</a>, <a class="xref" href="#spldoc_operator__parameter__trustStorePassword">trustStorePassword</a>
+
+</p>
+</dd>
+
+ 
+ 
+  <dt class="dt dlterm">Metrics</dt>
+
+  <dd class="dd">This operator reports 2 metrics.</dd>
+
+ 
+</dl>
+</div>
+
+<div class="section"><h2 class="title sectiontitle splhead-1">Properties</h2>
+
+<dl class="dl" compact="compact">
+ 
+  <dt class="dt dlterm">Implementation</dt>
+
+  <dd class="dd">Java</dd>
+
+ 
+</dl>
+
+</div>
+
+<div class="section">
+<p class="p splhead-1"><strong class="ph b"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__input_port_set">Input Ports</a></strong></p>
+<dl class="dl">
+  
+   <dt class="dt dlterm">Ports (0)</dt>
+
+   <dd class="dd">
+
+<p class="p">Windowed input port whose tuples will be available using a HTTP GET request with a URL using port index 0.
+</p>
+   </dd>
+
+  
+    
+      <dt class="dt dlterm">Properties</dt>
+
+      <dd class="dd">
+   <ul class="sl simple">
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__input_port_set__optional">Optional</a>: false
+     </li>
+
+   </ul>
+
+   <ul class="sl simple">
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__input_port_set__controlport">ControlPort</a>: false
+</li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__input_port_set__windowingmode">WindowingMode</a>: Windowed
+</li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__input_port_set__windowpunctuationinputmode">WindowPunctuationInputMode</a>: WindowBound
+</li>
+
+   </ul>
+
+      </dd>
+
+    
+  
+   <dt class="dt dlterm">Ports (1...)</dt>
+
+    <dd class="dd">
+
+<p class="p">Optional windowed input ports whose tuples will be available using a HTTP GET request a URL with the corresponding port index.
+</p>
+   <dl class="dl">
+    
+      <dt class="dt dlterm">Properties</dt>
+
+      <dd class="dd">
+   <ul class="sl simple">
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__input_port_set__controlport">ControlPort</a>: false
+</li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__input_port_set__windowingmode">WindowingMode</a>: Windowed
+</li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__input_port_set__windowpunctuationinputmode">WindowPunctuationInputMode</a>: WindowBound
+</li>
+
+   </ul>
+
+      </dd>
+
+    
+   </dl>
+
+  </dd>
+
+
+</dl>
+
+</div>
+
+<div class="section">
+<p class="p splhead-1"><strong class="ph b"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters">Parameters</a></strong></p>
+This operator supports 11 parameters.
+<p class="p"> Optional: 
+<a class="xref" href="#spldoc_operator__parameter__certificateAlias">certificateAlias</a>, <a class="xref" href="#spldoc_operator__parameter__context">context</a>, <a class="xref" href="#spldoc_operator__parameter__contextResourceBase">contextResourceBase</a>, <a class="xref" href="#spldoc_operator__parameter__headers">headers</a>, <a class="xref" href="#spldoc_operator__parameter__keyPassword">keyPassword</a>, <a class="xref" href="#spldoc_operator__parameter__keyStore">keyStore</a>, <a class="xref" href="#spldoc_operator__parameter__keyStorePassword">keyStorePassword</a>, <a class="xref" href="#spldoc_operator__parameter__partitionKey">partitionKey</a>, <a class="xref" href="#spldoc_operator__parameter__port">port</a>, <a class="xref" href="#spldoc_operator__parameter__trustStore">trustStore</a>, <a class="xref" href="#spldoc_operator__parameter__trustStorePassword">trustStorePassword</a>
+
+</p>
+<dl class="dl">
+
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__certificateAlias"><!-- --></a><tt class="ph tt">certificateAlias</tt></dt>
+
+<dd class="dd">
+<p class="p">Alias of the certificate to use in the key store. When this parameter is set all connections use HTTPS.
+</p>
+<dl class="dl">
+
+ <dt class="dt dlterm">Properties </dt>
+
+ <dd class="dd">
+  <ul class="sl simple">
+  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
+  </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
+     </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
+     </li>
+
+  </ul>
+
+ </dd>
+
+
+</dl>
+
+</dd>
+
+
+
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__context"><!-- --></a><tt class="ph tt">context</tt></dt>
+
+<dd class="dd">
+<p class="p">Define a URL context path that maps to the resources defined by<tt class="ph tt">contextResourceBase</tt>. This allows a composite that invokes this operator in a toolkit to provide resources regardless of the value of the application's data directory. For example setting it to <em class="ph i">maps</em> would result in the URL <em class="ph i">/maps/index.html</em> mapping to the file <em class="ph i">index.html</em> in the directory defined by <tt class="ph tt">contextResourceBase</tt>. Requires the parameter <tt class="ph tt">contextResourceBase</tt> to be set. If when the operator is initialized the context already exists then no action is taken. This allows multiple independent composites in the same toolkit to have common <tt class="ph tt">context</tt> and <tt class="ph tt">contextResourceBase</tt> settings, typically to point to a single set of HTML and Javascript resources for the toolkit.
+</p>
+
+<p class="p">If the operator provides URLs for its input or output ports then they are placed in the this context when this parameter is set. This then provides fixed locations for the URLs regardless of the depth of the operator invocation in the main composite.
+</p>
+
+<p class="p">Only a single context per invocation is supported.
+</p>
+<dl class="dl">
+
+ <dt class="dt dlterm">Properties </dt>
+
+ <dd class="dd">
+  <ul class="sl simple">
+  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
+  </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
+     </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
+     </li>
+
+  </ul>
+
+ </dd>
+
+
+</dl>
+
+</dd>
+
+
+
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__contextResourceBase"><!-- --></a><tt class="ph tt">contextResourceBase</tt></dt>
+
+<dd class="dd">
+<p class="p">Directory location of resources that will be available through the the URL context defined by the parameter <tt class="ph tt">context</tt>. Typically used to allow a toolkit to provide a set of resources in a fixed location. The set of resources is recommended to be stored in the application_dir/opt directory, which is automatically included in the bundle by default. Path of this directory can be absolute or relative, if relative path is specified then it is relative to the application directory. A set of default resources is included in the toolkit directory under ToolkitDir/opt/resources and will be loaded by the operator. This default resources can be viewed at <tt class="ph tt">http://hostname:8080/streamsx.inet.resources</tt>. A path within the application is obtained using the SPL function <tt class="ph tt">getThisToolkitDir()</tt>. Thus a composite in the file <em class="ph i">maps.spl</em> in the namespace directory <tt class="ph tt">com.acme.streams.apps.map</tt> might have the following setting to map <tt class="ph tt">http://127.0.0.1:8080/maps</tt> to <tt class="ph tt">opt/resources/mapinfo</tt> in the application.
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+param
+  context: “maps”
+  contextResourceBase: getThisToolkitDir() + “/opt/resources/mapinfo”
+</pre>
+
+
+</div>
+<dl class="dl">
+
+ <dt class="dt dlterm">Properties </dt>
+
+ <dd class="dd">
+  <ul class="sl simple">
+  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
+  </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
+     </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
+     </li>
+
+  </ul>
+
+ </dd>
+
+
+</dl>
+
+</dd>
+
+
+
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__headers"><!-- --></a><tt class="ph tt">headers</tt></dt>
+
+<dd class="dd">
+<p class="p">List of headers to insert into the http reply. Formatted as header:value
+</p>
+<dl class="dl">
+
+ <dt class="dt dlterm">Properties </dt>
+
+ <dd class="dd">
+  <ul class="sl simple">
+  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
+  </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
+     </li>
+
+  </ul>
+
+ </dd>
+
+
+</dl>
+
+</dd>
+
+
+
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__keyPassword"><!-- --></a><tt class="ph tt">keyPassword</tt></dt>
+
+<dd class="dd">
+<p class="p">Password to the certificate. If not provided, defaults to the value of <tt class="ph tt">keyStorePassword</tt>.
+</p>
+<dl class="dl">
+
+ <dt class="dt dlterm">Properties </dt>
+
+ <dd class="dd">
+  <ul class="sl simple">
+  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
+  </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
+     </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
+     </li>
+
+  </ul>
+
+ </dd>
+
+
+</dl>
+
+</dd>
+
+
+
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__keyStore"><!-- --></a><tt class="ph tt">keyStore</tt></dt>
+
+<dd class="dd">
+<p class="p">URL to the key store containing the certificate. If a relative file path then it is taken as relative to the application directory.
+</p>
+<dl class="dl">
+
+ <dt class="dt dlterm">Properties </dt>
+
+ <dd class="dd">
+  <ul class="sl simple">
+  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
+  </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
+     </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
+     </li>
+
+  </ul>
+
+ </dd>
+
+
+</dl>
+
+</dd>
+
+
+
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__keyStorePassword"><!-- --></a><tt class="ph tt">keyStorePassword</tt></dt>
+
+<dd class="dd">
+<p class="p">Password to the key store.
+</p>
+<dl class="dl">
+
+ <dt class="dt dlterm">Properties </dt>
+
+ <dd class="dd">
+  <ul class="sl simple">
+  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
+  </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
+     </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
+     </li>
+
+  </ul>
+
+ </dd>
+
+
+</dl>
+
+</dd>
+
+
+
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__partitionKey"><!-- --></a><tt class="ph tt">partitionKey</tt></dt>
+
+<dd class="dd">
+<p class="p">Names of attributes to partition the window by. If the cardinality of this parameter is &gt; 1,then every value represents one attribute name. If the cadinality equals to 1, the value may contain one attribute name or a comma separated list of attribute names.
+</p>
+<dl class="dl">
+
+ <dt class="dt dlterm">Properties </dt>
+
+ <dd class="dd">
+  <ul class="sl simple">
+  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
+  </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
+     </li>
+
+  </ul>
+
+ </dd>
+
+
+</dl>
+
+</dd>
+
+
+
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__port"><!-- --></a><tt class="ph tt">port</tt></dt>
+
+<dd class="dd">
+<p class="p">Port number for the embedded Jetty HTTP server. Defaults to 8080.
+</p>
+<dl class="dl">
+
+ <dt class="dt dlterm">Properties </dt>
+
+ <dd class="dd">
+  <ul class="sl simple">
+  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: int32
+  </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
+     </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
+     </li>
+
+  </ul>
+
+ </dd>
+
+
+</dl>
+
+</dd>
+
+
+
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__trustStore"><!-- --></a><tt class="ph tt">trustStore</tt></dt>
+
+<dd class="dd">
+<p class="p">URL to the trust store containing client certificates. If a relative file path then it is taken as relative to the application directory. When this parameter is set, client authentication is required.
+</p>
+<dl class="dl">
+
+ <dt class="dt dlterm">Properties </dt>
+
+ <dd class="dd">
+  <ul class="sl simple">
+  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
+  </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
+     </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
+     </li>
+
+  </ul>
+
+ </dd>
+
+
+</dl>
+
+</dd>
+
+
+
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__trustStorePassword"><!-- --></a><tt class="ph tt">trustStorePassword</tt></dt>
+
+<dd class="dd">
+<p class="p">Password to the trust store.
+</p>
+<dl class="dl">
+
+ <dt class="dt dlterm">Properties </dt>
+
+ <dd class="dd">
+  <ul class="sl simple">
+  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
+  </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
+     </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
+     </li>
+
+  </ul>
+
+ </dd>
+
+
+</dl>
+
+</dd>
+
+
+</dl>
+
+</div>
+
+<div class="section">
+<p class="p splhead-1"><strong class="ph b"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__context__metrics">Metrics</a></strong></p>
+<dl class="dl">
+  
+    <dt class="dt dlterm"><tt class="ph tt">https</tt> - <a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__context__metrics_kind_gauge">Gauge</a></dt>
+
+    <dd class="dd">
+
+<p class="p">Jetty SSL/TLS status: 0=HTTP, 1=HTTPS
+</p>
+
+     <p class="p"/>
+
+     </dd>
+
+  
+  
+    <dt class="dt dlterm"><tt class="ph tt">serverPort</tt> - <a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__context__metrics_kind_gauge">Gauge</a></dt>
+
+    <dd class="dd">
+
+<p class="p">Jetty (HTTP/HTTPS) server port
+</p>
+
+     <p class="p"/>
+
+     </dd>
+
+  
+</dl>
+
+</div>
+
+<div class="section">
+<p class="p splhead-1"><strong class="ph b"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__context__dependencies">Libraries</a></strong></p>
+
+ <dl class="dl">
+ 
+  <dt class="dt dlterm">Operator class library
+  </dt>
+
+  <dd class="dd"/>
+
+  <dd class="dd"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__context__dependencies__managedlibrary__libpath">Library Path</a>: <tt class="ph tt">../../impl/lib/com.ibm.streamsx.inetserver.jar</tt></dd>
+
+ 
+ </dl>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

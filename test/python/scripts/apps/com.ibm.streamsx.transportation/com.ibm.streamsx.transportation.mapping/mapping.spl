@@ -1,0 +1,50 @@
+namespace com.ibm.streamsx.transportation.mapping;
+
+// ************************************************************************
+// * Copyright (C) 2016 International Business Machines Corporation and
+// * others. All Rights Reserved.
+// ************************************************************************
+
+
+/**
+ * Directional arrow from a heading.
+ * Returns a string containing an arrow
+ * pointing in the direction of the heading.
+ * The heading is rounded off to one of
+ * eight directions: N ⬆; NE ⬈; E ➡;
+ * SE ⬊; S ⬇; SW ⬋; W ⬅; NW ⬉.
+ *
+ * @param heading Degrees from north.
+ * @return String containing directional arrow and heading value.
+*/
+public rstring headingArrow(int16 heading) {
+  if (heading > 337h ||  heading <= 22h)
+      return '⬆';
+  if (heading <= 67h)
+      return '⬈';
+  if (heading <= 112h)
+      return '➡';
+  if (heading <= 157h)
+      return '⬊';
+  if (heading <= 202h)
+      return '⬇';
+  if (heading <= 247h)
+      return '⬋' ;
+  if (heading <= 292h)
+      return '⬅';
+  return '⬉';
+}
+
+/**
+ * Directional arrow with the heading value.
+ * Returns a string containing an arrow
+ * pointing in the direction of the heading
+ * and the heading value in parentheses,
+ * e.g. `⬊ (134°)`
+ *
+ * @param heading Degrees from north.
+ * @return String containing directional arrow and heading value.
+*/
+public rstring headingArrowValue(int16 heading) {
+  return headingArrow(heading) + '(' + (rstring) heading + '°)';
+}

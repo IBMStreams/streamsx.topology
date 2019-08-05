@@ -1,0 +1,94 @@
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>Auto Live Table</title>
+
+<link rel="stylesheet" href="/streamsx.inet.dojo/dojo/resources/dojo.css">
+<link rel="stylesheet" href="/streamsx.inet.dojo/dijit/themes/claro/claro.css">
+<link rel="stylesheet" href="/streamsx.inet.dojo/dojox/grid/resources/claroGrid.css">
+<script src="/streamsx.inet.dojo/dojo/dojo.js"></script>
+<script src="../utils.js"></script>
+<script src="dojoutils.js"></script>
+
+<script>
+rawAutoTableLink = function(cp) {
+  return '<a href="autotable.html?info=' + cp.info + '&json=' + cp.tuples  + '&raw=true">Raw Table</a>';
+}
+fmtAutoTableLink = function(cp) {
+  return '<a href="autotable.html?info=' + cp.info + '&json=' + cp.tuples  + '&raw=false">Live Data</a>';
+}
+
+mapLink = function(cp) {
+    return '<a href="../openlayers/simplemap.html?json=' + cp.tuples  + '">Live Map</a>';
+}
+
+
+createGrid = function() {
+ require(["dojox/grid/DataGrid", "dojo/number", "dojo/store/Memory", "dojo/data/ObjectStore"],
+   function(DataGrid, number, Memory, ObjectStore) {
+     var urlinfo = "/ports/info"
+     dojo.xhrGet({ url: urlinfo, handleAs: "json", load: function(portInfo) {
+
+  var layout = [[
+      { name: "Operator", field: "operatorName"},
+      { name: "Port", field: "portName"},
+      { name: "Info", field: "_info", formatter: fmtLink},
+      { name: "Live Table", field: "contextPaths", formatter: fmtAutoTableLink},
+      { name: "Live Table (Raw)", field: "contextPaths", formatter: rawAutoTableLink},
+      { name: "JSON Data", field: "_json", formatter: fmtLink},
+      { name: "Live Map", field: "contextPaths", formatter: mapLink}
+    ]];
+
+  var ports = portInfo.exposedPorts;
+  console.log(portInfo);
+  for (var i = ports.length - 1; i >= 0; i--) {
+  console.log(ports[i]);
+      if (ports[i].operatorKind != 'com.ibm.streamsx.inet.rest::HTTPTupleView')
+           ports.splice(i, 1);         
+  }
+  
+  for (var i = 0; i < ports.length; i++) {
+       ports[i]._info = ports[i].contextPaths.info;
+       ports[i]._json = ports[i].contextPaths.tuples;
+  }
+         var store = new Memory({ data: [] });
+          store.setData(ports);
+
+  var grid = new DataGrid(
+	    {  store: emptyDataStore, structure: layout, autoWidth: true},
+						"alltables");
+        grid.setStore(new ObjectStore({ objectStore: store }));
+        grid.resize();
+	grid.startup();
+
+}
+
+});
+}
+)
+}
+</script>
+
+<style type="text/css">
+#alltables {
+	width: 98%;
+	margin:1em auto; 
+}
+</style>
+    <base target="_top">
+	</head>
+	<body class="claro" onload="createGrid()">
+		<h1 style="text-align:center">Auto Visualization</h1>
+		<div id="alltables" ></div>	
+		<h3>Live Map visualization</h3>
+		<em>Live Map visualization uses Open Layer JavaScript
+		mapping library and requires external internet connectivity to access it.</em>
+		<P>
+		A stream is only viewable as a map if it includes these fields:
+		<UL>
+		<LI>id - A unique identifier for the object being mapped.</LI>
+		<LI>float64 longitude - Longitude of the objects location.</LI>
+		<LI>float64 latitude - Latitude of the objects location.</LI>
+		</UL>
+		</P>
+	</body>
+</html>
