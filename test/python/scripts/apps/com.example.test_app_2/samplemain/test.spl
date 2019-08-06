@@ -1,0 +1,12 @@
+namespace samplemain;
+
+use test_tk_1.test1::f1 ;
+use test_tk_2.test1::f2 ;
+
+
+public composite main {
+    graph
+
+    stream<int32 a> A = Beacon() { output A: a = f1() + f2();}
+
+}
