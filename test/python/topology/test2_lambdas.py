@@ -2,6 +2,7 @@
 # Copyright IBM Corp. 2016
 import unittest
 import sys
+import statistics
 from streamsx.topology.tester import Tester
 
 import test_functions
@@ -16,6 +17,28 @@ except ImportError:
 from streamsx.topology.topology import *
 from streamsx.topology import schema
 import streamsx.topology.context
+
+
+class Gen(object):
+    def __init__(self, n):
+        self.n = n
+
+    def __iter__(self):
+        self.c = 0
+        self.start = time.time()
+        return self
+
+    def __next__(self):
+        self.c += 1
+        if self.c <= self.n:
+            return {'id': random.randint(0, 1000), 'ts':time.time(), 'value': random.random() }
+        end = time.time()
+        dur = end - self.start
+        raise StopIteration()
+
+class M(object):
+    def __call__(self, tuple_):
+        return statistics.mean([tuple_['value'], 9.3])
 
 def _rand_msg():
     import streamsx.ec
@@ -52,6 +75,7 @@ class TestLambdas(unittest.TestCase):
       tester.test(self.test_ctxtype, self.test_config)
 
   def test_lambda_module_refs(self):
+
       topo = Topology("test_lambda_module_refs")
       sr = topo.source(_rand_msg, name='RM')
       #sevs = hw.split(3, lambda m: M.get(m, -1), names=['high', 'medium', 'low'], name='SeveritySplit')
@@ -95,3 +119,14 @@ class TestLambdas(unittest.TestCase):
       tester = Tester(topo)
       tester.contents(hw, ['A:' + str(round(np.cos(0.4),3))])
       tester.test(self.test_ctxtype, self.test_config)
+
+  def test_modules_in_main_class(self):
+      topo = Topology("test_modules_in_main_class")
+      s = topo.source(Gen(7))
+      s = s.map(M())
+      tester = Tester(topo)
+      tester.tuple_count(s, 7)
+      tester.test(self.test_ctxtype, self.test_config)
+
+if __name__ == '__main__':
+    unittest.main()
