@@ -134,17 +134,18 @@ def _get_all_local_toolkits(toolkit_paths):
 
     # For each direct path to a toolkit, parse the name & version, and convert it to a _LocalToolkit object
     for tk_path in local_toolkits_paths:
-        # Get the name & version of the toolkit that is in the directory tk_path
-        root = ET.parse(tk_path + "/info.xml").getroot()
-        identity = root.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}identity')
-        name = identity.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}name')
-        version = identity.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}version')
+        if os.path.isfile(tk_path + 'info.xml'):
+            # Get the name & version of the toolkit that is in the directory tk_path
+            root = ET.parse(tk_path + 'info.xml').getroot()
+            identity = root.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}identity')
+            name = identity.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}name')
+            version = identity.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}version')
 
-        toolkit_name = name.text
-        toolkit_version = version.text
+            toolkit_name = name.text
+            toolkit_version = version.text
 
-        tk = _LocalToolkit(toolkit_name, toolkit_version, tk_path)
-        local_toolkits.append(tk)
+            tk = _LocalToolkit(toolkit_name, toolkit_version, tk_path)
+            local_toolkits.append(tk)
 
     return local_toolkits
 
