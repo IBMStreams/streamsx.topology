@@ -222,6 +222,20 @@ class TestSC(unittest.TestCase):
             deps.append(tk)
         return deps
 
+    def delete_sab(self, sab_file):
+        """ Deletes the .sab and the _jobConfig.json file, if it exists, after a test finishes
+
+        Arguments:
+            sab_file {String} -- The filename of the sab
+        """
+        if os.path.isfile(sab_file):
+            os.remove(sab_file)
+
+        jsonFile = sab_file.replace(".sab", "_jobConfig.json")
+
+        if os.path.isfile(jsonFile):
+            os.remove(jsonFile)
+
     def test_1(self):
         # tk_1 should be version 3.0.0, tk_3 should have version 2.0.0
         os.chdir(
@@ -242,17 +256,19 @@ class TestSC(unittest.TestCase):
 
         self.check_sab_correct_dependencies(sab_file, required_dependencies)
 
-    def test_2(self):
-        # tk_1 should be version 3.0.0, tk_3 should have version 2.0.0
-        os.chdir(
-            "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_2/"
-        )
-        # self._run_sc(self.main_composite, self.local_toolkit_paths_string)
+        self.delete_sab(sab_file)
 
-        # # Check sab has correct dependencies
-        # sab_path = self.get_sab_path(self.main_composite)
+    # def test_2(self):
+    # tk_1 should be version 3.0.0, tk_3 should have version 2.0.0
+    # os.chdir(
+    #     "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_2/"
+    # )
+    # self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
-        # if not os.path.isfile(sab_path):
-        #     self.fail("Sab does not exist")
+    # # Check sab has correct dependencies
+    # sab_path = self.get_sab_path(self.main_composite)
 
-        # self.check_sab_correct_dependencies(sab_path, None)
+    # if not os.path.isfile(sab_path):
+    #     self.fail("Sab does not exist")
+
+    # self.check_sab_correct_dependencies(sab_path, None)
