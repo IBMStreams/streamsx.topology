@@ -20,13 +20,13 @@ import zipfile
 
 # Tests SC script.
 # Requires environment setup for a ICP4D Streams instance.
-# @unittest.skipUnless(
-#     "CP4D_URL" in os.environ
-#     and "STREAMS_INSTANCE_ID" in os.environ
-#     and "STREAMS_USERNAME" in os.environ
-#     and "STREAMS_PASSWORD" in os.environ,
-#     "requires Streams REST API setup",
-# )
+@unittest.skipUnless(
+    "CP4D_URL" in os.environ
+    and "STREAMS_INSTANCE_ID" in os.environ
+    and "STREAMS_USERNAME" in os.environ
+    and "STREAMS_PASSWORD" in os.environ,
+    "requires Streams REST API setup",
+)
 
 # REST API failures raise HTTPError instance, which, when printed, show
 # the default error message for the status code.  We often have useful
@@ -55,20 +55,20 @@ class TestSC(unittest.TestCase):
         if self.build_server.resource_url is None:
             self.skipTest("Build REST API is not available")
         else:
-            # Delete all toolkits in case they were left over from previous test
+            # delete all the test toolkits from the buildserver, in case they were left behind by a previous test failure.
             self.delete_test_toolkits()
 
-            # Get a list of all toolkit_paths, each element representing 1 toolkit_path
+            # Get a list of paths for all the test toolkits, each element representing the path to a given test toolkit
             toolkit_paths = self.get_local_toolkit_paths()
 
-            # Randomly shuffle toolkits
+            # Randomly shuffle the toolkits
             random.shuffle(toolkit_paths)
 
             # Take half of the toolkits and place them on the buildserver
             self.uploaded_toolkits_paths = toolkit_paths[: len(toolkit_paths) // 2]
-            self.post_toolkits(self.uploaded_toolkits_paths)
+            self.post_test_toolkits(self.uploaded_toolkits_paths)
 
-            # Other half is local toolkits, format it to a string by seperating paths w/ a ':' for use in SC command
+            # Other half is local toolkits, combine all the paths into 1 string by seperating paths w/ a ':' for use in SC command
             self.local_toolkits_paths = toolkit_paths
             self.local_toolkit_paths_string = ""
             for tk_path in self.local_toolkits_paths:
@@ -88,7 +88,7 @@ class TestSC(unittest.TestCase):
         self.delete_test_toolkits()
 
     def get_local_toolkit_paths(self):
-        # Get a list of all toolkit_paths, each element representing 1 toolkit_path
+        # Get a list of all the test toolkit paths, each element representing 1 toolkit_path
         toolkit_paths = []
         os.chdir(
             "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/toolkits"
@@ -107,7 +107,7 @@ class TestSC(unittest.TestCase):
         return sc.main(args=args)
 
     def delete_test_toolkits(self):
-        # delete the test toolkits, in case they have been left behind by a test failure.
+        # delete all the test toolkits from the buildserver, in case they were left behind by a previous test failure.
         uploaded_toolkit_objects = self._get_toolkit_objects(
             self.get_local_toolkit_paths()
         )
@@ -118,7 +118,8 @@ class TestSC(unittest.TestCase):
             if toolkit.name in toolkit_names:
                 self.assertTrue(toolkit.delete())
 
-    def post_toolkits(self, toolkit_paths):
+    def post_test_toolkits(self, toolkit_paths):
+        # Given a list of test toolkit paths, upload these toolkits to the buildserver
         try:
             for toolkit in toolkit_paths:
                 tk = self.build_server.upload_toolkit(toolkit)
@@ -126,9 +127,17 @@ class TestSC(unittest.TestCase):
         except requests.exceptions.HTTPError as err:
             _handle_http_error(err)
 
-    def check_sab_correct_dependencies(self, sab_path, required_dependencies):
-        # Read the dependencies/toolkits used to build the sab
-        sab_toolkits = self._parse_dependencies(sab_path)
+    def check_sab_correct_dependencies(self, sab_file, required_dependencies):
+        """ Given the name of the sab file, and a list of required _LocalToolkit objects, check if the required dependencies/toolkits are used in the sab
+
+        Arguments:
+            sab_file {String} -- The name of the .sab file created by the tests
+            required_dependencies {List} -- List of _LocalToolkit objects, each representing a required dependency/toolkit
+        """
+        # Parse the sab file for the dependencies used to build it
+        sab_toolkits = self._parse_dependencies(sab_file)
+
+        # Check if the required dependencies are in the sab
         for tk in required_dependencies:
             if tk in sab_toolkits:
                 continue
@@ -139,41 +148,17 @@ class TestSC(unittest.TestCase):
                     )
                 )
 
-    def test_1(self):
-        # tk_1 should be version 3.0.0, tk_3 should have version 2.0.0
-        os.chdir(
-            "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_1/"
-        )
-        self._run_sc(self.main_composite, self.local_toolkit_paths_string)
+    def get_sab_filename(self, main_composite):
+        """ Get the sab name from the path of the main composite
 
-        # Check sab has correct dependencies
-        sab_path = self.get_sab_path(self.main_composite)
+        Arguments:
+            main_composite {String} -- The name of the main composite Ex. 'samplemain::main'
 
-        if not os.path.isfile(sab_path):
-            self.fail("Sab does not exist")
-
-        required_dependencies = []
-        req1 = self._LocalToolkit("test_tk_1", "3.0.0", None)
-        req2 = self._LocalToolkit("test_tk_3", "2.0.0", None)
-        required_dependencies.extend([req1, req2])
-
-        self.check_sab_correct_dependencies(sab_path, required_dependencies)
-
-    # def test_2(self):
-    #     # tk_1 should be version 3.0.0, tk_3 should have version 2.0.0
-    #     os.chdir('/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_2/')
-    #     self._run_sc(self.main_composite, self.local_toolkit_paths_string)
-
-    #     # Check sab has correct dependencies
-    #     sab_path = self.get_sab_path(self.main_composite)
-
-    #     if not os.path.isfile(sab_path):
-    #         self.fail("Sab does not exist")
-
-    #     self.check_sab_correct_dependencies(sab_path, None)
-
-    def get_sab_path(self, path):
-        return path.replace(":", ".", 1).replace(":", "") + ".sab"
+        Returns:
+            [String] -- The filename of the sab
+        """
+        # Ex 'samplemain::main' -> 'samplemain.main.sab'
+        return main_composite.replace(":", ".", 1).replace(":", "") + ".sab"
 
     def _get_toolkit_objects(self, toolkit_paths):
         toolkit_objects = []
@@ -207,10 +192,18 @@ class TestSC(unittest.TestCase):
         def __eq__(self, other):
             return self.name == other.name and self.version == other.version
 
-    def _parse_dependencies(self, sab_path):
+    def _parse_dependencies(self, sab_file):
+        """ Parse the sab_file for the dependencies/toolkits used in it
+
+        Arguments:
+            sab_file {.sab} -- A .sab file
+
+        Returns:
+            [List] -- A list of _LocalToolkit objects representing the dependencies/toolkits used in the sab
+        """
         deps = []
         # Parse bundleInfo.xml for the dependencies of the app you want to build sab file for
-        zip = zipfile.ZipFile(sab_path)
+        zip = zipfile.ZipFile(sab_file)
         content = None
         with zip.open("bundleInfo.xml") as f:
             content = f.read()
@@ -228,3 +221,38 @@ class TestSC(unittest.TestCase):
             tk = self._LocalToolkit(name, version, None)
             deps.append(tk)
         return deps
+
+    def test_1(self):
+        # tk_1 should be version 3.0.0, tk_3 should have version 2.0.0
+        os.chdir(
+            "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_1/"
+        )
+        self._run_sc(self.main_composite, self.local_toolkit_paths_string)
+
+        # Check sab has correct dependencies
+        sab_file = self.get_sab_filename(self.main_composite)
+
+        if not os.path.isfile(sab_file):
+            self.fail("Sab does not exist")
+
+        required_dependencies = []
+        req1 = self._LocalToolkit("test_tk_1", "3.0.0", None)
+        req2 = self._LocalToolkit("test_tk_3", "2.0.0", None)
+        required_dependencies.extend([req1, req2])
+
+        self.check_sab_correct_dependencies(sab_file, required_dependencies)
+
+    def test_2(self):
+        # tk_1 should be version 3.0.0, tk_3 should have version 2.0.0
+        os.chdir(
+            "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_2/"
+        )
+        # self._run_sc(self.main_composite, self.local_toolkit_paths_string)
+
+        # # Check sab has correct dependencies
+        # sab_path = self.get_sab_path(self.main_composite)
+
+        # if not os.path.isfile(sab_path):
+        #     self.fail("Sab does not exist")
+
+        # self.check_sab_correct_dependencies(sab_path, None)
