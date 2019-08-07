@@ -236,8 +236,28 @@ class TestSC(unittest.TestCase):
         if os.path.isfile(jsonFile):
             os.remove(jsonFile)
 
+    def get_output(self, my_function):
+        """ Helper function that gets the ouput from executing my_function
+
+        Arguments:
+            my_function {} -- The function to be executed
+
+        Returns:
+            stdout [String] -- Output of my_function
+            stderr [String] -- Errors and exceptions from executing my_function
+            rc [int] -- 0 indicates succces, 1 indicates error or failure
+        """
+        rc = None
+        with captured_output() as (out, err):
+            my_function()
+        stdout = out.getvalue().strip()
+        stderr = err.getvalue().strip()
+        return stdout, stderr
+
     def test_1(self):
-        # tk_1 should be version 3.0.0, tk_3 should have version 2.0.0
+        # Build test_app_1, requiring toolkit tk_1 [1.0.0,4.0.0), and tk_3 [1.0.0,4.0.0)
+        # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
+        # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 2.0.0
         os.chdir(
             "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_1/"
         )
@@ -258,17 +278,36 @@ class TestSC(unittest.TestCase):
 
         self.delete_sab(sab_file)
 
-    # def test_2(self):
-    # tk_1 should be version 3.0.0, tk_3 should have version 2.0.0
-    # os.chdir(
-    #     "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_2/"
-    # )
-    # self._run_sc(self.main_composite, self.local_toolkit_paths_string)
+    def test_2(self):
+        # Build test_app_2, requiring toolkit tk_1 [1.0.0,4.0.0), and tk_2 [1.0.0,4.0.0)
+        # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
+        # 3 versions of tk_3 available, v0.5.0, v0.5.7 and v0.8.0 , No suitable version, thus should error out
+        os.chdir(
+            "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_2/"
+        )
+        # with self.assertRaises(Exception):
+        output, error = self.get_output(
+            lambda: self._run_sc(self.main_composite, self.local_toolkit_paths_string)
+        )
 
-    # # Check sab has correct dependencies
-    # sab_path = self.get_sab_path(self.main_composite)
+        self.assertTrue(
+            "The com.example.test_app_2 toolkit requires version [1.0.0,4.0.0) of the test_tk_2 toolkit, but version [1.0.0,4.0.0) of the test_tk_2 toolkit is not available"
+            in error
+        )
 
-    # if not os.path.isfile(sab_path):
-    #     self.fail("Sab does not exist")
+        # Check sab doesn't exist
+        sab_file = self.get_sab_filename(self.main_composite)
 
-    # self.check_sab_correct_dependencies(sab_path, None)
+        if os.path.isfile(sab_file):
+            self.fail("Sab should not exist")
+
+
+@contextmanager
+def captured_output():
+    new_out, new_err = StringIO(), StringIO()
+    old_out, old_err = sys.stdout, sys.stderr
+    try:
+        sys.stdout, sys.stderr = new_out, new_err
+        yield sys.stdout, sys.stderr
+    finally:
+        sys.stdout, sys.stderr = old_out, old_err
