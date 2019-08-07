@@ -466,7 +466,6 @@ class _SPLInvocation(object):
         # Wrap a lambda as a callable class instance
         recurse = None
         if isinstance(function, types.LambdaType) and function.__name__ == "<lambda>" :
-            sig = inspect.signature(function)
             if nargs:
                 function = streamsx.topology.runtime._Callable1(function, no_context=True)
             else:
