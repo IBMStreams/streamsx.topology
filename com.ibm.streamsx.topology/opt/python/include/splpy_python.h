@@ -19,7 +19,7 @@
 #define __SPL__SPLPY_PYTHON_H
 
 #if PY_MAJOR_VERSION == 3
-#define Py_LIMITED_API ((PY_MAJOR_VERSION << 24) | (PY_MINOR_VERSION << 16)
+#define Py_LIMITED_API ((PY_MAJOR_VERSION << 24) | (PY_MINOR_VERSION << 16))
 #endif
 
 #include "Python.h"
