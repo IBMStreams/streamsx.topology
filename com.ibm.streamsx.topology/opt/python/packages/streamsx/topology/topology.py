@@ -589,7 +589,7 @@ class Topology(object):
         sl = _SourceLocation(_source_info(), "source")
         _name = self.graph._requested_name(_name, action='source', func=func)
         # source is always stateful
-        op = self.graph.addOperator(self.opnamespace+"::Source", func, name=_name, sl=sl)
+        op = self.graph.addOperator(self.opnamespace+"::Source", func, name=_name, sl=sl, nargs=0)
         op._layout(kind='Source', name=_name, orig_name=name)
         oport = op.addOutputPort(name=_name)
         return Stream(self, oport)._make_placeable()
@@ -2200,12 +2200,12 @@ class Window(object):
         # This is based on graph._addOperatorFunction.
         recurse = None
         if isinstance(function, types.LambdaType) and function.__name__ == "<lambda>" :
-            function = streamsx.topology.runtime._Callable(function, no_context=True)
+            function = streamsx.topology.runtime._Callable1(function, no_context=True)
             recurse = True
         elif function.__module__ == '__main__':
             # Function/Class defined in main, create a callable wrapping its
             # dill'ed form
-            function = streamsx.topology.runtime._Callable(function,
+            function = streamsx.topology.runtime._Callable1(function,
                 no_context = True if inspect.isroutine(function) else None)
             recurse = True
          
@@ -2216,7 +2216,7 @@ class Window(object):
             # callable is a callable class instance
             name = function.__class__.__name__
             # dill format is binary; base64 encode so it is json serializable 
-            dilled_callable = base64.b64encode(dill.dumps(function, recurse=recurse)).decode("ascii")
+            dilled_callable = base64.b64encode(dill.dumps(function, recurse=recurse if sys.version_info.major == 2 else None)).decode("ascii")
 
         self._config['partitioned'] = True
         if dilled_callable is not None:
