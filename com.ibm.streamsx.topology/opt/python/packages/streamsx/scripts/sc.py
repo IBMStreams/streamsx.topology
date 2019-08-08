@@ -241,7 +241,6 @@ def _check_correct_version(toolkit, dependency_range):
         return True
     return False
 
-
 def _submit_build(cmd_args, topo):
      cfg = {}
      # Only supported for remote builds.

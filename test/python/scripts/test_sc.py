@@ -338,7 +338,7 @@ class TestSC(unittest.TestCase):
         # Test that sab fails to build when a dependency/toolkit version is not met
         # Build test_app_2, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_2 w/ version [1.0.0,4.0.0)
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
-        # 3 versions of tk_3 available, v0.5.0, v0.5.7 and v0.8.0 , No suitable version, thus should error out
+        # 3 versions of tk_2 available, v0.5.0, v0.5.7 and v0.8.0 , No suitable version, thus should error out
         os.chdir(
             "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_2/"
         )
