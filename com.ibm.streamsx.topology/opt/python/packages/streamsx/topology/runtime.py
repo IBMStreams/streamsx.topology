@@ -10,6 +10,7 @@ import pickle
 import inspect
 import logging
 import importlib
+import types
 from past.builtins import basestring
 
 import streamsx.ec as ec
@@ -426,28 +427,45 @@ tuple_in = object_in
 def _get_namedtuple_cls(schema, name):
     return StreamSchema(schema).as_tuple(named=name).style
 
-
-# Wraps an iterable instance returning
-# it when called. Allows an iterable
-# instance to be passed directly to Topology.source
-# (such as a list)
-# Instance of _WrapOpLogic so used at declaration time
-class _IterableInstance(streamsx._streams._runtime._WrapOpLogic):
-    def __call__(self):
-        return self._callable
+def _inline_modules(fn):
+    if sys.version_info.major == 2:
+        return None
+    modules = []
+    cvs = inspect.getclosurevars(fn)
+    for mk in cvs.globals.keys():
+        if isinstance(cvs.globals[mk], types.ModuleType):
+            modules.append(mk)
+    return modules
 
 # Wraps an callable instance 
 # When this is called, the callable is called.
 # Used to wrap a lambda object or a function/class
 # defined in __main__
+# Also used through _IterableInstance to handle
+# any instance passed to source() including those
+# defined in __main__ and those not defined in __main__
 # Instance of _WrapInstance so used at declaration time
-class _Callable(streamsx._streams._runtime._WrapOpLogic):
-    def __init__(self, callable_, no_context=None, modules=None):
-        super(_Callable, self).__init__(callable_, no_context)
-        self._modules = modules
+class _ModulesCallable(streamsx._streams._runtime._WrapOpLogic):
+    def __init__(self, callable_, no_context=None):
+        super(_ModulesCallable, self).__init__(callable_, no_context)
+        check_cmm = False
+        if inspect.isroutine(callable_):
+            self._modules = _inline_modules(callable_)
+        elif callable(callable_):
+            self._modules = _inline_modules(callable_.__call__)
+            check_cmm = True
+        elif type(callable_).__module__ == '__main__': 
+            self._modules = _inline_modules(callable_.__iter__)
+            # Handle common case the iterable is also the iterator.
+            if hasattr(callable_, '__next__'):
+                self._modules.extend(_inline_modules(callable_.__next__))
+            check_cmm = True
+        else:
+            self._modules = None
 
-    def __call__(self, *args, **kwargs):
-        return self._callable.__call__(*args, **kwargs)
+        if check_cmm and self._streamsx_ec_context:
+            self._modules.extend(_inline_modules(callable_.__enter__))
+            self._modules.extend(_inline_modules(callable_.__exit__))
 
     def __getstate__(self):
         return self.__dict__
@@ -458,9 +476,32 @@ class _Callable(streamsx._streams._runtime._WrapOpLogic):
         # Patch the lambda/in-line function's globals
         # to include any modules it references.
         if self._modules:
+            if inspect.isroutine(self._callable):
+                gbls = self._callable.__globals__
+            elif callable(self._callable):
+                gbls = self._callable.__call__.__globals__
+            else:
+                gbls = self._callable.__iter__.__globals__
             for mn in self._modules:
-                if mn not in self._callable.__globals__:
-                    self._callable.__globals__[mn] = importlib.import_module(mn)
+                if mn not in gbls:
+                    gbls[mn] = importlib.import_module(mn)
+
+class _Callable0(_ModulesCallable):
+    def __call__(self):
+        return self._callable()
+
+class _Callable1(_ModulesCallable):
+    def __call__(self, tuple_):
+        return self._callable(tuple_)
+
+# Wraps an iterable instance returning
+# it when called. Allows an iterable
+# instance to be passed directly to Topology.source
+# (such as a list)
+# Instance of _WrapOpLogic so used at declaration time
+class _IterableInstance(_ModulesCallable):
+    def __call__(self):
+        return self._callable
 
 def _spl_boolean_to_bool(v):
     return not v == 'false'
