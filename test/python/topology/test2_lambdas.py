@@ -2,7 +2,7 @@
 # Copyright IBM Corp. 2016
 import unittest
 import sys
-import statistics
+import decimal
 from streamsx.topology.tester import Tester
 
 import test_functions
@@ -38,7 +38,7 @@ class Gen(object):
 
 class M(object):
     def __call__(self, tuple_):
-        return statistics.mean([tuple_['value'], 9.3])
+        return decimal.Decimal(tuple_['value'])
 
 def _rand_msg():
     import streamsx.ec
