@@ -39,17 +39,6 @@ def _handle_http_error(err):
     raise err
 
 
-@contextmanager
-def captured_output():
-    new_out, new_err = StringIO(), StringIO()
-    old_out, old_err = sys.stdout, sys.stderr
-    try:
-        sys.stdout, sys.stderr = new_out, new_err
-        yield sys.stdout, sys.stderr
-    finally:
-        sys.stdout, sys.stderr = old_out, old_err
-
-
 # Tests SC script.
 # Requires environment setup for a ICP4D Streams instance.
 @unittest.skipUnless(
@@ -70,7 +59,7 @@ class TestSC(unittest.TestCase):
             self.delete_test_toolkits()
 
             # Get a list of paths for all the test toolkits, each element representing the path to a given test toolkit
-            toolkit_paths = self.get_local_toolkit_paths()
+            toolkit_paths = self.get_test_toolkit_paths()
 
             # Randomly shuffle the toolkits
             random.shuffle(toolkit_paths)
@@ -79,7 +68,7 @@ class TestSC(unittest.TestCase):
             self.uploaded_toolkits_paths = toolkit_paths[: len(toolkit_paths) // 2]
             self.post_test_toolkits(self.uploaded_toolkits_paths)
 
-            # Other half is local toolkits, combine all the paths into 1 string by seperating paths w/ a ':' for use in SC command
+            # Other half is local toolkits, combine all local toolkit paths into 1 string by seperating paths w/ a ':' to pass into SC command via -t arg
             self.local_toolkits_paths = toolkit_paths
             self.local_toolkit_paths_string = ""
             for tk_path in self.local_toolkits_paths:
@@ -98,31 +87,33 @@ class TestSC(unittest.TestCase):
     def tearDown(self):
         self.delete_test_toolkits()
 
-    def _run_sc(self, spl_app_to_build, toolkits_path=None):
+    def _run_sc(self, spl_app_to_build, local_toolkits_path=None):
         args = ["--disable-ssl-verify", "-M", spl_app_to_build]
-        if toolkits_path:
+        if local_toolkits_path:
             args.insert(3, "-t")
-            args.insert(4, toolkits_path)
+            args.insert(4, local_toolkits_path)
         return sc.main(args=args)
 
-    def get_local_toolkit_paths(self):
+    def get_test_toolkit_paths(self):
         # Get a list of all the test toolkit paths, each element representing 1 toolkit_path
         toolkit_paths = []
         os.chdir(
             "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/toolkits"
         )
         cwd = os.getcwd()
+
+        # Get all direct subfolders in toolkits folder
         toolkits = glob("*/")
+
+        # For each toolkit in toolkits folder, get the path, add it to list
         for tk in toolkits:
             toolkit_paths.append(cwd + "/" + tk)
         return toolkit_paths
 
     def delete_test_toolkits(self):
         # delete all the test toolkits from the buildserver, in case they were left behind by a previous test failure.
-        uploaded_toolkit_objects = self._get_toolkit_objects(
-            self.get_local_toolkit_paths()
-        )
-        toolkit_names = [tk.name for tk in uploaded_toolkit_objects]
+        test_toolkit_objects = self._get_toolkit_objects(self.get_test_toolkit_paths())
+        toolkit_names = [tk.name for tk in test_toolkit_objects]
 
         remote_toolkits = self.build_server.get_toolkits()
         for toolkit in remote_toolkits:
@@ -139,7 +130,7 @@ class TestSC(unittest.TestCase):
             _handle_http_error(err)
 
     def check_sab_correct_dependencies(self, sab_file, required_dependencies):
-        """ Given the name of the sab file, and a list of required _LocalToolkit objects, check if the required dependencies/toolkits are used in the sab
+        """ Given the name of a sab file, and a list of required _LocalToolkit objects, check if the required dependencies/toolkits are used in the sab
 
         Arguments:
             sab_file {String} -- The name of the .sab file created by the tests
@@ -151,8 +142,10 @@ class TestSC(unittest.TestCase):
         # Check if the required dependencies are in the sab
         for tk in required_dependencies:
             if tk in sab_toolkits:
+                # Dependency satisfied
                 continue
             else:
+                # Dependency not satisfied, print the toolkits used, and print which one was not included
                 print([(tk.name, tk.version) for tk in sab_toolkits])
                 self.fail(
                     "Dependency/toolkit {} with version {} not in sab".format(
@@ -248,24 +241,6 @@ class TestSC(unittest.TestCase):
         if os.path.isfile(jsonFile):
             os.remove(jsonFile)
 
-    def get_output(self, my_function):
-        """ Helper function that gets the ouput from executing my_function
-
-        Arguments:
-            my_function {} -- The function to be executed
-
-        Returns:
-            stdout [String] -- Output of my_function
-            stderr [String] -- Errors and exceptions from executing my_function
-            rc [int] -- 0 indicates succces, 1 indicates error or failure
-        """
-        rc = None
-        with captured_output() as (out, err):
-            my_function()
-        stdout = out.getvalue().strip()
-        stderr = err.getvalue().strip()
-        return stdout, stderr
-
     def test_specific_version(self):
         # Test build of sab w/ specific version of toolkit
         # Build test_app_3, requiring toolkit tk_4 w/ version 2.6.3
@@ -298,7 +273,6 @@ class TestSC(unittest.TestCase):
         )
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
-        
         sab_file = self.get_sab_filename(self.main_composite)
 
         if not os.path.isfile(sab_file):
@@ -368,17 +342,10 @@ class TestSC(unittest.TestCase):
         os.chdir(
             "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_2/"
         )
-        output, error = self.get_output(
-            lambda: self._run_sc(self.main_composite, self.local_toolkit_paths_string)
-        )
 
-        self.assertTrue(
-            "The com.example.test_app_2 toolkit requires version [1.0.0,4.0.0) of the test_tk_2 toolkit, but version [1.0.0,4.0.0) of the test_tk_2 toolkit is not available"
-            in error
-        )
+        self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
         # Check sab doesn't exist
         sab_file = self.get_sab_filename(self.main_composite)
-
         if os.path.isfile(sab_file):
             self.fail("Sab should not exist")

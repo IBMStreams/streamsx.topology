@@ -7,12 +7,10 @@
     <info:requiredProductVersion>4.2.0</info:requiredProductVersion>
   </info:identity>
   <info:dependencies>
-    <!--Highest version used should be 3.0.0-->
     <info:toolkit>
       <common:name>test_tk_1</common:name>
       <common:version>[1.0.0,4.0.0)</common:version>
     </info:toolkit>
-    <!--Highest version used should be 2.0.0, bc highest version available (4) is not acceptable-->
     <info:toolkit>
       <common:name>test_tk_3</common:name>
       <common:version>[1.0.0,4.0.0)</common:version>
