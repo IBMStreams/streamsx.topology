@@ -8,6 +8,7 @@ import time
 import requests
 import random
 from glob import glob
+import json
 
 from streamsx.topology.topology import Topology
 from streamsx.topology.context import submit, ConfigParams
