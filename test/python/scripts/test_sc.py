@@ -34,7 +34,6 @@ def _handle_http_error(err):
         messages = text_json["messages"]
         for message in messages:
             print(message["message"])
-            logger.error(message["message"])
     except:
         pass
     raise err
