@@ -349,3 +349,18 @@ class TestSC(unittest.TestCase):
         sab_file = self.get_sab_filename(self.main_composite)
         if os.path.isfile(sab_file):
             self.fail("Sab should not exist")
+
+    def test_simple_3(self):
+        # Build test_app_6, requiring no dependencies
+        os.chdir(
+            "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_6/"
+        )
+
+        self._run_sc(self.main_composite, self.local_toolkit_paths_string)
+
+        sab_file = self.get_sab_filename(self.main_composite)
+
+        if not os.path.isfile(sab_file):
+            self.fail("Sab does not exist")
+
+        self.delete_sab(sab_file)

@@ -318,7 +318,6 @@ def _deprecated_args(cmd_parser):
     dep.add_argument('--checkpoint-directory', '-K', action='store', metavar='path')
     dep.add_argument('--profiling-sampling', '-S', action='store', metavar='rate')
 
-
 if __name__ == '__main__':
     rc = main()
     sys.exit(rc)
