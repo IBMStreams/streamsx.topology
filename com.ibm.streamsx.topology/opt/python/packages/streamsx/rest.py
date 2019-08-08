@@ -70,7 +70,7 @@ from .rest_primitives import (Domain, Instance, Installation, RestResource, Tool
 
 logger = logging.getLogger('streamsx.rest')
 
-class _AbstractStreamsConnection():
+class _AbstractStreamsConnection(object):
     # This is an abstract property, but there seems to be no way to enforce
     # that in python 2.7.
     @property
