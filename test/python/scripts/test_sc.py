@@ -18,24 +18,15 @@ from contextlib import contextmanager
 from io import StringIO
 import zipfile
 
-# Tests SC script.
-# Requires environment setup for a ICP4D Streams instance.
-@unittest.skipUnless(
-    "CP4D_URL" in os.environ
-    and "STREAMS_INSTANCE_ID" in os.environ
-    and "STREAMS_USERNAME" in os.environ
-    and "STREAMS_PASSWORD" in os.environ,
-    "requires Streams REST API setup",
-)
 
-# REST API failures raise HTTPError instance, which, when printed, show
-# the default error message for the status code.  We often have useful
-# messages in the response, but those are hidden from the user.  We ought
-# to consider making it easier for the user to see the specific error message
-# from the REST API call.
-# Handle HTTPError, and show the detailed error message contained
-# in the response.
 def _handle_http_error(err):
+    # REST API failures raise HTTPError instance, which, when printed, show
+    # the default error message for the status code.  We often have useful
+    # messages in the response, but those are hidden from the user.  We ought
+    # to consider making it easier for the user to see the specific error message
+    # from the REST API call.
+    # Handle HTTPError, and show the detailed error message contained
+    # in the response.
     try:
         response = err.response
         text_json = json.loads(response.text)
@@ -48,6 +39,26 @@ def _handle_http_error(err):
     raise err
 
 
+@contextmanager
+def captured_output():
+    new_out, new_err = StringIO(), StringIO()
+    old_out, old_err = sys.stdout, sys.stderr
+    try:
+        sys.stdout, sys.stderr = new_out, new_err
+        yield sys.stdout, sys.stderr
+    finally:
+        sys.stdout, sys.stderr = old_out, old_err
+
+
+# Tests SC script.
+# Requires environment setup for a ICP4D Streams instance.
+@unittest.skipUnless(
+    "CP4D_URL" in os.environ
+    and "STREAMS_INSTANCE_ID" in os.environ
+    and "STREAMS_USERNAME" in os.environ
+    and "STREAMS_PASSWORD" in os.environ,
+    "requires Streams REST API setup",
+)
 class TestSC(unittest.TestCase):
     def setUp(self):
         self.build_server = BuildService.of_endpoint(verify=False)
@@ -87,6 +98,13 @@ class TestSC(unittest.TestCase):
     def tearDown(self):
         self.delete_test_toolkits()
 
+    def _run_sc(self, spl_app_to_build, toolkits_path=None):
+        args = ["--disable-ssl-verify", "-M", spl_app_to_build]
+        if toolkits_path:
+            args.insert(3, "-t")
+            args.insert(4, toolkits_path)
+        return sc.main(args=args)
+
     def get_local_toolkit_paths(self):
         # Get a list of all the test toolkit paths, each element representing 1 toolkit_path
         toolkit_paths = []
@@ -98,13 +116,6 @@ class TestSC(unittest.TestCase):
         for tk in toolkits:
             toolkit_paths.append(cwd + "/" + tk)
         return toolkit_paths
-
-    def _run_sc(self, spl_app_to_build, toolkits_path=None):
-        args = ["--disable-ssl-verify", "-M", spl_app_to_build]
-        if toolkits_path:
-            args.insert(3, "-t")
-            args.insert(4, toolkits_path)
-        return sc.main(args=args)
 
     def delete_test_toolkits(self):
         # delete all the test toolkits from the buildserver, in case they were left behind by a previous test failure.
@@ -142,6 +153,7 @@ class TestSC(unittest.TestCase):
             if tk in sab_toolkits:
                 continue
             else:
+                print([(tk.name, tk.version) for tk in sab_toolkits])
                 self.fail(
                     "Dependency/toolkit {} with version {} not in sab".format(
                         tk.name, tk.version
@@ -254,8 +266,79 @@ class TestSC(unittest.TestCase):
         stderr = err.getvalue().strip()
         return stdout, stderr
 
-    def test_1(self):
-        # Build test_app_1, requiring toolkit tk_1 [1.0.0,4.0.0), and tk_3 [1.0.0,4.0.0)
+    def test_specific_version(self):
+        # Test build of sab w/ specific version of toolkit
+        # Build test_app_3, requiring toolkit tk_4 w/ version 2.6.3
+        # 2 versions of tk_4 available, v1.0.0, and v2.6.3 , chosen version should be 2.6.3
+        os.chdir(
+            "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_3/"
+        )
+        self._run_sc(self.main_composite, self.local_toolkit_paths_string)
+
+        sab_file = self.get_sab_filename(self.main_composite)
+
+        if not os.path.isfile(sab_file):
+            self.fail("Sab does not exist")
+
+        # Check sab has correct dependencies
+        required_dependencies = []
+        req1 = self._LocalToolkit("test_tk_4", "2.6.3", None)
+        required_dependencies.extend([req1])
+        self.check_sab_correct_dependencies(sab_file, required_dependencies)
+
+        self.delete_sab(sab_file)
+
+    def test_inclusive_tk_version_cutoff(self):
+        # Test inclusive aspect on both sides of toolkit version
+        # Build test_app_4, requiring toolkit tk_1 w/ version [1.0.0,2.0.0), and tk_3 w/ version (2.0.0,4.0.0]
+        # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 1.0.0
+        # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 4.0.0
+        os.chdir(
+            "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_4/"
+        )
+        self._run_sc(self.main_composite, self.local_toolkit_paths_string)
+
+        
+        sab_file = self.get_sab_filename(self.main_composite)
+
+        if not os.path.isfile(sab_file):
+            self.fail("Sab does not exist")
+
+        # Check sab has correct dependencies
+        required_dependencies = []
+        req1 = self._LocalToolkit("test_tk_1", "1.0.0", None)
+        req1 = self._LocalToolkit("test_tk_3", "4.0.0", None)
+        required_dependencies.extend([req1])
+        self.check_sab_correct_dependencies(sab_file, required_dependencies)
+
+        self.delete_sab(sab_file)
+
+    def test_exclusive_tk_version_cutoff(self):
+        # Test exclusive aspect on both sides of toolkit version
+        # Build test_app_5, requiring toolkit tk_1 w/ version (1.0.0,2.0.0], and tk_3 w/ version [2.0.0,4.0.0)
+        # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 2.0.0
+        # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 2.0.0
+        os.chdir(
+            "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_5/"
+        )
+        self._run_sc(self.main_composite, self.local_toolkit_paths_string)
+
+        sab_file = self.get_sab_filename(self.main_composite)
+
+        if not os.path.isfile(sab_file):
+            self.fail("Sab does not exist")
+
+        # Check sab has correct dependencies
+        required_dependencies = []
+        req1 = self._LocalToolkit("test_tk_1", "2.0.0", None)
+        req1 = self._LocalToolkit("test_tk_3", "2.0.0", None)
+        required_dependencies.extend([req1])
+        self.check_sab_correct_dependencies(sab_file, required_dependencies)
+
+        self.delete_sab(sab_file)
+
+    def test_simple_1(self):
+        # Build test_app_1, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_3 w/ version [1.0.0,4.0.0)
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
         # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 2.0.0
         os.chdir(
@@ -263,29 +346,28 @@ class TestSC(unittest.TestCase):
         )
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
-        # Check sab has correct dependencies
         sab_file = self.get_sab_filename(self.main_composite)
 
         if not os.path.isfile(sab_file):
             self.fail("Sab does not exist")
 
+        # Check sab has correct dependencies
         required_dependencies = []
         req1 = self._LocalToolkit("test_tk_1", "3.0.0", None)
         req2 = self._LocalToolkit("test_tk_3", "2.0.0", None)
         required_dependencies.extend([req1, req2])
-
         self.check_sab_correct_dependencies(sab_file, required_dependencies)
 
         self.delete_sab(sab_file)
 
-    def test_2(self):
-        # Build test_app_2, requiring toolkit tk_1 [1.0.0,4.0.0), and tk_2 [1.0.0,4.0.0)
+    def test_simple_2(self):
+        # Test that sab fails to build when a dependency/toolkit version is not met
+        # Build test_app_2, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_2 w/ version [1.0.0,4.0.0)
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
         # 3 versions of tk_3 available, v0.5.0, v0.5.7 and v0.8.0 , No suitable version, thus should error out
         os.chdir(
             "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_2/"
         )
-        # with self.assertRaises(Exception):
         output, error = self.get_output(
             lambda: self._run_sc(self.main_composite, self.local_toolkit_paths_string)
         )
@@ -300,14 +382,3 @@ class TestSC(unittest.TestCase):
 
         if os.path.isfile(sab_file):
             self.fail("Sab should not exist")
-
-
-@contextmanager
-def captured_output():
-    new_out, new_err = StringIO(), StringIO()
-    old_out, old_err = sys.stdout, sys.stderr
-    try:
-        sys.stdout, sys.stderr = new_out, new_err
-        yield sys.stdout, sys.stderr
-    finally:
-        sys.stdout, sys.stderr = old_out, old_err
