@@ -18,14 +18,16 @@ If already installed upgrade to the latest version is recommended::
 A local install of IBM Streams is **not** required when:
 
     * Using the Streams and Streaming Analytics REST bindings :py:mod:`streamsx.rest`.
-    * Devloping and submitting streaming applications using :py:mod:`streamsx.topology.topology` to the Streaming Analytics service on IBM Cloud.
+    * Devloping and submitting streaming applications using :py:mod:`streamsx.topology.topology` to Cloud Pak for Data or Streaming Analytics service on IBM Cloud.
+
         * The environment variable ``JAVA_HOME`` must reference a Java 1.8 JRE or JDK/SDK.
 
 A local install of IBM Streams is required when:
 
-    * Developing and submitting streaming applications using :py:mod:`streamsx.topology.topology` to the IBM Streams distributed or standalone contexts.
+    * Developing and submitting streaming applications using :py:mod:`streamsx.topology.topology` to IBM Streams 4.2, 4.3 distributed or standalone contexts.
+
         * If set the environment variable ``JAVA_HOME`` must reference a Java 1.8 JRE or JDK/SDK, otherwise the Java install from ``$STREAMS_INSTALL/java`` is used.
-    * Creating SPL Python primitive operators using :py:mod:`streamsx.spl.spl` decorators.
+    * Creating SPL toolkits with Python primitive operators using :py:mod:`streamsx.spl.spl` decorators for use with 4.2, 4.3 distributed or standalone applications.
 
 .. warning::
    When using the `streamsx` package ensure that the environment variable
@@ -68,11 +70,11 @@ submitted to the service instance.
 Streaming applications can be submitted through Jupyter notebooks running in
 Cloud Pak for Data projects. The `streamsx` package is preinstalled and applications are sumitted to the :py:const:`~streamsx.topology.context.ContextTypes.DISTRIBUTED` context.
 
-***********************
-IBM Streams on-premises
-***********************
+********************
+IBM Streams 4.2, 4.3
+********************
 
-For a distributed cluster running Streams Python 3.6, 3.5 or 2.7(deprecated)
+For a distributed cluster running Streams Python 3.7, 3.6, 3.5 or 2.7(deprecated)
 may be used.
 
 Anaconda or Miniconda distributions may be used as the Python runtime, these have the advantage of being pre-built and including a number of standard packages.
@@ -80,7 +82,7 @@ Ananconda installs may be downloaded at: https://www.continuum.io/downloads .
 
 .. note::
     When used by a distributed cluster a distribution matching
-    the required Python 3.6, 3.5 or 2.7 release must be used, rather
+    the required Python 3.7, 3.6, 3.5 or 2.7(deprecated) release must be used, rather
     than a conda environment.
 
 If building Python from source then it must be built to support embedding
@@ -110,9 +112,30 @@ The Python install path must be accessible on every application resource
 that will execute Python code within a Streams application.
 
 .. note::
-   The Python version used to declare and submit the application must match the setting of ``PYTHONHOME`` in the instance. For example, if ``PYTHONHOME`` Streams application instance variable points to a Python 3.6 install, then Python 3.6 must be used to declare and submit the application.
+   The Python version used to declare and submit the application must compatible with the setting of ``PYTHONHOME`` in the instance. For example, if ``PYTHONHOME`` Streams application instance variable points to a Python 3.6 install, then Python 3.5 or 3.6 can be used to declare and submit the application.
 
 Standalone
 ==========
 
 The environment ``PYTHONHOME`` must be set to the Python install path.
+
+***********************************
+Bundle Python version compatibility
+***********************************
+
+As of 1.13 Streams application bundles (sab files) invoking Python are binary
+compatible with a range of Python releases when using Python 3.
+
+The minimum verson supported is the version of Python used during bundle
+creation.
+
+The maximum version supported is the highest version of Python with a
+proposed release schedule.
+
+For example if a sab is built with Python 3.6 then it can be submitted
+to a Streams instance using 3.6 or higher, up to & including 3.9 which is
+the highest Python release with a proposed release schedule as of 1.13.
+
+.. note::
+   Compatability across Python releases is dependent on Python's
+   `Stable Application Binary Inteface <https://docs.python.org/3/c-api/stable.html>`_.
