@@ -18,7 +18,7 @@
 #ifndef __SPL__SPLPY_GENERAL_H
 #define __SPL__SPLPY_GENERAL_H
 
-#include "Python.h"
+#include "splpy_python.h"
 #include <sstream>
 
 #undef PyMemoryView_Check
