@@ -586,8 +586,8 @@ class _SubmitContextFactory(object):
             return _DistributedSubmitter(ctxtype, self.config, self.graph, self.username, self.password)
         elif ctxtype == ContextTypes.ANALYTICS_SERVICE or ctxtype == ContextTypes.STREAMING_ANALYTICS_SERVICE:
             logger.debug("Selecting the STREAMING_ANALYTICS_SERVICE context for submission")
-            if not (sys.version_info.major == 3 and sys.version_info.minor == 5):
-                raise RuntimeError("The ANALYTICS_SERVICE context only supports Python version 3.5")
+            if sys.version_info.major == 2:
+                raise RuntimeError("The STREAMING_ANALYTICS_SERVICE context requires Python 3")
             ctxtype = ContextTypes.STREAMING_ANALYTICS_SERVICE
             return _StreamingAnalyticsSubmitter(ctxtype, self.config, self.graph)
         elif ctxtype == 'BUNDLE':
