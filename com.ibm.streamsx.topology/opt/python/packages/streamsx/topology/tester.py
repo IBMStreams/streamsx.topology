@@ -385,15 +385,12 @@ class Tester(object):
             force_remote_build(bool): Force use of the Streaming Analytics build service. If `false` and ``STREAMS_INSTALL`` is set then a local build will be used if the local environment is suitable for the service, otherwise the Streams application bundle is built using the build service.
             verbose(bool): If `true` then the ``streamsx.topology.test`` logger is configured at ``DEBUG`` level with output sent to standard error.
 
-        If run with Python 2 the test is skipped, only Python 3.5
-        is supported with Streaming Analytics service.
+        If run with Python 2 the test is skipped,.
 
         Returns: None
         """
         if sys.version_info.major == 2:
             raise unittest.SkipTest('Skipped due to running with Python 2')
-        if not (sys.version_info.major == 3 and sys.version_info.minor == 5):
-            raise unittest.SkipTest('Skipped as Streaming Analytics service requires Python 3.5')
         if not 'VCAP_SERVICES' in os.environ:
             raise unittest.SkipTest("Skipped due to VCAP_SERVICES environment variable not set")
 
