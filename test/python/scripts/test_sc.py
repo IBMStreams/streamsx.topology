@@ -9,6 +9,7 @@ import requests
 import random
 from glob import glob
 import json
+from pathlib import Path
 
 from streamsx.topology.topology import Topology
 from streamsx.topology.context import submit, ConfigParams
@@ -19,6 +20,7 @@ from contextlib import contextmanager
 from io import StringIO
 import zipfile
 
+my_path = Path(__file__).parent
 
 def _handle_http_error(err):
     # REST API failures raise HTTPError instance, which, when printed, show
@@ -97,8 +99,9 @@ class TestSC(unittest.TestCase):
     def get_test_toolkit_paths(self):
         # Get a list of all the test toolkit paths, each element representing 1 toolkit_path
         toolkit_paths = []
+        path = (my_path / "toolkits").resolve()
         os.chdir(
-            "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/toolkits"
+            path
         )
         cwd = os.getcwd()
 
@@ -245,9 +248,11 @@ class TestSC(unittest.TestCase):
         # Test build of sab w/ specific version of toolkit
         # Build test_app_3, requiring toolkit tk_4 w/ version 2.6.3
         # 2 versions of tk_4 available, v1.0.0, and v2.6.3 , chosen version should be 2.6.3
+        path = (my_path / "apps/com.example.test_app_3/").resolve()
         os.chdir(
-            "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_3/"
+            path
         )
+
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
         sab_file = self.get_sab_filename(self.main_composite)
@@ -268,9 +273,11 @@ class TestSC(unittest.TestCase):
         # Build test_app_4, requiring toolkit tk_1 w/ version [1.0.0,2.0.0), and tk_3 w/ version (2.0.0,4.0.0]
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 1.0.0
         # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 4.0.0
+        path = (my_path / "apps/com.example.test_app_4/").resolve()
         os.chdir(
-            "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_4/"
+            path
         )
+
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
         sab_file = self.get_sab_filename(self.main_composite)
@@ -292,9 +299,11 @@ class TestSC(unittest.TestCase):
         # Build test_app_5, requiring toolkit tk_1 w/ version (1.0.0,2.0.0], and tk_3 w/ version [2.0.0,4.0.0)
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 2.0.0
         # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 2.0.0
+        path = (my_path / "apps/com.example.test_app_5/").resolve()
         os.chdir(
-            "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_5/"
+            path
         )
+
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
         sab_file = self.get_sab_filename(self.main_composite)
@@ -315,9 +324,11 @@ class TestSC(unittest.TestCase):
         # Build test_app_1, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_3 w/ version [1.0.0,4.0.0)
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
         # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 2.0.0
+        path = (my_path / "apps/com.example.test_app_1/").resolve()
         os.chdir(
-            "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_1/"
+            path
         )
+
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
         sab_file = self.get_sab_filename(self.main_composite)
@@ -339,8 +350,9 @@ class TestSC(unittest.TestCase):
         # Build test_app_2, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_2 w/ version [1.0.0,4.0.0)
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
         # 3 versions of tk_2 available, v0.5.0, v0.5.7 and v0.8.0 , No suitable version, thus should error out
+        path = (my_path / "apps/com.example.test_app_2/").resolve()
         os.chdir(
-            "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_2/"
+            path
         )
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
@@ -352,10 +364,10 @@ class TestSC(unittest.TestCase):
 
     def test_simple_3(self):
         # Build test_app_6, requiring no dependencies
+        path = (my_path / "apps/com.example.test_app_6/").resolve()
         os.chdir(
-            "/home/streamsadmin/hostdir/streamsx.topology/test/python/scripts/apps/com.example.test_app_6/"
+            path
         )
-
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
         sab_file = self.get_sab_filename(self.main_composite)

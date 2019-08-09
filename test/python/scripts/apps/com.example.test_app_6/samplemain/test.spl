@@ -1,0 +1,14 @@
+namespace samplemain;
+
+public composite main {
+    graph
+
+    stream < int64 x > S = Beacon(){
+        param period:0.1;
+    }
+
+    () as e = Custom(S) {
+        logic onTuple S:println(S);
+    }
+
+}
