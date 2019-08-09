@@ -21,7 +21,7 @@
 #define __SPL__SPLPY_SYM_H
 
 #include <stdexcept>
-#include "Python.h"
+#include "splpy_python.h"
 
 /**
  * For a Python C API function symbol PyXXX we create
