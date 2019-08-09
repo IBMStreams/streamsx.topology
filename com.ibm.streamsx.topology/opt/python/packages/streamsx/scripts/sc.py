@@ -16,6 +16,7 @@ import xml.etree.ElementTree as ET
 from glob import glob
 import re
 from packaging import version
+from io import StringIO
 
 
 _FACADE=['--prefer-facade-tuples', '-k']
@@ -42,13 +43,26 @@ def _parse_dependencies():
     # Parse info.xml for the dependencies of the app you want to build sab file for
     deps = {} # name - version
     if os.path.isfile('info.xml'):
-        root = ET.parse('info.xml').getroot()
-        info = '{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}'
-        common = '{http://www.ibm.com/xmlns/prod/streams/spl/common}'
-        dependency_elements = root.find(info + 'dependencies').findall(info + 'toolkit')
-        for dependency_element in dependency_elements:
-            name = dependency_element.find(common + 'name').text
-            version = dependency_element.find(common + 'version').text
+        # Open XML file and strip all namespaces from XML tags
+        # Ex. <info:dependencies> -> <dependencies>
+        XML_data = None
+        with open('info.xml', 'r') as file:
+            XML_data = file.read()
+        it = ET.iterparse(StringIO(XML_data))
+        for _, el in it:
+            if '}' in el.tag:
+                el.tag = el.tag.split('}', 1)[1]
+        root = it.root
+
+        # Get dependency tag
+        dependency_elements = root.findall('dependencies')
+        assert len(dependency_elements) == 1, 'Should only contain 1 dependency tag'
+
+        # Get toolkits tags
+        dependencies = dependency_elements[0].findall('toolkit')
+        for toolkit in dependencies:
+            name = toolkit.find('name').text
+            version = toolkit.find('version').text
             deps[name] = version
     return deps
 
@@ -135,17 +149,18 @@ def _get_all_local_toolkits(toolkit_paths):
 
     # For each direct path to a toolkit, parse the name & version, and convert it to a _LocalToolkit object
     for tk_path in local_toolkits_paths:
-        # Get the name & version of the toolkit that is in the directory tk_path
-        root = ET.parse(tk_path + "/info.xml").getroot()
-        identity = root.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}identity')
-        name = identity.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}name')
-        version = identity.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}version')
+        if os.path.isfile(tk_path + 'info.xml'):
+            # Get the name & version of the toolkit that is in the directory tk_path
+            root = ET.parse(tk_path + 'info.xml').getroot()
+            identity = root.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}identity')
+            name = identity.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}name')
+            version = identity.find('{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}version')
 
-        toolkit_name = name.text
-        toolkit_version = version.text
+            toolkit_name = name.text
+            toolkit_version = version.text
 
-        tk = _LocalToolkit(toolkit_name, toolkit_version, tk_path)
-        local_toolkits.append(tk)
+            tk = _LocalToolkit(toolkit_name, toolkit_version, tk_path)
+            local_toolkits.append(tk)
 
     return local_toolkits
 
@@ -226,7 +241,6 @@ def _check_correct_version(toolkit, dependency_range):
         return True
     return False
 
-
 def _submit_build(cmd_args, topo):
      cfg = {}
      # Only supported for remote builds.
@@ -273,7 +287,7 @@ def _is_likely_toolkit(tkdir):
 def _create_topo(cmd_args):
     topo,invoke = main_composite(kind=cmd_args.main_composite)
     return topo
-    
+
 def _parse_args(args):
     """ Argument parsing
     """
@@ -303,7 +317,6 @@ def _deprecated_args(cmd_parser):
 
     dep.add_argument('--checkpoint-directory', '-K', action='store', metavar='path')
     dep.add_argument('--profiling-sampling', '-S', action='store', metavar='rate')
-    
 
 if __name__ == '__main__':
     rc = main()
