@@ -10,6 +10,7 @@ import random
 from glob import glob
 import json
 from pathlib import Path
+import re
 
 from streamsx.topology.topology import Topology
 from streamsx.topology.context import submit, ConfigParams
@@ -62,20 +63,28 @@ class TestSC(unittest.TestCase):
             self.delete_test_toolkits()
 
             # Get a list of paths for all the test toolkits, each element representing the path to a given test toolkit
-            toolkit_paths = self.get_test_toolkit_paths()
+            self.test_toolkit_paths = self.get_test_toolkit_paths()
+
+            # Get the random toolkit name, so we can use it to check correct dependencies
+            # Ex. 'com.example.tmyuuwkpjittfjla.test_tk_2' -> 'com.example.tmyuuwkpjittfjla.'
+            tk1 = self._get_toolkit_objects(self.test_toolkit_paths[0:1])[0]
+            self.random_name_variable = re.sub("test_tk_.", "", tk1.name)
 
             # Randomly shuffle the toolkits
-            random.shuffle(toolkit_paths)
+            random.shuffle(self.test_toolkit_paths)
 
             # Take half of the toolkits and place them on the buildserver
-            self.uploaded_toolkits_paths = toolkit_paths[: len(toolkit_paths) // 2]
+            self.uploaded_toolkits_paths = self.test_toolkit_paths[: len(self.test_toolkit_paths) // 2]
             self.post_test_toolkits(self.uploaded_toolkits_paths)
 
             # Other half is local toolkits, combine all local toolkit paths into 1 string by seperating paths w/ a ':' to pass into SC command via -t arg
-            self.local_toolkits_paths = toolkit_paths
+            self.local_toolkits_paths = self.test_toolkit_paths[len(self.test_toolkit_paths) // 2 :]
             self.local_toolkit_paths_string = ""
             for tk_path in self.local_toolkits_paths:
-                self.local_toolkit_paths_string += tk_path + ":"
+                # Prevents adding an extra ':' at the very end of the string
+                if self.local_toolkit_paths_string:
+                    self.local_toolkit_paths_string += ":"
+                self.local_toolkit_paths_string += tk_path
 
             # Name of SPL app to build
             self.main_composite = "samplemain::main"
@@ -89,14 +98,15 @@ class TestSC(unittest.TestCase):
             time.sleep(5)
 
     def tearDown(self):
-        self.delete_test_toolkits()
-
         # Delete the .sab and the _jobConfig.json file, if it exists, after a test finishes
+        # Needs to be done before deleting test toolkits, bc that method changes the current directory
         if os.path.isfile(self.sab_file):
             os.remove(self.sab_file)
         jsonFile = self.sab_file.replace(".sab", "_jobConfig.json")
         if os.path.isfile(jsonFile):
             os.remove(jsonFile)
+
+        self.delete_test_toolkits()
 
     def _run_sc(self, spl_app_to_build, local_toolkits_path=None):
         args = ["--disable-ssl-verify", "-M", spl_app_to_build]
@@ -210,8 +220,6 @@ class TestSC(unittest.TestCase):
 
                 tk = self._LocalToolkit(toolkit_name, toolkit_version, tk_path)
                 toolkit_objects.append(tk)
-        print(list(set([x.name for x in toolkit_objects])))
-        exit()
         return toolkit_objects
 
     class _LocalToolkit:
@@ -267,7 +275,8 @@ class TestSC(unittest.TestCase):
 
         # Check sab has correct dependencies
         required_dependencies = []
-        req1 = self._LocalToolkit("test_tk_4", "2.6.3", None)
+        tk_name = self.random_name_variable + "test_tk_4"
+        req1 = self._LocalToolkit(tk_name, "2.6.3", None)
         required_dependencies.extend([req1])
         self.check_sab_correct_dependencies(self.sab_file, required_dependencies)
 
@@ -286,8 +295,10 @@ class TestSC(unittest.TestCase):
 
         # Check sab has correct dependencies
         required_dependencies = []
-        req1 = self._LocalToolkit("test_tk_1", "1.0.0", None)
-        req1 = self._LocalToolkit("test_tk_3", "4.0.0", None)
+        tk1_name = self.random_name_variable + "test_tk_1"
+        tk3_name = self.random_name_variable + "test_tk_3"
+        req1 = self._LocalToolkit(tk1_name, "1.0.0", None)
+        req1 = self._LocalToolkit(tk3_name, "4.0.0", None)
         required_dependencies.extend([req1])
         self.check_sab_correct_dependencies(self.sab_file, required_dependencies)
 
@@ -306,8 +317,10 @@ class TestSC(unittest.TestCase):
 
         # Check sab has correct dependencies
         required_dependencies = []
-        req1 = self._LocalToolkit("test_tk_1", "2.0.0", None)
-        req1 = self._LocalToolkit("test_tk_3", "2.0.0", None)
+        tk1_name = self.random_name_variable + "test_tk_1"
+        tk3_name = self.random_name_variable + "test_tk_3"
+        req1 = self._LocalToolkit(tk1_name, "2.0.0", None)
+        req1 = self._LocalToolkit(tk3_name, "2.0.0", None)
         required_dependencies.extend([req1])
         self.check_sab_correct_dependencies(self.sab_file, required_dependencies)
 
@@ -325,8 +338,10 @@ class TestSC(unittest.TestCase):
 
         # Check sab has correct dependencies
         required_dependencies = []
-        req1 = self._LocalToolkit("test_tk_1", "3.0.0", None)
-        req2 = self._LocalToolkit("test_tk_3", "2.0.0", None)
+        tk1_name = self.random_name_variable + "test_tk_1"
+        tk3_name = self.random_name_variable + "test_tk_3"
+        req1 = self._LocalToolkit(tk1_name, "3.0.0", None)
+        req2 = self._LocalToolkit(tk3_name, "2.0.0", None)
         required_dependencies.extend([req1, req2])
         self.check_sab_correct_dependencies(self.sab_file, required_dependencies)
 

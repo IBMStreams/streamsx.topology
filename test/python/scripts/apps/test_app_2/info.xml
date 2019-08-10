@@ -9,12 +9,12 @@
   <info:dependencies>
     <!--Highest version used should be 3.0.0-->
     <info:toolkit>
-      <common:name>com.example.tmyuuwkpjittfjla.test_tk_1</common:name>
+      <common:name>com.example.uxbqwulxgnzhnjsq.test_tk_1</common:name>
       <common:version>[1.0.0,4.0.0)</common:version>
     </info:toolkit>
     <!--No toolkits can satisfy, sc should throw error-->
     <info:toolkit>
-      <common:name>com.example.tmyuuwkpjittfjla.test_tk_2</common:name>
+      <common:name>com.example.uxbqwulxgnzhnjsq.test_tk_2</common:name>
       <common:version>[1.0.0,4.0.0)</common:version>
     </info:toolkit>
   </info:dependencies>
