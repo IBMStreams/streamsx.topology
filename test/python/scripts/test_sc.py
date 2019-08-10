@@ -22,6 +22,7 @@ import zipfile
 
 my_path = Path(__file__).parent
 
+
 def _handle_http_error(err):
     # REST API failures raise HTTPError instance, which, when printed, show
     # the default error message for the status code.  We often have useful
@@ -78,6 +79,7 @@ class TestSC(unittest.TestCase):
 
             # Name of SPL app to build
             self.main_composite = "samplemain::main"
+            self.sab_file = "samplemain.main.sab"
 
             # Operations such as adding or deleting toolkits sometimes are not
             # effective immediately.  Even though toolkits were deleted
@@ -88,6 +90,13 @@ class TestSC(unittest.TestCase):
 
     def tearDown(self):
         self.delete_test_toolkits()
+
+        # Delete the .sab and the _jobConfig.json file, if it exists, after a test finishes
+        if os.path.isfile(self.sab_file):
+            os.remove(self.sab_file)
+        jsonFile = self.sab_file.replace(".sab", "_jobConfig.json")
+        if os.path.isfile(jsonFile):
+            os.remove(jsonFile)
 
     def _run_sc(self, spl_app_to_build, local_toolkits_path=None):
         args = ["--disable-ssl-verify", "-M", spl_app_to_build]
@@ -100,9 +109,7 @@ class TestSC(unittest.TestCase):
         # Get a list of all the test toolkit paths, each element representing 1 toolkit_path
         toolkit_paths = []
         path = (my_path / "toolkits").resolve()
-        os.chdir(
-            path
-        )
+        os.chdir(path)
         cwd = os.getcwd()
 
         # Get all direct subfolders in toolkits folder
@@ -115,13 +122,25 @@ class TestSC(unittest.TestCase):
 
     def delete_test_toolkits(self):
         # delete all the test toolkits from the buildserver, in case they were left behind by a previous test failure.
+        deleted_all_toolkits = False
         test_toolkit_objects = self._get_toolkit_objects(self.get_test_toolkit_paths())
         toolkit_names = [tk.name for tk in test_toolkit_objects]
+        while not deleted_all_toolkits:
+            # Assume no test toolkits are on buildsever, check to make sure
+            toolkit_still_on_buildserver = False
+            remote_toolkits = self.build_server.get_toolkits()
+            for toolkit in remote_toolkits:
+                if toolkit.name in toolkit_names:
+                    # test toolkit found to still on buildserver, delete
+                    self.assertTrue(toolkit.delete())
+                    toolkit_still_on_buildserver = True
 
-        remote_toolkits = self.build_server.get_toolkits()
-        for toolkit in remote_toolkits:
-            if toolkit.name in toolkit_names:
-                self.assertTrue(toolkit.delete())
+            # if a test toolkit is found to still be on buildserver, sleep and retry again
+            if toolkit_still_on_buildserver:
+                time.sleep(5)
+            # No test toolkits located on buildserver, break out of loop
+            else:
+                deleted_all_toolkits = True
 
     def post_test_toolkits(self, toolkit_paths):
         # Given a list of test toolkit paths, upload these toolkits to the buildserver
@@ -171,24 +190,28 @@ class TestSC(unittest.TestCase):
     def _get_toolkit_objects(self, toolkit_paths):
         toolkit_objects = []
         for tk_path in toolkit_paths:
-            if os.path.isfile(tk_path + "info.xml"):
+            my_file = tk_path + "toolkit.xml"
+            if os.path.isfile(my_file):
                 # Get the name & version of the toolkit that is in the directory tk_path
-                root = ET.parse(tk_path + "info.xml").getroot()
-                identity = root.find(
-                    "{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}identity"
-                )
-                name = identity.find(
-                    "{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}name"
-                )
-                version = identity.find(
-                    "{http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo}version"
-                )
+                # Open XML file and strip all namespaces from XML tags
+                # Ex. <info:dependencies> -> <dependencies>
+                XML_data = None
+                with open(my_file, "r") as file:
+                    XML_data = file.read()
+                it = ET.iterparse(StringIO(XML_data))
+                for _, el in it:
+                    if "}" in el.tag:
+                        el.tag = el.tag.split("}", 1)[1]
+                root = it.root
+                toolkit_tag = root.find("toolkit")
 
-                toolkit_name = name.text
-                toolkit_version = version.text
+                toolkit_name = toolkit_tag.get("name")
+                toolkit_version = toolkit_tag.get("version")
 
                 tk = self._LocalToolkit(toolkit_name, toolkit_version, tk_path)
                 toolkit_objects.append(tk)
+        print(list(set([x.name for x in toolkit_objects])))
+        exit()
         return toolkit_objects
 
     class _LocalToolkit:
@@ -230,59 +253,35 @@ class TestSC(unittest.TestCase):
             deps.append(tk)
         return deps
 
-    def delete_sab(self, sab_file):
-        """ Deletes the .sab and the _jobConfig.json file, if it exists, after a test finishes
-
-        Arguments:
-            sab_file {String} -- The filename of the sab
-        """
-        if os.path.isfile(sab_file):
-            os.remove(sab_file)
-
-        jsonFile = sab_file.replace(".sab", "_jobConfig.json")
-
-        if os.path.isfile(jsonFile):
-            os.remove(jsonFile)
-
     def test_specific_version(self):
         # Test build of sab w/ specific version of toolkit
         # Build test_app_3, requiring toolkit tk_4 w/ version 2.6.3
         # 2 versions of tk_4 available, v1.0.0, and v2.6.3 , chosen version should be 2.6.3
-        path = (my_path / "apps/com.example.test_app_3/").resolve()
-        os.chdir(
-            path
-        )
+        path = (my_path / "apps/test_app_3/").resolve()
+        os.chdir(path)
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
-        sab_file = self.get_sab_filename(self.main_composite)
-
-        if not os.path.isfile(sab_file):
+        if not os.path.isfile(self.sab_file):
             self.fail("Sab does not exist")
 
         # Check sab has correct dependencies
         required_dependencies = []
         req1 = self._LocalToolkit("test_tk_4", "2.6.3", None)
         required_dependencies.extend([req1])
-        self.check_sab_correct_dependencies(sab_file, required_dependencies)
-
-        self.delete_sab(sab_file)
+        self.check_sab_correct_dependencies(self.sab_file, required_dependencies)
 
     def test_inclusive_tk_version_cutoff(self):
         # Test inclusive aspect on both sides of toolkit version
         # Build test_app_4, requiring toolkit tk_1 w/ version [1.0.0,2.0.0), and tk_3 w/ version (2.0.0,4.0.0]
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 1.0.0
         # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 4.0.0
-        path = (my_path / "apps/com.example.test_app_4/").resolve()
-        os.chdir(
-            path
-        )
+        path = (my_path / "apps/test_app_4/").resolve()
+        os.chdir(path)
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
-        sab_file = self.get_sab_filename(self.main_composite)
-
-        if not os.path.isfile(sab_file):
+        if not os.path.isfile(self.sab_file):
             self.fail("Sab does not exist")
 
         # Check sab has correct dependencies
@@ -290,25 +289,19 @@ class TestSC(unittest.TestCase):
         req1 = self._LocalToolkit("test_tk_1", "1.0.0", None)
         req1 = self._LocalToolkit("test_tk_3", "4.0.0", None)
         required_dependencies.extend([req1])
-        self.check_sab_correct_dependencies(sab_file, required_dependencies)
-
-        self.delete_sab(sab_file)
+        self.check_sab_correct_dependencies(self.sab_file, required_dependencies)
 
     def test_exclusive_tk_version_cutoff(self):
         # Test exclusive aspect on both sides of toolkit version
         # Build test_app_5, requiring toolkit tk_1 w/ version (1.0.0,2.0.0], and tk_3 w/ version [2.0.0,4.0.0)
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 2.0.0
         # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 2.0.0
-        path = (my_path / "apps/com.example.test_app_5/").resolve()
-        os.chdir(
-            path
-        )
+        path = (my_path / "apps/test_app_5/").resolve()
+        os.chdir(path)
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
-        sab_file = self.get_sab_filename(self.main_composite)
-
-        if not os.path.isfile(sab_file):
+        if not os.path.isfile(self.sab_file):
             self.fail("Sab does not exist")
 
         # Check sab has correct dependencies
@@ -316,24 +309,18 @@ class TestSC(unittest.TestCase):
         req1 = self._LocalToolkit("test_tk_1", "2.0.0", None)
         req1 = self._LocalToolkit("test_tk_3", "2.0.0", None)
         required_dependencies.extend([req1])
-        self.check_sab_correct_dependencies(sab_file, required_dependencies)
-
-        self.delete_sab(sab_file)
+        self.check_sab_correct_dependencies(self.sab_file, required_dependencies)
 
     def test_simple_1(self):
         # Build test_app_1, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_3 w/ version [1.0.0,4.0.0)
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
         # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 2.0.0
-        path = (my_path / "apps/com.example.test_app_1/").resolve()
-        os.chdir(
-            path
-        )
+        path = (my_path / "apps/test_app_1/").resolve()
+        os.chdir(path)
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
-        sab_file = self.get_sab_filename(self.main_composite)
-
-        if not os.path.isfile(sab_file):
+        if not os.path.isfile(self.sab_file):
             self.fail("Sab does not exist")
 
         # Check sab has correct dependencies
@@ -341,38 +328,27 @@ class TestSC(unittest.TestCase):
         req1 = self._LocalToolkit("test_tk_1", "3.0.0", None)
         req2 = self._LocalToolkit("test_tk_3", "2.0.0", None)
         required_dependencies.extend([req1, req2])
-        self.check_sab_correct_dependencies(sab_file, required_dependencies)
-
-        self.delete_sab(sab_file)
+        self.check_sab_correct_dependencies(self.sab_file, required_dependencies)
 
     def test_simple_2(self):
         # Test that sab fails to build when a dependency/toolkit version is not met
         # Build test_app_2, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_2 w/ version [1.0.0,4.0.0)
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
         # 3 versions of tk_2 available, v0.5.0, v0.5.7 and v0.8.0 , No suitable version, thus should error out
-        path = (my_path / "apps/com.example.test_app_2/").resolve()
-        os.chdir(
-            path
-        )
+        path = (my_path / "apps/test_app_2/").resolve()
+        os.chdir(path)
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
         # Check sab doesn't exist
-        sab_file = self.get_sab_filename(self.main_composite)
-        if os.path.isfile(sab_file):
+        if os.path.isfile(self.sab_file):
             self.fail("Sab should not exist")
 
     def test_simple_3(self):
         # Build test_app_6, requiring no dependencies
-        path = (my_path / "apps/com.example.test_app_6/").resolve()
-        os.chdir(
-            path
-        )
+        path = (my_path / "apps/test_app_6/").resolve()
+        os.chdir(path)
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
-        sab_file = self.get_sab_filename(self.main_composite)
-
-        if not os.path.isfile(sab_file):
+        if not os.path.isfile(self.sab_file):
             self.fail("Sab does not exist")
-
-        self.delete_sab(sab_file)

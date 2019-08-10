@@ -3,7 +3,7 @@
 <!-- All Rights Reserved                                                   -->
 <toolkitInfoModel xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo" xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common" xsi:schemaLocation="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo toolkitInfoModel.xsd">
   <identity>
-    <name>test_tk_4</name>
+    <name>com.example.tmyuuwkpjittfjla.test_tk_4</name>
     <description>asdasdasdasdas</description>
     <version>1.0.0</version>
     <requiredProductVersion>4.0.1.0</requiredProductVersion>

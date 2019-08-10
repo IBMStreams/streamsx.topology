@@ -1,21 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <info:toolkitInfoModel xmlns:common="http://www.ibm.com/xmlns/prod/streams/spl/common" xmlns:info="http://www.ibm.com/xmlns/prod/streams/spl/toolkitInfo">
   <info:identity>
-    <info:name>com.example.test_app_2</info:name>
+    <info:name>test_app_3</info:name>
     <info:description></info:description>
     <info:version>2.0.0.alpha</info:version>
     <info:requiredProductVersion>4.2.0</info:requiredProductVersion>
   </info:identity>
   <info:dependencies>
-    <!--Highest version used should be 3.0.0-->
     <info:toolkit>
-      <common:name>test_tk_1</common:name>
-      <common:version>[1.0.0,4.0.0)</common:version>
-    </info:toolkit>
-    <!--No toolkits can satisfy, sc should throw error-->
-    <info:toolkit>
-      <common:name>test_tk_2</common:name>
-      <common:version>[1.0.0,4.0.0)</common:version>
+      <common:name>com.example.test_tk_4</common:name>
+      <common:version>2.6.3</common:version>
     </info:toolkit>
   </info:dependencies>
 </info:toolkitInfoModel>
