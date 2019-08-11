@@ -11,6 +11,7 @@ from glob import glob
 import json
 from pathlib import Path
 import re
+import subprocess
 
 from streamsx.topology.topology import Topology
 from streamsx.topology.context import submit, ConfigParams
@@ -53,6 +54,19 @@ def _handle_http_error(err):
     "requires Streams REST API setup",
 )
 class TestSC(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Call shell script to create the info.xml and toolkit.xml for each toolkit, and the info.xml for each app to build
+        # Also updates toolkit names so different users can run tests concurrently
+        # Ex. 'com.example.test_tk_2' -> 'com.example.tmyuuwkpjittfjla.test_tk_2'
+        subprocess.call(["toolkits/create_test_sc_files.sh"])
+
+    @classmethod
+    def tearDownClass(cls):
+        # Call shell script to delete the info.xml and toolkit.xml for each toolkit, and the info.xml for each app to build
+        os.chdir(my_path)
+        subprocess.call(["toolkits/delete_test_sc_files.sh"])
+
     def setUp(self):
         self.build_server = BuildService.of_endpoint(verify=False)
 
