@@ -8,6 +8,7 @@ import os
 import argparse
 import urllib3
 import streamsx.rest
+import pkg_resources
 from streamsx.spl.op import main_composite
 from streamsx.spl.toolkit import add_toolkit
 from streamsx.topology.context import submit, ConfigParams
@@ -15,7 +16,6 @@ from streamsx.build import BuildService
 import xml.etree.ElementTree as ET
 from glob import glob
 import re
-from packaging import version
 from io import StringIO
 
 
@@ -105,8 +105,8 @@ def _add_local_toolkits(toolkit_paths, dependencies, topo, verify_arg):
                 # if we have a toolkit that already satisfies the version requirement, and tk also satisfies its
                 # compare tk against the highest version we have seen thus far
                 if latest_compatible_toolkit:
-                    latest_version_so_far = version.parse(latest_compatible_toolkit.version)
-                    curr_tk_version = version.parse(tk.version)
+                    latest_version_so_far = pkg_resources.parse_version(latest_compatible_toolkit.version)
+                    curr_tk_version = pkg_resources.parse_version(tk.version)
 
                     # if it is a later version, update our toolkit
                     if curr_tk_version > latest_version_so_far:
@@ -185,12 +185,12 @@ def _check_correct_version(toolkit, dependency_range):
         dependency_range {String} -- A string of the form '1.2.3' or [3.0.0,4.0.0)' that represents a version or range of versions that is acceptable
     """
     # Convert it to version
-    toolkit_ver = version.parse(toolkit.version)
+    toolkit_ver = pkg_resources.parse_version(toolkit.version)
 
     # Check if dependency_range is a single # or a range (single # won't contain brackets or parenthesis)
     temp = ['(', ')', '[', ']']
     if not any(x in dependency_range for x in temp):
-        required_version = version.parse(dependency_range)
+        required_version = pkg_resources.parse_version(dependency_range)
         if required_version == toolkit_ver:
             return True
         return False
@@ -217,8 +217,8 @@ def _check_correct_version(toolkit, dependency_range):
     # Remove parenthesis and brackets from range and split by ',' to get lower and upper bounds, then convert to version
     # Version also handles the case '[4.5.6,5.2)' where 5.2 > 4.5.6
     bounds = re.sub('[()\[\]]', '', dependency_range).split(',')
-    left_bound = version.parse(bounds[0])
-    right_bound = version.parse(bounds[1])
+    left_bound = pkg_resources.parse_version(bounds[0])
+    right_bound = pkg_resources.parse_version(bounds[1])
 
     # Check that toolkit_ver satisfies its left and right bounds
     # if left is '[' check that version satisfies it
