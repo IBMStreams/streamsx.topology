@@ -9,7 +9,7 @@ PARENT_PATH=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 
 # Use the same random name for each toolkit.
 NAME=$(head -c16 <(tr -dc '[:lower:]' < /dev/urandom 2>/dev/null))
-echo "Random toolkit name is ${NAME}"
+echo "Random toolkit name is com.example.${NAME}."
 
 # Create info.xml files for the toolkits located in /scripts/toolkits/
 for i in $(find ${PARENT_PATH} -name info.xml.tmpl); do
