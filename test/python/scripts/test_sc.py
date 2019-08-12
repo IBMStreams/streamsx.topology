@@ -59,13 +59,14 @@ class TestSC(unittest.TestCase):
         # Call shell script to create the info.xml and toolkit.xml for each toolkit, and the info.xml for each app to build
         # Also updates toolkit names so different users can run tests concurrently
         # Ex. 'com.example.test_tk_2' -> 'com.example.tmyuuwkpjittfjla.test_tk_2'
-        subprocess.call(["toolkits/create_test_sc_files.sh"])
+        script = (my_path / "toolkits/create_test_sc_files.sh").resolve()
+        subprocess.call([script])
 
     @classmethod
     def tearDownClass(cls):
         # Call shell script to delete the info.xml and toolkit.xml for each toolkit, and the info.xml for each app to build
-        os.chdir(my_path)
-        subprocess.call(["toolkits/delete_test_sc_files.sh"])
+        script = (my_path / "toolkits/delete_test_sc_files.sh").resolve()
+        subprocess.call([script])
 
     def setUp(self):
         self.build_server = BuildService.of_endpoint(verify=False)
@@ -81,7 +82,7 @@ class TestSC(unittest.TestCase):
 
             # Get the random toolkit name, so we can use it to check correct dependencies
             # Ex. 'com.example.tmyuuwkpjittfjla.test_tk_2' -> 'com.example.tmyuuwkpjittfjla.'
-            tk1 = self._get_toolkit_objects(self.test_toolkit_paths[0:1])[0]
+            tk1 = self._get_toolkit_objects([self.test_toolkit_paths[0]])[0]
             self.random_name_variable = re.sub("test_tk_.", "", tk1.name)
 
             # Randomly shuffle the toolkits
@@ -112,15 +113,14 @@ class TestSC(unittest.TestCase):
             time.sleep(5)
 
     def tearDown(self):
+        self.delete_test_toolkits()
+
         # Delete the .sab and the _jobConfig.json file, if it exists, after a test finishes
-        # Needs to be done before deleting test toolkits, bc that method changes the current directory
         if os.path.isfile(self.sab_file):
             os.remove(self.sab_file)
         jsonFile = self.sab_file.replace(".sab", "_jobConfig.json")
         if os.path.isfile(jsonFile):
             os.remove(jsonFile)
-
-        self.delete_test_toolkits()
 
     def _run_sc(self, spl_app_to_build, local_toolkits_path=None):
         args = ["--disable-ssl-verify", "-M", spl_app_to_build]
@@ -133,15 +133,14 @@ class TestSC(unittest.TestCase):
         # Get a list of all the test toolkit paths, each element representing 1 toolkit_path
         toolkit_paths = []
         path = (my_path / "toolkits").resolve()
-        os.chdir(path)
-        cwd = os.getcwd()
 
         # Get all direct subfolders in toolkits folder
-        toolkits = glob("*/")
+        toolkits = path.glob("*/")
 
         # For each toolkit in toolkits folder, get the path, add it to list
         for tk in toolkits:
-            toolkit_paths.append(cwd + "/" + tk)
+            if os.path.isdir(tk):
+                toolkit_paths.append(str(tk))
         return toolkit_paths
 
     def delete_test_toolkits(self):
@@ -214,7 +213,7 @@ class TestSC(unittest.TestCase):
     def _get_toolkit_objects(self, toolkit_paths):
         toolkit_objects = []
         for tk_path in toolkit_paths:
-            my_file = tk_path + "toolkit.xml"
+            my_file = tk_path + "/toolkit.xml"
             if os.path.isfile(my_file):
                 # Get the name & version of the toolkit that is in the directory tk_path
                 # Open XML file and strip all namespaces from XML tags
