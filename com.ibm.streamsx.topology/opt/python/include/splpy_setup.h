@@ -20,7 +20,7 @@
 #ifndef __SPL__SPLPY_SETUP_H
 #define __SPL__SPLPY_SETUP_H
 
-#include "Python.h"
+#include "splpy_python.h"
 #include <stdlib.h>
 #include <string>
 #include <sys/types.h>
@@ -153,23 +153,10 @@ class SplpySetup {
   private:
     static void * loadPythonLib() {
 
-        std::string pyLib(TOPOLOGY_PYTHON_LIBNAME);
+        std::string pyLibName(TOPOLOGY_PYTHON_LIBNAME);
         const char * pyHome = getenv("PYTHONHOME");
         if (pyHome != NULL) {
             SPLAPPLOG(L_INFO, TOPOLOGY_PYTHONHOME(pyHome), "python");
-
-            std::string wk(pyHome);
-            wk.append("/lib/");
-            wk.append(pyLib);
-            struct stat st;
-            if (stat(wk.c_str(), &st) != 0) {
-               std::string wk64(pyHome);
-               wk64.append("/lib64/");
-               wk64.append(pyLib);
-               pyLib = wk64;
-            } else {
-               pyLib = wk;
-            }
         } else {
           std::string errtxt(TOPOLOGY_PYTHONHOME_NO(__SPLPY_VERSION));
 
@@ -179,7 +166,6 @@ class SplpySetup {
           SPL::SPLRuntimeOperatorException exc("setup", errtxt);
           throw exc;
         }
-        SPLAPPLOG(L_INFO, TOPOLOGY_LOAD_LIB(pyLib), "python");
  
 #if PY_MAJOR_VERSION == 3
         // When SPL compile is optimized disable Python
@@ -193,6 +179,48 @@ class SplpySetup {
           }
         }
 #endif
+        std::string wk(pyHome); wk.append("/lib/");
+        std::string wk64(pyHome); wk64.append("/lib64/");
+        std::string pyLib = wk + pyLibName;
+        struct stat st;
+        if (stat(pyLib.c_str(), &st) != 0) {
+               pyLib = wk64 + pyLibName;
+        }
+
+#if PY_MAJOR_VERSION == 3
+        /**
+         * With Python 3 we compile to the Stable ABI.
+         * We first look (above) for libpython3.Xm.so with
+         * 3.X matching the Python environment when the SPL
+         * application was compiled (e.g. 3.6).
+         *
+         * If a matching library does not exist then
+         * search for libaries from 3.9 to 3.X (exclusive).
+         */
+        if ((stat(pyLib.c_str(), &st) == -1) && errno == ENOENT)
+        {
+            // Remove Nm.so
+            std::string base = pyLibName.substr(0, pyLibName.size()-4);
+            base = base.substr(0, base.find_last_of('.')+1);
+            // Only release schedules for up to 3.9 as of Aug2019
+            for (int mv = 9; mv > PY_MINOR_VERSION; mv--) {
+                std::ostringstream mvs;
+                mvs << mv;
+                std::string possLibName = base + mvs.str() + "m.so";
+                std::string possLib = wk + possLibName;
+                if (stat(possLib.c_str(), &st) == 0) {
+                    pyLib = possLib;
+                    break;
+                }
+                possLib = wk64 + possLibName;
+                if (stat(possLib.c_str(), &st) == 0) {
+                    pyLib = possLib;
+                    break;
+                }
+            }
+        }
+#endif
+        SPLAPPLOG(L_INFO, TOPOLOGY_LOAD_LIB(pyLib), "python");
 
         void * pydl = dlopen(pyLib.c_str(),
                          RTLD_LAZY | RTLD_GLOBAL | RTLD_DEEPBIND);
