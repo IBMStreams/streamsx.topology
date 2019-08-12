@@ -142,7 +142,7 @@ class SPLGraph(object):
         return self._requested_name(name)
 
 
-    def addOperator(self, kind, function=None, name=None, params=None, sl=None, stateful=None):
+    def addOperator(self, kind, function=None, name=None, params=None, sl=None, stateful=None, nargs=1):
         if(params is None):
             params = {}
 
@@ -154,7 +154,7 @@ class SPLGraph(object):
         else:
             if function is not None:
                 params['toolkitDir'] = streamsx.topology.param.toolkit_dir()
-            op = _SPLInvocation(len(self.operators), kind, function, name, params, self, sl=sl, stateful=stateful)
+            op = _SPLInvocation(len(self.operators), kind, function, name, params, self, sl=sl, stateful=stateful, nargs=nargs)
         self.operators.append(op)
         if not function is None:
             dep_instance = function
@@ -287,20 +287,10 @@ class SPLGraph(object):
             _graph["config"]["checkpoint"]["period"] = self.topology.checkpoint_period * 1000 * 1000 # Seconds to microseconds
             _graph["config"]["checkpoint"]["unit"] = unit
 
-def _inline_modules(fn):
-    if sys.version_info.major == 2:
-        return None
-    modules = []
-    cvs = inspect.getclosurevars(fn)
-    for mk in cvs.globals.keys():
-        if isinstance(cvs.globals[mk], types.ModuleType):
-            modules.append(mk)
-    return modules
-
 
 class _SPLInvocation(object):
 
-    def __init__(self, index, kind, function, name, params, graph, sl=None, stateful=None):
+    def __init__(self, index, kind, function, name, params, graph, sl=None, stateful=None, nargs=None):
         self.index = index
         self.kind = kind
         self.model = None
@@ -324,7 +314,7 @@ class _SPLInvocation(object):
         self.inputPorts = []
         self.outputPorts = []
         self._layout_hints = {}
-        self._addOperatorFunction(self.function, stateful)
+        self._addOperatorFunction(self.function, stateful, nargs)
 
     def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema= CommonSchema.Python,partitioned_keys=None, routing = None):
         if name is None:
@@ -464,7 +454,7 @@ class _SPLInvocation(object):
             self._ex_op._generate(_op)
         return _op
 
-    def _addOperatorFunction(self, function, stateful):
+    def _addOperatorFunction(self, function, stateful, nargs):
         if (function is None):
             return None
         if not hasattr(function, "__call__"):
@@ -476,16 +466,20 @@ class _SPLInvocation(object):
         # Wrap a lambda as a callable class instance
         recurse = None
         if isinstance(function, types.LambdaType) and function.__name__ == "<lambda>" :
-            function = streamsx.topology.runtime._Callable(function,
-                no_context=True,
-                modules=_inline_modules(function))
+            if nargs:
+                function = streamsx.topology.runtime._Callable1(function, no_context=True)
+            else:
+                function = streamsx.topology.runtime._Callable0(function, no_context=True)
             recurse = True
         elif function.__module__ == '__main__':
             # Function/Class defined in main, create a callable wrapping its
             # dill'ed form
-            function = streamsx.topology.runtime._Callable(function,
-                no_context = True if inspect.isroutine(function) else None,
-                modules=_inline_modules(function))
+            if nargs:
+                function = streamsx.topology.runtime._Callable1(function,
+                    no_context = True if inspect.isroutine(function) else None)
+            else:
+                function = streamsx.topology.runtime._Callable0(function,
+                    no_context = True if inspect.isroutine(function) else None)
             recurse = True
          
         if inspect.isroutine(function):

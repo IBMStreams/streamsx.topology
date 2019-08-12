@@ -32,35 +32,36 @@ Usage
 
 .. code-block:: none
 
-    streamsx-streamtool submitjob [<sab-pathname>]
-            [-g,--jobConfig <file-name>]
-            [-P,--P <parameter-name>]
-            [-J,--jobgroup <jobgroup-name>]
-            [--jobname <job-name>]
-            [--outfile <file-name>]
-            [-U,--User <user>] [-h,--help]
+    streamsx-streamtool submitjob [-h] [--jobConfig file-name]
+            [--jobname job-name] [--jobgroup jobgroup-name]
+            [--outfile file-name] [--P parameter-name]
+            [--User user]
+            sab-pathname
 
-    streamsx-streamtool canceljob {[-f,--file <file-name>] | [-j,--jobs <job-id>,...] |
-            [--jobnames <job-names>,...] | [<jobid> ... | <jobid>,...]}
-            [--collectlogs] [--force] [-U,--User <user>] [-h,--help]
+    streamsx-streamtool canceljob [-h] [--force] [--collectlogs]
+            [--jobs job-id | --jobnames job-names | --file file-name]
+            [--User user]
+            [jobid [jobid ...]]
 
-    streamsx-streamtool lsjobs [-j,--jobs <job-id>,...] [--jobnames <job-names>,...]
-            [-u,--users <user>,...] [--xheaders] [-l,--long] [--fmt <format-spec>]
-            [--showtimestamp] [-U,--User <user>] [-h,--help]
+    streamsx-streamtool lsjobs [-h] [--jobs job-id] [--users user]
+            [--jobnames job-names] [--fmt format-spec]
+            [--xheaders] [--long] [--showtimestamp]
+            [--User user]
 
-    streamsx-streamtool lsappconfig [--fmt <format-spec>] [-U,--User <user>]
-            [-h,--help]
+    streamsx-streamtool lsappconfig [-h] [--fmt format-spec] [--User user]
 
-    streamsx-streamtool mkappconfig [--description <description>]
-            [--property <name=value>] [--propfile <property-file>] [-U,--User <user>]
-            [-h,--help] <config-name>
+    streamsx-streamtool mkappconfig [-h] [--property name=value]
+            [--propfile property-file]
+            [--description description] [--User user]
+            config-name
 
-    streamsx-streamtool rmappconfig [--noprompt] [-U,--User <user>] <config-name>
+    streamsx-streamtool rmappconfig [-h] [--noprompt] [--User user] config-name
 
-    streamsx-streamtool chappconfig [--description <description>]
-            [--property <name=value>] [-U,--User <user>] [-h,--help] <config-name>
+    streamsx-streamtool chappconfig [-h] [--property name=value]
+            [--description description] [--User user]
+            config-name
 
-    streamsx-streamtool getappconfig [-U,--User <user>]  <config-name>
+    streamsx-streamtool getappconfig [-h] [--User user] config-name
 
 
 *****************************************
@@ -81,13 +82,11 @@ Jobs remain in the system until they are canceled or the instance is stopped.
 
 .. code-block:: none
 
-    streamsx-streamtool submitjob [<sab-pathname>]
-            [-g,--jobConfig <file-name>]
-            [-P,--P <parameter-name>]
-            [-J,--jobgroup <jobgroup-name>]
-            [--jobname <job-name>]
-            [--outfile <file-name>]
-            [-U,--User <user>] [-h,--help]
+    streamsx-streamtool submitjob [-h] [--jobConfig file-name]
+            [--jobname job-name] [--jobgroup jobgroup-name]
+            [--outfile file-name] [--P parameter-name]
+            [--User user]
+            sab-pathname
 
 Options and arguments
 
@@ -115,7 +114,7 @@ Options and arguments
     -\--jobname:
         Specifies the name of the job.
 
-    outfile:
+    -\--outfile:
         Specifies the path and file name of the output file in which the
         command writes the list of submitted job IDs. The path can be an
         absolute or relative path. If you do not specify a path, the file is
@@ -145,11 +144,15 @@ job to cancel.
 
 .. code-block:: none
 
-    streamsx-streamtool canceljob {[-f,--file <file-name>] | [-j,--jobs <job-id>,...] |
-            [--jobnames <job-names>,...] | [<jobid> ... | <jobid>,...]}
-            [--collectlogs] [--force] [-U,--User <user>] [-h,--help]
+    streamsx-streamtool canceljob [-h] [--force] [--collectlogs]
+            [--jobs job-id | --jobnames job-names | --file file-name]
+            [--User user]
+            [jobid [jobid ...]]
 
 Options and arguments
+
+    jobid
+        Specifies a list of job IDs.
 
     -f,--file:
         Specifies the file that contains a list of job IDs, one per line.
@@ -166,9 +169,7 @@ Options and arguments
 
     -\--force:
         Specifies to quickly cancel a job and remove the job from the Streams
-        data table. If you also specified the --collectlogs option, the log
-        files for the processing elements are collected, then the processing
-        elements are forced to stop.
+        data table.
 
     -U,--User:
         Specifies an IBM Streams user ID that has authority to run the
@@ -201,9 +202,10 @@ the job or its processing elements (PEs).
 
 .. code-block:: none
 
-    streamsx-streamtool lsjobs [-j,--jobs <job-id>,...] [--jobnames <job-names>,...]
-            [-u,--users <user>,...] [--xheaders] [-l,--long] [--fmt <format-spec>]
-            [--showtimestamp] [-U,--User <user>] [-h,--help]
+    streamsx-streamtool lsjobs [-h] [--jobs job-id] [--users user]
+            [--jobnames job-names] [--fmt format-spec]
+            [--xheaders] [--long] [--showtimestamp]
+            [--User user]
 
 Options and arguments
 
@@ -253,8 +255,7 @@ application.
 
 .. code-block:: none
 
-    streamsx-streamtool lsappconfig [--fmt <format-spec>] [-U,--User <user>]
-            [-h,--help]
+    streamsx-streamtool lsappconfig [-h] [--fmt format-spec] [--User user]
 
 Options and arguments
 
@@ -288,11 +289,15 @@ property file using a name=value syntax.
 
 .. code-block:: none
 
-    streamsx-streamtool mkappconfig [--description <description>]
-            [--property <name=value>] [--propfile <property-file>] [-U,--User <user>]
-            [-h,--help] <config-name>
+    streamsx-streamtool mkappconfig [-h] [--property name=value]
+            [--propfile property-file]
+            [--description description] [--User user]
+            config-name
 
 Options and arguments
+
+    config-name:
+        Name of the app config
 
     -\--description:
         Specifies a description for the application configuration. The
@@ -333,9 +338,12 @@ external application.
 
 .. code-block:: none
 
-    streamsx-streamtool rmappconfig [--noprompt] [-U,--User <user>] <config-name>
+    streamsx-streamtool rmappconfig [-h] [--noprompt] [--User user] config-name
 
 Options and arguments
+
+    config-name:
+        Name of the app config
 
     -\--noprompt:
         Specifies to suppress confirmation prompts.
@@ -358,10 +366,14 @@ application. You can change the values of properties or add new properties.
 
 .. code-block:: none
 
-    streamsx-streamtool chappconfig [--description <description>]
-            [--property <name=value>] [-U,--User <user>] [-h,--help] <config-name>
+    streamsx-streamtool chappconfig [-h] [--property name=value]
+            [--description description] [--User user]
+            config-name
 
 Options and arguments
+
+    config-name:
+        Name of the app config
 
     -\--description:
         Specifies a description for the application configuration. The
@@ -393,9 +405,12 @@ for connecting to an external application.
 
 .. code-block:: none
 
-    streamsx-streamtool getappconfig [-U,--User <user>]  <config-name>
+    streamsx-streamtool getappconfig [-h] [--User user] config-name
 
 Options and arguments
+
+    config-name:
+        Name of the app config
 
     -U,--User:
         Specifies an IBM Streams user ID that has authority to run the
