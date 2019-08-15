@@ -13,4 +13,5 @@ def _tk_dir(tk):
     return os.path.join(_spl_dir(), tk)
 
 def _extract_tk(tk):
-    streamsx.scripts.extract.main(['-i', _tk_dir(tk), '--make-toolkit'])
+    if 'STREAMS_INSTALL' in os.environ:
+        streamsx.scripts.extract.main(['-i', _tk_dir(tk), '--make-toolkit'])
