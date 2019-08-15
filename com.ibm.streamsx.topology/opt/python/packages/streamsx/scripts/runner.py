@@ -125,7 +125,7 @@ def _get_topology_app(cmd_args):
         raise ValueError(app)
 
     if 'originator' not in app.cfg:
-        cfg['originator'] = 'streamsxrunner-' + streamsx._streams._version.__version__ + ':python-' + platform.python_version() 
+        app.cfg['originator'] = 'streamsxrunner-' + streamsx._streams._version.__version__ + ':python-' + platform.python_version() 
 
     return app
 
