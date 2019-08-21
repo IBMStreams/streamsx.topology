@@ -1,9 +1,6 @@
 language: python
 python: "3.6"
-addons:
-  apt:
-    packages:
-      - oracle-java9-set-default
+
 install:
     - pip install flake8  # pytest  # add another testing frameworks later
 before_script:
