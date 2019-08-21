@@ -4,6 +4,7 @@ before_install:
   - ( cd /tmp/local-ant ; unzip apache-ant-1.10.6-bin.zip )
   - export PATH=/tmp/local-ant/apache-ant-1.10.6/bin:$PATH
 
+jdk: openjdk8
 language: python
 python: "3.6"
 
