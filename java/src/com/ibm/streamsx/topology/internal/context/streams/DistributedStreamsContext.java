@@ -97,7 +97,7 @@ public class DistributedStreamsContext extends
     
     @Override
     protected final Future<BigInteger> action(AppEntity entity) throws Exception {
-        if (useRemoteBuild(entity, e -> 7))
+        if (useRestApi.get() && useRemoteBuild(entity, e -> 7))
             return fullRemoteAction(entity);
 
         return super.action(entity);
