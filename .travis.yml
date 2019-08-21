@@ -1,5 +1,5 @@
 language: java
-python: "3.6"
+pyenv: 3.6
 install:
     - pip3 install flake8  # pytest  # add another testing frameworks later
 before_script:
