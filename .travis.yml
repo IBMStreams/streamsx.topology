@@ -3,10 +3,8 @@ before_install:
   - ( cd /tmp/local-ant ; wget http://apache.osuosl.org//ant/binaries/apache-ant-1.10.6-bin.zip )
   - ( cd /tmp/local-ant ; unzip apache-ant-1.10.6-bin.zip )
   - export PATH=/tmp/local-ant/apache-ant-1.10.6/bin:$PATH
-  - export JAVA_HOME=/usr/local/lib/jvm/openjdk8
+  - export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
   - export PATH=${JAVA_HOME}/bin:$PATH
-  - find /usr -type d -name '*openjdk*'
-  - echo '***********************'
 
 language: python
 python: "3.6"
