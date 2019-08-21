@@ -1,7 +1,7 @@
-addons:
-  apt:
-    packages:
-      - ant
+before_install:
+  - wget http://apache.osuosl.org//ant/binaries/apache-ant-1.10.6-bin.zip
+  - unzip apache-ant-1.10.6-bin.zip
+  - export PATH=`pwd`/apache-ant-1.10.6/bin:$PATH
 
 language: python
 python: "3.6"
