@@ -138,11 +138,12 @@ def _get_all_local_toolkits(toolkit_paths):
     #  For each path, check if its a SPL toolkit (has info.xml directly inside)
     #  or a directory consisting of toolkits (no info.xml directly inside)
     for x in toolkit_paths:
-        if _is_local_toolkit(x):
-            local_toolkits_paths.append(x)
+        path = os.path.join(x, '') # Adds a trailing '/' if not already present
+        if _is_local_toolkit(path):
+            local_toolkits_paths.append(path)
         else:
             # directory consisting of toolkits, get list and check which are local_toolkits, add them
-            sub_directories = glob(x + "*/")
+            sub_directories = glob(path + "*/") # All values in sub_directories will have a trailing '/'
             for y in sub_directories:
                 if _is_local_toolkit(y):
                     local_toolkits_paths.append(y)
