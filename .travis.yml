@@ -1,7 +1,8 @@
 before_install:
-  - wget http://apache.osuosl.org//ant/binaries/apache-ant-1.10.6-bin.zip
-  - unzip apache-ant-1.10.6-bin.zip
-  - export PATH=`pwd`/apache-ant-1.10.6/bin:$PATH
+  - mkdir /tmp/local-ant
+  - ( cd /tmp/local-ant ; wget http://apache.osuosl.org//ant/binaries/apache-ant-1.10.6-bin.zip )
+  - ( cd /tmp/local-ant ; unzip apache-ant-1.10.6-bin.zip )
+  - export PATH=`/tmp/local-ant/apache-ant-1.10.6/bin:$PATH
 
 language: python
 python: "3.6"
