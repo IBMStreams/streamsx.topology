@@ -1,5 +1,4 @@
-language: python
-python: "3.6"
+language: java
 
 install:
     - pip install flake8  # pytest  # add another testing frameworks later
