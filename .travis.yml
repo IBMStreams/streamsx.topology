@@ -1,7 +1,6 @@
 language: python
+install: ant deps
 python: "3.6"
-jdk:
-    - openjdk8
 install:
     - pip install flake8  # pytest  # add another testing frameworks later
 before_script:
@@ -10,5 +9,4 @@ before_script:
     # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
     - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 script:
-    - jdk_switcher use openjdk8
     - ./test/python/travisci.sh
