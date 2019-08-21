@@ -22,7 +22,7 @@ wd="$WORKSPACE/test/python/nose_runs/service-py${pyv}"
 mkdir -p ${wd}
 # xunit not working with processes
 # --xunit-file ${xuf} --xunit-testsuite-name="pysvc${pyv}"
-nosetests --where=${wd} --config=nose.cfg --with-streamsx-skip-standalone ../../topology ../../spl/tests ../../scripts ../../rest
+nosetests --where=${wd} --config=nose.cfg --with-streamsx-skip-standalone ../../rest
 nrc=$?
 
 # Ensure only test failures just cause an unstable build.
