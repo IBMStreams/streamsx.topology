@@ -1,9 +1,7 @@
 language: python
 python: "3.6"
-addons:
-  apt:
-    packages:
-      - oracle-java8-installer
+jdk:
+    - openjdk8
 install:
     - pip install flake8  # pytest  # add another testing frameworks later
 before_script:
@@ -11,4 +9,6 @@ before_script:
     - flake8 . --count --select=E901,E999,F821,F822,F823 --show-source --statistics
     # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
     - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-script: ./test/python/travisci.sh
+script:
+    - jdk_switcher use openjdk8
+    - ./test/python/travisci.sh
