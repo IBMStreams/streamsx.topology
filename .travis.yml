@@ -1,5 +1,5 @@
 language: python
-install: ant deps
+install: ant
 python: "3.6"
 install:
     - pip install flake8  # pytest  # add another testing frameworks later
