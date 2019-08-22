@@ -1,9 +1,12 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016
+# Copyright IBM Corp. 2016,2019
+
 
 from future.builtins import *
 from past.builtins import basestring
+
+__all__ = ['ExtensionOperator']
 
 import streamsx.topology.topology
 import streamsx.topology.schema

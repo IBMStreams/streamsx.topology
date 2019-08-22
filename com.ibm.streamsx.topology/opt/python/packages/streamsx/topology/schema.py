@@ -83,6 +83,7 @@ _spl_object = object
 from future.builtins import *
 from past.builtins import basestring, unicode
 
+__all__ = ['is_common', 'StreamSchema', 'CommonSchema']
 
 import collections
 import decimal

@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2017
+# Copyright IBM Corp. 2017,2019
 
 """
 SPL toolkit integration.
@@ -19,6 +19,8 @@ must not be added through ``add_toolkit``.
 
 """
 from future.builtins import *
+
+__all__ = ['add_toolkit', 'add_toolkit_dependency']
 
 import os
 

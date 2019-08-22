@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2017
+# Copyright IBM Corp. 2017,2019
 """
 Access to the IBM Streams execution context.
 
@@ -102,6 +102,8 @@ being invoked in a Streams application.
 """
 
 from future.builtins import *
+
+__all__ = ['is_active', 'shutdown', 'domain_id', 'instance_id', 'job_id', 'pe_id', 'is_standalone', 'get_application_directory', 'get_application_configuration', 'channel', 'local_channel', 'max_channels', 'local_max_channels', 'MetricKind', 'CustomMetric']
 
 import enum
 import pickle

@@ -88,6 +88,8 @@ between tuples are within the timeout period the test remains running until ten 
 from __future__ import unicode_literals
 from future.builtins import *
 
+__all__ = ['Tester']
+
 import streamsx.ec as ec
 import streamsx.topology.context as stc
 import csv
@@ -106,6 +108,7 @@ import time
 import json
 import sys
 import warnings
+
 
 import streamsx.topology.tester_runtime as sttrt
 

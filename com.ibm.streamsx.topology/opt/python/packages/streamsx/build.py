@@ -23,6 +23,8 @@ returning an :py:class:`~streamsx.build.BuildService`.
 """
 from future.builtins import *
 
+__all__ = ['BuildService']
+
 import os
 import json
 import logging
