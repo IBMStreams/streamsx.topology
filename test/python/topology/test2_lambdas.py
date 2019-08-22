@@ -134,5 +134,15 @@ class TestLambdas(unittest.TestCase):
       tester.tuple_count(s, 7)
       tester.test(self.test_ctxtype, self.test_config)
 
+  def test_closure_vars(self):
+      topo = Topology("test_closure_vars")
+      s = topo.source([1,2,3,4,5,6,7,8,9])
+      cv_y = 7.0
+      s = s.filter(lambda x : x < cv_y)
+
+      tester = Tester(topo)
+      tester.contents(s, [1,2,3,4,5,6])
+      tester.test(self.test_ctxtype, self.test_config)
+
 if __name__ == '__main__':
     unittest.main()
