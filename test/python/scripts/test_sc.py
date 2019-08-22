@@ -122,11 +122,14 @@ class TestSC(unittest.TestCase):
         if os.path.isfile(jsonFile):
             os.remove(jsonFile)
 
-    def _run_sc(self, spl_app_to_build, local_toolkits_path=None):
+    def _run_sc(self, spl_app_to_build, local_toolkits_path=None, output_directory=None, compile_time_arguments=None):
         args = ["--disable-ssl-verify", "-M", spl_app_to_build]
         if local_toolkits_path:
-            args.insert(3, "-t")
-            args.insert(4, local_toolkits_path)
+            args.extend(['-t', local_toolkits_path])
+        if output_directory:
+            args.extend(['--output-directory', output_directory])
+        if compile_time_arguments:
+            args.extend(compile_time_arguments)
         return sc.main(args=args)
 
     def get_test_toolkit_paths(self):
@@ -280,9 +283,7 @@ class TestSC(unittest.TestCase):
         # 2 versions of tk_4 available, v1.0.0, and v2.6.3 , chosen version should be 2.6.3
         path = (my_path / "apps/test_app_3/").resolve()
         os.chdir(path)
-
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
-
         if not os.path.isfile(self.sab_file):
             self.fail("Sab does not exist")
 
@@ -380,3 +381,20 @@ class TestSC(unittest.TestCase):
 
         if not os.path.isfile(self.sab_file):
             self.fail("Sab does not exist")
+
+    def test_output_directory(self):
+        # Test build of sab w/ specific version of toolkit and output to correct directory
+        # Build test_app_3, requiring toolkit tk_4 w/ version 2.6.3
+        # 2 versions of tk_4 available, v1.0.0, and v2.6.3 , chosen version should be 2.6.3
+        path = (my_path / "apps/test_app_3/").resolve()
+        os.chdir(path)
+        self._run_sc(self.main_composite, self.local_toolkit_paths_string, output_directory='apps/test_app_3/output_temp/')
+        if not os.path.isfile(self.sab_file):
+            self.fail("Sab does not exist")
+
+        # Check sab has correct dependencies
+        required_dependencies = []
+        tk_name = self.random_name_variable + "test_tk_4"
+        req1 = self._LocalToolkit(tk_name, "2.6.3", None)
+        required_dependencies.extend([req1])
+        self.check_sab_correct_dependencies(self.sab_file, required_dependencies)
