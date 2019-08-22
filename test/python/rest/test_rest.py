@@ -32,7 +32,7 @@ def _get_distributed_sc():
     return Instance.of_endpoint(verify=False).rest_client._sc
   
 
-class TestDistributedRestFeatures(unittest.TestCase):
+class _RestFeatures(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """
@@ -41,12 +41,6 @@ class TestDistributedRestFeatures(unittest.TestCase):
         """
         cls.is_v2 = None
         cls.logger = logger
-
-    def setUp(self):
-        Tester.setup_distributed(self)
-        self.sc = _get_distributed_sc()
-        self.sc.session.verify = False
-        self.test_config[ConfigParams.STREAMS_CONNECTION] = self.sc
 
     def test_username_and_password(self):
         self.logger.debug("Beginning test: test_username_and_password.")
@@ -244,8 +238,16 @@ instance_response_keys = [
 from streamsx.rest_primitives import _IAMConstants
 from streamsx.rest import StreamingAnalyticsConnection
 
+@unittest.skipUnless('STREAMS_INSTANCE_ID' in os.environ, 'Distributed setup required')
+class TestDistributedRestFeatures(_RestFeatures):
+    def setUp(self):
+        Tester.setup_distributed(self)
+        self.sc = _get_distributed_sc()
+        self.sc.session.verify = False
+        self.test_config[ConfigParams.STREAMS_CONNECTION] = self.sc
 
-class TestSasRestFeatures(TestDistributedRestFeatures):
+
+class TestSasRestFeatures(_RestFeatures):
 
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)

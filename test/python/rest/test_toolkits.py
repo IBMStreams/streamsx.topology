@@ -13,10 +13,6 @@ from streamsx.rest_primitives import *
 logger = logging.getLogger('streamsx.test.toolkits_test')
 
 def _get_distributed_sc():
-    # 4.3 on-prem
-    if 'STREAMS_DOMAIN_ID' in os.environ:
-        self.skipTest("Build REST API is not available in on-prem")
-
     return BuildService.of_endpoint(verify=False)
 
 # REST API failures raise HTTPError instance, which, when printed, show
@@ -39,6 +35,13 @@ def _handle_http_error(err):
     raise err
 
 # Tests of the toolkit methods provided throught the Build REST API
+@unittest.skipUnless(
+    "CP4D_URL" in os.environ
+    and "STREAMS_INSTANCE_ID" in os.environ
+    and "STREAMS_USERNAME" in os.environ
+    and "STREAMS_PASSWORD" in os.environ,
+    "requires Streams REST API setup",
+)
 class TestDistributedRestToolkitAPI(unittest.TestCase):
     # toolkits used in these tests.
     bingo_0_path = './toolkits/bingo_tk0' # version 1.0.0
@@ -61,6 +64,9 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
         Initialize the logger and get the SWS username, password, and REST URL.
         :return: None
         """
+        if not 'CP4D_URL' in os.environ:
+            return
+
         cls.is_v2 = None
         cls.logger = logger
 
