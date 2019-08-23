@@ -122,11 +122,14 @@ class TestSC(unittest.TestCase):
         if os.path.isfile(jsonFile):
             os.remove(jsonFile)
 
-    def _run_sc(self, spl_app_to_build, local_toolkits_path=None):
+    def _run_sc(self, spl_app_to_build, local_toolkits_path=None, output_directory=None, compile_time_arguments=None):
         args = ["--disable-ssl-verify", "-M", spl_app_to_build]
         if local_toolkits_path:
-            args.insert(3, "-t")
-            args.insert(4, local_toolkits_path)
+            args.extend(['-t', local_toolkits_path])
+        if output_directory:
+            args.extend(['--output-directory', output_directory])
+        if compile_time_arguments:
+            args.extend(compile_time_arguments)
         return sc.main(args=args)
 
     def get_test_toolkit_paths(self):
@@ -280,9 +283,7 @@ class TestSC(unittest.TestCase):
         # 2 versions of tk_4 available, v1.0.0, and v2.6.3 , chosen version should be 2.6.3
         path = (my_path / "apps/test_app_3/").resolve()
         os.chdir(path)
-
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
-
         if not os.path.isfile(self.sab_file):
             self.fail("Sab does not exist")
 
@@ -380,3 +381,39 @@ class TestSC(unittest.TestCase):
 
         if not os.path.isfile(self.sab_file):
             self.fail("Sab does not exist")
+
+    def test_compile_time_args(self):
+        # Build test_app_7, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_3 w/ version [1.0.0,4.0.0)
+        # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
+        # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 2.0.0
+        # test_app_7 fails w/o compile time args
+        path = (my_path / "apps/test_app_7/").resolve()
+        os.chdir(path)
+
+        self._run_sc(self.main_composite, self.local_toolkit_paths_string)
+
+        # Check sab doesn't exist
+        if os.path.isfile(self.sab_file):
+            self.fail("Sab should not exist")
+
+    def test_compile_time_args_2(self):
+        # Build test_app_7, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_3 w/ version [1.0.0,4.0.0)
+        # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
+        # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 2.0.0
+        # test_app_7 succesfully builds given comptile time args
+        path = (my_path / "apps/test_app_7/").resolve()
+        os.chdir(path)
+
+        self._run_sc(self.main_composite, self.local_toolkit_paths_string, compile_time_arguments=['hello=a,b,c', 'foo=bar'])
+
+        if not os.path.isfile(self.sab_file):
+            self.fail("Sab does not exist")
+
+        # Check sab has correct dependencies
+        required_dependencies = []
+        tk1_name = self.random_name_variable + "test_tk_1"
+        tk3_name = self.random_name_variable + "test_tk_3"
+        req1 = self._LocalToolkit(tk1_name, "3.0.0", None)
+        req2 = self._LocalToolkit(tk3_name, "2.0.0", None)
+        required_dependencies.extend([req1, req2])
+        self.check_sab_correct_dependencies(self.sab_file, required_dependencies)
