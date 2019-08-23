@@ -1,0 +1,28 @@
+namespace samplemain;
+
+use test_tk_1.test1::f1 ;
+use test_tk_3.test1::f3 ;
+
+
+public composite main {
+    graph
+
+    stream<int32 a> A = Beacon() { output A: a = f1() + f3();}
+
+    stream <rstring message> Hi = Beacon() {
+			param
+				iterations: 5u;
+
+			output
+				Hi: message = getCompileTimeValue((rstring) "foo");
+		}
+
+    stream <list<rstring> message2> bye = Beacon() {
+			param
+				iterations: 5u;
+
+			output
+				bye: message2 = getCompileTimeListValue((rstring) "hello");
+		}
+
+}

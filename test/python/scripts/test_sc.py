@@ -382,19 +382,38 @@ class TestSC(unittest.TestCase):
         if not os.path.isfile(self.sab_file):
             self.fail("Sab does not exist")
 
-    def test_output_directory(self):
-        # Test build of sab w/ specific version of toolkit and output to correct directory
-        # Build test_app_3, requiring toolkit tk_4 w/ version 2.6.3
-        # 2 versions of tk_4 available, v1.0.0, and v2.6.3 , chosen version should be 2.6.3
-        path = (my_path / "apps/test_app_3/").resolve()
+    def test_compile_time_args(self):
+        # Build test_app_7, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_3 w/ version [1.0.0,4.0.0)
+        # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
+        # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 2.0.0
+        # test_app_7 fails w/o compile time args
+        path = (my_path / "apps/test_app_7/").resolve()
         os.chdir(path)
-        self._run_sc(self.main_composite, self.local_toolkit_paths_string, output_directory='apps/test_app_3/output_temp/')
+
+        self._run_sc(self.main_composite, self.local_toolkit_paths_string)
+
+        # Check sab doesn't exist
+        if os.path.isfile(self.sab_file):
+            self.fail("Sab should not exist")
+
+    def test_compile_time_args_2(self):
+        # Build test_app_7, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_3 w/ version [1.0.0,4.0.0)
+        # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
+        # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 2.0.0
+        # test_app_7 succesfully builds given comptile time args
+        path = (my_path / "apps/test_app_7/").resolve()
+        os.chdir(path)
+
+        self._run_sc(self.main_composite, self.local_toolkit_paths_string, compile_time_arguments=['hello=a,b,c', 'foo=bar'])
+
         if not os.path.isfile(self.sab_file):
             self.fail("Sab does not exist")
 
         # Check sab has correct dependencies
         required_dependencies = []
-        tk_name = self.random_name_variable + "test_tk_4"
-        req1 = self._LocalToolkit(tk_name, "2.6.3", None)
-        required_dependencies.extend([req1])
+        tk1_name = self.random_name_variable + "test_tk_1"
+        tk3_name = self.random_name_variable + "test_tk_3"
+        req1 = self._LocalToolkit(tk1_name, "3.0.0", None)
+        req2 = self._LocalToolkit(tk3_name, "2.0.0", None)
+        required_dependencies.extend([req1, req2])
         self.check_sab_correct_dependencies(self.sab_file, required_dependencies)
