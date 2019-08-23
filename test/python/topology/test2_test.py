@@ -5,6 +5,7 @@ import unittest
 import itertools
 import datetime
 import time
+import random
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester

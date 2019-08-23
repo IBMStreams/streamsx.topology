@@ -1,6 +1,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
 import unittest
+import os
 import sys
 import itertools
 

@@ -8,6 +8,7 @@ import itertools
 import logging
 import tempfile
 import codecs
+import os
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester

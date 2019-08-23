@@ -4,6 +4,7 @@ import unittest
 import sys
 import itertools
 import time
+import random
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester

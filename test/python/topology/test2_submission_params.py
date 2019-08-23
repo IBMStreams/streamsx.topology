@@ -8,6 +8,7 @@ import itertools
 from enum import IntEnum
 import datetime
 import decimal
+import random
 
 from streamsx.topology.schema import StreamSchema
 from streamsx.topology.topology import *
