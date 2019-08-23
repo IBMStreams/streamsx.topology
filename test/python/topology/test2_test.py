@@ -195,7 +195,7 @@ class TestDistributedTester(TestTester):
         Tester.setup_distributed(self)
 
 
-class TestCloudTester(TestTester):
+class TestSasTester(TestTester):
     def setUp(self):
         Tester.setup_streaming_analytics(self)
 
