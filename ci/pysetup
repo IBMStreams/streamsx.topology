@@ -3,4 +3,4 @@ export PATH=$PYTHONHOME/bin:$PATH
 export PYTHONPATH=${WORKSPACE}/com.ibm.streamsx.topology/opt/python/packages
 ${PYTHONHOME}/bin/python -V
 ${PYTHONHOME}/bin/python -m pip install -r ${WORKSPACE}/requirements.txt
-${PYTHONHOME}/bin/python -m pip install nose coverage
+${PYTHONHOME}/bin/python -m pip install streamsx.testing nose coverage
