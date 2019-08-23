@@ -253,6 +253,7 @@ def _submit_build(cmd_args, topo):
      submit('BUNDLE', topo, cfg)
 
 def _sc_options(cmd_args, cfg):
+    args_dict = vars(cmd_args)
     args = []
     if cmd_args.prefer_facade_tuples:
         args.append(_FACADE[0])
@@ -261,7 +262,7 @@ def _sc_options(cmd_args, cfg):
         args.append('--ld-flags=' + str(cmd_args.ld_flags))
     if cmd_args.cxx_flags:
         args.append('--cxx-flags=' + str(cmd_args.cxx_flags))
-    if cmd_args.c___std:
+    if args_dict['--c++std']:
         args.append('--c++std=' + str(cmd_args.c___std))
     if cmd_args.data_directory:
         args.append('--data-directory=' + str(cmd_args.data_directory))
@@ -312,10 +313,10 @@ def _parse_args(args):
     cmd_parser.add_argument('--no-optimized-code-generation', action='store_true', help='Generate non-optimized code with more runtime error checking. Do not use with the --optimized-code-generation option.')
     cmd_parser.add_argument(*_FACADE, action='store_true', help='Generate the facade tuples when it is possible.')
 
-    cmd_parser.add_argument('compile_time_args', help='arguments that are passed in at compile time.', nargs='*', metavar='compile-time-args')
+    cmd_parser.add_argument('compile-time-args', help='arguments that are passed in at compile time.', nargs='*', metavar='compile-time-args')
     cmd_parser.add_argument('--ld-flags', '-w', help='Pass the specified flags to ld while linking occurs.')
     cmd_parser.add_argument('--cxx-flags', '-x', help='Pass the specified flags to the C++ compiler during the build.')
-    cmd_parser.add_argument('--c___std', metavar='--c++std', help='Specify the language level for the underlying C++ compiles.')
+    cmd_parser.add_argument('--c++std', help='Specify the language level for the underlying C++ compiles.')
     cmd_parser.add_argument('--data-directory', help='Specifies the location of the data directory to use.')
     cmd_parser.add_argument('--output-directory', help='Specifies a directory where the application artifacts are placed.')
 
