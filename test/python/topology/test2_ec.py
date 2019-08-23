@@ -220,6 +220,6 @@ class TestDistributedEc(TestEc):
   def setUp(self):
       Tester.setup_distributed(self)
 
-class TestBluemixEc(TestEc):
+class TestSasEc(TestEc):
   def setUp(self):
       Tester.setup_streaming_analytics(self, force_remote_build=True)
