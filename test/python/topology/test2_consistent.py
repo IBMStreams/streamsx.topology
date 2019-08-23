@@ -8,6 +8,7 @@ import streamsx.ec as ec
 
 import itertools
 import unittest
+import time
 from datetime import timedelta
 
 # Tests for consistent region.

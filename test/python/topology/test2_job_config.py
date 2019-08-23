@@ -6,9 +6,10 @@ import os
 import sys
 import itertools
 import logging
+import json
 
 from streamsx.topology.topology import *
-from streamsx.topology.context import JobConfig, ConfigParams
+from streamsx.topology.context import JobConfig, ConfigParams, submit
 from streamsx.topology.tester import Tester
 from streamsx import rest
 from streamsx.rest_primitives import _IAMConstants
@@ -266,7 +267,7 @@ class TestOverlays(unittest.TestCase):
         cfg = {}
         jc = JobConfig(job_name='ABCD', job_group='XXG', preload=True)
         jc.add(cfg)
-        bb = streamsx.topology.context.submit('BUNDLE', topo, cfg)
+        bb = submit('BUNDLE', topo, cfg)
         self.assertIn('bundlePath', bb)
         self.assertIn('jobConfigPath', bb)
 
