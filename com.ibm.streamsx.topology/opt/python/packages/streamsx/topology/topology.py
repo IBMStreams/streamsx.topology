@@ -196,7 +196,6 @@ Module contents
 ***************
 
 """
-
 from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
@@ -207,6 +206,8 @@ try:
     standard_library.install_aliases()
 except (ImportError,NameError):
     pass
+
+__all__ = [ 'Routing', 'SubscribeConnection', 'Topology', 'Stream', 'View', 'PendingStream', 'Window', 'Sink' ]
 
 import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
@@ -238,7 +239,6 @@ import warnings
 from enum import Enum
 
 logger = logging.getLogger('streamsx.topology')
-
 
 def _source_info():
     """

@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016,2017
+# Copyright IBM Corp. 2016,2019
 """
 SPL type definitions.
 
@@ -14,6 +14,8 @@ must use the SPL type required by the operator.
 
 """
 from future.builtins import *
+
+__all__ = ['Timestamp', 'int8', 'int16', 'int32', 'int64', 'uint8', 'uint16', 'uint32', 'uint64', 'float32', 'float64', 'rstring', 'null']
 
 import datetime
 import time

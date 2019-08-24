@@ -47,6 +47,8 @@ If the callable as ``__enter__`` and ``__exit__`` context manager methods then `
 from enum import Enum
 from datetime import timedelta
 
+__all__ = ['ConsistentRegionConfig']
+
 import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
 

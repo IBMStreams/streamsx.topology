@@ -433,8 +433,12 @@ def _inline_modules(fn):
     modules = {}
     cvs = inspect.getclosurevars(fn)
     for mk in cvs.globals.keys():
-        if isinstance(cvs.globals[mk], types.ModuleType):
-            modules[mk] = cvs.globals[mk].__name__
+        gv = cvs.globals[mk]
+        if isinstance(gv, types.ModuleType):
+            modules[mk] = gv.__name__
+        elif inspect.isclass(gv) and hasattr(gv, '__module__'):
+            modules[mk] = gv.__name__, gv.__module__
+          
     return modules
 
 # Wraps an callable instance 
@@ -484,7 +488,11 @@ class _ModulesCallable(streamsx._streams._runtime._WrapOpLogic):
                 gbls = self._callable.__iter__.__globals__
             for vn,mn in self._modules.items():
                 if vn not in gbls:
-                    gbls[vn] = importlib.import_module(mn)
+                    if isinstance(mn, tuple):
+                        cm = importlib.import_module(mn[1])
+                        gbls[vn] = getattr(cm, mn[0])
+                    else:
+                        gbls[vn] = importlib.import_module(mn)
 
 class _Callable0(_ModulesCallable):
     def __call__(self):

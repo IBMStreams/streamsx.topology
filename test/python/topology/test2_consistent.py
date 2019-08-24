@@ -8,6 +8,7 @@ import streamsx.ec as ec
 
 import itertools
 import unittest
+import time
 from datetime import timedelta
 
 # Tests for consistent region.
@@ -280,7 +281,7 @@ class TestWithoutConsistentRegion(unittest.TestCase):
         s = s.map(StatefulHalfPlusOne())
 
         sc = s.last(10).trigger(3).aggregate(StatefulAverage())
-        st = s.last(17).trigger(datetime.timedelta(seconds=2)).aggregate(StatefulAverage())
+        st = s.last(17).trigger(timedelta(seconds=2)).aggregate(StatefulAverage())
 
         # non-stateful aggregation functions
         nsc = s.last(19).trigger(13).aggregate(lambda tuples : sum(tuples))

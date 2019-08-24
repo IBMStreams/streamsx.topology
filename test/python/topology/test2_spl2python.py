@@ -134,6 +134,6 @@ class TestDistributedSPL(TestSPL2Python):
     def setUp(self):
         Tester.setup_distributed(self)
 
-class TestBluemixSPL(TestSPL2Python):
+class TestSasSPL(TestSPL2Python):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)

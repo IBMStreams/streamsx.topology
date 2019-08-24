@@ -238,7 +238,7 @@ class TestDistributedUDP(TestUDP):
   def setUp(self):
       Tester.setup_distributed(self)
 
-class TestBluemixUDP(TestUDP):
+class TestSasUDP(TestUDP):
   def setUp(self):
       Tester.setup_streaming_analytics(self, force_remote_build=True)
 

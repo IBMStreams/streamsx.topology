@@ -1,6 +1,7 @@
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 import streamsx.ec as ec
+import time
 
 import unittest
 from datetime import timedelta

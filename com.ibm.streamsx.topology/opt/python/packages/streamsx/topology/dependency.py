@@ -73,6 +73,10 @@ class _DependencyResolver(object):
         # If the module in which the class/function is defined is __main__, don't add it. Just add its dependencies.
         if mn == "__main__":
             self._processed_modules.add(module)
+            # Main classes & functions are handled through
+            # saving the explicit modules used rather than
+            # all items __main__ refers to.
+            return
 
         # add the module as a dependency
         elif not self._add_dependency(module, mn):
