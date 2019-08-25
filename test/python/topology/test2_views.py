@@ -2,6 +2,7 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
 import unittest
+import random
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
