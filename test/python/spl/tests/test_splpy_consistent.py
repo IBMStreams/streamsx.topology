@@ -72,7 +72,7 @@ class TestDistributedConsistentRegion(unittest.TestCase):
     @unittest.expectedFailure
     def test_primitive_foreach(self):
         iterations=3000
-        topo = Topology()
+        topo = Topology("test_primitive_foreach_EXPECT_SC_FAIL")
 
         topo.checkpoint_period = timedelta(seconds=1)
         streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))

@@ -5,6 +5,7 @@ import sys
 import itertools
 import os
 import shutil
+import json
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester

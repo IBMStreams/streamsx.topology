@@ -2,6 +2,7 @@
 # Copyright IBM Corp. 2016
 import unittest
 import sys
+import os
 
 import test_functions
 from test_utilities import standalone

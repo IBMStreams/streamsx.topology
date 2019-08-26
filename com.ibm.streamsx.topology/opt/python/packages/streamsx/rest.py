@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016,2017
+# Copyright IBM Corp. 2016,2019
 
 """
 REST API bindings for IBM® Streams & Streaming Analytics service.
@@ -52,6 +52,8 @@ In addition `StreamingAnalyticsConnection` extends from :py:class:`StreamsConnec
 .. seealso:: :ref:`sas-main`
 """
 from future.builtins import *
+
+__all__ = ['StreamsConnection', 'StreamingAnalyticsConnection']
 
 import os
 import json

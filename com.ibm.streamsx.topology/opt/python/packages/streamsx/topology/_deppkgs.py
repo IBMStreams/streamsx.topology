@@ -12,4 +12,5 @@ _DEP_PACKAGES = [
 # Notebook packages to be excluded when running in ICP4D
 _ICP4D_NB_PACKAGES = [
      'pyspark',
+     'icpd_core',
  ]

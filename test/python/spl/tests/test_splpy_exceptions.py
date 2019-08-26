@@ -8,6 +8,7 @@ import itertools
 import tempfile
 import os
 import uuid
+import time
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
@@ -306,16 +307,19 @@ class TestSuppressMetric(TestBaseExceptions):
     def check_suppress_metric(self):
         job = self.tester.submission_result.job
         hms = []
-        for op in job.get_operators():
-            seen_suppress_metric = False
-            for m in op.get_metrics():
-                if m.name == 'nExceptionsSuppressed':
-                    seen_suppress_metric = True
-            if 'NOMETRIC_' in op.name:
-                self.assertFalse(seen_suppress_metric, msg=op.name)
-            elif 'HASMETRIC_' in op.name:
-                hms.append(op)
-                self.assertTrue(seen_suppress_metric, msg=op.name)
+        # give the metrics time to appear
+        for i in range(5):
+            for op in job.get_operators():
+                seen_suppress_metric = False
+                for m in op.get_metrics():
+                    if m.name == 'nExceptionsSuppressed':
+                        seen_suppress_metric = True
+                if 'NOMETRIC_' in op.name:
+                    self.assertFalse(seen_suppress_metric, msg=op.name)
+                elif i == 4 and 'HASMETRIC_' in op.name:
+                    hms.append(op)
+                    self.assertTrue(seen_suppress_metric, msg=op.name)
+            time.sleep(2)
 
         self.assertEqual(3, len(hms))
         for _ in range(10):

@@ -430,11 +430,17 @@ def _get_namedtuple_cls(schema, name):
 def _inline_modules(fn):
     if sys.version_info.major == 2:
         return None
-    modules = []
+    modules = {}
     cvs = inspect.getclosurevars(fn)
     for mk in cvs.globals.keys():
-        if isinstance(cvs.globals[mk], types.ModuleType):
-            modules.append(mk)
+        gv = cvs.globals[mk]
+        if isinstance(gv, types.ModuleType):
+            modules[mk] = gv.__name__
+        elif hasattr(gv, '__module__') and gv.__module__ != '__main__':
+            modules[mk] = gv.__name__, gv.__module__
+        else:
+            raise TypeError("Unsupported global closure {} type {} in {}".format(mk, gv, fn))
+          
     return modules
 
 # Wraps an callable instance 
@@ -458,14 +464,14 @@ class _ModulesCallable(streamsx._streams._runtime._WrapOpLogic):
             self._modules = _inline_modules(callable_.__iter__)
             # Handle common case the iterable is also the iterator.
             if hasattr(callable_, '__next__'):
-                self._modules.extend(_inline_modules(callable_.__next__))
+                self._modules.update(_inline_modules(callable_.__next__))
             check_cmm = True
         else:
             self._modules = None
 
         if check_cmm and self._streamsx_ec_context:
-            self._modules.extend(_inline_modules(callable_.__enter__))
-            self._modules.extend(_inline_modules(callable_.__exit__))
+            self._modules.update(_inline_modules(callable_.__enter__))
+            self._modules.update(_inline_modules(callable_.__exit__))
 
     def __getstate__(self):
         return self.__dict__
@@ -482,9 +488,13 @@ class _ModulesCallable(streamsx._streams._runtime._WrapOpLogic):
                 gbls = self._callable.__call__.__globals__
             else:
                 gbls = self._callable.__iter__.__globals__
-            for mn in self._modules:
-                if mn not in gbls:
-                    gbls[mn] = importlib.import_module(mn)
+            for vn,mn in self._modules.items():
+                if vn not in gbls:
+                    if isinstance(mn, tuple):
+                        cm = importlib.import_module(mn[1])
+                        gbls[vn] = getattr(cm, mn[0])
+                    else:
+                        gbls[vn] = importlib.import_module(mn)
 
 class _Callable0(_ModulesCallable):
     def __call__(self):

@@ -119,7 +119,7 @@ class TestPending(unittest.TestCase):
         tester.contents(result, expected)
         tester.test(self.test_ctxtype, self.test_config)
 
-class TestPendingCloud(TestPending):
+class TestSasPending(TestPending):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
 

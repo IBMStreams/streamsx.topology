@@ -3,7 +3,12 @@
 import unittest
 import sys
 import decimal
+import random
+import time
 from streamsx.topology.tester import Tester
+from streamsx.ec import is_active as ia1234
+
+from datetime import datetime
 
 import test_functions
 from test_utilities import standalone
@@ -18,6 +23,12 @@ from streamsx.topology.topology import *
 from streamsx.topology import schema
 import streamsx.topology.context
 
+def c1(tuple_):
+    return tuple_
+
+def c2(tuple_):
+    return c1(tuple_)
+  
 
 class Gen(object):
     def __init__(self, n):
@@ -26,6 +37,7 @@ class Gen(object):
     def __iter__(self):
         self.c = 0
         self.start = time.time()
+        self.dt = datetime.now()
         return self
 
     def __next__(self):
@@ -38,12 +50,14 @@ class Gen(object):
 
 class M(object):
     def __call__(self, tuple_):
+        tuple_['dt'] = datetime.now()
         return decimal.Decimal(tuple_['value'])
 
 def _rand_msg():
     import streamsx.ec
     for _ in range(2000):
         streamsx.ec.is_active()
+        datetime.now()
         yield random.randint(0,3)
         time.sleep(0.001)
 
@@ -91,11 +105,11 @@ class TestLambdas(unittest.TestCase):
       s3.for_each(lambda x : None, name='S3E')
 
       srm1 = sr.map(lambda x : tt, name='SMR1')
-      srm2 = sr.map(lambda x : streamsx.ec.is_active(), name='SMR2')
+      srm2 = sr.map(lambda x : streamsx.ec.is_active() and ia1234, name='SMR2')
       srm3 = sr.map(lambda x : random.randint(0, 100), name='SMR3')
 
       srf1 = srm1.filter(lambda x : tt, name='SRF1')
-      srf2 = srm2.filter(lambda x : streamsx.ec.is_active(), name='SRF2')
+      srf2 = srm2.filter(lambda x : streamsx.ec.is_active() and datetime.now(), name='SRF2')
       srf3 = srm3.filter(lambda x : random.randint(0,2), name='SRF3')
 
       tester = Tester(topo)
@@ -127,6 +141,23 @@ class TestLambdas(unittest.TestCase):
       tester = Tester(topo)
       tester.tuple_count(s, 7)
       tester.test(self.test_ctxtype, self.test_config)
+
+  def test_closure_vars(self):
+      topo = Topology("test_closure_vars")
+      s = topo.source([1,2,3,4,5,6,7,8,9])
+      cv_y = 7.0
+      s = s.filter(lambda x : x < cv_y)
+
+      tester = Tester(topo)
+      tester.contents(s, [1,2,3,4,5,6])
+      tester.test(self.test_ctxtype, self.test_config)
+
+  @unittest.skipUnless(__name__ == '__main__', "Needs to be run as a script")
+  def test_bad_closure(self):
+      topo = Topology()
+      s = topo.source([])
+      with self.assertRaises(TypeError):
+          s.map(c2)
 
 if __name__ == '__main__':
     unittest.main()

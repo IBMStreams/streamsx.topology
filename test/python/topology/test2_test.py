@@ -5,6 +5,7 @@ import unittest
 import itertools
 import datetime
 import time
+import random
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
@@ -194,7 +195,7 @@ class TestDistributedTester(TestTester):
         Tester.setup_distributed(self)
 
 
-class TestCloudTester(TestTester):
+class TestSasTester(TestTester):
     def setUp(self):
         Tester.setup_streaming_analytics(self)
 

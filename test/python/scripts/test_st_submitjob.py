@@ -42,7 +42,7 @@ class TestSubmitJob(unittest.TestCase):
             cfg = {}
             cfg[ConfigParams.SSL_VERIFY] = False
             src = submit("BUNDLE", topo, cfg)
-            sab_path = src["build"]["artifacts"][0]["location"]
+            sab_path = src["bundlePath"]
             args.insert(2, sab_path)
             self.files_to_remove.append(sab_path)
         rc, val = streamtool.run_cmd(args=args)
@@ -144,7 +144,7 @@ class TestSubmitJob(unittest.TestCase):
         cfg = {}
         cfg[ConfigParams.SSL_VERIFY] = False
         src = submit("BUNDLE", topo, cfg)
-        sab_path = src["build"]["artifacts"][0]["location"]
+        sab_path = src["bundlePath"]
 
         # Submit the job
         args = ["--jobname", str(self.name), "-P", "key1=val1", "-P", "key2=val2"]
@@ -184,7 +184,7 @@ class TestSubmitJob(unittest.TestCase):
         cfg = {}
         cfg[ConfigParams.SSL_VERIFY] = False
         src = submit("BUNDLE", topo, cfg)
-        sab_path = src["build"]["artifacts"][0]["location"]
+        sab_path = src["bundlePath"]
 
         # Submit the job
         args = ["--jobname", str(self.name)]

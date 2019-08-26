@@ -143,7 +143,7 @@ class TestDistributedSubmitMethodsNew(unittest.TestCase):
 
 @unittest.skipUnless('VCAP_SERVICES' in os.environ, "requires VCAP_SERVICES")
 @unittest.skipUnless('STREAMING_ANALYTICS_SERVICE_NAME' in os.environ, "requires STREAMING_ANALYTICS_SERVICE_NAME")
-class TestBluemixSubmitMethodsNew(unittest.TestCase):
+class TestSasSubmitMethodsNew(unittest.TestCase):
 
     def setUp(self):
         self.topo = Topology('test_BluemixSubmit')
@@ -269,7 +269,7 @@ class TestDistributedTopologyMethodsNew(TestTopologyMethodsNew):
         Tester.setup_distributed(self)
         self.result = {}
 
-class TestBluemixTopologyMethodsNew(TestTopologyMethodsNew):
+class TestSasTopologyMethodsNew(TestTopologyMethodsNew):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
         self.result = {}
