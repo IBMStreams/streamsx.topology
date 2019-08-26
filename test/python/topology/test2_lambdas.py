@@ -6,6 +6,7 @@ import decimal
 import random
 import time
 from streamsx.topology.tester import Tester
+from streamsx.ec import is_active as ia1234
 
 from datetime import datetime
 
@@ -21,6 +22,13 @@ except ImportError:
 from streamsx.topology.topology import *
 from streamsx.topology import schema
 import streamsx.topology.context
+
+def c1(tuple_):
+    return tuple_
+
+def c2(tuple_):
+    return c1(tuple_)
+  
 
 class Gen(object):
     def __init__(self, n):
@@ -97,7 +105,7 @@ class TestLambdas(unittest.TestCase):
       s3.for_each(lambda x : None, name='S3E')
 
       srm1 = sr.map(lambda x : tt, name='SMR1')
-      srm2 = sr.map(lambda x : streamsx.ec.is_active(), name='SMR2')
+      srm2 = sr.map(lambda x : streamsx.ec.is_active() and ia1234, name='SMR2')
       srm3 = sr.map(lambda x : random.randint(0, 100), name='SMR3')
 
       srf1 = srm1.filter(lambda x : tt, name='SRF1')
@@ -143,6 +151,13 @@ class TestLambdas(unittest.TestCase):
       tester = Tester(topo)
       tester.contents(s, [1,2,3,4,5,6])
       tester.test(self.test_ctxtype, self.test_config)
+
+  @unittest.skipUnless(__name__ == '__main__', "Needs to be run as a script")
+  def test_bad_closure(self):
+      topo = Topology()
+      s = topo.source([])
+      with self.assertRaises(TypeError):
+          s.map(c2)
 
 if __name__ == '__main__':
     unittest.main()

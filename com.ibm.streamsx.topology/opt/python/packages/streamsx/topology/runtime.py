@@ -436,8 +436,10 @@ def _inline_modules(fn):
         gv = cvs.globals[mk]
         if isinstance(gv, types.ModuleType):
             modules[mk] = gv.__name__
-        elif inspect.isclass(gv) and hasattr(gv, '__module__'):
+        elif hasattr(gv, '__module__') and gv.__module__ != '__main__':
             modules[mk] = gv.__name__, gv.__module__
+        else:
+            raise TypeError("Unsupported global closure {} type {} in {}".format(mk, gv, fn))
           
     return modules
 
