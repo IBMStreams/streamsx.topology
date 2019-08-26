@@ -262,7 +262,7 @@ def _sc_options(cmd_args, cfg):
     if cmd_args.cxx_flags:
         args.append('--cxx-flags=' + str(cmd_args.cxx_flags))
     if cmd_args.cppstd:
-        args.append('--c++std=' + str(cmd_args.c___std))
+        args.append('--c++std=' + str(cmd_args.cppstd))
     if cmd_args.data_directory:
         args.append('--data-directory=' + str(cmd_args.data_directory))
     if cmd_args.output_directory:
