@@ -30,7 +30,7 @@ def main(args=None):
     # Get dependencies for app, if any at all
     dependencies = _parse_dependencies()
     # if dependencies and if -t arg, find & add local toolkits
-    spl_path = cmds_args.spl_path
+    spl_path = cmd_args.spl_path
     if spl_path is None:
         spl_path = os.environ.get('STREAMS_SPLPATH')
     if dependencies and spl_path:
