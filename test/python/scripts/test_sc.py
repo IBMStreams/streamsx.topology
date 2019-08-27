@@ -5,6 +5,7 @@ import unittest.mock
 import sys
 import os
 import time
+import shutil
 import requests
 import random
 from glob import glob
@@ -103,6 +104,7 @@ class TestSC(unittest.TestCase):
 
             # Name of SPL app to build
             self.main_composite = "samplemain::main"
+            self.output_directory = 'output'
             self.sab_file = "samplemain.main.sab"
 
             # Operations such as adding or deleting toolkits sometimes are not
@@ -116,11 +118,26 @@ class TestSC(unittest.TestCase):
         self.delete_test_toolkits()
 
         # Delete the .sab and the _jobConfig.json file, if it exists, after a test finishes
-        if os.path.isfile(self.sab_file):
-            os.remove(self.sab_file)
-        jsonFile = self.sab_file.replace(".sab", "_jobConfig.json")
+        sab_file = self._sab_path()
+        if os.path.isfile(sab_file):
+            os.remove(sab_file)
+        jsonFile = sab_file.replace(".sab", "_jobConfig.json")
         if os.path.isfile(jsonFile):
             os.remove(jsonFile)
+        if os.path.isdir(self.output_directory):
+            # Should be empty at this point
+            shutil.rmtree(self.output_directory)
+
+    def _sab_path(self):
+        return os.path.join(self.output_directory, self.sab_file)
+
+    def _check_sab(self):
+        if not os.path.isfile(self._sab_path()):
+            self.fail("Sab does not exist")
+
+    def _check_no_sab(self):
+        if os.path.isfile(self._sab_path()):
+            self.fail("Sab should not exist")
 
     def _run_sc(self, spl_app_to_build, local_toolkits_path=None, output_directory=None, compile_time_arguments=None):
         args = ["--disable-ssl-verify", "-M", spl_app_to_build]
@@ -128,6 +145,7 @@ class TestSC(unittest.TestCase):
             args.extend(['-t', local_toolkits_path])
         if output_directory:
             args.extend(['--output-directory', output_directory])
+            self.output_directory = output_directory
         if compile_time_arguments:
             args.extend(compile_time_arguments)
         return sc.main(args=args)
@@ -284,15 +302,14 @@ class TestSC(unittest.TestCase):
         path = (my_path / "apps/test_app_3/").resolve()
         os.chdir(path)
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
-        if not os.path.isfile(self.sab_file):
-            self.fail("Sab does not exist")
+        self._check_sab()
 
         # Check sab has correct dependencies
         required_dependencies = []
         tk_name = self.random_name_variable + "test_tk_4"
         req1 = self._LocalToolkit(tk_name, "2.6.3", None)
         required_dependencies.extend([req1])
-        self.check_sab_correct_dependencies(self.sab_file, required_dependencies)
+        self.check_sab_correct_dependencies(self._sab_path(), required_dependencies)
 
     def test_inclusive_tk_version_cutoff(self):
         # Test inclusive aspect on both sides of toolkit version
@@ -304,8 +321,7 @@ class TestSC(unittest.TestCase):
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
-        if not os.path.isfile(self.sab_file):
-            self.fail("Sab does not exist")
+        self._check_sab()
 
         # Check sab has correct dependencies
         required_dependencies = []
@@ -314,7 +330,7 @@ class TestSC(unittest.TestCase):
         req1 = self._LocalToolkit(tk1_name, "1.0.0", None)
         req1 = self._LocalToolkit(tk3_name, "4.0.0", None)
         required_dependencies.extend([req1])
-        self.check_sab_correct_dependencies(self.sab_file, required_dependencies)
+        self.check_sab_correct_dependencies(self._sab_path(), required_dependencies)
 
     def test_exclusive_tk_version_cutoff(self):
         # Test exclusive aspect on both sides of toolkit version
@@ -326,8 +342,7 @@ class TestSC(unittest.TestCase):
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
-        if not os.path.isfile(self.sab_file):
-            self.fail("Sab does not exist")
+        self._check_sab()
 
         # Check sab has correct dependencies
         required_dependencies = []
@@ -336,7 +351,7 @@ class TestSC(unittest.TestCase):
         req1 = self._LocalToolkit(tk1_name, "2.0.0", None)
         req1 = self._LocalToolkit(tk3_name, "2.0.0", None)
         required_dependencies.extend([req1])
-        self.check_sab_correct_dependencies(self.sab_file, required_dependencies)
+        self.check_sab_correct_dependencies(self._sab_path(), required_dependencies)
 
     def test_simple_1(self):
         # Build test_app_1, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_3 w/ version [1.0.0,4.0.0)
@@ -347,8 +362,7 @@ class TestSC(unittest.TestCase):
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
-        if not os.path.isfile(self.sab_file):
-            self.fail("Sab does not exist")
+        self._check_sab()
 
         # Check sab has correct dependencies
         required_dependencies = []
@@ -357,7 +371,7 @@ class TestSC(unittest.TestCase):
         req1 = self._LocalToolkit(tk1_name, "3.0.0", None)
         req2 = self._LocalToolkit(tk3_name, "2.0.0", None)
         required_dependencies.extend([req1, req2])
-        self.check_sab_correct_dependencies(self.sab_file, required_dependencies)
+        self.check_sab_correct_dependencies(self._sab_path(), required_dependencies)
 
     def test_simple_2(self):
         # Test that sab fails to build when a dependency/toolkit version is not met
@@ -370,8 +384,7 @@ class TestSC(unittest.TestCase):
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
         # Check sab doesn't exist
-        if os.path.isfile(self.sab_file):
-            self.fail("Sab should not exist")
+        self._check_no_sab()
 
     def test_simple_3(self):
         # Build test_app_6, requiring no dependencies
@@ -379,8 +392,7 @@ class TestSC(unittest.TestCase):
         os.chdir(path)
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
-        if not os.path.isfile(self.sab_file):
-            self.fail("Sab does not exist")
+        self._check_sab()
 
     def test_compile_time_args(self):
         # Build test_app_7, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_3 w/ version [1.0.0,4.0.0)
@@ -393,8 +405,7 @@ class TestSC(unittest.TestCase):
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
         # Check sab doesn't exist
-        if os.path.isfile(self.sab_file):
-            self.fail("Sab should not exist")
+        self._check_no_sab()
 
     def test_compile_time_args_2(self):
         # Build test_app_7, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_3 w/ version [1.0.0,4.0.0)
@@ -406,8 +417,7 @@ class TestSC(unittest.TestCase):
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string, compile_time_arguments=['hello=a,b,c', 'foo=bar'])
 
-        if not os.path.isfile(self.sab_file):
-            self.fail("Sab does not exist")
+        self._check_sab()
 
         # Check sab has correct dependencies
         required_dependencies = []
@@ -416,4 +426,4 @@ class TestSC(unittest.TestCase):
         req1 = self._LocalToolkit(tk1_name, "3.0.0", None)
         req2 = self._LocalToolkit(tk3_name, "2.0.0", None)
         required_dependencies.extend([req1, req2])
-        self.check_sab_correct_dependencies(self.sab_file, required_dependencies)
+        self.check_sab_correct_dependencies(self._sab_path(), required_dependencies)
