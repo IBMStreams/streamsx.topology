@@ -301,7 +301,9 @@ class TestSC(unittest.TestCase):
         # 2 versions of tk_4 available, v1.0.0, and v2.6.3 , chosen version should be 2.6.3
         path = (my_path / "apps/test_app_3/").resolve()
         os.chdir(path)
+
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
+
         self._check_sab()
 
         # Check sab has correct dependencies
@@ -328,8 +330,8 @@ class TestSC(unittest.TestCase):
         tk1_name = self.random_name_variable + "test_tk_1"
         tk3_name = self.random_name_variable + "test_tk_3"
         req1 = self._LocalToolkit(tk1_name, "1.0.0", None)
-        req1 = self._LocalToolkit(tk3_name, "4.0.0", None)
-        required_dependencies.extend([req1])
+        req2 = self._LocalToolkit(tk3_name, "4.0.0", None)
+        required_dependencies.extend([req1, req2])
         self.check_sab_correct_dependencies(self._sab_path(), required_dependencies)
 
     def test_exclusive_tk_version_cutoff(self):
@@ -349,8 +351,8 @@ class TestSC(unittest.TestCase):
         tk1_name = self.random_name_variable + "test_tk_1"
         tk3_name = self.random_name_variable + "test_tk_3"
         req1 = self._LocalToolkit(tk1_name, "2.0.0", None)
-        req1 = self._LocalToolkit(tk3_name, "2.0.0", None)
-        required_dependencies.extend([req1])
+        req2 = self._LocalToolkit(tk3_name, "2.0.0", None)
+        required_dependencies.extend([req1, req2])
         self.check_sab_correct_dependencies(self._sab_path(), required_dependencies)
 
     def test_simple_1(self):
@@ -426,4 +428,22 @@ class TestSC(unittest.TestCase):
         req1 = self._LocalToolkit(tk1_name, "3.0.0", None)
         req2 = self._LocalToolkit(tk3_name, "2.0.0", None)
         required_dependencies.extend([req1, req2])
+        self.check_sab_correct_dependencies(self._sab_path(), required_dependencies)
+
+    def test_output_directory(self):
+        # Test build of sab w/ specific version of toolkit and outputting to a given output directory
+        # Build test_app_3, requiring toolkit tk_4 w/ version 2.6.3
+        # 2 versions of tk_4 available, v1.0.0, and v2.6.3 , chosen version should be 2.6.3
+        path = (my_path / "apps/test_app_3/").resolve()
+        os.chdir(path)
+
+        self._run_sc(self.main_composite, self.local_toolkit_paths_string, output_directory='temp')
+
+        self._check_sab()
+
+        # Check sab has correct dependencies
+        required_dependencies = []
+        tk_name = self.random_name_variable + "test_tk_4"
+        req1 = self._LocalToolkit(tk_name, "2.6.3", None)
+        required_dependencies.extend([req1])
         self.check_sab_correct_dependencies(self._sab_path(), required_dependencies)
