@@ -7,6 +7,7 @@ import sysconfig
 import os
 import argparse
 import urllib3
+import shutil
 import streamsx.rest
 import pkg_resources
 from streamsx.spl.op import main_composite
@@ -36,8 +37,8 @@ def main(args=None):
         _add_local_toolkits(tool_kits, dependencies, topo, verify_arg = False if cmd_args.disable_ssl_verify else None)
 
     _add_toolkits(cmd_args, topo)
-    _submit_build(cmd_args, topo)
-    return 0
+    sr = _submit_build(cmd_args, topo)
+    return _move_bundle(cmd_args, sr)
 
 def _parse_dependencies():
     # Parse info.xml for the dependencies of the app you want to build sab file for
@@ -250,7 +251,22 @@ def _submit_build(cmd_args, topo):
          cfg[ConfigParams.SSL_VERIFY] = False
          urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
      _sc_options(cmd_args, cfg)
-     submit('BUNDLE', topo, cfg)
+     return submit('BUNDLE', topo, cfg)
+
+def _move_bundle(cmd_args, sr):
+    out_dir = cmd_args.output_directory
+    if not out_dir:
+        out_dir = 'output'
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+    if 'jobConfigPath' in sr:
+        jco = sr['jobConfigPath']
+        shutil.move(jco, os.path.join(out_dir, os.path.basename(jco)))
+    if not 'bundlePath' in sr:
+        return 1
+    sab = sr['bundlePath']
+    shutil.move(sab, os.path.join(out_dir, os.path.basename(sab)))
+    return 0
 
 def _sc_options(cmd_args, cfg):
     args = []
@@ -265,8 +281,6 @@ def _sc_options(cmd_args, cfg):
         args.append('--c++std=' + str(cmd_args.cppstd))
     if cmd_args.data_directory:
         args.append('--data-directory=' + str(cmd_args.data_directory))
-    if cmd_args.output_directory:
-        args.append('--output-directory=' + str(cmd_args.output_directory))
     if cmd_args.compile_time_args: # sc -M my::App hello=a,b,c foo=bar -> compile_time_args = ['hello=a,b,c', 'foo=bar']
         args.extend(cmd_args.compile_time_args)
     if args:
