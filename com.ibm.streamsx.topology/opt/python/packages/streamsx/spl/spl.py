@@ -580,7 +580,7 @@ The list may be empty resulting in no tuples being submitted.
 from future.builtins import *
 from enum import Enum
 
-__all__ = ['source' 'map', 'filter', 'for_each', 'PrimitiveOperator', 'input_port', 'primitive_operator', 'extracting', 'pipe', 'ignore', 'sink']
+__all__ = ['source', 'map', 'filter', 'for_each', 'PrimitiveOperator', 'input_port', 'primitive_operator', 'extracting', 'pipe', 'ignore', 'sink']
 
 import functools
 import inspect
