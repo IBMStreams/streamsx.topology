@@ -30,8 +30,11 @@ def main(args=None):
     # Get dependencies for app, if any at all
     dependencies = _parse_dependencies()
     # if dependencies and if -t arg, find & add local toolkits
-    if dependencies and cmd_args.spl_path:
-        tool_kits = cmd_args.spl_path.split(':')
+    spl_path = cmds_args.spl_path
+    if not spl_path:
+        spl_path = os.environ.get('STREAMS_SPLPATH')
+    if dependencies and spl_path:
+        tool_kits = spl_path.split(':')
         # Check if any dependencies are in the passed in toolkits, if so add them
         _add_local_toolkits(tool_kits, dependencies, topo, verify_arg = False if cmd_args.disable_ssl_verify else None)
 

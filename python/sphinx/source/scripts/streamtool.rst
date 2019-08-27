@@ -415,3 +415,5 @@ Options and arguments
     -U,--User:
         Specifies an IBM Streams user ID that has authority to run the
         command.
+
+.. versionadded:: 1.13
