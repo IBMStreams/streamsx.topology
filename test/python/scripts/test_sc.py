@@ -81,7 +81,11 @@ class TestSC(unittest.TestCase):
             if os.path.isfile(file_name):
                 with open(file_name) as f:
                     old_toolkit_name = f.readline().strip()
-            self.delete_test_toolkits(old_toolkit_name)
+            test_toolkits_deleted = self.delete_test_toolkits(old_toolkit_name)
+
+            # If toolkits were not deleted, skip current test, go to next test (which tries to delete test toolkits again)
+            if not test_toolkits_deleted:
+                self.fail('Current test toolkits or test toolkits from previous tests not deleted properly.')
 
             # Get a list of paths for all the test toolkits, each element representing the path to a given test toolkit
             self.test_toolkit_paths = self.get_test_toolkit_paths()
@@ -208,6 +212,7 @@ class TestSC(unittest.TestCase):
             # No test toolkits located on buildserver, break out of loop
             else:
                 deleted_all_toolkits = True
+        return deleted_all_toolkits
 
     def post_test_toolkits(self, toolkit_paths):
         # Given a list of test toolkit paths, upload these toolkits to the buildserver
