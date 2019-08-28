@@ -175,12 +175,13 @@ class TestSC(unittest.TestCase):
         return toolkit_paths
 
     def delete_test_toolkits(self, old_toolkit_name=None):
+        # delete all the test toolkits from the buildserver, in case they were left behind by a previous test failure.
+
         # 2 cases ..
         # Case 1 - Test in current run of test suite finishes, succesfully or not, need to delete test toolkits
         # Case 2 - Network failure on test in previous run of test suite (with a different randomly generated name), ..
         # thus toolkits with previous random name stuck on buildserver, need to delete
 
-        # delete all the test toolkits from the buildserver, in case they were left behind by a previous test failure.
         deleted_all_toolkits = False
         test_toolkit_objects = self._get_toolkit_objects(self.get_test_toolkit_paths())
         toolkit_names = [tk.name for tk in test_toolkit_objects]
