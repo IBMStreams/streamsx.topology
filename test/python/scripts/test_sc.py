@@ -83,7 +83,7 @@ class TestSC(unittest.TestCase):
                     old_toolkit_name = f.readline().strip()
             test_toolkits_deleted = self.delete_test_toolkits(old_toolkit_name)
 
-            # If toolkits were not deleted, skip current test, go to next test (which tries to delete test toolkits again)
+            # If toolkits were not deleted, fail current test, go to next test (which tries to delete test toolkits again)
             if not test_toolkits_deleted:
                 self.fail('Current test toolkits or test toolkits from previous tests not deleted properly.')
 
