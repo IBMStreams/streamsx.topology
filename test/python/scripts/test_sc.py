@@ -76,7 +76,16 @@ class TestSC(unittest.TestCase):
             self.skipTest("Build REST API is not available")
         else:
             # delete all the test toolkits from the buildserver, in case they were left behind by a previous test failure.
-            self.delete_test_toolkits()
+            file_name = (my_path / "test_sc_old_toolkit_name.txt").resolve()
+            old_toolkit_name = None
+            if os.path.isfile(file_name):
+                with open(file_name) as f:
+                    old_toolkit_name = f.readline().strip()
+            test_toolkits_deleted = self.delete_test_toolkits(old_toolkit_name)
+
+            # If toolkits were not deleted, fail current test, go to next test (which tries to delete test toolkits again)
+            if not test_toolkits_deleted:
+                self.fail('Current test toolkits or test toolkits from previous tests not deleted properly.')
 
             # Get a list of paths for all the test toolkits, each element representing the path to a given test toolkit
             self.test_toolkit_paths = self.get_test_toolkit_paths()
@@ -85,6 +94,11 @@ class TestSC(unittest.TestCase):
             # Ex. 'com.example.tmyuuwkpjittfjla.test_tk_2' -> 'com.example.tmyuuwkpjittfjla.'
             tk1 = self._get_toolkit_objects([self.test_toolkit_paths[0]])[0]
             self.random_name_variable = re.sub("test_tk_.", "", tk1.name)
+
+            # Store the randomly generated toolkit name, thus in case of network failure, on next run on test suite,
+            # can read old randomly generated toolkit name, and delete toolkits off buildserver
+            with open((my_path / "test_sc_old_toolkit_name.txt").resolve(), "w") as file1:
+                file1.write(self.random_name_variable)
 
             # Randomly shuffle the toolkits
             random.shuffle(self.test_toolkit_paths)
@@ -164,8 +178,14 @@ class TestSC(unittest.TestCase):
                 toolkit_paths.append(str(tk))
         return toolkit_paths
 
-    def delete_test_toolkits(self):
+    def delete_test_toolkits(self, old_toolkit_name=None):
         # delete all the test toolkits from the buildserver, in case they were left behind by a previous test failure.
+
+        # 2 cases ..
+        # Case 1 - Test in current run of test suite finishes, succesfully or not, need to delete test toolkits
+        # Case 2 - Network failure on test in previous run of test suite (with a different randomly generated name), ..
+        # thus toolkits with previous random name stuck on buildserver, need to delete
+
         deleted_all_toolkits = False
         test_toolkit_objects = self._get_toolkit_objects(self.get_test_toolkit_paths())
         toolkit_names = [tk.name for tk in test_toolkit_objects]
@@ -174,6 +194,13 @@ class TestSC(unittest.TestCase):
             toolkit_still_on_buildserver = False
             remote_toolkits = self.build_server.get_toolkits()
             for toolkit in remote_toolkits:
+                # Case 2
+                if old_toolkit_name:
+                    if old_toolkit_name in toolkit.name:
+                        # test toolkit found to still on buildserver, delete
+                        self.assertTrue(toolkit.delete())
+                        toolkit_still_on_buildserver = True
+                # Case 1
                 if toolkit.name in toolkit_names:
                     # test toolkit found to still on buildserver, delete
                     self.assertTrue(toolkit.delete())
@@ -185,6 +212,7 @@ class TestSC(unittest.TestCase):
             # No test toolkits located on buildserver, break out of loop
             else:
                 deleted_all_toolkits = True
+        return deleted_all_toolkits
 
     def post_test_toolkits(self, toolkit_paths):
         # Given a list of test toolkit paths, upload these toolkits to the buildserver
@@ -218,18 +246,6 @@ class TestSC(unittest.TestCase):
                         tk.name, tk.version
                     )
                 )
-
-    def get_sab_filename(self, main_composite):
-        """ Get the sab name from the path of the main composite
-
-        Arguments:
-            main_composite {String} -- The name of the main composite Ex. 'samplemain::main'
-
-        Returns:
-            [String] -- The filename of the sab
-        """
-        # Ex 'samplemain::main' -> 'samplemain.main.sab'
-        return main_composite.replace(":", ".", 1).replace(":", "") + ".sab"
 
     def _get_toolkit_objects(self, toolkit_paths):
         toolkit_objects = []
@@ -307,10 +323,9 @@ class TestSC(unittest.TestCase):
         self._check_sab()
 
         # Check sab has correct dependencies
-        required_dependencies = []
         tk_name = self.random_name_variable + "test_tk_4"
         req1 = self._LocalToolkit(tk_name, "2.6.3", None)
-        required_dependencies.extend([req1])
+        required_dependencies = [req1]
         self.check_sab_correct_dependencies(self._sab_path(), required_dependencies)
 
     def test_inclusive_tk_version_cutoff(self):
@@ -326,12 +341,11 @@ class TestSC(unittest.TestCase):
         self._check_sab()
 
         # Check sab has correct dependencies
-        required_dependencies = []
         tk1_name = self.random_name_variable + "test_tk_1"
         tk3_name = self.random_name_variable + "test_tk_3"
         req1 = self._LocalToolkit(tk1_name, "1.0.0", None)
         req2 = self._LocalToolkit(tk3_name, "4.0.0", None)
-        required_dependencies.extend([req1, req2])
+        required_dependencies = [req1, req2]
         self.check_sab_correct_dependencies(self._sab_path(), required_dependencies)
 
     def test_exclusive_tk_version_cutoff(self):
@@ -347,12 +361,11 @@ class TestSC(unittest.TestCase):
         self._check_sab()
 
         # Check sab has correct dependencies
-        required_dependencies = []
         tk1_name = self.random_name_variable + "test_tk_1"
         tk3_name = self.random_name_variable + "test_tk_3"
         req1 = self._LocalToolkit(tk1_name, "2.0.0", None)
         req2 = self._LocalToolkit(tk3_name, "2.0.0", None)
-        required_dependencies.extend([req1, req2])
+        required_dependencies = [req1, req2]
         self.check_sab_correct_dependencies(self._sab_path(), required_dependencies)
 
     def test_simple_1(self):
@@ -367,12 +380,11 @@ class TestSC(unittest.TestCase):
         self._check_sab()
 
         # Check sab has correct dependencies
-        required_dependencies = []
         tk1_name = self.random_name_variable + "test_tk_1"
         tk3_name = self.random_name_variable + "test_tk_3"
         req1 = self._LocalToolkit(tk1_name, "3.0.0", None)
         req2 = self._LocalToolkit(tk3_name, "2.0.0", None)
-        required_dependencies.extend([req1, req2])
+        required_dependencies = [req1, req2]
         self.check_sab_correct_dependencies(self._sab_path(), required_dependencies)
 
     def test_simple_2(self):
@@ -422,12 +434,11 @@ class TestSC(unittest.TestCase):
         self._check_sab()
 
         # Check sab has correct dependencies
-        required_dependencies = []
         tk1_name = self.random_name_variable + "test_tk_1"
         tk3_name = self.random_name_variable + "test_tk_3"
         req1 = self._LocalToolkit(tk1_name, "3.0.0", None)
         req2 = self._LocalToolkit(tk3_name, "2.0.0", None)
-        required_dependencies.extend([req1, req2])
+        required_dependencies = [req1, req2]
         self.check_sab_correct_dependencies(self._sab_path(), required_dependencies)
 
     def test_output_directory(self):
@@ -442,8 +453,7 @@ class TestSC(unittest.TestCase):
         self._check_sab()
 
         # Check sab has correct dependencies
-        required_dependencies = []
         tk_name = self.random_name_variable + "test_tk_4"
         req1 = self._LocalToolkit(tk_name, "2.6.3", None)
-        required_dependencies.extend([req1])
+        required_dependencies = [req1]
         self.check_sab_correct_dependencies(self._sab_path(), required_dependencies)
