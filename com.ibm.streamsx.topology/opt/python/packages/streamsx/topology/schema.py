@@ -61,7 +61,7 @@ Explictly defining a stream's schema is flexible and various types of values are
     * Builtin types as aliases for common schema types:
 
         * ``json`` (module) - for  :py:const:`~CommonSchema.Json`
-        * ``str`` (``unicode`` 2.7) - for  :py:const:`~CommonSchema.String`
+        * ``str`` - for  :py:const:`~CommonSchema.String`
         * ``object`` - for :py:const:`~CommonSchema.Python`
 
     * Values of the enumeration :py:class:`CommonSchema`
@@ -399,9 +399,9 @@ class StreamSchema(object) :
     ``complex32``                 complex with `float32` values   ``complex``                                ``complex(value)`` with real and imaginary values truncated to 32 bits
     ``complex64``                 complex with `float64` values   ``complex``                                ``complex(value)``
     ``timestamp``                 Nanosecond timestamp            :py:class:`~streamsx.spl.types.Timestamp`  -
-    ``rstring``                   UTF-8 string                    ``str`` (``unicode`` 2.7)                  ``str(value)``
-    ``rstring[N]``                Bounded UTF-8 string            ``str`` (``unicode`` 2.7)                  ``str(value)``
-    ``ustring``                   UTF-16 string                   ``str`` (``unicode`` 2.7)                  ``str(value)``
+    ``rstring``                   UTF-8 string                    ``str``                                    ``str(value)``
+    ``rstring[N]``                Bounded UTF-8 string            ``str``                                    ``str(value)``
+    ``ustring``                   UTF-16 string                   ``str``                                    ``str(value)``
     ``blob``                      Sequence of bytes               ``memoryview``                             -
     ``list<T>``                   List with elements of type `T`  ``list``                                   -
     ``list<T>[N]``                Bounded list                    ``list``                                   -
@@ -475,7 +475,7 @@ class StreamSchema(object) :
         For the common schemas the style is fixed:
 
             * ``CommonSchema.Python`` - ``object`` - Stream tuples are arbitrary objects.
-            * ``CommonSchema.String`` - ``str`` - Stream tuples are unicode strings. (``unicode`` on Python 2.7).
+            * ``CommonSchema.String`` - ``str`` - Stream tuples are unicode strings.
             * ``CommonSchema.Json`` - ``dict`` - Stream tuples are a ``dict`` that represents the JSON object.
 
         For a structured schema the supported styles are:
