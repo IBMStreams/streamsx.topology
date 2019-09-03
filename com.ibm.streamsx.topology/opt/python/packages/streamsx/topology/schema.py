@@ -72,16 +72,11 @@ Explictly defining a stream's schema is flexible and various types of values are
 
 """
 
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
 # For style dicts passed into Python from Streams C++
 # are raw dicts since they are created by Python C-API code
 # not the future dict in Python 2.7.
 _spl_dict = dict
 _spl_object = object
-
-from future.builtins import *
-from past.builtins import basestring, unicode
 
 __all__ = ['is_common', 'StreamSchema', 'CommonSchema']
 
@@ -99,7 +94,7 @@ import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
 
 
-_spl_str = unicode if sys.version_info.major == 2 else str
+_spl_str = str
 
 def _normalize(schema, allow_none=True):
     """
@@ -112,7 +107,7 @@ def _normalize(schema, allow_none=True):
     if isinstance(schema, StreamSchema):
         return schema
 
-    if isinstance(schema, basestring):
+    if isinstance(schema, str):
         return StreamSchema(schema)
 
     py_types = {
@@ -149,7 +144,7 @@ def is_common(schema):
         return schema.schema() in _SCHEMA_COMMON
     if isinstance(schema, CommonSchema):
         return True
-    if isinstance(schema, basestring):
+    if isinstance(schema, str):
         return is_common(StreamSchema(schema))
     return False
 
@@ -589,7 +584,7 @@ class StreamSchema(object) :
         if not named:
             return self._copy(tuple)
 
-        if named == True or isinstance(named, basestring):
+        if named == True or isinstance(named, str):
             return self._copy(self._make_named_tuple(name=named))
 
         return self._copy(tuple)

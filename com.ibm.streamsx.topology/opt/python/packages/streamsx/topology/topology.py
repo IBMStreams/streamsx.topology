@@ -196,16 +196,6 @@ Module contents
 ***************
 
 """
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-from future.builtins import *
-try:
-    from future import standard_library
-    standard_library.install_aliases()
-except (ImportError,NameError):
-    pass
 
 __all__ = [ 'Routing', 'SubscribeConnection', 'Topology', 'Stream', 'View', 'PendingStream', 'Window', 'Sink' ]
 

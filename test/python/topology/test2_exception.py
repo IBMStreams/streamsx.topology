@@ -1,7 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2018
-from future.builtins import *
 import unittest
 import sys
 import itertools

@@ -15,7 +15,6 @@
 # b) iterable is a decorated function that returns an iterator
 #
 
-from future.builtins import *
 import collections
 import sys
 import streamsx.spl.types

@@ -15,18 +15,6 @@ to a Streaming Analytics service or IBM® Streams instance for execution.
 
 """
 
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import division
-from __future__ import absolute_import
-try:
-    from future import standard_library
-    standard_library.install_aliases()
-except (ImportError, NameError):
-    # nothing to do here
-    pass
-from future.builtins import *
-
 __all__ = ['ContextTypes', 'ConfigParams', 'JobConfig', 'SubmissionResult', 'submit']
 
 import logging

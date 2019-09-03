@@ -147,8 +147,6 @@ For example, invoking an SPL `Beacon` operator using an output function to set t
 
 """
 
-from future.builtins import *
-
 __all__ = ['Invoke', 'Source', 'Map', 'Sink', 'Expression', 'main_composite']
 
 import streamsx.spl.toolkit

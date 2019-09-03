@@ -20,9 +20,6 @@ the runtime execution code from the test definition module
 
 """
 
-from __future__ import unicode_literals
-from future.builtins import *
-
 import streamsx.ec as ec
 import streamsx.topology.context as stc
 import streamsx.spl.op

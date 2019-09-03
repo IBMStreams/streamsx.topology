@@ -1,8 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
-from __future__ import unicode_literals
-from future.builtins import *
 
 import os
 import sys
@@ -11,7 +9,6 @@ import inspect
 import logging
 import importlib
 import types
-from past.builtins import basestring
 
 import streamsx.ec as ec
 from streamsx.topology.schema import StreamSchema
@@ -67,7 +64,7 @@ def _json_force_object(v):
 def _get_callable(f):
     if callable(f):
         return f
-    if isinstance(f, basestring):
+    if isinstance(f, str):
         ci = dill.loads(base64.b64decode(f))
         if callable(ci):
             return ci
@@ -526,7 +523,7 @@ class _SubmissionParam(object):
         if default is None and type_ is None:
             type_ = None
             self._spl_type = 'RSTRING'
-        elif isinstance(default, basestring):
+        elif isinstance(default, str):
             type_ = None
             self._spl_type = 'RSTRING'
         elif isinstance(default, bool):
