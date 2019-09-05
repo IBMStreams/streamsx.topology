@@ -317,6 +317,7 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
 
         auth_url = up.urlunsplit(('https', cluster_ip + ':' + str(cluster_port), '/icp4d-api/v1/authorize', None, None))
         r = requests.post(auth_url, json=pd, verify=self._verify)
+        _handle_http_errors(r)
         token = r.json()['token']
 
         details_url = up.urlunsplit(
@@ -368,6 +369,51 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
         }
 
         return cfg
+
+class _JWTAuthHandler(_BearerAuthHandler):
+    def __init__(self, endpoint, security_url, username, password, verify):
+        super(_JWTAuthHandler, self).__init__()
+        self._endpoint = endpoint
+        self._username = username
+        self._password = password
+        self._verify = verify
+        self.security_url = security_url
+        self._cfg = self._create_cfg()
+
+    def _refresh_autH(self):
+        logger.debug("JWTAuthHandler:Token refresh")
+        self._cfg = self._create_cfg()
+        logger.debug("JWT:Token refreshed:expiry:" + time.ctime(self._auth_expiry_time))
+        
+    def _create_cfg(self):
+        import requests
+        import urllib.parse as up
+
+        pd = {'audience': 'Streams', 'type': 'authenticate'}
+        r = requests.post(self.security_url, json=pd, verify=self._verify, auth=(self._username, self._password), headers={'Content-Type' : 'application/json',
+                                           'Accept' : 'application/json'})
+        _handle_http_errors(r)
+        self.token = r.json()['accessToken']
+        self._auth_expiry_time=time.time() + 4 * 60
+
+        es = up.urlsplit(self._endpoint)
+
+        cluster_port = es.port or 443
+        cluster_ip = es.hostname
+
+
+        cfg = {
+                'type': 'streams',
+                'service_token': self.token,
+                'service_token_expire': int(self._auth_expiry_time * 1000.0),
+                'cluster_ip': cluster_ip,
+                'cluster_port': cluster_port,
+                'externalClient':True,            
+        }
+
+        return cfg;
+
+
 
 class _IAMAuthHandler(_BearerAuthHandler):
     def __init__(self, credentials):
