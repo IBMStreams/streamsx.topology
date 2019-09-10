@@ -1690,7 +1690,8 @@ class Instance(_ResourceElement):
         Args:
             endpoint(str): Deployment URL for Cloud Pak for Data, e.g. `https://cp4d_server:31843`. Defaults to the environment variable ``CP4D_URL``.  This
             value is ignored for a stand-alone configuration.
-            service_name(str): Streams instance name. Defaults to the environment variable ``STREAMS_INSTANCE_ID``.
+            service_name(str): Streams instance name. Defaults to the environment variable ``STREAMS_INSTANCE_ID``.  This is ignored for a stand-alone 
+            configuration.
             username(str): User name to authenticate as. Defaults to the environment variable ``STREAMS_USERNAME`` or the operating system identifier if not set.
             password(str): Password for authentication. Defaults to the environment variable ``STREAMS_PASSWORD`` or the operating system identifier if not set.
             verify: SSL verification. Set to ``False`` to disable SSL verification. Defaults to SSL verification being enabled.
@@ -1718,11 +1719,11 @@ class Instance(_ResourceElement):
                 endpoint = os.environ.get('STREAMS_REST_URL')
                 if not endpoint:
                     return None
+            if not service_name:
+                service_name = os.environ.get('STREAMS_INSTANCE_ID')
+            if not service_name:
+                return None
         if not (endpoint or (security_endpoint and rest_endpoint)):
-            return None
-        if not service_name:
-            service_name = os.environ.get('STREAMS_INSTANCE_ID')
-        if not service_name:
             return None
         if not password:
             password = os.environ.get('STREAMS_PASSWORD')
@@ -1732,7 +1733,9 @@ class Instance(_ResourceElement):
 
         if security_endpoint:
             auth=_JWTAuthHandler(rest_endpoint, security_endpoint, username, password, verify)
-            resource_url = rest_endpoint
+            parsed = parse.urlparse(rest_endpoint)
+            resource_url = parse.urlunparse((parsed.scheme, parsed.netloc, "/streams/rest/resources", None, None, None))
+            service_name = None
         else:
             auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
             resource_url, _ = Instance._root_from_endpoint(auth._cfg['connection_info'].get('serviceRestEndpoint'))
@@ -1742,7 +1745,10 @@ class Instance(_ResourceElement):
         if verify is not None:
             sc.rest_client.session.verify = verify
 
-        return sc.get_instance(service_name)
+        if service_name is None:
+            return sc.get_instances()[0]
+        else:
+            return sc.get_instance(service_name)
 
     def get_operators(self, name=None):
         """Get the list of :py:class:`Operator` elements associated with this instance.

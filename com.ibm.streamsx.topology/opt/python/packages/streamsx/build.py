@@ -30,6 +30,7 @@ import re
 import requests
 import tempfile
 from pprint import pformat
+from urllib import parse
 from zipfile import ZipFile
 
 import streamsx.topology.context
@@ -235,7 +236,8 @@ class BuildService(_AbstractStreamsConnection):
 
         if security_endpoint:
             auth=_JWTAuthHandler(build_endpoint, security_endpoint, username, password, verify)
-            build_url = build_endpoint
+            parsed = parse.urlparse(build_endpoint)
+            build_url = parse.urlunparse((parsed.scheme, parsed.netloc, "/streams/rest/resources", None, None, None))
         else:
             auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
 
