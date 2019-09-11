@@ -32,6 +32,7 @@ import re
 import requests
 import tempfile
 from pprint import pformat
+from urllib import parse
 from zipfile import ZipFile
 
 import streamsx.topology.context
@@ -43,7 +44,7 @@ from streamsx import st
 from .rest import _AbstractStreamsConnection
 from .rest_primitives import (Domain, Instance, Installation, RestResource, Toolkit, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
     _exact_resource, _IAMStreamsRestClient, _IAMConstants, _get_username,
-    _ICPDExternalAuthHandler, _handle_http_errors)
+    _ICPDExternalAuthHandler, _handle_http_errors, _JWTAuthHandler)
 
 logger = logging.getLogger('streamsx.build')
 
@@ -190,22 +191,36 @@ class BuildService(_AbstractStreamsConnection):
                     return None
 
     @staticmethod
-    def of_endpoint(endpoint=None, service_name=None, username=None, password=None, verify=None):
+    def of_endpoint(endpoint=None, service_name=None, username=None, password=None, verify=None, build_endpoint=None, security_endpoint=None):
         """
-        Connect to a Cloud Pak for Data IBM Streams instance from
-        outside the cluster.
+        Connect to a Cloud Pak for Data IBM Streams instance from outside the 
+        cluster.
 
         Args:
-            endpoint(str): Deployment URL for Cloud Pak for Data, e.g. `https://cp4d_server:31843`. Defaults to the environment variable ``CP4D_URL``.
-            service_name(str): Streams instance name. Defaults to the environment variable ``STREAMS_INSTANCE_ID``.
+            endpoint(str): Deployment URL for Cloud Pak for Data, e.g. `https://cp4d_server:31843`. Defaults to the environment variable ``CP4D_URL``.  This 
+            value is ignored for a stand-alone configuration.
+            service_name(str): Streams instance name. Defaults to the environment variable ``STREAMS_INSTANCE_ID``.  This value is ignored for a stand-alone
+            configuration.
             username(str): User name to authenticate as. Defaults to the environment variable ``STREAMS_USERNAME`` or the operating system identifier if not set.
             password(str): Password for authentication. Defaults to the environment variable ``STREAMS_PASSWORD`` or the operating system identifier if not set.
             verify: SSL verification. Set to ``False`` to disable SSL verification. Defaults to SSL verification being enabled.
-
+            build_endpoint: URL of the build service.  This is required for
+            a stand-alone configuration, and ignored for an integrated 
+            configuration.  Defaults to the environment variable 
+            ``STREAMS_BUILD_URL``.  
+            security_endpoint: URL of the security service.  This is required
+            for a stand-alone configuration and ignored for an integrated
+            configuration.  Defaults to the environment variable 
+            ``STREAMS_SECURITY_URL``.
+       
         Returns:
             BuildService: Connection to Streams build service or ``None`` of insufficient configuration was provided.
 
         """
+        if not security_endpoint:
+            security_endpoint = os.environ.get('STREAMS_SECURITY_URL')
+        if not build_endpoint:
+            build_endpoint = os.environ.get('STREAMS_BUILD_URL')
         if not endpoint:
             endpoint = os.environ.get('CP4D_URL')
             if endpoint:
@@ -213,11 +228,7 @@ class BuildService(_AbstractStreamsConnection):
                     service_name = os.environ.get('STREAMS_INSTANCE_ID')
                 if not service_name:
                     return None
-            else:
-                endpoint = os.environ.get('STREAMS_BUILD_URL')
-                if not endpoint:
-                    return None
-        if not endpoint:
+        if not (endpoint or (security_endpoint and build_endpoint)):
             return None
         if not password:
             password = os.environ.get('STREAMS_PASSWORD')
@@ -225,9 +236,14 @@ class BuildService(_AbstractStreamsConnection):
             return None
         username = _get_username(username)
 
-        auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
+        if security_endpoint:
+            auth=_JWTAuthHandler(build_endpoint, security_endpoint, username, password, verify)
+            parsed = parse.urlparse(build_endpoint)
+            build_url = parse.urlunparse((parsed.scheme, parsed.netloc, "/streams/rest/resources", None, None, None))
+        else:
+            auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
 
-        build_url, _ = BuildService._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
+            build_url, _ = BuildService._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
 
         sc = BuildService(resource_url=build_url, auth=auth)
         if verify is not None:
