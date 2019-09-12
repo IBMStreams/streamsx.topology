@@ -371,9 +371,8 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
         return cfg
 
 class _JWTAuthHandler(_BearerAuthHandler):
-    def __init__(self, endpoint, security_url, username, password, verify):
+    def __init__(self, security_url, username, password, verify):
         super(_JWTAuthHandler, self).__init__()
-        self._endpoint = endpoint
         self._username = username
         self._password = password
         self._verify = verify
@@ -396,7 +395,7 @@ class _JWTAuthHandler(_BearerAuthHandler):
         self.token = r.json()['accessToken']
         self._auth_expiry_time=time.time() + 4 * 60
 
-        es = up.urlsplit(self._endpoint)
+        es = up.urlsplit(self.security_url)
 
         cluster_port = es.port or 443
         cluster_ip = es.hostname
@@ -1682,48 +1681,40 @@ class Instance(_ResourceElement):
         return resource_url, name
 
     @staticmethod
-    def of_endpoint(endpoint=None, service_name=None, username=None, password=None, verify=None, rest_endpoint=None, security_endpoint=None):
+    def of_endpoint(endpoint=None, service_name=None, username=None, password=None, verify=None):
         """
         Connect to a Cloud Pak for Data IBM Streams instance from
         outside the cluster.
 
         Args:
-            endpoint(str): Deployment URL for Cloud Pak for Data, e.g. `https://cp4d_server:31843`. Defaults to the environment variable ``CP4D_URL``.  This
-            value is ignored for a stand-alone configuration.
+            endpoint(str): In an integrated configuration, this is the 
+            deployment URL for Cloud Pak for Data, e.g. 
+            `https://cp4d_server:31843`.  In a stand-alone configuration,
+            this is the deployment URL of the Streams SWS service, e.g.
+            `https://sws_server:31098`.  Defaults to the environment variable 
+            ``CP4D_URL``, or, if that is not defined, to the environment 
+            variable ``STREAMS_REST_URL``.
+            
             service_name(str): Streams instance name. Defaults to the environment variable ``STREAMS_INSTANCE_ID``.  This is ignored for a stand-alone 
             configuration.
             username(str): User name to authenticate as. Defaults to the environment variable ``STREAMS_USERNAME`` or the operating system identifier if not set.
             password(str): Password for authentication. Defaults to the environment variable ``STREAMS_PASSWORD`` or the operating system identifier if not set.
             verify: SSL verification. Set to ``False`` to disable SSL verification. Defaults to SSL verification being enabled.
-            rest_endpoint: URL of the streams REST service.  This is required 
-            for a stand-alone configuration, and ignored for an integrated 
-            configuration.  Defaults to the environment variable 
-            ``STREAMS_REST_URL``.  
-            security_endpoint: URL of the security service.  This is required
-            for a stand-alone configuration and ignored for an integrated
-            configuration.  Defaults to the environment variable 
-            ``STREAMS_SECURITY_URL``.
 
         Returns:
             Instance: Connection to Streams instance or ``None`` of insufficient configuration was provided.
 
         .. versionadded:: 1.13
         """
-        if not security_endpoint:
-            security_endpoint = os.environ.get('STREAMS_SECURITY_URL')
-        if not rest_endpoint:
-            rest_endpoint = os.environ.get('STREAMS_REST_URL')
         if not endpoint:
             endpoint = os.environ.get('CP4D_URL')
             if not endpoint:
                 endpoint = os.environ.get('STREAMS_REST_URL')
                 if not endpoint:
                     return None
-            if not service_name:
-                service_name = os.environ.get('STREAMS_INSTANCE_ID')
-            if not service_name:
-                return None
-        if not (endpoint or (security_endpoint and rest_endpoint)):
+        if not service_name:
+            service_name = os.environ.get('STREAMS_INSTANCE_ID')
+        if not endpoint:
             return None
         if not password:
             password = os.environ.get('STREAMS_PASSWORD')
@@ -1731,24 +1722,40 @@ class Instance(_ResourceElement):
             return None
         username = _get_username(username)
 
-        if security_endpoint:
-            auth=_JWTAuthHandler(rest_endpoint, security_endpoint, username, password, verify)
-            parsed = parse.urlparse(rest_endpoint)
-            resource_url = parse.urlunparse((parsed.scheme, parsed.netloc, "/streams/rest/resources", None, None, None))
-            service_name = None
-        else:
+        if service_name:
+            # this is an integrated config
             auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
             resource_url, _ = Instance._root_from_endpoint(auth._cfg['connection_info'].get('serviceRestEndpoint'))
             service_name=auth._cfg['service_name']
-
-        sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth)
-        if verify is not None:
-            sc.rest_client.session.verify = verify
-
-        if service_name is None:
-            return sc.get_instances()[0]
-        else:
+            sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth)
+            if verify is not None:
+                sc.rest_client.session.verify = verify
+                
             return sc.get_instance(service_name)
+
+        else:
+            # this is a stand-alone config
+            parsed = parse.urlparse(endpoint)
+            resource_url = parse.urlunparse((parsed.scheme, parsed.netloc, "/streams/rest/resources", None, None, None))
+
+            # Create a connection using basic authentication.  This will be
+            # used to attempt to discover the security service.  If there
+            # is no security service, this connection will continue to be
+            # used; otherwise, it will be replaced by one using the 
+            # security service.
+            sc = streamsx.rest.StreamsConnection(resource_url=resource_url, username=username, password=password)
+            if verify is not None:
+                sc.rest_client.session.verify = verify
+            for resource in sc.get_resources():
+                if resource.name == 'accessTokens':
+                    auth=_JWTAuthHandler(resource.resource, username, password, verify)
+                    sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth)
+                    if verify is not None:
+                        sc.rest_client.session.verify = verify
+                    break
+
+            # There should be exactly one instance in this configuration.
+            return sc.get_instances()[0]
 
     def get_operators(self, name=None):
         """Get the list of :py:class:`Operator` elements associated with this instance.
