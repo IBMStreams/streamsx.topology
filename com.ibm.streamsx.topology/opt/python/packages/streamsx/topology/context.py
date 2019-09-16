@@ -476,22 +476,37 @@ class _BundleSubmitter(_BaseSubmitter):
         return env
 
 def _get_distributed_submitter(config, graph, username, password):
-    # Streams 4.2/4.3
+    # CP4D integrated environment and within project
+    svc_info = streamsx.rest_primitives.Instance._find_service_def(config)
+    if svc_info:
+        return _DistributedSubmitter(config, graph, None, None)
+
+    # CP4D integrated environment external to project
+    if  'CP4D_URL' in os.environ and \
+        'STREAMS_INSTANCE_ID' in os.environ and \
+        'STREAMS_PASSWORD' in os.environ and
+        return _DistributedSubmitter(config, graph, None, None)
+
+    # Streams 4.2/4.3 by connection
+    if  'STREAMS_INSTALL' in os.environ and \
+        'STREAMS_INSTANCE_ID' in os.environ and \
+        ConfigParams.STREAMS_CONNECTION in config:
+        return _DistributedSubmitter(config, graph, username, password)
+
+    # Streams 4.2/4.3 by environment
     if  'STREAMS_INSTALL' in os.environ and \
         'STREAMS_DOMAIN_ID' in os.environ and \
         'STREAMS_INSTANCE_ID' in os.environ:
-        return _DistributedSubmitter(ContextTypes.DISTRIBUTED,
-            config, graph, username, password)
+        return _DistributedSubmitter(config, graph, username, password)
 
-    return _DistributedSubmitter(ContextTypes.DISTRIBUTED,
-        config, graph, username, password)
+    return _DistributedSubmitter(config, graph, username, password)
 
 class _DistributedSubmitter(_BaseSubmitter):
     """
-    A submitter which supports the DISTRIBUTED (on-prem cluster) context.
+    A submitter which supports the DISTRIBUTED context.
     """
-    def __init__(self, ctxtype, config, graph, username, password):
-        _BaseSubmitter.__init__(self, ctxtype, config, graph)
+    def __init__(self, config, graph, username, password):
+        _BaseSubmitter.__init__(self, ContextTypes.DISTRIBUTED, config, graph)
 
         self._streams_connection = config.get(ConfigParams.STREAMS_CONNECTION)
         self.username = username
@@ -742,17 +757,21 @@ class ContextTypes(object):
 
     The `Topology` is compiled using the Streams build service and submitted
     to an Streams service instance running in the same Cloud Pak for
-    Data cluster as the Jupyter notebook declaring the application.
+    Data cluster as the Jupyter notebook or script declaring the application.
 
     The instance is specified in the configuration passed into :py:func:`submit`. The configuration may be code injected from the list of services or manually created. The code that selects a service instance by name is::
 
         from icpd_core import icpd_util
         cfg = icpd_util.get_service_instance_details(name='instanceName')
 
+        topo = Topology()
+        ...
+        submit(ContextTypes.DISTRIBUTED, topo, cfg)
+
     The resultant `cfg` dict may be augmented with other values such as
     a :py:class:`JobConfig` or keys from :py:class:`ConfigParams`.
 
-    *External to cluster*
+    *External to cluster or project*
 
     The `Topology` is compiled using the Streams build service and submitted
     to a Streams service instance running in Cloud Pak for Data.
@@ -917,7 +936,8 @@ class ConfigParams(object):
     """
     STREAMS_CONNECTION = 'topology.streamsConnection'
     """
-    Key for a :py:class:`StreamsConnection` object for connecting to a running IBM Streams instance.
+    Key for a :py:class:`StreamsConnection` object for connecting to a running IBM Streams instance. Only supported for Streams 4.2, 4.3. Requires environment
+    variable ``STREAMS_INSTANCE_ID`` to be set.
     """
     SSL_VERIFY = 'topology.SSLVerify'
     """
