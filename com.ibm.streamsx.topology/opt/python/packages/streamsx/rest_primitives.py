@@ -27,6 +27,7 @@ import time
 import json
 import re
 import time
+import warnings
 import xml.etree.ElementTree as ElementTree
 
 from pprint import pformat
@@ -1685,20 +1686,37 @@ class Instance(_ResourceElement):
     @staticmethod
     def of_endpoint(endpoint=None, service_name=None, username=None, password=None, verify=None):
         """
-        Connect to a Cloud Pak for Data IBM Streams instance from
-        outside the cluster.
+        Connect to a Cloud Pak for Data IBM Streams instance.
+
+        Two configurations are supported.
+
+        .. rubric:: Integrated configuration
+
+        The Streams instance is defined using the Cloud Pak for Data
+        deployment endpoint (URL) and the Streams service name.
+
+        The endpoint is passed in as `endpoint` defaulting the the
+        environment variable ``CP4D_URL``.
+        An example is `https://cp4d_server:31843`.
+
+        The Streams service name is passed in as `service_name` defaulting
+        to the environment variable ``STREAMS_INSTANCE_ID``.
+
+        .. rubric:: Standalone configuration
+
+        The Streams instance is defined using its Streams REST api
+        endpoint, which is its SWS service.
+
+        The endpoint is passed in as `endpoint` defaulting the the
+        environment variable ``STREAMS_REST_URL``.
+        An example is `https://streams_sws_service:34679`.
+
+        No service name is specified thus `service_name` should be passed
+        as ``None`` or not set.
 
         Args:
-            endpoint(str): In an integrated configuration, this is the 
-            deployment URL for Cloud Pak for Data, e.g. 
-            `https://cp4d_server:31843`.  In a stand-alone configuration,
-            this is the deployment URL of the Streams SWS service, e.g.
-            `https://sws_server:31098`.  Defaults to the environment variable 
-            ``CP4D_URL``, or, if that is not defined, to the environment 
-            variable ``STREAMS_REST_URL``.
-            
-            service_name(str): Streams instance name. Defaults to the environment variable ``STREAMS_INSTANCE_ID``.  This is ignored for a stand-alone 
-            configuration.
+            endpoint(str): Endpoint defining the Streams instance.
+            service_name(str): Streams instance name for a integrated configuration.  This value is ignored for a standalone configuration.
             username(str): User name to authenticate as. Defaults to the environment variable ``STREAMS_USERNAME`` or the operating system identifier if not set.
             password(str): Password for authentication. Defaults to the environment variable ``STREAMS_PASSWORD`` or the operating system identifier if not set.
             verify: SSL verification. Set to ``False`` to disable SSL verification. Defaults to SSL verification being enabled.
@@ -1708,16 +1726,19 @@ class Instance(_ResourceElement):
 
         .. versionadded:: 1.13
         """
+        possible_integ = True
         if not endpoint:
             endpoint = os.environ.get('CP4D_URL')
             if not endpoint:
                 endpoint = os.environ.get('STREAMS_REST_URL')
                 if not endpoint:
                     return None
-        if not service_name:
+                possible_integ = False
+                if service_name:
+                    warnings.warn("Service name ignored for standalone configuration", UserWarning, stacklevel=2)
+                    service_name = None
+        if possible_integ and not service_name:
             service_name = os.environ.get('STREAMS_INSTANCE_ID')
-        if not endpoint:
-            return None
         if not password:
             password = os.environ.get('STREAMS_PASSWORD')
         if not password:
