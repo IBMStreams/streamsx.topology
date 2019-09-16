@@ -191,44 +191,39 @@ class BuildService(_AbstractStreamsConnection):
                     return None
 
     @staticmethod
-    def of_endpoint(endpoint=None, service_name=None, username=None, password=None, verify=None, build_endpoint=None, security_endpoint=None):
+    def of_endpoint(endpoint=None, service_name=None, username=None, password=None, verify=None):
         """
         Connect to a Cloud Pak for Data IBM Streams instance from outside the 
         cluster.
 
         Args:
-            endpoint(str): Deployment URL for Cloud Pak for Data, e.g. `https://cp4d_server:31843`. Defaults to the environment variable ``CP4D_URL``.  This 
-            value is ignored for a stand-alone configuration.
+            endpoint(str): In an integrated configuration, this is the 
+            deployment URL for Cloud Pak for Data, e.g. 
+            `https://cp4d_server:31843`.  In a standalone configuration, this 
+            is the deployment URL of a Streams build service, e.g. 
+            `https:build_service:34679`.  Defaults to the environment variable 
+            ``CP4D_URL``, or, if that is not defined, to the environment 
+            variable ``STREAMS_BUILD_URL``.
+
             service_name(str): Streams instance name. Defaults to the environment variable ``STREAMS_INSTANCE_ID``.  This value is ignored for a stand-alone
             configuration.
             username(str): User name to authenticate as. Defaults to the environment variable ``STREAMS_USERNAME`` or the operating system identifier if not set.
             password(str): Password for authentication. Defaults to the environment variable ``STREAMS_PASSWORD`` or the operating system identifier if not set.
             verify: SSL verification. Set to ``False`` to disable SSL verification. Defaults to SSL verification being enabled.
-            build_endpoint: URL of the build service.  This is required for
-            a stand-alone configuration, and ignored for an integrated 
-            configuration.  Defaults to the environment variable 
-            ``STREAMS_BUILD_URL``.  
-            security_endpoint: URL of the security service.  This is required
-            for a stand-alone configuration and ignored for an integrated
-            configuration.  Defaults to the environment variable 
-            ``STREAMS_SECURITY_URL``.
        
         Returns:
             BuildService: Connection to Streams build service or ``None`` of insufficient configuration was provided.
 
         """
-        if not security_endpoint:
-            security_endpoint = os.environ.get('STREAMS_SECURITY_URL')
-        if not build_endpoint:
-            build_endpoint = os.environ.get('STREAMS_BUILD_URL')
         if not endpoint:
             endpoint = os.environ.get('CP4D_URL')
-            if endpoint:
-                if not service_name:
-                    service_name = os.environ.get('STREAMS_INSTANCE_ID')
-                if not service_name:
+            if not endpoint:
+                endpoint = os.environ.get('STREAMS_BUILD_URL')
+                if not endpoint:
                     return None
-        if not (endpoint or (security_endpoint and build_endpoint)):
+        if not service_name:
+            service_name = os.environ.get('STREAMS_INSTANCE_ID')
+        if not endpoint:
             return None
         if not password:
             password = os.environ.get('STREAMS_PASSWORD')
@@ -236,18 +231,39 @@ class BuildService(_AbstractStreamsConnection):
             return None
         username = _get_username(username)
 
-        if security_endpoint:
-            auth=_JWTAuthHandler(build_endpoint, security_endpoint, username, password, verify)
-            parsed = parse.urlparse(build_endpoint)
-            build_url = parse.urlunparse((parsed.scheme, parsed.netloc, "/streams/rest/resources", None, None, None))
-        else:
+        if service_name:
+            # this is an integrated config
             auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
-
             build_url, _ = BuildService._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
+            service_name=auth._cfg['service_name']
+            sc = BuildService(resource_url=build_url, auth=auth)
+            if verify is not None:
+                sc.rest_client.session.verify = verify
 
-        sc = BuildService(resource_url=build_url, auth=auth)
-        if verify is not None:
-            sc.rest_client.session.verify = verify
+        else:
+            # This is a stand-alone config
+            parsed = parse.urlparse(endpoint)
+            build_url = parse.urlunparse((parsed.scheme, parsed.netloc, "/streams/rest/resources", None, None, None))
+
+            # Create a connection using basic authentication.  This will be
+            # used to attempt to discover the security service.  If there
+            # is no security service, this connection will continue to be
+            # used; otherwise, it will be replaced by one using the 
+            # security service.
+            sc = BuildService(resource_url=build_url, username=username, password=password)
+            if verify is not None:
+                sc.rest_client.session.verify = verify
+            for resource in sc.get_resources():
+                if resource.name == 'accessTokens':
+                    auth=_JWTAuthHandler(resource.resource, username, password, verify)
+                    sc = BuildService(resource_url=build_url, auth=auth)
+                    if verify is not None:
+                        sc.rest_client.session.verify = verify
+                    break
+            else:
+                # No security service could be found.  We can try to proceed 
+                # with basic authentication.
+                pass
  
         return sc
 
