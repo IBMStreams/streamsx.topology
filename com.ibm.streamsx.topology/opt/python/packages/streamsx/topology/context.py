@@ -475,6 +475,17 @@ class _BundleSubmitter(_BaseSubmitter):
             env.pop('STREAMS_INSTALL', None)
         return env
 
+def _get_distributed_submitter(config, graph, username, password):
+    # Streams 4.2/4.3
+    if  'STREAMS_INSTALL' in os.environ and \
+        'STREAMS_DOMAIN_ID' in os.environ and \
+        'STREAMS_INSTANCE_ID' in os.environ:
+        return _DistributedSubmitter(ContextTypes.DISTRIBUTED,
+            config, graph, username, password)
+
+    return _DistributedSubmitter(ContextTypes.DISTRIBUTED,
+        config, graph, username, password)
+
 class _DistributedSubmitter(_BaseSubmitter):
     """
     A submitter which supports the DISTRIBUTED (on-prem cluster) context.
@@ -586,7 +597,7 @@ class _SubmitContextFactory(object):
 
         if ctxtype == ContextTypes.DISTRIBUTED:
             logger.debug("Selecting the DISTRIBUTED context for submission")
-            return _DistributedSubmitter(ctxtype, self.config, self.graph, self.username, self.password)
+            return _get_distributed_submitter(self.config, self.graph, self.username, self.password)
         elif ctxtype == ContextTypes.ANALYTICS_SERVICE or ctxtype == ContextTypes.STREAMING_ANALYTICS_SERVICE:
             logger.debug("Selecting the STREAMING_ANALYTICS_SERVICE context for submission")
             if sys.version_info.major == 2:
@@ -762,7 +773,7 @@ class ContextTypes(object):
     Use of the Cloud Pak for Data deployment URL and Streams instance
     name is recommended.
 
-    **IBM Streams on-premise**
+    **IBM Streams on-premise 4.2 & 4.3**
 
     The `Topology` is compiled locally and the resultant Streams application bundle
     (sab file) is submitted to an IBM Streams instance.
@@ -770,7 +781,7 @@ class ContextTypes(object):
     Environment variables:
         These environment variables define how the application is built and submitted.
 
-        * **STREAMS_INSTALL** - Location of a IBM Streams installation (4.2 or later).
+        * **STREAMS_INSTALL** - Location of a IBM Streams installation (4.2 or 4.3).
         * **STREAMS_DOMAIN_ID** - Domain identifier for the Streams instance.
         * **STREAMS_INSTANCE_ID** - Instance identifier.
         * **STREAMS_ZKCONNECT** - (optional) ZooKeeper connection string for domain (when not using an embedded ZooKeeper)
