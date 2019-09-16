@@ -51,24 +51,9 @@ logger = logging.getLogger('streamsx.build')
 
 
 class BuildService(_AbstractStreamsConnection):
-    """Creates a connection to a running distributed IBM Streams build service and exposes methods to manage the toolkits installed on that build service.
+    """IBM Streams build service.
 
-    Args:
-        username (str): Username of an authorized Streams user. If ``None``, the username is taken from the ``STREAMS_USERNAME`` environment variable.
-
-        password(str): Password for `username` If ``None``, the password is taken from the ``STREAMS_PASSWORD`` environment variable.
-
-        resource_url(str): Root URL for IBM Streams REST API. If ``None``, the URL is taken from the ``STREAMS_REST_URL`` environment variable.
-
-    Example:
-        >>> from streamsx.build import BuildService
-        >>> build_service = BuildService.of_endpoint("https://icpd_server:31843", "StreamsInstance", "streamsadmin", "passw0rd")
-        >>> toolkits = build_service.get_toolkits()
-        >>> print("There are {} toolkits available.".format(len(toolkits)))
-        There are 10 toolkits available.
-
-    Attributes:
-        session (:py:class:`requests.Session`): Requests session object for making REST calls.
+    A instance of a `BuildService` is created using :py:meth:`of_endpoint`.
 
     .. versionadded:: 1.13
     """
