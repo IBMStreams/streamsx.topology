@@ -31,6 +31,7 @@ import logging
 import re
 import requests
 import tempfile
+import warnings
 from pprint import pformat
 from urllib import parse
 from zipfile import ZipFile
@@ -193,20 +194,38 @@ class BuildService(_AbstractStreamsConnection):
     @staticmethod
     def of_endpoint(endpoint=None, service_name=None, username=None, password=None, verify=None):
         """
-        Connect to a Cloud Pak for Data IBM Streams instance from outside the 
-        cluster.
+        Connect to a Cloud Pak for Data IBM Streams build service instance.
+
+        Two configurations are supported.
+
+        .. rubric:: Integrated configuration
+
+        The build service is bound to a Streams instance and is defined
+        using the Cloud Pak for Data deployment endpoint (URL) and
+        the Streams service name.
+
+        The endpoint is passed in as `endpoint` defaulting the the
+        environment variable ``CP4D_URL``.
+        An example is `https://cp4d_server:31843`.
+
+        The Streams service name is passed in as `service_name` defaulting
+        to the environment variable ``STREAMS_INSTANCE_ID``.
+
+        .. rubric:: Standalone configuration
+
+        A build service is independent of a Streams instance and is defined
+        using the build service endpoint.
+
+        The endpoint is passed in as `endpoint` defaulting the the
+        environment variable ``STREAMS_BUILD_URL``.
+        An example is `https://build_service:34679`.
+
+        No service name is specified thus `service_name` should be passed
+        as ``None`` or not set.
 
         Args:
-            endpoint(str): In an integrated configuration, this is the 
-            deployment URL for Cloud Pak for Data, e.g. 
-            `https://cp4d_server:31843`.  In a standalone configuration, this 
-            is the deployment URL of a Streams build service, e.g. 
-            `https:build_service:34679`.  Defaults to the environment variable 
-            ``CP4D_URL``, or, if that is not defined, to the environment 
-            variable ``STREAMS_BUILD_URL``.
-
-            service_name(str): Streams instance name. Defaults to the environment variable ``STREAMS_INSTANCE_ID``.  This value is ignored for a stand-alone
-            configuration.
+            endpoint(str): Endpoint defining the build service.
+            service_name(str): Streams instance name for a integrated configuration.  This value is ignored for a standalone configuration.
             username(str): User name to authenticate as. Defaults to the environment variable ``STREAMS_USERNAME`` or the operating system identifier if not set.
             password(str): Password for authentication. Defaults to the environment variable ``STREAMS_PASSWORD`` or the operating system identifier if not set.
             verify: SSL verification. Set to ``False`` to disable SSL verification. Defaults to SSL verification being enabled.
@@ -215,16 +234,20 @@ class BuildService(_AbstractStreamsConnection):
             BuildService: Connection to Streams build service or ``None`` of insufficient configuration was provided.
 
         """
+        possible_integ = True
         if not endpoint:
             endpoint = os.environ.get('CP4D_URL')
             if not endpoint:
                 endpoint = os.environ.get('STREAMS_BUILD_URL')
                 if not endpoint:
                     return None
-        if not service_name:
+                possible_integ = False
+                if service_name:
+                    warnings.warn("Service name ignored for standalone configuration", UserWarning, stacklevel=2)
+                    service_name = None
+
+        if possible_integ and not service_name:
             service_name = os.environ.get('STREAMS_INSTANCE_ID')
-        if not endpoint:
-            return None
         if not password:
             password = os.environ.get('STREAMS_PASSWORD')
         if not password:
