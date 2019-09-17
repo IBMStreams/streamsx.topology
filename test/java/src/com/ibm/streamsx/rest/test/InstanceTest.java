@@ -41,11 +41,8 @@ public class InstanceTest {
     private static void check(Instance instance) {
         assertNotNull(instance);
         assertNotNull(instance.getId());
-        System.err.println(instance.getId());
         assertNotNull(instance.getHealth());
-        System.err.println(instance.getHealth());
         assertNotNull(instance.getStatus());
-        System.err.println(instance.getStatus());
     }
 
     private static boolean sslVerify() {

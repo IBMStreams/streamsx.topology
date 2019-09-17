@@ -191,7 +191,7 @@ public class Instance extends Element {
         if (possible_integ && name == null)
             name = System.getenv(Util.STREAMS_INSTANCE_ID);
 
-        StreamsConnection conn = null;
+        StreamsConnection conn;
         Instance instance = null;
         if (name != null) {
             // Integrated configuration
