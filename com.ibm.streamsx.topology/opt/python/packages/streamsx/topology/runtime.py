@@ -427,10 +427,9 @@ tuple_in = object_in
 def _get_namedtuple_cls(schema, name):
     return StreamSchema(schema).as_tuple(named=name).style
 
-def _inline_modules(fn):
+def _inline_modules(fn, modules, constants):
     if sys.version_info.major == 2:
         return None
-    modules = {}
     cvs = inspect.getclosurevars(fn)
     for mk in cvs.globals.keys():
         gv = cvs.globals[mk]
@@ -438,10 +437,11 @@ def _inline_modules(fn):
             modules[mk] = gv.__name__
         elif hasattr(gv, '__module__') and gv.__module__ != '__main__':
             modules[mk] = gv.__name__, gv.__module__
+        elif type(gv) == str or type(gv) == int or type(gv) == float or type(gv) == bool:
+            constants[mk] = gv
         else:
             raise TypeError("Unsupported global closure {} type {} in {}".format(mk, gv, fn))
           
-    return modules
 
 # Wraps an callable instance 
 # When this is called, the callable is called.
@@ -455,23 +455,26 @@ class _ModulesCallable(streamsx._streams._runtime._WrapOpLogic):
     def __init__(self, callable_, no_context=None):
         super(_ModulesCallable, self).__init__(callable_, no_context)
         check_cmm = False
+        modules = {}
+        constants = {}
         if inspect.isroutine(callable_):
-            self._modules = _inline_modules(callable_)
+            self._modules = _inline_modules(callable_, modules, constants)
         elif callable(callable_):
-            self._modules = _inline_modules(callable_.__call__)
+            self._modules = _inline_modules(callable_.__call__, modules, constants)
             check_cmm = True
         elif type(callable_).__module__ == '__main__': 
-            self._modules = _inline_modules(callable_.__iter__)
+            self._modules = _inline_modules(callable_.__iter__, modules, constants)
             # Handle common case the iterable is also the iterator.
             if hasattr(callable_, '__next__'):
-                self._modules.update(_inline_modules(callable_.__next__))
+                self._modules.update(_inline_modules(callable_.__next__, modules, constants))
             check_cmm = True
-        else:
-            self._modules = None
 
         if check_cmm and self._streamsx_ec_context:
-            self._modules.update(_inline_modules(callable_.__enter__))
-            self._modules.update(_inline_modules(callable_.__exit__))
+            self._modules.update(_inline_modules(callable_.__enter__, modules, constants))
+            self._modules.update(_inline_modules(callable_.__exit__, modules, constants))
+
+        self._modules = modules if modules else None
+        self._constants = constants if constants else None
 
     def __getstate__(self):
         return self.__dict__
@@ -481,13 +484,15 @@ class _ModulesCallable(streamsx._streams._runtime._WrapOpLogic):
 
         # Patch the lambda/in-line function's globals
         # to include any modules it references.
-        if self._modules:
+        if self._modules or self._constants:
             if inspect.isroutine(self._callable):
                 gbls = self._callable.__globals__
             elif callable(self._callable):
                 gbls = self._callable.__call__.__globals__
             else:
                 gbls = self._callable.__iter__.__globals__
+
+        if self._modules:
             for vn,mn in self._modules.items():
                 if vn not in gbls:
                     if isinstance(mn, tuple):
@@ -495,6 +500,12 @@ class _ModulesCallable(streamsx._streams._runtime._WrapOpLogic):
                         gbls[vn] = getattr(cm, mn[0])
                     else:
                         gbls[vn] = importlib.import_module(mn)
+
+        if self._constants:
+            for vn,mn in self._constants.items():
+                if vn not in gbls:
+                    gbls[vn] = self._constants[vn]
+
 
 class _Callable0(_ModulesCallable):
     def __call__(self):
