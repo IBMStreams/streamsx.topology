@@ -6,7 +6,7 @@ streamsx-runner
 Overview
 ********
 
-Submits a Streams application to the Streaming Analytics service.
+Submits or builds a Streams application to the Streaming Analytics service.
 
 The application to be submitted can be:
 
@@ -14,13 +14,48 @@ The application to be submitted can be:
  * An SPL application (main composite) using the ``--main-composite`` flag.
  * A Streams application bundle (``sab`` file) using the ``--bundle`` flag.
 
+***************************
+Streaming Analytics service
+***************************
+
+The Streaming Analytics service is defined by:
+
+ * Service name - ``--service-name`` defaulting to environment variable ``STREAMING_ANALYTICS_SERVICE_NAME``. The service name must exist in the vcap services.
+ * Vcap services - Environment variable ``VCAP_SERVICES`` containing JSON representation of the service definitions or a file name containing the service definitions.
+
+**************
+Job submission
+**************
+
+Job submission occurs unless ``--create-bundle`` is set.
+
+***************
+Bundle creation
+***************
+
+When ``-create-bundle`` is specified with ``-main-composite`` or ``--topology``
+then a Streams application bundle (sab file) is created.
+
+If environment variable `STREAMS_INSTALL` is set the the build is local
+otherwise the build occurs in the IBM Cloud using the Streaming Analytics
+service.
+
+When ``STREAMS_INSTALL`` is not set then `streamsx-runner` can be executed
+with no local Streams install.
+
+When compiling an SPL application (``--main-composite``) then the
+path to the application toolkit containing the main composite must
+be listed with ``--toolkits``. 
+
+Any other required local toolkits must be listed with with ``--toolkits``.
+
 *****
 Usage
 *****
 
 .. code-block:: none
 
-    streamsx-runner [-h] (--service-name SERVICE_NAME | --create-bundle)
+    streamsx-runner [-h] [--service-name SERVICE_NAME] | [--create-bundle]
                  (--topology TOPOLOGY | --main-composite MAIN_COMPOSITE | --bundle BUNDLE)
                  [--toolkits TOOLKITS [TOOLKITS ...]] [--job-name JOB_NAME]
                  [--preload] [--trace {error,warn,info,debug,trace}]
@@ -33,8 +68,7 @@ Usage
       -h, --help            show this help message and exit
       --service-name SERVICE_NAME
                             Submit to Streaming Analytics service
-      --create-bundle       Create a bundle using a local IBM Streams install. No
-                            job submission occurs.
+      --create-bundle       Create a bundle (sab file). No job submission occurs.
       --topology TOPOLOGY   Topology to call
       --main-composite MAIN_COMPOSITE
                             SPL main composite (namespace::composite_name)
@@ -45,8 +79,8 @@ Usage
       Application build options
     
       --toolkits TOOLKITS [TOOLKITS ...]
-                            SPL toolkit containing the main composite and any
-                            other required SPL toolkits.
+                            SPL toolkit path containing the main composite and any
+                            other required SPL toolkit paths.
     
     Job options:
       Job configuration options
