@@ -120,7 +120,7 @@ class TestBundleMethodsNew(TestToolkitMethodsNew):
         self.test_ctxtype = 'BUNDLE'
         self.result = {}
 
-@unittest.skipUnless('STREAMS_INSTALL' in os.environ, "requires STREAMS_INSTALL")
+@unittest.skipUnless('STREAMS_INSTALL' in os.environ and 'STREAMS_INSTANCE_ID' in os.environ and 'STREAMS_DOMAIN_ID' in os.environ, "requires STREAMS_INSTALL, STREAMS_INSTANCE_ID,STREAMS_DOMAIN_ID")
 class TestDistributedSubmitMethodsNew(unittest.TestCase):
 
     def setUp(self):
@@ -128,6 +128,13 @@ class TestDistributedSubmitMethodsNew(unittest.TestCase):
         self.topo.source(['Hello', 'DistributedSubmit'])
         self.test_ctxtype = 'DISTRIBUTED'
         self.test_config = {}
+
+    def test_submit(self):
+        sc = rest.StreamsConnection()
+        sc.session.verify = False
+        self.test_config[ConfigParams.STREAMS_CONNECTION] = sc
+        sr = submit(self.test_ctxtype, self.topo, self.test_config)
+        sr.job.cancel()
 
     def test_DifferentUsername(self):
         sc = rest.StreamsConnection('user1', 'pass1')
