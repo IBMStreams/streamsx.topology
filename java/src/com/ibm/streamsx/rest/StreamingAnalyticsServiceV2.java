@@ -6,12 +6,16 @@
 package com.ibm.streamsx.rest;
 
 import static com.ibm.streamsx.rest.StreamsRestUtils.TRACE;
+import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.getSPLCompatibleName;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.array;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.fluent.Executor;
@@ -26,7 +30,11 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.rest.internal.RestUtils;
+import com.ibm.streamsx.topology.internal.context.remote.BuildConfigKeys;
+import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
 
@@ -210,8 +218,8 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
     }
 
     @Override
-    protected boolean downloadArtifacts(CloseableHttpClient httpclient, JsonArray artifacts) {
-        boolean downloaded = false;
+    protected List<File> downloadArtifacts(CloseableHttpClient httpclient, JsonArray artifacts) {
+        final List<File> files = new ArrayList<>();
         for (JsonElement ae : artifacts) {
             JsonObject artifact = ae.getAsJsonObject();
             if (!artifact.has("download"))
@@ -222,12 +230,124 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
            
             // Don't fail the submit if we fail to download the sab(s).
             try {
-                StreamsRestUtils.getFile(Executor.newInstance(httpclient), getAuthorization(), url, new File(name));
+                File target = new File(name);
+                StreamsRestUtils.getFile(Executor.newInstance(httpclient), getAuthorization(), url, target);
+                files.add(target);
             } catch (IOException e) {
                 TRACE.warning("Failed to download sab: " + name + " : " + e.getMessage());
             }
-            downloaded = true;
         }
-        return downloaded;
+        return files;
     }
+    
+    @Override
+    public Result<List<File>, JsonObject> build(File archive,
+            String buildName, JsonObject buildConfig) throws IOException {
+        
+        JsonObject metrics = new JsonObject();
+        metrics.addProperty(SubmissionResultsKeys.SUBMIT_ARCHIVE_SIZE, archive.length());
+            
+        CloseableHttpClient httpclient = RestUtils.createHttpClient();
+        try {
+            // Set up the build name
+            if (null == buildName) {
+                buildName = "build";
+            }
+            buildName = getSPLCompatibleName(buildName) + "_" + randomHex(16);
+            buildName = URLEncoder.encode(buildName, StandardCharsets.UTF_8.name());
+            
+            String originator = null;
+            if (buildConfig != null) {
+                originator = jstring(buildConfig, "originator");
+            }
+            if (originator == null)
+                originator = DEFAULT_ORIGINATOR;
+                      
+            // Perform initial post of the archive
+            TRACE.info("Streaming Analytics service (" + serviceName + "): submitting build " + buildName + " originator " + originator);
+            final long startUploadTime = System.currentTimeMillis();
+            JsonObject buildSubmission = submitBuild(httpclient, archive, buildName, originator);
+            final long endUploadTime = System.currentTimeMillis();
+            metrics.addProperty(SubmissionResultsKeys.SUBMIT_UPLOAD_TIME, (endUploadTime - startUploadTime));
+            
+            String buildId = jstring(buildSubmission, "id");
+            String outputId = jstring(buildSubmission, "output_id");
+
+            // Loop until built
+            final long startBuildTime = endUploadTime;
+            long lastCheckTime = endUploadTime;
+            JsonObject buildStatus = getBuild(buildId, httpclient);  
+            String status = jstring(buildStatus, "status");
+            while (!"built".equals(status)) {
+                String mkey = SubmissionResultsKeys.buildStateMetricKey(status);
+                long now = System.currentTimeMillis();
+                long duration;
+                if (metrics.has(mkey)) {
+                    duration = metrics.get(mkey).getAsLong();                  
+                } else {
+                    duration = 0;
+                }
+                duration += (now - lastCheckTime);
+                metrics.addProperty(mkey, duration);
+                lastCheckTime = now;
+                
+                // 'building', 'notBuilt', and 'waiting' are all states which can eventualy result in 'built'
+                // sleep and continue to monitor
+                if (status.equals("building") || status.equals("notBuilt") || status.equals("waiting")) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    buildStatus = getBuild(buildId, httpclient); 
+                    status = jstring(buildStatus, "status");
+                    continue;
+                } 
+                // The remaining possible states are 'failed', 'timeout', 'canceled', 'canceling', and 'unknown', none of which can lead to a state of 'built', so we throw an error.
+                else {
+                    TRACE.severe("Streaming Analytics service (" + serviceName + "): The submitted archive " + archive.getName() + " failed to build with status " + status + ".");
+                    JsonObject output = getBuildOutput(buildId, outputId, httpclient);
+                    String strOutput = "";
+                    if (output != null)
+                        strOutput = prettyPrintOutput(output);
+                    throw new IllegalStateException("Error submitting archive for compilation: \n" + strOutput);
+                }
+            }
+            final long endBuildTime = System.currentTimeMillis();
+            metrics.addProperty(SubmissionResultsKeys.SUBMIT_TOTAL_BUILD_TIME, (endBuildTime - startBuildTime));
+
+            // Now perform archive put
+            JsonArray artifacts = array(buildStatus, "artifacts");
+            if (artifacts == null || artifacts.size() == 0) {
+                throw new IllegalStateException("No artifacts associated with build "
+                        + jstring(buildStatus, "id"));
+            }     
+            
+            final long startDownloadSabTime = System.currentTimeMillis();
+            final List<File> files = downloadArtifacts(httpclient, artifacts);
+            final long endDownloadSabTime = System.currentTimeMillis();
+            metrics.addProperty(SubmissionResultsKeys.DOWNLOAD_SABS_TIME,
+                        (endDownloadSabTime - startDownloadSabTime));
+            
+            Result<List<File>,JsonObject> result = new ResultImpl<>(true, buildName,
+                    ()->files, new JsonObject());
+            result.getRawResult().add(SubmissionResultsKeys.SUBMIT_METRICS, metrics);
+            result.getRawResult().add(SubmissionResultsKeys.BUILD_STATUS, buildStatus);
+            
+            JsonArray jsonFiles = new JsonArray();
+            for (File f : files)
+                jsonFiles.add(new JsonPrimitive(f.getAbsolutePath()));
+            
+            result.getRawResult().add("sabs", jsonFiles);
+            
+            if (files.size() == 1)
+                result.getRawResult().addProperty(SubmissionResultsKeys.BUNDLE_PATH,
+                        files.get(0).getAbsolutePath());
+            
+            return result;
+        } finally {
+            httpclient.close();
+        }
+    }
+
 }

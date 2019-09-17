@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.List;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
@@ -184,7 +186,13 @@ class StreamingAnalyticsServiceV1 extends AbstractStreamingAnalyticsService {
     }
     
     @Override
-    protected boolean downloadArtifacts(CloseableHttpClient httpclient, JsonArray artifacts) {
-        return false;
+    protected List<File> downloadArtifacts(CloseableHttpClient httpclient, JsonArray artifacts) {
+        return null;
+    }
+    
+    @Override
+    public Result<List<File>, JsonObject> build(File archive,
+            String buildName, JsonObject buildConfig) throws IOException {
+        throw new UnsupportedOperationException("com.ibm.streamsx.rest.StreamingAnalyticsService.build() V1");
     }
 }
