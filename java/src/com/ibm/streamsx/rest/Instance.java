@@ -10,15 +10,18 @@ import static java.util.Objects.requireNonNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
 import com.ibm.streamsx.rest.internal.RestUtils;
+import com.ibm.streamsx.rest.internal.StandaloneAuthenticator;
 import com.ibm.streamsx.topology.internal.context.streamsrest.StreamsKeys;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
@@ -28,7 +31,7 @@ import com.ibm.streamsx.topology.internal.streams.Util;
  * 
  */
 public class Instance extends Element {
-    
+
     @Expose
     private String activeServices;
     @Expose
@@ -79,25 +82,46 @@ public class Instance extends Element {
     @Expose
     private String views;
 
+    private static final String STREAMS_REST_RESOURCES = "/streams/rest/resources";
+
     final static List<Instance> createInstanceList(AbstractStreamsConnection sc, String uri)
        throws IOException {        
         return createList(sc, uri, InstancesArray.class);
     }
-    
+
     /**
-     * Connect to a Streams service REST API.
-     * 
-     * Supported for Cloud Pak for Data. The endpoint is the Cloud Pak for Data
-     * deployment URL.
-     * 
+     * Connect to a Cloud Pak for Data IBM Streams instance.
      * <P>
      * This call is equivalent to {@link #ofEndpoint(String, String, String, String, boolean)}
      * passing {@code true} for <em>verify</em>.
-     * </P>
+     * </P><P>
+     * Two configurations are supported:
+     * <DL>
+     * <DT>Integrated configuration</DT>
      * 
-     * @param endpoint Endpoint URL for Streams instance, if {@code null} defaults to environment variable
-     * {@code CP4D_URL}.
-     * @param name Streams service name, if {@code null} defaults to environment variable {@code STREAMS_INSTANCE_NAME}.
+     * <DD>The Streams instance is defined using the Cloud Pak for Data
+     * deployment endpoint (URL) and the Streams service name.
+     * <P>
+     * The endpoint defaults to the environment variable  {@code CP4D_URL}.
+     * An example is @{code https://cp4d_server:31843}.
+     * <P>
+     * The Streams service name is passed in as name, defaulting to the
+     * environment variables {@code STREAMS_INSTANCE_ID}.
+     * </DD>
+     * 
+     * <DT>Standalone configuration</DT>
+     * 
+     * <DD>The Streams instance is defined using its Streams REST API
+     * endpoint, which is its SWS service.
+     * <P>
+     * The endpoint defaults to the environment variable {@code STREAMS_REST_URL}.
+     * An example is {@code https://streams_sws_service:34679}.
+     * <P>
+     * No service name is specified thus name should be {@code null}.
+     * 
+     * @param endpoint Endpoint defining the Streams instance.
+     * @param name Streams instance name for a integrated configuration. This
+     *             value is ignored for a standalone configuration.
      * @param userName User name, if {@code null} defaults to environment variable {@code STREAMS_USERNAME} if set,
      *     otherwise the operating user identifier.
      * @param password Password, if {@code null} defaults to environment variable {@code STREAMS_PASSWORD}.
@@ -112,18 +136,38 @@ public class Instance extends Element {
     }
     
     /**
-     * Connect to a Streams service REST API.
+     * Connect to a Cloud Pak for Data IBM Streams instance.
+     * <P>
+     * Two configurations are supported:
+     * <DL>
+     * <DT>Integrated configuration</DT>
      * 
-     * Supported for Cloud Pak for Data. The endpoint is the Cloud Pak for Data
-     * deployment URL.
+     * <DD>The Streams instance is defined using the Cloud Pak for Data
+     * deployment endpoint (URL) and the Streams service name.
+     * <P>
+     * The endpoint defaults to the environment variable  {@code CP4D_URL}.
+     * An example is @{code https://cp4d_server:31843}.
+     * <P>
+     * The Streams service name is passed in as name, defaulting to the
+     * environment variables {@code STREAMS_INSTANCE_ID}.
+     * </DD>
      * 
-     * @param endpoint Endpoint URL for Streams instance, if {@code null} defaults to environment variable
-     * {@code CP4D_URL}.
-     * @param name Streams service name, if {@code null} defaults to environment variable {@code STREAMS_INSTANCE_NAME}.
+     * <DT>Standalone configuration</DT>
+     * 
+     * <DD>The Streams instance is defined using its Streams REST API
+     * endpoint, which is its SWS service.
+     * <P>
+     * The endpoint defaults to the environment variable {@code STREAMS_REST_URL}.
+     * An example is {@code https://streams_sws_service:34679}.
+     * <P>
+     * No service name is specified thus name should be {@code null}.
+     * 
+     * @param endpoint Endpoint defining the Streams instance.
+     * @param name Streams instance name for a integrated configuration. This
+     *             value is ignored for a standalone configuration.
      * @param userName User name, if {@code null} defaults to environment variable {@code STREAMS_USERNAME} if set,
      *     otherwise the operating user identifier.
      * @param password Password, if {@code null} defaults to environment variable {@code STREAMS_PASSWORD}.
-     * @param verify False to disable SSL host verification.
 
      * @return Connection to Streams instance using REST API.
      * @throws IOException Error connecting to instance.
@@ -132,29 +176,75 @@ public class Instance extends Element {
      */
     public static Instance ofEndpoint(String endpoint, String name, String userName, String password,
             boolean verify) throws IOException {
-        
-        if (name == null)
-            name = Util.getenv(Util.STREAMS_INSTANCE_ID);
-               
+
+        boolean possible_integ = true;
+        if (endpoint == null) {
+            endpoint = System.getenv(Util.ICP4D_DEPLOYMENT_URL);
+            if (endpoint == null) {
+                possible_integ = false;
+                endpoint = System.getenv(Util.STREAMS_REST_URL);
+                if (endpoint == null) {
+                    return null;
+                }
+            }
+        }
+        if (possible_integ && name == null)
+            name = System.getenv(Util.STREAMS_INSTANCE_ID);
+
+        StreamsConnection conn = null;
+        Instance instance = null;
+        if (name != null) {
+            // Integrated configuration
+            conn = createIntegratedConnection(endpoint, name, userName, password, verify);
+            if (!verify) {
+                conn.allowInsecureHosts(true);
+            }
+            instance = conn.getInstance(name);
+        } else {
+            conn = createStandaloneConnection(endpoint, userName, password, verify);
+            if (!verify) {
+                conn.allowInsecureHosts(true);
+            }
+            // Should only be one instance, use it, or fail.        
+            List<Instance> instances = conn.getInstances();
+            if (instances.size() != 1) {
+                return null;
+            }
+            instance = instances.get(0);
+        }
+
+        return instance;
+    }
+
+    /*
+     * Create a connection to an instance with an integrated configuration,
+     * using CP4D authentication.
+     */
+    private static StreamsConnection createIntegratedConnection(String endpoint, String name, String userName, String password,
+            boolean verify) throws IOException {
         ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(
                 endpoint, name, userName, password);
-        
+
         JsonObject deploy = new JsonObject();
         deploy.add(StreamsKeys.SERVICE_DEFINITION, authenticator.config(verify));
-        
+
         URL instanceUrl  = new URL(getStreamsInstanceURL(deploy));
 
         URL restUrl = new URL(instanceUrl.getProtocol(), instanceUrl.getHost(), instanceUrl.getPort(),
-                "/streams/rest/resources");
-                       
-        StreamsConnection conn = StreamsConnection.ofAuthenticator(restUrl.toExternalForm(), authenticator);
-        
-        if (!verify)
-            conn.allowInsecureHosts(true);
-                
-        Instance instance = conn.getInstance(name);
+                STREAMS_REST_RESOURCES);
 
-        return instance;
+        return StreamsConnection.ofAuthenticator(restUrl.toExternalForm(), authenticator);
+    }
+
+    private static StreamsConnection createStandaloneConnection(String endpoint,
+            String userName, String password, boolean verify) throws IOException {
+        StandaloneAuthenticator auth = StandaloneAuthenticator.of(endpoint, userName, password);
+        if (auth.config(verify) != null) {
+            return StreamsConnection.ofAuthenticator(auth.getResourcesUrl(), auth);
+        } else {
+            // Couldn't configure standalone authenticator, try Basic
+            return StreamsConnection.createInstance(userName, password, endpoint);
+        }
     }
 
     /**
