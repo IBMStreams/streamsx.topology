@@ -698,6 +698,9 @@ class View(_ResourceElement):
 
         .. versionadded:: 1.12
         """
+        if not 'display' in globals():
+            return
+        display=globals()['display']
         import ipywidgets as widgets
         vn = widgets.Text(value=self.description, description=self.name, disabled=True)
         active = widgets.Valid(value=True, description='Fetching', readout='Stopped')

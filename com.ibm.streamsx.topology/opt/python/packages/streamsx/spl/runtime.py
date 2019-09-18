@@ -132,7 +132,7 @@ def _splpy_all_ports_ready(callable_):
             ei = sys.exc_info()
             if streamsx._streams._runtime._call_exit(callable_, ei):
                 return None
-            raise e1[1]
+            raise ei[1]
     return None
 
 _Timestamp = collections.namedtuple('Timestamp', ['seconds', 'nanoseconds', 'machine_id'])

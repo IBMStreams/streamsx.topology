@@ -155,7 +155,7 @@ class _BaseSubmitter(object):
         if remote_context:
             submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
             try:
-                get_ipython()
+                globals()['get_ipython']()
                 import ipywidgets as widgets
                 progress_bar = widgets.IntProgress(
                     value=0,
@@ -164,7 +164,7 @@ class _BaseSubmitter(object):
                     bar_style='info', orientation='horizontal',
                     style={'description_width':'initial'})
                 try:
-                    display(progress_bar)
+                    globals()['display'](progress_bar)
                     def _show_progress(msg):
                         if msg is True:
                             progress_bar.value = progress_bar.max
@@ -1345,7 +1345,7 @@ class SubmissionResult(object):
                     raise
  
             button.on_click(_cancel_job_click)
-            display(vb)
+            globals['display'](vb)
         except:
             pass
 
