@@ -92,16 +92,6 @@ def _splpy_convert_tuple(attributes):
         return tuple_
     return _to_tuples
 
-def _splpy_to_tuples(fn, attributes):
-   conv_fn = _splpy_convert_tuple(attributes)
-
-   def _to_tuples(*args, **kwargs):
-      value = fn(*args, **kwargs)
-      return conv_fn(value)
-
-   _add_shutdown_hook(fn, _to_tuples)
-   return _to_tuples
-
 def _splpy_release_memoryviews(*args):
     for o in args:
         if isinstance(o, memoryview):
