@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.internal.context.streamsrest;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import java.io.File;
@@ -13,6 +14,9 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map.Entry;
+import java.util.function.Function;
+
+import org.apache.http.client.fluent.Executor;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -24,6 +28,7 @@ import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.rest.build.BuildService;
 import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
+import com.ibm.streamsx.rest.internal.StandaloneAuthenticator;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
@@ -79,7 +84,11 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
                 "/streams/rest/resources");
                        
         JsonObject serviceDefinition = object(deploy, StreamsKeys.SERVICE_DEFINITION);
-        StreamsConnection conn = StreamsConnection.ofAuthenticator(restUrl.toExternalForm(), ICP4DAuthenticator.of(serviceDefinition));
+        String name = jstring(serviceDefinition, "service_name");
+        Function<Executor,String> authenticator = (name == null || name.isEmpty())
+                ? StandaloneAuthenticator.of(serviceDefinition)
+                : ICP4DAuthenticator.of(serviceDefinition);
+        StreamsConnection conn = StreamsConnection.ofAuthenticator(restUrl.toExternalForm(), authenticator);
         
         if (!sslVerify(deploy))
             conn.allowInsecureHosts(true);

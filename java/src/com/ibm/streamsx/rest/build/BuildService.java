@@ -5,15 +5,22 @@
 
 package com.ibm.streamsx.rest.build;
 
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+
 import java.io.IOException;
 import java.io.File;
 import java.util.List;
+import java.util.function.Function;
+
+import org.apache.http.client.fluent.Executor;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
 import com.ibm.streamsx.rest.internal.RestUtils;
+import com.ibm.streamsx.rest.internal.StandaloneAuthenticator;
+import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
  * Access to a IBM Streams build service.
@@ -24,17 +31,30 @@ public interface BuildService {
 	
 	public static BuildService ofEndpoint(String endpoint, String name, String userName, String password,
             boolean verify) throws IOException {
-	    
-	    ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(endpoint, name, userName, password);
-	    JsonObject serviceDefinition = authenticator.config(verify);
+	    Function<Executor,String> authenticator;
+	    JsonObject serviceDefinition;
+	    if (name == null && System.getenv(Util.STREAMS_INSTANCE_ID) == null) {
+	        StandaloneAuthenticator auth = StandaloneAuthenticator.of(endpoint, userName, password);
+	        serviceDefinition = auth.config(verify);
+	        authenticator = auth;
+	    } else {
+	        ICP4DAuthenticator auth = ICP4DAuthenticator.of(endpoint, name, userName, password);
+	        serviceDefinition = auth.config(verify);
+	        authenticator = auth;
+	    }
 	    
 	    return StreamsBuildService.of(authenticator, serviceDefinition, verify);
 	    
 	}
 
     public static BuildService ofServiceDefinition(JsonObject serviceDefinition, boolean verify) throws IOException {
-
-        ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(serviceDefinition);
+        String name = jstring(serviceDefinition, "service_name");
+        Function<Executor,String> authenticator;
+        if (name == null) {
+            authenticator = StandaloneAuthenticator.of(serviceDefinition);
+        } else {
+            authenticator = ICP4DAuthenticator.of(serviceDefinition);
+        }
 
         return StreamsBuildService.of(authenticator, serviceDefinition, verify);
     }

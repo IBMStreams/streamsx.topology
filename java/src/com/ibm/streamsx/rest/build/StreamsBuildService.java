@@ -5,6 +5,8 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import java.io.IOException;
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -23,12 +25,26 @@ import com.ibm.streamsx.rest.RESTException;
 import com.ibm.streamsx.rest.internal.RestUtils;
 
 import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
+import com.ibm.streamsx.rest.internal.StandaloneAuthenticator;
 
 class StreamsBuildService extends AbstractConnection implements BuildService {
     
-    public static BuildService of(ICP4DAuthenticator authenticator, JsonObject serviceDefinition, boolean verify) throws IOException {
+    private static final String STREAMS_REST_BUILDS = "/streams/rest/builds";
+
+    public static BuildService of(Function<Executor,String> authenticator, JsonObject serviceDefinition, boolean verify) throws IOException {
         
         String buildServiceEndpoint = jstring(object(serviceDefinition, "connection_info"), "serviceBuildEndpoint");
+        if (!buildServiceEndpoint.endsWith(STREAMS_REST_BUILDS) &&
+                authenticator instanceof StandaloneAuthenticator) {
+            // URL was user-provided root of service, add the path
+            try {
+                URL url = new URL(buildServiceEndpoint);
+                URL buildsUrl = new URL(url.getProtocol(), url.getHost(), url.getPort(), STREAMS_REST_BUILDS);
+                buildServiceEndpoint = buildsUrl.toExternalForm();
+            } catch (MalformedURLException ignored) {
+                // Leave as-is
+            }
+        }
         return new StreamsBuildService(buildServiceEndpoint, authenticator, verify);
     }
 	
