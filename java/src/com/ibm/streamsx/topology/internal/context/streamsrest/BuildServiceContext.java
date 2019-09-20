@@ -43,7 +43,11 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
     @Override
     protected BuildService createSubmissionContext(JsonObject deploy) throws Exception {
         JsonObject serviceDefinition = object(deploy, StreamsKeys.SERVICE_DEFINITION);
-        return BuildService.ofServiceDefinition(serviceDefinition, sslVerify(deploy));
+        if (serviceDefinition != null)
+            return BuildService.ofServiceDefinition(serviceDefinition, sslVerify(deploy));
+        
+        // Remote environment context set through environment variables.
+        return BuildService.ofEndpoint(null, null, null, null, sslVerify(deploy));
     }
 
     @Override
