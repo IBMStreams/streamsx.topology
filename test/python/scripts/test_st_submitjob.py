@@ -23,13 +23,8 @@ from io import StringIO
 
 # Tests streamtool submitjob script.
 # Requires environment setup for a ICP4D Streams instance.
-@unittest.skipUnless(
-    "CP4D_URL" in os.environ
-    and "STREAMS_INSTANCE_ID" in os.environ
-    and "STREAMS_USERNAME" in os.environ
-    and "STREAMS_PASSWORD" in os.environ,
-    "requires Streams REST API setup",
-)
+import test_sc
+@unittest.skipUnless(test_sc.cpd_setup(), "requires Streams REST API setup")
 class TestSubmitJob(unittest.TestCase):
     def _submitjob(self, args, sab=None):
         args.insert(0, "--disable-ssl-verify")
@@ -49,7 +44,7 @@ class TestSubmitJob(unittest.TestCase):
         return rc, val
 
     def setUp(self):
-        self.instance = os.environ["STREAMS_INSTANCE_ID"]
+        self.instance = Instance.of_endpoint(verify=False).id
         self.username = os.environ["STREAMS_USERNAME"]
         self.stringLength = 10
         self.jobs_to_cancel = []
