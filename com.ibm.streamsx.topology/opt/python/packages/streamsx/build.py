@@ -30,6 +30,7 @@ import json
 import logging
 import re
 import requests
+import socket
 import tempfile
 import warnings
 from pprint import pformat
@@ -263,11 +264,19 @@ class BuildService(_AbstractStreamsConnection):
                 sc.rest_client.session.verify = verify
             for resource in sc.get_resources():
                 if resource.name == 'accessTokens':
-                    auth=_JWTAuthHandler(resource.resource, username, password, verify)
-                    sc = BuildService(resource_url=build_url, auth=auth)
-                    if verify is not None:
-                        sc.rest_client.session.verify = verify
-                    break
+                    atinfo = parse.urlparse(resource.resource)
+                    try:
+                        # If we are external to the cluster then
+                        # We can't resolve the security manager
+                        # so revert to basic auth
+                        socket.gethostbyname(atinfo.hostname)
+                        auth=_JWTAuthHandler(resource.resource, username, password, verify)
+                        sc = BuildService(resource_url=build_url, auth=auth)
+                        if verify is not None:
+                            sc.rest_client.session.verify = verify
+                        break
+                    except:
+                        pass
             else:
                 # No security service could be found.  We can try to proceed 
                 # with basic authentication.

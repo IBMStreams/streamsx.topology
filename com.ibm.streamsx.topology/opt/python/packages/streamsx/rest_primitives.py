@@ -1771,11 +1771,20 @@ class Instance(_ResourceElement):
                 sc.rest_client.session.verify = verify
             for resource in sc.get_resources():
                 if resource.name == 'accessTokens':
-                    auth=_JWTAuthHandler(resource.resource, username, password, verify)
-                    sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth)
-                    if verify is not None:
-                        sc.rest_client.session.verify = verify
-                    break
+                    atinfo = parse.urlparse(resource.resource)
+                    try:
+                        # If we are external to the cluster then
+                        # We can't resolve the security manager
+                        # so revert to basic auth
+                        socket.gethostbyname(atinfo.hostname)
+                        auth=_JWTAuthHandler(resource.resource, username, password, verify)
+                        sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth)
+                        if verify is not None:
+                            sc.rest_client.session.verify = verify
+                        break
+                    except:
+                        pass
+                  
 
             # There should be exactly one instance in this configuration.
             return sc.get_instances()[0]
