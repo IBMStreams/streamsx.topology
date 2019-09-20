@@ -30,7 +30,7 @@ import com.ibm.streamsx.topology.internal.streams.Util;
  */
 public interface BuildService {
 	
-	public static final String STREAMS_REST_RESOURCES = "/streams/rest/resources";
+	static final String STREAMS_BUILD_PATH = "/streams/rest/builds";
 
     public static BuildService ofEndpoint(String endpoint, String name, String userName, String password,
             boolean verify) throws IOException {
@@ -39,10 +39,10 @@ public interface BuildService {
             if (endpoint == null) {
                 endpoint = Util.getenv(Util.STREAMS_BUILD_URL);
             }
-            if (!endpoint.endsWith(STREAMS_REST_RESOURCES)) {
+            if (!endpoint.endsWith(STREAMS_BUILD_PATH)) {
                 URL url = new URL(endpoint);
                 URL resourcesUrl = new URL(url.getProtocol(), url.getHost(),
-                        url.getPort(), STREAMS_REST_RESOURCES);
+                        url.getPort(), STREAMS_BUILD_PATH);
                 endpoint = resourcesUrl.toExternalForm();
             }
 	        StandaloneAuthenticator auth = StandaloneAuthenticator.of(endpoint, userName, password);
