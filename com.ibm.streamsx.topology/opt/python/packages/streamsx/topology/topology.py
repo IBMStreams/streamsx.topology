@@ -196,16 +196,6 @@ Module contents
 ***************
 
 """
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-from future.builtins import *
-try:
-    from future import standard_library
-    standard_library.install_aliases()
-except (ImportError,NameError):
-    pass
 
 __all__ = [ 'Routing', 'SubscribeConnection', 'Topology', 'Stream', 'View', 'PendingStream', 'Window', 'Sink' ]
 
@@ -796,8 +786,8 @@ class Topology(object):
             supported within a lambda expression or a callable
             that is not a function.
 
-        The default type of a submission parameter's value is a `str`
-        (`unicode` on Python 2.7). When a `default` is specified
+        The default type of a submission parameter's value is a `str`.
+        When a `default` is specified
         the type of the value matches the type of the default.
 
         If `default` is not set, then the type can be set with `type_`.
@@ -1217,7 +1207,7 @@ class Stream(_placement._Placement, object):
         modifies each ``result`` before submission.
 
         * ``object`` or :py:const:`~streamsx.topology.schema.CommonSchema.Python` - The default:  `result` is submitted.
-        * ``str`` type (``unicode`` 2.7) or :py:const:`~streamsx.topology.schema.CommonSchema.String` - A stream of strings: ``str(result)`` is submitted.
+        * ``str`` type or :py:const:`~streamsx.topology.schema.CommonSchema.String` - A stream of strings: ``str(result)`` is submitted.
         * ``json`` or :py:const:`~streamsx.topology.schema.CommonSchema.Json` - A stream of JSON objects: ``result`` must be convertable to a JSON object using `json` package.
         * :py:const:`~streamsx.topology.schema.StreamSchema` - A structured stream. `result` must be a `dict` or (Python) `tuple`. When a `dict` is returned the outgoing stream tuple attributes are set by name, when a `tuple` is returned stream tuple attributes are set by position.
         * string value - Equivalent to passing ``StreamSchema(schema)``

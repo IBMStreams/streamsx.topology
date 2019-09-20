@@ -2,10 +2,6 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015,2016
 
-from __future__ import unicode_literals
-from future.builtins import *
-from past.builtins import basestring
-
 import os
 import sys
 import uuid
@@ -256,7 +252,7 @@ class SPLGraph(object):
          for location in fls:
              files = fls[location]
              for path in files:
-                 if isinstance(path, basestring):
+                 if isinstance(path, str):
                      # Simple file with a source to copy
                      f = {}
                      f['source'] = path

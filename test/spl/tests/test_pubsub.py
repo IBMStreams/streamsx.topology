@@ -1,7 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2018
-from __future__ import print_function
 import unittest
 import os
 import sys

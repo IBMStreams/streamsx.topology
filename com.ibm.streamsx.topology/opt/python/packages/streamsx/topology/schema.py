@@ -61,7 +61,7 @@ Explictly defining a stream's schema is flexible and various types of values are
     * Builtin types as aliases for common schema types:
 
         * ``json`` (module) - for  :py:const:`~CommonSchema.Json`
-        * ``str`` (``unicode`` 2.7) - for  :py:const:`~CommonSchema.String`
+        * ``str`` - for  :py:const:`~CommonSchema.String`
         * ``object`` - for :py:const:`~CommonSchema.Python`
 
     * Values of the enumeration :py:class:`CommonSchema`
@@ -72,16 +72,11 @@ Explictly defining a stream's schema is flexible and various types of values are
 
 """
 
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
 # For style dicts passed into Python from Streams C++
 # are raw dicts since they are created by Python C-API code
 # not the future dict in Python 2.7.
 _spl_dict = dict
 _spl_object = object
-
-from future.builtins import *
-from past.builtins import basestring, unicode
 
 __all__ = ['is_common', 'StreamSchema', 'CommonSchema']
 
@@ -99,7 +94,7 @@ import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
 
 
-_spl_str = unicode if sys.version_info.major == 2 else str
+_spl_str = str
 
 def _normalize(schema, allow_none=True):
     """
@@ -112,7 +107,7 @@ def _normalize(schema, allow_none=True):
     if isinstance(schema, StreamSchema):
         return schema
 
-    if isinstance(schema, basestring):
+    if isinstance(schema, str):
         return StreamSchema(schema)
 
     py_types = {
@@ -149,7 +144,7 @@ def is_common(schema):
         return schema.schema() in _SCHEMA_COMMON
     if isinstance(schema, CommonSchema):
         return True
-    if isinstance(schema, basestring):
+    if isinstance(schema, str):
         return is_common(StreamSchema(schema))
     return False
 
@@ -404,9 +399,9 @@ class StreamSchema(object) :
     ``complex32``                 complex with `float32` values   ``complex``                                ``complex(value)`` with real and imaginary values truncated to 32 bits
     ``complex64``                 complex with `float64` values   ``complex``                                ``complex(value)``
     ``timestamp``                 Nanosecond timestamp            :py:class:`~streamsx.spl.types.Timestamp`  -
-    ``rstring``                   UTF-8 string                    ``str`` (``unicode`` 2.7)                  ``str(value)``
-    ``rstring[N]``                Bounded UTF-8 string            ``str`` (``unicode`` 2.7)                  ``str(value)``
-    ``ustring``                   UTF-16 string                   ``str`` (``unicode`` 2.7)                  ``str(value)``
+    ``rstring``                   UTF-8 string                    ``str``                                    ``str(value)``
+    ``rstring[N]``                Bounded UTF-8 string            ``str``                                    ``str(value)``
+    ``ustring``                   UTF-16 string                   ``str``                                    ``str(value)``
     ``blob``                      Sequence of bytes               ``memoryview``                             -
     ``list<T>``                   List with elements of type `T`  ``list``                                   -
     ``list<T>[N]``                Bounded list                    ``list``                                   -
@@ -480,7 +475,7 @@ class StreamSchema(object) :
         For the common schemas the style is fixed:
 
             * ``CommonSchema.Python`` - ``object`` - Stream tuples are arbitrary objects.
-            * ``CommonSchema.String`` - ``str`` - Stream tuples are unicode strings. (``unicode`` on Python 2.7).
+            * ``CommonSchema.String`` - ``str`` - Stream tuples are unicode strings.
             * ``CommonSchema.Json`` - ``dict`` - Stream tuples are a ``dict`` that represents the JSON object.
 
         For a structured schema the supported styles are:
@@ -589,7 +584,7 @@ class StreamSchema(object) :
         if not named:
             return self._copy(tuple)
 
-        if named == True or isinstance(named, basestring):
+        if named == True or isinstance(named, str):
             return self._copy(self._make_named_tuple(name=named))
 
         return self._copy(tuple)

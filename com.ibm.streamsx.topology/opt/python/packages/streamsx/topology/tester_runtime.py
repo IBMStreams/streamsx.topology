@@ -20,9 +20,6 @@ the runtime execution code from the test definition module
 
 """
 
-from __future__ import unicode_literals
-from future.builtins import *
-
 import streamsx.ec as ec
 import streamsx.topology.context as stc
 import streamsx.spl.op
@@ -60,7 +57,7 @@ class Condition(object):
             applies.  If the condition applies to the topology as a whole 
             rather than to a specific stream, ``stream`` can be ``None``.
         """
-        raise NotImplementedException("_attach must be defined in the derived class.")
+        raise NotImplementedError("_attach must be defined in the derived class.")
 
 class _FunctionalCondition(Condition):
     """A condition for testing based on a functional callable.

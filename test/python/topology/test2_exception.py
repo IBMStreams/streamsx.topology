@@ -1,16 +1,12 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2018
-from future.builtins import *
 import unittest
 import sys
 import itertools
 import tempfile
 import os
 import uuid
-
-if sys.version_info.major == 3:
-    unicode = str
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
@@ -36,8 +32,8 @@ class EnterExit(object):
         return t
     def _report(self, txt):
         with open(self.tf, 'a') as fp:
-            fp.write(unicode(txt))
-            fp.write(unicode('\n'))
+            fp.write(str(txt))
+            fp.write(str('\n'))
             fp.flush()
 
 class ExcOnEnter(EnterExit):

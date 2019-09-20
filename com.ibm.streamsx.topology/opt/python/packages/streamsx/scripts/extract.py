@@ -1,9 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2018
-from __future__ import print_function
-from __future__ import unicode_literals
-from future.builtins import *
 import sys
 import sysconfig
 import inspect
