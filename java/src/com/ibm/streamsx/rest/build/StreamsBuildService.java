@@ -39,13 +39,13 @@ class StreamsBuildService extends AbstractConnection implements BuildService {
             if (buildServiceEndpoint == null) {
                 buildServiceEndpoint = Util.getenv(Util.STREAMS_BUILD_URL);
             }
-            if (!buildServiceEndpoint.endsWith(STREAMS_REST_BUILDS) &&
-                    authenticator instanceof StandaloneAuthenticator) {
+            if (!buildServiceEndpoint.endsWith(STREAMS_REST_BUILDS)) {
                 // URL was user-provided root of service, add the path
                 URL url = new URL(buildServiceEndpoint);
                 URL buildsUrl = new URL(url.getProtocol(), url.getHost(), url.getPort(), STREAMS_REST_BUILDS);
                 buildServiceEndpoint = buildsUrl.toExternalForm();
             }
+            return StreamsBuildService.of(authenticator, buildServiceEndpoint, verify);
         }
         return new StreamsBuildService(buildServiceEndpoint, authenticator, verify);
     }
@@ -54,8 +54,7 @@ class StreamsBuildService extends AbstractConnection implements BuildService {
 
         if (buildServiceEndpoint == null) {
             buildServiceEndpoint = Util.getenv(Util.STREAMS_BUILD_URL);
-            if (!buildServiceEndpoint.endsWith(STREAMS_REST_BUILDS) &&
-                    authenticator instanceof StandaloneAuthenticator) {
+            if (!buildServiceEndpoint.endsWith(STREAMS_REST_BUILDS)) {
                 // URL was user-provided root of service, add the path
                 URL url = new URL(buildServiceEndpoint);
                 URL buildsUrl = new URL(url.getProtocol(), url.getHost(), url.getPort(), STREAMS_REST_BUILDS);
