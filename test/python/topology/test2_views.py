@@ -12,6 +12,7 @@ import streamsx.ec as ec
 import streamsx.spl.op as op
 import streamsx.spl.types as spltypes
 import queue
+import os
 
 def rands():
     r = random.Random()
@@ -86,6 +87,29 @@ class TestDistributedViews(unittest.TestCase):
         self._ov = s.view(name='DoTwice')
         self._ov = s.view(name='DoTwice')
         self._expected_type = dict
+        
+        tester = Tester(topo)
+        tester.local_check = self._object_view
+        tester.tuple_count(s, 1000, exact=False)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    @unittest.skipUnless('STREAMS_INSTALL' in os.environ and 'STREAMS_INSTANCE_ID' in os.environ and 'STREAMS_DOMAIN_ID' in os.environ, "requires STREAMS_INSTALL, STREAMS_INSTANCE_ID,STREAMS_DOMAIN_ID")
+    def test_view_from_connection(self):
+        """ Test a view of strings
+        """
+        sc = rest.StreamsConnection()
+        sc.session.verify = False
+        self.test_config[context.ConfigParams.STREAMS_CONNECTION] = sc
+
+        topo = Topology()
+        s = topo.source(rands)
+        throttle = op.Map('spl.utility::Throttle', s,
+            params = {'rate': 25.0})
+        s = throttle.stream
+        s = s.map(lambda t : "ABC" + str(t))
+        s = s.as_string()
+        self._ov = s.view()
+        self._expected_type = str
         
         tester = Tester(topo)
         tester.local_check = self._object_view

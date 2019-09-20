@@ -475,49 +475,45 @@ class _BundleSubmitter(_BaseSubmitter):
             env.pop('STREAMS_INSTALL', None)
         return env
 
+def _get_distributed_submitter(config, graph, username, password):
+    # CP4D integrated environment and within project
+    svc_info = streamsx.rest_primitives.Instance._find_service_def(config)
+    if svc_info:
+        return _DistributedSubmitterCP4DIntegratedProject(config, graph, svc_info)
+
+    # CP4D integrated environment external to project
+    if  'CP4D_URL' in os.environ and \
+        'STREAMS_INSTANCE_ID' in os.environ and \
+        'STREAMS_PASSWORD' in os.environ:
+        return _DistributedSubmitterCP4DIntegrated(config, graph)
+
+    # Streams 4.2/4.3 by connection
+    if  'STREAMS_INSTALL' in os.environ and \
+        'STREAMS_INSTANCE_ID' in os.environ and \
+        ConfigParams.STREAMS_CONNECTION in config and \
+        isinstance(config[ConfigParams.STREAMS_CONNECTION], streamsx.rest.StreamsConnection):
+        return _DistributedSubmitter4Conn(config, graph, username, password)
+
+    # Streams 4.2/4.3 by environment
+    if  'STREAMS_INSTALL' in os.environ and \
+        'STREAMS_DOMAIN_ID' in os.environ and \
+        'STREAMS_INSTANCE_ID' in os.environ:
+        return _DistributedSubmitter4(config, graph, username, password)
+
+    raise RuntimeError('Insufficient configuration for DISTRIBUTED submission')
+
 class _DistributedSubmitter(_BaseSubmitter):
     """
-    A submitter which supports the DISTRIBUTED (on-prem cluster) context.
+    A submitter which supports the DISTRIBUTED context.
+    Sub-classed for specific configurations
     """
-    def __init__(self, ctxtype, config, graph, username, password):
-        _BaseSubmitter.__init__(self, ctxtype, config, graph)
+    def __init__(self, config, graph, username, password):
+        super(_DistributedSubmitter, self).__init__(ContextTypes.DISTRIBUTED, config, graph)
 
-        self._streams_connection = config.get(ConfigParams.STREAMS_CONNECTION)
+        self._streams_connection = None
         self.username = username
         self.password = password
         self._job = None
-
-        if self._streams_connection is not None:
-            pass
-        elif 'STREAMS_DOMAIN_ID' in os.environ and 'STREAMS_INSTANCE_ID' in os.environ:
-            pass
-        else:
-            # Look for a service definition
-            svc_info = streamsx.rest_primitives.Instance._find_service_def(config)
-            if not svc_info:
-                # Look for endpoint set by env vars.
-                inst = streamsx.rest_primitives.Instance.of_endpoint(username=username, password=password, verify=config.get(ConfigParams.SSL_VERIFY))
-                if inst is not None:
-                    self._streams_connection = inst.rest_client._sc
-
-        # Verify if credential (if supplied) is consistent with those in StreamsConnection
-        if self._streams_connection is not None and isinstance(self._streams_connection, streamsx.rest.StreamsConnection):
-            if isinstance(self._streams_connection.session.auth, tuple):
-                self.username = self._streams_connection.session.auth[0]
-                self.password = self._streams_connection.session.auth[1]
-                if ((username is not None and username != self.username) or (password is not None and password != self.password)):
-                        raise RuntimeError('Credentials supplied in the arguments differ than '
-                                   'those specified in the StreamsConnection object')
-            elif isinstance(self._streams_connection.session.auth, streamsx.rest_primitives._ICPDExternalAuthHandler):
-                svc_info = self._streams_connection.session.auth._cfg
-                self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
-                if  self._streams_connection.session.verify == False:
-                    self._config()[ConfigParams.SSL_VERIFY] = False
-        else:
-            svc_info =  streamsx.rest_primitives.Instance._find_service_def(config)
-            if svc_info:
-                self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
-                streamsx.rest_primitives.Instance._clear_service_info(self._config())
 
         # Give each view in the app the necessary information to connect to SWS.
         self._setup_views()
@@ -525,40 +521,87 @@ class _DistributedSubmitter(_BaseSubmitter):
     def _job_access(self):
         if self._job:
             return self._job
-        sc = self._config().get(ConfigParams.STREAMS_CONNECTION)
-        if not sc:
-            if ConfigParams.SERVICE_DEFINITION in self._config():
-                instance = streamsx.rest_primitives.Instance.of_service(self._config())
-                self._job = instance.get_job(id=self.submission_results['jobId'])
-                return self._job
-            sc = streamsx.rest.StreamsConnection(self.username, self.password)
-            if ConfigParams.SSL_VERIFY in self._config():
-                sc.session.verify = self._config()[ConfigParams.SSL_VERIFY]
 
-        iid = os.environ.get('STREAMS_INSTANCE_ID')
-        if iid:
-            instance = sc.get_instance(id=iid)
-        else:
-            instance = sc.get_instances()[0]
+        instance = self._get_instance()
         self._job = instance.get_job(id=self.submission_results['jobId'])
         return self._job
 
+
+class _DistributedSubmitterCPDIntegratedProject(_DistributedSubmitter):
+    """
+    A submitter which supports the CPD integrated configuration
+    within a project.
+    """
+    def __init__(self, config, graph, svc_info):
+        super(_DistributedSubmitterCP4DIntegratedProject, self).__init__(config, graph, None, None)
+        self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
+        streamsx.rest_primitives.Instance._clear_service_info(self._config())
+
+    def _get_instance(self):
+        return streamsx.rest_primitives.Instance.of_service(self._config())
+
+
+class _DistributedSubmitterCP4DIntegrated(_DistributedSubmitter):
+    """
+    A submitter which supports the CPD integrated configuration
+    outside a project.
+    """
+    def __init__(self, config, graph):
+        super(_DistributedSubmitterCP4DIntegrated, self).__init__(config, graph, None, None)
+        # Look for endpoint set by env vars.
+        self._inst = streamsx.rest_primitives.Instance.of_endpoint(verify=config.get(ConfigParams.SSL_VERIFY))
+        if self._inst is None:
+            raise ValueError("Incorrect configuration for Cloud Pak for Data integrated configuration")
+        self._streams_connection = self._inst.rest_client._sc
+        svc_info = self._streams_connection.session.auth._cfg
+        self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
+        if  self._streams_connection.session.verify == False:
+              self._config()[ConfigParams.SSL_VERIFY] = False
+
+    def _get_instance(self):
+        return self._inst
+
+class _DistributedSubmitter4(_DistributedSubmitter):
+    """
+    A submitter which supports the DISTRIBUTED context
+    for IBM Streams 4.2/4.3.
+    """
+    def __init__(self, config, graph, username, password):
+        super(_DistributedSubmitter4, self).__init__(config, graph, username, password)
+
+    def _get_instance(self):
+        if not self._streams_connection:
+            self._streams_connection = streamsx.rest.StreamsConnection(self.username, self.password)
+            if ConfigParams.SSL_VERIFY in self._config():
+                self._streams_connection.session.verify = self._config()[ConfigParams.SSL_VERIFY]
+        return self._streams_connection.get_instance(os.environ['STREAMS_INSTANCE_ID'])
+       
+
+class _DistributedSubmitter4Conn(_DistributedSubmitter4):
+    """
+    A submitter which supports the DISTRIBUTED context
+    for IBM Streams 4.2/4.3 using a connection.
+    """
+    def __init__(self, config, graph, username, password):
+        super(_DistributedSubmitter4Conn, self).__init__(config, graph, username, password)
+        self._streams_connection = config.get(ConfigParams.STREAMS_CONNECTION)
+        self.username = self._streams_connection.session.auth[0]
+        self.password = self._streams_connection.session.auth[1]
+        if (username is not None and username != self.username) or (password is not None and password != self.password):
+            raise RuntimeError('Credentials supplied in the arguments differ than '
+                               'those specified in the StreamsConnection object')
+
+    def _get_instance(self):
+        iid = os.environ.get('STREAMS_INSTANCE_ID')
+        return self._streams_connection.get_instance(id=iid)
+
     def _get_java_env(self):
-        "Set env vars from connection if set"
-        env = super(_DistributedSubmitter, self)._get_java_env()
-        if self._streams_connection is not None:
-            # Need to sure the environment matches the connection.
-            sc = self._streams_connection
-            if isinstance(sc._delegator, streamsx.rest_primitives._StreamsRestDelegator):
-                 env.pop('STREAMS_DOMAIN_ID', None)
-                 env.pop('STREAMS_INSTANCE_ID', None)
-            else:
-                 env['STREAMS_DOMAIN_ID'] = sc.get_domains()[0].id
-            if not ConfigParams.SERVICE_DEFINITION in self._config():
-                env['STREAMS_REST_URL'] = sc.resource_url
-                env['STREAMS_USERNAME'] = sc.session.auth[0]
-                env['STREAMS_PASSWORD'] = sc.session.auth[1]
+        env = super(_DistributedSubmitter4Conn, self)._get_java_env()
+        # Need to sure the environment matches the connection.
+        sc = self._streams_connection
+        env['STREAMS_DOMAIN_ID'] = sc.get_domains()[0].id
         return env
+
 
 class _SubmitContextFactory(object):
     """
@@ -586,7 +629,7 @@ class _SubmitContextFactory(object):
 
         if ctxtype == ContextTypes.DISTRIBUTED:
             logger.debug("Selecting the DISTRIBUTED context for submission")
-            return _DistributedSubmitter(ctxtype, self.config, self.graph, self.username, self.password)
+            return _get_distributed_submitter(self.config, self.graph, self.username, self.password)
         elif ctxtype == ContextTypes.ANALYTICS_SERVICE or ctxtype == ContextTypes.STREAMING_ANALYTICS_SERVICE:
             logger.debug("Selecting the STREAMING_ANALYTICS_SERVICE context for submission")
             if sys.version_info.major == 2:
@@ -731,17 +774,21 @@ class ContextTypes(object):
 
     The `Topology` is compiled using the Streams build service and submitted
     to an Streams service instance running in the same Cloud Pak for
-    Data cluster as the Jupyter notebook declaring the application.
+    Data cluster as the Jupyter notebook or script declaring the application.
 
     The instance is specified in the configuration passed into :py:func:`submit`. The configuration may be code injected from the list of services or manually created. The code that selects a service instance by name is::
 
         from icpd_core import icpd_util
         cfg = icpd_util.get_service_instance_details(name='instanceName')
 
+        topo = Topology()
+        ...
+        submit(ContextTypes.DISTRIBUTED, topo, cfg)
+
     The resultant `cfg` dict may be augmented with other values such as
     a :py:class:`JobConfig` or keys from :py:class:`ConfigParams`.
 
-    *External to cluster*
+    *External to cluster or project*
 
     The `Topology` is compiled using the Streams build service and submitted
     to a Streams service instance running in Cloud Pak for Data.
@@ -762,7 +809,7 @@ class ContextTypes(object):
     Use of the Cloud Pak for Data deployment URL and Streams instance
     name is recommended.
 
-    **IBM Streams on-premise**
+    **IBM Streams on-premise 4.2 & 4.3**
 
     The `Topology` is compiled locally and the resultant Streams application bundle
     (sab file) is submitted to an IBM Streams instance.
@@ -770,7 +817,7 @@ class ContextTypes(object):
     Environment variables:
         These environment variables define how the application is built and submitted.
 
-        * **STREAMS_INSTALL** - Location of a IBM Streams installation (4.2 or later).
+        * **STREAMS_INSTALL** - Location of a IBM Streams installation (4.2 or 4.3).
         * **STREAMS_DOMAIN_ID** - Domain identifier for the Streams instance.
         * **STREAMS_INSTANCE_ID** - Instance identifier.
         * **STREAMS_ZKCONNECT** - (optional) ZooKeeper connection string for domain (when not using an embedded ZooKeeper)
@@ -906,7 +953,8 @@ class ConfigParams(object):
     """
     STREAMS_CONNECTION = 'topology.streamsConnection'
     """
-    Key for a :py:class:`StreamsConnection` object for connecting to a running IBM Streams instance.
+    Key for a :py:class:`StreamsConnection` object for connecting to a running IBM Streams instance. Only supported for Streams 4.2, 4.3. Requires environment
+    variable ``STREAMS_INSTANCE_ID`` to be set.
     """
     SSL_VERIFY = 'topology.SSLVerify'
     """
