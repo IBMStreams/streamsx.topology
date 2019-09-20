@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.rest.build.BuildService;
@@ -21,6 +22,7 @@ import com.ibm.streamsx.topology.internal.context.RemoteContextForwarderStreamsC
 import com.ibm.streamsx.topology.internal.context.JSONStreamsContext.AppEntity;
 import com.ibm.streamsx.topology.internal.context.streamsrest.DistributedStreamsRestContext;
 import com.ibm.streamsx.topology.internal.context.streamsrest.StreamsKeys;
+import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
  * Context that submits the SPL to the Stream build service
@@ -86,8 +88,14 @@ public final class RemoteDistributedStreamsContext extends RemoteContextForwarde
                 StandaloneAuthenticator authenticator = (StandaloneAuthenticator) authenticatorO;
                 service = authenticator.config(verify);
                 String buildServiceUrl = getConfigBuildServiceUrl(entity);
+                if (buildServiceUrl == null) {
+                    buildServiceUrl = System.getenv(Util.STREAMS_BUILD_URL);
+                }
                 if (buildServiceUrl != null) {
-                    // FIXME: should we do deep copy to avoid changing instance?
+                    // Copy so we don't affect instance. Version of gson we
+                    // use lacks deepCopy() so we serialize / parse to copy.
+                    String json = service.toString();
+                    service = new JsonParser().parse(json).getAsJsonObject();
                     JsonObject connInfo = service.getAsJsonObject(CONNECTION_INFO);
                     if (connInfo.has(SERVICE_BUILD_ENDPOINT)) {
                         connInfo.remove(SERVICE_BUILD_ENDPOINT);

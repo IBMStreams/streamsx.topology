@@ -30,18 +30,18 @@ public class StandaloneAuthenticator implements Function<Executor,String> {
     private String userName;
     private String password;
     private String securityUrl;
-    private String auth;
+    private String serviceAuth;
     private long expire;    // in ms since epoch
 
     private JsonObject cfg;
 
-    // Resources URL path
-    private static final String STREAMS_REST_RESOURCES = "/streams/rest/resources";
     // Resources response array
     private static final String RESOURCES = "resources";
     // Resource name for security service URL
-    private static final String ACCESS_TOKENS = "accessTokens";
-    // Resrouce name for instances URL
+    private static final String ACCESS_TOKENS_RESOURCE = "accessTokens";
+    // Resource name for instances URL
+    private static final String BUILDS_RESOURCE = "builds";
+    // Resource name for instances URL
     private static final String INSTANCES_RESOURCE = "instances";
     // Instances response array
     private static final String INSTANCES_ARRAY = "instances";
@@ -57,20 +57,11 @@ public class StandaloneAuthenticator implements Function<Executor,String> {
     // Connection info elements
     private static final String SERVICE_TOKEN = "service_token";
     private static final String SERVICE_REST_ENDPOINT = "serviceRestEndpoint";
+    private static final String SERVICE_BUILD_ENDPOINT = "serviceBuildEndpoint";
 
     private static long MS = 1000;
 
     public static StandaloneAuthenticator of(String endpoint, String userName, String password) {
-        if (endpoint == null) {
-            endpoint = System.getenv(Util.ICP4D_DEPLOYMENT_URL);
-            if (endpoint == null) {
-                endpoint = System.getenv(Util.STREAMS_REST_URL);
-            }
-        }
-
-        // Fix endpoint if necessary
-        endpoint = getResourcesUrl(endpoint);
-
         // Fill in user / password defaults if required
         if (userName == null || password == null) {
             String[] values = Util.getDefaultUserPassword(userName, password);
@@ -89,7 +80,7 @@ public class StandaloneAuthenticator implements Function<Executor,String> {
 
         String serviceToken = jstring(service, SERVICE_TOKEN);
         if (serviceToken != null) {
-            authenticator.auth = RestUtils.createBearerAuth(serviceToken);
+            authenticator.serviceAuth = RestUtils.createBearerAuth(serviceToken);
             authenticator.expire = service.get(SERVICE_TOKEN_EXPIRE).getAsLong();
         }
         authenticator.cfg = service;
@@ -99,18 +90,15 @@ public class StandaloneAuthenticator implements Function<Executor,String> {
 
     @Override
     public String apply(Executor executor) {
-        if (auth == null || System.currentTimeMillis() > expire) {
+        if (serviceAuth == null || System.currentTimeMillis() > expire) {
             try {
-                refreshAuth(executor);
+                refreshAuth(executor, cfg);
             } catch (IOException ignored) {
                 // Leave as-is and let use fail with auth error
             }
         }
-        return auth;
-    }
 
-    public String getResourcesUrl() {
-        return resourcesUrl;
+        return serviceAuth;
     }
 
     StandaloneAuthenticator(String resourcesUrl, String userName, String password) {
@@ -118,12 +106,12 @@ public class StandaloneAuthenticator implements Function<Executor,String> {
         this.userName = userName;
         this.password = password;
         this.securityUrl = null;
-        this.auth = null;
+        this.serviceAuth = null;
         this.expire = 0;
         this.cfg = null;
     }
 
-    private String refreshAuth(Executor executor) throws IOException {
+    private void refreshAuth(Executor executor, JsonObject config) throws IOException {
         Request post = Request.Post(securityUrl)
                 .addHeader("Authorization", RestUtils.createBasicAuth(userName, password))
                 .addHeader("Accept", ContentType.APPLICATION_JSON.getMimeType())
@@ -131,18 +119,20 @@ public class StandaloneAuthenticator implements Function<Executor,String> {
 
         JsonObject resp = RestUtils.requestGsonResponse(executor, post);
         String token = jstring(resp, ACCESS_TOKEN);
-        auth = token == null ? null : RestUtils.createBearerAuth(token);
+        serviceAuth = token == null ? null : RestUtils.createBearerAuth(token);
         if (resp.has(EXPIRE_TIME)) {
             JsonElement je = resp.get(EXPIRE_TIME);
             // Response is in seconds since epoch, and docs say the min
-            // for the service is 30s, so give a 05s of slack if we can
+            // for the service is 30s, so give a 10s of slack if we can
             expire = je.isJsonNull() ? 0 : Math.max(0, je.getAsLong() - 10) * MS;
         } else {
             // Short expiry (same as python)
             expire = System.currentTimeMillis() + 4 * 60 * MS;
         }
 
-        return token;
+        // Update config
+        config.addProperty(SERVICE_TOKEN, token);
+        config.addProperty(SERVICE_TOKEN_EXPIRE, expire);
     }
 
     public JsonObject config(boolean verify) throws IOException {
@@ -160,22 +150,26 @@ public class StandaloneAuthenticator implements Function<Executor,String> {
 
         // Try to discover security service and instance URLs
         String streamsEndpoint = null;
+        String buildsEndpoint = null;
         try {
             String instancesUrl = null;
             String basicAuth = RestUtils.createBasicAuth(userName, password);
             JsonObject resp = RestUtils.getGsonResponse(executor, basicAuth, resourcesUrl);
             if (resp == null || !resp.has(RESOURCES)) {
-                // Not a standalone instance
+                // Not a standalone instance, return null to allow fallback
+                // to basic authentication.
                 return null;
             }
             ResourcesArray resources = new GsonBuilder()
                     .excludeFieldsWithoutExposeAnnotation()
                     .create().fromJson(resp, ResourcesArray.class);
             for (Resource resource : resources.resources) {
-                if (ACCESS_TOKENS.equals(resource.name)) {
+                if (ACCESS_TOKENS_RESOURCE.equals(resource.name)) {
                     securityUrl = resource.resource;
                 } else if (INSTANCES_RESOURCE.equals(resource.name)) {
                     instancesUrl = resource.resource;
+                } else if (BUILDS_RESOURCE.equals(resource.name)) { 
+                    buildsEndpoint = null;
                 }
             }
 
@@ -188,46 +182,38 @@ public class StandaloneAuthenticator implements Function<Executor,String> {
             }
         } catch (IOException ignored) {}
 
-        if (securityUrl == null || streamsEndpoint == null) {
-            // Unable to configure, return null to indicate may not be a
-            // standalone instance
+        if (securityUrl == null || (streamsEndpoint == null && buildsEndpoint == null)) {
+            // Need to have a security URL and at least one of streams or
+            // build endpoint, return null to allow fallback to basic auth.
             return null;
         }
 
-        String token = refreshAuth(executor);
-
         JsonObject config = new JsonObject();
-
         config.addProperty("type", "streams");
         config.addProperty("externalClient", true);
-        config.addProperty(SERVICE_TOKEN, token);
-        config.addProperty(SERVICE_TOKEN_EXPIRE, expire);
 
-        URL securityUrl = new URL(resourcesUrl);
-        config.addProperty("cluster_ip", securityUrl.getHost());
-        config.addProperty("cluster_port", securityUrl.getPort());
+        try {
+            refreshAuth(executor, config);
+        } catch (IOException e) {
+            // If this fails first time it may be because the security service
+            // URL was not resolvable / reachable (eg. an internal URL was
+            // given instead of an external one), or there were other I/O
+            // problems. In either case, return null to allow fallback to
+            // basic authentication.
+            return null;
+        }
 
-        // Get service rest endpoint from instancesUrl
-        
         JsonObject connInfo = new JsonObject();
-        connInfo.addProperty(SERVICE_REST_ENDPOINT, streamsEndpoint);
+        if (streamsEndpoint != null) {
+            connInfo.addProperty(SERVICE_REST_ENDPOINT, streamsEndpoint);
+        }
+        if (buildsEndpoint != null) {
+            connInfo.addProperty(SERVICE_BUILD_ENDPOINT, buildsEndpoint);
+        }
         config.add(CONNECTION_INFO, connInfo);
 
         cfg = config;
         return config;
-    }
-
-    private static String getResourcesUrl(String endpoint) {
-        if (!endpoint.endsWith(STREAMS_REST_RESOURCES)) {
-            try {
-                URL url = new URL(endpoint);
-                URL restUrl = new URL(url.getProtocol(), url.getHost(), url.getPort(), STREAMS_REST_RESOURCES);
-                endpoint = restUrl.toExternalForm();
-            } catch (MalformedURLException ignored) {
-                // Leave as-is
-            }
-        }
-        return endpoint;
     }
 
     private static class Resource {
