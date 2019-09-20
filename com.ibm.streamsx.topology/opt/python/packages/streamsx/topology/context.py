@@ -487,6 +487,11 @@ def _get_distributed_submitter(config, graph, username, password):
         'STREAMS_PASSWORD' in os.environ:
         return _DistributedSubmitterCP4DIntegrated(config, graph)
 
+    # CP4D standalone environment
+    if  'STREAMS_REST_URL' in os.environ and \
+        'STREAMS_PASSWORD' in os.environ:
+        return _DistributedSubmitterCP4DStandalone(config, graph)
+
     # Streams 4.2/4.3 by connection
     if  'STREAMS_INSTALL' in os.environ and \
         'STREAMS_INSTANCE_ID' in os.environ and \
@@ -535,10 +540,19 @@ class _DistributedSubmitterCPDIntegratedProject(_DistributedSubmitter):
     def __init__(self, config, graph, svc_info):
         super(_DistributedSubmitterCP4DIntegratedProject, self).__init__(config, graph, None, None)
         self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
+        self._config()[ConfigParams.FORCE_REMOTE_BUILD] = True
         streamsx.rest_primitives.Instance._clear_service_info(self._config())
 
     def _get_instance(self):
         return streamsx.rest_primitives.Instance.of_service(self._config())
+
+    def _get_java_env(self):
+        env = super(_DistributedSubmitterCP4DIntegratedProject, self)._get_java_env()
+        env.pop('CP4D_URL', None)
+        env.pop('STREAMS_DOMAIN_ID', None)
+        env.pop('STREAMS_INSTANCE_ID', None)
+        env.pop('STREAMS_INSTALL', None)
+        return env
 
 
 class _DistributedSubmitterCP4DIntegrated(_DistributedSubmitter):
@@ -555,11 +569,42 @@ class _DistributedSubmitterCP4DIntegrated(_DistributedSubmitter):
         self._streams_connection = self._inst.rest_client._sc
         svc_info = self._streams_connection.session.auth._cfg
         self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
-        if  self._streams_connection.session.verify == False:
-              self._config()[ConfigParams.SSL_VERIFY] = False
+        self._config()[ConfigParams.FORCE_REMOTE_BUILD] = True
 
     def _get_instance(self):
         return self._inst
+
+    def _get_java_env(self):
+        env = super(_DistributedSubmitterCP4DIntegrated, self)._get_java_env()
+        env.pop('CP4D_URL', None)
+        env.pop('STREAMS_DOMAIN_ID', None)
+        env.pop('STREAMS_INSTANCE_ID', None)
+        env.pop('STREAMS_INSTALL', None)
+        return env
+
+class _DistributedSubmitterCP4DStandalone(_DistributedSubmitter):
+    """
+    A submitter which supports the CPD standalone configuration.
+    """
+    def __init__(self, config, graph):
+        super(_DistributedSubmitterCP4DStandalone, self).__init__(config, graph, None, None)
+        # Look for endpoint set by env vars.
+        self._inst = streamsx.rest_primitives.Instance.of_endpoint(verify=config.get(ConfigParams.SSL_VERIFY))
+        if self._inst is None:
+            raise ValueError("Incorrect configuration for Cloud Pak for Data standalone configuration")
+        self._streams_connection = self._inst.rest_client._sc
+        self._config()[ConfigParams.FORCE_REMOTE_BUILD] = True
+
+    def _get_instance(self):
+        return self._inst
+
+    def _get_java_env(self):
+        env = super(_DistributedSubmitterCP4DStandalone, self)._get_java_env()
+        env.pop('CP4D_URL', None)
+        env.pop('STREAMS_DOMAIN_ID', None)
+        env.pop('STREAMS_INSTANCE_ID', None)
+        env.pop('STREAMS_INSTALL', None)
+        return env
 
 class _DistributedSubmitter4(_DistributedSubmitter):
     """
@@ -768,7 +813,7 @@ class ContextTypes(object):
     DISTRIBUTED = 'DISTRIBUTED'
     """Submission to an IBM Streams instance.
 
-    **IBM Cloud Pak for Data**
+    .. rubric:: IBM Cloud Pak for Data integated configuration
 
     *Projects (within cluster)*
 
@@ -796,20 +841,25 @@ class ContextTypes(object):
     Environment variables:
         These environment variables define how the application is built and submitted.
 
-        * **CP4D_URL** - Cloud Pak for Data deployment URL, e.g. `https://cp4d_server:31843`.
+        * **CP4D_URL** - Cloud Pak for Data deployment URL, e.g. `https://cp4d_server:31843`
         * **STREAMS_INSTANCE_ID** - Streams service instance name.
         * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
         * **STREAMS_PASSWORD** - Password for authentication.
 
-    For backwards compatibility if the Cloud Pak for Data deployment URL
-    uses the default port 31843 then the Streams instance to connect to
-    can be defined by the ``STREAMS_REST_URL`` environment variable which
-    is set to the external Streams REST endpoint for the service instance.
+    .. rubric:: IBM Cloud Pak for Data standalone configuration
 
-    Use of the Cloud Pak for Data deployment URL and Streams instance
-    name is recommended.
+    The `Topology` is compiled using the Streams build service and submitted
+    to a Streams service instance using REST apis.
 
-    **IBM Streams on-premise 4.2 & 4.3**
+    Environment variables:
+        These environment variables define how the application is built and submitted.
+
+        * **STREAMS_BUILD_URL** - Streams build service URL, e.g. when the service is exposed as node port: `https://<EXTERNAL-IP>:<NODE-PORT>`
+        * **STREAMS_REST_URL** - Streams SWS service (REST API) URL, e.g. when the service is exposed as node port: `https://<EXTERNAL-IP>:<NODE-PORT>`
+        * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
+        * **STREAMS_PASSWORD** - Password for authentication.
+
+    .. rubric:: IBM Streams on-premise 4.2 & 4.3
 
     The `Topology` is compiled locally and the resultant Streams application bundle
     (sab file) is submitted to an IBM Streams instance.
