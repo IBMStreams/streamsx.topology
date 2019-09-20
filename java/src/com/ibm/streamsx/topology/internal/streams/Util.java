@@ -24,6 +24,7 @@ public class Util {
     private static final String STREAMS_INSTALL = "STREAMS_INSTALL";
     public static final String STREAMS_USERNAME = "STREAMS_USERNAME";
     public static final String STREAMS_PASSWORD = "STREAMS_PASSWORD";
+    public static final String STREAMS_BUILD_URL = "STREAMS_BUILD_URL";
     public static final String STREAMS_REST_URL = "STREAMS_REST_URL";
     public static final String ICP4D_DEPLOYMENT_URL = "CP4D_URL";
     private static String streamsInstall;

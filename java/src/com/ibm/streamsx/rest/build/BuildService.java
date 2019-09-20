@@ -5,15 +5,23 @@
 
 package com.ibm.streamsx.rest.build;
 
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
+
 import java.io.IOException;
+import java.net.URL;
 import java.io.File;
 import java.util.List;
+import java.util.function.Function;
+
+import org.apache.http.client.fluent.Executor;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Job;
 import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
 import com.ibm.streamsx.rest.internal.RestUtils;
+import com.ibm.streamsx.rest.internal.StandaloneAuthenticator;
+import com.ibm.streamsx.topology.internal.streams.Util;
 
 /**
  * Access to a IBM Streams build service.
@@ -22,19 +30,49 @@ import com.ibm.streamsx.rest.internal.RestUtils;
  */
 public interface BuildService {
 	
-	public static BuildService ofEndpoint(String endpoint, String name, String userName, String password,
+	public static final String STREAMS_REST_RESOURCES = "/streams/rest/resources";
+
+    public static BuildService ofEndpoint(String endpoint, String name, String userName, String password,
             boolean verify) throws IOException {
-	    
-	    ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(endpoint, name, userName, password);
-	    JsonObject serviceDefinition = authenticator.config(verify);
-	    
-	    return StreamsBuildService.of(authenticator, serviceDefinition, verify);
-	    
+	    if (name == null && System.getenv(Util.STREAMS_INSTANCE_ID) == null) {
+	        // Standalone. Use endpoint from env if unset, and add known path
+            if (endpoint == null) {
+                endpoint = Util.getenv(Util.STREAMS_BUILD_URL);
+            }
+            if (!endpoint.endsWith(STREAMS_REST_RESOURCES)) {
+                URL url = new URL(endpoint);
+                URL resourcesUrl = new URL(url.getProtocol(), url.getHost(),
+                        url.getPort(), STREAMS_REST_RESOURCES);
+                endpoint = resourcesUrl.toExternalForm();
+            }
+	        StandaloneAuthenticator auth = StandaloneAuthenticator.of(endpoint, userName, password);
+	        JsonObject serviceDefinition = auth.config(verify);
+	        if (serviceDefinition == null) {
+	            // Problem with security service, fall back to basic auth, so
+	            // user and password are required.
+	            if (userName == null || password == null) {
+	                String[] values = Util.getDefaultUserPassword(userName, password);
+	                userName = values[0];
+	                password = values[1];
+	            }
+	            String basicAuth = RestUtils.createBasicAuth(userName, password);
+	            return StreamsBuildService.of(e -> basicAuth, endpoint, verify);
+	        }
+	        return StreamsBuildService.of(auth, serviceDefinition, verify);
+	    } else {
+	        ICP4DAuthenticator auth = ICP4DAuthenticator.of(endpoint, name, userName, password);
+	        return StreamsBuildService.of(auth, auth.config(verify), verify);
+	    }
 	}
 
     public static BuildService ofServiceDefinition(JsonObject serviceDefinition, boolean verify) throws IOException {
-
-        ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(serviceDefinition);
+        String name = jstring(serviceDefinition, "service_name");
+        Function<Executor,String> authenticator;
+        if (name == null) {
+            authenticator = StandaloneAuthenticator.of(serviceDefinition);
+        } else {
+            authenticator = ICP4DAuthenticator.of(serviceDefinition);
+        }
 
         return StreamsBuildService.of(authenticator, serviceDefinition, verify);
     }

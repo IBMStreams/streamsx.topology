@@ -148,7 +148,18 @@ public interface ContextProperties {
      * @since 1.13
      */
     String STREAMS_INSTANCE = "topology.streamsInstance";
-    
+
+    /**
+     * Set URL for remote build service.
+     * 
+     * For Cloud Pak for Data standalone configurations the build service used
+     * for remote builds is given by this URL. This is ignored by other contexts
+     * or configurations.
+     * 
+     * @since 1.13
+     */
+    String BUILD_SERVICE_URL = "topology.buildServiceUrl";
+
     /**
      * Set SSL certification verification state.
      * 

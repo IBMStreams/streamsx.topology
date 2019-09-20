@@ -87,10 +87,16 @@ public class DistributedStreamsContext extends
             InvokeSubmit.checkPreconditions();
             useRestApi.set(false);
     	} catch (IllegalStateException e) {
-    		// See if the REST api is setup.
-    	    Util.getenv(Util.ICP4D_DEPLOYMENT_URL);
-    		Util.getenv(Util.STREAMS_INSTANCE_ID);
-    		Util.getenv(Util.STREAMS_PASSWORD);
+    	    // See if the REST api is setup.
+    	    if (System.getenv(Util.ICP4D_DEPLOYMENT_URL) != null) {
+    	        // Integrated configuration
+    	        Util.getenv(Util.STREAMS_INSTANCE_ID);
+    	    } else {
+    	        // Standalone configuration
+                Util.getenv(Util.STREAMS_REST_URL);
+                Util.getenv(Util.STREAMS_BUILD_URL);
+    	    }
+            Util.getenv(Util.STREAMS_PASSWORD);
     		useRestApi.set(true);
     	}
     }

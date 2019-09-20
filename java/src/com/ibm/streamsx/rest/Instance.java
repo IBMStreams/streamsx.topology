@@ -238,9 +238,15 @@ public class Instance extends Element {
 
     private static StreamsConnection createStandaloneConnection(String endpoint,
             String userName, String password, boolean verify) throws IOException {
+        if (!endpoint.endsWith(STREAMS_REST_RESOURCES)) {
+            URL url = new URL(endpoint);
+            URL resourcesUrl = new URL(url.getProtocol(), url.getHost(),
+                    url.getPort(), STREAMS_REST_RESOURCES);
+            endpoint = resourcesUrl.toExternalForm();
+        }
         StandaloneAuthenticator auth = StandaloneAuthenticator.of(endpoint, userName, password);
         if (auth.config(verify) != null) {
-            return StreamsConnection.ofAuthenticator(auth.getResourcesUrl(), auth);
+            return StreamsConnection.ofAuthenticator(endpoint, auth);
         } else {
             // Couldn't configure standalone authenticator, try Basic
             return StreamsConnection.createInstance(userName, password, endpoint);
