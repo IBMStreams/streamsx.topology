@@ -30,33 +30,42 @@ import com.ibm.streamsx.topology.internal.streams.Util;
  */
 public interface BuildService {
 	
-	public static final String STREAMS_REST_RESOURCES = "/streams/rest/resources";
+    public static final String STREAMS_REST_RESOURCES = "/streams/rest/resources";
+    public static final String STREAMS_BUILD_PATH = "/streams/rest/builds";
 
     public static BuildService ofEndpoint(String endpoint, String name, String userName, String password,
             boolean verify) throws IOException {
 	    if (name == null && System.getenv(Util.STREAMS_INSTANCE_ID) == null) {
-	        // Standalone. Use endpoint from env if unset, and add known path
+	        // StandaloneAuthenticator, needs resources endpoint.
             if (endpoint == null) {
                 endpoint = Util.getenv(Util.STREAMS_BUILD_URL);
             }
-            if (!endpoint.endsWith(STREAMS_REST_RESOURCES)) {
+	        String resourcesEndpoint = endpoint;
+            if (!resourcesEndpoint.endsWith(STREAMS_REST_RESOURCES)) {
                 URL url = new URL(endpoint);
                 URL resourcesUrl = new URL(url.getProtocol(), url.getHost(),
                         url.getPort(), STREAMS_REST_RESOURCES);
-                endpoint = resourcesUrl.toExternalForm();
+                resourcesEndpoint = resourcesUrl.toExternalForm();
             }
-	        StandaloneAuthenticator auth = StandaloneAuthenticator.of(endpoint, userName, password);
+	        StandaloneAuthenticator auth = StandaloneAuthenticator.of(resourcesEndpoint, userName, password);
 	        JsonObject serviceDefinition = auth.config(verify);
 	        if (serviceDefinition == null) {
 	            // Problem with security service, fall back to basic auth, so
-	            // user and password are required.
+	            // user and password are required, and endpoint is builds path
 	            if (userName == null || password == null) {
 	                String[] values = Util.getDefaultUserPassword(userName, password);
 	                userName = values[0];
 	                password = values[1];
 	            }
 	            String basicAuth = RestUtils.createBasicAuth(userName, password);
-	            return StreamsBuildService.of(e -> basicAuth, endpoint, verify);
+	            String buildsEndpoint = endpoint;
+	            if (!buildsEndpoint.endsWith(STREAMS_BUILD_PATH)) {
+	                URL url = new URL(endpoint);
+	                URL resourcesUrl = new URL(url.getProtocol(), url.getHost(),
+	                        url.getPort(), STREAMS_BUILD_PATH);
+	                buildsEndpoint = resourcesUrl.toExternalForm();
+	            }
+	            return StreamsBuildService.of(e -> basicAuth, buildsEndpoint, verify);
 	        }
 	        return StreamsBuildService.of(auth, serviceDefinition, verify);
 	    } else {
