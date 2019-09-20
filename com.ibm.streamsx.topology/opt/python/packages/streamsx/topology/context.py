@@ -595,6 +595,14 @@ class _SubmitContextFactory(object):
             return _StreamingAnalyticsSubmitter(ctxtype, self.config, self.graph)
         elif ctxtype == 'BUNDLE':
             logger.debug("Selecting the BUNDLE context for submission")
+            if 'CP4D_URL' in os.environ:
+                return _BundleSubmitter(ctxtype, self.config, self.graph)
+            if 'VCAP_SERVICES' in os.environ or \
+                    ConfigParams.VCAP_SERVICES in self.config or \
+                    ConfigParams.SERVICE_DEFINITION in self.config:
+                sbs = _SasBundleSubmitter(self.config, self.graph)
+                if sbs._remote:
+                    return sbs
             return _BundleSubmitter(ctxtype, self.config, self.graph)
         else:
             logger.debug("Using the BaseSubmitter, and passing the context type through to java.")
@@ -1412,3 +1420,21 @@ def _vcap_from_service_definition(service_def):
 
 def _name_from_service_definition(service_def):
     return service_def['name'] if 'credentials' in service_def else 'service'
+
+class _SasBundleSubmitter(_BaseSubmitter):
+    """
+    A submitter which supports the BUNDLE context
+    for Streaming Analytics service.
+    """
+    def __init__(self, config, graph):
+        _BaseSubmitter.__init__(self, 'SAS_BUNDLE', config, graph)
+        self._remote = config.get(ConfigParams.FORCE_REMOTE_BUILD) or \
+            not 'STREAMS_INSTALL' in os.environ
+            
+    def _get_java_env(self):
+        "Set env vars from connection if set"
+        env = super(_SasBundleSubmitter, self)._get_java_env()
+        env.pop('STREAMS_DOMAIN_ID', None)
+        env.pop('STREAMS_INSTANCE_ID', None)
+        env.pop('STREAMS_INSTALL', None)
+        return env

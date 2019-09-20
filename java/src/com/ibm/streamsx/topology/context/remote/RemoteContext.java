@@ -30,6 +30,7 @@ public interface RemoteContext<T> {
         STREAMING_ANALYTICS_SERVICE,
         BUNDLE,
         DISTRIBUTED,
+        SAS_BUNDLE, // Internal value only for v4 Sas service.
     }
     
     

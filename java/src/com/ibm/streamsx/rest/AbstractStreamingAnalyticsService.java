@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.http.HttpEntity;
@@ -52,7 +53,7 @@ import com.ibm.streamsx.topology.internal.streams.Util;
  */
 abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsService {
     
-    private static final String DEFAULT_ORIGINATOR;
+    static final String DEFAULT_ORIGINATOR;
     static {
         String originator = "rest:java";
         String version = System.getProperty("java.version");
@@ -63,7 +64,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
 
     private final JsonObject credentials;
     final protected JsonObject service;
-    private final String serviceName;
+    protected final String serviceName;
 
     // Connection to Streams REST API
     AbstractStreamingAnalyticsConnection streamsConnection;
@@ -285,7 +286,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             
             if (GsonUtilities.jboolean(buildConfig, BuildConfigKeys.KEEP_ARTIFACTS)) {
                 final long startDownloadSabTime = System.currentTimeMillis();
-                if (downloadArtifacts(httpclient, artifacts)) {
+                if (downloadArtifacts(httpclient, artifacts) != null) {
                     final long endDownloadSabTime = System.currentTimeMillis();
                     metrics.addProperty(SubmissionResultsKeys.DOWNLOAD_SABS_TIME, (endDownloadSabTime - startDownloadSabTime));
                 }
@@ -297,7 +298,9 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         }
     }
     
-    protected abstract boolean downloadArtifacts(CloseableHttpClient httpclient, JsonArray artifacts);
+
+    
+    protected abstract List<File> downloadArtifacts(CloseableHttpClient httpclient, JsonArray artifacts);
 
     /**
      * Add any required Streams console URLs into the result.
@@ -316,7 +319,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         return result;
     }
 
-    private String prettyPrintOutput(JsonObject output) {
+    String prettyPrintOutput(JsonObject output) {
         StringBuilder sb = new StringBuilder();
         for(JsonElement messageElem : array(output, "output")){
             JsonObject message = messageElem.getAsJsonObject();
@@ -328,7 +331,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
     private static final String HEXES = "0123456789ABCDEF";
     private static final int HEXES_L = HEXES.length();
 
-    private static String randomHex(final int length) {
+    static String randomHex(final int length) {
         char[] name = new char[length];
         for (int i = 0; i < length; i++) {
             name[i] = HEXES.charAt(ThreadLocalRandom.current().nextInt(HEXES_L));
