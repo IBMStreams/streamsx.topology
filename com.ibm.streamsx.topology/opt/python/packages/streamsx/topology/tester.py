@@ -304,12 +304,21 @@ class Tester(object):
 
         Returns: None
 
-        .. rubric:: Cloud Pak for Data instance configuration
+        .. rubric:: Cloud Pak for Data integrated instance configuration
 
         These environment variables define how the test is built and submitted.
 
             * ``CP4D_URL`` - Cloud Pak for Data deployment URL, e.g. `https://cp4d_server:31843`.
             * ``STREAMS_INSTANCE_ID`` - Streams service instance name.
+            * ``STREAMS_USERNAME`` - (optional) User name to submit the test as, defaulting to the current operating system user name.
+            * ``STREAMS_PASSWORD`` - Password for authentication.
+
+        .. rubric:: Cloud Pak for Data standalone instance configuration
+
+        These environment variables define how the test is built and submitted.
+
+            * ``STREAMS_BUILD_URL`` - Endpoint for the Streams build service.
+            * ``STREAMS_REST_URL`` -  Endpoint for the Streams SWS (REST) service.
             * ``STREAMS_USERNAME`` - (optional) User name to submit the test as, defaulting to the current operating system user name.
             * ``STREAMS_PASSWORD`` - Password for authentication.
 
@@ -358,8 +367,12 @@ class Tester(object):
                 raise unittest.SkipTest("Skipped due to no local IBM Streams install")
             return
 
-        icpd_setup = 'CP4D_URL' in os.environ and 'STREAMS_INSTANCE_ID' in os.environ and 'STREAMS_PASSWORD' in os.environ
-        if icpd_setup:
+        icpd_integrated_setup = 'CP4D_URL' in os.environ and 'STREAMS_INSTANCE_ID' in os.environ and 'STREAMS_PASSWORD' in os.environ
+        if icpd_integrated_setup:
+            return
+
+        icpd_standalone_setup = 'STREAMS_BUILD_URL' in os.environ and 'STREAMS_REST_URL' in os.environ and 'STREAMS_PASSWORD' in os.environ
+        if icpd_standalone_setup:
             return
 
         raise unittest.SkipTest("No IBM Streams instance definition for DISTRIBUTED")
