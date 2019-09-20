@@ -25,6 +25,13 @@ import zipfile
 
 my_path = Path(__file__).parent
 
+def cpd_setup():
+    env = os.environ
+    return (("CP4D_URL" in env and "STREAMS_INSTANCE_ID" in env) or \
+         ('STREAMS_BUILD_URL' in env and 'STREAMS_REST_URL')) \
+         and \
+         "STREAMS_USERNAME" in os.environ and \
+         "STREAMS_PASSWORD" in os.environ
 
 def _handle_http_error(err):
     # REST API failures raise HTTPError instance, which, when printed, show
@@ -47,13 +54,7 @@ def _handle_http_error(err):
 
 # Tests SC script.
 # Requires environment setup for a ICP4D Streams instance.
-@unittest.skipUnless(
-    "CP4D_URL" in os.environ
-    and "STREAMS_INSTANCE_ID" in os.environ
-    and "STREAMS_USERNAME" in os.environ
-    and "STREAMS_PASSWORD" in os.environ,
-    "requires Streams REST API setup",
-)
+@unittest.skipUnless(cpd_setup(), "requires Streams REST API setup")
 class TestSC(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -105,7 +106,7 @@ class TestSC(unittest.TestCase):
 
             # Take half of the toolkits and place them on the buildserver
             self.uploaded_toolkits_paths = self.test_toolkit_paths[: len(self.test_toolkit_paths) // 2]
-            self.post_test_toolkits(self.uploaded_toolkits_paths)
+            self.post_toolkits(self.uploaded_toolkits_paths)
 
             # Other half is local toolkits, combine all local toolkit paths into 1 string by seperating paths w/ a ':' to pass into SC command via -t arg
             self.local_toolkits_paths = self.test_toolkit_paths[len(self.test_toolkit_paths) // 2 :]
@@ -214,7 +215,7 @@ class TestSC(unittest.TestCase):
                 deleted_all_toolkits = True
         return deleted_all_toolkits
 
-    def post_test_toolkits(self, toolkit_paths):
+    def post_toolkits(self, toolkit_paths):
         # Given a list of test toolkit paths, upload these toolkits to the buildserver
         try:
             for toolkit in toolkit_paths:

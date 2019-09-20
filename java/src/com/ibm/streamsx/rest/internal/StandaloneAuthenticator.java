@@ -254,8 +254,8 @@ public class StandaloneAuthenticator implements Function<Executor,String> {
                     securityUrl = resource.resource;
                 } else if (INSTANCES_RESOURCE.equals(resource.name)) {
                     instancesUrl = resource.resource;
-                } else if (BUILDS_RESOURCE.equals(resource.name)) { 
-                    buildsEndpoint = null;
+                } else if (BUILDS_RESOURCE.equals(resource.name)) {
+                    buildsEndpoint = resource.resource;
                 }
             }
 

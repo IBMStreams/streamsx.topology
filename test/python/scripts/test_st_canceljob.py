@@ -9,6 +9,7 @@ import requests
 
 from streamsx.topology.topology import Topology
 from streamsx.topology.context import submit, ConfigParams
+from streamsx.rest import Instance
 import streamsx.scripts.streamtool as streamtool
 
 from contextlib import contextmanager
@@ -27,13 +28,8 @@ def captured_output():
         sys.stdout, sys.stderr = old_out, old_err
 
 
-@unittest.skipUnless(
-    "CP4D_URL" in os.environ
-    and "STREAMS_INSTANCE_ID" in os.environ
-    and "STREAMS_USERNAME" in os.environ
-    and "STREAMS_PASSWORD" in os.environ,
-    "requires Streams REST API setup",
-)
+import test_sc
+@unittest.skipUnless(test_sc.cpd_setup(), "requires Streams REST API setup")
 class TestCancelJob(unittest.TestCase):
     def _submit_job(self):
         topo = Topology()
@@ -378,7 +374,7 @@ class TestCancelJob(unittest.TestCase):
         self.assertEqual(checkFiles, [])
 
     def setUp(self):
-        self.instance = os.environ["STREAMS_INSTANCE_ID"]
+        self.instance = Instance.of_endpoint(verify=False).id
         self.username = os.environ["STREAMS_USERNAME"]
         self.jobs_to_cancel = []
 
