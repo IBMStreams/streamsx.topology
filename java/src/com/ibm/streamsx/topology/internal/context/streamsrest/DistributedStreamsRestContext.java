@@ -6,6 +6,7 @@ package com.ibm.streamsx.topology.internal.context.streamsrest;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
+import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import java.io.File;
@@ -13,6 +14,9 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map.Entry;
+import java.util.function.Function;
+
+import org.apache.http.client.fluent.Executor;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -24,6 +28,7 @@ import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.rest.build.BuildService;
 import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
+import com.ibm.streamsx.rest.internal.StandaloneAuthenticator;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
@@ -46,16 +51,13 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
     protected BuildService createSubmissionContext(JsonObject deploy) throws Exception {
         
         if (!deploy.has(StreamsKeys.SERVICE_DEFINITION)) {
-            // Obtain the ICP4D information from the Streams rest Url.
-            
-            // Use defaults from env.
-            ICP4DAuthenticator authenticator = ICP4DAuthenticator.of(null, null, null, null);
-            
-            deploy.add(StreamsKeys.SERVICE_DEFINITION, authenticator.config(sslVerify(deploy)));
-        }
+            // Configuration from environment.
+            instance = Instance.ofEndpoint((String)null, (String)null, (String)null, (String)null, sslVerify(deploy));           
+        } else {
         
-        // Verify the Streams service endpoint has the correct format.
-        StreamsKeys.getStreamsInstanceURL(deploy);
+            // Verify the Streams service endpoint has the correct format.
+            StreamsKeys.getStreamsInstanceURL(deploy);
+        }
         
         BuildService builder = super.createSubmissionContext(deploy);
              
@@ -65,26 +67,36 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
     @Override
     protected void postBuildAction(JsonObject deploy, JsonObject jco, JsonObject result) throws Exception {
         
-        URL instanceUrl  = new URL(StreamsKeys.getStreamsInstanceURL(deploy));
+        if (instance == null) {
         
-        String path = instanceUrl.getPath();
-        
-        String instanceId = path.substring("/streams/rest/instances/".length());
-        if (instanceId.endsWith("/"))
-            instanceId = instanceId.substring(0, instanceId.length()-1);
-        
-        instanceId = URLDecoder.decode(instanceId, StandardCharsets.UTF_8.name());
-        
-        URL restUrl = new URL(instanceUrl.getProtocol(), instanceUrl.getHost(), instanceUrl.getPort(),
-                "/streams/rest/resources");
-                       
-        JsonObject serviceDefinition = object(deploy, StreamsKeys.SERVICE_DEFINITION);
-        StreamsConnection conn = StreamsConnection.ofAuthenticator(restUrl.toExternalForm(), ICP4DAuthenticator.of(serviceDefinition));
-        
-        if (!sslVerify(deploy))
-            conn.allowInsecureHosts(true);
-                
-        instance = conn.getInstance(instanceId);
+            URL instanceUrl = new URL(StreamsKeys.getStreamsInstanceURL(deploy));
+
+            String path = instanceUrl.getPath();
+
+            String instanceId = path.substring("/streams/rest/instances/".length());
+            if (instanceId.endsWith("/"))
+                instanceId = instanceId.substring(0, instanceId.length() - 1);
+
+            instanceId = URLDecoder.decode(instanceId, StandardCharsets.UTF_8.name());
+
+            URL restUrl = new URL(instanceUrl.getProtocol(),
+                    instanceUrl.getHost(), instanceUrl.getPort(),
+                    "/streams/rest/resources");
+
+            JsonObject serviceDefinition = object(deploy, StreamsKeys.SERVICE_DEFINITION);
+            String name = jstring(serviceDefinition, "service_name");
+            Function<Executor, String> authenticator = (name == null
+                    || name.isEmpty())
+                            ? StandaloneAuthenticator.of(serviceDefinition)
+                            : ICP4DAuthenticator.of(serviceDefinition);
+            StreamsConnection conn = StreamsConnection
+                    .ofAuthenticator(restUrl.toExternalForm(), authenticator);
+
+            if (!sslVerify(deploy))
+                conn.allowInsecureHosts(true);
+
+            instance = conn.getInstance(instanceId);
+        }
         
         JsonArray artifacts = GsonUtilities.array(GsonUtilities.object(result, "build"), "artifacts");
         try {

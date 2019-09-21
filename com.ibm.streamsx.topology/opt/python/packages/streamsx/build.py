@@ -30,8 +30,11 @@ import json
 import logging
 import re
 import requests
+import socket
 import tempfile
+import warnings
 from pprint import pformat
+from urllib import parse
 from zipfile import ZipFile
 
 import streamsx.topology.context
@@ -43,30 +46,15 @@ from streamsx import st
 from .rest import _AbstractStreamsConnection
 from .rest_primitives import (Domain, Instance, Installation, RestResource, Toolkit, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
     _exact_resource, _IAMStreamsRestClient, _IAMConstants, _get_username,
-    _ICPDExternalAuthHandler, _handle_http_errors)
+    _ICPDExternalAuthHandler, _handle_http_errors, _JWTAuthHandler)
 
 logger = logging.getLogger('streamsx.build')
 
 
 class BuildService(_AbstractStreamsConnection):
-    """Creates a connection to a running distributed IBM Streams build service and exposes methods to manage the toolkits installed on that build service.
+    """IBM Streams build service.
 
-    Args:
-        username (str): Username of an authorized Streams user. If ``None``, the username is taken from the ``STREAMS_USERNAME`` environment variable.
-
-        password(str): Password for `username` If ``None``, the password is taken from the ``STREAMS_PASSWORD`` environment variable.
-
-        resource_url(str): Root URL for IBM Streams REST API. If ``None``, the URL is taken from the ``STREAMS_REST_URL`` environment variable.
-
-    Example:
-        >>> from streamsx.build import BuildService
-        >>> build_service = BuildService.of_endpoint("https://icpd_server:31843", "StreamsInstance", "streamsadmin", "passw0rd")
-        >>> toolkits = build_service.get_toolkits()
-        >>> print("There are {} toolkits available.".format(len(toolkits)))
-        There are 10 toolkits available.
-
-    Attributes:
-        session (:py:class:`requests.Session`): Requests session object for making REST calls.
+    A instance of a `BuildService` is created using :py:meth:`of_endpoint`.
 
     .. versionadded:: 1.13
     """
@@ -192,46 +180,107 @@ class BuildService(_AbstractStreamsConnection):
     @staticmethod
     def of_endpoint(endpoint=None, service_name=None, username=None, password=None, verify=None):
         """
-        Connect to a Cloud Pak for Data IBM Streams instance from
-        outside the cluster.
+        Connect to a Cloud Pak for Data IBM Streams build service instance.
+
+        Two configurations are supported.
+
+        .. rubric:: Integrated configuration
+
+        The build service is bound to a Streams instance and is defined
+        using the Cloud Pak for Data deployment endpoint (URL) and
+        the Streams service name.
+
+        The endpoint is passed in as `endpoint` defaulting the the
+        environment variable ``CP4D_URL``.
+        An example is `https://cp4d_server:31843`.
+
+        The Streams service name is passed in as `service_name` defaulting
+        to the environment variable ``STREAMS_INSTANCE_ID``.
+
+        .. rubric:: Standalone configuration
+
+        A build service is independent of a Streams instance and is defined
+        using the build service endpoint.
+
+        The endpoint is passed in as `endpoint` defaulting the the
+        environment variable ``STREAMS_BUILD_URL``.
+        An example is `https://build_service:34679`.
+
+        No service name is specified thus `service_name` should be passed
+        as ``None`` or not set.
 
         Args:
-            endpoint(str): Deployment URL for Cloud Pak for Data, e.g. `https://cp4d_server:31843`. Defaults to the environment variable ``CP4D_URL``.
-            service_name(str): Streams instance name. Defaults to the environment variable ``STREAMS_INSTANCE_ID``.
+            endpoint(str): Endpoint defining the build service.
+            service_name(str): Streams instance name for a integrated configuration.  This value is ignored for a standalone configuration.
             username(str): User name to authenticate as. Defaults to the environment variable ``STREAMS_USERNAME`` or the operating system identifier if not set.
             password(str): Password for authentication. Defaults to the environment variable ``STREAMS_PASSWORD`` or the operating system identifier if not set.
             verify: SSL verification. Set to ``False`` to disable SSL verification. Defaults to SSL verification being enabled.
-
+       
         Returns:
             BuildService: Connection to Streams build service or ``None`` of insufficient configuration was provided.
 
         """
+        possible_integ = True
         if not endpoint:
             endpoint = os.environ.get('CP4D_URL')
-            if endpoint:
-                if not service_name:
-                    service_name = os.environ.get('STREAMS_INSTANCE_ID')
-                if not service_name:
-                    return None
-            else:
+            if not endpoint:
                 endpoint = os.environ.get('STREAMS_BUILD_URL')
                 if not endpoint:
                     return None
-        if not endpoint:
-            return None
+                possible_integ = False
+                if service_name:
+                    warnings.warn("Service name ignored for standalone configuration", UserWarning, stacklevel=2)
+                    service_name = None
+
+        if possible_integ and not service_name:
+            service_name = os.environ.get('STREAMS_INSTANCE_ID')
         if not password:
             password = os.environ.get('STREAMS_PASSWORD')
         if not password:
             return None
         username = _get_username(username)
 
-        auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
+        if service_name:
+            # this is an integrated config
+            auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
+            build_url, _ = BuildService._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
+            service_name=auth._cfg['service_name']
+            sc = BuildService(resource_url=build_url, auth=auth)
+            if verify is not None:
+                sc.rest_client.session.verify = verify
 
-        build_url, _ = BuildService._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
+        else:
+            # This is a stand-alone config
+            parsed = parse.urlparse(endpoint)
+            build_url = parse.urlunparse((parsed.scheme, parsed.netloc, "/streams/rest/resources", None, None, None))
 
-        sc = BuildService(resource_url=build_url, auth=auth)
-        if verify is not None:
-            sc.rest_client.session.verify = verify
+            # Create a connection using basic authentication.  This will be
+            # used to attempt to discover the security service.  If there
+            # is no security service, this connection will continue to be
+            # used; otherwise, it will be replaced by one using the 
+            # security service.
+            sc = BuildService(resource_url=build_url, username=username, password=password)
+            if verify is not None:
+                sc.rest_client.session.verify = verify
+            for resource in sc.get_resources():
+                if resource.name == 'accessTokens':
+                    atinfo = parse.urlparse(resource.resource)
+                    try:
+                        # If we are external to the cluster then
+                        # We can't resolve the security manager
+                        # so revert to basic auth
+                        socket.gethostbyname(atinfo.hostname)
+                        auth=_JWTAuthHandler(resource.resource, username, password, verify)
+                        sc = BuildService(resource_url=build_url, auth=auth)
+                        if verify is not None:
+                            sc.rest_client.session.verify = verify
+                        break
+                    except:
+                        pass
+            else:
+                # No security service could be found.  We can try to proceed 
+                # with basic authentication.
+                pass
  
         return sc
 

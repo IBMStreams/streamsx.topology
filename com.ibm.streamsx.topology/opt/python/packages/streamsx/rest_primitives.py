@@ -27,6 +27,7 @@ import time
 import json
 import re
 import time
+import warnings
 import xml.etree.ElementTree as ElementTree
 
 from pprint import pformat
@@ -319,6 +320,7 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
 
         auth_url = up.urlunsplit(('https', cluster_ip + ':' + str(cluster_port), '/icp4d-api/v1/authorize', None, None))
         r = requests.post(auth_url, json=pd, verify=self._verify)
+        _handle_http_errors(r)
         token = r.json()['token']
 
         details_url = up.urlunsplit(
@@ -370,6 +372,50 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
         }
 
         return cfg
+
+class _JWTAuthHandler(_BearerAuthHandler):
+    def __init__(self, security_url, username, password, verify):
+        super(_JWTAuthHandler, self).__init__()
+        self._username = username
+        self._password = password
+        self._verify = verify
+        self.security_url = security_url
+        self._cfg = self._create_cfg()
+
+    def _refresh_autH(self):
+        logger.debug("JWTAuthHandler:Token refresh")
+        self._cfg = self._create_cfg()
+        logger.debug("JWT:Token refreshed:expiry: " + time.ctime(self._auth_expiry_time))
+        
+    def _create_cfg(self):
+        import requests
+        import urllib.parse as up
+
+        pd = {'audience': 'streams'}
+        r = requests.post(self.security_url, json=pd, verify=self._verify, auth=(self._username, self._password), headers={'Content-Type' : 'application/json',
+                                           'Accept' : 'application/json'})
+        _handle_http_errors(r)
+        self.token = r.json()['accessToken']
+        self._auth_expiry_time=time.time() + 4 * 60
+
+        es = up.urlsplit(self.security_url)
+
+        cluster_port = es.port or 443
+        cluster_ip = es.hostname
+
+
+        cfg = {
+                'type': 'streams',
+                'service_token': self.token,
+                'service_token_expire': int(self._auth_expiry_time * 1000.0),
+                'cluster_ip': cluster_ip,
+                'cluster_port': cluster_port,
+                'externalClient':True,            
+        }
+
+        return cfg;
+
+
 
 class _IAMAuthHandler(_BearerAuthHandler):
     def __init__(self, credentials):
@@ -1640,12 +1686,37 @@ class Instance(_ResourceElement):
     @staticmethod
     def of_endpoint(endpoint=None, service_name=None, username=None, password=None, verify=None):
         """
-        Connect to a Cloud Pak for Data IBM Streams instance from
-        outside the cluster.
+        Connect to a Cloud Pak for Data IBM Streams instance.
+
+        Two configurations are supported.
+
+        .. rubric:: Integrated configuration
+
+        The Streams instance is defined using the Cloud Pak for Data
+        deployment endpoint (URL) and the Streams service name.
+
+        The endpoint is passed in as `endpoint` defaulting the the
+        environment variable ``CP4D_URL``.
+        An example is `https://cp4d_server:31843`.
+
+        The Streams service name is passed in as `service_name` defaulting
+        to the environment variable ``STREAMS_INSTANCE_ID``.
+
+        .. rubric:: Standalone configuration
+
+        The Streams instance is defined using its Streams REST api
+        endpoint, which is its SWS service.
+
+        The endpoint is passed in as `endpoint` defaulting the the
+        environment variable ``STREAMS_REST_URL``.
+        An example is `https://streams_sws_service:34679`.
+
+        No service name is specified thus `service_name` should be passed
+        as ``None`` or not set.
 
         Args:
-            endpoint(str): Deployment URL for Cloud Pak for Data, e.g. `https://cp4d_server:31843`. Defaults to the environment variable ``CP4D_URL``.
-            service_name(str): Streams instance name. Defaults to the environment variable ``STREAMS_INSTANCE_ID``.
+            endpoint(str): Endpoint defining the Streams instance.
+            service_name(str): Streams instance name for a integrated configuration.  This value is ignored for a standalone configuration.
             username(str): User name to authenticate as. Defaults to the environment variable ``STREAMS_USERNAME`` or the operating system identifier if not set.
             password(str): Password for authentication. Defaults to the environment variable ``STREAMS_PASSWORD`` or the operating system identifier if not set.
             verify: SSL verification. Set to ``False`` to disable SSL verification. Defaults to SSL verification being enabled.
@@ -1655,33 +1726,68 @@ class Instance(_ResourceElement):
 
         .. versionadded:: 1.13
         """
+        possible_integ = True
         if not endpoint:
             endpoint = os.environ.get('CP4D_URL')
-            if endpoint:
-                if not service_name:
-                    service_name = os.environ.get('STREAMS_INSTANCE_ID')
-                if not service_name:
-                    return None
-            else:
+            if not endpoint:
                 endpoint = os.environ.get('STREAMS_REST_URL')
                 if not endpoint:
                     return None
-        if not endpoint:
-            return None
+                possible_integ = False
+                if service_name:
+                    warnings.warn("Service name ignored for standalone configuration", UserWarning, stacklevel=2)
+                    service_name = None
+        if possible_integ and not service_name:
+            service_name = os.environ.get('STREAMS_INSTANCE_ID')
         if not password:
             password = os.environ.get('STREAMS_PASSWORD')
         if not password:
             return None
         username = _get_username(username)
 
-        auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
-        resource_url, _ = Instance._root_from_endpoint(auth._cfg['connection_info'].get('serviceRestEndpoint'))
+        if service_name:
+            # this is an integrated config
+            auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
+            resource_url, _ = Instance._root_from_endpoint(auth._cfg['connection_info'].get('serviceRestEndpoint'))
+            service_name=auth._cfg['service_name']
+            sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth)
+            if verify is not None:
+                sc.rest_client.session.verify = verify
+                
+            return sc.get_instance(service_name)
 
-        sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth)
-        if verify is not None:
-            sc.rest_client.session.verify = verify
- 
-        return sc.get_instance(auth._cfg['service_name'])
+        else:
+            # this is a stand-alone config
+            parsed = parse.urlparse(endpoint)
+            resource_url = parse.urlunparse((parsed.scheme, parsed.netloc, "/streams/rest/resources", None, None, None))
+
+            # Create a connection using basic authentication.  This will be
+            # used to attempt to discover the security service.  If there
+            # is no security service, this connection will continue to be
+            # used; otherwise, it will be replaced by one using the 
+            # security service.
+            sc = streamsx.rest.StreamsConnection(resource_url=resource_url, username=username, password=password)
+            if verify is not None:
+                sc.rest_client.session.verify = verify
+            for resource in sc.get_resources():
+                if resource.name == 'accessTokens':
+                    atinfo = parse.urlparse(resource.resource)
+                    try:
+                        # If we are external to the cluster then
+                        # We can't resolve the security manager
+                        # so revert to basic auth
+                        socket.gethostbyname(atinfo.hostname)
+                        auth=_JWTAuthHandler(resource.resource, username, password, verify)
+                        sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth)
+                        if verify is not None:
+                            sc.rest_client.session.verify = verify
+                        break
+                    except:
+                        pass
+                  
+
+            # There should be exactly one instance in this configuration.
+            return sc.get_instances()[0]
 
     def get_operators(self, name=None):
         """Get the list of :py:class:`Operator` elements associated with this instance.
