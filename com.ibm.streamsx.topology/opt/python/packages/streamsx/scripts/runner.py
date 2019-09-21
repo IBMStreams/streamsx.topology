@@ -72,9 +72,9 @@ def _parse_args(args):
     """
     cmd_parser = argparse.ArgumentParser(description='Execute a Streams application using a Streaming Analytics service.')
 
-    ctx_group = cmd_parser.add_mutually_exclusive_group(required=True)
+    ctx_group = cmd_parser.add_argument_group('Action')
     ctx_group.add_argument('--service-name', help='Submit to Streaming Analytics service')
-    ctx_group.add_argument('--create-bundle', action='store_true', help='Create a bundle using a local IBM Streams install. No job submission occurs.')
+    ctx_group.add_argument('--create-bundle', action='store_true', help='Create a bundle (sab file).  No job submission occurs.')
 
     app_group = cmd_parser.add_mutually_exclusive_group(required=True)
     app_group.add_argument('--topology', help='Topology to call')
@@ -132,7 +132,7 @@ def _get_topology_app(cmd_args):
 def _get_spl_app(cmd_args):
     topo = op.main_composite(kind=cmd_args.main_composite,
         toolkits=cmd_args.toolkits)[0]
-    if cmd_args.create_bundle:
+    if cmd_args.create_bundle and 'STREAMS_INSTALL' in os.environ:
         # Mimic what the build service does by indexing
         # any required toolkits including Python operator extraction
         # but only if we can write to it.
@@ -159,7 +159,7 @@ def _submit_topology(cmd_args, app):
     cfg = app.cfg
     if cmd_args.create_bundle:
         ctxtype = ctx.ContextTypes.BUNDLE
-    elif cmd_args.service_name:
+    else:
         cfg[ctx.ConfigParams.FORCE_REMOTE_BUILD] = True
         cfg[ctx.ConfigParams.SERVICE_NAME] = cmd_args.service_name
         ctxtype = ctx.ContextTypes.STREAMING_ANALYTICS_SERVICE

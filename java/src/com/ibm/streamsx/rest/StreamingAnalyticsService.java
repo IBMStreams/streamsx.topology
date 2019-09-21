@@ -11,6 +11,7 @@ import static com.ibm.streamsx.topology.context.AnalyticsServiceProperties.VCAP_
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -162,6 +163,29 @@ public interface StreamingAnalyticsService {
      */
     Result<Job,JsonObject> buildAndSubmitJob(File archive, JsonObject jco, String buildName, JsonObject buildConfig) throws IOException;
 
+    /**
+     * Submit an archive to build against Streaming Analytics service.
+     * <P>
+     * The returned {@link Result} instance has:
+     * <UL>
+     * <LI>{@link Result#getId()} returning the build identifier.</LI>
+     * <LI>{@link Result#getElement()} returning a list of the created sab files.</LI>
+     * <LI>{@link Result#getRawResult()} return the JSON build information.</LI>
+     * </UL>
+     * </P>
+     * <P>
+     * Only supported for Streaming Analytics with v2 REST api.
+     * </P>
+     * @param archive The application archive to build.
+     * @param buildName A name for the build, or null.
+     * @param buildConfig Build configuration, or null.
+     * @return Result of the build.
+     * @throws IOException Error communicating with the service.
+     * 
+     * @since 1.14
+     */
+    Result<List<File>,JsonObject> build(File archive, String buildName, JsonObject buildConfig) throws IOException;
+    
     /**
      * Submit an archive to build and run on the Streaming Analytics service.
      * 

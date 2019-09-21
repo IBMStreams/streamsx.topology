@@ -29,7 +29,7 @@ import com.ibm.streamsx.topology.internal.streaminganalytics.VcapServices;
  */
 public class RemoteBuildAndSubmitRemoteContext extends BuildRemoteContext<StreamingAnalyticsService> {
     
-    private static final ThreadLocal<Map<String,Long>> SERVICE_ACCESS = new ThreadLocal<Map<String,Long>>() {
+    static final ThreadLocal<Map<String,Long>> SERVICE_ACCESS = new ThreadLocal<Map<String,Long>>() {
         protected java.util.Map<String,Long> initialValue() {
             return new HashMap<>();
         }
