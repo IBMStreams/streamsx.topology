@@ -5,6 +5,8 @@
 
 package com.ibm.streamsx.rest.build;
 
+import static com.ibm.streamsx.rest.build.StreamsBuildService.STREAMS_BUILD_PATH;
+import static com.ibm.streamsx.rest.build.StreamsBuildService.STREAMS_REST_RESOURCES;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.io.IOException;
@@ -29,9 +31,6 @@ import com.ibm.streamsx.topology.internal.streams.Util;
  * @since 1.12
  */
 public interface BuildService {
-	
-    public static final String STREAMS_REST_RESOURCES = "/streams/rest/resources";
-    public static final String STREAMS_BUILD_PATH = "/streams/rest/builds";
 
     public static BuildService ofEndpoint(String endpoint, String name, String userName, String password,
             boolean verify) throws IOException {
@@ -40,13 +39,11 @@ public interface BuildService {
             if (endpoint == null) {
                 endpoint = Util.getenv(Util.STREAMS_BUILD_URL);
             }
-	        String resourcesEndpoint = endpoint;
-            if (!resourcesEndpoint.endsWith(STREAMS_REST_RESOURCES)) {
-                URL url = new URL(endpoint);
-                URL resourcesUrl = new URL(url.getProtocol(), url.getHost(),
+            URL url = new URL(endpoint);
+            URL resourcesUrl = new URL(url.getProtocol(), url.getHost(),
                         url.getPort(), STREAMS_REST_RESOURCES);
-                resourcesEndpoint = resourcesUrl.toExternalForm();
-            }
+            String resourcesEndpoint = resourcesUrl.toExternalForm();
+
 	        StandaloneAuthenticator auth = StandaloneAuthenticator.of(resourcesEndpoint, userName, password);
 	        JsonObject serviceDefinition = auth.config(verify);
 	        if (serviceDefinition == null) {
@@ -60,10 +57,9 @@ public interface BuildService {
 	            String basicAuth = RestUtils.createBasicAuth(userName, password);
 	            String buildsEndpoint = endpoint;
 	            if (!buildsEndpoint.endsWith(STREAMS_BUILD_PATH)) {
-	                URL url = new URL(endpoint);
-	                URL resourcesUrl = new URL(url.getProtocol(), url.getHost(),
+	                URL buildUrl = new URL(url.getProtocol(), url.getHost(),
 	                        url.getPort(), STREAMS_BUILD_PATH);
-	                buildsEndpoint = resourcesUrl.toExternalForm();
+	                buildsEndpoint = buildUrl.toExternalForm();
 	            }
 	            return StreamsBuildService.of(e -> basicAuth, buildsEndpoint, verify);
 	        }
