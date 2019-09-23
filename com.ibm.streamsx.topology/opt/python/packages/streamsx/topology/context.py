@@ -532,7 +532,7 @@ class _DistributedSubmitter(_BaseSubmitter):
         return self._job
 
 
-class _DistributedSubmitterCPDIntegratedProject(_DistributedSubmitter):
+class _DistributedSubmitterCP4DIntegratedProject(_DistributedSubmitter):
     """
     A submitter which supports the CPD integrated configuration
     within a project.
