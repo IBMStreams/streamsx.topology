@@ -97,6 +97,8 @@ class TestDistributedViews(unittest.TestCase):
     def test_view_from_connection(self):
         """ Test a view of strings
         """
+        if self.test_ctxtype != context.ContextTypes.DISTRIBUTED:
+            self.skipTest('Distributed only')
         sc = rest.StreamsConnection()
         sc.session.verify = False
         self.test_config[context.ConfigParams.STREAMS_CONNECTION] = sc
