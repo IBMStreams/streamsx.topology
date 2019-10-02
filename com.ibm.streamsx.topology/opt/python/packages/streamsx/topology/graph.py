@@ -227,7 +227,7 @@ class SPLGraph(object):
     def _add_project_info(self, _graph):
         # Determine if it looks like we are in a project structure
         # and if so add an @spl__project() annotation
-        project_id = os.environ.get('DSX_PROJECT_ID')
+        project_id = os.environ.get('PROJECT_ID', os.environ.get('DSX_PROJECT_ID'))
         if project_id:
             annotation = {'type':'spl__project', 'properties':{'id':project_id}}
             project_name = os.environ.get('DSX_PROJECT_NAME')
