@@ -396,6 +396,12 @@ class Topology(object):
                     if namespace.startswith('<ipython-input'):
                         if 'DSX_PROJECT_NAME' in os.environ:
                             namespace = os.environ['DSX_PROJECT_NAME']
+                        else:
+                            try:
+                                from project_lib.project import Project
+                                namespace = Project.access().get_name()
+                            except:
+                                namespace = 'notebook'
         
         if sys.version_info.major == 3:
           self.opnamespace = "com.ibm.streamsx.topology.functional.python"
