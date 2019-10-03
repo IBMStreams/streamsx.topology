@@ -27,6 +27,14 @@ import streamsx.topology.state
 import streamsx.spl.op
 from streamsx.topology.schema import CommonSchema, StreamSchema, _normalize
 
+def _get_project_name():
+    if 'DSX_PROJECT_NAME' in os.environ:
+        return os.environ['DSX_PROJECT_NAME']
+    try:
+        from project_lib.project import Project
+        return Project.access().get_name()
+    except:
+        pass
 
 def _fix_namespace(ns):
     ns = str(ns)
@@ -230,7 +238,7 @@ class SPLGraph(object):
         project_id = os.environ.get('PROJECT_ID', os.environ.get('DSX_PROJECT_ID'))
         if project_id:
             annotation = {'type':'spl__project', 'properties':{'id':project_id}}
-            project_name = os.environ.get('DSX_PROJECT_NAME')
+            project_name = _get_project_name()
             if project_name:
                 annotation['properties']['name'] = project_name
             if not 'annotations' in _graph:

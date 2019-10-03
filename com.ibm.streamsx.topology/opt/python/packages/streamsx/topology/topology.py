@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015,2017
+# Copyright IBM Corp. 2015,2019
 
 """
 Streaming application definition.
@@ -394,14 +394,9 @@ class Topology(object):
                 elif si[0] is not None:
                     namespace = os.path.splitext(os.path.basename(si[0]))[0]
                     if namespace.startswith('<ipython-input'):
-                        if 'DSX_PROJECT_NAME' in os.environ:
-                            namespace = os.environ['DSX_PROJECT_NAME']
-                        else:
-                            try:
-                                from project_lib.project import Project
-                                namespace = Project.access().get_name()
-                            except:
-                                namespace = 'notebook'
+                        namespace = streamsx.topology.graph._get_project_name()
+                        if not namespace:
+                            namespace = 'notebook'
         
         if sys.version_info.major == 3:
           self.opnamespace = "com.ibm.streamsx.topology.functional.python"
