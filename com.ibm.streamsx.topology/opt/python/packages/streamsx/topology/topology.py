@@ -394,6 +394,7 @@ class Topology(object):
                 elif si[0] is not None:
                     namespace = os.path.splitext(os.path.basename(si[0]))[0]
                     if namespace.startswith('<ipython-input'):
+                        import streamsx.topology.graph
                         namespace = streamsx.topology.graph._get_project_name()
                         if not namespace:
                             namespace = 'notebook'
