@@ -429,7 +429,7 @@ def _get_namedtuple_cls(schema, name):
 
 def _inline_modules(fn, modules, constants):
     if sys.version_info.major == 2:
-        return None
+        return
     cvs = inspect.getclosurevars(fn)
     for mk in cvs.globals.keys():
         gv = cvs.globals[mk]
@@ -458,20 +458,20 @@ class _ModulesCallable(streamsx._streams._runtime._WrapOpLogic):
         modules = {}
         constants = {}
         if inspect.isroutine(callable_):
-            self._modules = _inline_modules(callable_, modules, constants)
+            _inline_modules(callable_, modules, constants)
         elif callable(callable_):
-            self._modules = _inline_modules(callable_.__call__, modules, constants)
+            _inline_modules(callable_.__call__, modules, constants)
             check_cmm = True
         elif type(callable_).__module__ == '__main__': 
-            self._modules = _inline_modules(callable_.__iter__, modules, constants)
+            _inline_modules(callable_.__iter__, modules, constants)
             # Handle common case the iterable is also the iterator.
             if hasattr(callable_, '__next__'):
-                self._modules.update(_inline_modules(callable_.__next__, modules, constants))
+                _inline_modules(callable_.__next__, modules, constants)
             check_cmm = True
 
         if check_cmm and self._streamsx_ec_context:
-            self._modules.update(_inline_modules(callable_.__enter__, modules, constants))
-            self._modules.update(_inline_modules(callable_.__exit__, modules, constants))
+            _inline_modules(callable_.__enter__, modules, constants)
+            _inline_modules(callable_.__exit__, modules, constants)
 
         self._modules = modules if modules else None
         self._constants = constants if constants else None
