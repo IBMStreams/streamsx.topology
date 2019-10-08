@@ -17,11 +17,10 @@ import streamsx._streams._runtime
 import dill
 # Importing cloudpickle break dill's deserialization.
 # Workaround is to make dill aware of the ClassType type.
-if sys.version_info.major == 3:
-    if not 'dill._dill' in sys.modules:
-        sys.modules['dill._dill'] = dill.dill
-        dill._dill = dill.dill
-    dill._dill._reverse_typemap['ClassType'] = type
+if not 'dill._dill' in sys.modules:
+    sys.modules['dill._dill'] = dill.dill
+    dill._dill = dill.dill
+dill._dill._reverse_typemap['ClassType'] = type
     
 import base64
 import json
@@ -425,8 +424,6 @@ def _get_namedtuple_cls(schema, name):
     return StreamSchema(schema).as_tuple(named=name).style
 
 def _inline_modules(fn, modules, constants):
-    if sys.version_info.major == 2:
-        return
     cvs = inspect.getclosurevars(fn)
     for mk in cvs.globals.keys():
         gv = cvs.globals[mk]

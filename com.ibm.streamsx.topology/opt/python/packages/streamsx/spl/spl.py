@@ -1346,8 +1346,6 @@ class primitive_operator(object):
         inputs = dict()
         for fname, fn in inspect.getmembers(wrapped):
             if hasattr(fn, '_splpy_input_port_seq'):
-                if sys.version_info.major == 2:
-                    fn = fn.__func__
                 inputs[fn._splpy_input_port_seq] = fn
 
         cls._splpy_input_ports = []
