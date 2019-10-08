@@ -3,6 +3,7 @@ package com.ibm.streamsx.topology.context.remote;
 import com.ibm.streamsx.topology.internal.context.streamsrest.BuildServiceContext;
 import com.ibm.streamsx.topology.internal.context.streamsrest.DistributedStreamsRestContext;
 import com.ibm.streamsx.topology.internal.context.remote.RemoteBuildAndSubmitRemoteContext;
+import com.ibm.streamsx.topology.internal.context.remote.Sas4BuildContext;
 import com.ibm.streamsx.topology.internal.context.remote.ToolkitRemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.ZippedToolkitRemoteContext;
 import com.ibm.streamsx.topology.internal.messages.Messages;
@@ -26,6 +27,8 @@ public class RemoteContextFactory {
             return new BuildServiceContext();
         case DISTRIBUTED:
             return new DistributedStreamsRestContext();
+        case SAS_BUNDLE:
+            return new Sas4BuildContext();
         default:
             throw new IllegalArgumentException(Messages.getString("CONTEXT_UNKNOWN_TYPE", type));
         }

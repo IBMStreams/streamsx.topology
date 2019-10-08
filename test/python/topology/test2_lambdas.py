@@ -13,6 +13,11 @@ from datetime import datetime
 import test_functions
 from test_utilities import standalone
 
+g1 = 3
+g2 = False
+g3 = 9.7
+g4 = 'abcd'
+
 try:
     import numpy as np
     skip_numpy = False
@@ -147,6 +152,7 @@ class TestLambdas(unittest.TestCase):
       s = topo.source([1,2,3,4,5,6,7,8,9])
       cv_y = 7.0
       s = s.filter(lambda x : x < cv_y)
+      s = s.filter(lambda v : g1 == 3 and (not g2) and g3 == 9.7 and g4 == 'abcd')
 
       tester = Tester(topo)
       tester.contents(s, [1,2,3,4,5,6])

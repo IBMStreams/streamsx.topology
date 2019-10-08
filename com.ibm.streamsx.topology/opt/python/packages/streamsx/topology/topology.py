@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015,2017
+# Copyright IBM Corp. 2015,2019
 
 """
 Streaming application definition.
@@ -384,8 +384,10 @@ class Topology(object):
                 elif si[0] is not None:
                     namespace = os.path.splitext(os.path.basename(si[0]))[0]
                     if namespace.startswith('<ipython-input'):
-                        if 'DSX_PROJECT_NAME' in os.environ:
-                            namespace = os.environ['DSX_PROJECT_NAME']
+                        import streamsx.topology.graph
+                        namespace = streamsx.topology.graph._get_project_name()
+                        if not namespace:
+                            namespace = 'notebook'
         
         if sys.version_info.major == 3:
           self.opnamespace = "com.ibm.streamsx.topology.functional.python"
@@ -398,11 +400,11 @@ class Topology(object):
         self.exclude_packages = set() 
         self._pip_packages = list() 
         self._files = dict()
-        if "Anaconda" in sys.version or 'DSX_PROJECT_ID' in os.environ:
+        if "Anaconda" in sys.version or 'PROJECT_ID' in os.environ or 'DSX_PROJECT_ID' in os.environ:
             import streamsx.topology.condapkgs
             self.exclude_packages.update(streamsx.topology.condapkgs._CONDA_PACKAGES)
         import streamsx.topology._deppkgs
-        if 'DSX_PROJECT_ID' in os.environ:
+        if 'PROJECT_ID' in os.environ or 'DSX_PROJECT_ID' in os.environ:
             self.exclude_packages.update(streamsx.topology._deppkgs._ICP4D_NB_PACKAGES)
         self.exclude_packages.update(streamsx.topology._deppkgs._DEP_PACKAGES)
         

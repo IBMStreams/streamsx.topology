@@ -30,13 +30,8 @@ def captured_output():
         sys.stdout, sys.stderr = old_out, old_err
 
 
-@unittest.skipUnless(
-    "CP4D_URL" in os.environ
-    and "STREAMS_INSTANCE_ID" in os.environ
-    and "STREAMS_USERNAME" in os.environ
-    and "STREAMS_PASSWORD" in os.environ,
-    "requires Streams REST API setup",
-)
+import test_sc
+@unittest.skipUnless(test_sc.cpd_setup(), "requires Streams REST API setup")
 class TestAppconfig(unittest.TestCase):
 
     # Create the application config
@@ -94,7 +89,7 @@ class TestAppconfig(unittest.TestCase):
 
 
     def setUp(self):
-        self.instance = os.environ['STREAMS_INSTANCE_ID']
+        self.instance = Instance.of_endpoint(verify=False).id
         self.stringLength = 10
         self.username = os.environ['STREAMS_USERNAME']
         self.name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]

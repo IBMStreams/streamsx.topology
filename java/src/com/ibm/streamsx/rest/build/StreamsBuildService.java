@@ -3,8 +3,9 @@ package com.ibm.streamsx.rest.build;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
-import java.io.IOException;
 import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -18,17 +19,46 @@ import org.apache.http.entity.ContentType;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
-
 import com.ibm.streamsx.rest.RESTException;
 import com.ibm.streamsx.rest.internal.RestUtils;
-
-import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
+import com.ibm.streamsx.rest.internal.StandaloneAuthenticator;
+import com.ibm.streamsx.topology.internal.streams.Util;
 
 class StreamsBuildService extends AbstractConnection implements BuildService {
     
-    public static BuildService of(ICP4DAuthenticator authenticator, JsonObject serviceDefinition, boolean verify) throws IOException {
+    static final String STREAMS_REST_RESOURCES = "/streams/rest/resources";
+    static final String STREAMS_BUILD_PATH = "/streams/rest/builds";
+
+
+    static BuildService of(Function<Executor,String> authenticator, JsonObject serviceDefinition, boolean verify) throws IOException {
         
         String buildServiceEndpoint = jstring(object(serviceDefinition, "connection_info"), "serviceBuildEndpoint");
+        if (authenticator instanceof StandaloneAuthenticator) {
+            if (buildServiceEndpoint == null) {
+                buildServiceEndpoint = Util.getenv(Util.STREAMS_BUILD_URL);
+            }
+            if (!buildServiceEndpoint.endsWith(STREAMS_BUILD_PATH)) {
+                // URL was user-provided root of service, add the path
+                URL url = new URL(buildServiceEndpoint);
+                URL buildsUrl = new URL(url.getProtocol(), url.getHost(), url.getPort(), STREAMS_BUILD_PATH);
+                buildServiceEndpoint = buildsUrl.toExternalForm();
+            }
+            return StreamsBuildService.of(authenticator, buildServiceEndpoint, verify);
+        }
+        return new StreamsBuildService(buildServiceEndpoint, authenticator, verify);
+    }
+
+    static BuildService of(Function<Executor,String> authenticator, String buildServiceEndpoint, boolean verify) throws IOException {
+
+        if (buildServiceEndpoint == null) {
+            buildServiceEndpoint = Util.getenv(Util.STREAMS_BUILD_URL);
+            if (!buildServiceEndpoint.endsWith(STREAMS_BUILD_PATH)) {
+                // URL was user-provided root of service, add the path
+                URL url = new URL(buildServiceEndpoint);
+                URL buildsUrl = new URL(url.getProtocol(), url.getHost(), url.getPort(), STREAMS_BUILD_PATH);
+                buildServiceEndpoint = buildsUrl.toExternalForm();
+            }
+        }
         return new StreamsBuildService(buildServiceEndpoint, authenticator, verify);
     }
 	
