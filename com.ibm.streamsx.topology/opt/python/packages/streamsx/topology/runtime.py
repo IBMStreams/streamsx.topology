@@ -295,10 +295,6 @@ class _ObjectIterator(object):
        while nv is None:
           nv = next(self.it)
        return nv
-# python 2.7 uses the next function whereas 
-# python 3.x uses __next__ 
-   def next(self):
-       return self.__next__()
 
 # and pickle any returned value.
 class _PickleIterator(_ObjectIterator):

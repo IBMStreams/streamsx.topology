@@ -39,7 +39,7 @@ Python 3::
 
     sensors = raw_readings.map(parse_sensor, schema=SensorReading)
 
-Python 3, 2.7::
+Python 3::
 
     sensors = raw_readings.map(parse_sensor,
         schema='tuple<int64 sensor_id, int64 ts, float64 reading>')
