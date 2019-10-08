@@ -113,6 +113,21 @@ processed by a :py:meth:`~Stream.filter` using a lambda function::
     # Filter the stream so it only contains words starting with py
     pywords = words.filter(lambda word : word.startswith('py'))
 
+When a callable is a lambda or defined inline (defined in the main Python script,
+a notebook or an interactive session) then a serialized copy of its definition becomes part of the
+topology. The supported types of captured globals for these callables is limited to
+avoid increasing the size of the application and serialization failures due non-serializable
+objects directly or indirectly referenced from captured globals. The supported types of captured globals
+are constants (``int``, ``str``, ``float``, ``bool``), modules and module attributes (e.g. classes, functions and variables
+defined in a module). If a lambda or inline function causes an exception due to unsupported global
+capture then moving it to its own module is a solution.
+
+Due to `Python bug 36697 <https://bugs.python.org/issue36697>`_ a lambda or inline function can
+incorrect capture a global variable. For example an inline class using a attribute of ``self.model``
+will incorrectly capture the global ``model`` even if the global variable ``model`` is never used within the class.
+To workaround this bug use attribute or variable names that do not shadow global variables
+(e.g. ``self._model``).
+
 Stateful operations
 ===================
 
