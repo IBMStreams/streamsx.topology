@@ -46,19 +46,7 @@
 
 #define __SPLPY_VERSION __SPLPY_MAJOR_VER "." __SPLPY_MINOR_VER 
  
-#if PY_MAJOR_VERSION == 3
 #define TOPOLOGY_PYTHON_LIBNAME "libpython" __SPLPY_VERSION "m.so"
-#elif PY_MAJOR_VERSION == 2
-#if PY_MINOR_VERSION == 7
-// There will never be a Python 2.8
-// PEP-404 https://www.python.org/dev/peps/pep-0404/
-#define TOPOLOGY_PYTHON_LIBNAME "libpython2.7.so"
-#endif
-#endif
-
-#ifndef TOPOLOGY_PYTHON_LIBNAME
-#error "Python version not supported"
-#endif
 
 namespace streamsx {
   namespace topology {

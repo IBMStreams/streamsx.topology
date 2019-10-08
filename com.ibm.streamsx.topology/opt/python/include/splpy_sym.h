@@ -126,19 +126,10 @@ extern "C" {
 }
 #pragma weak PyObject_Str = __spl_fi_PyObject_Str
 
-#if PY_MAJOR_VERSION == 3
 #pragma weak PyUnicode_DecodeUTF8 = __spl_fi_PyUnicode_DecodeUTF8
 #pragma weak PyUnicode_AsUTF8String = __spl_fi_PyUnicode_AsUTF8String
 #pragma weak PyBytes_AsString = __spl_fi_PyBytes_AsString
-#else
-// In Python2 the original functions (e.g. PyUnicode_DecodeUTF8)
-// are #defined to different functions and hence symbols.
-#pragma weak PyUnicodeUCS4_DecodeUTF8 = __spl_fi_PyUnicode_DecodeUTF8
-#pragma weak PyUnicodeUCS4_AsUTF8String = __spl_fi_PyUnicode_AsUTF8String
-#pragma weak PyString_AsString = __spl_fi_PyBytes_AsString
-#endif
 
-#if PY_MAJOR_VERSION == 3
 typedef char * (*__splpy_uauas_fp)(PyObject *, Py_ssize_t);
 typedef PyObject * (*__splpy_mvfm_fp)(char *, Py_ssize_t, int);
 extern "C" {
@@ -154,29 +145,6 @@ extern "C" {
 #pragma weak PyUnicode_AsUTF8AndSize = __spl_fi_PyUnicode_AsUTF8AndSize
 #pragma weak PyMemoryView_FromMemory = __spl_fi_PyMemoryView_FromMemory
 
-#else
-typedef int (*__splpy_sasas_fp)(PyObject *, char **, Py_ssize_t *);
-typedef PyObject * (*__splpy_mvfb_fp)(Py_buffer *);
-typedef int (*__splpy_bfi_fp)(Py_buffer *, PyObject *, void *, Py_ssize_t, int, int);
-extern "C" {
-  static __splpy_sasas_fp __spl_fp_PyString_AsStringAndSize;
-  static __splpy_mvfb_fp __spl_fp_PyMemoryView_FromBuffer;
-  static __splpy_bfi_fp __spl_fp_PyBuffer_FillInfo;
-  static int __spl_fi_PyString_AsStringAndSize(PyObject * o, char ** buf, Py_ssize_t *size) {
-     return __spl_fp_PyString_AsStringAndSize(o, buf, size);
-  }
-  static PyObject * __spl_fi_PyMemoryView_FromBuffer(Py_buffer *buf) {
-     return __spl_fp_PyMemoryView_FromBuffer(buf);
-  }
-  static int __spl_fi_PyBuffer_FillInfo(Py_buffer *view, PyObject *o, void *buf, Py_ssize_t len, int readonly, int flags) {
-     return __spl_fp_PyBuffer_FillInfo(view, o, buf, len, readonly, flags);
-  }
-}
-#pragma weak PyString_AsStringAndSize = __spl_fi_PyString_AsStringAndSize
-#pragma weak PyMemoryView_FromBuffer = __spl_fi_PyMemoryView_FromBuffer
-#pragma weak PyBuffer_FillInfo = __spl_fi_PyBuffer_FillInfo
-#endif
-
 /*
  * Loading modules, running code
  */
@@ -184,13 +152,8 @@ extern "C" {
 typedef PyObject* (*__splpy_ogas_fp)(PyObject *, const char *);
 typedef int (*__splpy_ohas_fp)(PyObject *, const char *);
 typedef int (*__splpy_rssf_fp)(const char *, PyCompilerFlags *);
-#if PY_MAJOR_VERSION == 3
 typedef PyObject* (*__splpy_mc2_fp)(PyModuleDef *, int);
 typedef int (*__splpy_sam_fp)(PyObject *, PyModuleDef *);
-#endif
-#if PY_MAJOR_VERSION == 2
-typedef PyObject * (*__splpy_im4_fp)(const char *, PyMethodDef *, const char *doc, PyObject *self, int);
-#endif
 
 extern "C" {
   static __splpy_ogas_fp __spl_fp_PyObject_GetAttrString;
@@ -201,13 +164,8 @@ extern "C" {
   static __splpy_i_p_fp __spl_fp_PyCallable_Check;
   static __splpy_p_p_fp __spl_fp_PyImport_Import;
 
-#if PY_MAJOR_VERSION == 3
   static __splpy_mc2_fp __spl_fp_PyModule_Create2;
   static __splpy_sam_fp __spl_fp_PyState_AddModule;
-#endif
-#if PY_MAJOR_VERSION == 2
-  static __splpy_im4_fp __spl_fp_Py_InitModule4 ;
-#endif
 
   static PyObject * __spl_fi_PyObject_GetAttrString(PyObject *o, const char * attr_name) {
      return __spl_fp_PyObject_GetAttrString(o, attr_name);
@@ -231,19 +189,12 @@ extern "C" {
      return __spl_fp_PyImport_Import(name);
   }
 
-#if PY_MAJOR_VERSION == 3
   static PyObject * __spl_fi_PyModule_Create2(PyModuleDef *module, int apivers) {
      return __spl_fp_PyModule_Create2(module, apivers);
   }
   static int __spl_fi_PyState_AddModule(PyObject *module, PyModuleDef *def) {
      return __spl_fp_PyState_AddModule(module, def);
   }
-#endif
-#if PY_MAJOR_VERSION == 2
-  static PyObject * __spl_fi_Py_InitModule4(const char *name, PyMethodDef *methods, const char *doc, PyObject *self, int apiver) {
-     return __spl_fp_Py_InitModule4(name, methods, doc, self, apiver);
-  }
-#endif
 }
 #pragma weak PyObject_GetAttrString = __spl_fi_PyObject_GetAttrString
 #pragma weak PyObject_HasAttrString = __spl_fi_PyObject_HasAttrString
@@ -253,14 +204,8 @@ extern "C" {
 #pragma weak PyCallable_Check = __spl_fi_PyCallable_Check
 #pragma weak PyImport_Import = __spl_fi_PyImport_Import
 
-#if PY_MAJOR_VERSION == 3
 #pragma weak PyModule_Create2 = __spl_fi_PyModule_Create2
 #pragma weak PyState_AddModule = __spl_fi_PyState_AddModule
-#endif
-#if PY_MAJOR_VERSION == 2
-#pragma weak Py_InitModule4_64 = __spl_fi_Py_InitModule4
-#pragma weak Py_InitModule4TraceRefs_64 = __spl_fi_Py_InitModule4
-#endif
 
 /*
  * Container Objects
@@ -502,24 +447,12 @@ class SplpySym {
 
      __SPLFIX(PyObject_Str, __splpy_p_p_fp);
 
-#if PY_MAJOR_VERSION == 3
      __SPLFIX(PyUnicode_DecodeUTF8, __splpy_udu_fp);
      __SPLFIX(PyUnicode_AsUTF8String, __splpy_uaus_fp);
      __SPLFIX(PyBytes_AsString, __splpy_c_p_fp);
-#else
-     __SPLFIX_EX(__spl_fp_PyUnicode_DecodeUTF8, "PyUnicodeUCS4_DecodeUTF8", __splpy_udu_fp);
-     __SPLFIX_EX(__spl_fp_PyUnicode_AsUTF8String, "PyUnicodeUCS4_AsUTF8String", __splpy_uaus_fp);
-     __SPLFIX_EX(__spl_fp_PyBytes_AsString, "PyString_AsString", __splpy_c_p_fp);
-#endif
 
-#if PY_MAJOR_VERSION == 3
      __SPLFIX(PyUnicode_AsUTF8AndSize, __splpy_uauas_fp);
      __SPLFIX(PyMemoryView_FromMemory, __splpy_mvfm_fp);
-#else
-     __SPLFIX(PyString_AsStringAndSize, __splpy_sasas_fp);
-     __SPLFIX(PyMemoryView_FromBuffer, __splpy_mvfb_fp);
-     __SPLFIX(PyBuffer_FillInfo, __splpy_bfi_fp);
-#endif
 
      __SPLFIX(PyObject_GetAttrString, __splpy_ogas_fp);
      __SPLFIX(PyObject_HasAttrString, __splpy_ohas_fp);
@@ -529,13 +462,8 @@ class SplpySym {
      __SPLFIX(PyCallable_Check, __splpy_i_p_fp);
      __SPLFIX(PyImport_Import, __splpy_p_p_fp);
 
-#if PY_MAJOR_VERSION == 3
      __SPLFIX(PyModule_Create2, __splpy_mc2_fp);
      __SPLFIX(PyState_AddModule, __splpy_sam_fp);
-#endif
-#if PY_MAJOR_VERSION == 2
-     __SPLFIX_EX(__spl_fp_Py_InitModule4, __SPL_TOSTRING(Py_InitModule4), __splpy_im4_fp);
-#endif
  
      __SPLFIX(PyTuple_New, __splpy_p_s_fp);
      __SPLFIX(PyIter_Next, __splpy_p_p_fp);
