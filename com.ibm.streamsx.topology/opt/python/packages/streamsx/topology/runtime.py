@@ -435,7 +435,7 @@ def _inline_modules(fn, modules, constants):
         gv = cvs.globals[mk]
         if isinstance(gv, types.ModuleType):
             modules[mk] = gv.__name__
-        elif hasattr(gv, '__module__') and gv.__module__ != '__main__':
+        elif hasattr(gv, '__module__') and gv.__module__ != '__main__' and hasattr(gv, '__name__'):
             modules[mk] = gv.__name__, gv.__module__
         elif type(gv) == str or type(gv) == int or type(gv) == float or type(gv) == bool:
             constants[mk] = gv
