@@ -74,23 +74,14 @@ Cloud Pak for Data projects. The `streamsx` package is preinstalled and applicat
 IBM Streams 4.2, 4.3
 ********************
 
-For a distributed cluster running Streams Python 3.7, 3.6, 3.5 or 2.7(deprecated)
+For a distributed cluster running Streams Python 3.7, 3.6 or 3.5
 may be used.
 
 Anaconda or Miniconda distributions may be used as the Python runtime, these have the advantage of being pre-built and including a number of standard packages.
 Ananconda installs may be downloaded at: https://www.continuum.io/downloads .
 
-.. note::
-    When used by a distributed cluster a distribution matching
-    the required Python 3.7, 3.6, 3.5 or 2.7(deprecated) release must be used, rather
-    than a conda environment.
-
 If building Python from source then it must be built to support embedding
 of the runtime with shared libraries (``--enabled-shared`` option to `configure`).
-
-.. warning::
-   Support for Python 2.7 is deprecated in 1.13 and will be removed in
-   a future release. Python 2.7 EOL is January 1st, 2020.
 
 Distributed
 ===========

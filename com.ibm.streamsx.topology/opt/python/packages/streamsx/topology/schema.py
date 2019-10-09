@@ -39,7 +39,7 @@ Python 3::
 
     sensors = raw_readings.map(parse_sensor, schema=SensorReading)
 
-Python 3, 2.7::
+Python 3::
 
     sensors = raw_readings.map(parse_sensor,
         schema='tuple<int64 sensor_id, int64 ts, float64 reading>')
@@ -121,11 +121,10 @@ def _normalize(schema, allow_none=True):
 
     # With Python 3 allow a named tuple with type hints
     # to be used as a schema definition
-    if sys.version_info.major == 3:
-        import typing
-        if isinstance(schema, type) and  issubclass(schema, tuple):
-            if hasattr(schema, '_fields') and hasattr(schema, '_field_types'):
-                return _from_named_tuple(schema)
+    import typing
+    if isinstance(schema, type) and  issubclass(schema, tuple):
+        if hasattr(schema, '_fields') and hasattr(schema, '_field_types'):
+            return _from_named_tuple(schema)
 
     raise ValueError("Unknown stream schema type:" + str(schema))
 
@@ -520,12 +519,8 @@ class StreamSchema(object) :
             return tuple
         if name is True:
             name = 'StreamTuple'
-        if sys.version_info.major == 2:
-            fields = _attribute_names(self._types)
-            nt = collections.namedtuple(name, fields, rename=True)
-        else:
-            import typing
-            nt = typing.NamedTuple(name, _attribute_pytypes(self._types))
+        import typing
+        nt = typing.NamedTuple(name, _attribute_pytypes(self._types))
 
         nt._splpy_namedtuple = name
         return nt

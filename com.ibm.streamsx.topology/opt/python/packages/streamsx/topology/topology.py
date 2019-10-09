@@ -406,8 +406,6 @@ class Topology(object):
         
         if sys.version_info.major == 3:
           self.opnamespace = "com.ibm.streamsx.topology.functional.python"
-        elif sys.version_info.major == 2 and sys.version_info.minor == 7:
-          self.opnamespace = "com.ibm.streamsx.topology.functional.python2"
         else:
           raise ValueError("Python version not supported.")
         self._streams = dict()
@@ -2205,16 +2203,13 @@ class Window(object):
         stateful = _determine_statefulness(function)
 
         # This is based on graph._addOperatorFunction.
-        recurse = None
         if isinstance(function, types.LambdaType) and function.__name__ == "<lambda>" :
             function = streamsx.topology.runtime._Callable1(function, no_context=True)
-            recurse = True
         elif function.__module__ == '__main__':
             # Function/Class defined in main, create a callable wrapping its
             # dill'ed form
             function = streamsx.topology.runtime._Callable1(function,
                 no_context = True if inspect.isroutine(function) else None)
-            recurse = True
          
         if inspect.isroutine(function):
             # callable is a function
@@ -2223,7 +2218,7 @@ class Window(object):
             # callable is a callable class instance
             name = function.__class__.__name__
             # dill format is binary; base64 encode so it is json serializable 
-            dilled_callable = base64.b64encode(dill.dumps(function, recurse=recurse if sys.version_info.major == 2 else None)).decode("ascii")
+            dilled_callable = base64.b64encode(dill.dumps(function, recurse=None)).decode("ascii")
 
         self._config['partitioned'] = True
         if dilled_callable is not None:

@@ -696,18 +696,12 @@ def _delete_json(submitter):
 def _print_process_stdout(process):
     try:
         while True:
-            if sys.version_info.major == 2:
-                sout = codecs.getwriter('utf8')(sys.stdout)
             line = process.stdout.readline()
             if len(line) == 0:
                 process.stdout.close()
                 break
             line = line.decode("utf-8").strip()
-            if sys.version_info.major == 2:
-                sout.write(line)
-                sout.write("\n")
-            else:
-                print(line)
+            print(line)
     except:
         logger.error("Error reading from Java subprocess stdout stream.")
         raise
@@ -729,8 +723,6 @@ _JAVA_LOG_LVL = {
 # a logger or stderr
 def _print_process_stderr(process, submitter, progress_fn):
     try:
-        if sys.version_info.major == 2:
-            serr = codecs.getwriter('utf8')(sys.stderr)
         while True:
             line = process.stderr.readline()
             if len(line) == 0:
@@ -744,11 +736,7 @@ def _print_process_stderr(process, submitter, progress_fn):
                     continue
                 logger.log(_JAVA_LOG_LVL[em[0]], em[1])
                 continue
-            if sys.version_info.major == 2:
-                serr.write(line)
-                serr.write("\n")
-            else:
-                print(line, file=sys.stderr)
+            print(line, file=sys.stderr)
     except:
         logger.error("Error reading from Java subprocess stderr stream.")
         raise

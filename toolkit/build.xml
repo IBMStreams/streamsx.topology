@@ -28,22 +28,12 @@
    <mkdir dir="${tk}/license"/>
    <copy file="${streamsx.topology}/LICENSE" todir="${tk}/license"/>
 
-   <copy todir="${tk}/com.ibm.streamsx.topology.functional.python2">
-     <fileset dir="${tk}/com.ibm.streamsx.topology.functional.python" 
-         excludes="namespace-info.spl pyversion.sh"
-         includes="**" />
-   </copy>      
-
    <!-- Copy codegen used by functional api to templates used by operators -->
    <copy todir="${tk}/opt/python/templates/common">
       <fileset dir="${tk}/opt/python/codegen"/>
    </copy>
 
    <!-- Copy pyversion.sh used by functional api to templates used by operators -->
-   <copy
-      file="${tk}/com.ibm.streamsx.topology.functional.python2/pyversion.sh"
-      tofile="${tk}/opt/python/templates/common/pyversion2.sh"
-   />
    <copy
       file="${tk}/com.ibm.streamsx.topology.functional.python/pyversion.sh"
       tofile="${tk}/opt/python/templates/common/pyversion3.sh"
@@ -75,15 +65,10 @@
     <delete>
        <fileset dir="${tk}">
           <include name="com.ibm.streamsx.topology.functional.java/**"/>
-          <include name="com.ibm.streamsx.topology.functional.python2/**"/>
           <include name="com.ibm.streamsx.topology.file/**"/>
           <include name="com.ibm.streamsx.topology.testing/**"/>
-          <exclude name="com.ibm.streamsx.topology.functional.python2/pyversion.sh"/>
           <exclude name="**/namespace-info.spl"/>
        </fileset>
-       <dirset dir="${tk}">
-          <include name="com.ibm.streamsx.topology.functional.python2/*"/>
-       </dirset>
     </delete>
   </target>
 </project>
