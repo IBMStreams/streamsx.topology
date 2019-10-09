@@ -71,24 +71,6 @@ def _matching_resource(json_rep, name=None):
         return re.match(name, json_rep['name'])
     return True
 
-# For Streams 5 onwards we get a rest URL that points
-# directly to the Instance. We then create an Instance
-# directly and use a simplified Instance specifc StreamsConnection.
-# 
-class _InstanceSc(object):
-    @staticmethod
-    def get_instance(url, auth, verify):
-        rest_client = _StreamsRestClient(auth)
-        if verify is not None:
-            rest_client.session.verify = verify
-        _InstanceSc(rest_client)
-        return Instance(rest_client.make_request(url), rest_client)
-
-    def __init__(self, rest_client):
-        self.rest_client = rest_client
-        self.rest_client._sc = self
-        self._delegator = _StreamsRestDelegator(rest_client)
-        self.session = self.rest_client.session
 
 class _ResourceElement(object):
     """Stores JSON response from a REST call, and expose its properties as attributes.
@@ -1782,7 +1764,7 @@ class Instance(_ResourceElement):
             # this is an integrated config
             auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
             url = auth._cfg['connection_info'].get('serviceRestEndpoint')
-            return _InstanceSc.get_instance(url, auth, verify)
+            return streamsx.rest._InstanceSc.get_instance(url, auth, verify)
 
             #resource_url, _ = Instance._root_from_endpoint(auth._cfg['connection_info'].get('serviceRestEndpoint'))
             sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth)
