@@ -2736,10 +2736,7 @@ class _StreamsRestDelegator(object):
         _handle_http_errors(res)
         if res.status_code != 201:
             raise ValueError(str(res))
-        location = res.headers['Location']
-        job = Job({'self': location}, self.rest_client)
-        job.refresh()
-        return job.id
+        return res.json()['id']
 
     def _cancel_job(self, job, force):
         self.rest_client._block_ssl_warn()
