@@ -454,7 +454,7 @@ class _BundleSubmitter(_BaseSubmitter):
                 if inst is not None:
                     self._streams_connection = inst.rest_client._sc
 
-        if isinstance(self._streams_connection, streamsx.rest.StreamsConnection):
+        if isinstance(self._streams_connection, streamsx.rest.StreamsConnection) or isinstance(self._streams_connection, streamsx.rest_primitives._InstanceSc):
             if isinstance(self._streams_connection.session.auth, streamsx.rest_primitives._ICPDExternalAuthHandler):
                 svc_info = self._streams_connection.session.auth._cfg
                 self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info

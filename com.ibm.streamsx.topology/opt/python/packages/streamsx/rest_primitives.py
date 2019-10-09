@@ -71,6 +71,24 @@ def _matching_resource(json_rep, name=None):
         return re.match(name, json_rep['name'])
     return True
 
+# For Streams 5 onwards we get a rest URL that points
+# directly to the Instance. We then create an Instance
+# directly and use a simplified Instance specifc StreamsConnection.
+# 
+class _InstanceSc(object):
+    @staticmethod
+    def get_instance(url, auth, verify):
+        rest_client = _StreamsRestClient(auth)
+        if verify is not None:
+            rest_client.session.verify = verify
+        _InstanceSc(rest_client)
+        return Instance(rest_client.make_request(url), rest_client)
+
+    def __init__(self, rest_client):
+        self.rest_client = rest_client
+        self.rest_client._sc = self
+        self._delegator = _StreamsRestDelegator(rest_client)
+        self.session = self.rest_client.session
 
 class _ResourceElement(object):
     """Stores JSON response from a REST call, and expose its properties as attributes.
@@ -350,11 +368,26 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
         self._auth_expiry_time = time.time() + 19 * 60
 
         # Convert the external endpoints to use the passed in cluster ip.
-        bu = up.urlsplit(connection_info['externalBuildEndpoint'])
-        build_url = up.urlunsplit((bu.scheme, cluster_ip + ':' + str(bu.port), bu.path, None, None))
+        ebe = connection_info['externalBuildEndpoint']
+        if ebe.startswith('https:'):
+            bu = up.urlsplit(ebe)
+            ebe_port = bu.port
+            ebe_path = bu.path
+        else: # CPD 2.5 switched to path-absolute
+            ebe_port = cluster_port
+            ebe_path = ebe
+            
+        build_url = up.urlunsplit(('https', cluster_ip + ':' + str(ebe_port), ebe_path, None, None))
 
-        ru = up.urlsplit(connection_info['externalRestEndpoint'])
-        streams_url = up.urlunsplit((bu.scheme, cluster_ip + ':' + str(ru.port), ru.path, None, None))
+        ere = connection_info['externalRestEndpoint']
+        if ere.startswith('https:'):
+            ru = up.urlsplit(ere)
+            ere_port = ru.port
+            ere_path = ru.path
+        else: # CPD 2.5 switched to path-absolute
+            ere_port = cluster_port
+            ere_path = ere
+        streams_url = up.urlunsplit(('https', cluster_ip + ':' + str(ere_port), ere_path, None, None))
 
         cfg = {
                 'type': 'streams',
@@ -1748,11 +1781,11 @@ class Instance(_ResourceElement):
         if service_name:
             # this is an integrated config
             auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
-            resource_url, _ = Instance._root_from_endpoint(auth._cfg['connection_info'].get('serviceRestEndpoint'))
-            service_name=auth._cfg['service_name']
+            url = auth._cfg['connection_info'].get('serviceRestEndpoint')
+            return _InstanceSc.get_instance(url, auth, verify)
+
+            #resource_url, _ = Instance._root_from_endpoint(auth._cfg['connection_info'].get('serviceRestEndpoint'))
             sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth)
-            if verify is not None:
-                sc.rest_client.session.verify = verify
                 
             return sc.get_instance(service_name)
 
