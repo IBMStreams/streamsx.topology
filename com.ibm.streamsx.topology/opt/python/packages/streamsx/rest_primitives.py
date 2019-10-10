@@ -350,11 +350,26 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
         self._auth_expiry_time = time.time() + 19 * 60
 
         # Convert the external endpoints to use the passed in cluster ip.
-        bu = up.urlsplit(connection_info['externalBuildEndpoint'])
-        build_url = up.urlunsplit((bu.scheme, cluster_ip + ':' + str(bu.port), bu.path, None, None))
+        ebe = connection_info['externalBuildEndpoint']
+        if ebe.startswith('https:'):
+            bu = up.urlsplit(ebe)
+            ebe_port = bu.port
+            ebe_path = bu.path
+        else: # CPD 2.5 switched to path-absolute
+            ebe_port = cluster_port
+            ebe_path = ebe
+            
+        build_url = up.urlunsplit(('https', cluster_ip + ':' + str(ebe_port), ebe_path, None, None))
 
-        ru = up.urlsplit(connection_info['externalRestEndpoint'])
-        streams_url = up.urlunsplit((bu.scheme, cluster_ip + ':' + str(ru.port), ru.path, None, None))
+        ere = connection_info['externalRestEndpoint']
+        if ere.startswith('https:'):
+            ru = up.urlsplit(ere)
+            ere_port = ru.port
+            ere_path = ru.path
+        else: # CPD 2.5 switched to path-absolute
+            ere_port = cluster_port
+            ere_path = ere
+        streams_url = up.urlunsplit(('https', cluster_ip + ':' + str(ere_port), ere_path, None, None))
 
         cfg = {
                 'type': 'streams',
@@ -864,7 +879,7 @@ class Job(_ResourceElement):
         health (str): Health indicator for the job. Some possible values for this property include *healthy*,
             *partiallyHealthy*, *partiallyUnhealthy*, *unhealthy*, and *unknown*.
         applicationName (str): Name of the streams processing application that this job is running.
-        jobGroup (str): Identifies the job group to which this job belongs.
+        jobGroup (str): Streams 4.2/4.3 only. Identifies the job group to which this job belongs.
         startedBy (str): Identifies the user ID that started this job.
         status (str): Status of this job. Some possible values for this property include *canceling*, *running*,
             *canceled*, and *unknown*.
@@ -1016,6 +1031,26 @@ class Job(_ResourceElement):
         """
         return self.rest_client._sc._delegator._cancel_job(self, force)
 
+    def get_job_group(self):
+        """
+        Get the job group associated with this job.
+
+        .. versionadded:: 1.13.13
+        """
+        # 4.x returned just the name for jobGroup.
+        if self.jobGroup.startswith('https://'):
+            return JobGroup(self.rest_client.make_request(self.jobGroup), self.rest_client)
+        return JobGroup({'name':self.jobGroup}, self.rest_client)
+
+class JobGroup(_ResourceElement):
+    """A job group definition.
+
+        Attributes:
+        name(str): Job group name.
+        resourceType(str): Identifies the REST resource type, which is *jobGroup*.
+
+        .. versionadded:: 1.13.13
+    """
 
 class Operator(_ResourceElement):
     """An operator invocation within a job.
@@ -1281,6 +1316,17 @@ class PE(_ResourceElement):
         """
         if hasattr(self, 'host') and self.host:
             return Host(self.rest_client.make_request(self.host), self.rest_client)
+
+    def get_resource(self):
+        """Get resource this processing element is currently executing in.
+
+        Returns:
+            Host: Resource this processing element is running on.
+
+        .. versionadded:: 1.13.13
+        """
+        if hasattr(self, 'resource') and self.resource:
+            return Resource(self.rest_client.make_request(self.resource), self.rest_client)
 
     def retrieve_trace(self, filename=None, dir=None):
         """Retrieves the application trace files for this PE
@@ -1748,11 +1794,11 @@ class Instance(_ResourceElement):
         if service_name:
             # this is an integrated config
             auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
-            resource_url, _ = Instance._root_from_endpoint(auth._cfg['connection_info'].get('serviceRestEndpoint'))
-            service_name=auth._cfg['service_name']
+            url = auth._cfg['connection_info'].get('serviceRestEndpoint')
+            return streamsx.rest._InstanceSc.get_instance(url, auth, verify)
+
+            #resource_url, _ = Instance._root_from_endpoint(auth._cfg['connection_info'].get('serviceRestEndpoint'))
             sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth)
-            if verify is not None:
-                sc.rest_client.session.verify = verify
                 
             return sc.get_instance(service_name)
 
@@ -1889,6 +1935,23 @@ class Instance(_ResourceElement):
             >>> jobs = instance.get_jobs(name="*temperatureApplication*")
         """
         return self._get_elements(self.jobs, 'jobs', Job, None, name)
+
+    def get_job_groups(self, name=None):
+        """Retrieves job groups defined in this instance.
+
+        Args:
+            name (str, optional): Only return job groups containing property **name** that matches `name`. `name` can be a
+                regular expression. If `name` is not supplied, then all job groups are returned.
+
+        Returns:
+            list(JobGroup): A list of job groups matching the given `name`.
+
+        Only supported for Streams 5.0 and later.
+
+        .. versionadded:: 1.13.13
+        """
+        if hasattr(self, 'jobGroups'):
+            return self._get_elements(self.jobGroups, 'jobGroups', JobGroup, None, name)
 
     def get_job(self, id):
         """Retrieves a job matching the given `id`
@@ -2703,10 +2766,7 @@ class _StreamsRestDelegator(object):
         _handle_http_errors(res)
         if res.status_code != 201:
             raise ValueError(str(res))
-        location = res.headers['Location']
-        job = Job({'self': location}, self.rest_client)
-        job.refresh()
-        return job.id
+        return res.json()['id']
 
     def _cancel_job(self, job, force):
         self.rest_client._block_ssl_warn()

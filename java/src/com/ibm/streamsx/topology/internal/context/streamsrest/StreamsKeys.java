@@ -36,10 +36,6 @@ public interface StreamsKeys {
     static String getStreamsInstanceURL(JsonObject deploy) throws IOException {
         String url = getConnectionInfo(deploy, STREAMS_REST_ENDPOINT);
         url = Objects.requireNonNull(url);
-        URL u = new URL(url);
-        if (!u.getPath().startsWith(INSTANCES_PATH))
-            throw new IllegalStateException("Expecting Streams service endpoint with initial path " + INSTANCES_PATH + " : " + STREAMS_REST_ENDPOINT + "=" + url);
-
         return url;
     }
     

@@ -72,16 +72,16 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
             URL instanceUrl = new URL(StreamsKeys.getStreamsInstanceURL(deploy));
 
             String path = instanceUrl.getPath();
-
-            String instanceId = path.substring("/streams/rest/instances/".length());
-            if (instanceId.endsWith("/"))
-                instanceId = instanceId.substring(0, instanceId.length() - 1);
-
-            instanceId = URLDecoder.decode(instanceId, StandardCharsets.UTF_8.name());
-
-            URL restUrl = new URL(instanceUrl.getProtocol(),
-                    instanceUrl.getHost(), instanceUrl.getPort(),
-                    "/streams/rest/resources");
+            URL restUrl;
+            if (path.startsWith("/streams/rest/instances/")) {
+                restUrl = new URL(instanceUrl.getProtocol(),
+                        instanceUrl.getHost(), instanceUrl.getPort(),
+                        "/streams/rest/resources");
+            } else {
+                restUrl = new URL(instanceUrl.getProtocol(),
+                        instanceUrl.getHost(), instanceUrl.getPort(),
+                        path.replaceFirst("/streams-rest/", "/streams-resource/"));
+            }
 
             JsonObject serviceDefinition = object(deploy, StreamsKeys.SERVICE_DEFINITION);
             String name = jstring(serviceDefinition, "service_name");
@@ -95,7 +95,8 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
             if (!sslVerify(deploy))
                 conn.allowInsecureHosts(true);
 
-            instance = conn.getInstance(instanceId);
+            // Create the instance directly from the URL
+            instance = conn.getInstance(instanceUrl.toExternalForm());
         }
         
         JsonArray artifacts = GsonUtilities.array(GsonUtilities.object(result, "build"), "artifacts");
