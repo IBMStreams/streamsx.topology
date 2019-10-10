@@ -68,7 +68,7 @@ __version__ = streamsx._streams._version.__version__
 
 from streamsx import st
 from .rest_primitives import (Domain, Instance, Installation, RestResource, Toolkit, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
-    _exact_resource, _IAMStreamsRestClient, _IAMConstants)
+    _exact_resource, _IAMStreamsRestClient, _IAMConstants, _StreamsRestDelegator)
 
 logger = logging.getLogger('streamsx.rest')
 
@@ -244,6 +244,28 @@ class StreamsConnection(_AbstractStreamsConnection):
     def __str__(self):
         return pformat(self.__dict__)
 
+# For Streams 5 onwards we get a rest URL that points
+# directly to the Instance. We then create an Instance
+# directly and use a simplified Instance specifc StreamsConnection.
+# 
+class _InstanceSc(StreamsConnection):
+    @staticmethod
+    def get_instance(url, auth, verify):
+        if '/streams-rest' in url:
+            resource_url = url.replace('/streams-rest/', '/streams-resource/', 1)
+        rest_client = _StreamsRestClient(auth)
+        if verify is not None:
+            rest_client.session.verify = verify
+        _InstanceSc(resource_url, rest_client)
+        return Instance(rest_client.make_request(url), rest_client)
+
+    def __init__(self, resource_url, rest_client):
+        self._resource_url = resource_url
+        self.rest_client = rest_client
+        self.rest_client._sc = self
+        self._delegator_impl = _StreamsRestDelegator(rest_client)
+        self.session = self.rest_client.session
+        self._domains = None
 
 class StreamingAnalyticsConnection(StreamsConnection):
     """Creates a connection to a running Streaming Analytics service and exposes methods

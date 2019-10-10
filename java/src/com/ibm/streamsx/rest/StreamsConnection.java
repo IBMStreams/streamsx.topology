@@ -128,6 +128,11 @@ public class StreamsConnection {
      * @throws IOException
      */
     public Instance getInstance(String instanceId) throws IOException {   	
+        
+        if (instanceId.startsWith("https://")) {
+            
+            return Instance.create(delegate(), instanceId, Instance.class);
+        }
         return delegate().getInstance(requireNonNull(instanceId));
     }
 
