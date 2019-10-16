@@ -29,6 +29,7 @@ from streamsx.topology.topology import *
 from streamsx.topology import schema
 import streamsx.topology.context
 
+# One inline referencing another
 def c1(tuple_):
     return int(math.trunc(tuple_ + 3))
 
@@ -38,8 +39,13 @@ def c2(tuple_):
 X = []
 def cbad(tuple_):
     return X + [tuple_]
-    
-  
+
+if sys.version_info.major == 3:
+    import typing
+    SensorReading = typing.NamedTuple('SensorReading', [('id', str), ('val', float)])
+
+    def csensor(tuple_):
+        return SensorReading('a' + str(tuple_), float(tuple_))
 
 class Gen(object):
     def __init__(self, n):
@@ -171,6 +177,17 @@ class TestLambdas(unittest.TestCase):
 
       tester = Tester(topo)
       tester.contents(s, [8,9,10])
+      tester.test(self.test_ctxtype, self.test_config)
+
+  @unittest.skipUnless(sys.version_info.major == 3, "Needs to be run with Python 3")
+  def test_routine_with_inline_class(self):
+      topo = Topology()
+      s = topo.source([1,2])
+      s = s.map(csensor)
+      s = s.map(lambda x : (x.id, x.val))
+
+      tester = Tester(topo)
+      tester.contents(s, [('a1',1), ('a2',2)])
       tester.test(self.test_ctxtype, self.test_config)
 
   @unittest.skipUnless(__name__ == '__main__', "Needs to be run as a script")

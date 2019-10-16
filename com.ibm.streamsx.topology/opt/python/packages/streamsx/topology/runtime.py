@@ -448,6 +448,12 @@ def _inline_modules(fn, modules, constants, inlines):
                     inlines[mk] = gv
                     _inline_modules(gv, modules, constants, inlines)
                 continue
+            elif type(gv) == type:
+                if mk not in inlines:
+                    inlines[mk] = gv
+                    for xm in inspect.getmembers(gv, inspect.ismethod):
+                        _inline_modules(xm[1], modules, constants, inlines)
+                continue
  
         raise TypeError("Unsupported global closure {} type {} in {}".format(mk, gv, fn))
           
@@ -495,7 +501,7 @@ class _ModulesCallable(streamsx._streams._runtime._WrapOpLogic):
 
         # Patch the lambda/in-line function's globals
         # to include any modules it references.
-        if self._modules or self._constants:
+        if self._modules or self._constants or self._inlines:
             if inspect.isroutine(self._callable):
                 gbls = self._callable.__globals__
             elif callable(self._callable):
