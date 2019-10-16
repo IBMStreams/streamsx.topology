@@ -4,6 +4,7 @@ import unittest
 import sys
 import decimal
 import random
+import math
 import time
 from streamsx.topology.tester import Tester
 from streamsx.ec import is_active as ia1234
@@ -29,10 +30,15 @@ from streamsx.topology import schema
 import streamsx.topology.context
 
 def c1(tuple_):
-    return tuple_
+    return int(math.trunc(tuple_ + 3))
 
 def c2(tuple_):
-    return c1(tuple_)
+    return c1(tuple_) + 4
+
+X = []
+def cbad(tuple_):
+    return X + [tuple_]
+    
   
 
 class Gen(object):
@@ -158,12 +164,21 @@ class TestLambdas(unittest.TestCase):
       tester.contents(s, [1,2,3,4,5,6])
       tester.test(self.test_ctxtype, self.test_config)
 
+  def test_nested_routines(self):
+      topo = Topology()
+      s = topo.source([1,2,3])
+      s = s.map(c2)
+
+      tester = Tester(topo)
+      tester.contents(s, [8,9,10])
+      tester.test(self.test_ctxtype, self.test_config)
+
   @unittest.skipUnless(__name__ == '__main__', "Needs to be run as a script")
   def test_bad_closure(self):
       topo = Topology()
       s = topo.source([])
       with self.assertRaises(TypeError):
-          s.map(c2)
+          s.map(cbad)
 
 if __name__ == '__main__':
     unittest.main()
