@@ -11,22 +11,24 @@ Streams REST API
 
 The Streams REST API provides programmatic access to configuration and status information for IBM Streams objects such as domains, instances, and jobs. 
 
-IBM Cloud Pak for Data
-======================
+IBM Cloud Pak for Data (Streams 5)
+==================================
 
-Within ICPD
------------
+Integrated configuration within project
+---------------------------------------
 
 :py:meth:`~streamsx.rest_primitives.Instance.of_service` is the entry point to using the Streams REST API bindings,
 returning an :py:class:`~streamsx.rest_primitives.Instance`.
-The configuration required to connect is obtained from ``ipcd_util.get_service_details`` passing in
-the IBM Streams service instance name.
+The configuration required to connect is obtained from ``ipcd_util.get_service_details`` passing in the IBM Streams service instance name.
 
-The call to ``ipcd_util.get_service_details`` can be code injected into a Jupyter notebook within
-an ICPD project by selecting the service instance.
+Integrated & standalone configurations
+--------------------------------------
 
-IBM Streams On-premises
-=======================
+:py:meth:`~streamsx.rest_primitives.Instance.of_endpoint` is the entry point
+to using the Streams REST API bindings, returning an :py:class:`~streamsx.rest_primitives.Instance`.
+
+IBM Streams On-premises (4.2, 4.3)
+==================================
 
 :py:class:`StreamsConnection` is the entry point to using the Streams REST API bindings.
 Through its functions and the returned objects status information
@@ -67,7 +69,7 @@ __version__ = streamsx._streams._version.__version__
 
 from streamsx import st
 from .rest_primitives import (Domain, Instance, Installation, RestResource, Toolkit, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
-    _exact_resource, _IAMStreamsRestClient, _IAMConstants)
+    _exact_resource, _IAMStreamsRestClient, _IAMConstants, _StreamsRestDelegator)
 
 logger = logging.getLogger('streamsx.rest')
 
@@ -243,6 +245,28 @@ class StreamsConnection(_AbstractStreamsConnection):
     def __str__(self):
         return pformat(self.__dict__)
 
+# For Streams 5 onwards we get a rest URL that points
+# directly to the Instance. We then create an Instance
+# directly and use a simplified Instance specifc StreamsConnection.
+# 
+class _InstanceSc(StreamsConnection):
+    @staticmethod
+    def get_instance(url, auth, verify):
+        if '/streams-rest' in url:
+            resource_url = url.replace('/streams-rest/', '/streams-resource/', 1)
+        rest_client = _StreamsRestClient(auth)
+        if verify is not None:
+            rest_client.session.verify = verify
+        _InstanceSc(resource_url, rest_client)
+        return Instance(rest_client.make_request(url), rest_client)
+
+    def __init__(self, resource_url, rest_client):
+        self._resource_url = resource_url
+        self.rest_client = rest_client
+        self.rest_client._sc = self
+        self._delegator_impl = _StreamsRestDelegator(rest_client)
+        self.session = self.rest_client.session
+        self._domains = None
 
 class StreamingAnalyticsConnection(StreamsConnection):
     """Creates a connection to a running Streaming Analytics service and exposes methods

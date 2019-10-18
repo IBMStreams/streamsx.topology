@@ -10,20 +10,32 @@ SPL compiler for IBM Streams running on IBM Cloud Pak for Data.
 
 ``streamsx-sc`` replicates a sub-set of Streams 4.3 ``sc`` options.
 
-``streamsx-sc`` is supported for Streams instances running
-on Cloud Pak for Data. A local install of Streams is **not** required,
+``streamsx-sc`` is supported for Streams 5.x (Cloud Pak for Data).
+A local install of Streams is **not** required,
 simply the installation of the `streamsx` package. All functionality
 is implemented through the Cloud Pak for Data and Streams build service REST apis.
 
 Cloud Pak for Data configuration
 ================================
 
-The Streams instance and authentication are defined through environment variables:
+Integrated configuration
+------------------------
+
+The Streams instance (and its build service) and authentication are defined through environment variables:
 
     * **CP4D_URL** - Cloud Pak for Data deployment URL, e.g. `https://cp4d_server:31843`.
     * **STREAMS_INSTANCE_ID** - Streams service instance name.
     * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
     * **STREAMS_PASSWORD** - Password for authentication.
+
+Standalone configuration
+------------------------
+
+The Streams build service and authentication are defined through environment variables:
+
+        * **STREAMS_BUILD_URL** - Streams build service URL, e.g. when the service is exposed as node port: `https://<NODE-IP>:<NODE-PORT>`
+        * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
+        * **STREAMS_PASSWORD** - Password for authentication.
 
 *****
 Usage

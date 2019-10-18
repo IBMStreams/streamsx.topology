@@ -805,7 +805,7 @@ class ContextTypes(object):
     to an Streams service instance running in the same Cloud Pak for
     Data cluster as the Jupyter notebook or script declaring the application.
 
-    The instance is specified in the configuration passed into :py:func:`submit`. The configuration may be code injected from the list of services or manually created. The code that selects a service instance by name is::
+    The instance is specified in the configuration passed into :py:func:`submit`. The code that selects a service instance by name is::
 
         from icpd_core import icpd_util
         cfg = icpd_util.get_service_instance_details(name='instanceName')
@@ -838,8 +838,8 @@ class ContextTypes(object):
     Environment variables:
         These environment variables define how the application is built and submitted.
 
-        * **STREAMS_BUILD_URL** - Streams build service URL, e.g. when the service is exposed as node port: `https://<EXTERNAL-IP>:<NODE-PORT>`
-        * **STREAMS_REST_URL** - Streams SWS service (REST API) URL, e.g. when the service is exposed as node port: `https://<EXTERNAL-IP>:<NODE-PORT>`
+        * **STREAMS_BUILD_URL** - Streams build service URL, e.g. when the service is exposed as node port: `https://<NODE-IP>:<NODE-PORT>`
+        * **STREAMS_REST_URL** - Streams SWS service (REST API) URL, e.g. when the service is exposed as node port: `https://<NODE-IP>:<NODE-PORT>`
         * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
         * **STREAMS_PASSWORD** - Password for authentication.
 
@@ -905,7 +905,7 @@ class ContextTypes(object):
     TOOLKIT = 'TOOLKIT'
     """Creates an SPL toolkit.
 
-    `Topology` applications are translated to SPL applications before compilation into an Streams application
+    `Topology` applications are implemented as an SPL application before compilation into an Streams application
     bundle. This context type produces the intermediate SPL toolkit that is input to the SPL compiler for
     bundle creation.
 
