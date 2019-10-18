@@ -427,7 +427,7 @@ tuple_in = object_in
 def _get_namedtuple_cls(schema, name):
     return StreamSchema(schema).as_tuple(named=name).style
 
-def _inline_modules(fn, modules, constants):
+def _inline_modules(fn, modules, constants, inlines):
     if sys.version_info.major == 2:
         return
     cvs = inspect.getclosurevars(fn)
@@ -435,12 +435,27 @@ def _inline_modules(fn, modules, constants):
         gv = cvs.globals[mk]
         if isinstance(gv, types.ModuleType):
             modules[mk] = gv.__name__
+            continue
         elif hasattr(gv, '__module__') and gv.__module__ != '__main__' and hasattr(gv, '__name__'):
             modules[mk] = gv.__name__, gv.__module__
-        elif type(gv) == str or type(gv) == int or type(gv) == float or type(gv) == bool:
+            continue
+        elif type(gv) == str or type(gv) == int or type(gv) == float or type(gv) == bool or type(gv) == bytes or type(gv) == complex:
             constants[mk] = gv
-        else:
-            raise TypeError("Unsupported global closure {} type {} in {}".format(mk, gv, fn))
+            continue
+        elif hasattr(gv, '__module__') and gv.__module__ == '__main__':
+            if inspect.isroutine(gv):
+                if mk not in inlines:
+                    inlines[mk] = gv
+                    _inline_modules(gv, modules, constants, inlines)
+                continue
+            elif type(gv) == type:
+                if mk not in inlines:
+                    inlines[mk] = gv
+                    for xm in inspect.getmembers(gv, inspect.ismethod):
+                        _inline_modules(xm[1], modules, constants, inlines)
+                continue
+ 
+        raise TypeError("Unsupported global closure {} type {} in {}".format(mk, gv, fn))
           
 
 # Wraps an callable instance 
@@ -457,24 +472,26 @@ class _ModulesCallable(streamsx._streams._runtime._WrapOpLogic):
         check_cmm = False
         modules = {}
         constants = {}
+        inlines = {}
         if inspect.isroutine(callable_):
-            _inline_modules(callable_, modules, constants)
+            _inline_modules(callable_, modules, constants, inlines)
         elif callable(callable_):
-            _inline_modules(callable_.__call__, modules, constants)
+            _inline_modules(callable_.__call__, modules, constants, inlines)
             check_cmm = True
         elif type(callable_).__module__ == '__main__': 
-            _inline_modules(callable_.__iter__, modules, constants)
+            _inline_modules(callable_.__iter__, modules, constants, inlines)
             # Handle common case the iterable is also the iterator.
             if hasattr(callable_, '__next__'):
-                _inline_modules(callable_.__next__, modules, constants)
+                _inline_modules(callable_.__next__, modules, constants, inlines)
             check_cmm = True
 
         if check_cmm and self._streamsx_ec_context:
-            _inline_modules(callable_.__enter__, modules, constants)
-            _inline_modules(callable_.__exit__, modules, constants)
+            _inline_modules(callable_.__enter__, modules, constants, inlines)
+            _inline_modules(callable_.__exit__, modules, constants, inlines)
 
         self._modules = modules if modules else None
         self._constants = constants if constants else None
+        self._inlines = inlines if inlines else None
 
     def __getstate__(self):
         return self.__dict__
@@ -484,7 +501,7 @@ class _ModulesCallable(streamsx._streams._runtime._WrapOpLogic):
 
         # Patch the lambda/in-line function's globals
         # to include any modules it references.
-        if self._modules or self._constants:
+        if self._modules or self._constants or self._inlines:
             if inspect.isroutine(self._callable):
                 gbls = self._callable.__globals__
             elif callable(self._callable):
@@ -505,6 +522,12 @@ class _ModulesCallable(streamsx._streams._runtime._WrapOpLogic):
             for vn,mn in self._constants.items():
                 if vn not in gbls:
                     gbls[vn] = self._constants[vn]
+
+        if self._inlines:
+            for vn,d in self._inlines.items():
+                if vn not in gbls:
+                    gbls[vn] = self._inlines[vn]
+            
 
 
 class _Callable0(_ModulesCallable):
