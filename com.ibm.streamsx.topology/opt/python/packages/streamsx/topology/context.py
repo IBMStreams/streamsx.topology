@@ -829,7 +829,7 @@ class ContextTypes(object):
     to an Streams service instance running in the same Cloud Pak for
     Data cluster as the Jupyter notebook or script declaring the application.
 
-    The instance is specified in the configuration passed into :py:func:`submit`. The configuration may be code injected from the list of services or manually created. The code that selects a service instance by name is::
+    The instance is specified in the configuration passed into :py:func:`submit`. The code that selects a service instance by name is::
 
         from icpd_core import icpd_util
         cfg = icpd_util.get_service_instance_details(name='instanceName')
