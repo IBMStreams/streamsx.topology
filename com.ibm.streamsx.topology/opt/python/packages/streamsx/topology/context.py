@@ -929,7 +929,7 @@ class ContextTypes(object):
     TOOLKIT = 'TOOLKIT'
     """Creates an SPL toolkit.
 
-    `Topology` applications are translated to SPL applications before compilation into an Streams application
+    `Topology` applications are implemented as an SPL application before compilation into an Streams application
     bundle. This context type produces the intermediate SPL toolkit that is input to the SPL compiler for
     bundle creation.
 
