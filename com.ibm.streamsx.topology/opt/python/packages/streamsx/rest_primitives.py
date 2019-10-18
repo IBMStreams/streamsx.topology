@@ -934,7 +934,7 @@ class Job(_ResourceElement):
             >>> sc = rest.StreamingAnalyticsConnection()
             >>> instances = sc.get_instances()
             >>> job = instances[0].get_jobs()[0]
-            >>> views = job.get_views(name = "*temperatureSensor*")
+            >>> views = job.get_views(name = ".*temperatureSensor*")
         """
         return self._get_elements(self.views, 'views', View, name=name)
 
@@ -988,7 +988,7 @@ class Job(_ResourceElement):
             >>> sc = rest.StreamingAnalyticsConnection()
             >>> instances = sc.get_instances()
             >>> job = instances[0].get_jobs()[0]
-            >>> operators = job.get_operators(name="*temperatureSensor*")
+            >>> operators = job.get_operators(name=".*temperatureSensor*")
 
         .. versionchanged:: 1.9 `name` parameter added.
         """
@@ -1850,7 +1850,7 @@ class Instance(_ResourceElement):
             >>> from streamsx import rest
             >>> sc = rest.StreamingAnalyticsConnection()
             >>> instance = sc.get_instances()[0]
-            >>> operators = instance.get_operators(name="*temperatureSensor*")
+            >>> operators = instance.get_operators(name=".*temperatureSensor*")
 
         .. versionchanged:: 1.9 `name` parameter added.
         """
@@ -1895,7 +1895,7 @@ class Instance(_ResourceElement):
             >>> from streamsx import rest
             >>> sc = rest.StreamingAnalyticsConnection()
             >>> instance = sc.get_instances()[0]
-            >>> view = instance.get_views(name="*temperatureSensor*")
+            >>> view = instance.get_views(name=".*temperatureSensor*")
         """
         return self._get_elements(self.views, 'views', View, name=name)
 
@@ -1932,7 +1932,7 @@ class Instance(_ResourceElement):
             >>> from streamsx import rest
             >>> sc = rest.StreamingAnalyticsConnection()
             >>> instance = sc.get_instances()[0]
-            >>> jobs = instance.get_jobs(name="*temperatureApplication*")
+            >>> jobs = instance.get_jobs(name=".*temperatureApplication*")
         """
         return self._get_elements(self.jobs, 'jobs', Job, None, name)
 
