@@ -1800,11 +1800,6 @@ class Instance(_ResourceElement):
             url = auth._cfg['connection_info'].get('serviceRestEndpoint')
             return streamsx.rest._InstanceSc.get_instance(url, auth, verify)
 
-            #resource_url, _ = Instance._root_from_endpoint(auth._cfg['connection_info'].get('serviceRestEndpoint'))
-            sc = streamsx.rest.StreamsConnection(resource_url=resource_url, auth=auth)
-                
-            return sc.get_instance(service_name)
-
         else:
             # this is a stand-alone config
             parsed = parse.urlparse(endpoint)
