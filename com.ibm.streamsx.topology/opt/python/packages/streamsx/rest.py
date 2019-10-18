@@ -11,22 +11,24 @@ Streams REST API
 
 The Streams REST API provides programmatic access to configuration and status information for IBM Streams objects such as domains, instances, and jobs. 
 
-IBM Cloud Pak for Data
-======================
+IBM Cloud Pak for Data (Streams 5)
+==================================
 
-Within ICPD
------------
+Integrated configuration within project
+---------------------------------------
 
 :py:meth:`~streamsx.rest_primitives.Instance.of_service` is the entry point to using the Streams REST API bindings,
 returning an :py:class:`~streamsx.rest_primitives.Instance`.
-The configuration required to connect is obtained from ``ipcd_util.get_service_details`` passing in
-the IBM Streams service instance name.
+The configuration required to connect is obtained from ``ipcd_util.get_service_details`` passing in the IBM Streams service instance name.
 
-The call to ``ipcd_util.get_service_details`` can be code injected into a Jupyter notebook within
-an ICPD project by selecting the service instance.
+Integrated & standalone configurations
+--------------------------------------
 
-IBM Streams On-premises
-=======================
+:py:meth:`~streamsx.rest_primitives.Instance.of_endpoint` is the entry point
+to using the Streams REST API bindings, returning an :py:class:`~streamsx.rest_primitives.Instance`.
+
+IBM Streams On-premises (4.2, 4.3)
+==================================
 
 :py:class:`StreamsConnection` is the entry point to using the Streams REST API bindings.
 Through its functions and the returned objects status information
