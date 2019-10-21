@@ -243,7 +243,7 @@ class BuildService(_AbstractStreamsConnection):
         if service_name:
             # this is an integrated config
             auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
-            build_url, _ = BuildService._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
+            build_url = BuildService._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
             service_name=auth._cfg['service_name']
             sc = BuildService(resource_url=build_url, auth=auth)
             if verify is not None:
@@ -288,14 +288,17 @@ class BuildService(_AbstractStreamsConnection):
     def _root_from_endpoint(endpoint):
         import urllib.parse as up
         esu = up.urlsplit(endpoint)
+        # CPD 2.5
+        if esu.path.startswith('/streams-build/instances/'):
+            return endpoint.replace('/streams-build/instances', '/streams-build-resource/instances', 1)
+
         if not esu.path.startswith('/streams/rest/builds'):
-            return None, None
+            return None
 
         es = endpoint.split('/')
-        name = es[len(es)-1]
         root_url = endpoint.split('/streams/rest/builds')[0]
         resource_url = root_url + '/streams/rest/resources'
-        return resource_url, name
+        return resource_url
 
     def __str__(self):
         return pformat(self.__dict__)
