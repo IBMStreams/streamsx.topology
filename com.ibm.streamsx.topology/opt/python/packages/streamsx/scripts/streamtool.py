@@ -556,17 +556,19 @@ def _getappconfig(instance, cmd_args, rc):
 # deletetoolkit
 ###########################################
 def _deletetoolkit_parser(subparsers):
-    toolkit_delete = subparsers.add_parser('deletetoolkit', help='Submit an application bundle')
+    toolkit_delete = subparsers.add_parser('deletetoolkit', help='Delete a toolkit from the build server')
     g1 = toolkit_delete.add_argument_group(title='toolkitid toolkitname toolkitregex', description='One of these options must be chosen.')
     group = g1.add_mutually_exclusive_group(required=True)
-    group.add_argument('--toolkitid', '-i', help='Specifies the id of the toolkit to delete', metavar='toolkit-id') # dest=toolkitid
-    group.add_argument('--toolkitname', '-n', help='Remove all versions toolkits with this name', metavar='toolkit-name')
-    group.add_argument('--toolkitregex', '-r', help='Remove all versions toolkits matching this regex pattern', metavar='toolkit-regex')
+    group.add_argument('--toolkitid', '-i', help='Specifies the id of the toolkit to delete', metavar='toolkit-id')
+    group.add_argument('--toolkitname', '-n', help='Remove all toolkits with this name', metavar='toolkit-name')
+    group.add_argument('--toolkitregex', '-r', help='Remove all toolkits where the name matches this regex pattern', metavar='toolkit-regex')
     _user_arg(toolkit_delete)
 
 def _deletetoolkit(instance, cmd_args, rc):
-    build_server = BuildService.of_endpoint(verify=False)
+    # Get all toolkits from the build_server
+    build_server = BuildService.of_endpoint(verify=False if cmd_args.disable_ssl_verify else None)
     remote_toolkits = build_server.get_toolkits()
+
     tk_to_delete = []
     return_message = None
 

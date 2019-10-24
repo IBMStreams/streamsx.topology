@@ -5,7 +5,6 @@ import unittest.mock
 import sys
 import os
 import time
-import shutil
 import requests
 import random
 from glob import glob
@@ -17,7 +16,6 @@ import subprocess
 from streamsx.build import BuildService
 import xml.etree.ElementTree as ET
 from io import StringIO
-import zipfile
 import streamsx.scripts.streamtool as streamtool
 
 
@@ -50,7 +48,7 @@ def _handle_http_error(err):
     raise err
 
 
-# Tests SC script.
+# Tests deletetoolkit script.
 # Requires environment setup for a ICP4D Streams instance.
 @unittest.skipUnless(cpd_setup(), "requires Streams REST API setup")
 class Testdeletetoolkit(unittest.TestCase):
@@ -247,10 +245,11 @@ class Testdeletetoolkit(unittest.TestCase):
 
         # Delete random toolkit by id
         args = ['-i', random_tk_to_delete.id]
-        self._run_deletetoolkit(args)
+        rc, return_message = self._run_deletetoolkit(args)
 
         # Check random toolkit is deleted
         self._check_toolkit_deleted(toolkit_id=random_tk_to_delete.id)
+        self.assertEqual(rc, 0)
 
     # Delete all test toolkits with name
     def test_simple_2(self):
@@ -263,10 +262,11 @@ class Testdeletetoolkit(unittest.TestCase):
 
         # Delete random toolkit by name
         args = ['-n', random_tk_to_delete.name]
-        self._run_deletetoolkit(args)
+        rc, return_message = self._run_deletetoolkit(args)
 
         # Check random toolkit is deleted
         self._check_toolkit_deleted(toolkit_name=random_tk_to_delete.name)
+        self.assertEqual(rc, 0)
 
     # Delete all test toolkits by regex pattern
     def test_simple_3(self):
@@ -284,7 +284,8 @@ class Testdeletetoolkit(unittest.TestCase):
 
         # Delete random toolkit by pattern
         args = ['-r', pattern]
-        self._run_deletetoolkit(args)
+        rc, return_message = self._run_deletetoolkit(args)
 
         # Check random toolkit is deleted
         self._check_toolkit_deleted(toolkit_regex=pattern)
+        self.assertEqual(rc, 0)
