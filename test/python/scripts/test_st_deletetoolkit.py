@@ -90,15 +90,13 @@ class Testdeletetoolkit(unittest.TestCase):
             self.test_toolkit_objects = self._get_toolkit_objects(self.test_toolkit_paths)
             self.test_toolkit_names = [x.name for x in self.test_toolkit_objects]
 
-            # Get the random toolkit name, so we can use it to check correct dependencies
+            # Get and store the randomly generated toolkit name, thus in case of network failure, on next run on test suite,
+            # can read old randomly generated toolkit name, and delete toolkits off buildserver
             # Ex. 'com.example.tmyuuwkpjittfjla.test_tk_2' -> 'com.example.tmyuuwkpjittfjla.'
             tk1 = self._get_toolkit_objects([self.test_toolkit_paths[0]])[0]
-            self.random_name_variable = re.sub("test_tk_.", "", tk1.name)
-
-            # Store the randomly generated toolkit name, thus in case of network failure, on next run on test suite,
-            # can read old randomly generated toolkit name, and delete toolkits off buildserver
+            random_name_variable = re.sub("test_tk_.", "", tk1.name)
             with open((my_path / "test_sc_old_toolkit_name.txt").resolve(), "w") as file1:
-                file1.write(self.random_name_variable)
+                file1.write(random_name_variable)
 
             # Upload these toolkits to the buildserver
             try:
@@ -214,7 +212,17 @@ class Testdeletetoolkit(unittest.TestCase):
             return self.name == other.name and self.version == other.version
 
     def _check_toolkit_deleted(self, toolkit_id=None, toolkit_name=None, toolkit_regex=None):
-        # Get the new set of remote test toolkits after we have deleted one or more
+        """ Given a id, or name, or regex, check whether there are test toolkits on the buildserver matching these.
+            If yes, -> fail, these were supposed to be deleted
+            if not, -> success
+
+        Keyword Arguments:
+            toolkit_id {String} -- Id of the single toolkit that should have been deleted (default: {None})
+            toolkit_name {String} -- Name of the toolkit that should have been deleted (all versions) (default: {None})
+            toolkit_regex {String} -- Uncompiled regex matching the toolkits that should have been deleted (default: {None})
+        """
+
+        # Get the new set of remote toolkits after we have deleted one or more test toolkits
         remote_toolkits = self.build_server.get_toolkits()
         remote_test_tk_objects = [x for x in remote_toolkits if x.name in self.test_toolkit_names]
 
