@@ -15,9 +15,11 @@ import urllib3
 import datetime
 import json
 import locale
+import re
 
 import streamsx.topology.context
 from streamsx.rest import Instance
+from streamsx.build import BuildService
 
 
 
@@ -550,6 +552,52 @@ def _getappconfig(instance, cmd_args, rc):
         print(key + "=" + json_value)
     return (rc, config_props)
 
+###########################################
+# deletetoolkit
+###########################################
+def _deletetoolkit_parser(subparsers):
+    toolkit_delete = subparsers.add_parser('deletetoolkit', help='Submit an application bundle')
+    g1 = toolkit_delete.add_argument_group(title='toolkitid toolkitname toolkitregex', description='One of these options must be chosen.')
+    group = g1.add_mutually_exclusive_group(required=True)
+    group.add_argument('--toolkitid', '-i', help='Specifies the id of the toolkit to delete', metavar='toolkit-id') # dest=toolkitid
+    group.add_argument('--toolkitname', '-n', help='Remove all versions toolkits with this name', metavar='toolkit-name')
+    group.add_argument('--toolkitregex', '-r', help='Remove all versions toolkits matching this regex pattern', metavar='toolkit-regex')
+    _user_arg(toolkit_delete)
+
+def _deletetoolkit(instance, cmd_args, rc):
+    build_server = BuildService.of_endpoint(verify=False)
+    remote_toolkits = build_server.get_toolkits()
+    tk_to_delete = []
+    return_message = None
+
+    # Find the toolkit matching toolkitid
+    if cmd_args.toolkitid:
+        idk = [x for x in remote_toolkits if x.id == cmd_args.toolkitid]
+        if idk:
+            assert len(idk) == 1
+            tk_to_delete.append(idk[0])
+
+    # Find all toolkits with toolkitname
+    elif cmd_args.toolkitname:
+        idk = [x for x in remote_toolkits if x.name == cmd_args.toolkitname]
+        if idk:
+            tk_to_delete.extend(idk)
+
+    # Find all toolkits where the name matches toolkitregex
+    elif cmd_args.toolkitregex:
+        p = re.compile(cmd_args.toolkitregex)
+        idk = [x for x in remote_toolkits if p.match(x.name)]
+        if idk:
+            tk_to_delete.extend(idk)
+
+    # If there are any toolkits to delete, delete them
+    for tk in tk_to_delete:
+        val = tk.delete()
+        if not val:
+            rc = 1
+            return_message = '1 or more toolkits failed to delete'
+
+    return (rc, return_message)
 
 def run_cmd(args=None):
     cmd_args = _parse_args(args)
@@ -570,6 +618,7 @@ def run_cmd(args=None):
     "mkappconfig": _mkappconfig,
     "chappconfig": _chappconfig,
     "getappconfig": _getappconfig,
+    "deletetoolkit": _deletetoolkit,
     }
 
     extra_info = None
@@ -605,6 +654,7 @@ def _parse_args(args):
     _mkappconfig_parser(subparsers)
     _chappconfig_parser(subparsers)
     _getappconfig_parser(subparsers)
+    _deletetoolkit_parser(subparsers)
 
     return cmd_parser.parse_args(args)
 
