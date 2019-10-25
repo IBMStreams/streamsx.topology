@@ -574,28 +574,31 @@ def _deletetoolkit(instance, cmd_args, rc):
 
     # Find the toolkit matching toolkitid
     if cmd_args.toolkitid:
-        idk = [x for x in remote_toolkits if x.id == cmd_args.toolkitid]
-        if idk:
-            assert len(idk) == 1
-            tk_to_delete.append(idk[0])
+        matching_toolkits = [x for x in remote_toolkits if x.id == cmd_args.toolkitid]
+        if matching_toolkits:
+            # Assert that only 1 toolkit has this ID
+            assert len(matching_toolkits) == 1
+            tk_to_delete.append(matching_toolkits[0])
 
     # Find all toolkits with toolkitname
     elif cmd_args.toolkitname:
-        idk = [x for x in remote_toolkits if x.name == cmd_args.toolkitname]
-        if idk:
-            tk_to_delete.extend(idk)
+        matching_toolkits = [x for x in remote_toolkits if x.name == cmd_args.toolkitname]
+        if matching_toolkits:
+            tk_to_delete.extend(matching_toolkits)
 
     # Find all toolkits where the name matches toolkitregex
     elif cmd_args.toolkitregex:
         p = re.compile(cmd_args.toolkitregex)
-        idk = [x for x in remote_toolkits if p.match(x.name)]
-        if idk:
-            tk_to_delete.extend(idk)
+        # p.match(x.name) returns a match object only if it matches the entire name, not just a part of it, else returns None
+        matching_toolkits = [x for x in remote_toolkits if p.match(x.name)]
+        if matching_toolkits:
+            tk_to_delete.extend(matching_toolkits)
 
     # If there are any toolkits to delete, delete them
     for tk in tk_to_delete:
         val = tk.delete()
         if not val:
+            # If tk fails to delete, set error code and message
             rc = 1
             return_message = '1 or more toolkits failed to delete'
 

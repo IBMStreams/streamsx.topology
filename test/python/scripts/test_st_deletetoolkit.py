@@ -227,15 +227,19 @@ class Testdeletetoolkit(unittest.TestCase):
         remote_test_tk_objects = [x for x in remote_toolkits if x.name in self.test_toolkit_names]
 
         if toolkit_id:
+            # Get the id's of all test toolkits on the buildserver
             remote_test_tk_ids = [x.id for x in remote_test_tk_objects]
-            # print(remote_test_tk_ids)
             if toolkit_id in remote_test_tk_ids:
                 self.fail("Toolkit with id {} is still present on the build server".format(toolkit_id))
+
         elif toolkit_name:
+            # Get the names of all test toolkits on the buildserver
             remote_test_tk_names = [x.name for x in remote_test_tk_objects]
             if toolkit_name in remote_test_tk_names:
                 self.fail("Toolkit with name {} is still present on the build server".format(toolkit_name))
+
         elif toolkit_regex:
+            # Get the names of all test toolkits on the buildserver that match the regex
             p = re.compile(toolkit_regex)
             remote_test_tk_names = [x.name for x in remote_test_tk_objects]
             matched_toolkits = [x for x in remote_test_tk_names if p.match(x)]
