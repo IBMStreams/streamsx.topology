@@ -561,7 +561,7 @@ def _deletetoolkit_parser(subparsers):
     group = g1.add_mutually_exclusive_group(required=True)
     group.add_argument('--toolkitid', '-i', help='Specifies the id of the toolkit to delete', metavar='toolkit-id')
     group.add_argument('--toolkitname', '-n', help='Remove all toolkits with this name', metavar='toolkit-name')
-    group.add_argument('--toolkitregex', '-r', help='Remove all toolkits where the name matches this regex pattern', metavar='toolkit-regex')
+    group.add_argument('--toolkitregex', '-r', help='Remove all toolkits where the name matches the given regex pattern', metavar='toolkit-regex')
     _user_arg(toolkit_delete)
 
 def _deletetoolkit(instance, cmd_args, rc):
@@ -589,7 +589,7 @@ def _deletetoolkit(instance, cmd_args, rc):
     # Find all toolkits where the name matches toolkitregex
     elif cmd_args.toolkitregex:
         p = re.compile(cmd_args.toolkitregex)
-        # p.match(x.name) returns a match object only if it matches the entire name, not just a part of it, else returns None
+        # p.match(x.name) returns a match object only if zero or more characters at the beginning of string match the regex pattern, else it returns None
         matching_toolkits = [x for x in remote_toolkits if p.match(x.name)]
         if matching_toolkits:
             tk_to_delete.extend(matching_toolkits)
