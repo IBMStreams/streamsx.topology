@@ -439,7 +439,7 @@ The streamtool rmtoolkit command allows for the deletion of 1 or more toolkits f
 
 .. code-block:: none
 
-streamsx-streamtool rmtoolkit [-h]
+    streamsx-streamtool rmtoolkit [-h]
             (--toolkitid toolkit-id | --toolkitname toolkit-name | --toolkitregex toolkit-regex)
             [--User user]
 
