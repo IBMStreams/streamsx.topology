@@ -48,10 +48,10 @@ def _handle_http_error(err):
     raise err
 
 
-# Tests deletetoolkit script.
+# Tests rmtoolkit script.
 # Requires environment setup for a ICP4D Streams instance.
 @unittest.skipUnless(cpd_setup(), "requires Streams REST API setup")
-class Testdeletetoolkit(unittest.TestCase):
+class Testrmtoolkit(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # Call shell script to create the info.xml and toolkit.xml for each toolkit, and the info.xml for each app to build
@@ -116,9 +116,9 @@ class Testdeletetoolkit(unittest.TestCase):
     def tearDown(self):
         self.delete_test_toolkits()
 
-    def _run_deletetoolkit(self, args):
+    def _run_rmtoolkit(self, args):
         args.insert(0, "--disable-ssl-verify")
-        args.insert(1, "deletetoolkit")
+        args.insert(1, "rmtoolkit")
 
         rc, return_message = streamtool.run_cmd(args=args)
         # Operations such as adding or deleting toolkits sometimes are not
@@ -257,7 +257,7 @@ class Testdeletetoolkit(unittest.TestCase):
 
         # Delete random toolkit by id
         args = ['-i', random_tk_to_delete.id]
-        rc, return_message = self._run_deletetoolkit(args)
+        rc, return_message = self._run_rmtoolkit(args)
 
         # Check random toolkit is deleted
         self._check_toolkit_deleted(toolkit_id=random_tk_to_delete.id)
@@ -274,7 +274,7 @@ class Testdeletetoolkit(unittest.TestCase):
 
         # Delete random toolkit by name
         args = ['-n', random_tk_to_delete.name]
-        rc, return_message = self._run_deletetoolkit(args)
+        rc, return_message = self._run_rmtoolkit(args)
 
         # Check random toolkit is deleted
         self._check_toolkit_deleted(toolkit_name=random_tk_to_delete.name)
@@ -296,7 +296,7 @@ class Testdeletetoolkit(unittest.TestCase):
 
         # Delete random toolkit by pattern
         args = ['-r', pattern]
-        rc, return_message = self._run_deletetoolkit(args)
+        rc, return_message = self._run_rmtoolkit(args)
 
         # Check random toolkit is deleted
         self._check_toolkit_deleted(toolkit_regex=pattern)
