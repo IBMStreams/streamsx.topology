@@ -81,6 +81,25 @@ def check_split(fn, stream):
 def _check_split(fn, stream):
     _check_arg_matching_schema(fn, stream)
 
+# Check the callable for for_each
+#
+# - Can be passed a single argument
+# - Has an argument type that is compatible the the schema type.
+# - TODO? = Check the return is nothing?
+
+def check_for_each(fn, stream):
+    try:
+        _check_for_each(fn, stream)
+    except TypeError:
+        raise
+    except:
+        import traceback
+        traceback.print_exc()
+        pass
+
+def _check_for_each(fn, stream):
+    _check_arg_matching_schema(fn, stream)
+
 # Check the hint for paramter the tuple will be passed
 # as matches the schema.
 def _check_arg_matching_schema(fn, stream):

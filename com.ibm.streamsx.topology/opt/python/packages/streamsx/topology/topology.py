@@ -1011,6 +1011,7 @@ class Stream(_placement._Placement, object):
         .. versionchanged:: 1.7
             Now returns a :py:class:`Sink` instance.
         """
+        streamsx._streams._hints.check_for_each(func, self)
         sl = _SourceLocation(_source_info(), 'for_each')
         _name = self.topology.graph._requested_name(name, action='for_each', func=func)
         stateful = _determine_statefulness(func)
