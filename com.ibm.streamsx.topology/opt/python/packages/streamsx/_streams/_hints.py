@@ -32,9 +32,8 @@ def _schema_iterable(fn, topo):
     if not topo.type_checking:
         return
 
-    hints = typing.get_type_hints(fn)
-    if hints and 'return' in hints:
-        type_ = hints['return']
+    type_ = _fn_return_hint(fn)
+    if type_ is not None:
         if hasattr(type_, '__origin__') and hasattr(type_, '__args__'):
             if len(type_.__args__) == 1:
                 et = type_.__args__[0]
@@ -43,6 +42,11 @@ def _schema_iterable(fn, topo):
                 if typing.Iterator[et] == type_:
                     return _schema_from_type(et)
 
+def _fn_return_hint(fn):
+    hints = typing.get_type_hints(fn)
+    if hints and 'return' in hints:
+        return hints['return']
+        
 # Check the callable for a filter
 #
 # - Can be passed a single argument
@@ -104,11 +108,11 @@ def _check_for_each(fn, stream):
 #
 # - Can be passed a single argument
 # - Has an argument type that is compatible the the schema type.
-# - TODO - Infer output schema from type hint
+# - Infer output schema from type hint
 
 def check_map(fn, stream):
     try:
-        _check_map(fn, stream)
+        return _check_map(fn, stream)
     except TypeError:
         raise
     except:
@@ -117,7 +121,9 @@ def check_map(fn, stream):
         pass
 
 def _check_map(fn, stream):
-    _check_arg_matching_schema(fn, stream)
+    rt_hint = _check_arg_matching_schema(fn, stream)
+    if rt_hint:
+        return _schema_from_type(rt_hint)
 
 # Check the callable for flat_map
 #
@@ -138,8 +144,11 @@ def check_flat_map(fn, stream):
 def _check_flat_map(fn, stream):
     _check_arg_matching_schema(fn, stream)
 
-# Check the hint for paramter the tuple will be passed
-# as matches the schema.
+# Check the hint for paramter the tuple will be passed as
+#  matches the schema.
+#
+# Returns the type hint of the function's return if
+# it has one AND type_checking is true. Otherwiae return None
 def _check_arg_matching_schema(fn, stream):
 
     if inspect.isroutine(fn):
@@ -150,13 +159,13 @@ def _check_arg_matching_schema(fn, stream):
 
     _check_arg_count(fn, 1)
 
-    if not stream.topology.type_checking or not stream._hints:
-        return
+    if stream.topology.type_checking:
+        if stream._hints:
+            hint, param = _get_arg_hint(fn, n-1)
+            if hint:
+                _check_matching(fn, stream._hints.type_, hint, param)
 
-    hint, param = _get_arg_hint(fn, n-1)
-    if hint:
-        _check_matching(fn, stream._hints.type_, hint, param)
-
+        return _fn_return_hint(fn)
 
 def _check_arg_count(fn, n):
 
@@ -179,11 +188,6 @@ def _check_arg_count(fn, n):
 
     raise TypeError('Callable {} takes {} arguments, {} expected' .format(fn, len(sig.parameters), n))
 
-
-def _schema_fn(fn):
-    hints = typing.get_type_hints(fn)
-    if hints and 'return' in hints:
-        return _schema_from_type(hints['return'])
 
 def _schema_from_type(type_):
     try:

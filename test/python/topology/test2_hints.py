@@ -34,12 +34,13 @@ def f_p(t: P) : pass
 def f_s(t: S) : pass
 
 def m_none(t) : pass
-def m_int(t:int) : pass
-def m_str(t:str) : pass
-def m_any(t: typing.Any) : pass
+def m_int(t:int) -> str : pass
+def m_str(t:str) -> SensorReading : pass
+def m_any(t: typing.Any) -> str : pass
 def m_sensor(t: SensorReading) : pass
-def m_p(t: P) : pass
-def m_s(t: S) : pass
+def m_p(t: P) -> P : pass
+def m_s(t: S) -> S : pass
+def m_p2s(t: P) -> S : pass
 
 
 def a_0() : pass
@@ -315,52 +316,60 @@ class TestHints(unittest.TestCase):
         topo = Topology()
 
         s = topo.source(s_none)
-        s.map(f_none)
-        s.map(f_int)
-        s.map(f_str)
-        s.map(f_any)
-        s.map(f_sensor)
+        s.map(m_none)
+        sr = s.map(m_int)
+        self.assertEqual(CommonSchema.String, sr.oport.schema)
+        sr = s.map(m_str)
+        self.assertEqual(_normalize(SensorReading), sr.oport.schema)
+        s.map(m_any)
+        s.map(m_sensor)
 
         s = topo.source(s_int)
-        s.map(f_none)
-        s.map(f_int)
-        self.assertRaises(TypeError, s.map, f_str)
-        s.map(f_any)
-        self.assertRaises(TypeError, s.map, f_sensor)
+        s.map(m_none)
+        s.map(m_int)
+        self.assertRaises(TypeError, s.map, m_str)
+        s.map(m_any)
+        self.assertRaises(TypeError, s.map, m_sensor)
 
         s = topo.source(s_str)
-        s.map(f_none)
-        self.assertRaises(TypeError, s.map, f_int)
-        s.map(f_str)
-        s.map(f_any)
-        self.assertRaises(TypeError, s.map, f_sensor)
+        s.map(m_none)
+        self.assertRaises(TypeError, s.map, m_int)
+        s.map(m_str)
+        s.map(m_any)
+        self.assertRaises(TypeError, s.map, m_sensor)
 
         s = topo.source(s_any)
-        s.map(f_none)
-        s.map(f_int)
-        s.map(f_str)
-        s.map(f_any)
-        s.map(f_sensor)
+        s.map(m_none)
+        s.map(m_int)
+        s.map(m_str)
+        s.map(m_any)
+        s.map(m_sensor)
 
         s = topo.source(s_sensor)
-        s.map(f_none)
-        self.assertRaises(TypeError, s.map, f_int)
-        self.assertRaises(TypeError, s.map, f_str)
-        s.map(f_any)
-        s.map(f_sensor)
+        s.map(m_none)
+        self.assertRaises(TypeError, s.map, m_int)
+        self.assertRaises(TypeError, s.map, m_str)
+        s.map(m_any)
+        s.map(m_sensor)
 
         s = topo.source(s_p)
-        s.map(f_none)
-        self.assertRaises(TypeError, s.map, f_int)
-        self.assertRaises(TypeError, s.map, f_str)
-        s.map(f_any)
-        self.assertRaises(TypeError, s.map, f_sensor)
-        s.map(f_p)
-        self.assertRaises(TypeError, s.map, f_s)
+        s.map(m_none)
+        self.assertRaises(TypeError, s.map, m_int)
+        self.assertRaises(TypeError, s.map, m_str)
+        s.map(m_any)
+        self.assertRaises(TypeError, s.map, m_sensor)
+        sr = s.map(m_p)
+        self.assertEqual(CommonSchema.Python, sr.oport.schema)
+        self.assertRaises(TypeError, s.map, m_s)
+
+        # Ensure we maintain the hint as well as the schema
+        sr.map(m_p)
+        self.assertRaises(TypeError, sr.map, m_s)
+        sr.map(m_p2s).map(m_s)
 
         s = topo.source(s_s)
-        s.map(f_p)
-        s.map(f_s)
+        s.map(m_p)
+        s.map(m_s)
 
     def test_map_argcount(self):
         topo = Topology()
