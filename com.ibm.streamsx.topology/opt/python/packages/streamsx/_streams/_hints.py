@@ -43,6 +43,12 @@ def _schema_iterable(fn, topo):
                 if typing.Iterator[et] == type_:
                     return _schema_from_type(et)
 
+# Check the callable for a filter
+#
+# - Can be passed a single argument
+# - Has an argument type that is compatible the the schema type.
+# - TODO? = Check the return is convertable to a truth value
+
 def check_filter(fn, stream):
     try:
         _check_filter(fn, stream)
@@ -69,6 +75,37 @@ def _check_filter(fn, stream):
     if hint:
         _check_matching(fn, stream._hints.type_, hint, param)
 
+# Check the callable for a split
+#
+# - Can be passed a single argument
+# - Has an argument type that is compatible the the schema type.
+# - TODO? = Check the return is convertable to a int value
+
+def check_split(fn, stream):
+    try:
+        _check_split(fn, stream)
+    except TypeError:
+        raise
+    except:
+        import traceback
+        traceback.print_exc()
+        pass
+
+def _check_split(fn, stream):
+    if inspect.isroutine(fn):
+        n = 1
+    elif callable(fn):
+        fn = fn.__call__
+        n = 2 # includes self
+
+    _check_arg_count(fn, 1)
+
+    if not stream.topology.type_checking or not stream._hints:
+        return
+
+    hint, param = _get_arg_hint(fn, n-1)
+    if hint:
+        _check_matching(fn, stream._hints.type_, hint, param)
 
 def _check_arg_count(fn, n):
 
