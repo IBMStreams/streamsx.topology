@@ -1112,6 +1112,7 @@ class Stream(_placement._Placement, object):
 
         .. versionadded:: 1.13
         """
+        streamsx._streams._hints.check_split(func, self)
         sl = _SourceLocation(_source_info(), 'split')
         _name = self.topology.graph._requested_name(name, action="split", func=func)
         stateful = _determine_statefulness(func)

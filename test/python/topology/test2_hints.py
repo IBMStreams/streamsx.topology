@@ -64,6 +64,7 @@ class TestHints(unittest.TestCase):
 
         s = topo.source(s_int)
         s.filter(f_str)
+        s.split(2, f_str)
 
         s = topo.source(s_str)
         self.assertEqual(CommonSchema.Python, s.oport.schema)
@@ -168,3 +169,68 @@ class TestHints(unittest.TestCase):
         self.assertRaises(TypeError, s.filter, A_2())
         s.filter(ao_2)
         s.filter(AO_2())
+
+    def test_split(self):
+        topo = Topology()
+
+        s = topo.source(s_none)
+        s.split(2, f_none)
+        s.split(2, f_int)
+        s.split(2, f_str)
+        s.split(2, f_any)
+        s.split(2, f_sensor)
+
+        s = topo.source(s_int)
+        s.split(2, f_none)
+        s.split(2, f_int)
+        self.assertRaises(TypeError, s.split, 2, f_str)
+        s.split(2, f_any)
+        self.assertRaises(TypeError, s.split, 2, f_sensor)
+
+        s = topo.source(s_str)
+        s.split(2, f_none)
+        self.assertRaises(TypeError, s.split, 2, f_int)
+        s.split(2, f_str)
+        s.split(2, f_any)
+        self.assertRaises(TypeError, s.split, 2, f_sensor)
+
+        s = topo.source(s_any)
+        s.split(2, f_none)
+        s.split(2, f_int)
+        s.split(2, f_str)
+        s.split(2, f_any)
+        s.split(2, f_sensor)
+
+        s = topo.source(s_sensor)
+        s.split(2, f_none)
+        self.assertRaises(TypeError, s.split, 2, f_int)
+        self.assertRaises(TypeError, s.split, 2, f_str)
+        s.split(2, f_any)
+        s.split(2, f_sensor)
+
+        s = topo.source(s_p)
+        s.split(2, f_none)
+        self.assertRaises(TypeError, s.split, 2, f_int)
+        self.assertRaises(TypeError, s.split, 2, f_str)
+        s.split(2, f_any)
+        self.assertRaises(TypeError, s.split, 2, f_sensor)
+        s.split(2, f_p)
+        self.assertRaises(TypeError, s.split, 2, f_s)
+
+        s = topo.source(s_s)
+        s.split(2, f_p)
+        s.split(2, f_s)
+
+    def test_split_argcount(self):
+        topo = Topology()
+        s = topo.source([])
+        self.assertRaises(TypeError, s.split, 2, a_0)
+        self.assertRaises(TypeError, s.split, 2, A_0())
+        s.split(2, a_1)
+        s.split(2, A_1())
+        s.split(2, ao_1)
+        s.split(2, AO_1())
+        self.assertRaises(TypeError, s.split, 2, a_2)
+        self.assertRaises(TypeError, s.split, 2, A_2())
+        s.split(2, ao_2)
+        s.split(2, AO_2())
