@@ -129,11 +129,12 @@ def _check_map(fn, stream):
 #
 # - Can be passed a single argument
 # - Has an argument type that is compatible the the schema type.
-# - TODO: Infer output schema from type hint
+# - Infer output schema from type hint
+# - TODO - Check return type is iterable
 
 def check_flat_map(fn, stream):
     try:
-        _check_flat_map(fn, stream)
+        return _check_flat_map(fn, stream)
     except TypeError:
         raise
     except:
@@ -142,7 +143,13 @@ def check_flat_map(fn, stream):
         pass
 
 def _check_flat_map(fn, stream):
-    _check_arg_matching_schema(fn, stream)
+    rt_hint = _check_arg_matching_schema(fn, stream)
+    if rt_hint:
+        if hasattr(rt_hint, '__origin__') and hasattr(rt_hint, '__args__'):
+            if len(rt_hint.__args__) == 1:
+                et = rt_hint.__args__[0]
+                if typing.Iterable[et] == rt_hint:
+                    return _schema_from_type(et)
 
 # Check the hint for paramter the tuple will be passed as
 #  matches the schema.
