@@ -104,7 +104,7 @@ def _check_for_each(fn, stream):
 #
 # - Can be passed a single argument
 # - Has an argument type that is compatible the the schema type.
-# - TODO? = Check the return is nothing?
+# - TODO - Infer output schema from type hint
 
 def check_map(fn, stream):
     try:
@@ -117,6 +117,25 @@ def check_map(fn, stream):
         pass
 
 def _check_map(fn, stream):
+    _check_arg_matching_schema(fn, stream)
+
+# Check the callable for flat_map
+#
+# - Can be passed a single argument
+# - Has an argument type that is compatible the the schema type.
+# - TODO: Infer output schema from type hint
+
+def check_flat_map(fn, stream):
+    try:
+        _check_flat_map(fn, stream)
+    except TypeError:
+        raise
+    except:
+        import traceback
+        traceback.print_exc()
+        pass
+
+def _check_flat_map(fn, stream):
     _check_arg_matching_schema(fn, stream)
 
 # Check the hint for paramter the tuple will be passed

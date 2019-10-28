@@ -1306,6 +1306,8 @@ class Stream(_placement._Placement, object):
             func = streamsx.topology.runtime._identity
             if name is None:
                name = 'flatten'
+        else:
+            streamsx._streams._hints.check_flat_map(func, self)
      
         sl = _SourceLocation(_source_info(), 'flat_map')
         _name = self.topology.graph._requested_name(name, action='flat_map', func=func)
