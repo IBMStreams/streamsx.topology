@@ -216,6 +216,8 @@ def _get_arg_hint(fn, pos):
             break
     return hints.get(pn), sig.parameters[pn]
 
+STR_HINTS = _schema_from_type(str)
+
 def _check_matching(fn, source, target, param):
 
     if target == typing.Any or source == typing.Any:
