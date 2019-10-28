@@ -42,6 +42,14 @@ def m_p(t: P) -> P : pass
 def m_s(t: S) -> S : pass
 def m_p2s(t: P) -> S : pass
 
+def fm_none(t) : pass
+def fm_int(t:int) : pass
+def fm_str(t:str) -> typing.Iterable[SensorReading] : pass
+def fm_any(t: typing.Any) -> typing.Iterable[str] : pass
+def fm_sensor(t: SensorReading) : pass
+def fm_p(t: P) -> typing.Iterable[P] : pass
+def fm_s(t: S) -> typing.Iterable[S] : pass
+
 
 def a_0() : pass
 class A_0(object):
@@ -389,52 +397,58 @@ class TestHints(unittest.TestCase):
         topo = Topology()
 
         s = topo.source(s_none)
-        s.flat_map(f_none)
-        s.flat_map(f_int)
-        s.flat_map(f_str)
-        s.flat_map(f_any)
-        s.flat_map(f_sensor)
+        s.flat_map(fm_none)
+        s.flat_map(fm_int)
+        sr = s.flat_map(fm_str)
+        self.assertEqual(_normalize(SensorReading), sr.oport.schema)
+        sr.flat_map(fm_sensor)
+        s.flat_map(fm_any)
+        s.flat_map(fm_sensor)
 
         s = topo.source(s_int)
-        s.flat_map(f_none)
-        s.flat_map(f_int)
-        self.assertRaises(TypeError, s.flat_map, f_str)
-        s.flat_map(f_any)
-        self.assertRaises(TypeError, s.flat_map, f_sensor)
+        s.flat_map(fm_none)
+        s.flat_map(fm_int)
+        self.assertRaises(TypeError, s.flat_map, fm_str)
+        s.flat_map(fm_any)
+        self.assertRaises(TypeError, s.flat_map, fm_sensor)
 
         s = topo.source(s_str)
-        s.flat_map(f_none)
-        self.assertRaises(TypeError, s.flat_map, f_int)
-        s.flat_map(f_str)
-        s.flat_map(f_any)
-        self.assertRaises(TypeError, s.flat_map, f_sensor)
+        s.flat_map(fm_none)
+        self.assertRaises(TypeError, s.flat_map, fm_int)
+        sr = s.flat_map(fm_str)
+        self.assertEqual(_normalize(SensorReading), sr.oport.schema)
+        sr.flat_map(fm_sensor)
+        s.flat_map(fm_any)
+        self.assertRaises(TypeError, s.flat_map, fm_sensor)
 
         s = topo.source(s_any)
-        s.flat_map(f_none)
-        s.flat_map(f_int)
-        s.flat_map(f_str)
-        s.flat_map(f_any)
-        s.flat_map(f_sensor)
+        s.flat_map(fm_none)
+        s.flat_map(fm_int)
+        sr = s.flat_map(fm_str)
+        self.assertEqual(_normalize(SensorReading), sr.oport.schema)
+        sr.flat_map(fm_sensor)
+        s.flat_map(fm_any)
+        s.flat_map(fm_sensor)
 
         s = topo.source(s_sensor)
-        s.flat_map(f_none)
-        self.assertRaises(TypeError, s.flat_map, f_int)
-        self.assertRaises(TypeError, s.flat_map, f_str)
-        s.flat_map(f_any)
-        s.flat_map(f_sensor)
+        s.flat_map(fm_none)
+        self.assertRaises(TypeError, s.flat_map, fm_int)
+        self.assertRaises(TypeError, s.flat_map, fm_str)
+        s.flat_map(fm_any)
+        s.flat_map(fm_sensor)
 
         s = topo.source(s_p)
-        s.flat_map(f_none)
-        self.assertRaises(TypeError, s.flat_map, f_int)
-        self.assertRaises(TypeError, s.flat_map, f_str)
-        s.flat_map(f_any)
-        self.assertRaises(TypeError, s.flat_map, f_sensor)
-        s.flat_map(f_p)
-        self.assertRaises(TypeError, s.flat_map, f_s)
+        s.flat_map(fm_none)
+        self.assertRaises(TypeError, s.flat_map, fm_int)
+        self.assertRaises(TypeError, s.flat_map, fm_str)
+        s.flat_map(fm_any)
+        self.assertRaises(TypeError, s.flat_map, fm_sensor)
+        s.flat_map(fm_p)
+        self.assertRaises(TypeError, s.flat_map, fm_s)
 
         s = topo.source(s_s)
-        s.flat_map(f_p)
-        s.flat_map(f_s)
+        s.flat_map(fm_p)
+        s.flat_map(fm_s)
 
     def test_flat_map_argcount(self):
         topo = Topology()

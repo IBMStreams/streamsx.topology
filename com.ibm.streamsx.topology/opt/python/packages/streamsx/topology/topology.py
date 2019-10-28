@@ -1256,10 +1256,7 @@ class Stream(_placement._Placement, object):
         if func is not None:
             hints = streamsx._streams._hints.check_map(func, self)
         if schema is None:
-            if hints:
-                schema = hints.schema
-            else:
-                schema = streamsx.topology.schema.CommonSchema.Python
+            schema = hints.schema if hints else streamsx.topology.schema.CommonSchema.Python
         if func is None:
             func = streamsx.topology.runtime._identity
             if name is None:
@@ -1306,21 +1303,23 @@ class Stream(_placement._Placement, object):
 
         .. versionchanged:: 1.11 `func` is optional.
         """     
+        hints = None
         if func is None:
             func = streamsx.topology.runtime._identity
             if name is None:
                name = 'flatten'
         else:
-            streamsx._streams._hints.check_flat_map(func, self)
+            hints = streamsx._streams._hints.check_flat_map(func, self)
      
         sl = _SourceLocation(_source_info(), 'flat_map')
         _name = self.topology.graph._requested_name(name, action='flat_map', func=func)
         stateful = _determine_statefulness(func)
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::FlatMap", func, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.oport)
+        schema = hints.schema if hints else streamsx.topology.schema.CommonSchema.Python
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
-        oport = op.addOutputPort(name=_name)
-        return Stream(self.topology, oport)._make_placeable()._layout('FlatMap', name=_name, orig_name=name)
+        oport = op.addOutputPort(name=_name, schema=schema)
+        return Stream(self.topology, oport)._make_placeable()._layout('FlatMap', name=_name, orig_name=name)._add_hints(hints)
     
     def isolate(self):
         """
