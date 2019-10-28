@@ -221,6 +221,7 @@ import copy
 import collections
 import random
 import streamsx._streams._placement as _placement
+import streamsx._streams._hints
 import streamsx.spl.op
 import streamsx.spl.types
 import streamsx.topology.graph
@@ -426,6 +427,7 @@ class Topology(object):
         self._checkpoint_period = None
         self._consistent_region_config = None
         self._has_jcp = False
+        self.type_checking = True
 
     @property
     def name(self):
@@ -582,22 +584,23 @@ class Topology(object):
             is because generators cannot be pickled (even when using `dill`).
         """
         _name = name
-        if inspect.isroutine(func):
-            pass
-        elif callable(func):
+        hints = streamsx._streams._hints.schema_iterable(func, self)
+        if inspect.isroutine(func) or callable(func):
             pass
         else:
             if _name is None:
                 _name = type(func).__name__
             func = streamsx.topology.runtime._IterableInstance(func)
 
+        schema = hints.schema if hints else None
+
         sl = _SourceLocation(_source_info(), "source")
         _name = self.graph._requested_name(_name, action='source', func=func)
         # source is always stateful
         op = self.graph.addOperator(self.opnamespace+"::Source", func, name=_name, sl=sl, nargs=0)
         op._layout(kind='Source', name=_name, orig_name=name)
-        oport = op.addOutputPort(name=_name)
-        return Stream(self, oport)._make_placeable()
+        oport = op.addOutputPort(schema=schema, name=_name)
+        return Stream(self, oport)._make_placeable()._add_hints(hints)
 
     def subscribe(self, topic, schema=streamsx.topology.schema.CommonSchema.Python, name=None, connect=None, buffer_capacity=None, buffer_full_policy=None):
         """
@@ -918,6 +921,7 @@ class Stream(_placement._Placement, object):
         self.oport = oport
         self._placeable = False
         self._alias = None
+        self._hints = None
         topology._streams[self.oport.name] = self
         self._json_stream = None
 
@@ -925,6 +929,10 @@ class Stream(_placement._Placement, object):
         if not self._placeable:
             raise TypeError()
         return self.oport.operator
+
+    def _add_hints(self, hints):
+        self._hints = hints
+        return self
 
     @property
     def name(self):
@@ -1035,6 +1043,7 @@ class Stream(_placement._Placement, object):
         Returns:
             Stream: A Stream containing tuples that have not been filtered out.
         """
+        streamsx._streams._hints.check_filter(func, self)
         sl = _SourceLocation(_source_info(), 'filter')
         _name = self.topology.graph._requested_name(name, action="filter", func=func)
         stateful = _determine_statefulness(func)

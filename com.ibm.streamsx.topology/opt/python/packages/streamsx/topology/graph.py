@@ -324,7 +324,9 @@ class _SPLInvocation(object):
         self._layout_hints = {}
         self._addOperatorFunction(self.function, stateful, nargs)
 
-    def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema= CommonSchema.Python,partitioned_keys=None, routing = None):
+    def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema=None,partitioned_keys=None, routing = None):
+        if schema is None:
+            schema=CommonSchema.Python
         if name is None:
             name = self.name + "_OUT"+str(len(self.outputPorts))
         oport = OPort(name, self, len(self.outputPorts), schema, oWidth, partitioned_keys, routing=routing)
