@@ -463,3 +463,15 @@ class TestHints(unittest.TestCase):
         self.assertRaises(TypeError, s.flat_map, A_2())
         s.flat_map(ao_2)
         s.flat_map(AO_2())
+
+    def test_as_string(self):
+        topo = Topology()
+
+        s = topo.source(s_none)
+        s = s.as_string()
+
+        s.map(m_none)
+        self.assertRaises(TypeError, s.map, m_int)
+        s.map(m_str)
+        s.map(m_any)
+        self.assertRaises(TypeError, s.map, m_sensor)

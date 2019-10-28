@@ -1889,7 +1889,7 @@ class Stream(_placement._Placement, object):
         """
         sas = self._change_schema(streamsx.topology.schema.CommonSchema.String, 'as_string', name)._layout('AsString')
         sas.oport.operator.sl = _SourceLocation(_source_info(), 'as_string')
-        return sas
+        return sas._add_hints(streamsx._streams._hints.STR_HINTS)
 
     def as_json(self, force_object=True, name=None):
         """
