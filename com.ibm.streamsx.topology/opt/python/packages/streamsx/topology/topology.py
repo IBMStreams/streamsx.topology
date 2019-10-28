@@ -1252,6 +1252,8 @@ class Stream(_placement._Placement, object):
         .. versionadded:: 1.8 Support for submitting `dict` objects as stream tuples to a structured stream (in addition to existing support for `tuple` objects).
         .. versionchanged:: 1.11 `func` is optional.
         """
+        if func is not None:
+            streamsx._streams._hints.check_map(func, self)
         if schema is None:
             schema = streamsx.topology.schema.CommonSchema.Python
         if func is None:

@@ -33,6 +33,14 @@ def f_sensor(t: SensorReading) : pass
 def f_p(t: P) : pass
 def f_s(t: S) : pass
 
+def m_none(t) : pass
+def m_int(t:int) : pass
+def m_str(t:str) : pass
+def m_any(t: typing.Any) : pass
+def m_sensor(t: SensorReading) : pass
+def m_p(t: P) : pass
+def m_s(t: S) : pass
+
 
 def a_0() : pass
 class A_0(object):
@@ -66,6 +74,7 @@ class TestHints(unittest.TestCase):
         s.filter(f_str)
         s.split(2, f_str)
         s.for_each(f_sensor)
+        s.map(f_sensor)
 
         s = topo.source(s_str)
         self.assertEqual(CommonSchema.Python, s.oport.schema)
@@ -300,3 +309,68 @@ class TestHints(unittest.TestCase):
         self.assertRaises(TypeError, s.for_each, A_2())
         s.for_each(ao_2)
         s.for_each(AO_2())
+
+    def test_map(self):
+        topo = Topology()
+
+        s = topo.source(s_none)
+        s.map(f_none)
+        s.map(f_int)
+        s.map(f_str)
+        s.map(f_any)
+        s.map(f_sensor)
+
+        s = topo.source(s_int)
+        s.map(f_none)
+        s.map(f_int)
+        self.assertRaises(TypeError, s.map, f_str)
+        s.map(f_any)
+        self.assertRaises(TypeError, s.map, f_sensor)
+
+        s = topo.source(s_str)
+        s.map(f_none)
+        self.assertRaises(TypeError, s.map, f_int)
+        s.map(f_str)
+        s.map(f_any)
+        self.assertRaises(TypeError, s.map, f_sensor)
+
+        s = topo.source(s_any)
+        s.map(f_none)
+        s.map(f_int)
+        s.map(f_str)
+        s.map(f_any)
+        s.map(f_sensor)
+
+        s = topo.source(s_sensor)
+        s.map(f_none)
+        self.assertRaises(TypeError, s.map, f_int)
+        self.assertRaises(TypeError, s.map, f_str)
+        s.map(f_any)
+        s.map(f_sensor)
+
+        s = topo.source(s_p)
+        s.map(f_none)
+        self.assertRaises(TypeError, s.map, f_int)
+        self.assertRaises(TypeError, s.map, f_str)
+        s.map(f_any)
+        self.assertRaises(TypeError, s.map, f_sensor)
+        s.map(f_p)
+        self.assertRaises(TypeError, s.map, f_s)
+
+        s = topo.source(s_s)
+        s.map(f_p)
+        s.map(f_s)
+
+    def test_map_argcount(self):
+        topo = Topology()
+        s = topo.source([])
+        self.assertRaises(TypeError, s.map, a_0)
+        self.assertRaises(TypeError, s.map, A_0())
+        s.map(a_1)
+        s.map(A_1())
+        s.map(ao_1)
+        s.map(AO_1())
+        self.assertRaises(TypeError, s.map, a_2)
+        self.assertRaises(TypeError, s.map, A_2())
+        s.map(ao_2)
+        s.map(AO_2())

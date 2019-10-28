@@ -100,6 +100,25 @@ def check_for_each(fn, stream):
 def _check_for_each(fn, stream):
     _check_arg_matching_schema(fn, stream)
 
+# Check the callable for map
+#
+# - Can be passed a single argument
+# - Has an argument type that is compatible the the schema type.
+# - TODO? = Check the return is nothing?
+
+def check_map(fn, stream):
+    try:
+        _check_map(fn, stream)
+    except TypeError:
+        raise
+    except:
+        import traceback
+        traceback.print_exc()
+        pass
+
+def _check_map(fn, stream):
+    _check_arg_matching_schema(fn, stream)
+
 # Check the hint for paramter the tuple will be passed
 # as matches the schema.
 def _check_arg_matching_schema(fn, stream):
