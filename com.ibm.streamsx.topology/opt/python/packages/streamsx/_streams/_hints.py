@@ -60,20 +60,7 @@ def check_filter(fn, stream):
         pass
 
 def _check_filter(fn, stream):
-    if inspect.isroutine(fn):
-        n = 1
-    elif callable(fn):
-        fn = fn.__call__
-        n = 2 # includes self
-
-    _check_arg_count(fn, 1)
-
-    if not stream.topology.type_checking or not stream._hints:
-        return
-
-    hint, param = _get_arg_hint(fn, n-1)
-    if hint:
-        _check_matching(fn, stream._hints.type_, hint, param)
+    _check_arg_matching_schema(fn, stream)
 
 # Check the callable for a split
 #
@@ -92,6 +79,12 @@ def check_split(fn, stream):
         pass
 
 def _check_split(fn, stream):
+    _check_arg_matching_schema(fn, stream)
+
+# Check the hint for paramter the tuple will be passed
+# as matches the schema.
+def _check_arg_matching_schema(fn, stream):
+
     if inspect.isroutine(fn):
         n = 1
     elif callable(fn):
@@ -106,6 +99,7 @@ def _check_split(fn, stream):
     hint, param = _get_arg_hint(fn, n-1)
     if hint:
         _check_matching(fn, stream._hints.type_, hint, param)
+
 
 def _check_arg_count(fn, n):
 
