@@ -73,6 +73,11 @@ Usage
 
     streamsx-streamtool getappconfig [-h] [--User user] config-name
 
+    streamsx-streamtool rmtoolkit [-h]
+            (--toolkitid toolkit-id | --toolkitname toolkit-name | --toolkitregex toolkit-regex)
+            [--User user]
+
+
 
 *****************************************
 submitjob
@@ -425,5 +430,28 @@ Options and arguments
     -U,--User:
         Specifies an IBM Streams user ID that has authority to run the
         command.
+
+*****************************************
+rmtoolkit
+*****************************************
+
+The streamtool rmtoolkit command allows for the deletion of 1 or more toolkits from the build server.
+
+.. code-block:: none
+
+    streamsx-streamtool rmtoolkit [-h]
+            (--toolkitid toolkit-id | --toolkitname toolkit-name | --toolkitregex toolkit-regex)
+            [--User user]
+
+Options and arguments
+
+    -i,--toolkitid:
+        Specifies the id of the toolkit to delete
+
+    -n,--toolkitname:
+        Remove all toolkits with this name
+
+    -r,--toolkitregex:
+        Remove all toolkits where the name matches the given regex pattern
 
 .. versionadded:: 1.13

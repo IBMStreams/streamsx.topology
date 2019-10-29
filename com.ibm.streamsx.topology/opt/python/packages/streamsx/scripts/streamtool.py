@@ -15,9 +15,11 @@ import urllib3
 import datetime
 import json
 import locale
+import re
 
 import streamsx.topology.context
 from streamsx.rest import Instance
+from streamsx.build import BuildService
 
 
 
@@ -550,6 +552,57 @@ def _getappconfig(instance, cmd_args, rc):
         print(key + "=" + json_value)
     return (rc, config_props)
 
+###########################################
+# rmtoolkit
+###########################################
+def _rmtoolkit_parser(subparsers):
+    toolkit_rm = subparsers.add_parser('rmtoolkit', help='Remove a toolkit from the build server')
+    g1 = toolkit_rm.add_argument_group(title='toolkitid toolkitname toolkitregex', description='One of these options must be chosen.')
+    group = g1.add_mutually_exclusive_group(required=True)
+    group.add_argument('--toolkitid', '-i', help='Specifies the id of the toolkit to delete', metavar='toolkit-id')
+    group.add_argument('--toolkitname', '-n', help='Remove all toolkits with this name', metavar='toolkit-name')
+    group.add_argument('--toolkitregex', '-r', help='Remove all toolkits where the name matches the given regex pattern', metavar='toolkit-regex')
+    _user_arg(toolkit_rm)
+
+def _rmtoolkit(instance, cmd_args, rc):
+    # Get all toolkits from the build_server
+    build_server = BuildService.of_endpoint(verify=False if cmd_args.disable_ssl_verify else None)
+    remote_toolkits = build_server.get_toolkits()
+
+    tk_to_delete = []
+    return_message = None
+
+    # Find the toolkit matching toolkitid
+    if cmd_args.toolkitid:
+        matching_toolkits = [x for x in remote_toolkits if x.id == cmd_args.toolkitid]
+        if matching_toolkits:
+            # Assert that only 1 toolkit has this ID
+            assert len(matching_toolkits) == 1
+            tk_to_delete.append(matching_toolkits[0])
+
+    # Find all toolkits with toolkitname
+    elif cmd_args.toolkitname:
+        matching_toolkits = [x for x in remote_toolkits if x.name == cmd_args.toolkitname]
+        if matching_toolkits:
+            tk_to_delete.extend(matching_toolkits)
+
+    # Find all toolkits where the name matches toolkitregex
+    elif cmd_args.toolkitregex:
+        p = re.compile(cmd_args.toolkitregex)
+        # p.match(x.name) returns a match object only if zero or more characters at the beginning of string match the regex pattern, else it returns None
+        matching_toolkits = [x for x in remote_toolkits if p.match(x.name)]
+        if matching_toolkits:
+            tk_to_delete.extend(matching_toolkits)
+
+    # If there are any toolkits to delete, delete them
+    for tk in tk_to_delete:
+        val = tk.delete()
+        if not val:
+            # If tk fails to delete, set error code and message
+            rc = 1
+            return_message = '1 or more toolkits failed to delete'
+
+    return (rc, return_message)
 
 def run_cmd(args=None):
     cmd_args = _parse_args(args)
@@ -570,6 +623,7 @@ def run_cmd(args=None):
     "mkappconfig": _mkappconfig,
     "chappconfig": _chappconfig,
     "getappconfig": _getappconfig,
+    "rmtoolkit": _rmtoolkit,
     }
 
     extra_info = None
@@ -605,6 +659,7 @@ def _parse_args(args):
     _mkappconfig_parser(subparsers)
     _chappconfig_parser(subparsers)
     _getappconfig_parser(subparsers)
+    _rmtoolkit_parser(subparsers)
 
     return cmd_parser.parse_args(args)
 
