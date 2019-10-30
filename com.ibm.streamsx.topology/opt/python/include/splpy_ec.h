@@ -400,7 +400,6 @@ static PyMethodDef __splpy_ec_methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
-#if PY_MAJOR_VERSION == 3
 static struct PyModuleDef __splpy_ec_module = {
    PyModuleDef_HEAD_INIT,
    __SPLPY_EC_MODULE_NAME,   /* name of module */
@@ -409,17 +408,11 @@ static struct PyModuleDef __splpy_ec_module = {
                 or -1 if the module keeps state in global variables. */
    __splpy_ec_methods
 };
-#endif
 
 PyMODINIT_FUNC
 init_streamsx_ec(void)
 {
-#if PY_MAJOR_VERSION == 3
     return PyModule_Create(&__splpy_ec_module);
-#endif
-#if PY_MAJOR_VERSION == 2
-    (void) Py_InitModule(__SPLPY_EC_MODULE_NAME, __splpy_ec_methods);
-#endif
 }
 
 }

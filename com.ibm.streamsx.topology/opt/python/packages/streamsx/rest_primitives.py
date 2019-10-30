@@ -13,7 +13,6 @@ Contains classes representing primitive Streams objects, such as
 :py:class:`Instance`, :py:class:`Job`, :py:class:`PE`, etc.
 
 """
-from future.builtins import *
 
 __all__ = ['ActiveService', 'ActiveVersion', 'ApplicationBundle', 'ApplicationConfiguration', 'Domain', 'ExportedStream', 'Host', 'ImportedStream', 'Installation', 'Instance', 'Job', 'Metric', 'OperatorConnection', 'OperatorInputPort', 'OperatorOutputPort', 'Operator', 'PEConnection', 'PE', 'PublishedTopic', 'ResourceAllocation', 'Resource', 'ResourceTag', 'RestResource', 'StreamingAnalyticsService', 'Toolkit', 'ViewItem', 'View', 'get_view_obj']
 
@@ -26,6 +25,7 @@ import threading
 import time
 import json
 import re
+import socket
 import time
 import warnings
 import xml.etree.ElementTree as ElementTree
@@ -760,6 +760,9 @@ class View(_ResourceElement):
 
         .. versionadded:: 1.12
         """
+        if not 'display' in globals():
+            return
+        display=globals()['display']
         import ipywidgets as widgets
         vn = widgets.Text(value=self.description, description=self.name, disabled=True)
         active = widgets.Valid(value=True, description='Fetching', readout='Stopped')

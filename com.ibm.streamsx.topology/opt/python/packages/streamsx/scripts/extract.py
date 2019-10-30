@@ -1,14 +1,9 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016,2018
-from __future__ import print_function
-from __future__ import unicode_literals
-from future.builtins import *
 import sys
 import sysconfig
 import inspect
-if sys.version_info.major == 2:
-  import funcsigs
 import imp
 import glob
 import fcntl
@@ -25,17 +20,6 @@ import streamsx.spl.spl
 
 import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
-
-############################################
-# setup for function inspection
-if sys.version_info.major == 3:
-    _inspect = inspect
-elif sys.version_info.major == 2:
-    _inspect = funcsigs
-    FileNotFoundError = IOError
-else:
-    raise ValueError("Python version not supported.")
-############################################
 
 # Return the root of the com.ibm.streamsx.topology toolkit
 def _topology_tk_dir():
@@ -273,7 +257,7 @@ class _Extractor(object):
     def _create_op_parameters(self, opmodel_xml, name, opObj):
         opparam_xml = ''
         if _opcallable(opObj) == 'class':
-            pmds = init_sig = _inspect.signature(opObj._splpy_wrapped.__init__).parameters
+            pmds = init_sig = inspect.signature(opObj._splpy_wrapped.__init__).parameters
             itpmds = iter(pmds)
             # first argument to __init__ is self (instance ref)
             next(itpmds)
@@ -283,7 +267,7 @@ class _Extractor(object):
                 _valid_op_parameter(pn)
                 px = _OP_PARAM_TEMPLATE
                 px = px.replace('__SPLPY__PARAM_NAME__SPLPY__', pn)
-                px = px.replace('__SPLPY__PARAM_OPT__SPLPY__', 'false' if pmd.default== _inspect.Parameter.empty else 'true' )
+                px = px.replace('__SPLPY__PARAM_OPT__SPLPY__', 'false' if pmd.default== inspect.Parameter.empty else 'true' )
                 opparam_xml = opparam_xml + px
         replaceTokenInFile(opmodel_xml, '__SPLPY__PARAMETERS__SPLPY__', opparam_xml)
     

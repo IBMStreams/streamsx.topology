@@ -15,18 +15,6 @@ to a Streaming Analytics service or IBM® Streams instance for execution.
 
 """
 
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import division
-from __future__ import absolute_import
-try:
-    from future import standard_library
-    standard_library.install_aliases()
-except (ImportError, NameError):
-    # nothing to do here
-    pass
-from future.builtins import *
-
 __all__ = ['ContextTypes', 'ConfigParams', 'JobConfig', 'SubmissionResult', 'submit']
 
 import logging
@@ -167,7 +155,7 @@ class _BaseSubmitter(object):
         if remote_context:
             submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
             try:
-                get_ipython()
+                globals()['get_ipython']()
                 import ipywidgets as widgets
                 progress_bar = widgets.IntProgress(
                     value=0,
@@ -176,7 +164,7 @@ class _BaseSubmitter(object):
                     bar_style='info', orientation='horizontal',
                     style={'description_width':'initial'})
                 try:
-                    display(progress_bar)
+                    globals()['display'](progress_bar)
                     def _show_progress(msg):
                         if msg is True:
                             progress_bar.value = progress_bar.max
@@ -708,18 +696,12 @@ def _delete_json(submitter):
 def _print_process_stdout(process):
     try:
         while True:
-            if sys.version_info.major == 2:
-                sout = codecs.getwriter('utf8')(sys.stdout)
             line = process.stdout.readline()
             if len(line) == 0:
                 process.stdout.close()
                 break
             line = line.decode("utf-8").strip()
-            if sys.version_info.major == 2:
-                sout.write(line)
-                sout.write("\n")
-            else:
-                print(line)
+            print(line)
     except:
         logger.error("Error reading from Java subprocess stdout stream.")
         raise
@@ -741,8 +723,6 @@ _JAVA_LOG_LVL = {
 # a logger or stderr
 def _print_process_stderr(process, submitter, progress_fn):
     try:
-        if sys.version_info.major == 2:
-            serr = codecs.getwriter('utf8')(sys.stderr)
         while True:
             line = process.stderr.readline()
             if len(line) == 0:
@@ -756,11 +736,7 @@ def _print_process_stderr(process, submitter, progress_fn):
                     continue
                 logger.log(_JAVA_LOG_LVL[em[0]], em[1])
                 continue
-            if sys.version_info.major == 2:
-                serr.write(line)
-                serr.write("\n")
-            else:
-                print(line, file=sys.stderr)
+            print(line, file=sys.stderr)
     except:
         logger.error("Error reading from Java subprocess stderr stream.")
         raise
@@ -1463,7 +1439,7 @@ class SubmissionResult(object):
                     raise
  
             button.on_click(_cancel_job_click)
-            display(vb)
+            globals['display'](vb)
         except:
             pass
 

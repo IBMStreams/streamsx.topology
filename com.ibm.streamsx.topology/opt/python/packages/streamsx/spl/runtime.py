@@ -15,7 +15,6 @@
 # b) iterable is a decorated function that returns an iterator
 #
 
-from future.builtins import *
 import collections
 import sys
 import streamsx.spl.types
@@ -93,16 +92,6 @@ def _splpy_convert_tuple(attributes):
         return tuple_
     return _to_tuples
 
-def _splpy_to_tuples(fn, attributes):
-   conv_fn = _splpy_convert_tuple(attributes)
-
-   def _to_tuples(*args, **kwargs):
-      value = fn(*args, **kwargs)
-      return conv_fn(value)
-
-   _add_shutdown_hook(fn, _to_tuples)
-   return _to_tuples
-
 def _splpy_release_memoryviews(*args):
     for o in args:
         if isinstance(o, memoryview):
@@ -133,7 +122,7 @@ def _splpy_all_ports_ready(callable_):
             ei = sys.exc_info()
             if streamsx._streams._runtime._call_exit(callable_, ei):
                 return None
-            raise e1[1]
+            raise ei[1]
     return None
 
 _Timestamp = collections.namedtuple('Timestamp', ['seconds', 'nanoseconds', 'machine_id'])

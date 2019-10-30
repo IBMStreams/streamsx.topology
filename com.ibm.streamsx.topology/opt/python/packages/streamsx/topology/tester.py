@@ -85,8 +85,6 @@ between tuples are within the timeout period the test remains running until ten 
 .. versionchanged:: 1.9 - Python 2.7 supported (except with Streaming Analytics service).
 
 """
-from __future__ import unicode_literals
-from future.builtins import *
 
 __all__ = ['Tester']
 

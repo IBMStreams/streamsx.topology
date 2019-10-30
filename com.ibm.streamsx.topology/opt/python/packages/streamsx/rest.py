@@ -53,7 +53,6 @@ In addition `StreamingAnalyticsConnection` extends from :py:class:`StreamsConnec
 
 .. seealso:: :ref:`sas-main`
 """
-from future.builtins import *
 
 __all__ = ['StreamsConnection', 'StreamingAnalyticsConnection']
 

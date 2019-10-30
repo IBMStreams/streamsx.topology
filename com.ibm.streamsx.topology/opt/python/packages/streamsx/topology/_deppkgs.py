@@ -4,7 +4,6 @@
 
 _DEP_PACKAGES = [
     "dill",
-    "future",
     "enum34",
     "requests"
  ]

@@ -60,7 +60,6 @@ namespace streamsx {
       Py_ssize_t size = 0;
       PyObject * converted = NULL;
 
-#if PY_MAJOR_VERSION == 3
       // Python 3 character strings are unicode objects
       // Caller is not responsible for deallocating buffer
       // returned by PyUnicode_AsUTF8AndSize
@@ -70,24 +69,6 @@ namespace streamsx {
           value = converted = PyObject_Str(value);
       }
       const char *bytes = (const char *) PyUnicode_AsUTF8AndSize(value, &size);
-#else
-      // Python 2 supports Unicode and byte character strings 
-      // Default is byte character strings.
-      // PyString_AsStringAndSize returns a pointer to an
-      // internal buffer that must not be modified or deallocated
-      if (PyUnicode_Check(value)) {
-          value = converted = PyUnicode_AsUTF8String(value);
-      } else if (PyString_Check(value)) {
-           // no coversion needed
-      } else {
-          // Create a string from the object
-          value = converted = PyObject_Str(value);
-      }
-      char *_bytes = NULL;
-      int rc = PyString_AsStringAndSize(value, &_bytes, &size);
-
-      const char *bytes = rc == -1 ? NULL : const_cast<const char*>(_bytes);
-#endif
 
       if (bytes == NULL) {
          if (converted != NULL)
@@ -867,15 +848,7 @@ class SplpyExceptionInfo {
       long int sizeb = value.getSize();
       const unsigned char * bytes = value.getData();
 
-#if PY_MAJOR_VERSION == 3
       return PyMemoryView_FromMemory((char *) bytes, sizeb, PyBUF_READ);
-#else
-      Py_buffer buf;
-      PyBuffer_FillInfo(&buf, NULL, (void*) bytes, (Py_ssize_t) sizeb , 1, PyBUF_SIMPLE);
-      
-      // PyMemoryView_FromBuffer makes a copy of the info from buf.
-      return PyMemoryView_FromBuffer(&buf);
-#endif
     }
 
 
@@ -1068,7 +1041,6 @@ class SplpyExceptionInfo {
  * to the memoryview and thus never want to copy.
  *
  */
-#if PY_MAJOR_VERSION == 3
 
 #define PYSPL_MEMORY_VIEW_CLEANUP() MemoryViewCleanup pyMvs
 #define PYSPL_MEMORY_VIEW(o) pyMvs.add(o)
@@ -1132,13 +1104,6 @@ class MemoryViewCleanup {
            return releaser;
         }
 };
-
-#else /* VER == 2 */
-
-#define PYSPL_MEMORY_VIEW_CLEANUP() 
-#define PYSPL_MEMORY_VIEW(o) 
-
-#endif /* END VER 2/3 */
 
 }}
 
