@@ -475,3 +475,30 @@ class TestHints(unittest.TestCase):
         s.map(m_str)
         s.map(m_any)
         self.assertRaises(TypeError, s.map, m_sensor)
+
+    def test_maintain_hints(self):
+        topo = Topology()
+        s = topo.source(s_str)
+        s.map(m_str)
+        self.assertRaises(TypeError, s.map, m_sensor)
+
+        d = s.autonomous()
+        d.map(m_str)
+        self.assertRaises(TypeError, d.map, m_sensor)
+
+        d = s.low_latency()
+        d.map(m_str)
+        self.assertRaises(TypeError, d.map, m_sensor)
+
+        d = d.end_low_latency()
+        d.map(m_str)
+        self.assertRaises(TypeError, d.map, m_sensor)
+
+        p = s.parallel(width=3)
+        t = p.map(m_str).as_string()
+        self.assertRaises(TypeError, p.map, m_sensor)
+
+        e = t.end_parallel()
+        e.map(m_str)
+        self.assertRaises(TypeError, e.map, m_sensor)
+     
