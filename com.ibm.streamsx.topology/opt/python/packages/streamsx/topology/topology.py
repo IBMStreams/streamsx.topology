@@ -916,7 +916,7 @@ class Stream(_placement._Placement, object):
     series of tuples which can be operated upon to produce another stream, as in the case of :py:meth:`map`, or
     terminate a stream, as in the case of :py:meth:`for_each`.
     """
-    def __init__(self, topology, oport):
+    def __init__(self, topology, oport, other=None):
         self.topology = topology
         self.oport = oport
         self._placeable = False
@@ -924,6 +924,8 @@ class Stream(_placement._Placement, object):
         self._hints = None
         topology._streams[self.oport.name] = self
         self._json_stream = None
+        if other:
+            self._add_hints(other._hints)
 
     def _op(self):
         if not self._placeable:
@@ -1332,7 +1334,7 @@ class Stream(_placement._Placement, object):
         # does the addOperator above need the packages
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort(schema=self.oport.schema)
-        return Stream(self.topology, oport)
+        return Stream(self.topology, oport, other=self)
 
     def low_latency(self):
         """
@@ -1347,7 +1349,7 @@ class Stream(_placement._Placement, object):
         op = self.topology.graph.addOperator("$LowLatency$")
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort(schema=self.oport.schema)
-        return Stream(self.topology, oport)
+        return Stream(self.topology, oport, other=self)
 
     def end_low_latency(self):
         """
@@ -1360,7 +1362,7 @@ class Stream(_placement._Placement, object):
         op = self.topology.graph.addOperator("$EndLowLatency$")
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort(schema=self.oport.schema)
-        return Stream(self.topology, oport)
+        return Stream(self.topology, oport, other=self)
     
     def parallel(self, width, routing=Routing.ROUND_ROBIN, func=None, name=None):
         """
@@ -1467,7 +1469,7 @@ class Stream(_placement._Placement, object):
                 oport = op2.addOutputPort(width, schema=self.oport.schema, routing="ROUND_ROBIN", name=_name)
 
                 
-            return Stream(self.topology, oport)
+            return Stream(self.topology, oport, other=self)
         elif routing == Routing.HASH_PARTITIONED:
 
             if (func is None):
@@ -1503,7 +1505,7 @@ class Stream(_placement._Placement, object):
                 hrop.addInputPort(outputPort=parallel_op_port)
                 parallel_op_port = hrop.addOutputPort(schema=self.oport.schema)
 
-            return Stream(self.topology, parallel_op_port)
+            return Stream(self.topology, parallel_op_port, other=self)
         else :
             raise TypeError("Invalid routing type supplied to the parallel operator")    
 
@@ -1525,7 +1527,7 @@ class Stream(_placement._Placement, object):
         op = self.topology.graph.addOperator("$EndParallel$")
         op.addInputPort(outputPort=outport)
         oport = op.addOutputPort(schema=self.oport.schema)
-        endP = Stream(self.topology, oport)
+        endP = Stream(self.topology, oport, other=self)
         return endP
 
     def set_parallel(self, width, name=None):
@@ -1864,7 +1866,7 @@ class Stream(_placement._Placement, object):
         op = self.topology.graph.addOperator("$Autonomous$")
         op.addInputPort(outputPort=self.oport)
         oport = op.addOutputPort(schema=self.oport.schema)
-        return Stream(self.topology, oport)
+        return Stream(self.topology, oport, other=self)
 
     def as_string(self, name=None):
         """
