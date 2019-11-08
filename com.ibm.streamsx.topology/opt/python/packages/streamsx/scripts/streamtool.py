@@ -559,7 +559,7 @@ def _rmtoolkit_parser(subparsers):
     toolkit_rm = subparsers.add_parser('rmtoolkit', help='Remove a toolkit from the build server')
     g1 = toolkit_rm.add_argument_group(title='toolkitid toolkitname toolkitregex', description='One of these options must be chosen.')
     group = g1.add_mutually_exclusive_group(required=True)
-    group.add_argument('--toolkitid', '-i', help='Specifies the id of the toolkit to delete', metavar='toolkit-id')
+    group.add_argument('--toolkitid', '-i', help='Specifies the id of the toolkit to remove', metavar='toolkit-id')
     group.add_argument('--toolkitname', '-n', help='Remove all toolkits with this name', metavar='toolkit-name')
     group.add_argument('--toolkitregex', '-r', help='Remove all toolkits where the name matches the given regex pattern', metavar='toolkit-regex')
     _user_arg(toolkit_rm)
@@ -567,30 +567,28 @@ def _rmtoolkit_parser(subparsers):
 def _rmtoolkit(instance, cmd_args, rc):
     # Get all toolkits from the build_server
     build_server = BuildService.of_endpoint(verify=False if cmd_args.disable_ssl_verify else None)
-    remote_toolkits = build_server.get_toolkits()
 
     tk_to_delete = []
     return_message = None
 
     # Find the toolkit matching toolkitid
     if cmd_args.toolkitid:
-        matching_toolkits = [x for x in remote_toolkits if x.id == cmd_args.toolkitid]
-        if matching_toolkits:
-            # Assert that only 1 toolkit has this ID
-            assert len(matching_toolkits) == 1
-            tk_to_delete.append(matching_toolkits[0])
+        try:
+            matching_toolkit = build_server.get_toolkit(cmd_args.toolkitid)
+            tk_to_delete.append(matching_toolkit)
+        except ValueError:
+            pass
 
     # Find all toolkits with toolkitname
     elif cmd_args.toolkitname:
+        remote_toolkits = build_server.get_toolkits()
         matching_toolkits = [x for x in remote_toolkits if x.name == cmd_args.toolkitname]
         if matching_toolkits:
             tk_to_delete.extend(matching_toolkits)
 
     # Find all toolkits where the name matches toolkitregex
     elif cmd_args.toolkitregex:
-        p = re.compile(cmd_args.toolkitregex)
-        # p.match(x.name) returns a match object only if zero or more characters at the beginning of string match the regex pattern, else it returns None
-        matching_toolkits = [x for x in remote_toolkits if p.match(x.name)]
+        matching_toolkits = build_server.get_toolkits(name=cmd_args.toolkitregex)
         if matching_toolkits:
             tk_to_delete.extend(matching_toolkits)
 
