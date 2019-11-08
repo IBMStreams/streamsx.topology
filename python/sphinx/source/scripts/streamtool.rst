@@ -432,6 +432,32 @@ Options and arguments
         command.
 
 *****************************************
+lstoolkit
+*****************************************
+
+List toolkits from a build service.
+
+.. code-block:: none
+
+    streamsx-streamtool lstoolkit [-h]
+            (--all | --toolkitid toolkit-id | --toolkitname toolkit-name | --toolkitregex toolkit-regex)
+            [--User user]
+
+Options and arguments
+
+    -a,--all: 
+        List all toolkits
+ 
+    -i,--toolkitid:
+        List a specific toolkit given its toolkit id
+
+    -n,--toolkitname:
+        List all toolkits with this name
+
+    -r,--toolkitregex:
+        List all toolkits where the name matches the given regex pattern
+
+*****************************************
 rmtoolkit
 *****************************************
 
