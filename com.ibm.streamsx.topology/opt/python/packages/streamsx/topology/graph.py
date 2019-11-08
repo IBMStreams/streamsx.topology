@@ -28,6 +28,10 @@ import streamsx.spl.op
 from streamsx.topology.schema import CommonSchema, StreamSchema, _normalize
 
 def _get_project_name():
+    # CPD >= 2.5
+    if 'PROJECT_NAME' in os.environ:
+        return os.environ['PROJECT_NAME']
+    # CPD < 2.5
     if 'DSX_PROJECT_NAME' in os.environ:
         return os.environ['DSX_PROJECT_NAME']
     try:
@@ -648,6 +652,7 @@ class Marker(_SPLInvocation):
         self.model = 'virtual'
         self.name = name
         self.params = {}
+        self.config = {}
         self.setParameters(params)
         self.graph = graph
 
