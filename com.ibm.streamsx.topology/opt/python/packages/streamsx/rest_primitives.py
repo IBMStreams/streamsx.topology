@@ -1051,6 +1051,7 @@ class JobGroup(_ResourceElement):
 
         .. versionadded:: 1.13.13
     """
+    pass
 
 class Operator(_ResourceElement):
     """An operator invocation within a job.
