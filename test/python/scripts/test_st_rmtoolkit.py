@@ -89,7 +89,6 @@ class Testrmtoolkit(unittest.TestCase):
 
             self.test_toolkit_objects = self._get_toolkit_objects(self.test_toolkit_paths)
             self.test_toolkit_names = [x.name for x in self.test_toolkit_objects]
-
             # Get and store the randomly generated toolkit name, thus in case of network failure, on next run on test suite,
             # can read old randomly generated toolkit name, and delete toolkits off buildserver
             # Ex. 'com.example.tmyuuwkpjittfjla.test_tk_2' -> 'com.example.tmyuuwkpjittfjla.'
@@ -257,12 +256,13 @@ class Testrmtoolkit(unittest.TestCase):
         timeout = time.time() + 60*1
 
         remote_test_tk_objects = []
-        while not remote_test_tk_objects:
+        # Ensure that all test toolkits have been posted on the build server
+        while len(remote_test_tk_objects) != len(self.test_toolkit_objects):
             time.sleep(10)
             remote_toolkits = self.build_server.get_toolkits()
             remote_test_tk_objects = [x for x in remote_toolkits if x.name in self.test_toolkit_names]
 
-            if not remote_test_tk_objects and time.time() > timeout:
+            if (len(remote_test_tk_objects) != len(self.test_toolkit_objects)) and time.time() > timeout:
                 self.fail('Test toolkits failed to show up on build server after 1 minute')
 
         return remote_test_tk_objects
