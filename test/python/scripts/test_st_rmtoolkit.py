@@ -89,14 +89,13 @@ class Testrmtoolkit(unittest.TestCase):
 
             self.test_toolkit_objects = self._get_toolkit_objects(self.test_toolkit_paths)
             self.test_toolkit_names = [x.name for x in self.test_toolkit_objects]
-
             # Get and store the randomly generated toolkit name, thus in case of network failure, on next run on test suite,
             # can read old randomly generated toolkit name, and delete toolkits off buildserver
             # Ex. 'com.example.tmyuuwkpjittfjla.test_tk_2' -> 'com.example.tmyuuwkpjittfjla.'
             tk1 = self._get_toolkit_objects([self.test_toolkit_paths[0]])[0]
-            random_name_variable = re.sub("test_tk_.", "", tk1.name)
+            self.random_name_variable = re.sub("test_tk_.", "", tk1.name)
             with open((my_path / "test_sc_old_toolkit_name.txt").resolve(), "w") as file1:
-                file1.write(random_name_variable)
+                file1.write(self.random_name_variable)
 
             # Upload these toolkits to the buildserver
             try:
@@ -246,11 +245,31 @@ class Testrmtoolkit(unittest.TestCase):
             if matched_toolkits:
                 self.fail("Toolkit matching regex {} is still present on the build server".format(toolkit_regex))
 
+    def _get_remote_test_tk_objects(self):
+        # Get the remote toolkit objects of our test toolkits
+
+        # Operations such as adding or deleting toolkits sometimes are not
+        # effective immediately. For this reason, need to sleep
+        # until the test toolkits are present, or we reach timeout
+
+        # Set a 1 min timeout for the test toolkits to show up on build server
+        timeout = time.time() + 60*1
+
+        remote_test_tk_objects = []
+        # Ensure that all test toolkits have been posted on the build server
+        while len(remote_test_tk_objects) != len(self.test_toolkit_objects):
+            time.sleep(10)
+            remote_toolkits = self.build_server.get_toolkits()
+            remote_test_tk_objects = [x for x in remote_toolkits if x.name in self.test_toolkit_names]
+
+            if (len(remote_test_tk_objects) != len(self.test_toolkit_objects)) and time.time() > timeout:
+                self.fail('Test toolkits failed to show up on build server after 1 minute')
+
+        return remote_test_tk_objects
+
     # Delete a single test toolkit with id
     def test_simple_1(self):
-        # Get the remote toolkit objects of our test toolkits
-        remote_toolkits = self.build_server.get_toolkits()
-        remote_test_tk_objects = [x for x in remote_toolkits if x.name in self.test_toolkit_names]
+        remote_test_tk_objects = self._get_remote_test_tk_objects()
 
         # Chose 1 random toolkit to delete
         random_tk_to_delete = random.choice(remote_test_tk_objects)
@@ -265,9 +284,7 @@ class Testrmtoolkit(unittest.TestCase):
 
     # Delete all test toolkits with name
     def test_simple_2(self):
-        # Get the remote toolkit objects of our test toolkits
-        remote_toolkits = self.build_server.get_toolkits()
-        remote_test_tk_objects = [x for x in remote_toolkits if x.name in self.test_toolkit_names]
+        remote_test_tk_objects = self._get_remote_test_tk_objects()
 
         # Chose 1 random toolkit to delete
         random_tk_to_delete = random.choice(remote_test_tk_objects)
@@ -282,12 +299,10 @@ class Testrmtoolkit(unittest.TestCase):
 
     # Delete all test toolkits by regex pattern
     def test_simple_3(self):
-        # Get the remote toolkit objects of our test toolkits
-        remote_toolkits = self.build_server.get_toolkits()
-        remote_test_tk_names = [x.name for x in remote_toolkits if x.name in self.test_toolkit_names]
+        remote_test_tk_names = [x.name for x in self._get_remote_test_tk_objects()]
 
         # Regex pattern to delete toolkits by
-        pattern = 'com.example.*.test_tk_1'
+        pattern = self.random_name_variable + 'test_tk_1'
         p = re.compile(pattern)
 
         # Check at least 1 remote test toolkit object matches our pattern, so we can check later that it is deleted
