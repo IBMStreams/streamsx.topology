@@ -607,12 +607,12 @@ def _rmtoolkit(instance, cmd_args, rc):
 ###########################################
 def _lstoolkit_parser(subparsers):
     toolkit_ls = subparsers.add_parser('lstoolkit', help='List toolkits on the build service')
-    g1 = toolkit_ls.add_argument_group(title='toolkitid toolkitname toolkitregex', description='One of these options must be chosen.')
+    g1 = toolkit_ls.add_argument_group(title='Toolkit selection', description='Selects which toolkits will be listed.')
     group = g1.add_mutually_exclusive_group(required=True)
-    group.add_argument('--toolkitid', '-i', help='Specifies the id of the toolkit to list', metavar='toolkit-id')
-    group.add_argument('--toolkitname', '-n', help='List all toolkits with this name', metavar='toolkit-name')
-    group.add_argument('--toolkitregex', '-r', help='List all toolkits where the name matches the given regex pattern', metavar='toolkit-regex')
     group.add_argument('--all', '-a', action='store_true', help='List all toolkits')
+    group.add_argument('--id', '-i', help='Specifies the id of the toolkit to list', metavar='toolkit-id')
+    group.add_argument('--name', '-n', help='List all toolkits with this name', metavar='toolkit-name')
+    group.add_argument('--regex', '-r', help='List all toolkits where the name matches the given regex pattern', metavar='toolkit-regex')
     _user_arg(toolkit_ls)
 
 def _lstoolkit(instance, cmd_args, rc):
@@ -622,21 +622,21 @@ def _lstoolkit(instance, cmd_args, rc):
     return_message = None
 
     # Find the toolkit matching toolkitid
-    if cmd_args.toolkitid:
+    if cmd_args.id:
         try:
-            matching_toolkit = build_server.get_toolkit(cmd_args.toolkitid)
+            matching_toolkit = build_server.get_toolkit(cmd_args.id)
             tk_to_list = [matching_toolkit]
         except ValueError:
             tk_to_list = []
 
     # Find all toolkits with toolkitname
-    elif cmd_args.toolkitname:
+    elif cmd_args.name:
         remote_toolkits = build_server.get_toolkits()
-        tk_to_list = [x for x in remote_toolkits if x.name == cmd_args.toolkitname]
+        tk_to_list = [x for x in remote_toolkits if x.name == cmd_args.name]
 
     # Find all toolkits where the name matches toolkitregex
-    elif cmd_args.toolkitregex:
-        tk_to_list = build_server.get_toolkits(name=cmd_args.toolkitregex)
+    elif cmd_args.regex:
+        tk_to_list = build_server.get_toolkits(name=cmd_args.regex)
     elif cmd_args.all:
         tk_to_list = build_server.get_toolkits()
 

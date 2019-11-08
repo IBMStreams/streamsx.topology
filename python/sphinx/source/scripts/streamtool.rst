@@ -441,7 +441,7 @@ List toolkits from a build service.
 .. code-block:: none
 
     streamsx-streamtool lstoolkit [-h]
-            (--all | --toolkitid toolkit-id | --toolkitname toolkit-name | --toolkitregex toolkit-regex)
+            (--all | --id toolkit-id | --name toolkit-name | --regex toolkit-regex)
             [--User user]
 
 Options and arguments
@@ -449,13 +449,13 @@ Options and arguments
     -a,--all: 
         List all toolkits
  
-    -i,--toolkitid:
+    -i,--id:
         List a specific toolkit given its toolkit id
 
-    -n,--toolkitname:
+    -n,--name:
         List all toolkits with this name
 
-    -r,--toolkitregex:
+    -r,--regex:
         List all toolkits where the name matches the given regex pattern
 
 *****************************************
