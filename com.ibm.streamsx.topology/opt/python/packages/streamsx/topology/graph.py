@@ -652,6 +652,7 @@ class Marker(_SPLInvocation):
         self.model = 'virtual'
         self.name = name
         self.params = {}
+        self.config = {}
         self.setParameters(params)
         self.graph = graph
 
