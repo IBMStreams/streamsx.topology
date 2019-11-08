@@ -602,6 +602,65 @@ def _rmtoolkit(instance, cmd_args, rc):
 
     return (rc, return_message)
 
+###########################################
+# lstoolkit
+###########################################
+def _lstoolkit_parser(subparsers):
+    toolkit_ls = subparsers.add_parser('lstoolkit', help='List toolkits on the build service')
+    g1 = toolkit_ls.add_argument_group(title='Toolkit selection', description='Selects which toolkits will be listed.')
+    group = g1.add_mutually_exclusive_group(required=True)
+    group.add_argument('--all', '-a', action='store_true', help='List all toolkits')
+    group.add_argument('--id', '-i', help='Specifies the id of the toolkit to list', metavar='toolkit-id')
+    group.add_argument('--name', '-n', help='List all toolkits with this name', metavar='toolkit-name')
+    group.add_argument('--regex', '-r', help='List all toolkits where the name matches the given regex pattern', metavar='toolkit-regex')
+    _user_arg(toolkit_ls)
+
+def _lstoolkit(instance, cmd_args, rc):
+    # Get all toolkits from the build_service
+    build_server = BuildService.of_endpoint(verify=False if cmd_args.disable_ssl_verify else None)
+
+    return_message = None
+
+    # Find the toolkit matching toolkitid
+    if cmd_args.id:
+        try:
+            matching_toolkit = build_server.get_toolkit(cmd_args.id)
+            tk_to_list = [matching_toolkit]
+        except ValueError:
+            tk_to_list = []
+
+    # Find all toolkits with toolkitname
+    elif cmd_args.name:
+        remote_toolkits = build_server.get_toolkits()
+        tk_to_list = [x for x in remote_toolkits if x.name == cmd_args.name]
+
+    # Find all toolkits where the name matches toolkitregex
+    elif cmd_args.regex:
+        tk_to_list = build_server.get_toolkits(name=cmd_args.regex)
+    elif cmd_args.all:
+        tk_to_list = build_server.get_toolkits()
+
+    tk_to_list.sort(key=lambda tk : (tk.name, tk.version))
+
+    headers = ["Name", "Version", 'RequiredProductVersion']
+
+    # pre process the data so output is formatted nicely
+    h_length = [len(x) for x in headers] # header_length
+    for tk in tk_to_list:
+        h_length[0] = max(len(tk.name), h_length[0])
+        h_length[1] = max(len(tk.version), h_length[1])
+        h_length[2] = max(len(tk.requiredProductVersion), h_length[2])
+
+    fmt = '{:<{name_w}}  {:<{ver_w}}  {:<{pv_w}}'
+
+    print(fmt.format(headers[0], headers[1], headers[2],
+        name_w=h_length[0], ver_w=h_length[1], pv_w=h_length[2]))
+    for tk in tk_to_list:
+         print(fmt.format(tk.name, tk.version, tk.requiredProductVersion,
+             name_w=h_length[0], ver_w=h_length[1], pv_w=h_length[2]))
+
+    return (rc, return_message)
+
 def run_cmd(args=None):
     cmd_args = _parse_args(args)
 
@@ -622,6 +681,7 @@ def run_cmd(args=None):
     "chappconfig": _chappconfig,
     "getappconfig": _getappconfig,
     "rmtoolkit": _rmtoolkit,
+    "lstoolkit": _lstoolkit,
     }
 
     extra_info = None
@@ -658,6 +718,7 @@ def _parse_args(args):
     _chappconfig_parser(subparsers)
     _getappconfig_parser(subparsers)
     _rmtoolkit_parser(subparsers)
+    _lstoolkit_parser(subparsers)
 
     return cmd_parser.parse_args(args)
 

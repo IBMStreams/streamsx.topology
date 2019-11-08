@@ -33,6 +33,7 @@ Standalone configuration
 ------------------------
 
         * **STREAMS_REST_URL** - Streams SWS service (REST API) URL, e.g. when the service is exposed as node port: `https://<NODE-IP>:<NODE-PORT>`
+        * **STREAMS_BUILD_URL** - Streams build service (REST API) URL, e.g. when the service is exposed as node port: `https://<NODE-IP>:<NODE-PORT>`. Required for `lstoolkit` and `rmtoolkit`.
         * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
         * **STREAMS_PASSWORD** - Password for authentication.
 
@@ -432,10 +433,36 @@ Options and arguments
         command.
 
 *****************************************
+lstoolkit
+*****************************************
+
+List toolkits from a build service.
+
+.. code-block:: none
+
+    streamsx-streamtool lstoolkit [-h]
+            (--all | --id toolkit-id | --name toolkit-name | --regex toolkit-regex)
+            [--User user]
+
+Options and arguments
+
+    -a,--all: 
+        List all toolkits
+ 
+    -i,--id:
+        List a specific toolkit given its toolkit id
+
+    -n,--name:
+        List all toolkits with this name
+
+    -r,--regex:
+        List all toolkits where the name matches the given regex pattern
+
+*****************************************
 rmtoolkit
 *****************************************
 
-The streamtool rmtoolkit command allows for the deletion of 1 or more toolkits from the build server.
+The streamtool rmtoolkit command allows for the deletion of 1 or more toolkits from the build service.
 
 .. code-block:: none
 
