@@ -98,14 +98,17 @@ class BuildService(_AbstractStreamsConnection):
         """
         return super().get_resources()
 
-    def get_toolkits(self):
+    def get_toolkits(self, name=None):
         """Retrieves a list of all installed Streams Toolkits.
 
         Returns:
             :py:obj:`list` of :py:class:`~.rest_primitives.Toolkit`: List of all Toolkit resources.
 
+        Args:
+           name(str): Return toolkits matching name as a regular expression.
+
         """
-        return self._get_elements('toolkits', Toolkit)
+        return self._get_elements('toolkits', Toolkit, name=name)
      
     def get_toolkit(self, id):
         """Retrieves available toolkit matching a specific toolkit ID.
