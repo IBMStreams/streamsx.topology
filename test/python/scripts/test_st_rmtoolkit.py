@@ -78,14 +78,14 @@ class Testrmtoolkit(unittest.TestCase):
             if os.path.isfile(file_name):
                 with open(file_name) as f:
                     old_toolkit_name = f.readline().strip()
-            test_toolkits_deleted = self.delete_test_toolkits(old_toolkit_name)
+            test_toolkits_deleted = self._delete_test_toolkits(old_toolkit_name)
 
             # If toolkits were not deleted, fail current test, go to next test (which tries to delete test toolkits again)
             if not test_toolkits_deleted:
                 self.fail('Current test toolkits or test toolkits from previous tests not deleted properly.')
 
             # Get a list of paths for all the test toolkits, each element representing the path to a given test toolkit
-            self.test_toolkit_paths = self.get_test_toolkit_paths()
+            self.test_toolkit_paths = self._get_test_toolkit_paths()
 
             self.test_toolkit_objects = self._get_toolkit_objects(self.test_toolkit_paths)
             self.test_toolkit_names = [x.name for x in self.test_toolkit_objects]
@@ -114,7 +114,7 @@ class Testrmtoolkit(unittest.TestCase):
             time.sleep(5)
 
     def tearDown(self):
-        self.delete_test_toolkits()
+        self._delete_test_toolkits()
 
     def _run_rmtoolkit(self, args):
         args.insert(0, "--disable-ssl-verify")
@@ -127,7 +127,7 @@ class Testrmtoolkit(unittest.TestCase):
         time.sleep(5)
         return rc, return_message
 
-    def get_test_toolkit_paths(self):
+    def _get_test_toolkit_paths(self):
         # Get a list of all the test toolkit paths, each element representing 1 toolkit_path
         toolkit_paths = []
         path = (my_path / "toolkits").resolve()
@@ -141,7 +141,7 @@ class Testrmtoolkit(unittest.TestCase):
                 toolkit_paths.append(str(tk))
         return toolkit_paths
 
-    def delete_test_toolkits(self, old_toolkit_name=None):
+    def _delete_test_toolkits(self, old_toolkit_name=None):
         # delete all the test toolkits from the buildserver, in case they were left behind by a previous test failure.
 
         # 2 cases ..
@@ -150,7 +150,7 @@ class Testrmtoolkit(unittest.TestCase):
         # thus toolkits with previous random name stuck on buildserver, need to delete
 
         deleted_all_toolkits = False
-        test_toolkit_objects = self._get_toolkit_objects(self.get_test_toolkit_paths())
+        test_toolkit_objects = self._get_toolkit_objects(self._get_test_toolkit_paths())
         toolkit_names = [tk.name for tk in test_toolkit_objects]
         while not deleted_all_toolkits:
             # Assume no test toolkits are on buildsever, check to make sure
