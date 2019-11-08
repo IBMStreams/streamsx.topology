@@ -462,23 +462,23 @@ Options and arguments
 rmtoolkit
 *****************************************
 
-The streamtool rmtoolkit command allows for the deletion of 1 or more toolkits from the build service.
+Remove toolkits from a build service.
 
 .. code-block:: none
 
     streamsx-streamtool rmtoolkit [-h]
-            (--toolkitid toolkit-id | --toolkitname toolkit-name | --toolkitregex toolkit-regex)
+            (--id toolkit-id | --name toolkit-name | --regex toolkit-regex)
             [--User user]
 
 Options and arguments
 
-    -i,--toolkitid:
+    -i,--id:
         Specifies the id of the toolkit to delete
 
-    -n,--toolkitname:
+    -n,--name:
         Remove all toolkits with this name
 
-    -r,--toolkitregex:
+    -r,--regex:
         Remove all toolkits where the name matches the given regex pattern
 
 .. versionadded:: 1.13
