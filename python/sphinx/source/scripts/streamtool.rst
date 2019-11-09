@@ -481,4 +481,19 @@ Options and arguments
     -r,--regex:
         Remove all toolkits where the name matches the given regex pattern
 
+*****************************************
+uploadtoolkit
+*****************************************
+
+Upload a toolkit to a build service.
+
+.. code-block:: none
+
+    streamsx-streamtool uploadtoolkit [-h] --path toolkit-path [--User user]
+
+Options and arguments
+
+    -p,--path
+        Specifies the path of the indexed toolkit to upload
+
 .. versionadded:: 1.13
