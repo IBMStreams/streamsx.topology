@@ -661,6 +661,29 @@ def _lstoolkit(instance, cmd_args, rc):
 
     return (rc, return_message)
 
+###########################################
+# uploadtoolkit
+###########################################
+def _uploadtoolkit_parser(subparsers):
+    toolkit_up = subparsers.add_parser('uploadtoolkit', help='Upload a toolkit to a build service')
+    toolkit_up.add_argument('--path', '-p', help='Path to the toolkit to be uploaded', required=True)
+    _user_arg(toolkit_up)
+
+def _uploadtoolkit(instance, cmd_args, rc):
+    bs = BuildService.of_endpoint(verify=False if cmd_args.disable_ssl_verify else None)
+
+    return_message = None
+
+    tk = bs.upload_toolkit(cmd_args.path)
+    if tk is not None:
+        print('Toolkit with id {} uploaded from {}'.format(tk.id, cmd_args.path))
+    else:
+        return_message = 'Toolkit not uploaded from {}'.format(cmd_args.path)
+        print(return_message, file=sys.stderr )
+        rc = 1
+
+    return (rc, return_message)
+
 def run_cmd(args=None):
     cmd_args = _parse_args(args)
 
@@ -682,6 +705,7 @@ def run_cmd(args=None):
     "getappconfig": _getappconfig,
     "rmtoolkit": _rmtoolkit,
     "lstoolkit": _lstoolkit,
+    "uploadtoolkit": _uploadtoolkit,
     }
 
     extra_info = None
@@ -719,6 +743,7 @@ def _parse_args(args):
     _getappconfig_parser(subparsers)
     _rmtoolkit_parser(subparsers)
     _lstoolkit_parser(subparsers)
+    _uploadtoolkit_parser(subparsers)
 
     return cmd_parser.parse_args(args)
 
