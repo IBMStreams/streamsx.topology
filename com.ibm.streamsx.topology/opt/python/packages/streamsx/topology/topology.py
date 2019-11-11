@@ -2158,6 +2158,7 @@ class Window(object):
     """
     def __init__(self, stream, window_type):
         self.topology = stream.topology
+        self._hints = stream._hints
         self.stream = stream
         self._config = {'type': window_type}
 
@@ -2363,7 +2364,8 @@ class Window(object):
         .. versionchanged:: 1.11 Support for aggregation of streams with structured schemas.
         .. versionchanged:: 1.13 Support for partitioned aggregation.
         """
-        schema = streamsx.topology.schema.CommonSchema.Python
+        hints = streamsx._streams._hints.check_aggregate(function, self)
+        schema = hints.schema if hints else streamsx.topology.schema.CommonSchema.Python
         
         sl = _SourceLocation(_source_info(), "aggregate")
         _name = self.topology.graph._requested_name(name, action="aggregate", func=function)
@@ -2387,7 +2389,7 @@ class Window(object):
         streamsx.topology.schema.StreamSchema._fnop_style(self.stream.oport.schema, op, 'pyStyle')
         oport = op.addOutputPort(schema=schema, name=_name)
         op._layout(kind='Aggregate', name=_name, orig_name=name)
-        return Stream(self.topology, oport)._make_placeable()
+        return Stream(self.topology, oport)._make_placeable()._add_hints(hints)
 
 
 class Sink(_placement._Placement, object):

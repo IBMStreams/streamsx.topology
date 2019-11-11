@@ -142,17 +142,43 @@ def check_flat_map(fn, stream):
         traceback.print_exc()
         pass
 
+def _get_T(type_):
+    if hasattr(type_, '__origin__') and hasattr(type_, '__args__'):
+        if len(type_.__args__) == 1:
+            return type_.__args__[0]
+
 def _check_flat_map(fn, stream):
     rt_hint = _check_arg_matching_schema(fn, stream)
     if rt_hint:
-        if hasattr(rt_hint, '__origin__') and hasattr(rt_hint, '__args__'):
-            if len(rt_hint.__args__) == 1:
-                et = rt_hint.__args__[0]
-                if typing.Iterable[et] == rt_hint:
-                    return _schema_from_type(et)
+        et = _get_T(rt_hint)
+        if et and typing.Iterable[et] == rt_hint:
+            return _schema_from_type(et)
+
+# Check the callable for Window.aggregate
+#
+# - Can be passed a single argument
+# - Has an argument type that is compatible with List[schema type].
+# - Infer output schema from type hint
+
+def check_aggregate(fn, window):
+    try:
+        return _check_aggregate(fn, window)
+    except TypeError:
+        raise
+    except:
+        import traceback
+        traceback.print_exc()
+        pass
+
+def _check_aggregate(fn, stream):
+    rt_hint = _check_collection_arg_matching_schema(fn, stream, typing.List, typing.Iterable)
+    if rt_hint:
+        return _schema_from_type(rt_hint)
 
 # Check the hint for paramter the tuple will be passed as
 #  matches the schema.
+# If coll_type is set then it is a collection type, e.g. typing.List
+# to verify the function can be passed a list of tuples.
 #
 # Returns the type hint of the function's return if
 # it has one AND type_checking is true. Otherwiae return None
@@ -160,6 +186,13 @@ def _check_arg_matching_schema(fn, stream):
 
     if inspect.isroutine(fn):
         n = 1
+    elif type(fn) == type:
+        # Type is a class hence all returned objects
+        # will be of that type
+        # TODO argument checking for classes
+        #fn = fn.__init__
+        #n = 2 # includes self
+        return fn
     elif callable(fn):
         fn = fn.__call__
         n = 2 # includes self
@@ -170,9 +203,47 @@ def _check_arg_matching_schema(fn, stream):
         if stream._hints:
             hint, param = _get_arg_hint(fn, n-1)
             if hint:
-                _check_matching(fn, stream._hints.type_, hint, param)
+                source_type = stream._hints.type_
+                _check_matching(fn, source_type, hint, param)
 
         return _fn_return_hint(fn)
+
+def _check_collection_arg_matching_schema(fn, stream, *ctypes):
+
+    if inspect.isroutine(fn):
+        n = 1
+    elif callable(fn):
+        fn = fn.__call__
+        n = 2 # includes self
+
+    _check_arg_count(fn, 1)
+
+    if stream.topology.type_checking:
+        # TODO aggregate type checking
+        if False and stream._hints:
+            target, param = _get_arg_hint(fn, n-1)
+            if target:
+                if target == typing.Any:
+                    pass
+                else:
+                    ok = None
+                    source_type = stream._hints.type_
+                    for coll_type in ctypes:
+                         expected = coll_type[source_type]
+                         if target == expected:
+                             ok = True ; break
+     
+                if not ok:
+                    if type(target) == type:
+                        raise _type_err(fn, target, param, expected)
+                    et = _get_T(target)
+                    if et:
+                        raise _type_error(fn, target, param, expected)
+
+        return _fn_return_hint(fn)
+
+def _type_error(fn, target, param, source):
+    return TypeError('Callable {} expects {} for parameter {}, being passed {}' .format(fn.__name__, str(target), param.name, str(source)))
 
 def _check_arg_count(fn, n):
 
@@ -221,17 +292,18 @@ STR_HINTS = _schema_from_type(str)
 def _check_matching(fn, source, target, param):
 
     if target == typing.Any or source == typing.Any:
-        return
+        return True
 
     if source == target:
-        return
+        return True
 
     try:
         if issubclass(source, target):
-            return
+            return True
     except TypeError:
         if typing.Optional[source] == target:
-            return
-        return
+            return True
+        return None
 
-    raise TypeError('Callable {} expects {} for parameter {}, being passed {}' .format(fn.__name__, target.__name__, param.name, source.__name__))
+    raise _type_error(fn, target, param, source)
+    #raise TypeError('Callable {} expects {} for parameter {}, being passed {}' .format(fn.__name__, target.__name__, param.name, source.__name__))
