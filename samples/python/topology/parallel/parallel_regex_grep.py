@@ -1,5 +1,5 @@
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016
+# Copyright IBM Corp. 2016,2019
 from __future__ import print_function
 import sys
 from streamsx.topology.topology import Topology
@@ -69,7 +69,7 @@ def main():
     
     # Count the total number of lines before they are split between
     # different parallel channels.
-    lines_counter = lines.transform(parallel_regex_grep_functions.LineCounter())
+    lines_counter = lines.map(parallel_regex_grep_functions.LineCounter())
 
     # Parallelize the Stream.
     # Since there are 5 channels of the stream, the approximate number of

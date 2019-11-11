@@ -1,5 +1,5 @@
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016
+# Copyright IBM Corp. 2016,2019
 from streamsx.topology.topology import *
 import streamsx.topology.context
 from streamsx.topology.schema import *
@@ -37,7 +37,7 @@ def main():
   ts.publish("tweets/full", schema=CommonSchema.Json)
   
   # get the text of the tweet
-  ts = ts.transform(tweets.text)
+  ts = ts.map(tweets.text)
 
   # Publish just the test of tweets to a topic as String
   ts.publish("tweets/text", schema=CommonSchema.String)

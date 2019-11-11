@@ -46,14 +46,6 @@ def check_union_hello_world(t) :
    else :	
        raise AssertionError()
 
-def mqtt_publish() :
-    return [123, 2.344, "4.0", "Garbage text", 1.234e+15,]
-
-def mqtt_publish_class() :
-    tp = TestPublish("Message to publish")
-    testPublishStr = repr(tp)
-    return [testPublishStr,]
-
 def hello_world() :
     return ["Hello", "World!"]
 
@@ -74,25 +66,6 @@ def check_hello_world(t):
       _hwcount += 1
       return None
    raise AssertionError()
-
-def mqtt_subscribe(t):
-    print("String tuple",t)
-    sys.stdout.flush()
-    if t not in ["123", "2.344", "4.0", "Garbage text", "1234000000000000.0",] :
-        print("Invalid Tuple", t)
-        raise AssertionError()	 
-    return None
-
-def mqtt_subscribe_class(t):
-    print("String tuple",t)
-    sys.stdout.flush()
-    reprClass = repr(t)
-    newTestPublish = TestPublish(reprClass)
-    print("ReprClass", newTestPublish)
-    if not isinstance(newTestPublish, TestPublish) :
-        print("Invalid Tuple", t)
-        raise AssertionError()     
-    return None
 
 def filter(t):
    return "Wor" in t

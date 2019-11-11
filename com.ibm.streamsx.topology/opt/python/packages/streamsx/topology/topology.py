@@ -1012,16 +1012,6 @@ class Stream(_placement._Placement, object):
         op._layout(kind='ForEach', name=_name, orig_name=name)
         return Sink(op)
 
-    def sink(self, func, name=None):
-        """
-        Equivalent to calling :py:meth:`for_each`.
-        
-        .. deprecated:: 1.7
-            Replaced by :py:meth:`for_each`.
-        """
-        warnings.warn("Use Stream.for_each()", DeprecationWarning, stacklevel=2)
-        return self.for_each(func, name)
-
     def filter(self, func, name=None):
         """
         Filters tuples from this stream using the supplied callable `func`.
@@ -1262,16 +1252,6 @@ class Stream(_placement._Placement, object):
         ms.oport.operator.sl = _SourceLocation(_source_info(), 'map')
         return ms
 
-    def transform(self, func, name=None):
-        """
-        Equivalent to calling :py:meth:`map(func,name) <map>`.
-
-        .. deprecated:: 1.7
-            Replaced by :py:meth:`map`.
-        """
-        warnings.warn("Use Stream.map()", DeprecationWarning, stacklevel=2)
-        return self.map(func, name)
-             
     def flat_map(self, func=None, name=None):
         """
         Maps and flatterns each tuple from this stream into 0 or more tuples.
@@ -1323,16 +1303,6 @@ class Stream(_placement._Placement, object):
         oport = op.addOutputPort(name=_name)
         return Stream(self.topology, oport)._make_placeable()._layout('FlatMap', name=_name, orig_name=name)
     
-    def multi_transform(self, func, name=None):
-        """
-        Equivalent to calling :py:meth:`flat_map`.
-
-        .. deprecated:: 1.7
-            Replaced by :py:meth:`flat_map`.
-        """
-        warnings.warn("Use Stream.flat_map()", DeprecationWarning, stacklevel=2)
-        return self.flat_map(func, name)
-
     def isolate(self):
         """
         Guarantees that the upstream operation will run in a separate processing element from the downstream operation

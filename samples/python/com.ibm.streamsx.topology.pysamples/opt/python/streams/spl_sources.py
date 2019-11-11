@@ -1,6 +1,6 @@
 # coding:utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015, 2016
+# Copyright IBM Corp. 2015, 2019
 
 from __future__ import absolute_import, division, print_function
 import sys
@@ -21,8 +21,6 @@ from streamsx.spl import spl
 #
 # The function must be decorated with one of these
 #
-# @spl.pipe - Function is a pipe operator
-# @spl.sink - Function is a sink operator
 # @spl.ignore - Function is ignored
 
 # Attributes of the input SPL tuple are passed

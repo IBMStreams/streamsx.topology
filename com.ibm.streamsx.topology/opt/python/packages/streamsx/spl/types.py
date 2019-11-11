@@ -139,17 +139,6 @@ class Timestamp(streamsx.spl.runtime._Timestamp):
         """
         return datetime.datetime.utcfromtimestamp(self.time())
 
-    def tuple(self):
-        """Return this timestamp as a tuple.
-
-        Returns:
-            tuple: Returns a tuple of ``(seconds, nanoseconds, machine_id)``
-
-        .. deprecated:: 1.8.3
-            Timestamp is a `tuple` now.
-        """
-        return self
-
     def __reduce__(self):
         return streamsx.spl.runtime._stored_ts, tuple(self)
 

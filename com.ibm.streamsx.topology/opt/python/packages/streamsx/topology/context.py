@@ -74,8 +74,6 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
 
     if not graph.operators:
         raise ValueError("Topology {0} does not contain any streams.".format(graph.topology.name))
-    if ctxtype == ContextTypes.STANDALONE_BUNDLE:
-        warnings.warn("Use ContextTypes.BUNDLE", DeprecationWarning, stacklevel=2)
 
     if username or password:
         warnings.warn("Use environment variables STREAMS_USERNAME and STREAMS_PASSWORD", DeprecationWarning, stacklevel=2)
@@ -663,10 +661,8 @@ class _SubmitContextFactory(object):
         if ctxtype == ContextTypes.DISTRIBUTED:
             logger.debug("Selecting the DISTRIBUTED context for submission")
             return _get_distributed_submitter(self.config, self.graph, self.username, self.password)
-        elif ctxtype == ContextTypes.ANALYTICS_SERVICE or ctxtype == ContextTypes.STREAMING_ANALYTICS_SERVICE:
+        elif ctxtype == ContextTypes.STREAMING_ANALYTICS_SERVICE:
             logger.debug("Selecting the STREAMING_ANALYTICS_SERVICE context for submission")
-            if sys.version_info.major == 2:
-                raise RuntimeError("The STREAMING_ANALYTICS_SERVICE context requires Python 3")
             ctxtype = ContextTypes.STREAMING_ANALYTICS_SERVICE
             return _StreamingAnalyticsSubmitter(ctxtype, self.config, self.graph)
         elif ctxtype == 'BUNDLE':
@@ -788,11 +784,6 @@ class ContextTypes(object):
 
         * **STREAMS_INSTALL** - (optional) Location of a IBM Streams installation (4.0.1 or later). The install must be running on RedHat/CentOS 6 and `x86_64` architecture.
 
-    """
-    ANALYTICS_SERVICE = 'ANALYTICS_SERVICE'
-    """Synonym for :py:const:`STREAMING_ANALYTICS_SERVICE`.
-
-    .. deprecated:: Use :py:const:`STREAMING_ANALYTICS_SERVICE`.
     """
     DISTRIBUTED = 'DISTRIBUTED'
     """Submission to an IBM Streams instance.
@@ -922,26 +913,6 @@ class ContextTypes(object):
     .. note::
 
         `BUILD_ARCHIVE` is typically only used when diagnosing issues with bundle generation.
-    """
-
-    STANDALONE_BUNDLE = 'STANDALONE_BUNDLE'
-    """Create a Streams application bundle for standalone execution.
-
-    The `Topology` is compiled locally to produce Streams standalone application bundle (sab file).
-
-    The resultant application can be submitted to:
-        * Executed standalone for development or testing.
-
-    The bundle must be built on the same operating system version and architecture as the intended running
-    environment. For Streaming Analytics service this is currently RedHat/CentOS 6 and `x86_64` architecture.
-
-    Environment variables:
-        This environment variables define how the application is built.
-
-        * **STREAMS_INSTALL** - Location of a IBM Streams installation (4.0.1 or 4.1.x).
-
-    .. deprecated:: IBM Streams 4.2
-        Use :py:const:`BUNDLE`.
     """
 
 

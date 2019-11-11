@@ -1,5 +1,5 @@
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016
+# Copyright IBM Corp. 2016,2019
 from __future__ import print_function
 from streamsx.topology.topology import Topology
 import streamsx.topology.context
@@ -61,7 +61,7 @@ def play_fizz_buzz(counting):
     Returns:
         transformed output stream
     """
-    shouts = counting.transform(fizz_buzz_functions.fizz_buzz)
+    shouts = counting.map(fizz_buzz_functions.fizz_buzz)
     return shouts
 
 if __name__ == '__main__':
