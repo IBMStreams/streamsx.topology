@@ -42,6 +42,16 @@ def m_p(t: P) -> P : pass
 def m_s(t: S) -> S : pass
 def m_p2s(t: P) -> S : pass
 
+def agg_none(t) : pass
+def agg_any(t: typing.Any) -> str : pass
+def agg_int(t:typing.List[int]) -> str : pass
+def agg_str(t:typing.List[str]) -> SensorReading : pass
+def agg_listany(t: typing.List[typing.Any]) -> str : pass
+def agg_sensor(t: typing.List[SensorReading]) : pass
+def agg_p(t: typing.List[P]) -> P : pass
+def agg_s(t: typing.List[S]) -> S : pass
+def agg_p2s(t: typing.List[P]) -> S : pass
+
 def fm_none(t) : pass
 def fm_int(t:int) : pass
 def fm_str(t:str) -> typing.Iterable[SensorReading] : pass
@@ -392,6 +402,74 @@ class TestHints(unittest.TestCase):
         self.assertRaises(TypeError, s.map, A_2())
         s.map(ao_2)
         s.map(AO_2())
+
+    def test_aggregate(self):
+        topo = Topology()
+
+        w = topo.source(s_none).last()
+        w.aggregate(agg_none)
+        sr = w.aggregate(agg_int)
+        self.assertEqual(CommonSchema.String, sr.oport.schema)
+        sr = w.aggregate(agg_str)
+        self.assertEqual(_normalize(SensorReading), sr.oport.schema)
+        w.aggregate(agg_any)
+        w.aggregate(agg_sensor)
+
+        w = topo.source(s_int).last()
+        w.aggregate(agg_none)
+        w.aggregate(agg_int)
+        #self.assertRaises(TypeError, w.aggregate, agg_str)
+        w.aggregate(agg_any)
+        #self.assertRaises(TypeError, w.aggregate, agg_sensor)
+
+        w = topo.source(s_str).last()
+        w.aggregate(agg_none)
+        #self.assertRaises(TypeError, w.aggregate, agg_int)
+        w.aggregate(agg_str)
+        w.aggregate(agg_any)
+        #self.assertRaises(TypeError, w.aggregate, agg_sensor)
+
+        w = topo.source(s_any).last()
+        w.aggregate(agg_none)
+        w.aggregate(agg_int)
+        w.aggregate(agg_str)
+        w.aggregate(agg_any)
+        w.aggregate(agg_sensor)
+
+        w = topo.source(s_sensor).last()
+        w.aggregate(agg_none)
+        #self.assertRaises(TypeError, w.aggregate, agg_int)
+        #self.assertRaises(TypeError, w.aggregate, agg_str)
+        w.aggregate(agg_any)
+        w.aggregate(agg_sensor)
+
+        w = topo.source(s_p).last()
+        w.aggregate(agg_none)
+        #self.assertRaises(TypeError, w.aggregate, agg_int)
+        #self.assertRaises(TypeError, w.aggregate, agg_str)
+        w.aggregate(agg_any)
+        #self.assertRaises(TypeError, w.aggregate, agg_sensor)
+        sr = w.aggregate(agg_p)
+        self.assertEqual(CommonSchema.Python, sr.oport.schema)
+        #self.assertRaises(TypeError, w.aggregate, agg_s)
+
+        w = topo.source(s_s).last()
+        w.aggregate(agg_p)
+        w.aggregate(agg_s)
+
+    def test_aggregate_argcount(self):
+        topo = Topology()
+        w = topo.source([]).last(1)
+        self.assertRaises(TypeError, w.aggregate, a_0)
+        self.assertRaises(TypeError, w.aggregate, A_0())
+        w.aggregate(a_1)
+        w.aggregate(A_1())
+        w.aggregate(ao_1)
+        w.aggregate(AO_1())
+        self.assertRaises(TypeError, w.aggregate, a_2)
+        self.assertRaises(TypeError, w.aggregate, A_2())
+        w.aggregate(ao_2)
+        w.aggregate(AO_2())
 
     def test_flat_map(self):
         topo = Topology()
