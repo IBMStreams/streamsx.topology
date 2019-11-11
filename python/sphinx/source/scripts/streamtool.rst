@@ -33,6 +33,7 @@ Standalone configuration
 ------------------------
 
         * **STREAMS_REST_URL** - Streams SWS service (REST API) URL, e.g. when the service is exposed as node port: `https://<NODE-IP>:<NODE-PORT>`
+        * **STREAMS_BUILD_URL** - Streams build service (REST API) URL, e.g. when the service is exposed as node port: `https://<NODE-IP>:<NODE-PORT>`. Required for `lstoolkit` and `rmtoolkit`.
         * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
         * **STREAMS_PASSWORD** - Password for authentication.
 
@@ -72,6 +73,11 @@ Usage
             config-name
 
     streamsx-streamtool getappconfig [-h] [--User user] config-name
+
+    streamsx-streamtool rmtoolkit [-h]
+            (--toolkitid toolkit-id | --toolkitname toolkit-name | --toolkitregex toolkit-regex)
+            [--User user]
+
 
 
 *****************************************
@@ -425,5 +431,69 @@ Options and arguments
     -U,--User:
         Specifies an IBM Streams user ID that has authority to run the
         command.
+
+*****************************************
+lstoolkit
+*****************************************
+
+List toolkits from a build service.
+
+.. code-block:: none
+
+    streamsx-streamtool lstoolkit [-h]
+            (--all | --id toolkit-id | --name toolkit-name | --regex toolkit-regex)
+            [--User user]
+
+Options and arguments
+
+    -a,--all: 
+        List all toolkits
+ 
+    -i,--id:
+        List a specific toolkit given its toolkit id
+
+    -n,--name:
+        List all toolkits with this name
+
+    -r,--regex:
+        List all toolkits where the name matches the given regex pattern
+
+*****************************************
+rmtoolkit
+*****************************************
+
+Remove toolkits from a build service.
+
+.. code-block:: none
+
+    streamsx-streamtool rmtoolkit [-h]
+            (--id toolkit-id | --name toolkit-name | --regex toolkit-regex)
+            [--User user]
+
+Options and arguments
+
+    -i,--id:
+        Specifies the id of the toolkit to delete
+
+    -n,--name:
+        Remove all toolkits with this name
+
+    -r,--regex:
+        Remove all toolkits where the name matches the given regex pattern
+
+*****************************************
+uploadtoolkit
+*****************************************
+
+Upload a toolkit to a build service.
+
+.. code-block:: none
+
+    streamsx-streamtool uploadtoolkit [-h] --path toolkit-path [--User user]
+
+Options and arguments
+
+    -p,--path
+        Specifies the path of the indexed toolkit to upload
 
 .. versionadded:: 1.13
