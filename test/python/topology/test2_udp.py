@@ -121,7 +121,7 @@ class TestUDP(unittest.TestCase):
           with self.subTest(width=width):
               topo = Topology("test_TopologyParallelHash" + str(width))
               s = topo.source(range(17,142))
-              s = s.parallel(width, routing=Routing.HASH_PARTITIONED)
+              s = s.parallel(width, routing=Routing.HASH_PARTITIONED, name='PH')
               s = s.map(lambda tuple : tuple + 19)
               s = s.map(AddChannel())
               s = s.end_parallel()

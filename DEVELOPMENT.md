@@ -28,7 +28,7 @@ The Apache Ant `build.xml` files are setup to assume that the Junit and Jacoco j
 jacocoagent.jar  jacocoant.jar  junit-4.10.jar
 ```
 
-The project also requires a local install of IBM InfoSphere Streams 4.x (>= 4.0.1.0), with the environment variable `STREAMS_INSTALL` set to the root of the install. The recommended setup is to source the `bin/streamsprofile.sh` script in the Streams install.
+The project also requires a local install of IBM InfoSphere Streams 4.x (>= 4.2), with the environment variable `STREAMS_INSTALL` set to the root of the install. The recommended setup is to source the `bin/streamsprofile.sh` script in the Streams install.
 ```
 > source /opt/ibm/InfoSphere_Streams/4.0.1.0/bin/streamsprofile.sh
 InfoSphere Streams environment variables have been set.

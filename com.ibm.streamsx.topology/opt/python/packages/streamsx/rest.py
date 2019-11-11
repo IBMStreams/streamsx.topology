@@ -70,7 +70,7 @@ __version__ = streamsx._streams._version.__version__
 
 from streamsx import st
 from .rest_primitives import (Domain, Instance, Installation, RestResource, Toolkit, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
-    _exact_resource, _IAMStreamsRestClient, _IAMConstants, _StreamsRestDelegator)
+    _exact_resource, _IAMStreamsRestClient, _IAMConstants, _StreamsRestDelegator, _matching_resource)
 
 logger = logging.getLogger('streamsx.rest')
 
@@ -90,12 +90,14 @@ class _AbstractStreamsConnection(object):
         json_resources = self.rest_client.make_request(self.resource_url)['resources']
         return [RestResource(resource, self.rest_client) for resource in json_resources]
 
-    def _get_elements(self, resource_name, eclass, id=None):
+    def _get_elements(self, resource_name, eclass, id=None, name=None):
         for resource in self.get_resources():
             if resource.name == resource_name:
                 elements = []
                 for json_element in resource.get_resource()[resource_name]:
                     if not _exact_resource(json_element, id):
+                        continue
+                    if not _matching_resource(json_element, name):
                         continue
                     elements.append(eclass(json_element, self.rest_client))
                 return elements
