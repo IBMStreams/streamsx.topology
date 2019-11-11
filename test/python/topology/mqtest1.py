@@ -1,5 +1,5 @@
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016
+# Copyright IBM Corp. 2016,2019
 import unittest
 import os
 import test_functions
@@ -65,7 +65,7 @@ class TestTopologyMethods(unittest.TestCase):
     topic = ["python.topic1", "python.topic2", ]
     mqs = mqstream.subscribe(topic) 
     mqs.print()
-    mqs.sink(test_functions.mqtt_subscribe)
+    mqs.for_each(test_functions.mqtt_subscribe)
     streamsx.topology.context.submit("BUNDLE", topo.graph)
 
   def test_MQTTpublishClass(self):
@@ -116,7 +116,7 @@ class TestTopologyMethods(unittest.TestCase):
     topic = ["python.class.topic1", ]
     mqs = mqstream.subscribe(topic) 
     mqs.print()
-    mqs.sink(test_functions.mqtt_subscribe_class)
+    mqs.for_each(test_functions.mqtt_subscribe_class)
     streamsx.topology.context.submit("BUNDLE", topo.graph)
 
           

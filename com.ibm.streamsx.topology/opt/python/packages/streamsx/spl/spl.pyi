@@ -1,10 +1,7 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2017
+# Copyright IBM Corp. 2017,2019
 from typing import Any, Callable, Iterable
-
-def pipe(wrapped: Callable[[Any],Any) -> Callable[[Any],Any]: ...
-
 
 class source:
     def __init__(self, docpy: bool) -> None: ...
@@ -21,8 +18,6 @@ class filter(object):
     def __call__(self, wrapped: Callable[[Any], bool]) -> Callable[[Any], bool]: ...
  
 def ignore(wrapped: Any) -> Any: ...
-
-def sink(wrapped: Callable[[Any],None]) -> Callable[[Any],None]: ...
 
 class for_each:
     def __init__(self, style: Any=None, docpy: bool) -> None: ...

@@ -323,10 +323,6 @@ defaulting to *attributes by name*. The style value can be set to:
   * ``'name'`` - *attributes by name* (the default)
   * ``'position'`` - *attributes by position*
 
-**Note**: For backwards compatibility ``@spl.pipe`` and ``@spl.sink``
-**always** use *attributes by position* and do not support ``**kwargs``.
-They do not support the ``style`` parameter.
-
 Examples
 ========
 
@@ -579,7 +575,7 @@ The list may be empty resulting in no tuples being submitted.
 
 from enum import Enum
 
-__all__ = ['source', 'map', 'filter', 'for_each', 'PrimitiveOperator', 'input_port', 'primitive_operator', 'extracting', 'pipe', 'ignore', 'sink']
+__all__ = ['source', 'map', 'filter', 'for_each', 'PrimitiveOperator', 'input_port', 'primitive_operator', 'extracting', 'ignore']
 
 import functools
 import inspect
@@ -652,28 +648,6 @@ def extracting():
     """
     return _EXTRACTING
 
-def pipe(wrapped):
-    """
-    Decorator to create an SPL operator from a function.
-    
-    A pipe SPL operator with a single input port and a single
-    output port. For each tuple on the input port the
-    function is called passing the contents of the tuple.
-
-    SPL attributes from the tuple are passed by position.
-    
-    The value returned from the function results in
-    zero or more tuples being submitted to the operator output
-    port, see :ref:`submit-from-python`.
-
-    .. deprecated:: 1.8
-        Recommended to use :py:class:`@spl.map <map>` instead.
-    """
-    if not inspect.isfunction(wrapped):
-        raise TypeError('A function is required')
-    warnings.warn("Use @spl.map()", DeprecationWarning, stacklevel=2)
-
-    return _wrapforsplop(_OperatorType.Pipe, wrapped, 'position', False)
 
 #
 # Wrap object for an SPL operator, either
@@ -1089,22 +1063,6 @@ def ignore(wrapped):
     _ignore._splpy_file = inspect.getsourcefile(wrapped)
     return _ignore
 
-# Defines a function as a sink operator
-def sink(wrapped):
-    """Creates an SPL operator with a single input port.
-
-    A SPL operator with a single input port and no output ports.
-    For each tuple on the input port the decorated function
-    is called passing the contents of the tuple.
-
-    .. deprecated:: 1.8
-        Recommended to use :py:class:`@spl.for_each <for_each>` instead.
-    """
-    if not inspect.isfunction(wrapped):
-        raise TypeError('A function is required')
-    warnings.warn("Use @spl.for_each()", DeprecationWarning, stacklevel=2)
-
-    return _wrapforsplop(_OperatorType.Sink, wrapped, 'position', False)
 
 # Defines a function as a sink operator
 class for_each(object):
