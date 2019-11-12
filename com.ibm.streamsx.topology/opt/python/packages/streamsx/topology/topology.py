@@ -65,6 +65,8 @@ across the resources available in the instance.
     `Topology` does not represent a running application, so an instance of `Stream` class does not contain
     the tuples, it is only a declaration of a stream.
 
+.. _stream-desc:
+
 ******
 Stream
 ******
@@ -74,13 +76,35 @@ Alternatively, a stream can be finite, such as a stream that is created from the
 When a streams processing application contains infinite streams, the application runs continuously without ending.
 
 A stream has a schema that defines the type of each tuple on the stream.
-The schema for a Python Topology is either:
+The schema for a stream is either:
 
-* :py:const:`~streamsx.topology.schema.CommonSchema.Python` - A tuple may be any Python object. This is the default.
+* :py:const:`~streamsx.topology.schema.CommonSchema.Python` - A tuple may be any Python object. This is the default when the schema is not explictly or implicitly set.
 * :py:const:`~streamsx.topology.schema.CommonSchema.String` - Each tuple is a Unicode string.
 * :py:const:`~streamsx.topology.schema.CommonSchema.Binary` - Each tuple is a blob.
 * :py:const:`~streamsx.topology.schema.CommonSchema.Json` - Each tuple is a Python dict that can be expressed as a JSON object.
-* Structured - A stream that has a structured schema of a ordered list of attributes, with each attribute having a fixed type (e.g. float64 or int32) and a name. The schema of a structured stream is defined using :py:const:`~streamsx.topology.schema.StreamSchema`.
+* Structured - A stream that has a structured schema of a ordered list of attributes, with each attribute having a fixed type (e.g. float64 or int32) and a name. The schema of a structured stream is defined using typed named tuple or :py:const:`~streamsx.topology.schema.StreamSchema`.
+
+A stream's schema is implictly dervied from type hints declared for the callable
+of the transform that produces it. For example `readings` defined as follows would have a structured schema matching ``SensorReading`` ::
+
+    class SensorReading(typing.NamedTuple):
+        sensor_id: str
+        ts: int
+        reading: float
+    
+    def reading_from_json(value:dict) -> SensorReading:
+        return SensorReading(value['id'], value['timestamp'], value['reading'])
+
+    topo = Topology()
+    json_readings = topo.source(HttpReadings()).as_json()
+    readings = json_readings.map(reading_from_json)
+
+Deriving schemas from type hints can be disabled by setting the topology's
+``type_checking`` attribute to false, for example this would change `readings`
+in the previous example to have generic Python object schema :py:const:`~streamsx.topology.schema.CommonSchema.Python` ::
+
+    topo = Topology()
+    topo.type_checking = False
 
 *****************
 Stream processing
@@ -112,6 +136,30 @@ processed by a :py:meth:`~Stream.filter` using a lambda function::
 
     # Filter the stream so it only contains words starting with py
     pywords = words.filter(lambda word : word.startswith('py'))
+
+When a callable has type hints they are used to:
+
+   * define the schema of the resulting transformation, see  :ref:`stream-desc`.
+   * type checking the correctness of the transformation at topology declaration time.
+
+For example if the callable defining the source had type hints that indicated
+it was an iterator of ``str`` objects then the schema of the resultant stream
+would be :py:const:`~streamsx.topology.schema.CommonSchema.String`. If this
+source stream then underwent a :py:meth:`Stream.map` transform with a callable
+that had a type hint for its argument, a check is made to ensure
+that the type of the argument is compatible with ``str``.
+
+Type hints are maintained through transforms regardless of resultant schema.
+For example a transform that has a return type hint of ``int`` defines
+the schema as :py:const:`~streamsx.topology.schema.CommonSchema.Python`,
+but the type hint is retained even though the schema is generic. Thus an
+error is raised at topology declaration time if a downstream transformation
+uses a callable with a type hint that is incompatible with being passed an ``int``.
+
+How type hints are used is specific to each transformation, such as
+:py:meth:`~Topology.source`, :py:meth:`~Stream.map`, :py:meth:`~Stream.filter` etc.
+
+Type checking can be disabled by setting the topology's ``type_checking`` attribute to false.
 
 When a callable is a lambda or defined inline (defined in the main Python script,
 a notebook or an interactive session) then a serialized copy of its definition becomes part of the
@@ -369,11 +417,11 @@ class Topology(object):
         namespace(str): Namespace of the topology. Defaults to a name dervied from the calling evironment if it can be determined, otherwise a random name.
 
     Attributes:
-        include_packages(set[str]): Python package names to be included in the built application. Any package in this list is copied into the bundle and made available at runtime to the Python callables used in the application. By default a ``Topology`` will automatically discover which packages and modules are required to be copied, this field may be used to add additional packages that were not automatically discovered. See also :py:meth:`~Topology.add_pip_package`.
+        include_packages(set[str]): Python package names to be included in the built application. Any package in this list is copied into the bundle and made available at runtime to the Python callables used in the application. By default a ``Topology`` will automatically discover which packages and modules are required to be copied, this field may be used to add additional packages that were not automatically discovered. See also :py:meth:`~Topology.add_pip_package`. Package names in `include_packages` take precedence over package names in `exclude_packages`.
 
         exclude_packages(set[str]): Python top-level package names to be excluded from the built application. Excluding a top-level packages excludes all sub-modules at any level in the package, e.g. `sound` excludes `sound.effects.echo`. Only the top-level package can be defined, e.g. `sound` rather than `sound.filters`. Behavior when adding a module within a package is undefined. When compiling the application using Anaconda this set is pre-loaded with Python packages from the Anaconda pre-loaded set.
 
-    Package names in `include_packages` take precedence over package names in `exclude_packages`.
+        type_checking(bool): Set to false to disable type checking, defaults to ``True``.
 
     All declared streams in a `Topology` are available through their name
     using ``topology[name]``. The stream's name is defined by :py:meth:`Stream.name` and will differ from the name parameter passed when creating the stream if the application uses duplicate names.
@@ -496,6 +544,22 @@ class Topology(object):
         Returns:
             Stream: A stream whose tuples are the result of the iterable obtained from `func`.
 
+        .. rubric:: Type hints
+
+        Type hints on `func` define the schema of the returned stream,
+        defaulting to :py:const:`~streamsx.topology.schema.CommonSchema.Python`
+        if no type hints are present.
+
+        For example ``s_sensor`` has a type hint that
+        defines it as an iterable of ``SensorReading`` instances (typed named tuples).
+        Thus `readings` has a structured schema matching ``SensorReading`` ::
+
+            def s_sensor() -> typing.Iterable[SensorReading] :
+                ...
+
+            topo = Topology()
+            readings = topo.source(s_sensor)
+
         .. rubric:: Simple examples
 
         Finite constant source stream containing two tuples
@@ -582,6 +646,9 @@ class Topology(object):
             Source functions that use generators are not supported
             when checkpointing or within a consistent region. This
             is because generators cannot be pickled (even when using `dill`).
+
+        .. versionchanged:: 2.0
+            Type hints are used to define the returned stream schema.
         """
         _name = name
         hints = streamsx._streams._hints.schema_iterable(func, self)
@@ -915,6 +982,10 @@ class Stream(_placement._Placement, object):
     The Stream class is the primary abstraction within a streaming application. It represents a potentially infinite 
     series of tuples which can be operated upon to produce another stream, as in the case of :py:meth:`map`, or
     terminate a stream, as in the case of :py:meth:`for_each`.
+
+    .. versionchanged:: 2.0
+        Type hints are used to define stream schemas and verify transformations
+        at declaration time.
     """
     def __init__(self, topology, oport, other=None):
         self.topology = topology
@@ -1010,6 +1081,12 @@ class Stream(_placement._Placement, object):
         Returns:
             streamsx.topology.topology.Sink: Stream termination.
 
+        .. rubric:: Type hints
+
+        The argument type hint on `func` is used (if present) to verify
+        at topology declaration time that it is compatible with the
+        type of tuples on this stream.
+
         .. versionchanged:: 1.7
             Now returns a :py:class:`Sink` instance.
         """
@@ -1027,14 +1104,14 @@ class Stream(_placement._Placement, object):
         """
         Filters tuples from this stream using the supplied callable `func`.
 
-        For each tuple on the stream ``func(tuple)`` is called, if the return evaluates to ``True`` the
+        For each stream tuple `t` on the stream ``func(t)`` is called, if the return evaluates to ``True`` the
         tuple will be present on the returned stream, otherwise the tuple is filtered out.
         
         Args:
-            func: Filter callable that takes a single parameter for the tuple.
+            func: Filter callable that takes a single parameter for the stream tuple.
             name(str): Name of the stream, defaults to a generated name.
 
-        If invoking ``func`` for a tuple on the stream raises an exception
+        If invoking ``func`` for a stream tuple raises an exception
         then its processing element will terminate. By default the processing
         element will automatically restart though tuples may be lost.
 
@@ -1044,7 +1121,13 @@ class Stream(_placement._Placement, object):
         stream corresponding to the input tuple that caused the exception.
 
         Returns:
-            Stream: A Stream containing tuples that have not been filtered out.
+            Stream: A Stream containing tuples that have not been filtered out. The schema of the returned stream is the same as this stream's schema.
+
+        .. rubric:: Type hints
+
+        The argument type hint on `func` is used (if present) to verify
+        at topology declaration time that it is compatible with the
+        type of tuples on this stream.
         """
         streamsx._streams._hints.check_filter(func, self)
         sl = _SourceLocation(_source_info(), 'filter')
@@ -1090,7 +1173,15 @@ class Stream(_placement._Placement, object):
         stream corresponding to the input tuple that caused the exception.
 
         Returns:
-            namedtuple: Named tuple of streams this stream is split across.
+            namedtuple: Named tuple of streams this stream is split across. All returned streams have the same schema as this stream.
+
+        .. rubric:: Type hints
+
+        The argument type hint on `func` is used (if present) to verify
+        at topology declaration time that it is compatible with the
+        type of tuples on this stream.
+
+        .. rubric:: Examples
 
         Example of splitting a stream based upon message severity, dropping
         any messages with unknown severity, and then performing different
@@ -1248,6 +1339,28 @@ class Stream(_placement._Placement, object):
 
         Returns:
             Stream: A stream containing tuples mapped by `func`.
+
+        .. rubric:: Type hints
+
+        If `schema` is not set then the return type hint on `func` define the
+        schema of the returned stream, defaulting to
+        :py:const:`~streamsx.topology.schema.CommonSchema.Python` if no
+        type hints are present.
+
+        For example `reading_from_json` has a type hint that
+        defines it as returning ``SensorReading`` instances (typed named tuples).
+        Thus `readings` has a structured schema matching ``SensorReading`` ::
+
+            def reading_from_json(value:dict) -> SensorReading:
+                return SensorReading(value['id'], value['timestamp'], value['reading'])
+
+            topo = Topology()
+            json_readings = topo.source(HttpReadings()).as_json()
+            readings = json_readings.map(reading_from_json)
+
+        The argument type hint on `func` is used (if present) to verify
+        at topology declaration time that it is compatible with the
+        type of tuples on this stream.
 
         .. versionadded:: 1.7 `schema` argument added to allow conversion to
             a structured stream.
