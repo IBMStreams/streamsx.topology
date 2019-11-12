@@ -235,7 +235,7 @@ def _check_collection_arg_matching_schema(fn, stream, *ctypes):
      
                 if not ok:
                     if type(target) == type:
-                        raise _type_err(fn, target, param, expected)
+                        raise _type_error(fn, target, param, expected)
                     et = _get_T(target)
                     if et:
                         raise _type_error(fn, target, param, expected)
