@@ -409,6 +409,26 @@ class TestSC(unittest.TestCase):
 
         self._check_sab()
 
+    def test_simple_4(self):
+        # Build test_app_8, (SPLMM app) requiring no dependencies
+        path = (my_path / "apps/test_app_8/").resolve()
+        os.chdir(path)
+
+        self._run_sc(self.main_composite, self.local_toolkit_paths_string, compile_time_arguments=['3', 'foo=bar'])
+
+        self._check_sab()
+
+    def test_simple_5(self):
+        # Build test_app_8, (SPLMM app) requiring no dependencies
+        # test_app_8 fails w/o compile time args
+        path = (my_path / "apps/test_app_8/").resolve()
+        os.chdir(path)
+
+        self._run_sc(self.main_composite, self.local_toolkit_paths_string, compile_time_arguments=['3'])
+
+        # Check sab doesn't exist
+        self._check_no_sab()
+
     def test_compile_time_args(self):
         # Build test_app_7, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_3 w/ version [1.0.0,4.0.0)
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0

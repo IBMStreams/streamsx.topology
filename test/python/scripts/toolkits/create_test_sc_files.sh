@@ -54,6 +54,11 @@ for i in $(find $NEWDIR_PATH2 -name test.spl.tmpl); do
     rm $i
 done
 
+for i in $(find $NEWDIR_PATH2 -name test.splmm.tmpl); do
+    sed -e "s/test_tk/${NAME}.test_tk/" "$i" > "${i/.tmpl/}"
+    rm $i
+done
+
 # Create info.xml files for the apps, located in /scripts/apps/
 for i in $(find ${PARENT_PATH}/../apps/ -name info.xml.tmpl); do
     sed -e "s/com.example./${NAME}./" "$i" > "${i/.tmpl/}"
