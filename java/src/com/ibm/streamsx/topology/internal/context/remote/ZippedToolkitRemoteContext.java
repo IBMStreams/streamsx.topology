@@ -104,8 +104,6 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         
         JsonObject graph = graph(submission);
         
-        // System.out.println(graph.toString());
-
         if (mainCompositeKind == null) {
             String namespace = splAppNamespace(graph);
             String name = splAppName(graph);
@@ -132,9 +130,6 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         Path scOptsTmp = Files.createTempFile("sc_opts", ".txt");
         Path splmmOptsTmp = Files.createTempFile("splmm_opts", ".txt");
         Path mainCompDirTmp = Files.createTempFile("mainCompDir", ".txt");
-        
-        // String[] mainCompDir1 = {""};
-        // Map<Path,String> mainCompDir = new HashMap<>();
 
         // tkManifest is the list of toolkits contained in the archive
         try (PrintWriter tkManifest = new PrintWriter(manifestTmp.toFile(), "UTF-8")) {
@@ -150,31 +145,11 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                                 String tkRootName = tkRoot.getName();
                                 tkManifest.println(tkRootName);
                                 toolkits.put(tkRoot.toPath(), tkRootName);
-
-                                // if (deploy(submission).has(ContextProperties._SPLMM_OPTIONS)) {
-                                //     // if (mainCompDir1[0] == "") {
-                                //     //     mainCompDir1[0] = tkRootName;
-                                //     //     // System.out.println("------------- " + tkRoot.toPath().toString() + " -------------");
-                                //     //     // System.out.println("------------- " + tkRoot.getName() + " -------------");
-                                //     // }
-                                //     if (mainCompDir.isEmpty()) {
-                                //         mainCompDir.put(tkRoot.toPath(), tkRootName);
-                                //         // System.out.println("------------- " + tkRoot.toPath().toString() + " -------------");
-                                //         // System.out.println("------------- " + tkRoot.getName() + " -------------");
-                                //     }
-                                // } else {
-                                //     tkManifest.println(tkRootName);
-                                //     toolkits.put(tkRoot.toPath(), tkRootName);
-                                //     System.out.println(" TKS ------------- " + tkRoot.toPath().toString() + " -------------");
-                                //     System.out.println(" TKS------------- " + tkRoot.getName() + " -------------");
-                                // }
                             }
                             }
                         );
             }
         }
-
-        // String mainCompDir = mainCompDir1[0];
         
         // mainComposite is a string of the namespace and the main composite.
         // This is used by the Makefile
@@ -183,7 +158,6 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         }
         
         JsonObject deploy = deploy(submission);
-        
         
         if (deploy.has(ContextProperties.SC_OPTIONS)) {
             List<String> scOptions;
@@ -214,7 +188,6 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                 splmmOptions = new ArrayList<>();
                 for (JsonElement e : opts.getAsJsonArray()) {
                     splmmOptions.add(e.getAsString());
-                    // System.out.println(e.getAsString());
                 }
             } else {
                 splmmOptions = Collections.singletonList(opts.getAsString());
@@ -228,20 +201,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                     }
                 }
             }
-
-            // if (!mainCompDir.isEmpty()) {
-            //     try (PrintWriter mainCompDirW = new PrintWriter(mainCompDirTmp.toFile(), "UTF-8")) {
-            //         // mainCompDirW.print(mainCompDir);
-            //         for (Path dir : mainCompDir.keySet()) {
-            //             mainCompDirW.print(dir);
-            //         }
-            //     }
-            // }
         }
-
-        // System.out.println("------------- " + mainCompDir + " -------------");
-        // System.out.println(" TOOLKITS MAP ------------- " + toolkits + " -------------");
-        // System.exit(1);
                
         Path makefile = topologyToolkit.resolve(Paths.get("opt", "client", "remote", "Makefile.template"));
                       
@@ -249,10 +209,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         paths.put(mainCompTmp, "main_composite.txt");
         paths.put(scOptsTmp, "sc_opts.txt");
         paths.put(makefile, "Makefile");
-        if (deploy.has(ContextProperties._SPLMM_OPTIONS)) {
-            paths.put(splmmOptsTmp, "splmm_opts.txt");
-            paths.put(mainCompDirTmp, "mainCompDir.txt");
-        }
+        paths.put(splmmOptsTmp, "splmm_opts.txt");
 
         try {
             addAllToZippedArchive(submission, toolkits, paths, zipFilePath);
