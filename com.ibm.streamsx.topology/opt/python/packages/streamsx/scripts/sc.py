@@ -287,11 +287,11 @@ def _sc_options(cmd_args, cfg):
     if cmd_args.data_directory:
         args.append('--data-directory=' + str(cmd_args.data_directory))
     if cmd_args.compile_time_args: # sc -M my::App hello=a,b,c foo=bar -> compile_time_args = ['hello=a,b,c', 'foo=bar']
-        # Check if '=' is NOT present in the compile_time_args, this implies (maybe) that we have a .splmm file
+        # Check if '=' is NOT present in the compile_time_args, this implies that we have a .splmm file
         if any('=' not in arg for arg in cmd_args.compile_time_args):
-            # If we have both SPLMM args and SPL CompileTimeValue args, then compiling a .splmm file
+            # If we have both SPLMM args and SPL CompileTimeValue args, then main composite is a .splmm file
+            # _SPLMM_OPTIONS Should contain both regular SPL compile_time_args and SPLMM args to preserve ordering
             cfg[ConfigParams._SPLMM_OPTIONS] = cmd_args.compile_time_args
-            print(cmd_args.compile_time_args)
             # Just the SPL CompileTimeValue args
             args.extend([x for x in cmd_args.compile_time_args if '=' in x])
         else:

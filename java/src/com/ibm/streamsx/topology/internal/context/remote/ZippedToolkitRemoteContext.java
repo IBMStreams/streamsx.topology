@@ -117,6 +117,9 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         
         // Paths to completely copy into the code archive
         Map<Path, String> paths = new HashMap<>();
+
+        Map<Path, String> SPLMM_toolkits = new HashMap<>();
+        String[] splmm_dir = {""};
         
         // Paths to completely copy into the code archive
         Map<Path,String> toolkits = new HashMap<>();
@@ -129,7 +132,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         Path mainCompTmp = Files.createTempFile("main_composite", ".txt");
         Path scOptsTmp = Files.createTempFile("sc_opts", ".txt");
         Path splmmOptsTmp = Files.createTempFile("splmm_opts", ".txt");
-        Path mainCompDirTmp = Files.createTempFile("mainCompDir", ".txt");
+        Path splmm_dirTmp = Files.createTempFile("splmm_dir", ".txt");
 
         // tkManifest is the list of toolkits contained in the archive
         try (PrintWriter tkManifest = new PrintWriter(manifestTmp.toFile(), "UTF-8")) {
@@ -143,8 +146,18 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                             if (tk.has("root")) {
                                 File tkRoot = new File(jstring(tk, "root"));
                                 String tkRootName = tkRoot.getName();
-                                tkManifest.println(tkRootName);
-                                toolkits.put(tkRoot.toPath(), tkRootName);
+                                // If SPLMM app, need to seperate this toolkit to run the command
+                                // 'spl-make-toolkit -i <SPLMM_APP_DIR> `cat splmm_opts.txt`'
+                                // Bc SPLMM app requires arguments, so can't group with other toolkits
+                                if (deploy(submission).has(ContextProperties._SPLMM_OPTIONS)) {
+                                    if (SPLMM_toolkits.isEmpty()) {
+                                        splmm_dir[0] = tkRootName;
+                                        SPLMM_toolkits.put(tkRoot.toPath(), tkRootName);
+                                    }
+                                } else {
+                                    tkManifest.println(tkRootName);
+                                    toolkits.put(tkRoot.toPath(), tkRootName);
+                                }
                             }
                             }
                         );
@@ -201,6 +214,12 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                     }
                 }
             }
+
+            if (splmm_dir[0] != "") {
+                try (PrintWriter splmm_dirW = new PrintWriter(splmm_dirTmp.toFile(), "UTF-8")) {
+                    splmm_dirW.print(splmm_dir[0]);
+                }
+            }
         }
                
         Path makefile = topologyToolkit.resolve(Paths.get("opt", "client", "remote", "Makefile.template"));
@@ -210,25 +229,30 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         paths.put(scOptsTmp, "sc_opts.txt");
         paths.put(makefile, "Makefile");
         paths.put(splmmOptsTmp, "splmm_opts.txt");
+        paths.put(splmm_dirTmp, "splmm_dir.txt");
 
         try {
-            addAllToZippedArchive(submission, toolkits, paths, zipFilePath);
+            addAllToZippedArchive(submission, toolkits, paths, zipFilePath, SPLMM_toolkits);
         } finally {
             manifestTmp.toFile().delete();
             mainCompTmp.toFile().delete();
             scOptsTmp.toFile().delete();
             splmmOptsTmp.toFile().delete();
-            mainCompDirTmp.toFile().delete();
+            splmm_dirTmp.toFile().delete();
         }
         
         return zipFilePath;
     }
     
     
-    private static void addAllToZippedArchive(JsonObject submission, Map<Path, String> toolkits, Map<Path, String> starts, Path zipFilePath) throws IOException {
+    private static void addAllToZippedArchive(JsonObject submission, Map<Path, String> toolkits, Map<Path, String> starts, Path zipFilePath, Map<Path, String> SPLMM_toolkit) throws IOException {
         try (ZipArchiveOutputStream zos = new ZipArchiveOutputStream(zipFilePath.toFile())) {
             for (Path tk : toolkits.keySet()) {
                 final String rootEntryName = toolkits.get(tk);
+                Files.walkFileTree(tk, new ToolkitCopy(zos, rootEntryName, tk, submission));
+            }
+            for (Path tk : SPLMM_toolkit.keySet()) {
+                final String rootEntryName = SPLMM_toolkit.get(tk);
                 Files.walkFileTree(tk, new ToolkitCopy(zos, rootEntryName, tk, submission));
             }
             for (Path start : starts.keySet()) {
