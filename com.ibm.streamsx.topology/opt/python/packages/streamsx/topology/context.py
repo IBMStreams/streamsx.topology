@@ -1058,6 +1058,11 @@ class ConfigParams(object):
     .. versionadded:: 1.12.10
     """
 
+    _SPLMM_OPTIONS = 'topology.internal.splmm_options'
+    """
+    TBD
+    """
+
 
 class JobConfig(object):
     """

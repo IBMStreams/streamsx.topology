@@ -198,4 +198,6 @@ public interface ContextProperties {
      * @see https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.3.0/com.ibm.streams.ref.doc/doc/sc.html
      */
     String SC_OPTIONS = "topology.sc.options";
+
+    String _SPLMM_OPTIONS = "topology.internal.splmm_options";
 }

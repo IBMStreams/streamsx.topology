@@ -28,6 +28,9 @@ def main(args=None):
     cmd_args = _parse_args(args)
     topo = _create_topo(cmd_args)
 
+    # Add main composite toolkit
+    _add_toolkits(cmd_args, topo)
+
     # Get dependencies for app, if any at all
     dependencies = _parse_dependencies()
     # if dependencies and if -t arg, find & add local toolkits
@@ -39,7 +42,6 @@ def main(args=None):
         # Check if any dependencies are in the passed in toolkits, if so add them
         _add_local_toolkits(tool_kits, dependencies, topo, verify_arg = False if cmd_args.disable_ssl_verify else None)
 
-    _add_toolkits(cmd_args, topo)
     sr = _submit_build(cmd_args, topo)
     return _move_bundle(cmd_args, sr)
 
@@ -285,7 +287,16 @@ def _sc_options(cmd_args, cfg):
     if cmd_args.data_directory:
         args.append('--data-directory=' + str(cmd_args.data_directory))
     if cmd_args.compile_time_args: # sc -M my::App hello=a,b,c foo=bar -> compile_time_args = ['hello=a,b,c', 'foo=bar']
-        args.extend(cmd_args.compile_time_args)
+        # Check if '=' is NOT present in the compile_time_args, this implies (maybe) that we have a .splmm file
+        if any('=' not in arg for arg in cmd_args.compile_time_args):
+            # If we have both SPLMM args and SPL CompileTimeValue args, then compiling a .splmm file
+            cfg[ConfigParams._SPLMM_OPTIONS] = cmd_args.compile_time_args
+            print(cmd_args.compile_time_args)
+            # Just the SPL CompileTimeValue args
+            args.extend([x for x in cmd_args.compile_time_args if '=' in x])
+        else:
+            # No SPLMM args, so compiling a regular .spl file
+            args.extend(cmd_args.compile_time_args)
     if args:
         cfg[ConfigParams.SC_OPTIONS] = args
 
@@ -306,6 +317,8 @@ def _is_likely_toolkit(tkdir):
     for dirpath, dirnames, filenames in os.walk(tkdir):
         for fn in filenames:
             if fn.endswith('.spl'):
+                return True
+            if fn.endswith('.splmm'):
                 return True
             if fn.endswith('._cpp.cgt'):
                 return True

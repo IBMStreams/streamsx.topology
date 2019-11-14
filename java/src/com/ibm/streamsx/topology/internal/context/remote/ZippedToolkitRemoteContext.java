@@ -104,6 +104,8 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         
         JsonObject graph = graph(submission);
         
+        // System.out.println(graph.toString());
+
         if (mainCompositeKind == null) {
             String namespace = splAppNamespace(graph);
             String name = splAppName(graph);
@@ -128,13 +130,17 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         Path manifestTmp = Files.createTempFile("manifest_tk", ".txt");
         Path mainCompTmp = Files.createTempFile("main_composite", ".txt");
         Path scOptsTmp = Files.createTempFile("sc_opts", ".txt");
+        Path splmmOptsTmp = Files.createTempFile("splmm_opts", ".txt");
+        Path mainCompDirTmp = Files.createTempFile("mainCompDir", ".txt");
         
+        // String[] mainCompDir1 = {""};
+        // Map<Path,String> mainCompDir = new HashMap<>();
+
         // tkManifest is the list of toolkits contained in the archive
         try (PrintWriter tkManifest = new PrintWriter(manifestTmp.toFile(), "UTF-8")) {
             if (tkName != null)
                 tkManifest.println(tkName);
             tkManifest.println(topologyToolkitName);
-            
             JsonObject configSpl = object(graph, CONFIG, "spl");
             if (configSpl != null) {
                 objectArray(configSpl, "toolkits",
@@ -144,11 +150,31 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                                 String tkRootName = tkRoot.getName();
                                 tkManifest.println(tkRootName);
                                 toolkits.put(tkRoot.toPath(), tkRootName);
+
+                                // if (deploy(submission).has(ContextProperties._SPLMM_OPTIONS)) {
+                                //     // if (mainCompDir1[0] == "") {
+                                //     //     mainCompDir1[0] = tkRootName;
+                                //     //     // System.out.println("------------- " + tkRoot.toPath().toString() + " -------------");
+                                //     //     // System.out.println("------------- " + tkRoot.getName() + " -------------");
+                                //     // }
+                                //     if (mainCompDir.isEmpty()) {
+                                //         mainCompDir.put(tkRoot.toPath(), tkRootName);
+                                //         // System.out.println("------------- " + tkRoot.toPath().toString() + " -------------");
+                                //         // System.out.println("------------- " + tkRoot.getName() + " -------------");
+                                //     }
+                                // } else {
+                                //     tkManifest.println(tkRootName);
+                                //     toolkits.put(tkRoot.toPath(), tkRootName);
+                                //     System.out.println(" TKS ------------- " + tkRoot.toPath().toString() + " -------------");
+                                //     System.out.println(" TKS------------- " + tkRoot.getName() + " -------------");
+                                // }
                             }
                             }
                         );
             }
         }
+
+        // String mainCompDir = mainCompDir1[0];
         
         // mainComposite is a string of the namespace and the main composite.
         // This is used by the Makefile
@@ -180,7 +206,42 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                 }
             }
         }
-        
+
+        if (deploy.has(ContextProperties._SPLMM_OPTIONS)) {
+            List<String> splmmOptions;
+            JsonElement opts = deploy.get(ContextProperties._SPLMM_OPTIONS);
+            if (opts.isJsonArray()) {
+                splmmOptions = new ArrayList<>();
+                for (JsonElement e : opts.getAsJsonArray()) {
+                    splmmOptions.add(e.getAsString());
+                    // System.out.println(e.getAsString());
+                }
+            } else {
+                splmmOptions = Collections.singletonList(opts.getAsString());
+            }
+            
+            if (!splmmOptions.isEmpty()) {
+                try (PrintWriter splmmOptsW = new PrintWriter(splmmOptsTmp.toFile(), "UTF-8")) {
+                    for (String splmmOpt : splmmOptions) {
+                        splmmOptsW.print(splmmOpt);
+                        splmmOptsW.print(" ");
+                    }
+                }
+            }
+
+            // if (!mainCompDir.isEmpty()) {
+            //     try (PrintWriter mainCompDirW = new PrintWriter(mainCompDirTmp.toFile(), "UTF-8")) {
+            //         // mainCompDirW.print(mainCompDir);
+            //         for (Path dir : mainCompDir.keySet()) {
+            //             mainCompDirW.print(dir);
+            //         }
+            //     }
+            // }
+        }
+
+        // System.out.println("------------- " + mainCompDir + " -------------");
+        // System.out.println(" TOOLKITS MAP ------------- " + toolkits + " -------------");
+        // System.exit(1);
                
         Path makefile = topologyToolkit.resolve(Paths.get("opt", "client", "remote", "Makefile.template"));
                       
@@ -188,13 +249,19 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         paths.put(mainCompTmp, "main_composite.txt");
         paths.put(scOptsTmp, "sc_opts.txt");
         paths.put(makefile, "Makefile");
-        
+        if (deploy.has(ContextProperties._SPLMM_OPTIONS)) {
+            paths.put(splmmOptsTmp, "splmm_opts.txt");
+            paths.put(mainCompDirTmp, "mainCompDir.txt");
+        }
+
         try {
             addAllToZippedArchive(submission, toolkits, paths, zipFilePath);
         } finally {
             manifestTmp.toFile().delete();
             mainCompTmp.toFile().delete();
             scOptsTmp.toFile().delete();
+            splmmOptsTmp.toFile().delete();
+            mainCompDirTmp.toFile().delete();
         }
         
         return zipFilePath;
