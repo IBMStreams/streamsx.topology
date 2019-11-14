@@ -24,7 +24,4 @@ all:
             	fi; \
 		${STREAMS_INSTALL}/bin/spl-make-toolkit -i $${toolkit} `cat splmm_opts.txt`; \
 	done;
-	#if [ -f mainCompDir.txt ]; then \
-	#	${STREAMS_INSTALL}/bin/spl-make-toolkit -i `cat mainCompDir.txt` `cat splmm_opts.txt`; \
-	#fi; \
 	${STREAMS_INSTALL}/bin/sc -M `cat main_composite.txt` --no-toolkit-indexing -t ${STREAMS_INSTALL}/toolkits${ADDL_TKS} --output-directory ${OUT} ${THREAD_OPTION} `cat sc_opts.txt`
