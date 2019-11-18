@@ -150,7 +150,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                                 // 'spl-make-toolkit -i <SPLMM_APP_DIR> `cat splmm_opts.txt`'
                                 // Bc SPLMM app requires arguments, so can't group with other toolkits
                                 if (deploy(submission).has(ContextProperties._SPLMM_OPTIONS)) {
-                                    if (SPLMM_toolkits[0] == null) {
+                                    if (SPLMM_toolkits.isEmpty()) {
                                         splmm_dir[0] = tkRootName;
                                         SPLMM_toolkits.put(tkRoot.toPath(), tkRootName);
                                     } else {
