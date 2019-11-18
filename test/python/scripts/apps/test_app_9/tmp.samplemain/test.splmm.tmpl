@@ -1,0 +1,61 @@
+namespace samplemain;
+
+use test_tk_1.test1::f1 ;
+use test_tk_3.test1::f3 ;
+
+<%  # switch to Perl scripting mode
+    # parse arguments, do error checking
+    use integer;
+    my $numLevels = $ARGV[0];
+    unless(defined($numLevels) and $numLevels>0) {
+       print STDERR "ERROR: Please specify the number ",
+                    "of tree levels (a positive number).\n";
+       exit 1;
+    }
+%>
+
+public composite main {
+    graph
+
+    stream<int32 a> A = Beacon() { output A: a = f1() + f3();}
+
+    stream<rstring data> Src = Beacon() {
+        logic state : mutable int32 i = 0; 
+        param iterations : 10u;
+        output Src : data = (rstring)(++i);
+    }
+
+	stream <rstring message> Hi = Beacon() {
+			param
+				iterations: 5u;
+
+			output
+				Hi: message = getCompileTimeValue((rstring) "foo");
+		}
+
+    // the root node
+    stream<rstring data> Node_0_0 = Filter(Src) {}
+
+    <% # create levels of the tree
+       my @leaves; # collect leaf streams
+       my $n = 1; # num. of nodes at a level
+       for(my $i=1; $i<$numLevels; ++$i) {
+           $n *= 2; # num. of nodes at this level
+           for(my $j=0; $j<$n; ++$j) {
+               my $p = ($i-1)."_".($j/2); # parent
+               my $s = "${i}_${j}"; # self %>
+
+               stream<rstring data> Node_<%=$s%> = Filter(Node_<%=$p%>) {}
+
+               <% # collect last level's streams
+               push @leaves, "Node_${s}" if($i==$numLevels-1);
+           }
+     }
+     my $sinkStreams = join(",",@leaves);
+  %>
+
+  () as Writer = FileSink(<%=$sinkStreams%>) {
+     param file : "Results.txt";
+  }
+  
+}

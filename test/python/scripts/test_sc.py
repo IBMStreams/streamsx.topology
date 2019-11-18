@@ -429,6 +429,25 @@ class TestSC(unittest.TestCase):
         # Check sab doesn't exist
         self._check_no_sab()
 
+    def test_simple_6(self):
+        # Build test_app_9, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_3 w/ version [1.0.0,4.0.0)
+        # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
+        # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 2.0.0
+        path = (my_path / "apps/test_app_9/").resolve()
+        os.chdir(path)
+
+        self._run_sc(self.main_composite, self.local_toolkit_paths_string, compile_time_arguments=['3', 'foo=bar'])
+
+        self._check_sab()
+
+        # Check sab has correct dependencies
+        tk1_name = self.random_name_variable + "test_tk_1"
+        tk3_name = self.random_name_variable + "test_tk_3"
+        req1 = self._LocalToolkit(tk1_name, "3.0.0", None)
+        req2 = self._LocalToolkit(tk3_name, "2.0.0", None)
+        required_dependencies = [req1, req2]
+        self.check_sab_correct_dependencies(self._sab_path(), required_dependencies)
+
     def test_compile_time_args(self):
         # Build test_app_7, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_3 w/ version [1.0.0,4.0.0)
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0

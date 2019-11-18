@@ -218,7 +218,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                 }
             }
 
-            if (splmm_dir[0] != "") {
+            if (splmm_dir[0] != null) {
                 try (PrintWriter splmm_dirW = new PrintWriter(splmm_dirTmp.toFile(), "UTF-8")) {
                     splmm_dirW.print(splmm_dir[0]);
                 }
