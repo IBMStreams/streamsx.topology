@@ -119,7 +119,7 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         Map<Path, String> paths = new HashMap<>();
 
         Map<Path, String> SPLMM_toolkits = new HashMap<>();
-        String[] splmm_dir = {""};
+        String[] splmm_dir = {null};
         
         // Paths to completely copy into the code archive
         Map<Path,String> toolkits = new HashMap<>();
@@ -150,9 +150,12 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                                 // 'spl-make-toolkit -i <SPLMM_APP_DIR> `cat splmm_opts.txt`'
                                 // Bc SPLMM app requires arguments, so can't group with other toolkits
                                 if (deploy(submission).has(ContextProperties._SPLMM_OPTIONS)) {
-                                    if (SPLMM_toolkits.isEmpty()) {
+                                    if (SPLMM_toolkits[0] == null) {
                                         splmm_dir[0] = tkRootName;
                                         SPLMM_toolkits.put(tkRoot.toPath(), tkRootName);
+                                    } else {
+                                        tkManifest.println(tkRootName);
+                                        toolkits.put(tkRoot.toPath(), tkRootName);
                                     }
                                 } else {
                                     tkManifest.println(tkRootName);
