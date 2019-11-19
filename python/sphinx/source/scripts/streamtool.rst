@@ -74,10 +74,15 @@ Usage
 
     streamsx-streamtool getappconfig [-h] [--User user] config-name
 
+    streamsx-streamtool lstoolkit [-h]
+            (--all | --id toolkit-id | --name toolkit-name | --regex toolkit-regex)
+            [--User user]
+
     streamsx-streamtool rmtoolkit [-h]
             (--toolkitid toolkit-id | --toolkitname toolkit-name | --toolkitregex toolkit-regex)
             [--User user]
 
+    streamsx-streamtool uploadtoolkit [-h] --path toolkit-path [--User user]
 
 
 *****************************************
