@@ -712,9 +712,17 @@ def _updateops(instance, cmd_args, rc):
 
     if job:
         if cmd_args.jobConfig:
+            json_result = None
             with open(cmd_args.jobConfig) as fd:
                 job_config = streamsx.topology.context.JobConfig.from_overlays(json.load(fd))
-                job.update_operators(job_config)
+                json_result = job.update_operators(job_config)
+
+            if json_result:
+                file_name = job.name + '_config.json'
+                with open(file_name, 'w') as outfile:
+                    json.dump(json_result, outfile)
+                print('Update operators was started on the {} instance.'.format(instance.id))
+                print('The operator configuration results were written to the following file: {}'.format(file_name))
     else:
         print("The job was not found", file=sys.stderr)
 
