@@ -53,7 +53,7 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 
 @include "../pyspltuple2value.cgt"
 
-           PyObject *ret = pySplProcessTuple(function, value);
+           PyObject *ret = pySplProcessTuple(funcop_->callable(), value);
 
            if (ret == 0) {
                throw SplpyExceptionInfo::pythonError("split");
