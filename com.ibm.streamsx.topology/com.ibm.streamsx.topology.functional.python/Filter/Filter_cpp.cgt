@@ -52,13 +52,13 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 
 @include "../pyspltuple2value.cgt"
 
-             PyObject *ret = pySplProcessTuple(function, splVal);
+             PyObject *ret = pySplProcessTuple(function, value);
 
-             if (ret == 0) {
+             if (ret == NULL) {
                  throw SplpyExceptionInfo::pythonError("filter");
              }
 
-             passed = PyObject_IsTrue(pyReturnVar);
+             passed = PyObject_IsTrue(ret);
 
              Py_DECREF(ret);
 

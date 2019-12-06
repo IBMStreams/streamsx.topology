@@ -40,25 +40,6 @@ namespace streamsx {
 
       public:
 
-    template <class T>
-    static SPL::int64 pyTupleSplit(PyObject * function, T & splVal) {
-
-      SplpyGIL lock;
-
-      // invoke python nested function that calls the application function
-      PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
-
-      if(pyReturnVar == 0){
-         throw SplpyExceptionInfo::pythonError("split");
-      }
-
-      SPL::int64 split;
-      pySplValueFromPyObject(split, pyReturnVar);
-
-      Py_DECREF(pyReturnVar);
-      return split;
-    }
-
     /*
     * Call a function passing the SPL attribute value of type T
     * and fill in the SPL attribute of type R with its result.
