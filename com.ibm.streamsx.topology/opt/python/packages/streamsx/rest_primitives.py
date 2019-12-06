@@ -1035,7 +1035,7 @@ class Job(_ResourceElement):
         """ Adjust a job configuration while the job is running
 
         Arguments:
-            job_config {[JobConfig} -- a job configuration overlay
+            job_config {JobConfig} -- a job configuration overlay
 
         Returns:
             [type] -- [description]
