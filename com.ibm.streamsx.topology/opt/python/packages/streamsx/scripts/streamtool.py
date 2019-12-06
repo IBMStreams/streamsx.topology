@@ -684,6 +684,24 @@ def _uploadtoolkit(instance, cmd_args, rc):
 
     return (rc, return_message)
 
+###########################################
+# updateoperators
+###########################################
+def _updateops_parser(subparsers):
+    update_ops = subparsers.add_parser('updateoperators', help='Adjust a job configuration while the job is running')
+    g1 = update_ops.add_argument_group(title='Job', description='Selects which toolkits will be listed.')
+    group = g1.add_mutually_exclusive_group(required=True)
+    group.add_argument('jobid', help='Specifies a job ID.', nargs='?', metavar='jobid')
+    group.add_argument('--jobname', '-a', help='List all toolkits', metavar='job-name')
+    update_ops.add_argument('--jobConfig', '-g', help='Specifies the name of an external file that defines a job configuration overlay', metavar='file-name')
+    # update_ops.add_argument('--parallelRegionWidth', help='Specifies a parallel region name and its width')
+    _user_arg(update_ops)
+
+def _updateops(instance, cmd_args, rc):
+    return_message = None
+
+    return (rc, return_message)
+
 def run_cmd(args=None):
     cmd_args = _parse_args(args)
 
