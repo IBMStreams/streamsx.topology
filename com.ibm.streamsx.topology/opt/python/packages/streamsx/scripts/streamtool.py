@@ -699,6 +699,24 @@ def _updateops_parser(subparsers):
 
 def _updateops(instance, cmd_args, rc):
     return_message = None
+    job_config = None
+
+    job = None
+
+    if cmd_args.jobid:
+        job = instance.get_job(id=str(cmd_args.jobid))
+    elif cmd_args.jobname:
+        jobs = instance.get_jobs(name=str(cmd_args.jobname))
+        if jobs:
+            job = jobs[0]
+
+    if job:
+        if cmd_args.jobConfig:
+            with open(cmd_args.jobConfig) as fd:
+                job_config = streamsx.topology.context.JobConfig.from_overlays(json.load(fd))
+                job.update_operators(job_config)
+    else:
+        print("The job was not found", file=sys.stderr)
 
     return (rc, return_message)
 
