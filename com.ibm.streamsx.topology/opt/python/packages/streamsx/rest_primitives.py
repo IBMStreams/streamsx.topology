@@ -1031,8 +1031,16 @@ class Job(_ResourceElement):
         """
         return self.rest_client._sc._delegator._cancel_job(self, force)
 
-    def update_operators(self):
-        return self.rest_client._sc._delegator._update_operators(self)
+    def update_operators(self, job_config):
+        """ Adjust a job configuration while the job is running
+
+        Arguments:
+            job_config {[JobConfig} -- a job configuration overlay
+
+        Returns:
+            [type] -- [description]
+        """
+        return self.rest_client._sc._delegator._update_operators(self, job_config)
 
     def get_job_group(self):
         """
@@ -2792,7 +2800,7 @@ class _StreamsRestDelegator(object):
         update_url = self._get_jobs_url() + '/' + job.id
         res = self.rest_client.session.patch(update_url,
                 headers = {'Accept' : 'application/json'},
-                json={'jobConfigurationOverlay':job_options, 'preview':False},
+                json = {'jobConfigurationOverlay':job_options, 'preview':False},
                 verify=self.rest_client.session.verify)
         _handle_http_errors(res)
         if res.status_code != 200:
