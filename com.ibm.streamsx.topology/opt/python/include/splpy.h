@@ -40,29 +40,6 @@ namespace streamsx {
 
       public:
 
-    /*
-    * Call a function passing the SPL attribute value of type T
-    * and return the function return as a boolean
-    * Implementation for function Filter operator.
-    */
-    template <class T>
-    static int pyTupleFilter(PyObject * function, T & splVal) {
-
-      SplpyGIL lock;
-
-      // invoke python nested function that calls the application function
-      PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
-
-      if(pyReturnVar == 0){
-         throw SplpyExceptionInfo::pythonError("filter");
-      }
-
-      int ret = PyObject_IsTrue(pyReturnVar);
-
-      Py_DECREF(pyReturnVar);
-      return ret;
-    }
-
     template <class T>
     static SPL::int64 pyTupleSplit(PyObject * function, T & splVal) {
 
