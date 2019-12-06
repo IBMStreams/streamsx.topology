@@ -692,7 +692,7 @@ def _updateops_parser(subparsers):
     g1 = update_ops.add_argument_group(title='Job', description='One of these options must be chosen.')
     group = g1.add_mutually_exclusive_group(required=True)
     group.add_argument('jobid', help='Specifies a job ID.', nargs='?', metavar='jobid')
-    group.add_argument('--jobname', '-a', help='List all toolkits', metavar='job-name')
+    group.add_argument('--jobname', help='Specifies the name of the job.', metavar='job-name')
     update_ops.add_argument('--jobConfig', '-g', help='Specifies the name of an external file that defines a job configuration overlay', metavar='file-name')
     # update_ops.add_argument('--parallelRegionWidth', help='Specifies a parallel region name and its width')
     _user_arg(update_ops)
@@ -710,21 +710,22 @@ def _updateops(instance, cmd_args, rc):
         if jobs:
             job = jobs[0]
 
-    if job:
-        if cmd_args.jobConfig:
-            json_result = None
-            with open(cmd_args.jobConfig) as fd:
-                job_config = streamsx.topology.context.JobConfig.from_overlays(json.load(fd))
-                json_result = job.update_operators(job_config)
-
-            if json_result:
-                file_name = job.name + '_config.json'
-                with open(file_name, 'w') as outfile:
-                    json.dump(json_result, outfile)
-                print('Update operators was started on the {} instance.'.format(instance.id))
-                print('The operator configuration results were written to the following file: {}'.format(file_name))
-    else:
+    if not job:
         print("The job was not found", file=sys.stderr)
+
+    if cmd_args.jobConfig:
+        json_result = None
+        with open(cmd_args.jobConfig) as fd:
+            job_config = streamsx.topology.context.JobConfig.from_overlays(json.load(fd))
+            json_result = job.update_operators(job_config)
+
+        if json_result:
+            file_name = str(job.name) + '_config.json'
+            with open(file_name, 'w') as outfile:
+                json.dump(json_result, outfile)
+
+            print('Update operators was started on the {} instance.'.format(instance.id))
+            print('The operator configuration results were written to the following file: {}'.format(file_name))
 
     return (rc, return_message)
 
