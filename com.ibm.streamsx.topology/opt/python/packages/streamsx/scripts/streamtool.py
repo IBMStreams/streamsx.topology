@@ -689,7 +689,7 @@ def _uploadtoolkit(instance, cmd_args, rc):
 ###########################################
 def _updateops_parser(subparsers):
     update_ops = subparsers.add_parser('updateoperators', help='Adjust a job configuration while the job is running')
-    g1 = update_ops.add_argument_group(title='Job', description='Selects which toolkits will be listed.')
+    g1 = update_ops.add_argument_group(title='Job', description='One of these options must be chosen.')
     group = g1.add_mutually_exclusive_group(required=True)
     group.add_argument('jobid', help='Specifies a job ID.', nargs='?', metavar='jobid')
     group.add_argument('--jobname', '-a', help='List all toolkits', metavar='job-name')

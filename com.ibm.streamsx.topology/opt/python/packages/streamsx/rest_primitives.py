@@ -1038,7 +1038,7 @@ class Job(_ResourceElement):
             job_config {JobConfig} -- a job configuration overlay
 
         Returns:
-            [type] -- [description]
+            [JSON] -- The result of applying the new jobConfig?
         """
         return self.rest_client._sc._delegator._update_operators(self, job_config)
 
@@ -2805,6 +2805,7 @@ class _StreamsRestDelegator(object):
         _handle_http_errors(res)
         if res.status_code != 200:
             raise ValueError(str(res))
+        return res.json()['results']
 
 class Toolkit(_ResourceElement):
     """IBM Streams toolkit.
