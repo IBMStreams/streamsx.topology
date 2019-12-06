@@ -106,27 +106,6 @@ namespace streamsx {
     }
 
 
-    // Python hash of an SPL value
-    // Python hashes are signed integer values
-    template <class T>
-    static SPL::int64 pyTupleHash(PyObject * function, T & splVal) {
-
-      SplpyGIL lock;
-
-      PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
-
-      if (pyReturnVar == 0){
-        throw SplpyExceptionInfo::pythonError("hash");
-      }
-
-      // construct integer from return value
-      SPL::int64 hash;
-      pySplValueFromPyObject(hash, pyReturnVar);
-      Py_DECREF(pyReturnVar);
-      return hash;
-   }
-
-
     /**
      *  Return a Python tuple containing the attribute
      *  names for a port in order.

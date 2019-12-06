@@ -50,9 +50,17 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 #endif
 
         try {
+          SplpyGIL lock;
 @include "../pyspltuple2value.cgt"
 
-            _hash = streamsx::topology::Splpy::pyTupleHash(funcop_->callable(), value);
+          PyObject *ret = pySplProcessTuple(funcop_->callable(), value);
+
+          if (ret == NULL) {
+              throw SplpyExceptionInfo::pythonError("hash");
+          }
+
+          pySplValueFromPyObject(_hash, ret);
+          Py_DECREF(ret);
 
         } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
             SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
