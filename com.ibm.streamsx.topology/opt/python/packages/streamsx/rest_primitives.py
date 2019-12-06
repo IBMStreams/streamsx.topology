@@ -1031,6 +1031,9 @@ class Job(_ResourceElement):
         """
         return self.rest_client._sc._delegator._cancel_job(self, force)
 
+    def update_operators(self):
+        return None
+
     def get_job_group(self):
         """
         Get the job group associated with this job.
@@ -2430,6 +2433,32 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         cancel_url = self._get_jobs_url() + '/' + str(job_id)
         headers = { 'Accept' : 'application/json'}
         res = self.rest_client.session.delete(cancel_url, headers=headers)
+        _handle_http_errors(res)
+        return res.json()
+
+    def update_operators(self, job_config, job_id=None, job_name=None):
+        if job_config is None:
+            raise ValueError("Please specify a job config when updating a job's operator.")
+
+        if job_id is None and job_name is None:
+            raise ValueError("Please specify either the job id or job name when cancelling a job.")
+
+        if job_id is None:
+            # Get the job id using the job name, since it's required by the REST API
+            res = self.rest_client.make_request(self.get_jobs_url())
+            _handle_http_errors(res)
+            for job in res['resources']:
+                if job['name'] == job_name:
+                    # Find the correct job_id, set it
+                    job_id = job['id']
+
+        job_options = job_config.as_overlays()
+        files = [('job_options', ('job_options', json.dumps(job_options), 'application/json'))]
+
+        # Update the job operators using the job id
+        update_url = self._get_jobs_url() + '/' + str(job_id)
+        headers = { 'Accept' : 'application/json'}
+        res = self.rest_client.session.patch(update_url, headers=headers, files=files)
         _handle_http_errors(res)
         return res.json()
 
