@@ -41,25 +41,6 @@ namespace streamsx {
       public:
 
     /*
-     * Call the function passing an SPL attribute
-     * converted to a Python object and discard the return 
-     * Implementation for function ForEach operator.
-     */
-    template <class T>
-    static void pyTupleForEach(PyObject * function, T & splVal) {
-      SplpyGIL lock;
-
-      // invoke python nested function that calls the application function
-      PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
-
-      if(pyReturnVar == 0){
-        throw SplpyExceptionInfo::pythonError("for_each");
-      }
-
-      Py_DECREF(pyReturnVar);
-    }
-    
-    /*
     * Call a function passing the SPL attribute value of type T
     * and return the function return as a boolean
     * Implementation for function Filter operator.
