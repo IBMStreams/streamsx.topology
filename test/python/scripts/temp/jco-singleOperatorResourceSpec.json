@@ -1,0 +1,21 @@
+{
+  "jobConfigOverlays": [
+    {
+     "operatorConfigs": {
+       "operators": [
+         {
+           "nameSpec": "Link_2*",
+            "memorySpecification": {
+              "resourceRequest": 2,
+              "resourceLimit": 2
+            },
+            "cpuSpecification": {
+             "resourceRequest": 0.3,
+              "resourceLimit": 0.3
+            }
+         }
+       ]
+     }
+    }
+  ]
+}
