@@ -1,0 +1,16 @@
+{
+  "jobConfigOverlays": [
+    {
+      "configInstructions": {
+        "adjustmentSection":  [
+          {
+            "targetParallelRegion": {
+              "regionName": "Link_2",
+              "newWidth": 3
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

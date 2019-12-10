@@ -720,7 +720,7 @@ def _updateops(instance, cmd_args, rc):
             json_result = job.update_operators(job_config)
 
         if json_result:
-            file_name = str(job.name) + '_config.json'
+            file_name = str(job.name) + '_' + str(job.id) + '_config.json'
             with open(file_name, 'w') as outfile:
                 json.dump(json_result, outfile)
 
@@ -751,6 +751,7 @@ def run_cmd(args=None):
     "rmtoolkit": _rmtoolkit,
     "lstoolkit": _lstoolkit,
     "uploadtoolkit": _uploadtoolkit,
+    "updateops": _updateops,
     }
 
     extra_info = None
@@ -789,6 +790,7 @@ def _parse_args(args):
     _rmtoolkit_parser(subparsers)
     _lstoolkit_parser(subparsers)
     _uploadtoolkit_parser(subparsers)
+    _updateops_parser(subparsers)
 
     return cmd_parser.parse_args(args)
 
