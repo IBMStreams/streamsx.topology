@@ -71,9 +71,9 @@ class Testupdateoperator(unittest.TestCase):
         self.jobs_to_cancel.extend([job])
         self.assertEqual(rc, 0)
 
-        file_name = str(job.name) + '_' + str(job.id) + '_config.json'
-        newRC, val = self._update_operators(job.id, str(new_config))
-        self.assertEqual(rc, 0)
+        # file_name = str(job.name) + '_' + str(job.id) + '_config.json'
+        # newRC, val = self._update_operators(job.id, str(new_config))
+        # self.assertEqual(rc, 0)
 
-        self.assertTrue(os.path.exists(file_name))
+        # self.assertTrue(os.path.exists(file_name))
 
