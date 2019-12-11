@@ -5,11 +5,14 @@
         "adjustmentSection":  [
           {
             "targetParallelRegion": {
-              "regionName": "Link_2",
+              "regionName": "Link*",
               "newWidth": 3
             }
           }
         ]
+      },
+      "operationConfig": {
+        "forcePeStopped": true
       }
     }
   ]

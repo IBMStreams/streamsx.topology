@@ -751,7 +751,7 @@ def run_cmd(args=None):
     "rmtoolkit": _rmtoolkit,
     "lstoolkit": _lstoolkit,
     "uploadtoolkit": _uploadtoolkit,
-    "updateops": _updateops,
+    "updateoperators": _updateops,
     }
 
     extra_info = None
