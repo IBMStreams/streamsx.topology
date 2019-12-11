@@ -4,7 +4,7 @@
      "operatorConfigs": {
        "operators": [
          {
-           "nameSpec": "Link_2*",
+           "nameSpec": "Link*",
             "memorySpecification": {
               "resourceRequest": 2,
               "resourceLimit": 2

@@ -162,8 +162,8 @@ class _ResourceElement(object):
 def _handle_http_errors(res):
     # HTTP error responses are 4xx, server errors are 5xx
     if res.status_code >= 400:
-        #logger.error("Response returned with error code: " + str(res.status_code))
-        #logger.error(res.text)
+        logger.error("Response returned with error code: " + str(res.status_code))
+        logger.error(res.text)
         res.raise_for_status()
 
 
@@ -2791,13 +2791,13 @@ class _StreamsRestDelegator(object):
 
         return False
 
-    def update_operators(self, job, job_config):
+    def _update_operators(self, job, job_config):
         self.rest_client._block_ssl_warn()
 
         job_options = job_config.as_overlays()
 
         # Update the job operators using the job id
-        update_url = self._get_jobs_url() + '/' + job.id
+        update_url = job.instance + '/jobs/' + job.id
         res = self.rest_client.session.patch(update_url,
                 headers = {'Accept' : 'application/json'},
                 json = {'jobConfigurationOverlay':job_options, 'preview':False},
@@ -2805,7 +2805,9 @@ class _StreamsRestDelegator(object):
         _handle_http_errors(res)
         if res.status_code != 200:
             raise ValueError(str(res))
-        return res.json()['results']
+        print(res.json)
+        return None
+        # return res.json()['results']
 
 class Toolkit(_ResourceElement):
     """IBM Streams toolkit.
