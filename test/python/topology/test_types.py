@@ -25,11 +25,10 @@ class TestTypes(unittest.TestCase):
       self.assertEqual(Timestamp, type(ts))
       self.assertTrue(isinstance(ts, tuple))
 
-      t = ts.tuple()
-      self.assertEqual(3, len(t))
-      self.assertEqual(s, t[0])
-      self.assertEqual(ns, t[1])
-      self.assertEqual(mid, t[2])
+      self.assertEqual(3, len(ts))
+      self.assertEqual(s, ts[0])
+      self.assertEqual(ns, ts[1])
+      self.assertEqual(mid, ts[2])
 
       ts2 = Timestamp(ts.seconds, ts.nanoseconds, ts.machine_id)
       self.assertEqual(ts, ts2)
