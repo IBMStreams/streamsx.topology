@@ -694,7 +694,7 @@ def _updateops_parser(subparsers):
     group.add_argument('jobid', help='Specifies a job ID.', nargs='?', metavar='jobid')
     group.add_argument('--jobname', help='Specifies the name of the job.', metavar='job-name')
     update_ops.add_argument('--jobConfig', '-g', help='Specifies the name of an external file that defines a job configuration overlay', metavar='file-name')
-    # update_ops.add_argument('--parallelRegionWidth', help='Specifies a parallel region name and its width')
+    update_ops.add_argument('--parallelRegionWidth', help='Specifies a parallel region name and its width')
     _user_arg(update_ops)
 
 def _updateops(instance, cmd_args, rc):
@@ -711,13 +711,37 @@ def _updateops(instance, cmd_args, rc):
             job = jobs[0]
 
     if not job:
-        print("The job was not found", file=sys.stderr)
+        return (1, "The job was not found")
 
     if cmd_args.jobConfig:
         json_result = None
         with open(cmd_args.jobConfig) as fd:
-            job_config = streamsx.topology.context.JobConfig.from_overlays(json.load(fd))
-            json_result = job.update_operators(job_config)
+            job_config_json = json.load(fd)
+    else:
+        job_config_json = {}
+
+    # Overrides the targetParallelRegion if already present in the JCO
+    if cmd_args.parallelRegionWidth:
+        arr = cmd_args.parallelRegionWidth.split('=')
+        name = arr[0]
+        width = arr[1]
+
+        entry = {'targetParallelRegion': {'regionName': name, 'newWidth': int(width)}}
+
+        JCO1 = job_config_json['jobConfigOverlays'][0]
+        if 'configInstructions' in JCO1:
+            temp2 = JCO1['configInstructions']
+            if 'adjustmentSection' in temp2:
+                temp3 = temp2['adjustmentSection']
+                temp3.append(entry)
+            else:
+                temp2['adjustmentSection'] = [entry]
+        else:
+            JCO1['configInstructions'] = {'adjustmentSection': [entry]}
+
+    if job_config_json:
+        job_config = streamsx.topology.context.JobConfig.from_overlays(json.load(fd))
+        json_result = job.update_operators(job_config)
 
         if json_result:
             file_name = str(job.name) + '_' + str(job.id) + '_config.json'
