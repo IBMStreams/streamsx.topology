@@ -2794,7 +2794,7 @@ class _StreamsRestDelegator(object):
     def _update_operators(self, job, job_config):
         self.rest_client._block_ssl_warn()
 
-        job_options = job_config.as_overlays()
+        job_options = job_config.as_overlays() if job_config else {}
 
         # Update the job operators using the job id
         update_url = job.instance + '/jobs/' + job.id
@@ -2805,7 +2805,7 @@ class _StreamsRestDelegator(object):
         _handle_http_errors(res)
         if res.status_code != 200:
             raise ValueError(str(res))
-        print(res.json)
+        print(res.json())
         return None
         # return res.json()['results']
 
