@@ -196,13 +196,12 @@ class TestSPL(unittest.TestCase):
         topo = Topology()
         s = topo.source([(1,ts1), (2,dt1)])
         s = s.map(lambda x : x, schema=ts_schema)
-        as_ts = s.map(lambda x : x.ts.tuple())
-        s.print()
+        as_ts = s.map(lambda x : x.ts)
 
         tester = Tester(topo)
         tester.tuple_check(s, ts_check)
         tester.tuple_count(s, 2)
-        tester.contents(as_ts, [ts1.tuple(), ts2.tuple()])
+        tester.contents(as_ts, [ts1, ts2])
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_custom_literal(self):
