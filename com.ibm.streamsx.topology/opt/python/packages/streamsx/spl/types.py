@@ -148,7 +148,7 @@ def _get_timestamp_tuple(ts):
     Handles input being a datetime or a Timestamp.
     """
     if isinstance(ts, datetime.datetime):    
-        return Timestamp.from_datetime(ts).tuple()
+        return Timestamp.from_datetime(ts)
     elif isinstance(ts, Timestamp):    
         return ts
     raise TypeError('Timestamp or datetime.datetime required')
