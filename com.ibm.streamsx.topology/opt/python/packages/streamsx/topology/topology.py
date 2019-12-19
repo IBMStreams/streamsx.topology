@@ -650,8 +650,13 @@ class Topology(object):
         .. versionchanged:: 2.0
             Type hints are used to define the returned stream schema.
         """
+        import streamsx.topology.composite
+        if isinstance(func, streamsx.topology.composite.Source):
+            return func._add(self, name)
+
         _name = name
         hints = streamsx._streams._hints.schema_iterable(func, self)
+
         if inspect.isroutine(func) or callable(func):
             pass
         else:
@@ -1063,11 +1068,13 @@ class Stream(_placement._Placement, object):
         """
         Sends information as a stream to an external system.
 
-        For each tuple `t` on the stream ``func(t)`` is called.
-        
-        Args:
-            func: A callable that takes a single parameter for the tuple and returns None.
-            name(str): Name of the stream, defaults to a generated name.
+        The transformation defined by `func` is a callable
+        or a composite transformation.
+
+        .. rubric:: Callable transformation
+
+        If `func` is callable then for each tuple `t` on this
+        stream ``func(t)`` is called.
 
         If invoking ``func`` for a tuple on the stream raises an exception
         then its processing element will terminate. By default the processing
@@ -1077,6 +1084,17 @@ class Stream(_placement._Placement, object):
         by return a true value from its ``__exit__`` method. When an
         exception is suppressed no further processing occurs for the
         input tuple that caused the exception.
+
+        .. rubric:: Composite transformation
+
+        A composite transformation is an instance of :py:class:`~streamsx.topology.composite.ForEach`. Composites allow the application developer to use
+        the standard functional style of the topology api while allowing
+        allowing expansion of a `for_each` transform to multiple basic
+        transformations.
+        
+        Args:
+            func: A callable that takes a single parameter for the tuple and returns None.
+            name(str): Name of the stream, defaults to a generated name.
 
         Returns:
             streamsx.topology.topology.Sink: Stream termination.
@@ -1089,7 +1107,13 @@ class Stream(_placement._Placement, object):
 
         .. versionchanged:: 1.7
             Now returns a :py:class:`Sink` instance.
+        .. versionchanged:: 2.0
+            Support for type hints and composite transformations.
         """
+        import streamsx.topology.composite
+        if isinstance(func, streamsx.topology.composite.ForEach):
+            return func._add(self, name)
+
         streamsx._streams._hints.check_for_each(func, self)
         sl = _SourceLocation(_source_info(), 'for_each')
         _name = self.topology.graph._requested_name(name, action='for_each', func=func)
@@ -1305,6 +1329,11 @@ class Stream(_placement._Placement, object):
         """
         Maps each tuple from this stream into 0 or 1 stream tuples.
 
+        The transformation defined by `func` is a callable
+        or a composite transformation.
+
+        .. rubric:: Callable transformation
+
         For each tuple on this stream ``result = func(tuple)`` is called.
         If `result` is not `None` then the result will be submitted
         as a tuple on the returned stream. If `result` is `None` then
@@ -1320,6 +1349,13 @@ class Stream(_placement._Placement, object):
         * ``json`` or :py:const:`~streamsx.topology.schema.CommonSchema.Json` - A stream of JSON objects: ``result`` must be convertable to a JSON object using `json` package.
         * :py:const:`~streamsx.topology.schema.StreamSchema` - A structured stream. `result` must be a `dict` or (Python) `tuple`. When a `dict` is returned the outgoing stream tuple attributes are set by name, when a `tuple` is returned stream tuple attributes are set by position.
         * string value - Equivalent to passing ``StreamSchema(schema)``
+
+        .. rubric:: Composite transformation
+
+        A composite transformation is an instance of :py:class:`~streamsx.topology.composite.Map`. Composites allow the application developer to use
+        the standard functional style of the topology api while allowing
+        allowing expansion of a `map` transform to multiple basic
+        transformations.
 
         Args:
             func: A callable that takes a single parameter for the tuple.
@@ -1367,6 +1403,10 @@ class Stream(_placement._Placement, object):
         .. versionadded:: 1.8 Support for submitting `dict` objects as stream tuples to a structured stream (in addition to existing support for `tuple` objects).
         .. versionchanged:: 1.11 `func` is optional.
         """
+        import streamsx.topology.composite
+        if isinstance(func, streamsx.topology.composite.Map):
+            return func._add(self, schema, name)
+
         hints = None
         if func is not None:
             hints = streamsx._streams._hints.check_map(func, self)
@@ -2523,3 +2563,4 @@ class Sink(_placement._Placement, object):
 
     def _op(self):
         return self.__op
+
