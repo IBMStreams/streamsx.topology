@@ -87,7 +87,7 @@ class EESMSourceM(object):
         return exc_type == ValueError
 
 class EESMClass(object):
-    def __call__(self):
+    def __call__(self, t):
         return None
 
 class EESMClassM(object):
