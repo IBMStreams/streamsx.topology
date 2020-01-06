@@ -7,6 +7,12 @@ from streamsx.topology.topology import *
 def f42():
     pass
 
+class cool_source(object):
+    def __init__(self):
+        pass
+    def __call__(self):
+        return []
+
 class cool_class(object):
     def __init__(self):
         pass
@@ -49,11 +55,11 @@ class TestNames(unittest.TestCase):
      s3a = topo.source(lambda : [])
      self.assertEqual(s3a.name, "source_lambda_2")
 
-     s4 = topo.source(cool_class())
-     self.assertEqual(s4.name, "cool_class")
+     s4 = topo.source(cool_source())
+     self.assertEqual(s4.name, "cool_source")
 
-     s4a = topo.source(cool_class())
-     self.assertEqual(s4a.name, "cool_class_2")
+     s4a = topo.source(cool_source())
+     self.assertEqual(s4a.name, "cool_source_2")
 
      s5 = topo.source([])
      self.assertEqual(s5.name, "list_2")
@@ -80,14 +86,14 @@ class TestNames(unittest.TestCase):
      self.assertEqual(s9.category, 'Analytics')
 
      s10 = s6.map(cool_class)
-     self.assertIs(s10, topo['cool_class_3'])
-     self.assertEqual(s10.name, "cool_class_3")
+     self.assertIs(s10, topo['cool_class'])
+     self.assertEqual(s10.name, "cool_class")
 
      s11 = s6.flat_map(cool_class, name="mYFM")
      self.assertEqual(s11.name, "mYFM")
      self.assertIs(s11, topo['mYFM'])
      s12 = s6.flat_map(cool_class)
-     self.assertEqual(s12.name, "cool_class_4")
+     self.assertEqual(s12.name, "cool_class_2")
      
      s12.for_each(lambda x : None)
      s12.category = 'DB'

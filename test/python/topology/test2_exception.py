@@ -41,6 +41,8 @@ class ExcOnEnter(EnterExit):
         super(ExcOnEnter,self).__enter__()
         raise ValueError('INTENTIONAL ERROR: __enter__ has failed!')
 
+class ExcOnEnterSource(ExcOnEnter):
+    def __call__(self): return []
 
 class BadData(EnterExit):
     def __call__(self, t):
@@ -257,7 +259,7 @@ class TestExceptions(TestBaseExceptions):
     def test_exc_on_enter_source(self):
         """Test exception on enter.
         """
-        self._run_app(data=ExcOnEnter(self.tf))
+        self._run_app(data=ExcOnEnterSource(self.tf))
 
         self._result(3)
 
