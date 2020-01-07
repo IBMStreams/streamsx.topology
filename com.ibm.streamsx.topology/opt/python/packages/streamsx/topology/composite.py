@@ -4,6 +4,8 @@
 
 """
 Composite transformations.
+
+.. versionadded:: 1.14
 """
 
 
@@ -13,6 +15,7 @@ import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
 
 from abc import ABC, abstractmethod
+from typing import Optional
 import streamsx.topology.topology
 
 class Composite(ABC):
@@ -83,13 +86,13 @@ class Source(Composite):
         return s
 
     @abstractmethod
-    def populate(self, topology:streamsx.topology.topology.Topology, name, **options) -> streamsx.topology.topology.Stream:
+    def populate(self, topology:streamsx.topology.topology.Topology, name:Optional[str], **options) -> streamsx.topology.topology.Stream:
         """
         Populate the topology with this composite source.
 
         Args:
-            topology(Topology): Topology containing the source.
-            name(str): Name passed into ``source``.
+            topology: Topology containing the source.
+            name: Name passed into ``source``.
             **options: Future options passed to ``source``.
 
         Returns:
@@ -125,14 +128,15 @@ class Map(Composite):
         return s
 
     @abstractmethod
-    def populate(self, topology:streamsx.topology.topology.Topology, stream:streamsx.topology.topology.Stream, schema, name, **options) -> streamsx.topology.topology.Stream:
+    def populate(self, topology:streamsx.topology.topology.Topology, stream:streamsx.topology.topology.Stream, schema, name:Optional[str], **options) -> streamsx.topology.topology.Stream:
         """
         Populate the topology with this composite map transformation.
 
         Args:
-            topology(Topology): Topology containing the composite map.
-            stream(Stream): Stream to be transformed.
-            name(str): Name passed into ``map``.
+            topology: Topology containing the composite map.
+            stream: Stream to be transformed.
+            schema: Schema passed into ``map``.
+            name: Name passed into ``map``.
             **options: Future options passed to ``map``.
 
         Returns:
@@ -155,14 +159,14 @@ class ForEach(Composite):
         return s
 
     @abstractmethod
-    def populate(self, topology, stream, name, **options):
+    def populate(self, topology:streamsx.topology.topology.Topology, stream:streamsx.topology.topology.Stream, name:Optional[str], **options) -> streamsx.topology.topology.Sink:
         """
         Populate the topology with this composite for each transformation.
 
         Args:
-            topology(Topology): Topology containing the composite map.
-            stream(Stream): Stream to be transformed.
-            name(str): Name passed into ``for_each``.
+            topology: Topology containing the composite map.
+            stream: Stream to be transformed.
+            name: Name passed into ``for_each``.
             **options: Future options passed to ``for_each``.
 
         Returns:
