@@ -1,6 +1,10 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2019
+# Copyright IBM Corp. 2019,2020
+
+"""
+Composite transformations.
+"""
 
 
 __all__ = [ 'Source', 'Map', 'ForEach']
@@ -13,7 +17,7 @@ import streamsx.topology.topology
 
 class Composite(ABC):
     """
-    Composite transformationss support a single logical transformation
+    Composite transformations support a single logical transformation
     being a composite of one or more basic transformations.
 
     A composite transformation is implemented as a sub-class
@@ -83,6 +87,11 @@ class Source(Composite):
         """
         Populate the topology with this composite source.
 
+        Args:
+            topology(Topology): Topology containing the source.
+            name(str): Name passed into ``source``.
+            **options: Future options passed to ``source``.
+
         Returns:
             Stream: Single stream representing the source.
         """
@@ -97,8 +106,7 @@ class Map(Composite):
     to create a stream that is composed of one or more basic transformations
     of an input stream.
 
-    Example assuming ``RawTweets`` is Python iterable that produces
-    raw tweets::
+    Example::
 
         class WordCount(streamsx.topology.composite.Map):
             def ___init__(self, period, update):
@@ -106,7 +114,7 @@ class Map(Composite):
                 self.update = update
      
             def populate(self, topology, stream, schema, name, **options):
-                words = stream.map(lambda line : line.split(), schema=str)
+                words = stream.flat_map(lambda line : line.split())
                 win = words.last(size=self.period).trigger(self.update).partition(lambda s : s)
                 return win.aggregate(lambda values : (values[0], len(values)))
     """
@@ -121,6 +129,12 @@ class Map(Composite):
         """
         Populate the topology with this composite map transformation.
 
+        Args:
+            topology(Topology): Topology containing the composite map.
+            stream(Stream): Stream to be transformed.
+            name(str): Name passed into ``map``.
+            **options: Future options passed to ``map``.
+
         Returns:
             Stream: Single stream representing the transformation of `stream`.
         """
@@ -128,6 +142,12 @@ class Map(Composite):
 
 
 class ForEach(Composite):
+    """
+    Abstract composite for each transformation.
+
+    An instance of a subclass can be passed to :py:meth:`~streamsx.topology.topology.Stream.for_each` to create a sink (stream termination) that is
+    composed of one or more basic transformations of an input stream.
+    """
 
     def _add(self, stream, name, **options):
         s = self.populate(stream.topology, stream, name, **options)
@@ -136,4 +156,16 @@ class ForEach(Composite):
 
     @abstractmethod
     def populate(self, topology, stream, name, **options):
+        """
+        Populate the topology with this composite for each transformation.
+
+        Args:
+            topology(Topology): Topology containing the composite map.
+            stream(Stream): Stream to be transformed.
+            name(str): Name passed into ``for_each``.
+            **options: Future options passed to ``for_each``.
+
+        Returns:
+            ~streamsx.topology.topology.Sink: Termination for this composite transformation of `stream`.
+        """
         pass
