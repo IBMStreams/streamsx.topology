@@ -156,7 +156,7 @@ class WordCount(Map):
         self.update = update
 
     def populate(self, topology, stream, schema, name, **options):
-        words = stream.map(lambda line : line.split(), schema=str)
+        words = stream.flat_map(lambda line : line.split())
         win = words.last(size=self.period).trigger(self.update).partition(lambda s : s)
         return win.aggregate(lambda values : (values[0], len(values)))
 
@@ -170,8 +170,7 @@ class TestRealComposite(unittest.TestCase):
         topo = Topology()
         s = topo.source(['Two things are infinite the universe and human stupidty and Im not sure about the universe'])
         s = s.as_string()
-        wc = s.map(WordCount(12, 2))
-        s.print()
+        wc = s.map(WordCount(3, 2))
 
         tester = Tester(topo)
         tester.contents(wc, [('and', 2), ('the', 2), ('universe', 2)])
