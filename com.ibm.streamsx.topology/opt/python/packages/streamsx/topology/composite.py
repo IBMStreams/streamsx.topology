@@ -16,6 +16,7 @@ __version__ = streamsx._streams._version.__version__
 
 from abc import ABC, abstractmethod
 from typing import Optional
+import streamsx.typing
 import streamsx.topology.topology
 
 class Composite(ABC):
@@ -128,7 +129,7 @@ class Map(Composite):
         return s
 
     @abstractmethod
-    def populate(self, topology:streamsx.topology.topology.Topology, stream:streamsx.topology.topology.Stream, schema, name:Optional[str], **options) -> streamsx.topology.topology.Stream:
+    def populate(self, topology:streamsx.topology.topology.Topology, stream:streamsx.topology.topology.Stream, schema:streamsx.typing.Schema, name:Optional[str], **options) -> streamsx.topology.topology.Stream:
         """
         Populate the topology with this composite map transformation.
 
