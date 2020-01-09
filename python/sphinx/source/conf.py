@@ -34,7 +34,8 @@ sys.path.insert(0, os.path.abspath("../../../com.ibm.streamsx.topology/opt/pytho
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'sphinx_autodoc_typehints'
 ]
 
 autodoc_default_flags = ['members']

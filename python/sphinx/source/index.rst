@@ -32,6 +32,7 @@ See :py:mod:`~streamsx.topology`
    streamsx.topology.context
    streamsx.topology.schema
    streamsx.topology.state
+   streamsx.topology.composite
    streamsx.topology.tester
    streamsx.topology.tester_runtime
    streamsx.ec
