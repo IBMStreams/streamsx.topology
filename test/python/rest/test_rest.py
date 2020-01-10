@@ -127,6 +127,9 @@ class _RestFeatures(unittest.TestCase):
         self.assertIsInstance(instance, Instance)
         primitives_caller.check_instance(self, instance)
 
+        job_alt = instance.get_job(id=job.id)
+        print('XXXX', job_alt.id, job_alt.name)
+
         domain = instance.get_domain()
         if domain is not None:
             self.assertIsInstance(domain, Domain)
