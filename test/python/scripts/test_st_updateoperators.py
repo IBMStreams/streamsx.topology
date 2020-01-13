@@ -69,7 +69,7 @@ class Testupdateoperator(unittest.TestCase):
 
     # Check blank config errors out
     def test_blank_config(self):
-        new_config = (my_path / "updateoperators_test_files/blank_config.json").resolve()
+        new_config = str((my_path / "updateoperators_test_files/blank_config.json").resolve())
 
         # Submit job, assert no problems
         rc, job = self._submitjob(sab=str(self.sab_path), job_config=str(self.initial_config))
@@ -77,13 +77,13 @@ class Testupdateoperator(unittest.TestCase):
         self.assertEqual(rc, 0)
 
         # updateoperators
-        newRC, val = self._update_operators(job_config = str(new_config), jobID=job.id)
+        newRC, val = self._update_operators(job_config = new_config, jobID=job.id)
         self.assertEqual(newRC, 1)
 
 
     # Check updateoperators works as expected on valid config
     def test_valid_config(self):
-        new_config = (my_path / "updateoperators_test_files/config2.json").resolve()
+        new_config = str((my_path / "updateoperators_test_files/config2.json").resolve())
 
         # Submit job, assert no problems
         rc, job = self._submitjob(sab=self.sab_path, job_config=self.initial_config)
@@ -91,12 +91,12 @@ class Testupdateoperator(unittest.TestCase):
         self.assertEqual(rc, 0)
 
         # updateoperators
-        newRC, val = self._update_operators(job_config = str(new_config), jobID=job.id)
+        newRC, val = self._update_operators(job_config = new_config, jobID=job.id)
         self.assertEqual(newRC, 0)
 
     # Check --jobname arg
     def test_jobname(self):
-        new_config = (my_path / "updateoperators_test_files/config2.json").resolve()
+        new_config = str((my_path / "updateoperators_test_files/config2.json").resolve())
 
         # Submit job, assert no problems
         rc, job = self._submitjob(sab=self.sab_path, job_config=self.initial_config)
@@ -104,12 +104,12 @@ class Testupdateoperator(unittest.TestCase):
         self.assertEqual(rc, 0)
 
         # updateoperators
-        newRC, val = self._update_operators(job_config = str(new_config), job_name=job.name)
+        newRC, val = self._update_operators(job_config = new_config, job_name=job.name)
         self.assertEqual(newRC, 0)
 
     # Check parallelRegionWidth arg
     def test_parallelRegionWidth(self):
-        new_config = (my_path / "updateoperators_test_files/config2.json").resolve()
+        new_config = str((my_path / "updateoperators_test_files/config2.json").resolve())
 
         # Submit job, assert no problems
         rc, job = self._submitjob(sab=self.sab_path, job_config=self.initial_config)
@@ -118,6 +118,6 @@ class Testupdateoperator(unittest.TestCase):
 
         # updateoperators
         new_parallelRegionWidth = 'Link*=2'
-        newRC, val = self._update_operators(job_config = str(new_config), jobID=job.id, parallelRegionWidth=new_parallelRegionWidth)
+        newRC, val = self._update_operators(job_config = new_config, jobID=job.id, parallelRegionWidth=new_parallelRegionWidth)
         self.assertEqual(newRC, 0)
 

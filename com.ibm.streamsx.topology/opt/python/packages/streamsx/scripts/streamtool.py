@@ -726,6 +726,8 @@ def _updateops(instance, cmd_args, rc):
     # Overrides the targetParallelRegion if already present in the JCO
     if cmd_args.parallelRegionWidth:
         arr = cmd_args.parallelRegionWidth.split('=')
+        if len(arr) != 2:
+            raise ValueError("The format of the following submission-time parameter is not valid: {}. The correct syntax is: <name>=<value>".format(arr))
         name, width = arr[0], arr[1]
 
         entry = {'targetParallelRegion': {'regionName': name, 'newWidth': int(width)}}
