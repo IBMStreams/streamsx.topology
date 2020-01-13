@@ -712,12 +712,11 @@ def _updateops(instance, cmd_args, rc):
     if not job:
         return (1, "The job was not found")
 
-    if cmd_args.jobConfig:
-        json_result = None
-        with open(cmd_args.jobConfig) as fd:
-            job_config_json = json.load(fd)
-    else:
-        job_config_json = {}
+    if not cmd_args.jobConfig:
+        raise Exception("A JCO is required")
+
+    with open(cmd_args.jobConfig) as fd:
+        job_config_json = json.load(fd)
 
     # Overrides the targetParallelRegion if already present in the JCO
     if cmd_args.parallelRegionWidth:
