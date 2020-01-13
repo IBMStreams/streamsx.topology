@@ -712,47 +712,49 @@ def _updateops(instance, cmd_args, rc):
     if not job:
         return (1, "The job was not found")
 
+    # Ensure JCO is passed in
     if not cmd_args.jobConfig:
         raise Exception("A JCO is required")
 
     with open(cmd_args.jobConfig) as fd:
         job_config_json = json.load(fd)
 
+    # Check if JCO is empty
+    if not job_config_json:
+        raise Exception("Inputted JCO is empty, please input a valid JCO")
+
     # Overrides the targetParallelRegion if already present in the JCO
     if cmd_args.parallelRegionWidth:
         arr = cmd_args.parallelRegionWidth.split('=')
-        name = arr[0]
-        width = arr[1]
+        name, width = arr[0], arr[1]
 
         entry = {'targetParallelRegion': {'regionName': name, 'newWidth': int(width)}}
 
-        JCO1 = job_config_json['jobConfigOverlays'][0]
-        if 'configInstructions' in JCO1:
-            temp2 = JCO1['configInstructions']
-            if 'adjustmentSection' in temp2:
-                temp3 = temp2['adjustmentSection']
-                temp3.append(entry)
-            else:
-                temp2['adjustmentSection'] = [entry]
+        # jobConfigOverlays is an array, where only the first jobConfigOverlay is supported
+        JCO = job_config_json['jobConfigOverlays'][0]
+        # Check if configInstructions already exists
+        if 'configInstructions' in JCO:
+            cfg_inst = JCO['configInstructions']
+            # Overwrite adjustmentSection, since only 1 parallelRegion can be specified
+            cfg_inst['adjustmentSection'] = [entry]
         else:
-            JCO1['configInstructions'] = {'adjustmentSection': [entry]}
+            JCO['configInstructions'] = {'adjustmentSection': [entry]}
 
-    if job_config_json:
-        job_config = streamsx.topology.context.JobConfig.from_overlays(job_config_json)
-        json_result = job.update_operators(job_config)
+    job_config = streamsx.topology.context.JobConfig.from_overlays(job_config_json)
+    json_result = job.update_operators(job_config)
 
-        # --- 1/13/20 JSON result is incorrect until 1Q20 fix ---
-        # if json_result:
-        #     file_name = str(job.name) + '_' + str(job.id) + '_config.json'
-        #     with open(file_name, 'w') as outfile:
-        #         json.dump(json_result, outfile)
+    # --- 1/13/20 JSON result is incorrect until 1Q20 fix ---
+    # if json_result:
+    #     file_name = str(job.name) + '_' + str(job.id) + '_config.json'
+    #     with open(file_name, 'w') as outfile:
+    #         json.dump(json_result, outfile)
 
-        if json_result == 0:
-            print('Update operators was started on the {} instance.'.format(instance.id))
-            # print('The operator configuration results were written to the following file: {}'.format(file_name))
-        else:
-            rc = 1
-            return_message = 'Update operators failed'
+    if json_result == 0:
+        print('Update operators was started on the {} instance.'.format(instance.id))
+        # print('The operator configuration results were written to the following file: {}'.format(file_name))
+    else:
+        rc = 1
+        return_message = 'Update operators failed'
 
     return (rc, return_message)
 
