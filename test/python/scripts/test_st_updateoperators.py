@@ -40,9 +40,14 @@ class Testupdateoperator(unittest.TestCase):
         args = ["--disable-ssl-verify", "submitjob", sab, "-g", job_config]
         rc, job = streamtool.run_cmd(args=args)
         return rc, job
-
-    def _update_operators(self, jobID, job_config, parallelRegionWidth):
-        args = ["--disable-ssl-verify", "updateoperators", jobID, '-g', job_config]
+    
+    def _update_operators(self, job_config, jobID=None, job_name=None, parallelRegionWidth=None):
+        args = ["--disable-ssl-verify", "updateoperators"]
+        if jobID:
+            args.append(jobID)
+        elif job_name:
+            args.extend(['--jobname', job_name])
+        args.extend(['-g', job_config])
         if parallelRegionWidth:
             args.extend(["--parallelRegionWidth", parallelRegionWidth])
         rc, val = streamtool.run_cmd(args=args)
@@ -51,6 +56,8 @@ class Testupdateoperator(unittest.TestCase):
     def setUp(self):
         self.jobs_to_cancel = []
         self.files_to_remove = []
+        self.sab_path = str((my_path / "updateoperators_test_files/limits.Main.sab").resolve())
+        self.initial_config = str((my_path / "updateoperators_test_files/config1.json").resolve())
 
     def tearDown(self):
         for job in self.jobs_to_cancel:
@@ -62,48 +69,55 @@ class Testupdateoperator(unittest.TestCase):
 
     # Check blank config errors out
     def test_blank_config(self):
-        sab_path = (my_path / "updateoperators_test_files/limits.Main.sab").resolve()
-        initial_config = (my_path / "updateoperators_test_files/config1.json").resolve()
         new_config = (my_path / "updateoperators_test_files/blank_config.json").resolve()
 
         # Submit job, assert no problems
-        rc, job = self._submitjob(sab=str(sab_path), job_config=str(initial_config))
+        rc, job = self._submitjob(sab=str(self.sab_path), job_config=str(self.initial_config))
         self.jobs_to_cancel.extend([job])
         self.assertEqual(rc, 0)
 
         # updateoperators
-        newRC, val = self._update_operators(job.id, str(new_config))
+        newRC, val = self._update_operators(job_config = str(new_config), jobID=job.id)
         self.assertEqual(newRC, 1)
 
 
     # Check updateoperators works as expected on valid config
     def test_valid_config(self):
-        sab_path = (my_path / "updateoperators_test_files/limits.Main.sab").resolve()
-        initial_config = (my_path / "updateoperators_test_files/config1.json").resolve()
         new_config = (my_path / "updateoperators_test_files/config2.json").resolve()
 
         # Submit job, assert no problems
-        rc, job = self._submitjob(sab=str(sab_path), job_config=str(initial_config))
+        rc, job = self._submitjob(sab=self.sab_path, job_config=self.initial_config)
         self.jobs_to_cancel.extend([job])
         self.assertEqual(rc, 0)
 
         # updateoperators
-        newRC, val = self._update_operators(job.id, str(new_config))
+        newRC, val = self._update_operators(job_config = str(new_config), jobID=job.id)
+        self.assertEqual(newRC, 0)
+
+    # Check --jobname arg
+    def test_jobname(self):
+        new_config = (my_path / "updateoperators_test_files/config2.json").resolve()
+
+        # Submit job, assert no problems
+        rc, job = self._submitjob(sab=self.sab_path, job_config=self.initial_config)
+        self.jobs_to_cancel.extend([job])
+        self.assertEqual(rc, 0)
+
+        # updateoperators
+        newRC, val = self._update_operators(job_config = str(new_config), job_name=job.name)
         self.assertEqual(newRC, 0)
 
     # Check parallelRegionWidth arg
     def test_parallelRegionWidth(self):
-        sab_path = (my_path / "updateoperators_test_files/limits.Main.sab").resolve()
-        initial_config = (my_path / "updateoperators_test_files/config1.json").resolve()
         new_config = (my_path / "updateoperators_test_files/config2.json").resolve()
 
         # Submit job, assert no problems
-        rc, job = self._submitjob(sab=str(sab_path), job_config=str(initial_config))
+        rc, job = self._submitjob(sab=self.sab_path, job_config=self.initial_config)
         self.jobs_to_cancel.extend([job])
         self.assertEqual(rc, 0)
 
         # updateoperators
         new_parallelRegionWidth = 'Link*=2'
-        newRC, val = self._update_operators(job.id, str(new_config), parallelRegionWidth=new_parallelRegionWidth)
+        newRC, val = self._update_operators(job_config = str(new_config), jobID=job.id, parallelRegionWidth=new_parallelRegionWidth)
         self.assertEqual(newRC, 0)
 

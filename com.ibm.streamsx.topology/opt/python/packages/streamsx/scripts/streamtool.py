@@ -714,14 +714,14 @@ def _updateops(instance, cmd_args, rc):
 
     # Ensure JCO is passed in
     if not cmd_args.jobConfig:
-        raise Exception("A JCO is required")
+        return (1, 'A JCO is required')
 
     with open(cmd_args.jobConfig) as fd:
         job_config_json = json.load(fd)
 
     # Check if JCO is empty
     if not job_config_json:
-        raise Exception("Inputted JCO is empty, please input a valid JCO")
+        return (1, 'Inputted JCO is empty')
 
     # Overrides the targetParallelRegion if already present in the JCO
     if cmd_args.parallelRegionWidth:
@@ -749,12 +749,11 @@ def _updateops(instance, cmd_args, rc):
     #     with open(file_name, 'w') as outfile:
     #         json.dump(json_result, outfile)
 
-    if json_result == 0:
+    if json_result !=0:
+        return (1, 'Update operators failed')
+    else:
         print('Update operators was started on the {} instance.'.format(instance.id))
         # print('The operator configuration results were written to the following file: {}'.format(file_name))
-    else:
-        rc = 1
-        return_message = 'Update operators failed'
 
     return (rc, return_message)
 
