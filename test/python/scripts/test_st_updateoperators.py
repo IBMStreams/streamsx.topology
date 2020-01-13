@@ -58,7 +58,6 @@ class Testupdateoperator(unittest.TestCase):
             if os.path.exists(file):
                 os.remove(file)
 
-    # Check --jobname option
     def test_update_operator(self):
         sab_path = (my_path / "temp/limits.Main.sab").resolve()
         initial_config = (my_path / "temp/jco-singleOperatorResourceSpec.json").resolve()
