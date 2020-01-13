@@ -32,7 +32,7 @@ def cpd_setup():
          "STREAMS_USERNAME" in os.environ and \
          "STREAMS_PASSWORD" in os.environ
 
-# Tests streamtool submitjob script.
+# Tests streamtool updateoperators script.
 # Requires environment setup for a ICP4D Streams instance.
 @unittest.skipUnless(cpd_setup(), "requires Streams REST API setup")
 class Testupdateoperator(unittest.TestCase):
@@ -41,8 +41,10 @@ class Testupdateoperator(unittest.TestCase):
         rc, job = streamtool.run_cmd(args=args)
         return rc, job
 
-    def _update_operators(self, jobID, job_config):
-        args = ["--disable-ssl-verify", "updateoperators", jobID, job_config]
+    def _update_operators(self, jobID, job_config, parallelRegionWidth):
+        args = ["--disable-ssl-verify", "updateoperators", jobID, '-g', job_config]
+        if parallelRegionWidth:
+            args.extend(["--parallelRegionWidth", parallelRegionWidth])
         rc, val = streamtool.run_cmd(args=args)
         return rc, val
 
@@ -58,21 +60,50 @@ class Testupdateoperator(unittest.TestCase):
             if os.path.exists(file):
                 os.remove(file)
 
-    def test_update_operator(self):
-        sab_path = (my_path / "temp/limits.Main.sab").resolve()
-        initial_config = (my_path / "temp/jco-singleOperatorResourceSpec.json").resolve()
-        new_config = (my_path / "temp/jco-Link_2-width3.json").resolve()
-
-        print(str(sab_path))
+    # Check blank config errors out
+    def test_blank_config(self):
+        sab_path = (my_path / "updateoperators_test_files/limits.Main.sab").resolve()
+        initial_config = (my_path / "updateoperators_test_files/config1.json").resolve()
+        new_config = (my_path / "updateoperators_test_files/blank_config.json").resolve()
 
         # Submit job, assert no problems
         rc, job = self._submitjob(sab=str(sab_path), job_config=str(initial_config))
         self.jobs_to_cancel.extend([job])
         self.assertEqual(rc, 0)
 
-        # file_name = str(job.name) + '_' + str(job.id) + '_config.json'
-        # newRC, val = self._update_operators(job.id, str(new_config))
-        # self.assertEqual(rc, 0)
+        # updateoperators
+        newRC, val = self._update_operators(job.id, str(new_config))
+        self.assertEqual(newRC, 1)
 
-        # self.assertTrue(os.path.exists(file_name))
+
+    # Check updateoperators works as expected on valid config
+    def test_valid_config(self):
+        sab_path = (my_path / "updateoperators_test_files/limits.Main.sab").resolve()
+        initial_config = (my_path / "updateoperators_test_files/config1.json").resolve()
+        new_config = (my_path / "updateoperators_test_files/config2.json").resolve()
+
+        # Submit job, assert no problems
+        rc, job = self._submitjob(sab=str(sab_path), job_config=str(initial_config))
+        self.jobs_to_cancel.extend([job])
+        self.assertEqual(rc, 0)
+
+        # updateoperators
+        newRC, val = self._update_operators(job.id, str(new_config))
+        self.assertEqual(newRC, 0)
+
+    # Check parallelRegionWidth arg
+    def test_parallelRegionWidth(self):
+        sab_path = (my_path / "updateoperators_test_files/limits.Main.sab").resolve()
+        initial_config = (my_path / "updateoperators_test_files/config1.json").resolve()
+        new_config = (my_path / "updateoperators_test_files/config2.json").resolve()
+
+        # Submit job, assert no problems
+        rc, job = self._submitjob(sab=str(sab_path), job_config=str(initial_config))
+        self.jobs_to_cancel.extend([job])
+        self.assertEqual(rc, 0)
+
+        # updateoperators
+        new_parallelRegionWidth = 'Link*=2'
+        newRC, val = self._update_operators(job.id, str(new_config), parallelRegionWidth=new_parallelRegionWidth)
+        self.assertEqual(newRC, 0)
 
