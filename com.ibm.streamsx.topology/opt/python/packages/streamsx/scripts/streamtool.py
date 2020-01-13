@@ -699,8 +699,7 @@ def _updateops_parser(subparsers):
 
 def _updateops(instance, cmd_args, rc):
     return_message = None
-    job_config = None
-
+    job_config_json = None
     job = None
 
     if cmd_args.jobid:
@@ -740,16 +739,21 @@ def _updateops(instance, cmd_args, rc):
             JCO1['configInstructions'] = {'adjustmentSection': [entry]}
 
     if job_config_json:
-        job_config = streamsx.topology.context.JobConfig.from_overlays(json.load(fd))
+        job_config = streamsx.topology.context.JobConfig.from_overlays(job_config_json)
         json_result = job.update_operators(job_config)
 
-        if json_result:
-            file_name = str(job.name) + '_' + str(job.id) + '_config.json'
-            with open(file_name, 'w') as outfile:
-                json.dump(json_result, outfile)
+        # --- 1/13/20 JSON result is incorrect until 1Q20 fix ---
+        # if json_result:
+        #     file_name = str(job.name) + '_' + str(job.id) + '_config.json'
+        #     with open(file_name, 'w') as outfile:
+        #         json.dump(json_result, outfile)
 
+        if json_result == 0:
             print('Update operators was started on the {} instance.'.format(instance.id))
-            print('The operator configuration results were written to the following file: {}'.format(file_name))
+            # print('The operator configuration results were written to the following file: {}'.format(file_name))
+        else:
+            rc = 1
+            return_message = 'Update operators failed'
 
     return (rc, return_message)
 
