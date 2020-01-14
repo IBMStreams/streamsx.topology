@@ -709,16 +709,17 @@ def _updateops(instance, cmd_args, rc):
     if not job:
         return (1, "The job was not found")
 
-    # Ensure JCO is passed in
-    if not cmd_args.jobConfig:
-        return (1, 'A JCO is required')
+    # JCO and/or parallelRegionWidth arg
+    if cmd_args.jobConfig:
+        with open(cmd_args.jobConfig) as fd:
+            job_config_json = json.load(fd)
+    # No JCO, but parallelRegionWidth arg
+    elif cmd_args.parallelRegionWidth:
+        job_config_json = {}
+    # No JCO or parallelRegionWidth arg
+    else:
+        return (1, 'A JCO or parallelRegionWidth is required')
 
-    with open(cmd_args.jobConfig) as fd:
-        job_config_json = json.load(fd)
-
-    # Check if JCO is empty
-    if not job_config_json:
-        return (1, 'Inputted JCO is empty')
 
     # Overrides the targetParallelRegion if already present in the JCO
     if cmd_args.parallelRegionWidth:
@@ -729,15 +730,26 @@ def _updateops(instance, cmd_args, rc):
 
         entry = {'targetParallelRegion': {'regionName': name, 'newWidth': int(width)}}
 
-        # jobConfigOverlays is an array, where only the first jobConfigOverlay is supported
-        JCO = job_config_json['jobConfigOverlays'][0]
-        # Check if configInstructions already exists
-        if 'configInstructions' in JCO:
-            cfg_inst = JCO['configInstructions']
-            # Overwrite adjustmentSection, since only 1 parallelRegion can be specified
-            cfg_inst['adjustmentSection'] = [entry]
+        # If JCO is empty, and parallelRegionWidth arg is present, create JCO with arg
+        if not job_config_json:
+            job_config_json = {
+                'jobConfigOverlays' : [
+                    {'configInstructions' : {'adjustmentSection': [entry]}
+                    }
+                ]
+            }
         else:
-            JCO['configInstructions'] = {'adjustmentSection': [entry]}
+            # Non-empty JCO, and parallelRegionWidth arg is present, override existing in JCO
+
+            # jobConfigOverlays is an array, where only the first jobConfigOverlay is supported
+            JCO = job_config_json['jobConfigOverlays'][0]
+            # Check if configInstructions already exists
+            if 'configInstructions' in JCO:
+                cfg_inst = JCO['configInstructions']
+                # Overwrite adjustmentSection, since only 1 parallelRegion can be specified
+                cfg_inst['adjustmentSection'] = [entry]
+            else:
+                JCO['configInstructions'] = {'adjustmentSection': [entry]}
 
     job_config = streamsx.topology.context.JobConfig.from_overlays(job_config_json)
     json_result = job.update_operators(job_config)

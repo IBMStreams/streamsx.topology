@@ -41,7 +41,7 @@ class Testupdateoperator(unittest.TestCase):
         rc, job = streamtool.run_cmd(args=args)
         return rc, job
     
-    def _update_operators(self, job_config, jobID=None, job_name=None, parallelRegionWidth=None):
+    def _update_operators(self, job_config=None, jobID=None, job_name=None, parallelRegionWidth=None):
         args = ["--disable-ssl-verify", "updateoperators"]
         if jobID:
             args.append(jobID)
@@ -80,6 +80,20 @@ class Testupdateoperator(unittest.TestCase):
         newRC, val = self._update_operators(job_config = new_config, jobID=job.id)
         self.assertEqual(newRC, 1)
 
+    # Check no config w/ parallelRegionWidth works as expected
+    def test_no_config_with_arg(self):
+        # Submit job, assert no problems
+        rc, job = self._submitjob(sab=str(self.sab_path), job_config=str(self.initial_config))
+        self.jobs_to_cancel.extend([job])
+        self.assertEqual(rc, 0)
+
+        # updateoperators
+        new_parallelRegionWidth = 'Link*=2'
+        newRC, val = self._update_operators(jobID=job.id, parallelRegionWidth=new_parallelRegionWidth)
+        self.assertEqual(newRC, 0)
+
+        self.check_update_ops(job, 2)
+
 
     # Check updateoperators works as expected on valid config
     def test_valid_config(self):
@@ -94,6 +108,8 @@ class Testupdateoperator(unittest.TestCase):
         newRC, val = self._update_operators(job_config = new_config, jobID=job.id)
         self.assertEqual(newRC, 0)
 
+        self.check_update_ops(job, 3)
+
     # Check --jobname arg
     def test_jobname(self):
         new_config = str((my_path / "updateoperators_test_files/config2.json").resolve())
@@ -106,6 +122,8 @@ class Testupdateoperator(unittest.TestCase):
         # updateoperators
         newRC, val = self._update_operators(job_config = new_config, job_name=job.name)
         self.assertEqual(newRC, 0)
+
+        self.check_update_ops(job, 3)
 
     # Check parallelRegionWidth arg
     def test_parallelRegionWidth(self):
@@ -121,3 +139,19 @@ class Testupdateoperator(unittest.TestCase):
         newRC, val = self._update_operators(job_config = new_config, jobID=job.id, parallelRegionWidth=new_parallelRegionWidth)
         self.assertEqual(newRC, 0)
 
+        self.check_update_ops(job, 2)
+
+
+    def check_update_ops(self, job, new_width):
+        """ Checks whether the job operators has been updated to the correct new width
+
+        Arguments:
+            job {Job}
+            new_width {int}
+        """
+        channel = []
+        for op in job.get_operators(name='Link*'):
+            channel.append(op.channel)
+
+        if len(channel) != new_width:
+            self.fail('Update operation failed')
