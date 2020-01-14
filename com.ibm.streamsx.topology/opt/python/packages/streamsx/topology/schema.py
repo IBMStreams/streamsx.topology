@@ -89,6 +89,7 @@ import json
 import sys
 import token
 import tokenize
+import typing
 
 import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
@@ -119,12 +120,10 @@ def _normalize(schema, allow_none=True):
     if schema in py_types:
         return py_types[schema]
 
-    # With Python 3 allow a named tuple with type hints
+    # Allow a named tuple with type hints
     # to be used as a schema definition
-    import typing
-    if isinstance(schema, type) and  issubclass(schema, tuple):
-        if hasattr(schema, '_fields') and hasattr(schema, '_field_types'):
-            return _from_named_tuple(schema)
+    if _is_typedtuple(schema):
+        return _from_named_tuple(schema)
 
     raise ValueError("Unknown stream schema type:" + str(schema))
 
@@ -148,7 +147,10 @@ def is_common(schema):
     return False
 
 def _is_namedtuple(cls):
-    return cls != tuple and issubclass(cls, tuple) and hasattr(cls, '_fields')
+    return cls != tuple and isinstance(cls, type) and issubclass(cls, tuple) and hasattr(cls, '_fields')
+
+def _is_typedtuple(cls):
+    return _is_namedtuple(cls) and hasattr(cls, '_field_types')
 
 _SCHEMA_PENDING = '<pending>'
 def _is_pending(schema):
@@ -519,7 +521,6 @@ class StreamSchema(object) :
             return tuple
         if name is True:
             name = 'StreamTuple'
-        import typing
         nt = typing.NamedTuple(name, _attribute_pytypes(self._types))
 
         nt._splpy_namedtuple = name
@@ -640,7 +641,12 @@ class StreamSchema(object) :
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return self.schema() == other.schema()
+            if self.schema() == other.schema():
+                if self.style == other.style:
+                    return True
+                if _is_typedtuple(self.style) and _is_typedtuple(other.style):
+                    return self.style._fields == other.style._fields and self.style._field_types == other.style._field_types
+ 
         return False
 
     def __ne__(self, other):
@@ -757,7 +763,6 @@ class CommonSchema(enum.Enum):
         return str(self.schema())
 
 def _from_named_tuple(nt):
-    import typing
     spl_types = []
     for name in nt._fields:
         spl_types.append(_spl_from_type(nt._field_types[name]))
@@ -780,7 +785,6 @@ def _spl_from_type(type_):
     # See https://bugs.python.org/issue34568
     # isinstance,issubclass no longer work in Python 3.7
     if hasattr(type_, '__origin__') and hasattr(type_, '__args__'):
-        import typing
         if len(type_.__args__) == 1:
             et = type_.__args__[0]
             if typing.List[et] == type_:
@@ -793,7 +797,6 @@ def _spl_from_type(type_):
             if typing.Mapping[kt, vt] == type_:
                 return 'map<' + _spl_from_type(kt) + ', ' + _spl_from_type(vt) + '>'
     if hasattr(type_, '__args__') and len(type_.__args__) == 2:
-        import typing
         if type(None) in type_.__args__:
             et = type_.__args__[0] if type_.__args__[1] is type(None) else type_.__args__[1]
             if typing.Optional[et] == type_:
@@ -806,7 +809,6 @@ def _type_from_spl(type_):
         return _SPLTYPE_TO_PY[type_]
 
     if isinstance(type_, tuple):
-        import typing
         if type_[0] == 'list':
             return typing.List[_type_from_spl(type_[1])]
         if type_[0] == 'set':

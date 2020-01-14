@@ -65,7 +65,7 @@ class Source(Composite):
     raw tweets::
 
         class Tweets(streamsx.topology.composite.Source):
-            def ___init__(self, track):
+            def __init__(self, track):
                 self.track = track
      
             def populate(self, topology, name, **options):
@@ -113,7 +113,7 @@ class Map(Composite):
     Example::
 
         class WordCount(streamsx.topology.composite.Map):
-            def ___init__(self, period, update):
+            def __init__(self, period, update):
                 self.period = period
                 self.update = update
      
@@ -126,6 +126,8 @@ class Map(Composite):
     def _add(self, stream, schema, name, **options):
         s = self.populate(stream.topology, stream, schema, name, **options)
         Map._check_type(s, streamsx.topology.topology.Stream)
+        if schema:
+            s = s.map(schema=schema)
         return s
 
     @abstractmethod
@@ -144,7 +146,6 @@ class Map(Composite):
             Stream: Single stream representing the transformation of `stream`.
         """
         pass
-
 
 class ForEach(Composite):
     """
