@@ -59,8 +59,6 @@ def check_filter(fn, stream):
     except TypeError:
         raise
     except:
-        import traceback
-        traceback.print_exc()
         pass
 
 def _check_filter(fn, stream):
@@ -247,7 +245,10 @@ def _type_error(fn, target, param, source):
 
 def _check_arg_count(fn, n):
 
-    sig = inspect.signature(fn)
+    try:
+        sig = inspect.signature(fn)
+    except ValueError:
+        return
     if len(sig.parameters) == n:
         return
 
@@ -279,7 +280,10 @@ def _get_arg_hint(fn, pos):
     if not hints:
         return None,None
 
-    sig = inspect.signature(fn)
+    try:
+        sig = inspect.signature(fn)
+    except ValueError:
+        return None,None
     i = 0
     for pn in sig.parameters:
         i += 1
