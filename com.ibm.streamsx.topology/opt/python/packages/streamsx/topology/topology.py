@@ -1407,6 +1407,11 @@ class Stream(_placement._Placement, object):
         if isinstance(func, streamsx.topology.composite.Map):
             return func._add(self, schema, name)
 
+        # Schema mapping only, if no change then return original
+        if func is None and name is None and (schema is not None and
+            streamsx.topology.schema._normalize(schema) == self.oport.schema):
+            return self
+
         hints = None
         if func is not None:
             hints = streamsx._streams._hints.check_map(func, self)
