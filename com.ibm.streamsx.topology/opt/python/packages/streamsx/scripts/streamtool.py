@@ -716,6 +716,8 @@ def _updateops(instance, cmd_args, rc):
     if cmd_args.jobConfig:
         with open(cmd_args.jobConfig) as fd:
             job_config_json = json.load(fd)
+        if not job_config_json:
+            return (1, 'JCO is empty')
     # No JCO, but parallelRegionWidth arg
     elif cmd_args.parallelRegionWidth:
         job_config_json = {}
