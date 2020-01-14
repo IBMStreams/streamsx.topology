@@ -13,7 +13,6 @@ using classes from ``streamsx.spl.op`` then any parameters
 must use the SPL type required by the operator.
 
 """
-from future.builtins import *
 
 __all__ = ['Timestamp', 'int8', 'int16', 'int32', 'int64', 'uint8', 'uint16', 'uint32', 'uint64', 'float32', 'float64', 'rstring', 'null']
 
@@ -140,17 +139,6 @@ class Timestamp(streamsx.spl.runtime._Timestamp):
         """
         return datetime.datetime.utcfromtimestamp(self.time())
 
-    def tuple(self):
-        """Return this timestamp as a tuple.
-
-        Returns:
-            tuple: Returns a tuple of ``(seconds, nanoseconds, machine_id)``
-
-        .. deprecated:: 1.8.3
-            Timestamp is a `tuple` now.
-        """
-        return self
-
     def __reduce__(self):
         return streamsx.spl.runtime._stored_ts, tuple(self)
 
@@ -160,7 +148,7 @@ def _get_timestamp_tuple(ts):
     Handles input being a datetime or a Timestamp.
     """
     if isinstance(ts, datetime.datetime):    
-        return Timestamp.from_datetime(ts).tuple()
+        return Timestamp.from_datetime(ts)
     elif isinstance(ts, Timestamp):    
         return ts
     raise TypeError('Timestamp or datetime.datetime required')

@@ -1,5 +1,5 @@
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016
+# Copyright IBM Corp. 2016,2019
 import unittest
 import os
 import sys
@@ -36,7 +36,7 @@ class TestPackages(unittest.TestCase):
   def test_TopologyIndirectPackage(self):
       topo = Topology("test_TopologyIndirectPackage")
       hw = topo.source(["Hello", "World!"])
-      hwf = hw.transform(test2_pkg_helpers.imported_package)
+      hwf = hw.map(test2_pkg_helpers.imported_package)
       tester = Tester(topo)
       tester.contents(hwf, ["HelloIP"])
       tester.test(self.test_ctxtype, self.test_config)
@@ -46,7 +46,7 @@ class TestPackages(unittest.TestCase):
       topo = Topology("test_TopologyExcludePackage")
       topo.exclude_packages.add('test_package')
       hw = topo.source(["Hello", "World!"])
-      hwf = hw.transform(test2_pkg_helpers.missing_package)
+      hwf = hw.map(test2_pkg_helpers.missing_package)
       tester = Tester(topo)
       tester.contents(hwf, ["HelloMP", "World!MP"])
       pypath = None

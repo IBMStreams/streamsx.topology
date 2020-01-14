@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015, 2016
+# Copyright IBM Corp. 2015, 2019
 
 from __future__ import absolute_import, division, print_function
 
@@ -20,8 +20,8 @@ from streamsx.spl import spl
 #
 # The function must be decorated with one of these
 #
-# @spl.pipe - Function is a pipe operator
-# @spl.sink - Function is a sink operator
+# @spl.map() - Function is a map operator
+# @spl.for_each() - Function is a sink operator
 # @spl.ignore - Function is ignored
 
 # Attributes of the input SPL tuple are passed
@@ -128,7 +128,7 @@ class PrintWithTimeIntervals(object):
 # position, any additional attributes beyond the
 # first two are ignored. Attribute names in SPL are irrelevant.
 
-@spl.pipe
+@spl.map(style='position')
 def SimpleFilter(a,b):
    """
    Filter tuples only allowing output if the first attribute is less than the second.
@@ -142,7 +142,7 @@ def SimpleFilter(a,b):
 # second two attributes and returns
 # the results as the first two attribute in the output tuple 
 
-@spl.pipe
+@spl.map(style='position')
 def AddFirstTwoSecondTwo(a,b,c,d):
     "Add first two and second two attributes."
     return a+b,c+d
@@ -151,7 +151,7 @@ def AddFirstTwoSecondTwo(a,b,c,d):
 # as the first parameter (threshold) and all the remaining
 # attributes are available as a variable argument list
 #
-@spl.pipe
+@spl.map(style='position')
 def Lowest(threshold, *values):
     "Find the lowest value above a threshold in all the remaining attributes."
     lm = None
@@ -167,7 +167,7 @@ def Lowest(threshold, *values):
 # Returns four tuples. This demonstrates the
 # ability for a python tuple to submit multiple tuples as output.
 #
-@spl.pipe
+@spl.map(style='position')
 def ReturnList(a,b,c):
     "Demonstrate returning a list of values, each value is submitted as a tuple." 
     return [(a+1,b+1,c+1),(a+2,b+2,c+2),(a+3,b+3,c+3),(a+4,b+4,c+4)]

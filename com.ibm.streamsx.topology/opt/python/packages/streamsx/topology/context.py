@@ -15,18 +15,6 @@ to a Streaming Analytics service or IBM® Streams instance for execution.
 
 """
 
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import division
-from __future__ import absolute_import
-try:
-    from future import standard_library
-    standard_library.install_aliases()
-except (ImportError, NameError):
-    # nothing to do here
-    pass
-from future.builtins import *
-
 __all__ = ['ContextTypes', 'ConfigParams', 'JobConfig', 'SubmissionResult', 'submit']
 
 import logging
@@ -86,8 +74,6 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
 
     if not graph.operators:
         raise ValueError("Topology {0} does not contain any streams.".format(graph.topology.name))
-    if ctxtype == ContextTypes.STANDALONE_BUNDLE:
-        warnings.warn("Use ContextTypes.BUNDLE", DeprecationWarning, stacklevel=2)
 
     if username or password:
         warnings.warn("Use environment variables STREAMS_USERNAME and STREAMS_PASSWORD", DeprecationWarning, stacklevel=2)
@@ -167,7 +153,7 @@ class _BaseSubmitter(object):
         if remote_context:
             submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
             try:
-                get_ipython()
+                globals()['get_ipython']()
                 import ipywidgets as widgets
                 progress_bar = widgets.IntProgress(
                     value=0,
@@ -176,7 +162,7 @@ class _BaseSubmitter(object):
                     bar_style='info', orientation='horizontal',
                     style={'description_width':'initial'})
                 try:
-                    display(progress_bar)
+                    globals()['display'](progress_bar)
                     def _show_progress(msg):
                         if msg is True:
                             progress_bar.value = progress_bar.max
@@ -675,10 +661,8 @@ class _SubmitContextFactory(object):
         if ctxtype == ContextTypes.DISTRIBUTED:
             logger.debug("Selecting the DISTRIBUTED context for submission")
             return _get_distributed_submitter(self.config, self.graph, self.username, self.password)
-        elif ctxtype == ContextTypes.ANALYTICS_SERVICE or ctxtype == ContextTypes.STREAMING_ANALYTICS_SERVICE:
+        elif ctxtype == ContextTypes.STREAMING_ANALYTICS_SERVICE:
             logger.debug("Selecting the STREAMING_ANALYTICS_SERVICE context for submission")
-            if sys.version_info.major == 2:
-                raise RuntimeError("The STREAMING_ANALYTICS_SERVICE context requires Python 3")
             ctxtype = ContextTypes.STREAMING_ANALYTICS_SERVICE
             return _StreamingAnalyticsSubmitter(ctxtype, self.config, self.graph)
         elif ctxtype == 'BUNDLE':
@@ -708,18 +692,12 @@ def _delete_json(submitter):
 def _print_process_stdout(process):
     try:
         while True:
-            if sys.version_info.major == 2:
-                sout = codecs.getwriter('utf8')(sys.stdout)
             line = process.stdout.readline()
             if len(line) == 0:
                 process.stdout.close()
                 break
             line = line.decode("utf-8").strip()
-            if sys.version_info.major == 2:
-                sout.write(line)
-                sout.write("\n")
-            else:
-                print(line)
+            print(line)
     except:
         logger.error("Error reading from Java subprocess stdout stream.")
         raise
@@ -741,8 +719,6 @@ _JAVA_LOG_LVL = {
 # a logger or stderr
 def _print_process_stderr(process, submitter, progress_fn):
     try:
-        if sys.version_info.major == 2:
-            serr = codecs.getwriter('utf8')(sys.stderr)
         while True:
             line = process.stderr.readline()
             if len(line) == 0:
@@ -756,11 +732,7 @@ def _print_process_stderr(process, submitter, progress_fn):
                     continue
                 logger.log(_JAVA_LOG_LVL[em[0]], em[1])
                 continue
-            if sys.version_info.major == 2:
-                serr.write(line)
-                serr.write("\n")
-            else:
-                print(line, file=sys.stderr)
+            print(line, file=sys.stderr)
     except:
         logger.error("Error reading from Java subprocess stderr stream.")
         raise
@@ -812,11 +784,6 @@ class ContextTypes(object):
 
         * **STREAMS_INSTALL** - (optional) Location of a IBM Streams installation (4.0.1 or later). The install must be running on RedHat/CentOS 6 and `x86_64` architecture.
 
-    """
-    ANALYTICS_SERVICE = 'ANALYTICS_SERVICE'
-    """Synonym for :py:const:`STREAMING_ANALYTICS_SERVICE`.
-
-    .. deprecated:: Use :py:const:`STREAMING_ANALYTICS_SERVICE`.
     """
     DISTRIBUTED = 'DISTRIBUTED'
     """Submission to an IBM Streams instance.
@@ -946,26 +913,6 @@ class ContextTypes(object):
     .. note::
 
         `BUILD_ARCHIVE` is typically only used when diagnosing issues with bundle generation.
-    """
-
-    STANDALONE_BUNDLE = 'STANDALONE_BUNDLE'
-    """Create a Streams application bundle for standalone execution.
-
-    The `Topology` is compiled locally to produce Streams standalone application bundle (sab file).
-
-    The resultant application can be submitted to:
-        * Executed standalone for development or testing.
-
-    The bundle must be built on the same operating system version and architecture as the intended running
-    environment. For Streaming Analytics service this is currently RedHat/CentOS 6 and `x86_64` architecture.
-
-    Environment variables:
-        This environment variables define how the application is built.
-
-        * **STREAMS_INSTALL** - Location of a IBM Streams installation (4.0.1 or 4.1.x).
-
-    .. deprecated:: IBM Streams 4.2
-        Use :py:const:`BUNDLE`.
     """
 
 
@@ -1468,7 +1415,7 @@ class SubmissionResult(object):
                     raise
  
             button.on_click(_cancel_job_click)
-            display(vb)
+            globals['display'](vb)
         except:
             pass
 

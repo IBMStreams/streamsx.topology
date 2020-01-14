@@ -64,5 +64,4 @@ class TestSasNames(TestNames):
 class TestContextNames(unittest.TestCase):
     def test_expected_values(self):
         self.assertEqual('DISTRIBUTED', stc.ContextTypes.DISTRIBUTED)
-        self.assertEqual('ANALYTICS_SERVICE', stc.ContextTypes.ANALYTICS_SERVICE)
         self.assertEqual('STREAMING_ANALYTICS_SERVICE', stc.ContextTypes.STREAMING_ANALYTICS_SERVICE)

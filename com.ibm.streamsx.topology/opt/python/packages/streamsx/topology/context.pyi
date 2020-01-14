@@ -1,6 +1,6 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2017
+# Copyright IBM Corp. 2017, 2019
 from typing import Any, Optional
 
 from streamsx.topology.topology import Topology
@@ -30,13 +30,11 @@ class SubmissionResult(object):
 
 class ContextTypes(object):
     STREAMING_ANALYTICS_SERVICE : str
-    ANALYTICS_SERVICE : str
     DISTRIBUTED : str
     STANDALONE : str
     BUNDLE : str
     TOOLKIT : str
     BUILD_ARCHIVE : str
-    STANDALONE_BUNDLE : str
 
 
 class ConfigParams(object):

@@ -1,4 +1,2 @@
 requests
 dill
-future
-enum34; python_version == '2.7'

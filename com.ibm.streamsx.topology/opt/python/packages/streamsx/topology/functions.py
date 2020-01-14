@@ -2,9 +2,6 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015,2017
 
-from __future__ import print_function
-from future.builtins import *
-
 import sys
 
 # Print function that flushes

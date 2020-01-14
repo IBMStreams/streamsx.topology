@@ -1,6 +1,5 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
-from past.builtins import unicode
 import unittest
 import random
 import decimal
@@ -213,7 +212,7 @@ class TestSchema(unittest.TestCase):
         self.assertEqual(dict, sd2.style)
 
         self.assertEqual(object, _sch.CommonSchema.Python.value.style)
-        self.assertEqual(unicode if sys.version_info.major == 2 else str, _sch.CommonSchema.String.value.style)
+        self.assertEqual(str, _sch.CommonSchema.String.value.style)
         self.assertEqual(dict, _sch.CommonSchema.Json.value.style)
 
         snt = s.as_tuple(named='Alert')
@@ -266,7 +265,7 @@ class TestSchema(unittest.TestCase):
         self.assertEqual(s, _sch._normalize(s))
 
         self.assertEqual(_sch.CommonSchema.Python, _sch._normalize(object))
-        _u = str if sys.version_info.major == 3 else unicode
+        _u = str 
         self.assertEqual(_sch.CommonSchema.String, _sch._normalize(_u))
         import json
         self.assertEqual(_sch.CommonSchema.Json, _sch._normalize(json))

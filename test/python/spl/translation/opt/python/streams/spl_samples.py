@@ -1,8 +1,6 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015, 2016
 
-from __future__ import absolute_import, division, print_function
-
 # Import the SPL decorators
 from streamsx.spl import spl
 
