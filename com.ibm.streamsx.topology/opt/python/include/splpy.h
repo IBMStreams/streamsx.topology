@@ -41,67 +41,6 @@ namespace streamsx {
       public:
 
     /*
-     * Call the function passing an SPL attribute
-     * converted to a Python object and discard the return 
-     * Implementation for function ForEach operator.
-     */
-    template <class T>
-    static void pyTupleForEach(PyObject * function, T & splVal) {
-      SplpyGIL lock;
-
-      // invoke python nested function that calls the application function
-      PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
-
-      if(pyReturnVar == 0){
-        throw SplpyExceptionInfo::pythonError("for_each");
-      }
-
-      Py_DECREF(pyReturnVar);
-    }
-    
-    /*
-    * Call a function passing the SPL attribute value of type T
-    * and return the function return as a boolean
-    * Implementation for function Filter operator.
-    */
-    template <class T>
-    static int pyTupleFilter(PyObject * function, T & splVal) {
-
-      SplpyGIL lock;
-
-      // invoke python nested function that calls the application function
-      PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
-
-      if(pyReturnVar == 0){
-         throw SplpyExceptionInfo::pythonError("filter");
-      }
-
-      int ret = PyObject_IsTrue(pyReturnVar);
-
-      Py_DECREF(pyReturnVar);
-      return ret;
-    }
-
-    template <class T>
-    static SPL::int64 pyTupleSplit(PyObject * function, T & splVal) {
-
-      SplpyGIL lock;
-
-      // invoke python nested function that calls the application function
-      PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
-
-      if(pyReturnVar == 0){
-         throw SplpyExceptionInfo::pythonError("split");
-      }
-
-      SPL::int64 split;
-      pySplValueFromPyObject(split, pyReturnVar);
-
-      Py_DECREF(pyReturnVar);
-      return split;
-    }
-
-    /*
     * Call a function passing the SPL attribute value of type T
     * and fill in the SPL attribute of type R with its result.
     * Implementation for function Map operator.
@@ -165,27 +104,6 @@ namespace streamsx {
 
       return 1;
     }
-
-
-    // Python hash of an SPL value
-    // Python hashes are signed integer values
-    template <class T>
-    static SPL::int64 pyTupleHash(PyObject * function, T & splVal) {
-
-      SplpyGIL lock;
-
-      PyObject * pyReturnVar = pySplProcessTuple(function, splVal);
-
-      if (pyReturnVar == 0){
-        throw SplpyExceptionInfo::pythonError("hash");
-      }
-
-      // construct integer from return value
-      SPL::int64 hash;
-      pySplValueFromPyObject(hash, pyReturnVar);
-      Py_DECREF(pyReturnVar);
-      return hash;
-   }
 
 
     /**
