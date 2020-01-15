@@ -41,7 +41,7 @@ class Testupdateoperator(unittest.TestCase):
         rc, job = streamtool.run_cmd(args=args)
         return rc, job
     
-    def _update_operators(self, job_config=None, jobID=None, job_name=None, parallelRegionWidth=None):
+    def _update_operators(self, job_config=None, jobID=None, job_name=None, parallelRegionWidth=None, force=None):
         args = ["--disable-ssl-verify", "updateoperators"]
         if jobID:
             args.append(jobID)
@@ -50,6 +50,8 @@ class Testupdateoperator(unittest.TestCase):
         args.extend(['-g', job_config])
         if parallelRegionWidth:
             args.extend(["--parallelRegionWidth", parallelRegionWidth])
+        if force:
+            args.append('--force')
         rc, val = streamtool.run_cmd(args=args)
         return rc, val
 
@@ -80,7 +82,7 @@ class Testupdateoperator(unittest.TestCase):
         newRC, val = self._update_operators(job_config = new_config, jobID=job.id)
         self.assertEqual(newRC, 1)
 
-    # Check no config w/ parallelRegionWidth works as expected
+    # Check no config w/ parallelRegionWidth fails bc PE's need to be stopped first
     def test_no_config_with_arg(self):
         # Submit job, assert no problems
         rc, job = self._submitjob(sab=str(self.sab_path), job_config=str(self.initial_config))
@@ -90,6 +92,18 @@ class Testupdateoperator(unittest.TestCase):
         # updateoperators
         new_parallelRegionWidth = 'Link*=2'
         newRC, val = self._update_operators(jobID=job.id, parallelRegionWidth=new_parallelRegionWidth)
+        self.assertEqual(newRC, 1)
+
+    # Check no config w/ parallelRegionWidth and force arg works as expected
+    def test_no_config_with_arg_and_force(self):
+        # Submit job, assert no problems
+        rc, job = self._submitjob(sab=str(self.sab_path), job_config=str(self.initial_config))
+        self.jobs_to_cancel.extend([job])
+        self.assertEqual(rc, 0)
+
+        # updateoperators
+        new_parallelRegionWidth = 'Link*=2'
+        newRC, val = self._update_operators(jobID=job.id, parallelRegionWidth=new_parallelRegionWidth, force=True)
         self.assertEqual(newRC, 0)
 
         self.check_update_ops(job, 2)

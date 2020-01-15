@@ -695,6 +695,8 @@ def _updateops_parser(subparsers):
     group.add_argument('--jobname', help='Specifies the name of the job.', metavar='job-name')
     update_ops.add_argument('--jobConfig', '-g', help='Specifies the name of an external file that defines a job configuration overlay', metavar='file-name')
     update_ops.add_argument('--parallelRegionWidth', help='Specifies a parallel region name and its width')
+    update_ops.add_argument('--force', action='store_true', help='Specifies whether to automatically stop the PEs that need to be stopped', default=False)
+
     _user_arg(update_ops)
 
 def _updateops(instance, cmd_args, rc):
@@ -755,6 +757,11 @@ def _updateops(instance, cmd_args, rc):
                 cfg_inst['adjustmentSection'] = [entry]
             else:
                 JCO['configInstructions'] = {'adjustmentSection': [entry]}
+
+    # If --force present, force PE to stop
+    if cmd_args.force:
+        JCO = job_config_json['jobConfigOverlays'][0]
+        JCO['operationConfig'] = {"forcePeStopped": True}
 
     job_config = streamsx.topology.context.JobConfig.from_overlays(job_config_json)
     json_result = job.update_operators(job_config)
