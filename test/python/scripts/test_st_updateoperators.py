@@ -129,7 +129,7 @@ class Testupdateoperator(unittest.TestCase):
 
     # Check updateoperators works as expected on valid config
     def test_valid_config(self):
-        new_config = str((my_path / "updateoperators_test_files/config2.json").resolve())
+        new_config = str((my_path / "updateoperators_test_files/new_config.json").resolve())
 
         # Submit job, assert no problems
         rc, job = self._submitjob(sab=self.sab_path, job_config=self.initial_config)
@@ -144,7 +144,7 @@ class Testupdateoperator(unittest.TestCase):
 
     # Check --jobname arg
     def test_jobname(self):
-        new_config = str((my_path / "updateoperators_test_files/config2.json").resolve())
+        new_config = str((my_path / "updateoperators_test_files/new_config.json").resolve())
 
         # Submit job, assert no problems
         rc, job = self._submitjob(sab=self.sab_path, job_config=self.initial_config)
@@ -159,7 +159,7 @@ class Testupdateoperator(unittest.TestCase):
 
     # Check parallelRegionWidth arg overrides arg in JCO
     def test_parallelRegionWidth(self):
-        new_config = str((my_path / "updateoperators_test_files/config2.json").resolve())
+        new_config = str((my_path / "updateoperators_test_files/new_config.json").resolve())
 
         # Submit job, assert no problems
         rc, job = self._submitjob(sab=self.sab_path, job_config=self.initial_config)
