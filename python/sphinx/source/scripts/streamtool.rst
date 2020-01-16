@@ -84,7 +84,7 @@ Usage
 
     streamsx-streamtool uploadtoolkit [-h] --path toolkit-path [--User user]
 
-    streamsx-streamtool updateoperatos [-h] [--jobname job-name]
+    streamsx-streamtool updateoperators [-h] [--jobname job-name]
             [--jobConfig file-name]
             [--parallelRegionWidth parallelRegionName=width]
             [--force] [--User user]
@@ -509,14 +509,14 @@ Options and arguments
 .. versionadded:: 1.13
 
 *****************************************
-updateoperatos
+updateoperators
 *****************************************
 
 Adjust a job configuration while the job is running in order to improve the job performance
 
 .. code-block:: none
 
-    streamsx-streamtool updateoperatos [-h] [--jobname job-name]
+    streamsx-streamtool updateoperators [-h] [--jobname job-name]
             [--jobConfig file-name]
             [--parallelRegionWidth parallelRegionName=width]
             [--force] [--User user]
