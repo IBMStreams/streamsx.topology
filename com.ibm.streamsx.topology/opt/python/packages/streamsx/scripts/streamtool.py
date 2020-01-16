@@ -686,12 +686,12 @@ def _uploadtoolkit(instance, cmd_args, rc):
 ###########################################
 def _updateops_parser(subparsers):
     update_ops = subparsers.add_parser('updateoperators', help='Adjust a job configuration while the job is running')
-    g1 = update_ops.add_argument_group(title='Job', description='One of these options must be chosen.')
+    g1 = update_ops.add_argument_group(title='Job selection', description='One of these options must be chosen.')
     group = g1.add_mutually_exclusive_group(required=True)
     group.add_argument('jobid', help='Specifies a job ID.', nargs='?', metavar='jobid')
     group.add_argument('--jobname', help='Specifies the name of the job.', metavar='job-name')
     update_ops.add_argument('--jobConfig', '-g', help='Specifies the name of an external file that defines a job configuration overlay', metavar='file-name')
-    update_ops.add_argument('--parallelRegionWidth', help='Specifies a parallel region name and its width')
+    update_ops.add_argument('--parallelRegionWidth', help='Specifies a parallel region name and its width', metavar='parallelRegionName=width')
     update_ops.add_argument('--force', action='store_true', help='Specifies whether to automatically stop the PEs that need to be stopped', default=False)
 
     _user_arg(update_ops)
