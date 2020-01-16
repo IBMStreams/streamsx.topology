@@ -55,6 +55,7 @@ class Testupdateoperator(unittest.TestCase):
         cls.initial_config = src['jobConfigPath']
 
         cls.files_to_remove = [src['bundlePath'], src['jobConfigPath']]
+        cls.new_parallelRegionWidth = 'test*=2'
 
     @classmethod
     def tearDownClass(cls):
@@ -109,8 +110,7 @@ class Testupdateoperator(unittest.TestCase):
         self.assertEqual(rc, 0)
 
         # updateoperators
-        new_parallelRegionWidth = 'test*=2'
-        newRC, val = self._update_operators(jobID=job.id, parallelRegionWidth=new_parallelRegionWidth)
+        newRC, val = self._update_operators(jobID=job.id, parallelRegionWidth=self.new_parallelRegionWidth)
         self.assertEqual(newRC, 1)
 
     # Check parallelRegionWidth arg w/ force arg works as expected
@@ -121,8 +121,7 @@ class Testupdateoperator(unittest.TestCase):
         self.assertEqual(rc, 0)
 
         # updateoperators
-        new_parallelRegionWidth = 'test*=2'
-        newRC, val = self._update_operators(jobID=job.id, parallelRegionWidth=new_parallelRegionWidth, force=True)
+        newRC, val = self._update_operators(jobID=job.id, parallelRegionWidth=self.new_parallelRegionWidth, force=True)
         self.assertEqual(newRC, 0)
 
         self.check_update_ops(job, 2)
@@ -139,7 +138,6 @@ class Testupdateoperator(unittest.TestCase):
         # updateoperators
         newRC, val = self._update_operators(job_config = new_config, jobID=job.id)
         self.assertEqual(newRC, 0)
-
         self.check_update_ops(job, 3)
 
     # Check --jobname arg
@@ -154,7 +152,6 @@ class Testupdateoperator(unittest.TestCase):
         # updateoperators
         newRC, val = self._update_operators(job_config = new_config, job_name=job.name)
         self.assertEqual(newRC, 0)
-
         self.check_update_ops(job, 3)
 
     # Check parallelRegionWidth arg overrides arg in JCO
@@ -167,10 +164,8 @@ class Testupdateoperator(unittest.TestCase):
         self.assertEqual(rc, 0)
 
         # updateoperators
-        new_parallelRegionWidth = 'test*=2'
-        newRC, val = self._update_operators(job_config = new_config, jobID=job.id, parallelRegionWidth=new_parallelRegionWidth)
+        newRC, val = self._update_operators(job_config = new_config, jobID=job.id, parallelRegionWidth=self.new_parallelRegionWidth)
         self.assertEqual(newRC, 0)
-
         self.check_update_ops(job, 2)
 
     def check_update_ops(self, job, new_width, regionName='test*'):
