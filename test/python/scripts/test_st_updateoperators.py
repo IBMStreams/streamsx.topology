@@ -36,11 +36,37 @@ def cpd_setup():
 # Requires environment setup for a ICP4D Streams instance.
 @unittest.skipUnless(cpd_setup(), "requires Streams REST API setup")
 class Testupdateoperator(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Create the job
+        operator1 = "test1"
+
+        topo = Topology()
+        s = topo.source([1])
+        p = s.parallel(3, name=operator1)
+        p = p.filter(lambda x : x > 0)
+        e = p.end_parallel()
+
+        cfg = {}
+        cfg[ConfigParams.SSL_VERIFY] = False
+        src = submit("BUNDLE", topo, cfg)
+
+        cls.sab_path = src['bundlePath']
+        cls.initial_config = src['jobConfigPath']
+
+        cls.files_to_remove = [src['bundlePath'], src['jobConfigPath']]
+
+    @classmethod
+    def tearDownClass(cls):
+        for file in cls.files_to_remove:
+            if os.path.exists(file):
+                os.remove(file)
+
     def _submitjob(self, sab, job_config):
-        args = ["--disable-ssl-verify", "submitjob", sab, "-g", job_config]
+        args = ["--disable-ssl-verify", "submitjob", sab, '-g', job_config]
         rc, job = streamtool.run_cmd(args=args)
         return rc, job
-    
+
     def _update_operators(self, job_config=None, jobID=None, job_name=None, parallelRegionWidth=None, force=None):
         args = ["--disable-ssl-verify", "updateoperators"]
         if jobID:
@@ -57,17 +83,10 @@ class Testupdateoperator(unittest.TestCase):
 
     def setUp(self):
         self.jobs_to_cancel = []
-        self.files_to_remove = []
-        self.sab_path = str((my_path / "updateoperators_test_files/limits.Main.sab").resolve())
-        self.initial_config = str((my_path / "updateoperators_test_files/config1.json").resolve())
 
     def tearDown(self):
         for job in self.jobs_to_cancel:
             job.cancel(force=True)
-
-        for file in self.files_to_remove:
-            if os.path.exists(file):
-                os.remove(file)
 
     # Check blank config errors out
     def test_blank_config(self):
@@ -75,7 +94,7 @@ class Testupdateoperator(unittest.TestCase):
 
         # Submit job, assert no problems
         rc, job = self._submitjob(sab=str(self.sab_path), job_config=str(self.initial_config))
-        self.jobs_to_cancel.extend([job])
+        self.jobs_to_cancel.append(job)
         self.assertEqual(rc, 0)
 
         # updateoperators
@@ -86,28 +105,27 @@ class Testupdateoperator(unittest.TestCase):
     def test_no_config_with_arg(self):
         # Submit job, assert no problems
         rc, job = self._submitjob(sab=str(self.sab_path), job_config=str(self.initial_config))
-        self.jobs_to_cancel.extend([job])
+        self.jobs_to_cancel.append(job)
         self.assertEqual(rc, 0)
 
         # updateoperators
-        new_parallelRegionWidth = 'Link*=2'
+        new_parallelRegionWidth = 'test*=2'
         newRC, val = self._update_operators(jobID=job.id, parallelRegionWidth=new_parallelRegionWidth)
         self.assertEqual(newRC, 1)
 
-    # Check no config w/ parallelRegionWidth and force arg works as expected
+    # Check parallelRegionWidth arg w/ force arg works as expected
     def test_no_config_with_arg_and_force(self):
         # Submit job, assert no problems
         rc, job = self._submitjob(sab=str(self.sab_path), job_config=str(self.initial_config))
-        self.jobs_to_cancel.extend([job])
+        self.jobs_to_cancel.append(job)
         self.assertEqual(rc, 0)
 
         # updateoperators
-        new_parallelRegionWidth = 'Link*=2'
+        new_parallelRegionWidth = 'test*=2'
         newRC, val = self._update_operators(jobID=job.id, parallelRegionWidth=new_parallelRegionWidth, force=True)
         self.assertEqual(newRC, 0)
 
         self.check_update_ops(job, 2)
-
 
     # Check updateoperators works as expected on valid config
     def test_valid_config(self):
@@ -115,7 +133,7 @@ class Testupdateoperator(unittest.TestCase):
 
         # Submit job, assert no problems
         rc, job = self._submitjob(sab=self.sab_path, job_config=self.initial_config)
-        self.jobs_to_cancel.extend([job])
+        self.jobs_to_cancel.append(job)
         self.assertEqual(rc, 0)
 
         # updateoperators
@@ -130,7 +148,7 @@ class Testupdateoperator(unittest.TestCase):
 
         # Submit job, assert no problems
         rc, job = self._submitjob(sab=self.sab_path, job_config=self.initial_config)
-        self.jobs_to_cancel.extend([job])
+        self.jobs_to_cancel.append(job)
         self.assertEqual(rc, 0)
 
         # updateoperators
@@ -139,24 +157,23 @@ class Testupdateoperator(unittest.TestCase):
 
         self.check_update_ops(job, 3)
 
-    # Check parallelRegionWidth arg
+    # Check parallelRegionWidth arg overrides arg in JCO
     def test_parallelRegionWidth(self):
         new_config = str((my_path / "updateoperators_test_files/config2.json").resolve())
 
         # Submit job, assert no problems
         rc, job = self._submitjob(sab=self.sab_path, job_config=self.initial_config)
-        self.jobs_to_cancel.extend([job])
+        self.jobs_to_cancel.append(job)
         self.assertEqual(rc, 0)
 
         # updateoperators
-        new_parallelRegionWidth = 'Link*=2'
+        new_parallelRegionWidth = 'test*=2'
         newRC, val = self._update_operators(job_config = new_config, jobID=job.id, parallelRegionWidth=new_parallelRegionWidth)
         self.assertEqual(newRC, 0)
 
         self.check_update_ops(job, 2)
 
-
-    def check_update_ops(self, job, new_width):
+    def check_update_ops(self, job, new_width, regionName='test*'):
         """ Checks whether the job operators has been updated to the correct new width
 
         Arguments:
@@ -164,7 +181,7 @@ class Testupdateoperator(unittest.TestCase):
             new_width {int}
         """
         channel = []
-        for op in job.get_operators(name='Link*'):
+        for op in job.get_operators(name=regionName):
             channel.append(op.channel)
 
         if len(channel) != new_width:
