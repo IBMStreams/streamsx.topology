@@ -84,6 +84,11 @@ Usage
 
     streamsx-streamtool uploadtoolkit [-h] --path toolkit-path [--User user]
 
+    streamsx-streamtool updateoperatos [-h] [--jobname job-name]
+            [--jobConfig file-name]
+            [--parallelRegionWidth parallelRegionName=width]
+            [--force] [--User user]
+            [jobid]
 
 *****************************************
 submitjob
@@ -498,7 +503,46 @@ Upload a toolkit to a build service.
 
 Options and arguments
 
-    -p,--path
+    -p,--path:
         Specifies the path of the indexed toolkit to upload
 
 .. versionadded:: 1.13
+
+*****************************************
+updateoperatos
+*****************************************
+
+Adjust a job configuration while the job is running in order to improve the job performance
+
+.. code-block:: none
+
+    streamsx-streamtool updateoperatos [-h] [--jobname job-name]
+            [--jobConfig file-name]
+            [--parallelRegionWidth parallelRegionName=width]
+            [--force] [--User user]
+            [jobid]
+
+Options and arguments
+
+    jobid:
+        Specifies a job ID
+
+    -\--jobname:
+        Specifies the name of the job
+
+    -g,--jobConfig:
+        Specifies the name of an external file that defines a job
+        configuration overlay. You can use a job configuration overlay to set
+        the job configuration when the job is submitted or to change the
+        configuration of a running job.
+
+    -\--parallelRegionWidth:
+        Specifies a parallel region name and its width.
+
+    -\--force:
+        Specifies whether to automatically stop the PEs that need to be
+        stopped.
+
+    -U,--User:
+        Specifies an IBM Streams user ID that has authority to run the
+        command.
