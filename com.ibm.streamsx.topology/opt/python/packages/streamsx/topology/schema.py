@@ -39,7 +39,7 @@ Python 3::
 
     sensors = raw_readings.map(parse_sensor, schema=SensorReading)
 
-Python 3, 2.7::
+Python 3::
 
     sensors = raw_readings.map(parse_sensor,
         schema='tuple<int64 sensor_id, int64 ts, float64 reading>')
@@ -61,7 +61,7 @@ Explictly defining a stream's schema is flexible and various types of values are
     * Builtin types as aliases for common schema types:
 
         * ``json`` (module) - for  :py:const:`~CommonSchema.Json`
-        * ``str`` (``unicode`` 2.7) - for  :py:const:`~CommonSchema.String`
+        * ``str`` - for  :py:const:`~CommonSchema.String`
         * ``object`` - for :py:const:`~CommonSchema.Python`
 
     * Values of the enumeration :py:class:`CommonSchema`
@@ -72,16 +72,11 @@ Explictly defining a stream's schema is flexible and various types of values are
 
 """
 
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
 # For style dicts passed into Python from Streams C++
 # are raw dicts since they are created by Python C-API code
 # not the future dict in Python 2.7.
 _spl_dict = dict
 _spl_object = object
-
-from future.builtins import *
-from past.builtins import basestring, unicode
 
 __all__ = ['is_common', 'StreamSchema', 'CommonSchema']
 
@@ -94,12 +89,13 @@ import json
 import sys
 import token
 import tokenize
+import typing
 
 import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
 
 
-_spl_str = unicode if sys.version_info.major == 2 else str
+_spl_str = str
 
 def _normalize(schema, allow_none=True):
     """
@@ -112,7 +108,7 @@ def _normalize(schema, allow_none=True):
     if isinstance(schema, StreamSchema):
         return schema
 
-    if isinstance(schema, basestring):
+    if isinstance(schema, str):
         return StreamSchema(schema)
 
     py_types = {
@@ -124,13 +120,10 @@ def _normalize(schema, allow_none=True):
     if schema in py_types:
         return py_types[schema]
 
-    # With Python 3 allow a named tuple with type hints
+    # Allow a named tuple with type hints
     # to be used as a schema definition
-    if sys.version_info.major == 3:
-        import typing
-        if isinstance(schema, type) and  issubclass(schema, tuple):
-            if hasattr(schema, '_fields') and hasattr(schema, '_field_types'):
-                return _from_named_tuple(schema)
+    if _is_typedtuple(schema):
+        return _from_named_tuple(schema)
 
     raise ValueError("Unknown stream schema type:" + str(schema))
 
@@ -149,12 +142,15 @@ def is_common(schema):
         return schema.schema() in _SCHEMA_COMMON
     if isinstance(schema, CommonSchema):
         return True
-    if isinstance(schema, basestring):
+    if isinstance(schema, str):
         return is_common(StreamSchema(schema))
     return False
 
 def _is_namedtuple(cls):
-    return cls != tuple and issubclass(cls, tuple) and hasattr(cls, '_fields')
+    return cls != tuple and isinstance(cls, type) and issubclass(cls, tuple) and hasattr(cls, '_fields')
+
+def _is_typedtuple(cls):
+    return _is_namedtuple(cls) and hasattr(cls, '_field_types')
 
 _SCHEMA_PENDING = '<pending>'
 def _is_pending(schema):
@@ -404,9 +400,9 @@ class StreamSchema(object) :
     ``complex32``                 complex with `float32` values   ``complex``                                ``complex(value)`` with real and imaginary values truncated to 32 bits
     ``complex64``                 complex with `float64` values   ``complex``                                ``complex(value)``
     ``timestamp``                 Nanosecond timestamp            :py:class:`~streamsx.spl.types.Timestamp`  -
-    ``rstring``                   UTF-8 string                    ``str`` (``unicode`` 2.7)                  ``str(value)``
-    ``rstring[N]``                Bounded UTF-8 string            ``str`` (``unicode`` 2.7)                  ``str(value)``
-    ``ustring``                   UTF-16 string                   ``str`` (``unicode`` 2.7)                  ``str(value)``
+    ``rstring``                   UTF-8 string                    ``str``                                    ``str(value)``
+    ``rstring[N]``                Bounded UTF-8 string            ``str``                                    ``str(value)``
+    ``ustring``                   UTF-16 string                   ``str``                                    ``str(value)``
     ``blob``                      Sequence of bytes               ``memoryview``                             -
     ``list<T>``                   List with elements of type `T`  ``list``                                   -
     ``list<T>[N]``                Bounded list                    ``list``                                   -
@@ -480,7 +476,7 @@ class StreamSchema(object) :
         For the common schemas the style is fixed:
 
             * ``CommonSchema.Python`` - ``object`` - Stream tuples are arbitrary objects.
-            * ``CommonSchema.String`` - ``str`` - Stream tuples are unicode strings. (``unicode`` on Python 2.7).
+            * ``CommonSchema.String`` - ``str`` - Stream tuples are unicode strings.
             * ``CommonSchema.Json`` - ``dict`` - Stream tuples are a ``dict`` that represents the JSON object.
 
         For a structured schema the supported styles are:
@@ -525,12 +521,7 @@ class StreamSchema(object) :
             return tuple
         if name is True:
             name = 'StreamTuple'
-        if sys.version_info.major == 2:
-            fields = _attribute_names(self._types)
-            nt = collections.namedtuple(name, fields, rename=True)
-        else:
-            import typing
-            nt = typing.NamedTuple(name, _attribute_pytypes(self._types))
+        nt = typing.NamedTuple(name, _attribute_pytypes(self._types))
 
         nt._splpy_namedtuple = name
         return nt
@@ -589,7 +580,7 @@ class StreamSchema(object) :
         if not named:
             return self._copy(tuple)
 
-        if named == True or isinstance(named, basestring):
+        if named == True or isinstance(named, str):
             return self._copy(self._make_named_tuple(name=named))
 
         return self._copy(tuple)
@@ -650,7 +641,12 @@ class StreamSchema(object) :
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return self.schema() == other.schema()
+            if self.schema() == other.schema():
+                if self.style == other.style:
+                    return True
+                if _is_typedtuple(self.style) and _is_typedtuple(other.style):
+                    return self.style._fields == other.style._fields and self.style._field_types == other.style._field_types
+ 
         return False
 
     def __ne__(self, other):
@@ -767,7 +763,6 @@ class CommonSchema(enum.Enum):
         return str(self.schema())
 
 def _from_named_tuple(nt):
-    import typing
     spl_types = []
     for name in nt._fields:
         spl_types.append(_spl_from_type(nt._field_types[name]))
@@ -790,7 +785,6 @@ def _spl_from_type(type_):
     # See https://bugs.python.org/issue34568
     # isinstance,issubclass no longer work in Python 3.7
     if hasattr(type_, '__origin__') and hasattr(type_, '__args__'):
-        import typing
         if len(type_.__args__) == 1:
             et = type_.__args__[0]
             if typing.List[et] == type_:
@@ -803,7 +797,6 @@ def _spl_from_type(type_):
             if typing.Mapping[kt, vt] == type_:
                 return 'map<' + _spl_from_type(kt) + ', ' + _spl_from_type(vt) + '>'
     if hasattr(type_, '__args__') and len(type_.__args__) == 2:
-        import typing
         if type(None) in type_.__args__:
             et = type_.__args__[0] if type_.__args__[1] is type(None) else type_.__args__[1]
             if typing.Optional[et] == type_:
@@ -816,7 +809,6 @@ def _type_from_spl(type_):
         return _SPLTYPE_TO_PY[type_]
 
     if isinstance(type_, tuple):
-        import typing
         if type_[0] == 'list':
             return typing.List[_type_from_spl(type_[1])]
         if type_[0] == 'set':

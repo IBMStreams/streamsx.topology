@@ -1,5 +1,5 @@
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2016
+# Copyright IBM Corp. 2016,2019
 
 from __future__ import print_function
 from streamsx.topology.topology import Topology
@@ -29,10 +29,10 @@ def main():
     source = topo.source(transform_sample_functions.int_strings_transform)
     
     # transform the stream of string tuples (`source`) to a stream of integer tuples (`i1`)
-    i1 = source.transform(transform_sample_functions.string_to_int)
+    i1 = source.map(transform_sample_functions.string_to_int)
     
     # adds 17 to each integer tuple 
-    i2 = i1.transform(transform_sample_functions.AddNum(17))
+    i2 = i1.map(transform_sample_functions.AddNum(17))
     
     # terminate the stream by printing each tuple to stdout
     i2.print()

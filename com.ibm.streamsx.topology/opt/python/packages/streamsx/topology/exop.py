@@ -3,16 +3,13 @@
 # Copyright IBM Corp. 2016,2019
 
 
-from future.builtins import *
-from past.builtins import basestring
-
 __all__ = ['ExtensionOperator']
 
 import streamsx.topology.topology
 import streamsx.topology.schema
 
 def _single_schema(schemas):
-    if isinstance(schemas, basestring):
+    if isinstance(schemas, str):
         return schemas
     if isinstance(schemas, streamsx.topology.schema.CommonSchema):
         return schemas

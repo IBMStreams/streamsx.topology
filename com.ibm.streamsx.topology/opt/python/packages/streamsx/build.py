@@ -21,7 +21,6 @@ returning an :py:class:`~streamsx.build.BuildService`.
 
 .. seealso:: :ref:`sas-main`
 """
-from future.builtins import *
 
 __all__ = ['BuildService']
 

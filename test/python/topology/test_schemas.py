@@ -1,6 +1,5 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2016
-from past.builtins import unicode
 import unittest
 import random
 import decimal
@@ -77,6 +76,31 @@ class TestSchema(unittest.TestCase):
 
       self.assertEqual('int64', p._type[1][0])
       self.assertEqual('b', p._type[1][1])
+
+    def test_equality(self):
+        s1 = _sch.StreamSchema('tuple<int32 a, int64 b>')
+        s2 = _sch.StreamSchema('tuple<int32 a, int64 b>')
+        sn = _sch.StreamSchema('tuple<int32 a, int32 b>')
+
+        self.assertTrue(s1 == s2)
+        self.assertFalse(s1 != s2)
+
+        self.assertFalse(s1 == sn)
+        self.assertTrue(s1 != sn)
+
+        s1t = s1.as_tuple()
+        s2t = s1.as_tuple()
+        self.assertTrue(s1t == s2t)
+        self.assertFalse(s1t != s2t)
+        self.assertFalse(s1 == s1t)
+        self.assertTrue(s1 != s1t)
+
+        s1nt = s1.as_tuple(named=True)
+        s2nt = s2.as_tuple(named=True)
+        self.assertTrue(s1nt == s2nt)
+        self.assertFalse(s1nt != s2nt)
+        self.assertFalse(s1 == s1nt)
+        self.assertFalse(s1t == s1nt)
 
     def test_primitives(self):
       for typ in _PRIMITIVES:
@@ -161,20 +185,6 @@ class TestSchema(unittest.TestCase):
         s = _sch.StreamSchema('tuple<set<list<int32>[9]>[100] a>')
 
 
-    @unittest.skip("not yet supported")
-    def test_named_schema(self):
-        s = _sch.StreamSchema('tuple<int32 a, boolean alert>')
-
-        nt1 = s._namedtuple()
-        nt2 = s._namedtuple()
-        self.assertIs(nt1, nt2)
-
-        t = nt1(345, False)
-        self.assertEqual(345, t.a)
-        self.assertFalse(t.alert)
-        self.assertEqual(345, t[0])
-        self.assertFalse(t[1])
-
     def test_common_styles(self):
         """ Test that common schemas cannot have their style changed"""
         s = _sch.CommonSchema.Python
@@ -213,7 +223,7 @@ class TestSchema(unittest.TestCase):
         self.assertEqual(dict, sd2.style)
 
         self.assertEqual(object, _sch.CommonSchema.Python.value.style)
-        self.assertEqual(unicode if sys.version_info.major == 2 else str, _sch.CommonSchema.String.value.style)
+        self.assertEqual(str, _sch.CommonSchema.String.value.style)
         self.assertEqual(dict, _sch.CommonSchema.Json.value.style)
 
         snt = s.as_tuple(named='Alert')
@@ -266,7 +276,7 @@ class TestSchema(unittest.TestCase):
         self.assertEqual(s, _sch._normalize(s))
 
         self.assertEqual(_sch.CommonSchema.Python, _sch._normalize(object))
-        _u = str if sys.version_info.major == 3 else unicode
+        _u = str 
         self.assertEqual(_sch.CommonSchema.String, _sch._normalize(_u))
         import json
         self.assertEqual(_sch.CommonSchema.Json, _sch._normalize(json))
@@ -337,6 +347,8 @@ class TestKeepSchema(unittest.TestCase):
         topo = Topology()
         s = topo.source([]).map(lambda x : x, schema='tuple<rstring a, int32 b>')
         self._check_kept(s)
+
+        self.assertIs(s, s.map(schema='tuple<rstring a, int32 b>'))
 
     def _check_kept(self, s):
        # Stream.oport.schema is an internal api

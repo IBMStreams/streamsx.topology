@@ -323,10 +323,6 @@ defaulting to *attributes by name*. The style value can be set to:
   * ``'name'`` - *attributes by name* (the default)
   * ``'position'`` - *attributes by position*
 
-**Note**: For backwards compatibility ``@spl.pipe`` and ``@spl.sink``
-**always** use *attributes by position* and do not support ``**kwargs``.
-They do not support the ``style`` parameter.
-
 Examples
 ========
 
@@ -577,10 +573,9 @@ The list may be empty resulting in no tuples being submitted.
 
 """
 
-from future.builtins import *
 from enum import Enum
 
-__all__ = ['source', 'map', 'filter', 'for_each', 'PrimitiveOperator', 'input_port', 'primitive_operator', 'extracting', 'pipe', 'ignore', 'sink']
+__all__ = ['source', 'map', 'filter', 'for_each', 'PrimitiveOperator', 'input_port', 'primitive_operator', 'extracting', 'ignore']
 
 import functools
 import inspect
@@ -593,17 +588,6 @@ import warnings
 
 import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
-
-############################################
-# setup for function inspection
-if sys.version_info.major == 3:
-  _inspect = inspect
-elif sys.version_info.major == 2:
-  import funcsigs
-  _inspect = funcsigs
-else:
-  raise ValueError("Python version not supported.")
-############################################
 
 # Used to recreate instances of decorated operators
 # from their module & class name during pickleling (dill)
@@ -664,28 +648,6 @@ def extracting():
     """
     return _EXTRACTING
 
-def pipe(wrapped):
-    """
-    Decorator to create an SPL operator from a function.
-    
-    A pipe SPL operator with a single input port and a single
-    output port. For each tuple on the input port the
-    function is called passing the contents of the tuple.
-
-    SPL attributes from the tuple are passed by position.
-    
-    The value returned from the function results in
-    zero or more tuples being submitted to the operator output
-    port, see :ref:`submit-from-python`.
-
-    .. deprecated:: 1.8
-        Recommended to use :py:class:`@spl.map <map>` instead.
-    """
-    if not inspect.isfunction(wrapped):
-        raise TypeError('A function is required')
-    warnings.warn("Use @spl.map()", DeprecationWarning, stacklevel=2)
-
-    return _wrapforsplop(_OperatorType.Pipe, wrapped, 'position', False)
 
 #
 # Wrap object for an SPL operator, either
@@ -768,7 +730,7 @@ def _define_style(wrapped, fn, style):
     has_positional = False
     req_named = False
      
-    pmds = _inspect.signature(fn).parameters
+    pmds = inspect.signature(fn).parameters
     itpmds = iter(pmds)
     # Skip self
     if inspect.isclass(wrapped):
@@ -777,16 +739,16 @@ def _define_style(wrapped, fn, style):
     pc = 0
     for pn in itpmds:
         pmd = pmds[pn]
-        if pmd.kind == _inspect.Parameter.POSITIONAL_ONLY:
+        if pmd.kind == inspect.Parameter.POSITIONAL_ONLY:
             raise TypeError('Positional only parameters are not supported:' + pn)
-        elif pmd.kind == _inspect.Parameter.VAR_POSITIONAL:
+        elif pmd.kind == inspect.Parameter.VAR_POSITIONAL:
             has_args = True
-        elif pmd.kind == _inspect.Parameter.VAR_KEYWORD:
+        elif pmd.kind == inspect.Parameter.VAR_KEYWORD:
             has_kwargs = True
-        elif pmd.kind == _inspect.Parameter.POSITIONAL_OR_KEYWORD:
+        elif pmd.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD:
             has_positional = True
-        elif pmd.kind == _inspect.Parameter.KEYWORD_ONLY:
-            if pmd.default is _inspect.Parameter.empty:
+        elif pmd.kind == inspect.Parameter.KEYWORD_ONLY:
+            if pmd.default is inspect.Parameter.empty:
                 req_named = True
         pc +=1
                
@@ -841,7 +803,7 @@ def _define_fixed(wrapped, callable_):
 
     fixed_count = 0
     if style == 'tuple':
-        sig = _inspect.signature(callable_)
+        sig = inspect.signature(callable_)
         pmds = sig.parameters
         itpmds = iter(pmds)
         # Skip 'self' for classes
@@ -850,12 +812,12 @@ def _define_fixed(wrapped, callable_):
 
         for pn in itpmds:
             param = pmds[pn]
-            if param.kind == _inspect.Parameter.POSITIONAL_OR_KEYWORD:
+            if param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD:
                 fixed_count += 1
-            if param.kind == _inspect.Parameter.VAR_POSITIONAL: # *args
+            if param.kind == inspect.Parameter.VAR_POSITIONAL: # *args
                 fixed_count = -1
                 break
-            if param.kind == _inspect.Parameter.VAR_KEYWORD:
+            if param.kind == inspect.Parameter.VAR_KEYWORD:
                 break
     return fixed_count
 
@@ -1101,22 +1063,6 @@ def ignore(wrapped):
     _ignore._splpy_file = inspect.getsourcefile(wrapped)
     return _ignore
 
-# Defines a function as a sink operator
-def sink(wrapped):
-    """Creates an SPL operator with a single input port.
-
-    A SPL operator with a single input port and no output ports.
-    For each tuple on the input port the decorated function
-    is called passing the contents of the tuple.
-
-    .. deprecated:: 1.8
-        Recommended to use :py:class:`@spl.for_each <for_each>` instead.
-    """
-    if not inspect.isfunction(wrapped):
-        raise TypeError('A function is required')
-    warnings.warn("Use @spl.for_each()", DeprecationWarning, stacklevel=2)
-
-    return _wrapforsplop(_OperatorType.Sink, wrapped, 'position', False)
 
 # Defines a function as a sink operator
 class for_each(object):
@@ -1358,8 +1304,6 @@ class primitive_operator(object):
         inputs = dict()
         for fname, fn in inspect.getmembers(wrapped):
             if hasattr(fn, '_splpy_input_port_seq'):
-                if sys.version_info.major == 2:
-                    fn = fn.__func__
                 inputs[fn._splpy_input_port_seq] = fn
 
         cls._splpy_input_ports = []

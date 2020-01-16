@@ -1,1 +1,3 @@
-../requirements.txt
+requests
+dill
+sphinx-autodoc-typehints

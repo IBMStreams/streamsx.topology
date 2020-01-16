@@ -48,10 +48,20 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
          SPL::AutoPortMutex am(mutex_, *this);
 #endif
          try {
+             SplpyGIL lock;
 
 @include "../pyspltuple2value.cgt"
 
-             passed = streamsx::topology::Splpy::pyTupleFilter(funcop_->callable(), value);
+             PyObject *ret = pySplProcessTuple(funcop_->callable(), value);
+
+             if (ret == NULL) {
+                 throw SplpyExceptionInfo::pythonError("filter");
+             }
+
+             passed = PyObject_IsTrue(ret);
+
+             Py_DECREF(ret);
+
          } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
              SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
              return;

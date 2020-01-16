@@ -61,19 +61,6 @@ pipeline {
          }
        }
     }
-    stage('Python 2.7 standalone') {
-       when { anyOf { branch 'master'; branch 'feature/*' } }
-       steps {
-         script {
-           try {
-               sh 'ci/test_python27_standalone.sh'
-           }
-           catch (exc) {
-             currentBuild.result = 'UNSTABLE'
-           }
-         }
-       }
-    }
   }
   post {
     always {

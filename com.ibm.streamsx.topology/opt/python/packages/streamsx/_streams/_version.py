@@ -3,7 +3,7 @@
 # Copyright IBM Corp. 2018,2019
 
 ## Common PEP396 version for modules shipped with streamsx packages
-__version__='1.13.15'
+__version__='1.14.1a'
 
 import pkg_resources
 import sys
@@ -16,7 +16,7 @@ import warnings
 # is set by default by streamsprofile.sh
 def _mismatch_check(module_name):
     if sys.version_info.major == 2:
-        warnings.warn("Python 2.7 support is deprecated for module {}.".format(module_name), DeprecationWarning, stacklevel=3)
+        raise RuntimeError("Python 2.7 is not supported for module {}.".format(module_name))
 
     srp = pkg_resources.working_set.find(pkg_resources.Requirement.parse('streamsx'))
     if srp is None or not srp.has_version():

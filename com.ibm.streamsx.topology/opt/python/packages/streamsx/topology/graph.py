@@ -2,10 +2,6 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2015,2016
 
-from __future__ import unicode_literals
-from future.builtins import *
-from past.builtins import basestring
-
 import os
 import sys
 import uuid
@@ -268,7 +264,7 @@ class SPLGraph(object):
          for location in fls:
              files = fls[location]
              for path in files:
-                 if isinstance(path, basestring):
+                 if isinstance(path, str):
                      # Simple file with a source to copy
                      f = {}
                      f['source'] = path
@@ -328,7 +324,9 @@ class _SPLInvocation(object):
         self._layout_hints = {}
         self._addOperatorFunction(self.function, stateful, nargs)
 
-    def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema= CommonSchema.Python,partitioned_keys=None, routing = None):
+    def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema=None,partitioned_keys=None, routing = None):
+        if schema is None:
+            schema=CommonSchema.Python
         if name is None:
             name = self.name + "_OUT"+str(len(self.outputPorts))
         oport = OPort(name, self, len(self.outputPorts), schema, oWidth, partitioned_keys, routing=routing)
@@ -476,13 +474,11 @@ class _SPLInvocation(object):
         self.language = 'python'
 
         # Wrap a lambda as a callable class instance
-        recurse = None
         if isinstance(function, types.LambdaType) and function.__name__ == "<lambda>" :
             if nargs:
                 function = streamsx.topology.runtime._Callable1(function, no_context=True)
             else:
                 function = streamsx.topology.runtime._Callable0(function, no_context=True)
-            recurse = True
         elif function.__module__ == '__main__':
             # Function/Class defined in main, create a callable wrapping its
             # dill'ed form
@@ -492,7 +488,6 @@ class _SPLInvocation(object):
             else:
                 function = streamsx.topology.runtime._Callable0(function,
                     no_context = True if inspect.isroutine(function) else None)
-            recurse = True
          
         if inspect.isroutine(function):
             # callable is a function
@@ -501,7 +496,7 @@ class _SPLInvocation(object):
             # callable is a callable class instance
             self.params["pyName"] = function.__class__.__name__
             # dill format is binary; base64 encode so it is json serializable 
-            self.params["pyCallable"] = base64.b64encode(dill.dumps(function, recurse=recurse if sys.version_info.major == 2 else None )).decode("ascii")
+            self.params["pyCallable"] = base64.b64encode(dill.dumps(function, recurse=None )).decode("ascii")
 
         if stateful is not None:
             self.params['pyStateful'] = bool(stateful)

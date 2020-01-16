@@ -49,10 +49,20 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
          SPL::AutoPortMutex am(mutex_, *this);
 #endif
          try {
+           SplpyGIL lock;
 
 @include "../pyspltuple2value.cgt"
 
-             split = streamsx::topology::Splpy::pyTupleSplit(funcop_->callable(), value);
+           PyObject *ret = pySplProcessTuple(funcop_->callable(), value);
+
+           if (ret == 0) {
+               throw SplpyExceptionInfo::pythonError("split");
+           }
+
+           pySplValueFromPyObject(split, ret);
+
+           Py_DECREF(ret);
+
          } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
              SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
              return;
