@@ -123,7 +123,6 @@ class Testupdateoperator(unittest.TestCase):
         # updateoperators
         newRC, val = self._update_operators(jobID=job.id, parallelRegionWidth=self.new_parallelRegionWidth, force=True)
         self.assertEqual(newRC, 0)
-
         self.check_update_ops(job, 2)
 
     # Check updateoperators works as expected on valid config
