@@ -1,0 +1,19 @@
+{
+  "jobConfigOverlays": [
+    {
+      "configInstructions": {
+        "adjustmentSection":  [
+          {
+            "targetParallelRegion": {
+              "regionName": "test*",
+              "newWidth": 3
+            }
+          }
+        ]
+      },
+      "operationConfig": {
+        "forcePeStopped": true
+      }
+    }
+  ]
+}
