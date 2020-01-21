@@ -701,6 +701,7 @@ def _updateops(instance, cmd_args, rc):
     job_config_json = None
     job = None
 
+    # Check that job w/ jobID or jobname exists
     if cmd_args.jobid:
         job = instance.get_job(id=str(cmd_args.jobid))
     elif cmd_args.jobname:
@@ -708,25 +709,27 @@ def _updateops(instance, cmd_args, rc):
         if jobs:
             job = jobs[0]
 
+    # job doesn't exist, throw error
     if not job:
         return (1, "The job was not found")
 
-    # JCO and/or parallelRegionWidth arg
     if cmd_args.jobConfig:
         with open(cmd_args.jobConfig) as fd:
             job_config_json = json.load(fd)
+        # If empty JCO passed in, throw error
         if not job_config_json:
             return (1, 'JCO is empty')
-    # No JCO, but parallelRegionWidth arg
     elif cmd_args.parallelRegionWidth:
+        # If no JCO, but parallelRegionWidth arg passed in, create empty JCO and later populate w/ parallelRegionWidth
         job_config_json = {}
-    # No JCO or parallelRegionWidth arg
     else:
+        # No JCO or parallelRegionWidth arg, throw error
         return (1, 'A JCO or parallelRegionWidth is required')
 
 
-    # Overrides the targetParallelRegion if already present in the JCO
     if cmd_args.parallelRegionWidth:
+        # Overrides the targetParallelRegion if already present in the JCO
+        # else, populate empty JCO w/ parallelRegionWidth
         arr = cmd_args.parallelRegionWidth.split('=')
         if len(arr) != 2:
             raise ValueError("The format of the following submission-time parameter is not valid: {}. The correct syntax is: <name>=<value>".format(arr))
