@@ -61,13 +61,13 @@ class TestSC(unittest.TestCase):
         # Call shell script to create the info.xml and toolkit.xml for each toolkit, and the info.xml for each app to build
         # Also updates toolkit names so different users can run tests concurrently
         # Ex. 'com.example.test_tk_2' -> 'com.example.tmyuuwkpjittfjla.test_tk_2'
-        script = (my_path / "toolkits/create_test_sc_files.sh").resolve()
+        script = (my_path / "sc_test_files/create_test_sc_files.sh").resolve()
         subprocess.call([script])
 
     @classmethod
     def tearDownClass(cls):
         # Call shell script to delete the info.xml and toolkit.xml for each toolkit, and the info.xml for each app to build
-        script = (my_path / "toolkits/delete_test_sc_files.sh").resolve()
+        script = (my_path / "sc_test_files/delete_test_sc_files.sh").resolve()
         subprocess.call([script])
 
     def setUp(self):
@@ -77,7 +77,7 @@ class TestSC(unittest.TestCase):
             self.skipTest("Build REST API is not available")
         else:
             # delete all the test toolkits from the buildserver, in case they were left behind by a previous test failure.
-            file_name = (my_path / "test_sc_old_toolkit_name.txt").resolve()
+            file_name = (my_path / "sc_test_files/test_sc_old_toolkit_name.txt").resolve()
             old_toolkit_name = None
             if os.path.isfile(file_name):
                 with open(file_name) as f:
