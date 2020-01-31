@@ -98,7 +98,7 @@ class TestSC(unittest.TestCase):
 
             # Store the randomly generated toolkit name, thus in case of network failure, on next run on test suite,
             # can read old randomly generated toolkit name, and delete toolkits off buildserver
-            with open((my_path / "test_sc_old_toolkit_name.txt").resolve(), "w") as file1:
+            with open((my_path / "sc_test_files/test_sc_old_toolkit_name.txt").resolve(), "w") as file1:
                 file1.write(self.random_name_variable)
 
             # Randomly shuffle the toolkits
