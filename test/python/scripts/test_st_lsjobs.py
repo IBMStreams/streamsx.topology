@@ -77,7 +77,9 @@ class Testlsjobs(unittest.TestCase):
         self.jobs_to_cancel = []
         self.files_to_remove = []
         self.my_instance = Instance.of_endpoint(username=self.username, verify=False)
+        self.instance_string = "Instance: " + self.my_instance.id
         self.name = "TEST__" + uuid.uuid4().hex.upper()[0 : self.stringLength]
+        self.true_headers = ["Id", "State", "Healthy", "User", "Date", "Name", "Group"]
 
     def tearDown(self):
         for job in self.jobs_to_cancel:
@@ -104,11 +106,11 @@ class Testlsjobs(unittest.TestCase):
         """ Get the string corresponding to each job in jobs from the lsjobs output string
 
         Arguments:
-            jobs {[job]} -- List of job objects
+            jobs {List} -- List of job objects
             output {String} -- Strings, representing the output from lsjobs
 
         Returns:
-            [String] -- Returns the list of strings corresponding to each job from jobs
+            {List} -- Returns the list of strings corresponding to each job from jobs
         """
         job_outputs = []
         for job in jobs:
@@ -158,24 +160,19 @@ class Testlsjobs(unittest.TestCase):
         output, error, rc = self.get_output(lambda: self._ls_jobs())
 
         # Check instance data output correctly
-        instance_string = "Instance: " + self.my_instance.id
-        self.assertEqual(output[0].strip(), instance_string)
+        self.assertEqual(output[0].strip(), self.instance_string)
 
         # Check headers outputs correctly
-        true_headers = ["Id", "State", "Healthy", "User", "Date", "Name", "Group"]
         headers = self.split_string(output[1])
-        self.assertEqual(true_headers, headers)
+        self.assertEqual(self.true_headers, headers)
 
         # Can't assume this is the only job running, find the line w/ our jobID, then do checks
         job_output = self.get_jobs_from_output([job1, job2], output)
         job1_output, job2_output = job_output[0], job_output[1]
 
-        # Check details of job1 are correct
+        # Check details of each job are correct
         self.check_job_Tf_fmt(job1, job1_output)
-
-        # Check details of job2 are correct
         self.check_job_Tf_fmt(job2, job2_output)
-
         self.assertEqual(rc, 0)
 
     # Create 3 jobs w/ names, and check --jobnames option correctly returns desired jobnames
@@ -191,24 +188,19 @@ class Testlsjobs(unittest.TestCase):
         output, error, rc = self.get_output(lambda: self._ls_jobs(jobnames=job_names))
 
         # Check instance data output correctly
-        instance_string = "Instance: " + self.my_instance.id
-        self.assertEqual(output[0].strip(), instance_string)
+        self.assertEqual(output[0].strip(), self.instance_string)
 
         # Check headers outputs correctly
-        true_headers = ["Id", "State", "Healthy", "User", "Date", "Name", "Group"]
         headers = self.split_string(output[1])
-        self.assertEqual(true_headers, headers)
+        self.assertEqual(self.true_headers, headers)
 
         # Filtering by job_names but can't assume output order, thus find jobs then do checks
         job_output = self.get_jobs_from_output([job1, job3], output)
         job1_output, job3_output = job_output[0], job_output[1]
 
-        # Check details of job1 are correct
+        # Check details of each job are correct
         self.check_job_Tf_fmt(job1, job1_output)
-
-        # Check details of job3 are correct
         self.check_job_Tf_fmt(job3, job3_output)
-
         self.assertEqual(rc, 0)
 
     # Create 3 jobs w/ names, and check --jobs option correctly returns desired jobnames
@@ -223,24 +215,19 @@ class Testlsjobs(unittest.TestCase):
         output, error, rc = self.get_output(lambda: self._ls_jobs(jobs=job_ids))
 
         # Check instance data output correctly
-        instance_string = "Instance: " + self.my_instance.id
-        self.assertEqual(output[0].strip(), instance_string)
+        self.assertEqual(output[0].strip(), self.instance_string)
 
         # Check headers outputs correctly
-        true_headers = ["Id", "State", "Healthy", "User", "Date", "Name", "Group"]
         headers = self.split_string(output[1])
-        self.assertEqual(true_headers, headers)
+        self.assertEqual(self.true_headers, headers)
 
         # Filtering by jobs_ids but can't assume output order, thus find jobs then do checks
         job_output = self.get_jobs_from_output([job1, job3], output)
         job1_output, job3_output = job_output[0], job_output[1]
 
-        # Check details of job1 are correct
+        # Check details of each job are correct
         self.check_job_Tf_fmt(job1, job1_output)
-
-        # Check details of job3 are correct
         self.check_job_Tf_fmt(job3, job3_output)
-
         self.assertEqual(rc, 0)
 
     # Create a single job, and check --xheaders option correctly removes all headers
@@ -265,13 +252,11 @@ class Testlsjobs(unittest.TestCase):
         self.assertTrue(Date_string in output[0].strip())
 
         # Check instance data output correctly
-        instance_string = "Instance: " + self.my_instance.id
-        self.assertEqual(output[1].strip(), instance_string)
+        self.assertEqual(output[1].strip(), self.instance_string)
 
         # Check headers outputs correctly
-        true_headers = ["Id", "State", "Healthy", "User", "Date", "Name", "Group"]
         headers = self.split_string(output[2])
-        self.assertEqual(true_headers, headers)
+        self.assertEqual(self.true_headers, headers)
 
         # Can't assume this is the only job running, find the line w/ our jobID, then do checks
         job_output = self.get_jobs_from_output([job], output)[0]
@@ -311,13 +296,12 @@ class Testlsjobs(unittest.TestCase):
         output, error, rc = self.get_output(lambda: self._ls_jobs(long=True))
 
         # Check instance data output correctly
-        instance_string = "Instance: " + self.my_instance.id
-        self.assertEqual(output[0].strip(), instance_string)
+        self.assertEqual(output[0].strip(), self.instance_string)
 
         # Check headers outputs correctly
-        true_headers = ["Id", "State", "Healthy", "User", "Date", "Name", "Group", "ProductVersion"]
+        true_headers2 = self.true_headers.append("ProductVersion")
         headers = self.split_string(output[1])
-        self.assertEqual(true_headers, headers)
+        self.assertEqual(true_headers2, headers)
 
         # Can't assume this is the only job running, find the line w/ our jobID, then do checks
         job_output = self.get_jobs_from_output([job], output)[0]
@@ -392,7 +376,6 @@ class Testlsjobs(unittest.TestCase):
         Groups = self.split_string(job_to_check[7])
 
         # Check headers
-        true_headers = ["Id", "State", "Healthy", "User", "Date", "Name", "Group"]
         headers = [
             ids[0],
             states[0],
@@ -405,12 +388,12 @@ class Testlsjobs(unittest.TestCase):
 
         # if long, need to check corresponding value is correct
         if long:
-            true_headers.append('ProductVersion')
+            self.true_headers.append('ProductVersion')
             prod_version = self.split_string(job_to_check[8])
             headers.append(prod_version[0])
             self.assertTrue(prod_version[1])
 
-        self.assertEqual(true_headers, headers)
+        self.assertEqual(self.true_headers, headers)
 
         # Check job details
         self.assertEqual(ids[2], job.id)
@@ -425,8 +408,7 @@ class Testlsjobs(unittest.TestCase):
         output, error, rc = self.get_output(lambda: self._ls_jobs(jobs=job_ids, fmt="%Mf"))
 
         # Check instance data output correctly
-        instance_string = "Instance: " + self.my_instance.id
-        self.assertEqual(output[1].strip(), instance_string)
+        self.assertEqual(output[1].strip(), self.instance_string)
 
         # Remove instance data from output
         output = output[2:]
@@ -434,7 +416,6 @@ class Testlsjobs(unittest.TestCase):
         # Check details of job1 are correct
         job_details1, output = self.get_job_Mf_fmt(output)
         self.check_job_Mf_fmt(job1, job_details1)
-
         self.assertEqual(rc, 0)
 
     # Test that --long option works
@@ -444,8 +425,7 @@ class Testlsjobs(unittest.TestCase):
         output, error, rc = self.get_output(lambda: self._ls_jobs(jobs=job_ids, fmt="%Mf", long=True))
 
         # Check instance data output correctly
-        instance_string = "Instance: " + self.my_instance.id
-        self.assertEqual(output[1].strip(), instance_string)
+        self.assertEqual(output[1].strip(), self.instance_string)
 
         # Remove instance data from output
         output = output[2:]
@@ -502,7 +482,7 @@ class Testlsjobs(unittest.TestCase):
         job_output = self.get_jobs_from_output([job1, job2], output)
         job1_output, job2_output = job_output[0], job_output[1]
 
-        # Check details of jobs are correct
+        # Check details of each job are correct
         self.check_job_nf_fmt(job1, job1_output)
         self.check_job_nf_fmt(job2, job2_output)
         self.assertEqual(rc, 0)
@@ -526,7 +506,7 @@ class Testlsjobs(unittest.TestCase):
             my_function {} -- The function to be executed
 
         Returns:
-            stdout {list} -- list of lines from the output of my_function, split at line boundaries
+            stdout {List} -- list of lines from the output of my_function, split at line boundaries
             stderr {String} -- Errors and exceptions from executing my_function
             rc {int} -- 0 indicates succces, 1 indicates error or failure
         """
