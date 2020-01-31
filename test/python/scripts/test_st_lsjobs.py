@@ -100,6 +100,29 @@ class Testlsjobs(unittest.TestCase):
         """
         return re.split(r"\s{2,}", my_string.strip())
 
+    def get_jobs_from_output(self, jobs, output):
+        """ Get the string corresponding to each job in jobs from the lsjobs output string
+
+        Arguments:
+            jobs {[job]} -- List of job objects
+            output {String} -- Strings, representing the output from lsjobs
+
+        Returns:
+            [String] -- Returns the list of strings corresponding to each job from jobs
+        """
+        job_outputs = []
+        for job in jobs:
+            job_line = None
+            for line in output:
+                if job.id in line and job.name in line:
+                    job_line = line
+                    break
+            if job_line:
+                job_outputs.append(job_line)
+            else:
+                self.fail("Job not found in output")
+        return job_outputs
+
     ###########################################
     # Tf fmt
     ###########################################
@@ -133,7 +156,6 @@ class Testlsjobs(unittest.TestCase):
         rc, job1 = self._submitjob(args=["--jobname", self.name])
         rc, job2 = self._submitjob(args=["--jobname", self.name + self.name])
         output, error, rc = self.get_output(lambda: self._ls_jobs())
-        output = output.splitlines()
 
         # Check instance data output correctly
         instance_string = "Instance: " + self.my_instance.id
@@ -145,18 +167,8 @@ class Testlsjobs(unittest.TestCase):
         self.assertEqual(true_headers, headers)
 
         # Can't assume this is the only job running, find the line w/ our jobID, then do checks
-        job1_output = None
-        job2_output = None
-        for line in output:
-            if job1.id in line and job1.name in line:
-                job1_output = line
-
-            elif job2.id in line and job2.name in line:
-                job2_output = line
-
-        # If we can't find our jobID in the output, should fail
-        if not job1_output or not job2_output :
-            self.fail("Jobs should be in output")
+        job_output = self.get_jobs_from_output([job1, job2], output)
+        job1_output, job2_output = job_output[0], job_output[1]
 
         # Check details of job1 are correct
         self.check_job_Tf_fmt(job1, job1_output)
@@ -177,7 +189,6 @@ class Testlsjobs(unittest.TestCase):
         # Get jobs job1 and job3 via --jobnames option
         job_names = str(job1.name) + "," + str(job3.name)
         output, error, rc = self.get_output(lambda: self._ls_jobs(jobnames=job_names))
-        output = output.splitlines()
 
         # Check instance data output correctly
         instance_string = "Instance: " + self.my_instance.id
@@ -189,17 +200,8 @@ class Testlsjobs(unittest.TestCase):
         self.assertEqual(true_headers, headers)
 
         # Filtering by job_names but can't assume output order, thus find jobs then do checks
-        job1_output = None
-        job3_output = None
-        for line in output:
-            if job1.id in line and job1.name in line:
-                job1_output = line
-            elif job3.id in line and job3.name in line:
-                job3_output = line
-
-        # If we can't find our jobID in the output, should fail
-        if not job1_output or not job3_output :
-            self.fail("Jobs should be in output")
+        job_output = self.get_jobs_from_output([job1, job3], output)
+        job1_output, job3_output = job_output[0], job_output[1]
 
         # Check details of job1 are correct
         self.check_job_Tf_fmt(job1, job1_output)
@@ -219,7 +221,6 @@ class Testlsjobs(unittest.TestCase):
 
         job_ids = str(job1.id) + "," + str(job3.id)
         output, error, rc = self.get_output(lambda: self._ls_jobs(jobs=job_ids))
-        output = output.splitlines()
 
         # Check instance data output correctly
         instance_string = "Instance: " + self.my_instance.id
@@ -231,17 +232,8 @@ class Testlsjobs(unittest.TestCase):
         self.assertEqual(true_headers, headers)
 
         # Filtering by jobs_ids but can't assume output order, thus find jobs then do checks
-        job1_output = None
-        job3_output = None
-        for line in output:
-            if job1.id in line and job1.name in line:
-                job1_output = line
-            elif job3.id in line and job3.name in line:
-                job3_output = line
-
-        # If we can't find our jobID in the output, should fail
-        if not job1_output or not job3_output :
-            self.fail("Jobs should be in output")
+        job_output = self.get_jobs_from_output([job1, job3], output)
+        job1_output, job3_output = job_output[0], job_output[1]
 
         # Check details of job1 are correct
         self.check_job_Tf_fmt(job1, job1_output)
@@ -255,18 +247,9 @@ class Testlsjobs(unittest.TestCase):
     def test_lsjobs_simple_2(self):
         rc, job = self._submitjob(args=[])
         output, error, rc = self.get_output(lambda: self._ls_jobs(xheaders=True))
-        output = output.splitlines()
 
         # Can't assume this is the only job running, find the line w/ our jobID, then do checks
-        job_output = None
-        for line in output:
-            if job.id in line and job.name in line:
-                job_output = line
-                break
-
-        # If we can't find our jobID in the output, should fail
-        if not job_output:
-            self.fail("Job should be in output")
+        job_output = self.get_jobs_from_output([job], output)[0]
 
         # Check details of job are correct
         self.check_job_Tf_fmt(job, job_output)
@@ -276,7 +259,6 @@ class Testlsjobs(unittest.TestCase):
     def test_lsjobs_simple_3(self):
         rc, job = self._submitjob(args=[])
         output, error, rc = self.get_output(lambda: self._ls_jobs(showtimestamp=True))
-        output = output.splitlines()
 
         # Check -- showtimestamp correctly outputs timestamp
         Date_string = "Date: "
@@ -292,15 +274,7 @@ class Testlsjobs(unittest.TestCase):
         self.assertEqual(true_headers, headers)
 
         # Can't assume this is the only job running, find the line w/ our jobID, then do checks
-        job_output = None
-        for line in output:
-            if job.id in line and job.name in line:
-                job_output = line
-                break
-
-        # If we can't find our jobID in the output, should fail
-        if not job_output:
-            self.fail("Job should be in output")
+        job_output = self.get_jobs_from_output([job], output)[0]
 
         # Check details of job are correct
         self.check_job_Tf_fmt(job, job_output)
@@ -313,7 +287,6 @@ class Testlsjobs(unittest.TestCase):
         output, error, rc = self.get_output(
             lambda: self._ls_jobs(jobs=job_ids, xheaders=True, showtimestamp=True)
         )
-        output = output.splitlines()
 
         # len 1 bc only 1 job (since we are filtering by this jobID)
         self.assertTrue(len(output) == 1)
@@ -328,7 +301,6 @@ class Testlsjobs(unittest.TestCase):
         output, error, rc = self.get_output(
             lambda: self._ls_jobs(users=' ')
         )
-        output = output.splitlines()
 
         # len 2 bc only contains instance string and header string
         self.assertTrue(len(output) == 2)
@@ -337,7 +309,6 @@ class Testlsjobs(unittest.TestCase):
     def test_lsjobs_simple_long(self):
         rc, job = self._submitjob(args=[])
         output, error, rc = self.get_output(lambda: self._ls_jobs(long=True))
-        output = output.splitlines()
 
         # Check instance data output correctly
         instance_string = "Instance: " + self.my_instance.id
@@ -349,15 +320,7 @@ class Testlsjobs(unittest.TestCase):
         self.assertEqual(true_headers, headers)
 
         # Can't assume this is the only job running, find the line w/ our jobID, then do checks
-        job_output = None
-        for line in output:
-            if job.id in line and job.name in line:
-                job_output = line
-                break
-
-        # If we can't find our jobID in the output, should fail
-        if not job_output:
-            self.fail("Job should be in output")
+        job_output = self.get_jobs_from_output([job], output)[0]
 
         # Check details of job are correct
         self.check_job_Tf_fmt(job, job_output, long=True)
@@ -460,7 +423,6 @@ class Testlsjobs(unittest.TestCase):
         rc, job1 = self._submitjob(args=["--jobname", self.name])
         job_ids = str(job1.id)
         output, error, rc = self.get_output(lambda: self._ls_jobs(jobs=job_ids, fmt="%Mf"))
-        output = output.splitlines()
 
         # Check instance data output correctly
         instance_string = "Instance: " + self.my_instance.id
@@ -480,7 +442,6 @@ class Testlsjobs(unittest.TestCase):
         rc, job = self._submitjob(args=[])
         job_ids = str(job.id)
         output, error, rc = self.get_output(lambda: self._ls_jobs(jobs=job_ids, fmt="%Mf", long=True))
-        output = output.splitlines()
 
         # Check instance data output correctly
         instance_string = "Instance: " + self.my_instance.id
@@ -536,21 +497,10 @@ class Testlsjobs(unittest.TestCase):
         rc, job1 = self._submitjob(args=["--jobname", self.name])
         rc, job2 = self._submitjob(args=["--jobname", self.name + self.name])
         output, error, rc = self.get_output(lambda: self._ls_jobs(fmt="%Nf"))
-        output = output.splitlines()
 
         # Can't assume this is the only job running, find the line w/ our jobID, then do checks
-        job1_output = None
-        job2_output = None
-        for line in output:
-            if job1.id in line and job1.name in line:
-                job1_output = line
-
-            elif job2.id in line and job2.name in line:
-                job2_output = line
-
-        # If we can't find our jobID in the output, should fail
-        if not job1_output or not job2_output :
-            self.fail("Jobs should be in output")
+        job_output = self.get_jobs_from_output([job1, job2], output)
+        job1_output, job2_output = job_output[0], job_output[1]
 
         # Check details of jobs are correct
         self.check_job_nf_fmt(job1, job1_output)
@@ -561,18 +511,9 @@ class Testlsjobs(unittest.TestCase):
     def test_lsjobs_simple_Nf_fmt_long(self):
         rc, job = self._submitjob(args=[])
         output, error, rc = self.get_output(lambda: self._ls_jobs(fmt="%Nf", long=True))
-        output = output.splitlines()
 
         # Can't assume this is the only job running, find the line w/ our jobID, then do checks
-        job_output = None
-        for line in output:
-            if job.id in line and job.name in line:
-                job_output = line
-                break
-
-        # If we can't find our jobID in the output, should fail
-        if not job_output:
-            self.fail("Jobs should be in output")
+        job_output = self.get_jobs_from_output([job], output)[0]
 
         # Check details of job are correct
         self.check_job_nf_fmt(job, job_output)
@@ -585,7 +526,7 @@ class Testlsjobs(unittest.TestCase):
             my_function {} -- The function to be executed
 
         Returns:
-            stdout {String} -- Output of my_function
+            stdout {list} -- list of lines from the output of my_function, split at line boundaries
             stderr {String} -- Errors and exceptions from executing my_function
             rc {int} -- 0 indicates succces, 1 indicates error or failure
         """
@@ -594,7 +535,7 @@ class Testlsjobs(unittest.TestCase):
             rc, val = my_function()
         stdout = out.getvalue().strip()
         stderr = err.getvalue().strip()
-        return stdout, stderr, rc
+        return stdout.splitlines(), stderr, rc
 
 
 @contextmanager
