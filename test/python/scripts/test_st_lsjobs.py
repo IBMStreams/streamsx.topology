@@ -299,9 +299,9 @@ class Testlsjobs(unittest.TestCase):
         self.assertEqual(output[0].strip(), self.instance_string)
 
         # Check headers outputs correctly
-        true_headers2 = self.true_headers.append("ProductVersion")
+        self.true_headers.append("ProductVersion")
         headers = self.split_string(output[1])
-        self.assertEqual(true_headers2, headers)
+        self.assertEqual(self.true_headers, headers)
 
         # Can't assume this is the only job running, find the line w/ our jobID, then do checks
         job_output = self.get_jobs_from_output([job], output)[0]
