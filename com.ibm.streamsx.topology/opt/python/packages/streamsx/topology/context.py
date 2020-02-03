@@ -882,20 +882,65 @@ class ContextTypes(object):
     BUNDLE = 'BUNDLE'
     """Create a Streams application bundle.
 
-    The `Topology` is compiled locally to produce Streams application bundle (sab file).
+    The `Topology` is compiled to produce Streams application bundle (sab file).
 
     The resultant application can be submitted to:
         * Streaming Analytics service using the Streams console or the Streaming Analytics REST api.
         * IBM Streams instance using the Streams console, JMX api or command line ``streamtool submitjob``.
-        * Executed standalone for development or testing (when built with IBM Streams 4.2 or later).
+        * Executed standalone for development or testing.
 
     The bundle must be built on the same operating system version and architecture as the intended running
-    environment. For Streaming Analytics service this is currently RedHat/CentOS 6 and `x86_64` architecture.
+    environment. For Streaming Analytics service this is currently RedHat/CentOS 7 and `x86_64` architecture.
+    
+    .. rubric:: IBM Cloud Pak for Data integated configuration
+
+    *Projects (within cluster)*
+
+    The `Topology` is compiled using the Streams build service for 
+    a Streams service instance running in the same Cloud Pak for
+    Data cluster as the Jupyter notebook or script declaring the application.
+
+    The instance is specified in the configuration passed into :py:func:`submit`. The code that selects a service instance by name is::
+
+        from icpd_core import icpd_util
+        cfg = icpd_util.get_service_instance_details(name='instanceName')
+
+        topo = Topology()
+        ...
+        submit(ContextTypes.BUNDLE, topo, cfg)
+
+    The resultant `cfg` dict may be augmented with other values such as
+    keys from :py:class:`ConfigParams`.
+
+    *External to cluster or project*
+
+    The `Topology` is compiled using the Streams build service for a Streams service instance running in Cloud Pak for Data.
 
     Environment variables:
-        This environment variables define how the application is built.
+        These environment variables define how the application is built and submitted.
 
-        * **STREAMS_INSTALL** - Location of a IBM Streams installation (4.0.1 or later).
+        * **CP4D_URL** - Cloud Pak for Data deployment URL, e.g. `https://cp4d_server:31843`
+        * **STREAMS_INSTANCE_ID** - Streams service instance name.
+        * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
+        * **STREAMS_PASSWORD** - Password for authentication.
+
+    .. rubric:: IBM Cloud Pak for Data standalone configuration
+
+    The `Topology` is compiled using the Streams build service.
+
+    Environment variables:
+        These environment variables define how the application is built.
+
+        * **STREAMS_BUILD_URL** - Streams build service URL, e.g. when the service is exposed as node port: `https://<NODE-IP>:<NODE-PORT>`
+        * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
+        * **STREAMS_PASSWORD** - Password for authentication.
+
+    .. rubric:: IBM Streams on-premise 4.2 & 4.3
+
+    Environment variables:
+        These environment variables define how the application is built.
+
+        * **STREAMS_INSTALL** - Location of a local IBM Streams installation.
 
     """
     TOOLKIT = 'TOOLKIT'
