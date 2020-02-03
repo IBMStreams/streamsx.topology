@@ -50,11 +50,11 @@ A local install of IBM Streams is required when:
 Streaming Analytics service
 ***************************
 
-The service instance has Anaconda 4.1 installed with Python 3.5 as the
+The service instance has Anaconda installed with Python 3.6 as the
 runtime environment and has ``PYTHONHOME`` Streams application environment variable
 pre-configured.
 
-Any streaming applications using Python must use Python 3.5 when
+Any streaming applications using Python must use Python 3.6 when
 submitted to the service instance.
 
 **********************
@@ -68,7 +68,11 @@ Any streaming applications using Python must use Python 3.6 when
 submitted to the service instance.
 
 Streaming applications can be submitted through Jupyter notebooks running in
-Cloud Pak for Data projects. The `streamsx` package is preinstalled and applications are sumitted to the :py:const:`~streamsx.topology.context.ContextTypes.DISTRIBUTED` context.
+Cloud Pak for Data projects. The `streamsx` package is preinstalled and applications are submitted to the :py:const:`~streamsx.topology.context.ContextTypes.DISTRIBUTED` context.
+
+Streaming applications can be submitted externally to the OpenShift cluster containing Cloud Pak for Data.
+The `streamsx` package must be installed locally and applications are submitted to the :py:const:`~streamsx.topology.context.ContextTypes.DISTRIBUTED` context. The specific environment variables depend
+on if the Streams instance is in a integrated or standalone configuration. See :py:const:`~streamsx.topology.context.ContextTypes.DISTRIBUTED` for details.
 
 ********************
 IBM Streams 4.2, 4.3
