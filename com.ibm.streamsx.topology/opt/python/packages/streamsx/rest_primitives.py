@@ -760,9 +760,8 @@ class View(_ResourceElement):
 
         .. versionadded:: 1.12
         """
-        if not 'display' in globals():
-            return
-        display=globals()['display']
+        # Verify we are in a IPython env.
+        get_ipython()
         import ipywidgets as widgets
         vn = widgets.Text(value=self.description, description=self.name, disabled=True)
         active = widgets.Valid(value=True, description='Fetching', readout='Stopped')
@@ -801,9 +800,12 @@ class View(_ResourceElement):
                 if not tuples:
                     if not self._data_fetcher:
                         break
-                    out.append_stdout('No tuples')
+                    with out:
+                        display('No tuples')
                 else:
-                    out.append_display_data(pd.DataFrame(tuples))
+                    df = pd.DataFrame(tuples)
+                    with out:
+                        display(df)
                 out.clear_output(wait=True)
                 last = time.time()
         except Exception as e:
