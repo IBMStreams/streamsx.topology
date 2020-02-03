@@ -61,13 +61,13 @@ class TestSC(unittest.TestCase):
         # Call shell script to create the info.xml and toolkit.xml for each toolkit, and the info.xml for each app to build
         # Also updates toolkit names so different users can run tests concurrently
         # Ex. 'com.example.test_tk_2' -> 'com.example.tmyuuwkpjittfjla.test_tk_2'
-        script = (my_path / "toolkits/create_test_sc_files.sh").resolve()
+        script = (my_path / "sc_test_files/toolkits/create_test_sc_files.sh").resolve()
         subprocess.call([script])
 
     @classmethod
     def tearDownClass(cls):
         # Call shell script to delete the info.xml and toolkit.xml for each toolkit, and the info.xml for each app to build
-        script = (my_path / "toolkits/delete_test_sc_files.sh").resolve()
+        script = (my_path / "sc_test_files/toolkits/delete_test_sc_files.sh").resolve()
         subprocess.call([script])
 
     def setUp(self):
@@ -77,7 +77,7 @@ class TestSC(unittest.TestCase):
             self.skipTest("Build REST API is not available")
         else:
             # delete all the test toolkits from the buildserver, in case they were left behind by a previous test failure.
-            file_name = (my_path / "test_sc_old_toolkit_name.txt").resolve()
+            file_name = (my_path / "sc_test_files/test_sc_old_toolkit_name.txt").resolve()
             old_toolkit_name = None
             if os.path.isfile(file_name):
                 with open(file_name) as f:
@@ -98,7 +98,7 @@ class TestSC(unittest.TestCase):
 
             # Store the randomly generated toolkit name, thus in case of network failure, on next run on test suite,
             # can read old randomly generated toolkit name, and delete toolkits off buildserver
-            with open((my_path / "test_sc_old_toolkit_name.txt").resolve(), "w") as file1:
+            with open((my_path / "sc_test_files/test_sc_old_toolkit_name.txt").resolve(), "w") as file1:
                 file1.write(self.random_name_variable)
 
             # Randomly shuffle the toolkits
@@ -168,7 +168,7 @@ class TestSC(unittest.TestCase):
     def get_test_toolkit_paths(self):
         # Get a list of all the test toolkit paths, each element representing 1 toolkit_path
         toolkit_paths = []
-        path = (my_path / "toolkits").resolve()
+        path = (my_path / "sc_test_files/toolkits").resolve()
 
         # Get all direct subfolders in toolkits folder
         toolkits = path.glob("*/")
@@ -316,7 +316,7 @@ class TestSC(unittest.TestCase):
         # Test build of sab w/ specific version of toolkit
         # Build test_app_3, requiring toolkit tk_4 w/ version 2.6.3
         # 2 versions of tk_4 available, v1.0.0, and v2.6.3 , chosen version should be 2.6.3
-        path = (my_path / "apps/test_app_3/").resolve()
+        path = (my_path / "sc_test_files/apps/test_app_3/").resolve()
         os.chdir(path)
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
@@ -334,7 +334,7 @@ class TestSC(unittest.TestCase):
         # Build test_app_4, requiring toolkit tk_1 w/ version [1.0.0,2.0.0), and tk_3 w/ version (2.0.0,4.0.0]
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 1.0.0
         # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 4.0.0
-        path = (my_path / "apps/test_app_4/").resolve()
+        path = (my_path / "sc_test_files/apps/test_app_4/").resolve()
         os.chdir(path)
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
@@ -354,7 +354,7 @@ class TestSC(unittest.TestCase):
         # Build test_app_5, requiring toolkit tk_1 w/ version (1.0.0,2.0.0], and tk_3 w/ version [2.0.0,4.0.0)
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 2.0.0
         # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 2.0.0
-        path = (my_path / "apps/test_app_5/").resolve()
+        path = (my_path / "sc_test_files/apps/test_app_5/").resolve()
         os.chdir(path)
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
@@ -373,7 +373,7 @@ class TestSC(unittest.TestCase):
         # Build test_app_1, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_3 w/ version [1.0.0,4.0.0)
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
         # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 2.0.0
-        path = (my_path / "apps/test_app_1/").resolve()
+        path = (my_path / "sc_test_files/apps/test_app_1/").resolve()
         os.chdir(path)
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
@@ -393,7 +393,7 @@ class TestSC(unittest.TestCase):
         # Build test_app_2, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_2 w/ version [1.0.0,4.0.0)
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
         # 3 versions of tk_2 available, v0.5.0, v0.5.7 and v0.8.0 , No suitable version, thus should error out
-        path = (my_path / "apps/test_app_2/").resolve()
+        path = (my_path / "sc_test_files/apps/test_app_2/").resolve()
         os.chdir(path)
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
@@ -403,7 +403,7 @@ class TestSC(unittest.TestCase):
 
     def test_simple_3(self):
         # Build test_app_6, requiring no dependencies
-        path = (my_path / "apps/test_app_6/").resolve()
+        path = (my_path / "sc_test_files/apps/test_app_6/").resolve()
         os.chdir(path)
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
 
@@ -411,7 +411,7 @@ class TestSC(unittest.TestCase):
 
     def test_simple_4(self):
         # Build test_app_8, (SPLMM app) requiring no dependencies
-        path = (my_path / "apps/test_app_8/").resolve()
+        path = (my_path / "sc_test_files/apps/test_app_8/").resolve()
         os.chdir(path)
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string, compile_time_arguments=['3', 'foo=bar'])
@@ -421,7 +421,7 @@ class TestSC(unittest.TestCase):
     def test_simple_5(self):
         # Build test_app_8, (SPLMM app) requiring no dependencies
         # test_app_8 fails w/o compile time args
-        path = (my_path / "apps/test_app_8/").resolve()
+        path = (my_path / "sc_test_files/apps/test_app_8/").resolve()
         os.chdir(path)
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string, compile_time_arguments=['3'])
@@ -433,7 +433,7 @@ class TestSC(unittest.TestCase):
         # Build test_app_9, requiring toolkit tk_1 w/ version [1.0.0,4.0.0), and tk_3 w/ version [1.0.0,4.0.0)
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
         # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 2.0.0
-        path = (my_path / "apps/test_app_9/").resolve()
+        path = (my_path / "sc_test_files/apps/test_app_9/").resolve()
         os.chdir(path)
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string, compile_time_arguments=['3', 'foo=bar'])
@@ -453,7 +453,7 @@ class TestSC(unittest.TestCase):
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
         # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 2.0.0
         # test_app_7 fails w/o compile time args
-        path = (my_path / "apps/test_app_7/").resolve()
+        path = (my_path / "sc_test_files/apps/test_app_7/").resolve()
         os.chdir(path)
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string)
@@ -466,7 +466,7 @@ class TestSC(unittest.TestCase):
         # 3 versions of tk_1 available, v1.0.0, v2.0.0 and v3.0.0 , chosen version should be 3.0.0
         # 3 versions of tk_3 available, v1.0.0, v2.0.0 and v4.0.0 , chosen version should be 2.0.0
         # test_app_7 succesfully builds given comptile time args
-        path = (my_path / "apps/test_app_7/").resolve()
+        path = (my_path / "sc_test_files/apps/test_app_7/").resolve()
         os.chdir(path)
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string, compile_time_arguments=['hello=a,b,c', 'foo=bar'])
@@ -485,7 +485,7 @@ class TestSC(unittest.TestCase):
         # Test build of sab w/ specific version of toolkit and outputting to a given output directory
         # Build test_app_3, requiring toolkit tk_4 w/ version 2.6.3
         # 2 versions of tk_4 available, v1.0.0, and v2.6.3 , chosen version should be 2.6.3
-        path = (my_path / "apps/test_app_3/").resolve()
+        path = (my_path / "sc_test_files/apps/test_app_3/").resolve()
         os.chdir(path)
 
         self._run_sc(self.main_composite, self.local_toolkit_paths_string, output_directory='temp')
