@@ -154,7 +154,7 @@ class _BaseSubmitter(object):
             submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
             try:
                 # Verify we are in a IPython env.
-                get_ipython()
+                get_ipython() # noqa : F821
                 import ipywidgets as widgets
                 logger.debug("ipywidgets available - creating IntProgress")
                 progress_bar = widgets.IntProgress(
@@ -165,7 +165,7 @@ class _BaseSubmitter(object):
                     style={'description_width':'initial'})
                 logger.debug("ipywidgets available - created IntProgress")
                 try:
-                    display(progress_bar)
+                    display(progress_bar) # noqa : F821
                     def _show_progress(msg):
                         if msg is True:
                             progress_bar.value = progress_bar.max
@@ -1395,7 +1395,7 @@ class SubmissionResult(object):
   
         try:
             # Verify we are in a IPython env.
-            get_ipython()
+            get_ipython() # noqa : F821
             import ipywidgets as widgets
             if not description:
                 description = 'Cancel job: '
@@ -1422,7 +1422,7 @@ class SubmissionResult(object):
                     raise
  
             button.on_click(_cancel_job_click)
-            display(vb)
+            display(vb) # noqa : F821
         except:
             pass
 
