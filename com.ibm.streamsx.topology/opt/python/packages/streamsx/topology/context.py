@@ -153,16 +153,19 @@ class _BaseSubmitter(object):
         if remote_context:
             submit_class = "com.ibm.streamsx.topology.context.remote.RemoteContextSubmit"
             try:
-                globals()['get_ipython']()
+                # Verify we are in a IPython env.
+                get_ipython() # noqa : F821
                 import ipywidgets as widgets
+                logger.debug("ipywidgets available - creating IntProgress")
                 progress_bar = widgets.IntProgress(
                     value=0,
                     min=0, max=10, step=1,
                     description='Initializing',
                     bar_style='info', orientation='horizontal',
                     style={'description_width':'initial'})
+                logger.debug("ipywidgets available - created IntProgress")
                 try:
-                    globals()['display'](progress_bar)
+                    display(progress_bar) # noqa : F821
                     def _show_progress(msg):
                         if msg is True:
                             progress_bar.value = progress_bar.max
@@ -176,8 +179,10 @@ class _BaseSubmitter(object):
                         progress_bar.description = msg[3]
                     progress_fn = _show_progress
                 except:
+                    logger.debug("ipywidgets IntProgress error: %s", sys.exc_info()[1])
                     pass
             except:
+                logger.debug("ipywidgets not available: %s", sys.exc_info()[1])
                 pass
         else:
             submit_class = "com.ibm.streamsx.topology.context.local.StreamsContextSubmit"
@@ -1389,6 +1394,8 @@ class SubmissionResult(object):
             return
   
         try:
+            # Verify we are in a IPython env.
+            get_ipython() # noqa : F821
             import ipywidgets as widgets
             if not description:
                 description = 'Cancel job: '
@@ -1415,7 +1422,7 @@ class SubmissionResult(object):
                     raise
  
             button.on_click(_cancel_job_click)
-            globals['display'](vb)
+            display(vb) # noqa : F821
         except:
             pass
 

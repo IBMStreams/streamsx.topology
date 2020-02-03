@@ -760,16 +760,15 @@ class View(_ResourceElement):
 
         .. versionadded:: 1.12
         """
-        if not 'display' in globals():
-            return
-        display=globals()['display']
+        # Verify we are in a IPython env.
+        get_ipython() # noqa : F821
         import ipywidgets as widgets
         vn = widgets.Text(value=self.description, description=self.name, disabled=True)
         active = widgets.Valid(value=True, description='Fetching', readout='Stopped')
         out = widgets.Output(layout={'border': '1px solid black'})
         hb = widgets.HBox([vn, active])
         vb = widgets.VBox([hb, out])
-        display(vb)
+        display(vb) # noqa : F821
         self._display_thread = threading.Thread(target=lambda: self._display(out, duration, period, active))
         self._display_thread.start()
         
@@ -801,9 +800,12 @@ class View(_ResourceElement):
                 if not tuples:
                     if not self._data_fetcher:
                         break
-                    out.append_stdout('No tuples')
+                    with out:
+                        display('No tuples') # noqa : F821
                 else:
-                    out.append_display_data(pd.DataFrame(tuples))
+                    df = pd.DataFrame(tuples)
+                    with out:
+                        display(df) # noqa : F821
                 out.clear_output(wait=True)
                 last = time.time()
         except Exception as e:
