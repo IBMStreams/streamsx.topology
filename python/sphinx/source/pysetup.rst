@@ -55,7 +55,7 @@ runtime environment and has ``PYTHONHOME`` Streams application environment varia
 pre-configured.
 
 Any streaming applications using Python must use Python 3.6 when
-submitted to the service instance.
+submitted to the service instance. The `streamsx` package must be installed locally and applications are submitted to the :py:const:`~streamsx.topology.context.ContextTypes.STREAMING_ANALYTICS_SERVICE` context.
 
 **********************
 IBM Cloud Pak for Data
