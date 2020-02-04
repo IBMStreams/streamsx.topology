@@ -2083,9 +2083,17 @@ class Stream(_placement._Placement, object):
             Stream: Stream containing the JSON representations of tuples on this stream.
 
         """
-        func = streamsx.topology.runtime._json_force_object if force_object else None
+        force_dict = False
+        if isinstance(self.oport.schema, streamsx.topology.schema.StreamSchema):
+            func = None
+            if self.oport.schema.style != dict:
+                force_dict = True
+        else:
+            func = streamsx.topology.runtime._json_force_object if force_object else None
         saj = self._change_schema(streamsx.topology.schema.CommonSchema.Json, 'as_json', name, func)._layout('AsJson')
         saj.oport.operator.sl = _SourceLocation(_source_info(), 'as_json')
+        if force_dict:
+            saj.oport.operator.params['pyStyle'] = 'dict'
         return saj
 
     def _change_schema(self, schema, action, name=None, func=None):
