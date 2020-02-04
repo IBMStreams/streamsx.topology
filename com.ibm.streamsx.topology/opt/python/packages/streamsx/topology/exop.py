@@ -9,16 +9,9 @@ import streamsx.topology.topology
 import streamsx.topology.schema
 
 def _single_schema(schemas):
-    if isinstance(schemas, str):
-        return schemas
-    if isinstance(schemas, streamsx.topology.schema.CommonSchema):
-        return schemas
-    if isinstance(schemas, streamsx.topology.schema.StreamSchema):
-        return schemas
     if isinstance(schemas, list):
         return schemas[0] if len(schemas) == 1 else None
-    if isinstance(schemas, tuple):
-        return schemas[0] if len(schemas) == 1 else None
+    return streamsx.topology.schema._normalize(schemas)
 
 
 class ExtensionOperator(object):
