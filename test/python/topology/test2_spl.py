@@ -8,6 +8,7 @@ from enum import IntEnum
 import datetime
 import decimal
 import os
+import typing
 
 from streamsx.topology.schema import StreamSchema, CommonSchema
 from streamsx.topology.topology import *
@@ -37,7 +38,6 @@ class TestParseOption(IntEnum):
     strict = 0
     permissive = 1
     fast = 2
-    
 
 class TestSPL(unittest.TestCase):
     """ Test invocations of SPL operators from Python topology.
@@ -157,10 +157,12 @@ class TestSPL(unittest.TestCase):
 
     def test_SPL_as_json(self):
         topo = Topology()
+        #    'tuple<uint64 seq, rstring b>',
+        SEQ=typing.NamedTuple('SQNT', [('seq', int), ('b', str)])
         b = op.Source(topo, "spl.utility::Beacon",
-            'tuple<uint64 seq, rstring b>',
+            schema=SEQ,
             params = {'period': 0.02, 'iterations':5})
-        b.seq = b.output('IterationCount()')
+        b.seq = b.output('(int64) IterationCount()')
 
         s = b.stream.as_json()
 
