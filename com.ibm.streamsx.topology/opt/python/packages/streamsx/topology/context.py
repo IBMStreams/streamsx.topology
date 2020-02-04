@@ -936,6 +936,8 @@ class ContextTypes(object):
         * **STREAMS_PASSWORD** - Password for authentication.
 
     .. rubric:: IBM Streams on-premise 4.2 & 4.3
+    
+    The `Topology` is compiled using a local IBM Streams installation.
 
     Environment variables:
         These environment variables define how the application is built.
