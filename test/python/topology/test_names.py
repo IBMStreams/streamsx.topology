@@ -33,6 +33,8 @@ class TestNames(unittest.TestCase):
      s1 = topo.source([], name="CoolSource")
      self.assertEqual(s1.name, "CoolSource")
      self.assertIs(s1, topo['CoolSource'])
+     self.assertEqual(1, len(topo.streams))
+     self.assertEqual(s1, topo.streams['CoolSource'])
 
      s1.category = 'Ingest'
      self.assertEqual(s1.category, 'Ingest')
@@ -41,6 +43,7 @@ class TestNames(unittest.TestCase):
      self.assertEqual(s1a.name, "CoolSource_2")
      self.assertIs(s1, topo['CoolSource'])
      self.assertIs(s1a, topo['CoolSource_2'])
+     self.assertEqual(2, len(topo.streams))
 
      s1b = topo.source([], name="CoolSource")
      self.assertEqual(s1b.name, "CoolSource_3")
@@ -98,6 +101,15 @@ class TestNames(unittest.TestCase):
      s12.for_each(lambda x : None)
      s12.category = 'DB'
      self.assertEqual(s12.category, 'DB')
+
+     for sn in topo.streams:
+         self.assertIs(topo.streams[sn], topo[sn])
+         self.assertEqual(sn, topo[sn].name)
+
+     a1 = topo.streams
+     a2 = topo.streams
+     self.assertIsNot(a1, a2)
+     self.assertEqual(a1, a2)
 
   def test_missing_stream(self):
      topo = Topology()
