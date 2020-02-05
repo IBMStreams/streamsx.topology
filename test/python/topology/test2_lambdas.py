@@ -40,15 +40,24 @@ X = []
 def cbad(tuple_):
     return X + [tuple_]
 
-if sys.version_info.major == 3:
-    import typing
-    SensorReading = typing.NamedTuple('SensorReading', [('id', str), ('val', float)])
+import typing
+SensorReading = typing.NamedTuple('SensorReading', [('id', str), ('val', float)])
 
-    def csensor(tuple_):
-        return SensorReading('a' + str(tuple_), float(tuple_))
+def csensor(tuple_):
+    return SensorReading('a' + str(tuple_), float(tuple_))
 
 class Gen(object):
     def __init__(self, n):
+        # Both these fail due to Dill issue #300
+        # https://github.com/uqfoundation/dill/issues/300
+        # super(Gen, self).__init__()
+        # super().__init__()
+
+        # Workaround is due use the super class method explicitly
+        # [In this case the call to __init__ is not required,
+        # but showing the general pattern of using the super class method.
+        object.__init__(self)
+       
         self.n = n
 
     def __iter__(self):
