@@ -26,7 +26,6 @@ import time
 import json
 import re
 import socket
-import time
 import warnings
 import xml.etree.ElementTree as ElementTree
 
@@ -85,13 +84,26 @@ class _ResourceElement(object):
         Indirect creation of a new instance of this class
         to allow instance reuse to avoid REST calls.
         """
-        print("Indirect creation of:", cls)
-        return cls(json_rep, rest_client)
+        if cls._USE_CACHE:
+            element = rest_client._cache_find(cls, json_rep['self'])
+            if element:
+                element._refresh(json_rep)
+                return element
+        element = cls(json_rep, rest_client)
+        rest_client._cache_add(cls, element)
+        return element
 
     @classmethod
     def _fetch(cls, url, rest_client):
-        print("Fetch creation of:", url)
+        element = rest_client._cache_find(cls, url)
+        if element:
+            age = time.time() - element._last_modified
+            if age > 2:
+                element.refresh()
+            return element
         return cls._new(rest_client.make_request(url), rest_client)
+
+    _USE_CACHE = True
 
     def __init__(self, json_rep, rest_client):
         """
@@ -102,6 +114,7 @@ class _ResourceElement(object):
         self.rest_client = rest_client
         self.rest_self = json_rep.get('self', None)
         self.json_rep = json_rep
+        self._last_modified = time.time()
 
     def __str__(self):
         return pformat(self.__dict__)
@@ -126,7 +139,11 @@ class _ResourceElement(object):
     def refresh(self):
         """Refresh the resource and update the attributes to reflect the latest status.
         """
-        self.json_rep = self.rest_client.make_request(self.rest_self)
+        self._refresh(self.rest_client.make_request(self.rest_self))
+
+    def _refresh(self, json_rep):
+        self.json_rep = self.json_rep
+        self._last_modified = time.time()
 
     def _get_elements(self, url, key, eclass, id=None, name=None):
         """Get elements matching `id` or `name`
@@ -189,6 +206,47 @@ class _StreamsRestClient(object):
     def __init__(self, auth):
         self.session = requests.Session()
         self.session.auth = auth
+        self._cache = {}
+        self._cache_lock = threading.Lock()
+
+    def _cache_find(self, cls, url):
+        if cls._USE_CACHE:
+            try:
+                self._cache_lock.acquire()
+                elements = self._cache.get(cls)
+                if elements is not None:
+                    return elements.get(url)
+            finally:
+                self._cache_lock.release()
+
+    def _cache_add(self, cls, element):
+        if cls._USE_CACHE:
+            try:
+                self._cache_lock.acquire()
+                elements = self._cache.get(cls)
+                if elements is None:
+                    elements = {}
+                    self._cache[cls] = elements
+                elements[element.rest_self] = element
+            finally:
+                self._cache_lock.release()
+
+    def _cache_job_cancel(self, job):
+        expire = time.time() - 60.0
+        url = job.rest_self
+        c = 0
+        try:
+            self._cache_lock.acquire()
+            elements = self._cache.get(job.__class__)
+            elements.pop(url, None)
+            for ecls, elements in self._cache.items():
+                if ecls == job.__class__:
+                    continue
+                remove = [u for u,e in elements.items() if e.json_rep.get('job') == url or e._last_modified < expire]
+                for u in remove:
+                    del elements[u]
+        finally:
+            self._cache_lock.release()
 
     def _block_ssl_warn(self):
         if self.session.verify is False and not _StreamsRestClient._blocked_ssl_warn:
@@ -912,6 +970,7 @@ class Job(_ResourceElement):
         >>> print (jobs[0].health)
         healthy
     """
+
     def retrieve_log_trace(self, filename=None, dir=None):
         """Retrieves the application log and trace files of the job
         and saves them as a compressed tar file.
@@ -1048,6 +1107,7 @@ class Job(_ResourceElement):
         Returns:
             bool: True if the job was cancelled, otherwise False if an error occurred.
         """
+        self.rest_client._cache_job_cancel(self)
         return self.rest_client._sc._delegator._cancel_job(self, force)
 
     def update_operators(self, job_config):
@@ -1162,6 +1222,15 @@ class Operator(_ResourceElement):
         .. versionadded:: 1.9
         """
         return self._get_elements(self.inputPorts, 'inputPorts', OperatorInputPort)
+
+    def get_job(self):
+        """Get the Streams job that owns this operator.
+
+        Returns:
+            Job: Streams Job owning this operator.
+
+        """
+        return Job._fetch(self.job, self.rest_client)
 
 
 class OperatorConnection(_ResourceElement):
@@ -1297,7 +1366,7 @@ class Metric(_ResourceElement):
         >>> print (metrics[0].resourceType)
         metric
     """
-    pass
+    _USE_CACHE = False
 
 
 class PE(_ResourceElement):
@@ -1439,6 +1508,14 @@ class PE(_ResourceElement):
         """
         if hasattr(self, 'resourceAllocation'):
             return ResourceAllocation._fetch(self.resourceAllocation, self.rest_client)
+
+    def get_job(self):
+        """Get the Streams job that owns this PE.
+
+        Returns:
+            Job: Streams Job owning this PE.
+        """
+        return Job._fetch(self.job, self.rest_client)
 
 
 class PEConnection(_ResourceElement):

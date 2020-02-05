@@ -3,6 +3,7 @@ import os
 import random
 import shutil
 import tempfile
+import time
 
 def check_instance(tc, instance):
     """Basic test of calls against an instance, assumed there is
@@ -120,10 +121,27 @@ def _fetch_from_job(tc, job):
     _check_operators(tc, ops)
     _check_resource_allocations(tc, job)
 
+    s = time.time()  
+    job_alt = ops[0].get_job()
+    job_alt2 = ops[0].get_job()
+    e = time.time()  
+    tc.assertIsInstance(job_alt, Job)
+    tc.assertEqual(job_alt.id, job.id)
+    if (e-s) < 2:
+        tc.assertIs(job_alt, job_alt2)
+
     pes = job.get_pes()
     for pe in pes:
         tc.assertIsInstance(pe, PE)
         _check_metrics(tc, pe)
+        s = time.time()  
+        job_alt = pe.get_job()
+        job_alt2 = pe.get_job()
+        e = time.time()  
+        tc.assertIsInstance(job_alt, Job)
+        tc.assertEqual(job_alt.id, job.id)
+        if (e-s) < 2:
+            tc.assertIs(job_alt, job_alt2)
      
     _check_non_empty_list(tc, job.get_views(), View)
     _check_non_empty_list(tc, job.get_operator_connections(), OperatorConnection)
