@@ -79,7 +79,7 @@ class _ResourceElement(object):
             notation on the object.
     """
     @classmethod
-    def _new(cls, json_rep, rest_client):
+    def _new(cls, json_rep, rest_client, ts=None):
         """
         Indirect creation of a new instance of this class
         to allow instance reuse to avoid REST calls.
@@ -87,9 +87,11 @@ class _ResourceElement(object):
         if cls._USE_CACHE:
             element = rest_client._cache_find(cls, json_rep['self'])
             if element:
-                element._refresh(json_rep)
+                element.json_rep = json_rep
+                element._last_modified = ts if ts else time.time()
                 return element
         element = cls(json_rep, rest_client)
+        element._last_modified = ts if ts else time.time()
         rest_client._cache_add(cls, element)
         return element
 
@@ -114,7 +116,7 @@ class _ResourceElement(object):
         self.rest_client = rest_client
         self.rest_self = json_rep.get('self', None)
         self.json_rep = json_rep
-        self._last_modified = time.time()
+        self._last_modified = 0
 
     def __str__(self):
         return pformat(self.__dict__)
@@ -139,10 +141,7 @@ class _ResourceElement(object):
     def refresh(self):
         """Refresh the resource and update the attributes to reflect the latest status.
         """
-        self._refresh(self.rest_client.make_request(self.rest_self))
-
-    def _refresh(self, json_rep):
-        self.json_rep = self.json_rep
+        self.json_rep = self.rest_client.make_request(self.rest_self)
         self._last_modified = time.time()
 
     def _get_elements(self, url, key, eclass, id=None, name=None):
@@ -165,7 +164,8 @@ class _ResourceElement(object):
             raise ValueError("id and name cannot specified together")
 
         json_elements = self.rest_client.make_request(url)[key]
-        return [eclass._new(element, self.rest_client) for element in json_elements
+        ts = time.time()
+        return [eclass._new(element, self.rest_client, ts=ts) for element in json_elements
                 if _exact_resource(element, id) and _matching_resource(element, name)]
 
     def _get_element_by_id(self, url, key, eclass, id):
@@ -469,7 +469,7 @@ class _JWTAuthHandler(_BearerAuthHandler):
         self.security_url = security_url
         self._cfg = self._create_cfg()
 
-    def _refresh_autH(self):
+    def _refresh_auth(self):
         logger.debug("JWTAuthHandler:Token refresh")
         self._cfg = self._create_cfg()
         logger.debug("JWT:Token refreshed:expiry: " + time.ctime(self._auth_expiry_time))
