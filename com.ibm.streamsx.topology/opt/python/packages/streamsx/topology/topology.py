@@ -499,6 +499,23 @@ class Topology(object):
     def __getitem__(self, name):
         return self._streams[name]
 
+    @property
+    def streams(self):
+        """
+        Dict of all streams in the topology.
+
+        Key is the name of the stream, value is the corresponding :py:obj:`Stream` instance.
+
+        The returned value is a shallow copy of current streams
+        in this topology. This allows callers to iterate over the copy
+        and perform operators that would add streams.
+
+        .. note:: Includes all streams created by composites and any internal streams created by topology.
+ 
+        .. versionadded:: 1.14
+        """
+        return self._streams.copy()
+
     def source(self, func, name=None):
         """
         Declare a source stream that introduces tuples into the application.
