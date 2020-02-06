@@ -25,6 +25,25 @@ in a :py:class:`~Topology` instance.
 
 For details see :py:mod:`streamsx.topology.topology`.
 
+Extensions
+##########
+
+This package (`streamsx`) provides the core functionality to build
+streaming applications in Python for Streams.
+
+Additional `streamsx.*` packages are available that provide adapters to
+external systems, analytics and streaming primitives. This include:
+
+ * Apache Kafka integration - `streamsx.kafka <https://pypi.org/project/streamsx.kafka/>`_
+ * Database integration - `streamsx.database <https://pypi.org/project/streamsx.database/>`_
+ * Geospatial analytics- `streamsx.geospatial <https://pypi.org/project/streamsx.geospatial/>`_
+ * IBM Event Streams integration - `streamsx.eventstreams <https://pypi.org/project/streamsx.eventstreams/>`_
+ * MQTT integration - `streamsx.mqtt <https://pypi.org/project/streamsx.mqtt/>`_
+ * Cloud Object Storage integration - `streamsx.objectstorage <https://pypi.org/project/streamsx.objectstorage/>`_
+ * Streaming primitives - `streamsx.standard <https://pypi.org/project/streamsx.standard/>`_
+
+A full list of available packages is at : https://pypi.org/search?q=streamsx
+
 Microservices
 #############
 
