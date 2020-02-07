@@ -26,7 +26,6 @@ import time
 import json
 import re
 import socket
-import time
 import warnings
 import xml.etree.ElementTree as ElementTree
 
@@ -79,6 +78,35 @@ class _ResourceElement(object):
         json_rep(dict): The JSON representation of the resource, its properties can be accessed directly using dot
             notation on the object.
     """
+    @classmethod
+    def _new(cls, json_rep, rest_client, ts=None):
+        """
+        Indirect creation of a new instance of this class
+        to allow instance reuse to avoid REST calls.
+        """
+        if cls._USE_CACHE:
+            element = rest_client._cache_find(cls, json_rep['self'])
+            if element:
+                element.json_rep = json_rep
+                element._last_modified = ts if ts else time.time()
+                return element
+        element = cls(json_rep, rest_client)
+        element._last_modified = ts if ts else time.time()
+        rest_client._cache_add(cls, element)
+        return element
+
+    @classmethod
+    def _fetch(cls, url, rest_client):
+        element = rest_client._cache_find(cls, url)
+        if element:
+            age = time.time() - element._last_modified
+            if age > 2:
+                element.refresh()
+            return element
+        return cls._new(rest_client.make_request(url), rest_client)
+
+    _USE_CACHE = True
+
     def __init__(self, json_rep, rest_client):
         """
         Args:
@@ -88,6 +116,7 @@ class _ResourceElement(object):
         self.rest_client = rest_client
         self.rest_self = json_rep.get('self', None)
         self.json_rep = json_rep
+        self._last_modified = 0
 
     def __str__(self):
         return pformat(self.__dict__)
@@ -113,6 +142,7 @@ class _ResourceElement(object):
         """Refresh the resource and update the attributes to reflect the latest status.
         """
         self.json_rep = self.rest_client.make_request(self.rest_self)
+        self._last_modified = time.time()
 
     def _get_elements(self, url, key, eclass, id=None, name=None):
         """Get elements matching `id` or `name`
@@ -134,7 +164,8 @@ class _ResourceElement(object):
             raise ValueError("id and name cannot specified together")
 
         json_elements = self.rest_client.make_request(url)[key]
-        return [eclass(element, self.rest_client) for element in json_elements
+        ts = time.time()
+        return [eclass._new(element, self.rest_client, ts=ts) for element in json_elements
                 if _exact_resource(element, id) and _matching_resource(element, name)]
 
     def _get_element_by_id(self, url, key, eclass, id):
@@ -175,6 +206,47 @@ class _StreamsRestClient(object):
     def __init__(self, auth):
         self.session = requests.Session()
         self.session.auth = auth
+        self._cache = {}
+        self._cache_lock = threading.Lock()
+
+    def _cache_find(self, cls, url):
+        if cls._USE_CACHE:
+            try:
+                self._cache_lock.acquire()
+                elements = self._cache.get(cls)
+                if elements is not None:
+                    return elements.get(url)
+            finally:
+                self._cache_lock.release()
+
+    def _cache_add(self, cls, element):
+        if cls._USE_CACHE:
+            try:
+                self._cache_lock.acquire()
+                elements = self._cache.get(cls)
+                if elements is None:
+                    elements = {}
+                    self._cache[cls] = elements
+                elements[element.rest_self] = element
+            finally:
+                self._cache_lock.release()
+
+    def _cache_job_cancel(self, job):
+        expire = time.time() - 60.0
+        url = job.rest_self
+        c = 0
+        try:
+            self._cache_lock.acquire()
+            elements = self._cache.get(job.__class__)
+            elements.pop(url, None)
+            for ecls, elements in self._cache.items():
+                if ecls == job.__class__:
+                    continue
+                remove = [u for u,e in elements.items() if e.json_rep.get('job') == url or e._last_modified < expire]
+                for u in remove:
+                    del elements[u]
+        finally:
+            self._cache_lock.release()
 
     def _block_ssl_warn(self):
         if self.session.verify is False and not _StreamsRestClient._blocked_ssl_warn:
@@ -397,7 +469,7 @@ class _JWTAuthHandler(_BearerAuthHandler):
         self.security_url = security_url
         self._cfg = self._create_cfg()
 
-    def _refresh_autH(self):
+    def _refresh_auth(self):
         logger.debug("JWTAuthHandler:Token refresh")
         self._cfg = self._create_cfg()
         logger.debug("JWT:Token refreshed:expiry: " + time.ctime(self._auth_expiry_time))
@@ -644,7 +716,7 @@ class View(_ResourceElement):
             Domain: Streams domain for the instance owning this view.
         """
         if hasattr(self, 'domain'):
-            return Domain(self.rest_client.make_request(self.domain), self.rest_client)
+            return Domain._fetch(self.domain, self.rest_client)
 
     def get_instance(self):
         """Get the Streams instance that owns this view.
@@ -652,7 +724,7 @@ class View(_ResourceElement):
         Returns:
             Instance: Streams instance owning this view.
         """
-        return Instance(self.rest_client.make_request(self.instance), self.rest_client)
+        return Instance._fetch(self.instance, self.rest_client)
 
     def get_job(self):
         """Get the Streams job that owns this view.
@@ -660,7 +732,7 @@ class View(_ResourceElement):
         Returns:
             Job: Streams Job owning this view.
         """
-        return Job(self.rest_client.make_request(self.job), self.rest_client)
+        return Job._fetch(self.job, self.rest_client)
 
     def stop_data_fetch(self):
         """Stops the thread that fetches data from the Streams view server.
@@ -898,6 +970,7 @@ class Job(_ResourceElement):
         >>> print (jobs[0].health)
         healthy
     """
+
     def retrieve_log_trace(self, filename=None, dir=None):
         """Retrieves the application log and trace files of the job
         and saves them as a compressed tar file.
@@ -950,7 +1023,7 @@ class Job(_ResourceElement):
             Domain: Streams domain that owns this job.
         """
         if hasattr(self, 'domain'):
-            return Domain(self.rest_client.make_request(self.domain), self.rest_client)
+            return Domain._fetch(self.domain, self.rest_client)
 
     def get_instance(self):
         """Get the Streams instance that owns this job.
@@ -958,7 +1031,7 @@ class Job(_ResourceElement):
         Returns:
             Instance: Streams instance that owns this job.
         """
-        return Instance(self.rest_client.make_request(self.instance), self.rest_client)
+        return Instance._fetch(self.instance, self.rest_client)
 
     def get_hosts(self):
         """Get the list of :py:class:`Host` elements associated with this job.
@@ -1034,6 +1107,7 @@ class Job(_ResourceElement):
         Returns:
             bool: True if the job was cancelled, otherwise False if an error occurred.
         """
+        self.rest_client._cache_job_cancel(self)
         return self.rest_client._sc._delegator._cancel_job(self, force)
 
     def update_operators(self, job_config):
@@ -1055,7 +1129,7 @@ class Job(_ResourceElement):
         """
         # 4.x returned just the name for jobGroup.
         if self.jobGroup.startswith('https://'):
-            return JobGroup(self.rest_client.make_request(self.jobGroup), self.rest_client)
+            return JobGroup._fetch(self.jobGroup, self.rest_client)
         return JobGroup({'name':self.jobGroup}, self.rest_client)
 
 class JobGroup(_ResourceElement):
@@ -1117,7 +1191,7 @@ class Operator(_ResourceElement):
         .. versionadded:: 1.9
         """
         if hasattr(self, 'host') and self.host:
-            return Host(self.rest_client.make_request(self.host), self.rest_client)
+            return Host._fetch(self.host, self.rest_client)
 
     def get_pe(self):
         """Get the Streams processing element this operator is executing in.
@@ -1127,7 +1201,7 @@ class Operator(_ResourceElement):
 
         .. versionadded:: 1.9
         """
-        return PE(self.rest_client.make_request(self.pe), self.rest_client)
+        return PE._fetch(self.pe, self.rest_client)
 
     def get_output_ports(self):
         """Get list of output ports for this operator.
@@ -1148,6 +1222,15 @@ class Operator(_ResourceElement):
         .. versionadded:: 1.9
         """
         return self._get_elements(self.inputPorts, 'inputPorts', OperatorInputPort)
+
+    def get_job(self):
+        """Get the Streams job that owns this operator.
+
+        Returns:
+            Job: Streams Job owning this operator.
+
+        """
+        return Job._fetch(self.job, self.rest_client)
 
 
 class OperatorConnection(_ResourceElement):
@@ -1283,7 +1366,7 @@ class Metric(_ResourceElement):
         >>> print (metrics[0].resourceType)
         metric
     """
-    pass
+    _USE_CACHE = False
 
 
 class PE(_ResourceElement):
@@ -1332,7 +1415,7 @@ class PE(_ResourceElement):
         .. versionadded:: 1.9
         """
         if hasattr(self, 'host') and self.host:
-            return Host(self.rest_client.make_request(self.host), self.rest_client)
+            return Host._fetch(self.host, self.rest_client)
 
     def get_resource(self):
         """Get resource this processing element is currently executing in.
@@ -1343,7 +1426,7 @@ class PE(_ResourceElement):
         .. versionadded:: 1.13.13
         """
         if hasattr(self, 'resource') and self.resource:
-            return Resource(self.rest_client.make_request(self.resource), self.rest_client)
+            return Resource._fetch(self.resource, self.rest_client)
 
     def retrieve_trace(self, filename=None, dir=None):
         """Retrieves the application trace files for this PE
@@ -1424,7 +1507,15 @@ class PE(_ResourceElement):
         .. versionadded:: 1.9
         """
         if hasattr(self, 'resourceAllocation'):
-            return ResourceAllocation(self.rest_client.make_request(self.resourceAllocation), self.rest_client)
+            return ResourceAllocation._fetch(self.resourceAllocation, self.rest_client)
+
+    def get_job(self):
+        """Get the Streams job that owns this PE.
+
+        Returns:
+            Job: Streams Job owning this PE.
+        """
+        return Job._fetch(self.job, self.rest_client)
 
 
 class PEConnection(_ResourceElement):
@@ -1474,7 +1565,7 @@ class ResourceAllocation(_ResourceElement):
 
         .. versionadded:: 1.9
         """
-        return Resource(self.rest_client.make_request(self.resource), self.rest_client)
+        return Resource._fetch(self.resource, self.rest_client)
 
     def get_pes(self):
         """Get the list of :py:class:`PE` running on this resource
@@ -1587,7 +1678,7 @@ class ExportedStream(_ResourceElement):
         Returns:
             OperatorOutputPort: Output port of this exported stream.
         """
-        return OperatorOutputPort(self.rest_client.make_request(self.operatorOutputPort), self.rest_client)
+        return OperatorOutputPort._fetch(self.operatorOutputPort, self.rest_client)
 
     def _as_published_topic(self):
         """This stream as a PublishedTopic if it is published otherwise None
@@ -1927,7 +2018,7 @@ class Instance(_ResourceElement):
             Domain: Streams domain owning this instance.
         """
         if hasattr(self, 'domain'):
-            return Domain(self.rest_client.make_request(self.domain), self.rest_client)
+            return Domain._fetch(self.domain, self.rest_client)
 
     def get_jobs(self, name=None):
         """Retrieves jobs running in this instance.

@@ -176,6 +176,21 @@ will incorrectly capture the global ``model`` even if the global variable ``mode
 To workaround this bug use attribute or variable names that do not shadow global variables
 (e.g. ``self._model``).
 
+Due to `issue 2336 <https://github.com/IBMStreams/streamsx.topology/issues/2336>`_ an inline class using ``super()`` will cause an ``AttributeError`` at runtime. Workaround is to call the super class's method directly, for example replace this code::
+
+    class A(X):
+        def __init__(self):
+            super().__init__()
+
+with::
+
+    class A(X):
+        def __init__(self):
+            X.__init__(self)
+
+or move the class to a module.
+   
+
 Stateful operations
 ===================
 
