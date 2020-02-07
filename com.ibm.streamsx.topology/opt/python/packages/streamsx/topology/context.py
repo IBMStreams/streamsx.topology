@@ -7,7 +7,7 @@ Context for submission and build of topologies.
 
 """
 
-__all__ = ['ContextTypes', 'ConfigParams', 'JobConfig', 'SubmissionResult', 'submit', 'build']
+__all__ = ['ContextTypes', 'ConfigParams', 'JobConfig', 'SubmissionResult', 'submit', 'build', 'run']
 
 import logging
 import os
@@ -102,11 +102,10 @@ def build(topology, config=None, dest=None, verify=None):
     .. versionadded:: 1.14
     """
     if verify is not None:
-        if config is None:
-            config = {}
+        config = config.copy() if config else dict()
         config[ConfigParams.SSL_VERIFY] = verify
 
-    sr = submit (ContextTypes.BUNDLE, topology, config=config)
+    sr = submit(ContextTypes.BUNDLE, topology, config=config)
     if 'bundlePath' in sr:
         if dest:
             bundle = sr['bundlePath']
@@ -123,6 +122,7 @@ def build(topology, config=None, dest=None, verify=None):
         return sr['bundlePath'], sr['jobConfigPath'], sr
 
     return None, None, sr
+
 
 
 class _BaseSubmitter(object):
@@ -1582,3 +1582,33 @@ class _SasBundleSubmitter(_BaseSubmitter):
         env.pop('STREAMS_INSTANCE_ID', None)
         env.pop('STREAMS_INSTALL', None)
         return env
+
+def run(topology, config=None, job_name=None, verify=None, ctxtype=ContextTypes.DISTRIBUTED):
+    """
+    Run a topology in a distributed Streams instance.
+
+    Runs a topology using :py:func:`submit` with context type :py:const:`~ContextTypes.DISTRIBUTED` (by default). The result is running Streams job.
+
+    Args:
+        topology(Topology): Application topology to be run.
+        config(dict): Configuration for the build.
+        job_name(str): Optional job name. If set will override any job name in `config`.
+        verify: SSL verification used by requests when using a build service. Defaults to enabling SSL verification.
+        ctxtype(str): Context type for submission.
+
+    Returns:
+        2-element tuple containing
+
+        - **job** (*Job*): REST binding object for the running job or ``None`` if no job was submitted.
+        - **result** (*SubmissionResult*): value returned from ``submit``.
+
+    .. seealso:: :py:const:`~ContextTypes.DISTRIBUTED` for details on how to configure the Streams instance to use.
+    .. versionadded:: 1.14
+    """
+    config = config.copy() if config else dict()
+    if verify is not None:
+        config[ConfigParams.SSL_VERIFY] = verify
+
+    sr = submit(ctxtype, topology, config=config)
+    return sr.job, sr
+

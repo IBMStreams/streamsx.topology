@@ -8,7 +8,7 @@ import time
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
-from streamsx.topology.context import build
+from streamsx.topology.context import build, run
 
 
 class TestContext(unittest.TestCase):
@@ -62,4 +62,18 @@ class TestContext(unittest.TestCase):
             bundle, jco, sr = build(topo, verify=self._verify, dest=td)
             self._check_result(bundle, jco, sr, dest=td)
             self._remove_result(sr)
+
+class TestContextRun(unittest.TestCase):
+
+    def setUp(self):
+        Tester.setup_distributed(self)
+        self._verify = False
+  
+    def test_run(self):
+        topo = Topology()
+        topo.source(['a'])
+        job, sr = run(topo, verify=self._verify)
+
+        self.assertIs(job, sr.job)
+        job.cancel()
   
