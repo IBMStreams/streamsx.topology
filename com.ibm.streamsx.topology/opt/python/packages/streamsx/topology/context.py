@@ -1,25 +1,18 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015,2019
+# Copyright IBM Corp. 2015,2020
 """
 
-Context for submission of applications.
-
-********
-Overview
-********
-
-The main function is :py:func:`submit` to submit
-a :py:class:`~streamsx.topology.topology.Topology`
-to a Streaming Analytics service or IBM® Streams instance for execution.
+Context for submission and build of topologies.
 
 """
 
-__all__ = ['ContextTypes', 'ConfigParams', 'JobConfig', 'SubmissionResult', 'submit']
+__all__ = ['ContextTypes', 'ConfigParams', 'JobConfig', 'SubmissionResult', 'submit', 'build']
 
 import logging
 import os
 import os.path
+import shutil
 import json
 import platform
 import subprocess
@@ -83,6 +76,53 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
     sr._submitter = context_submitter
     return sr
 
+def build(topology, config=None, dest=None, verify=None):
+    """
+    Build a topology to produce a Streams application bundle.
+
+    Builds a topology using :py:func:`submit` with context type :py:const:`~ContextTypes.BUNDLE`. The result is a sab file on the local file system along
+    with a job config overlay file matching the application.
+
+    The build uses a build service or a local install, see :py:const:`~ContextTypes.BUNDLE` for details.
+
+    Args:
+        topology(Topology): Application topology to be built.
+        config(dict): Configuration for the build.
+        dest(str): Destination directory for the sab and JCO files. Default is context specific.
+        verify: SSL verification used by requests when using a build service. Defaults to enabling SSL verification.
+
+    Returns:
+        3-element tuple containing
+
+        - **bundle_path** (*str*): path to the bundle (sab file) or ``None`` if not created.
+        - **jco_path** (*str*): path to file containing the job config overlay for the application or ``None`` if not created.
+        - **result** (*SubmissionResult*): value returned from ``submit``.
+
+    .. seealso:: :py:const:`~ContextTypes.BUNDLE` for details on how to configure the build service to use.
+    .. versionadded:: 1.14
+    """
+    if verify is not None:
+        if config is None:
+            config = {}
+        config[ConfigParams.SSL_VERIFY] = verify
+
+    sr = submit (ContextTypes.BUNDLE, topology, config=config)
+    if 'bundlePath' in sr:
+        if dest:
+            bundle = sr['bundlePath']
+            bundle_dest = os.path.join(dest, os.path.basename(bundle))
+            if os.path.exists(bundle_dest): os.remove(bundle_dest)
+            shutil.move(bundle, dest)
+            sr['bundlePath'] = bundle_dest
+
+            jco = sr['jobConfigPath']
+            jco_dest = os.path.join(dest, os.path.basename(jco))
+            if os.path.exists(jco_dest): os.remove(jco_dest)
+            shutil.move(jco, dest)
+            sr['jobConfigPath'] = jco_dest
+        return sr['bundlePath'], sr['jobConfigPath'], sr
+
+    return None, None, sr
 
 
 class _BaseSubmitter(object):
