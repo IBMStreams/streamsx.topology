@@ -610,7 +610,6 @@ class StreamSchema(object) :
         return self._schema
 
     def spl_json(self):
-        """Private method. May be removed at any time."""
         _splj = {}
         _splj["type"] = 'spltype'
         _splj["value"] = self.schema()
@@ -745,7 +744,6 @@ class CommonSchema(enum.Enum):
         return self.value.schema()
 
     def spl_json(self):
-        """Private method. May be removed at any time."""
         return self.value.spl_json()
 
     def extend(self, schema):

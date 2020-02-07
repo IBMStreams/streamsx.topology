@@ -403,7 +403,6 @@ class SubscribeConnection(Enum):
     """
 
     def spl_json(self):
-        """Internal method."""
         return streamsx.spl.op.Expression.expression('com.ibm.streamsx.topology.topic::' + self.name).spl_json()
 
 class Topology(object):

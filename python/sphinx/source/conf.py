@@ -38,7 +38,7 @@ extensions = [
     'sphinx_autodoc_typehints'
 ]
 
-autodoc_default_flags = ['members']
+autodoc_default_flags = ['members', 'show-inheritance', 'no-undoc-members']
 autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
@@ -121,6 +121,8 @@ todo_include_todos = False
 # all autodoc directives.
 autodoc_default_flags = [
     'inherited-members',  # Include docs for members inherited from base class 
+    'show-inheritance',
+    'no-undoc-members'
 ]
 
 # -- Options for HTML output ----------------------------------------------
