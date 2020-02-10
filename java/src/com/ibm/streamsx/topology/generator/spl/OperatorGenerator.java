@@ -249,7 +249,7 @@ class OperatorGenerator {
         objectArray(config, "viewConfigs", viewConfig -> {
 
             String name = jstring(viewConfig, "name");
-            String port = jstring(viewConfig, "port");
+            String port = getSPLCompatibleName(jstring(viewConfig, "port"));
             String description = jstring(viewConfig, "description");
             Double bufferTime = viewConfig.get("bufferTime").getAsDouble();
             Long sampleSize = viewConfig.get("sampleSize").getAsLong();

@@ -64,7 +64,7 @@ class TestDistributedViews(unittest.TestCase):
             params = {'rate': 25.0})
         s = throttle.stream
         s = s.map(lambda t : "ABC" + str(t))
-        s = s.as_string()
+        s = s.as_string(name="Spacy Name")
         self._ov = s.view()
         self._expected_type = str
         
