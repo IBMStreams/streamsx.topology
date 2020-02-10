@@ -5,10 +5,11 @@ import sys
 import os
 import tempfile
 import time
+import uuid
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
-from streamsx.topology.context import build, run
+from streamsx.topology.context import build, run, JobConfig
 
 
 class TestContext(unittest.TestCase):
@@ -75,5 +76,29 @@ class TestContextRun(unittest.TestCase):
         job, sr = run(topo, verify=self._verify)
 
         self.assertIs(job, sr.job)
+        job.cancel()
+  
+    def test_run_with_name(self):
+        topo = Topology()
+        topo.source(['a'])
+        name = 'JOB:' + str(uuid.uuid4())
+        job, sr = run(topo, job_name=name, verify=self._verify)
+
+        self.assertIs(job, sr.job)
+        self.assertEqual(name, job.name)
+        job.cancel()
+  
+    def test_run_with_name_overwrite(self):
+        topo = Topology()
+        topo.source(['a'])
+        name_not_used = 'JOB:' + str(uuid.uuid4())
+        name = 'JOB:' + str(uuid.uuid4())
+        cfg = {}
+        jc = JobConfig(job_name=name_not_used)
+        jc.add(cfg)
+        job, sr = run(topo, config=cfg, job_name=name, verify=self._verify)
+
+        self.assertIs(job, sr.job)
+        self.assertEqual(name, job.name)
         job.cancel()
   
