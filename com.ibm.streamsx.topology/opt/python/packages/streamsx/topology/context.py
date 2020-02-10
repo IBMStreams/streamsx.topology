@@ -1,25 +1,18 @@
 # coding=utf-8
 # Licensed Materials - Property of IBM
-# Copyright IBM Corp. 2015,2019
+# Copyright IBM Corp. 2015,2020
 """
 
-Context for submission of applications.
-
-********
-Overview
-********
-
-The main function is :py:func:`submit` to submit
-a :py:class:`~streamsx.topology.topology.Topology`
-to a Streaming Analytics service or IBM® Streams instance for execution.
+Context for submission and build of topologies.
 
 """
 
-__all__ = ['ContextTypes', 'ConfigParams', 'JobConfig', 'SubmissionResult', 'submit']
+__all__ = ['ContextTypes', 'ConfigParams', 'JobConfig', 'SubmissionResult', 'submit', 'build', 'run']
 
 import logging
 import os
 import os.path
+import shutil
 import json
 import platform
 import subprocess
@@ -82,6 +75,53 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
     sr = SubmissionResult(context_submitter.submit())
     sr._submitter = context_submitter
     return sr
+
+def build(topology, config=None, dest=None, verify=None):
+    """
+    Build a topology to produce a Streams application bundle.
+
+    Builds a topology using :py:func:`submit` with context type :py:const:`~ContextTypes.BUNDLE`. The result is a sab file on the local file system along
+    with a job config overlay file matching the application.
+
+    The build uses a build service or a local install, see :py:const:`~ContextTypes.BUNDLE` for details.
+
+    Args:
+        topology(Topology): Application topology to be built.
+        config(dict): Configuration for the build.
+        dest(str): Destination directory for the sab and JCO files. Default is context specific.
+        verify: SSL verification used by requests when using a build service. Defaults to enabling SSL verification.
+
+    Returns:
+        3-element tuple containing
+
+        - **bundle_path** (*str*): path to the bundle (sab file) or ``None`` if not created.
+        - **jco_path** (*str*): path to file containing the job config overlay for the application or ``None`` if not created.
+        - **result** (*SubmissionResult*): value returned from ``submit``.
+
+    .. seealso:: :py:const:`~ContextTypes.BUNDLE` for details on how to configure the build service to use.
+    .. versionadded:: 1.14
+    """
+    if verify is not None:
+        config = config.copy() if config else dict()
+        config[ConfigParams.SSL_VERIFY] = verify
+
+    sr = submit(ContextTypes.BUNDLE, topology, config=config)
+    if 'bundlePath' in sr:
+        if dest:
+            bundle = sr['bundlePath']
+            bundle_dest = os.path.join(dest, os.path.basename(bundle))
+            if os.path.exists(bundle_dest): os.remove(bundle_dest)
+            shutil.move(bundle, dest)
+            sr['bundlePath'] = bundle_dest
+
+            jco = sr['jobConfigPath']
+            jco_dest = os.path.join(dest, os.path.basename(jco))
+            if os.path.exists(jco_dest): os.remove(jco_dest)
+            shutil.move(jco, dest)
+            sr['jobConfigPath'] = jco_dest
+        return sr['bundlePath'], sr['jobConfigPath'], sr
+
+    return None, None, sr
 
 
 
@@ -1315,7 +1355,7 @@ class JobConfig(object):
         return config
 
     def as_overlays(self):
-        """Return this jobs configuration as a complete job configuration overlays object.
+        """Return this job configuration as a complete job configuration overlays object.
 
         Converts this job configuration into the full format supported by IBM Streams.
         The returned `dict` contains:
@@ -1542,3 +1582,42 @@ class _SasBundleSubmitter(_BaseSubmitter):
         env.pop('STREAMS_INSTANCE_ID', None)
         env.pop('STREAMS_INSTALL', None)
         return env
+
+def run(topology, config=None, job_name=None, verify=None, ctxtype=ContextTypes.DISTRIBUTED):
+    """
+    Run a topology in a distributed Streams instance.
+
+    Runs a topology using :py:func:`submit` with context type :py:const:`~ContextTypes.DISTRIBUTED` (by default). The result is running Streams job.
+
+    Args:
+        topology(Topology): Application topology to be run.
+        config(dict): Configuration for the build.
+        job_name(str): Optional job name. If set will override any job name in `config`.
+        verify: SSL verification used by requests when using a build service. Defaults to enabling SSL verification.
+        ctxtype(str): Context type for submission.
+
+    Returns:
+        2-element tuple containing
+
+        - **job** (*Job*): REST binding object for the running job or ``None`` if no job was submitted.
+        - **result** (*SubmissionResult*): value returned from ``submit``.
+
+    .. seealso:: :py:const:`~ContextTypes.DISTRIBUTED` for details on how to configure the Streams instance to use.
+    .. versionadded:: 1.14
+    """
+    config = config.copy() if config else dict()
+    if job_name:
+        if ConfigParams.JOB_CONFIG in config:
+            # Ensure the original is not changed
+            jc = JobConfig.from_overlays(config[ConfigParams.JOB_CONFIG].as_overlays())
+            jc.job_name = job_name
+            jc.add(config)
+        else:
+            JobConfig(job_name=job_name).add(config)
+
+    if verify is not None:
+        config[ConfigParams.SSL_VERIFY] = verify
+
+    sr = submit(ctxtype, topology, config=config)
+    return sr.job, sr
+
