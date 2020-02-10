@@ -1355,7 +1355,7 @@ class JobConfig(object):
         return config
 
     def as_overlays(self):
-        """Return this jobs configuration as a complete job configuration overlays object.
+        """Return this job configuration as a complete job configuration overlays object.
 
         Converts this job configuration into the full format supported by IBM Streams.
         The returned `dict` contains:
@@ -1606,6 +1606,15 @@ def run(topology, config=None, job_name=None, verify=None, ctxtype=ContextTypes.
     .. versionadded:: 1.14
     """
     config = config.copy() if config else dict()
+    if job_name:
+        if ConfigParams.JOB_CONFIG in config:
+            # Ensure the original is not changed
+            jc = JobConfig.from_overlays(config[ConfigParams.JOB_CONFIG].as_overlays())
+            jc.job_name = job_name
+            jc.add(config)
+        else:
+            JobConfig(job_name=job_name).add(config)
+
     if verify is not None:
         config[ConfigParams.SSL_VERIFY] = verify
 
