@@ -1060,9 +1060,47 @@ class Stream(_placement._Placement, object):
             str: Name of the stream.
 
         .. seealso:: :py:meth:`aliased_as`
+
+        .. warning::
+            If the name is not a valid SPL identifier or longer than
+            80 characters then the name will be
+            converted to a valid SPL identifier at compile and runtime.
+            This identifier will be the name used in the REST api and log/trace.
+
+            Visualizations of the runtime graph uses `name` rather
+            than the converted identifier.
+
+            A valid SPL identifier consists only of 
+            characters ``A-Z``, ``a-z``, ``0-9``, ``_`` and
+            must not start with a number or be an SPL keyword.
+
+            See :py:meth:`runtime_name <runtime_name>`.
         """
         return self._alias if self._alias else self.oport.name
 
+    @property
+    def runtime_name(self):
+        """
+        Return runtime name.
+
+        If :py:meth:`name <name>` is not a valid SPL identifier then the
+        runtime name will be valid SPL identifier that represents `name`.
+        Otherwise `name` is returned.
+
+        Returns:
+            str: Runtime name of the stream.
+
+        .. versionadded:: 1.14
+        """
+        import re
+        if len(self.name) <= 80 and re.fullmatch('^[a-zA-z_][a-zA-z0-9_]*$', self.name):
+            return self.name
+
+        import hashlib
+        md = hashlib.md5()
+        md.update(self.name.encode('utf-8'))
+        return '__spl_' + md.hexdigest()
+     
     def aliased_as(self, name):
         """
         Create an alias of this stream.
