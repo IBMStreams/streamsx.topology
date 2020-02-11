@@ -46,6 +46,17 @@ class Timestamp(streamsx.spl.runtime._Timestamp):
     A `Timestamp` is a namedtuple with three fields `seconds`, `nanoseconds`
     and `machine_id`.
 
+    A `Timestamp` acts as a ``datetime.datetime`` instance (duck typing)
+    with the exception of:
+
+        * :py:meth:`time` - returns an ``int`` instead of ``datetime.time``
+        * ``datetime.datetime`` operations (``+,-,<``) are not supported
+        * string representation (uses ``Timestamp`` representation)
+        * is not an instance of ``datetime.datetime``
+
+    The value of the equivalent ``datetime.datetime`` is identical to the
+    instance returned by :py:meth:`datetime`.
+
     Attributes:
         seconds (int) : Seconds since epoch.
         nanoseconds (int) : Nanosecond component.
@@ -54,6 +65,8 @@ class Timestamp(streamsx.spl.runtime._Timestamp):
     .. warning::
         Implementation of `Timestamp` changed with 1.8.3 to be a `namedtuple`
         maintaining the existing class API.
+
+    .. versionchanged:: 1.14 ``Timestamp`` acts as a ``datetime.datetime`.
     """
 
     _EPOCH = datetime.datetime.utcfromtimestamp(0)
@@ -116,7 +129,9 @@ class Timestamp(streamsx.spl.runtime._Timestamp):
          return ns
 
     def __new__(cls, seconds, nanoseconds, machine_id=0):
-        return streamsx.spl.runtime._Timestamp.__new__(cls, int(seconds), Timestamp._check_nanos(nanoseconds), int(machine_id))
+        value = streamsx.spl.runtime._Timestamp.__new__(cls, int(seconds), Timestamp._check_nanos(nanoseconds), int(machine_id))
+        value._dt = None
+        return value
 
     def time(self):
         """
@@ -137,10 +152,36 @@ class Timestamp(streamsx.spl.runtime._Timestamp):
         Returns:
              datetime.datetime: Timestamp converted to a `datetime.datetime`.
         """
-        return datetime.datetime.utcfromtimestamp(self.time())
+        if self._dt is None:
+            self._dt = datetime.datetime.utcfromtimestamp(self.time())
+        return self._dt
 
     def __reduce__(self):
         return streamsx.spl.runtime._stored_ts, tuple(self)
+
+    # Duck-typed as datetime.datetime
+    @property
+    def year(self): return self.datetime().year
+    @property
+    def month(self): return self.datetime().month
+    @property
+    def day(self): return self.datetime().day
+    @property
+    def hour(self): return self.datetime().hour
+    @property
+    def minute(self): return self.datetime().minute
+    @property
+    def second(self): return self.datetime().second
+    @property
+    def microsecond(self): return self.datetime().microsecond
+    @property
+    def tzinfo(self): return self.datetime().tzinfo
+
+    def __getattr__(self, name):
+        dt = self.datetime()
+        if hasattr(dt, name):
+            return getattr(dt, name)
+        raise AttributeError(name)
 
 def _get_timestamp_tuple(ts):
     """

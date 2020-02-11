@@ -3,6 +3,7 @@
 import unittest
 import random
 import decimal
+import datetime
 import collections
 import sys
 import threading
@@ -285,42 +286,45 @@ class TestSchema(unittest.TestCase):
         self.assertIsInstance(_sch._normalize('MyCoolSchema'), _sch.StreamSchema)
         self.assertRaises(ValueError, _sch._normalize, False)
 
-        if sys.version_info.major == 3:
-            import typing
-            Employee = typing.NamedTuple('Employee', [('name', str), ('id', int)])
-            nts = _sch._normalize(Employee)
-            self.assertIsInstance(nts, _sch.StreamSchema)
-            self.assertEqual('tuple<rstring name, int64 id>', nts._schema)
+        import typing
+        Employee = typing.NamedTuple('Employee', [('name', str), ('id', int)])
+        nts = _sch._normalize(Employee)
+        self.assertIsInstance(nts, _sch.StreamSchema)
+        self.assertEqual('tuple<rstring name, int64 id>', nts._schema)
 
-            AllSPLTypes = typing.NamedTuple('AllSPLTypes', [
-                ('b', bool),
-                ('i64', int),
-                ('f64', float),
-                ('c64', complex),
-                ('d128', decimal.Decimal),
-                ('s', _u),
-                ('li64', typing.List[int]),
-                ('lf64', typing.List[float]),
-                ('mi64b', typing.Mapping[int,bool]),
-                ('llf64', typing.List[typing.List[float]]),
-                ('mi64li64', typing.Mapping[int,typing.List[int]]),
-                ('sc64', typing.Set[complex]),
-                ('sli64', typing.Set[typing.List[int]]),
-                ('ts_spl', streamsx.spl.types.Timestamp),
-                ('binary', bytes),
-                ('oi64', typing.Optional[int]),
-                ('of64', typing.Union[float, None]),
-                ('ob', typing.Union[None, bool]),
-                ])
-            nts = _sch._normalize(AllSPLTypes)
-            self.assertIsInstance(nts, _sch.StreamSchema)
-            self.assertEqual('tuple<boolean b, int64 i64, float64 f64, complex64 c64, decimal128 d128, rstring s, list<int64> li64, list<float64> lf64, map<int64, boolean> mi64b, list<list<float64>> llf64, map<int64, list<int64>> mi64li64, set<complex64> sc64, set<list<int64>> sli64, timestamp ts_spl, blob binary, optional<int64> oi64, optional<float64> of64, optional<boolean> ob>', nts._schema)
-            self.assertEqual('AllSPLTypes', nts.style.__name__)
+        AllSPLTypes = typing.NamedTuple('AllSPLTypes', [
+            ('b', bool),
+            ('i64', int),
+            ('f64', float),
+            ('c64', complex),
+            ('d128', decimal.Decimal),
+            ('s', _u),
+            ('li64', typing.List[int]),
+            ('lf64', typing.List[float]),
+            ('mi64b', typing.Mapping[int,bool]),
+            ('llf64', typing.List[typing.List[float]]),
+            ('mi64li64', typing.Mapping[int,typing.List[int]]),
+            ('sc64', typing.Set[complex]),
+            ('sli64', typing.Set[typing.List[int]]),
+            ('ts_spl', streamsx.spl.types.Timestamp),
+            ('ts_dt', datetime.datetime),
+            ('binary', bytes),
+            ('oi64', typing.Optional[int]),
+            ('of64', typing.Union[float, None]),
+            ('ob', typing.Union[None, bool]),
+            ])
+        nts = _sch._normalize(AllSPLTypes)
+        self.assertIsInstance(nts, _sch.StreamSchema)
+        self.assertEqual('tuple<boolean b, int64 i64, float64 f64, complex64 c64, decimal128 d128, rstring s, list<int64> li64, list<float64> lf64, map<int64, boolean> mi64b, list<list<float64>> llf64, map<int64, list<int64>> mi64li64, set<complex64> sc64, set<list<int64>> sli64, timestamp ts_spl, timestamp ts_dt, blob binary, optional<int64> oi64, optional<float64> of64, optional<boolean> ob>', nts._schema)
+        self.assertEqual('AllSPLTypes', nts.style.__name__)
 
-            ont = nts.style
-            self.assertEqual(ont._fields, AllSPLTypes._fields)
-            if sys.version_info.major == 3:
-                self.assertEqual(ont._field_types, AllSPLTypes._field_types)
+        ont = nts.style
+        self.assertEqual(ont._fields, AllSPLTypes._fields)
+        for n in ont._field_types:
+            if n == 'ts_dt':
+                self.assertEqual(streamsx.spl.types.Timestamp, ont._field_types[n])
+            else:
+                self.assertEqual(ont._field_types[n], AllSPLTypes._field_types[n])
            
 class TestKeepSchema(unittest.TestCase):
     """

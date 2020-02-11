@@ -82,6 +82,7 @@ __all__ = ['is_common', 'StreamSchema', 'CommonSchema']
 
 import collections
 import decimal
+import datetime
 import enum
 import io
 import itertools
@@ -353,6 +354,7 @@ class StreamSchema(object) :
         ``complex``                        ``complex64``
         ``bytes``                          ``blob``
         ``streamsx.spl.types.Timestamp``   ``timestamp``
+        ``datetime.datetime``              ``timestamp``
         ``typing.List[T]``                 ``list<T>``
         ``typing.Set[T]``                  ``set<T>``
         ``typing.Mapping[K,V]``            ``map<K,V>``
@@ -827,6 +829,7 @@ def _init_type_mappings():
             str:'rstring', bool:'boolean', int:'int64', float:'float64',
             complex:'complex64', decimal.Decimal:'decimal128',
             streamsx.spl.types.Timestamp:'timestamp',
+            datetime.datetime:'timestamp',
             bytes:'blob' }
 
         global _SPLTYPE_TO_PY
