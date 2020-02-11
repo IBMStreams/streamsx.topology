@@ -104,3 +104,17 @@ class TestTypes(unittest.TestCase):
       ts = Timestamp.from_datetime(dt, 892)
       self.assertEqual(dt, ts.datetime())
       self.assertEqual(892, ts.machine_id)
+
+      dt = ts.datetime()
+      self.assertIs(dt, ts.datetime())
+
+      # Check Timestamp is duck-typed as a datetime
+      self.assertEqual(dt.year, ts.year)
+      self.assertEqual(dt.month, ts.month)
+      self.assertEqual(dt.day, ts.day)
+      self.assertEqual(dt.hour, ts.hour)
+      self.assertEqual(dt.minute, ts.minute)
+      self.assertEqual(dt.second, ts.second)
+      self.assertEqual(dt.microsecond, ts.microsecond)
+      self.assertEqual(dt.tzinfo, ts.tzinfo)
+      self.assertEqual(dt.ctime(), ts.ctime())
