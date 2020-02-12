@@ -9,7 +9,7 @@ Composite transformations.
 """
 
 
-__all__ = [ 'Source', 'Map', 'ForEach']
+__all__ = ['Composite', 'Source', 'Map', 'ForEach']
 
 import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
@@ -35,24 +35,61 @@ class Composite(ABC):
 
     Composites may use other composites during ``populate``.
 
-    """
-    def __init__(self):
-        self.group = True
-        ns = self.__class__.__module__
-        if ns == '__main__':
-            self.kind = self.__class__.__name__
-        else:
-            self.kind = ns + '::' + self.__class__.__name__
 
+    Composites can control how the basic transformations are
+    visually represented. By default any transformations within
+    a composite are grouped visually. A composite may alter this using these
+    attributes of the composite instance:
+
+        * ``kind`` - Sets the name of operator kind for a group or single operator.  Defaults to a combination of the module and class name of the composite, e.g. ``streamsx.standard.utility::Sequence``. Set to a false value to disable any modification of the visual representation of the composite's transformations.
+        * ``group`` - Set to a false value to disable any grouping of multiple transformations. Defaults to ``True`` to enable grouping.
+
+    The values of ``kind`` and ``group`` are checked after the expansion
+    of the composite using ``populate``.
+
+    """
     @classmethod
     def _check_type(cls, obj, type_):
         if not isinstance(obj, type_):
             raise TypeError()
 
-    def _set_group(self, name):
-        if self.group:
-            pass
+    def _group_ops(self, topology, name):
+        if not hasattr(self, 'group'):
+            self.group = True
+        if not hasattr(self, 'kind'):
+            ns = self.__class__.__module__
+            if ns == '__main__':
+                self.kind = self.__class__.__name__
+            else:
+                self.kind = ns + '::' + self.__class__.__name__
+        return _GroupOps(self, topology, name)
 
+
+class _GroupOps(object):
+    def __init__(self, composite, topology, name):
+        self.composite = composite
+        self.topology = topology
+        self.name = name
+    def __enter__(self):
+        self.ops = len(self.topology.graph.operators)
+    def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type is None:
+           new_ops = len(self.topology.graph.operators) - self.ops
+           if new_ops > 1 and self.composite.group and self.composite.kind:
+               self._grouping()
+           if new_ops == 1 and self.composite.kind:
+               self._single()
+
+    def _grouping(self):
+        group_id = None
+        for i in range(self.ops, len(self.topology.graph.operators)):
+            op = self.topology.graph.operators[i]
+            group_id = op._layout_group(self.composite.kind, self.name, group_id=group_id)
+
+    def _single(self):
+        op = self.topology.graph.operators[self.ops]
+        op._layout(kind=self.composite.kind, name=op.name, orig_name=self.name)
+ 
 
 class Source(Composite):
     """
@@ -82,7 +119,8 @@ class Source(Composite):
     """
 
     def _add(self, topology, name, **options):
-        s = self.populate(topology, name, **options)
+        with self._group_ops(topology, name):
+            s = self.populate(topology, name, **options)
         Source._check_type(s, streamsx.topology.topology.Stream)
         return s
 
