@@ -681,24 +681,21 @@ class Topology(object):
         .. versionchanged:: 2.0
             Type hints are used to define the returned stream schema.
         """
+        sl = _SourceLocation(_source_info(), "source")
         import streamsx.topology.composite
         if isinstance(func, streamsx.topology.composite.Source):
             return func._add(self, name)
 
-        _name = name
+        _name = self.graph._requested_name(name, action='source', func=func)
         hints = streamsx._streams._hints.schema_iterable(func, self)
 
         if inspect.isroutine(func) or callable(func):
             pass
         else:
-            if _name is None:
-                _name = type(func).__name__
             func = streamsx.topology.runtime._IterableInstance(func)
 
         schema = hints.schema if hints else None
 
-        sl = _SourceLocation(_source_info(), "source")
-        _name = self.graph._requested_name(_name, action='source', func=func)
         # source is always stateful
         op = self.graph.addOperator(self.opnamespace+"::Source", func, name=_name, sl=sl, nargs=0)
         op._layout(kind='Source', name=_name, orig_name=name)
