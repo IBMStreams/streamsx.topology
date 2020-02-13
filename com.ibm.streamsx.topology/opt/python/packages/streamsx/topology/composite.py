@@ -62,6 +62,12 @@ class Composite(ABC):
                 self.kind = self.__class__.__name__
             else:
                 self.kind = ns + '::' + self.__class__.__name__
+
+        if not name:
+            if '::' in self.kind:
+                name = self.kind.split('::')[-1]
+            else:
+                name = self.kind
         return _GroupOps(self, topology, name)
 
 
@@ -162,7 +168,8 @@ class Map(Composite):
     """
 
     def _add(self, stream, schema, name, **options):
-        s = self.populate(stream.topology, stream, schema, name, **options)
+        with self._group_ops(stream.topology, name):
+            s = self.populate(stream.topology, stream, schema, name, **options)
         Map._check_type(s, streamsx.topology.topology.Stream)
         if schema:
             s = s.map(schema=schema)
@@ -194,7 +201,8 @@ class ForEach(Composite):
     """
 
     def _add(self, stream, name, **options):
-        s = self.populate(stream.topology, stream, name, **options)
+        with self._group_ops(stream.topology, name):
+            s = self.populate(stream.topology, stream, name, **options)
         ForEach._check_type(s, streamsx.topology.topology.Sink)
         return s
 
