@@ -60,7 +60,7 @@
         <trans-unit id="StreamsTopologyMessages_CDIST0302" extraData="TOPOLOGY_PYTHONHOME_NO" resname="CDIST0302I">
           <source>PYTHONHOME environment variable not set. Please set PYTHONHOME to a valid Python {0} install.</source>
           <!--TRNOTE Do not translate the word PYTHONHOME -->
-          <target>未设置 PYTHONHOME 环境变量。请将 PYTHONHOME 设置为有效的 Python {0} 安装。</target>
+          <target>未设置 PYTHONHOME 环境变量。 请将 PYTHONHOME 设置为有效的 Python {0} 安装。</target>
         </trans-unit>
         <trans-unit id="StreamsTopologyMessages_CDIST0303" extraData="TOPOLOGY_LOAD_LIB" resname="CDIST0303I">
           <source>Loading Python library: {0}.</source>
@@ -70,7 +70,7 @@
         <trans-unit id="StreamsTopologyMessages_CDIST0304" extraData="TOPOLOGY_LOAD_LIB_ERROR" resname="CDIST0304E">
           <source>Fatal error: could not open Python library: {0} : {2}. Please set PYTHONHOME to a valid Python {1} install.</source>
           <!--TRNOTE Do not translate the words Python, PYTHONHOME -->
-          <target>致命错误：未能打开 Python 库 {0}：{2}。请将 PYTHONHOME 设置为有效的 Python {1} 安装。</target>
+          <target>致命错误：未能打开 Python 库 {0}：{2}。 请将 PYTHONHOME 设置为有效的 Python {1} 安装。</target>
         </trans-unit>
         <trans-unit id="StreamsTopologyMessages_CDIST0305" extraData="TOPOLOGY_IMPORT_MODULE_ERROR" resname="CDIST0305E">
           <source>Fatal error: missing module: {0}.</source>
