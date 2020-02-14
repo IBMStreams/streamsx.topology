@@ -60,7 +60,7 @@
         <trans-unit id="StreamsTopologyMessages_CDIST0302" extraData="TOPOLOGY_PYTHONHOME_NO" resname="CDIST0302I">
           <source>PYTHONHOME environment variable not set. Please set PYTHONHOME to a valid Python {0} install.</source>
           <!--TRNOTE Do not translate the word PYTHONHOME -->
-          <target>Variável de ambiente PYTHONHOME não configurada. Configure PYTHONHOME como uma instalação Python {0} válida. </target>
+          <target>Variável de ambiente PYTHONHOME não configurada. Configure PYTHONHOME como uma instalação Python {0} válida.</target>
         </trans-unit>
         <trans-unit id="StreamsTopologyMessages_CDIST0303" extraData="TOPOLOGY_LOAD_LIB" resname="CDIST0303I">
           <source>Loading Python library: {0}.</source>
@@ -70,7 +70,7 @@
         <trans-unit id="StreamsTopologyMessages_CDIST0304" extraData="TOPOLOGY_LOAD_LIB_ERROR" resname="CDIST0304E">
           <source>Fatal error: could not open Python library: {0} : {2}. Please set PYTHONHOME to a valid Python {1} install.</source>
           <!--TRNOTE Do not translate the words Python, PYTHONHOME -->
-          <target>Erro fatal: não foi possível abrir a biblioteca Python: {0} : {2}. Configure PYTHONHOME como uma instalação Python {1} válida. </target>
+          <target>Erro fatal: não foi possível abrir a biblioteca Python: {0} : {2}. Configure PYTHONHOME como uma instalação Python {1} válida.</target>
         </trans-unit>
         <trans-unit id="StreamsTopologyMessages_CDIST0305" extraData="TOPOLOGY_IMPORT_MODULE_ERROR" resname="CDIST0305E">
           <source>Fatal error: missing module: {0}.</source>
