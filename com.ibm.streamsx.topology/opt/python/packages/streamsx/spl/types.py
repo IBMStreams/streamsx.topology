@@ -66,7 +66,7 @@ class Timestamp(streamsx.spl.runtime._Timestamp):
         Implementation of `Timestamp` changed with 1.8.3 to be a `namedtuple`
         maintaining the existing class API.
 
-    .. versionchanged:: 1.14 ``Timestamp`` acts as a ``datetime.datetime`.
+    .. versionchanged:: 1.14 ``Timestamp`` acts as a ``datetime.datetime``.
     """
 
     _EPOCH = datetime.datetime.utcfromtimestamp(0)

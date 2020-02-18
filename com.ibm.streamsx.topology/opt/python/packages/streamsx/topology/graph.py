@@ -15,12 +15,14 @@ import dill
 
 import types
 import base64
+import hashlib
 import re
 import streamsx.topology.dependency
 import streamsx.topology.functions
 import streamsx.topology.param
 import streamsx.topology.state
 import streamsx.spl.op
+import streamsx.spl.spl
 from streamsx.topology.schema import CommonSchema, StreamSchema, _normalize
 
 def _get_project_name():
@@ -49,6 +51,28 @@ def _fix_namespace(ns):
             sns.pop(i)
 
     return '.'.join(sns)
+
+_RT_ID_REMOVE = {ord('='):None,ord('+'):None,ord('/'):None}
+
+def _get_runtime_id(kind, name):
+    if len(name) <= 80 and streamsx.spl.spl._is_identifier(name):
+        return name
+
+    md = hashlib.md5()
+    md.update(name.encode('utf-8'))
+
+    d = md.digest()
+    # Xor fold to reduce length
+    f = bytes(f^b for (f,b) in zip(d[0:8], d[8:16]))
+
+    # Base 64 encode to make somewhat readable
+    # Use _ for +,/
+    # Strip padding
+    suffix = base64.b64encode(f).decode('ascii').translate(_RT_ID_REMOVE)
+
+    prefix = kind.split('::')[-1] if '::' in kind else kind
+
+    return prefix + '_' + suffix
 
 def _as_spl_expr(value):
     """ Return value converted to an SPL expression if
@@ -324,11 +348,13 @@ class _SPLInvocation(object):
         self._layout_hints = {}
         self._addOperatorFunction(self.function, stateful, nargs)
 
+        self.runtime_id = _get_runtime_id(self.kind, self.name)
+
     def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema=None,partitioned_keys=None, routing = None):
         if schema is None:
             schema=CommonSchema.Python
         if name is None:
-            name = self.name + "_OUT"+str(len(self.outputPorts))
+            name = self.runtime_id + "_OUT"+str(len(self.outputPorts))
         oport = OPort(name, self, len(self.outputPorts), schema, oWidth, partitioned_keys, routing=routing)
         self.outputPorts.append(oport)
         if schema == CommonSchema.Python:
@@ -373,7 +399,8 @@ class _SPLInvocation(object):
 
     def generateSPLOperator(self):
         _op = dict(self._op_def)
-        _op["name"] = self.name
+        #_op["name"] = self.name
+        _op["name"] = self.runtime_id
         if self.category:
             _op["category"] = self.category
 
@@ -597,7 +624,7 @@ class IPort(object):
         _iport["name"] = self.name
         if self._alias:
             _iport['alias'] = self._alias
-        _iport["connections"] = [port.name for port in self.outputPorts]
+        _iport["connections"] = [port.runtime_id for port in self.outputPorts]
         _iport["type"] = self.schema.schema()
         if self.window_config is not None:
             _iport['window'] = self.window_config
@@ -615,6 +642,7 @@ class OPort(object):
         self.routing = routing
 
         self.inputPorts = []
+        self.runtime_id = _get_runtime_id(self.operator.kind, self.name)
 
     def connect(self, iport):
         if not iport in self.inputPorts:
@@ -626,7 +654,8 @@ class OPort(object):
     def getSPLOutputPort(self):
         _oport = {}
         _oport["type"] = self.schema.schema()
-        _oport["name"] = self.name
+        #_oport["name"] = self.name
+        _oport["name"] = self.runtime_id
         _oport["connections"] = [port.name for port in self.inputPorts]
         _oport["routing"] = self.routing
 
@@ -653,11 +682,13 @@ class Marker(_SPLInvocation):
 
         self.inputPorts = []
         self.outputPorts = []
-                   
 
+        self.runtime_id = _get_runtime_id(self.kind, self.name)
+                   
     def generateSPLOperator(self):
         _op = {}
-        _op["name"] = self.name
+        #_op["name"] = self.name
+        _op["name"] = self.runtime_id
 
         _op["kind"] = self.kind
         _op["partitioned"] = False

@@ -196,11 +196,14 @@ class Invoke(streamsx._streams._placement._Placement, streamsx.topology.exop.Ext
                  action = kind[kind.rfind('::') + 2 :]
              else:
                  action = kind
-        name = topology.graph._requested_name(name, action)
-        super(Invoke,self).__init__(topology,kind,inputs,schemas,params,name)
+        _name = topology.graph._requested_name(name, action)
+        super(Invoke,self).__init__(topology,kind,inputs,schemas,params,_name)
         self._op()._ex_op = self
         self._op().model = 'spl'
         self._op().language = 'spl'
+        if name:
+            self._op()._layout(name=self._op().runtime_id, orig_name=name)
+
 
     def attribute(self, stream, name):
         """Expression for an input attribute.
