@@ -8,6 +8,18 @@ using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
 
+<%
+my $tkdir = $model->getContext()->getToolkitDirectory();
+my $pydir = $tkdir."/opt/python";
+
+require $pydir."/codegen/splpy.pm";
+
+# Initialize splpy.pm
+splpyInit($model);
+
+my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
+%>
+
 @include "../../opt/python/codegen/py_disallow_cr_trigger.cgt"
  
 class MY_OPERATOR : public MY_BASE_OPERATOR
@@ -35,6 +47,8 @@ private:
   // Control for interaction with Python
   SplpyFuncOp *funcop_;
 
+  PyObject *pyOutNames_0;
+
   // Number of output connections when passing by ref
   // -1 when cannot pass by ref
   int32_t occ_;
@@ -42,6 +56,13 @@ private:
 #if SPLPY_OP_STATE_HANDLER == 1
     SPL::Mutex mutex_;
 #endif
+
+<%
+if ($pyoutstyle eq 'dict') {
+%>
+    void fromPyTupleToSPLTuple(PyObject *pyDict, OPort0Type & otuple);
+    void fromPyDictToSPLTuple(PyObject *pyTuple, OPort0Type & otuple);
+<%}%>
 }; 
 
 <%SPL::CodeGen::headerEpilogue($model);%>

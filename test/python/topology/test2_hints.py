@@ -7,6 +7,8 @@ import random
 import time
 
 from streamsx.topology.topology import Topology
+from streamsx.topology.tester import Tester
+from streamsx.topology.context import submit
 from streamsx.topology.schema import StreamSchema, CommonSchema, _normalize
 
 SensorReading = typing.NamedTuple('SensorReading',
@@ -579,4 +581,60 @@ class TestHints(unittest.TestCase):
         e = t.end_parallel()
         e.map(m_str)
         self.assertRaises(TypeError, e.map, m_sensor)
-     
+
+class V_Sensor(object):
+    def __init__(self):
+        self.c = 0
+  
+    def __iter__(self) -> typing.Iterable[SensorReading] :
+        return self
+
+    def __next__(self) -> SensorReading:
+        if self.c == 0:
+             self.c += 1
+             return SensorReading(101, 10, 3.0)
+        if self.c == 1:
+             self.c += 1
+             return {'sensor_id':202, 'ts':20, 'reading': 7.0}
+        raise StopIteration()
+
+class V_Str(object):
+    def __init__(self):
+        self.c = 0
+  
+    def __iter__(self) -> typing.Iterable[str] :
+        return self
+
+    def __next__(self) -> SensorReading:
+        if self.c == 0:
+             self.c += 1
+             return 'Hello'
+        if self.c == 1:
+             self.c += 1
+             return 'World'
+        raise StopIteration()
+
+class TestRunningHints(unittest.TestCase):
+    def setUp(self):
+        Tester.setup_standalone(self)
+
+    def test_structured(self):
+        topo = Topology()
+        s = topo.source(V_Sensor())
+        d = s.map(lambda v : v._asdict())
+
+        tester = Tester(topo)
+        tester.tuple_count(s, 2)
+        tester.tuple_check(s, lambda v : isinstance(v, tuple))
+        tester.contents(d, [{'sensor_id':101, 'ts':10, 'reading': 3.0}, {'sensor_id':202, 'ts':20, 'reading': 7.0}])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_string(self):
+        topo = Topology()
+        s = topo.source(V_Str())
+
+        tester = Tester(topo)
+        tester.tuple_count(s, 2)
+        tester.tuple_check(s, lambda v : isinstance(v, str))
+        tester.contents(s, ['Hello', 'World'])
+        tester.test(self.test_ctxtype, self.test_config)
