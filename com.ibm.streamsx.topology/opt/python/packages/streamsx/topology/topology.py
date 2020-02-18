@@ -287,6 +287,7 @@ import streamsx._streams._placement as _placement
 import streamsx._streams._hints
 import streamsx.spl.op
 import streamsx.spl.types
+import streamsx.spl.spl
 import streamsx.topology.graph
 import streamsx.topology.schema
 import streamsx.topology.functions
@@ -678,7 +679,7 @@ class Topology(object):
             when checkpointing or within a consistent region. This
             is because generators cannot be pickled (even when using `dill`).
 
-        .. versionchanged:: 2.0
+        .. versionchanged:: 1.14 
             Type hints are used to define the returned stream schema.
         """
         sl = _SourceLocation(_source_info(), "source")
@@ -698,7 +699,7 @@ class Topology(object):
 
         # source is always stateful
         op = self.graph.addOperator(self.opnamespace+"::Source", func, name=_name, sl=sl, nargs=0)
-        op._layout(kind='Source', name=_name, orig_name=name)
+        op._layout(kind='Source', name=op.runtime_id, orig_name=name)
         oport = op.addOutputPort(schema=schema, name=_name)
         return Stream(self, oport)._make_placeable()._add_hints(hints)
 
@@ -1016,7 +1017,7 @@ class Stream(_placement._Placement, object):
     series of tuples which can be operated upon to produce another stream, as in the case of :py:meth:`map`, or
     terminate a stream, as in the case of :py:meth:`for_each`.
 
-    .. versionchanged:: 2.0
+    .. versionchanged::1.14 
         Type hints are used to define stream schemas and verify transformations
         at declaration time.
     """
@@ -1071,32 +1072,61 @@ class Stream(_placement._Placement, object):
             characters ``A-Z``, ``a-z``, ``0-9``, ``_`` and
             must not start with a number or be an SPL keyword.
 
-            See :py:meth:`runtime_name <runtime_name>`.
+            See :py:meth:`runtime_id <runtime_id>`.
         """
         return self._alias if self._alias else self.oport.name
 
     @property
-    def runtime_name(self):
+    def runtime_id(self):
         """
-        Return runtime name.
+        Return runtime identifier.
 
         If :py:meth:`name <name>` is not a valid SPL identifier then the
-        runtime name will be valid SPL identifier that represents `name`.
+        runtime identifier will be valid SPL identifier that represents `name`.
         Otherwise `name` is returned.
 
+        The runtime identifier is how the underlying SPL operator
+        or output port is named in the REST api and trace/log files.
+
+        If a name is supplied when creating a stream then runtime
+        identifier is fixed regardless of other changes in the topology.
+
+        The algorithm to determine the runtime name (for clients that
+        cannot call this method, for example, remote REST clients gathering
+        metrics) is as follows.
+
+        If the length of :py:meth:`name <name>` is less than or equal
+        to 80 and ``name`` is an SPL identifier then ``name`` is used.
+        An SPL identifier consists only of the characters ``A-Z``, ``a-z``
+        ``0-9`` and ``_``, must not start with ``0-9`` and must not be
+        an SPL keyword.
+
+        Otherwise the identifier has the form ``prefix_suffix``.
+
+        ``prefix`` is the kind of the SPL operator stripped of
+        its namespace and ``::``.  For all functional methods
+        the operator kind is the method name with the first
+        character upper-cased.
+
+        For example, ``Filter`` for :py:meth:`filter`, ``Beacon`` for
+        ``spl::utility::Beacon``.
+
+        ``suffix`` is a hashed version of name, an MD5 digest
+        ``d`` is calculated from the UTf-8 encoding of ``name``.
+        ``d`` is shortened by having its first eight bytes xor folded
+        with its last eight bytes. ``d`` is then base64 encoded
+        to produce a string. Padding ``=`` and ``+`` and ``/`` characters
+        are removed from the string.
+
+        For example, ``s.filter(lambda x : True, name='你好')``
+        results in a runtime identifier of ``Filter_oGwCfhWRg4``.
+
         Returns:
-            str: Runtime name of the stream.
+            str: Runtime identifier of the stream.
 
         .. versionadded:: 1.14
         """
-        import re
-        if len(self.name) <= 80 and re.fullmatch('^[a-zA-z_][a-zA-z0-9_]*$', self.name):
-            return self.name
-
-        import hashlib
-        md = hashlib.md5()
-        md.update(self.name.encode('utf-8'))
-        return '__spl_' + md.hexdigest()
+        return self.oport.runtime_id
      
     def aliased_as(self, name):
         """
@@ -1173,7 +1203,7 @@ class Stream(_placement._Placement, object):
 
         .. versionchanged:: 1.7
             Now returns a :py:class:`Sink` instance.
-        .. versionchanged:: 2.0
+        .. versionchanged:: 1.14 
             Support for type hints and composite transformations.
         """
         import streamsx.topology.composite
@@ -1187,7 +1217,7 @@ class Stream(_placement._Placement, object):
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.oport)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
-        op._layout(kind='ForEach', name=_name, orig_name=name)
+        op._layout(kind='ForEach', name=op.runtime_id, orig_name=name)
         return Sink(op)
 
     def filter(self, func, name=None):
@@ -1226,7 +1256,7 @@ class Stream(_placement._Placement, object):
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Filter", func, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.oport)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
-        op._layout(kind='Filter', name=_name, orig_name=name)
+        op._layout(kind='Filter', name=op.runtime_id, orig_name=name)
         oport = op.addOutputPort(schema=self.oport.schema, name=_name)
         return Stream(self.topology, oport)._make_placeable()
 
@@ -1303,7 +1333,7 @@ class Stream(_placement._Placement, object):
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Split", func, name=_name, sl=sl, stateful=stateful)
         op.addInputPort(outputPort=self.oport)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
-        op._layout(kind='Split', name=_name, orig_name=name)
+        op._layout(kind='Split', name=op.runtime_id, orig_name=name)
         streams = []
         nt_names = []
         op_name = name if name else _name
@@ -1314,7 +1344,7 @@ class Stream(_placement._Placement, object):
             oport = op.addOutputPort(schema=self.oport.schema, name=sn)
             streams.append(Stream(self.topology, oport)._make_placeable())
             nt_names.append(lsn)
-            op._layout(name=sn, orig_name=lsn)
+            op._layout(name=oport.runtime_id, orig_name=lsn)
         nt = collections.namedtuple(op_name, nt_names, rename=True)
         return nt._make(streams)
 
@@ -1326,7 +1356,7 @@ class Stream(_placement._Placement, object):
         op.addInputPort(outputPort=self.oport)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         oport = op.addOutputPort(schema=schema, name=_name)
-        op._layout(name=_name, orig_name=name)
+        op._layout(name=op.runtime_id, orig_name=name)
         return Stream(self.topology, oport)._make_placeable()
 
     def view(self, buffer_time = 10.0, sample_size = 10000, name=None, description=None, start=False):
@@ -1377,7 +1407,7 @@ class Stream(_placement._Placement, object):
         else:
             view_stream = self
 
-        port = view_stream.oport.name
+        port = view_stream.oport.runtime_id
         view_config = {
                 'name': name,
                 'port': port,
@@ -1545,7 +1575,7 @@ class Stream(_placement._Placement, object):
         schema = hints.schema if hints else streamsx.topology.schema.CommonSchema.Python
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         oport = op.addOutputPort(name=_name, schema=schema)
-        return Stream(self.topology, oport)._make_placeable()._layout('FlatMap', name=_name, orig_name=name)._add_hints(hints)
+        return Stream(self.topology, oport)._make_placeable()._layout('FlatMap', name=op.runtime_id, orig_name=name)._add_hints(hints)
     
     def isolate(self):
         """
@@ -2620,7 +2650,7 @@ class Window(object):
         op.addInputPort(outputPort=self.stream.oport, window_config=self._config)
         streamsx.topology.schema.StreamSchema._fnop_style(self.stream.oport.schema, op, 'pyStyle')
         oport = op.addOutputPort(schema=schema, name=_name)
-        op._layout(kind='Aggregate', name=_name, orig_name=name)
+        op._layout(kind='Aggregate', name=op.runtime_id, orig_name=name)
         return Stream(self.topology, oport)._make_placeable()._add_hints(hints)
 
 

@@ -605,12 +605,27 @@ _OperatorType.Filter.spl_template = 'PythonFunctionFilter'
 _OperatorType.Primitive.spl_template = 'PythonPrimitive'
 
 _SPL_KEYWORDS = {'graph', 'stream', 'public', 'composite', 'input', 'output', 'type', 'config', 'logic',
-                 'window', 'param', 'onTuple', 'onPunct', 'onProcess', 'state', 'stateful', 'mutable',
-                 'if', 'for', 'while', 'break', 'continue', 'return', 'attribute', 'function', 'operator'}
+                 'window', 'param', 'onTuple', 'onPunct', 'onProcess', 'state', 'stateful', 'mutable', 'static',
+                 'if', 'for', 'while', 'break', 'continue', 'return', 'attribute', 'function', 'operator', 'expression',
+                 'true', 'false', 'null',
+                 'boolean', 'enum',
+                 'int8', 'int16', 'int32', 'int64',
+                 'uint8', 'uint16', 'uint32', 'uint64',
+                 'float32', 'float64',
+                 'decimal32', 'decimal64', 'decimal128',
+                 'complex32', 'complex64',
+                 'timestamp', 'blob',
+                 'rstring', 'ustring', 'xml',
+                 'list', 'map', 'set', 'optional', 'tuple'
+                }
+
+def _is_identifier(id):
+    return re.match('^[a-zA-Z_][a-zA-Z_0-9]*$', id) and id not in _SPL_KEYWORDS
 
 def _valid_identifier(id):
-    if re.match('^[a-zA-Z_][a-zA-Z_0-9]*$', id) is None or id in _SPL_KEYWORDS:
+    if not _is_identifier(id):
         raise ValueError("{0} is not a valid SPL identifier".format(id))
+
 
 def _valid_op_parameter(name):
     _valid_identifier(name)
