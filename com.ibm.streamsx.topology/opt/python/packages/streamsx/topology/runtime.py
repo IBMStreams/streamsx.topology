@@ -378,6 +378,9 @@ pickle_in__json_out = _PickleInJSONOut
 pickle_in__dict_out = _PickleInTupleOut
 pickle_in = _PickleInObjectOut
 
+source_string = source_object
+source_dict = source_object
+
 string_in__object_out = object_in__object_out
 string_in__object_iter = object_in__object_iter
 string_in__pickle_out = object_in__pickle_out

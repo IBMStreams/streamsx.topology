@@ -4,10 +4,23 @@
 #include "splpy_sh.h"
 #endif
 
-<% my $pywrapfunc='source_pickle'; %>
+<%
+my $tkdir = $model->getContext()->getToolkitDirectory();
+my $pydir = $tkdir."/opt/python";
+
+require $pydir."/codegen/splpy.pm";
+
+# Initialize splpy.pm
+splpyInit($model);
+
+my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
+my $pywrapfunc='source_' . $pyoutstyle;
+my %cpp_tuple_types;
+%>
 
 MY_OPERATOR::MY_OPERATOR() :
     funcop_(NULL),
+    pyOutNames_0(NULL),
     occ_(-1)
 {
     const char * wrapfn = "<%=$pywrapfunc%>";
@@ -34,6 +47,13 @@ MY_OPERATOR::MY_OPERATOR() :
 %>
 
     funcop_ = new SplpyFuncOp(this, SPLPY_CALLABLE_STATE_HANDLER, wrapfn);
+
+<%if ($pyoutstyle eq 'dict') {%>
+  {
+  SplpyGIL lock;
+  pyOutNames_0 = Splpy::pyAttributeNames(getOutputPortAt(0));
+  }
+<%}%>
 
 #if SPLPY_OP_STATE_HANDLER == 1
    this->getContext().registerStateHandler(*this);
@@ -93,6 +113,7 @@ void MY_OPERATOR::process(uint32_t idx)
                 } else {
                     submitTuple = true;
 
+<% if ($pyoutstyle eq 'pickle') { %>
                     if (occ_ > 0) {
                         // passing by reference
                         pyTupleByRef(otuple.get___spl_po(), pyReturnVar, occ_);
@@ -106,6 +127,22 @@ void MY_OPERATOR::process(uint32_t idx)
                         // which is when we natually regain the lock.
                         pySplValueUsingPyObject(otuple.get___spl_po(), pyReturnVar);
                     }
+<%}%>
+<% if ($pyoutstyle eq 'string') { %>
+                    pySplValueFromPyObject(otuple.get_string(), pyReturnVar);
+<%}%>
+<%if ($pyoutstyle eq 'dict') {%>
+                    if (PyTuple_Check(pyReturnVar)) {
+                        fromPyTupleToSPLTuple(pyReturnVar, otuple);
+                        Py_DECREF(pyReturnVar);
+                    } else if (PyDict_Check(pyReturnVar)) {
+                        fromPyDictToSPLTuple(pyReturnVar, otuple);
+                        Py_DECREF(pyReturnVar);
+                    } else {
+                        throw SplpyGeneral::generalException("submit",
+                "Fatal error: Value submitted must be a Python tuple or dict.");
+                   }
+<%}%>
                }
            } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
                 SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
@@ -129,4 +166,22 @@ void MY_OPERATOR::process(uint32_t idx)
         }
     }
 }
+
+<%
+if ($pyoutstyle eq 'dict') {
+  # In this case we don't want the function that
+  # converts the Python tuple to an SPL tuple to
+  # copy attributes from the input port
+  my $iport;
+
+  my $oport = $model->getOutputPortAt(0);
+  my $oport_submission = 0;
+  my $otupleType = $oport->getSPLTupleType();
+  my @onames = SPL::CodeGen::Type::getAttributeNames($otupleType);
+  my @otypes = SPL::CodeGen::Type::getAttributeTypes($otupleType);
+
+%>
+// Create member function that converts Python tuple to SPL tuple
+@include  "../../opt/python/codegen/py_pyTupleTosplTuple.cgt"
+<%}%>
 <%SPL::CodeGen::implementationEpilogue($model);%>
