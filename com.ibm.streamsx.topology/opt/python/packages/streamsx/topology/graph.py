@@ -348,7 +348,7 @@ class _SPLInvocation(object):
         self._layout_hints = {}
         self._addOperatorFunction(self.function, stateful, nargs)
 
-        self.runtime_id = _get_runtime_id(self.kind, self.name)
+        self.runtime_id = self._get_runtime_id(self.kind, self.name)
 
     def addOutputPort(self, oWidth=None, name=None, inputPort=None, schema=None,partitioned_keys=None, routing = None):
         if schema is None:
@@ -598,6 +598,16 @@ class _SPLInvocation(object):
         for port in self.outputPorts:
             print(port.name)
 
+    def _get_runtime_id(self, kind, name):
+        if self.graph.topology.name_to_runtime_id:
+            runtime_id = self.graph.topology.name_to_runtime_id(name)
+            if runtime_id:
+                if not streamsx.spl.spl._is_identifier(runtime_id):
+                    raise ValueError('%s is not a valid SPL identifier for name %s' % (runtime_id, name))
+                return runtime_id
+        return _get_runtime_id(kind, name)
+       
+
 # Input ports don't have a name in SPL but the code generation
 # keys ports by their name so we create a unique internal identifier
 # for the name.
@@ -642,7 +652,7 @@ class OPort(object):
         self.routing = routing
 
         self.inputPorts = []
-        self.runtime_id = _get_runtime_id(self.operator.kind, self.name)
+        self.runtime_id = self.operator._get_runtime_id(self.operator.kind, self.name)
 
     def connect(self, iport):
         if not iport in self.inputPorts:
@@ -683,7 +693,7 @@ class Marker(_SPLInvocation):
         self.inputPorts = []
         self.outputPorts = []
 
-        self.runtime_id = _get_runtime_id(self.kind, self.name)
+        self.runtime_id = self._get_runtime_id(self.kind, self.name)
                    
     def generateSPLOperator(self):
         _op = {}

@@ -491,6 +491,7 @@ class Topology(object):
         self._consistent_region_config = None
         self._has_jcp = False
         self.type_checking = True
+        self.name_to_runtime_id = None
 
     @property
     def name(self):
