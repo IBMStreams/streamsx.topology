@@ -438,6 +438,8 @@ class Topology(object):
 
         type_checking(bool): Set to false to disable type checking, defaults to ``True``.
 
+        name_to_runtime_id: Optional callable that returns a runtime identifier for a name. Used to override the default mapping of a name into a runtime identifer. It will be called with `name` and returns a valid SPL identifier or ``None``. If ``None`` is returned then the default mapping for `name` is used. Defaults to ``None`` indicating the default mapping is used. See :py:meth:`Stream.runtime_id <Stream.runtime_id>`.
+
     All declared streams in a `Topology` are available through their name
     using ``topology[name]``. The stream's name is defined by :py:meth:`Stream.name` and will differ from the name parameter passed when creating the stream if the application uses duplicate names.
 
@@ -1089,7 +1091,7 @@ class Stream(_placement._Placement, object):
         The runtime identifier is how the underlying SPL operator
         or output port is named in the REST api and trace/log files.
 
-        If a name is supplied when creating a stream then runtime
+        If a topology unique name is supplied when creating a stream then runtime
         identifier is fixed regardless of other changes in the topology.
 
         The algorithm to determine the runtime name (for clients that
@@ -1121,6 +1123,19 @@ class Stream(_placement._Placement, object):
 
         For example, ``s.filter(lambda x : True, name='你好')``
         results in a runtime identifier of ``Filter_oGwCfhWRg4``.
+
+        The default mapping can be overridden by setting :py:attr:`Topology.name_to_runtime_id` to a callable that returns a valid identifier for its single argument. The returned identifier should be unique with the topology. For example usinig a pre-populated `dict` as the mapper::
+
+            topo = Topology()
+            names = {'你好', 'Buses', '培养':'Trains'}
+            topo.name_to_runtime_id = names.get
+
+            buses = toopo.source(..., name='你好')
+            trains = topo.source(..., name='培养'}
+
+            // buses.runtime_id will be Buses
+            // trains.runtime_id will be Trains
+
 
         Returns:
             str: Runtime identifier of the stream.
