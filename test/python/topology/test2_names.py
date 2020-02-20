@@ -66,6 +66,34 @@ class TestNames(unittest.TestCase):
      tester.contents(hw, ["Hello", "Tester"])
      tester.test(self.test_ctxtype, self.test_config)
 
+  def test_mapper(self):
+     topo = Topology()
+
+     names = {'A':'Y', 'B':'Z', '1€':'OneEuro', 'TwoEuro':'2€'}
+     topo.name_to_runtime_id = names.get
+
+     s = topo.source([], name='A')
+     self.assertEqual('A', s.name)
+     self.assertEqual('Y', s.runtime_id)
+
+     s = topo.source([], name='B')
+     self.assertEqual('B', s.name)
+     self.assertEqual('Z', s.runtime_id)
+
+     s = topo.source([], name='C')
+     self.assertEqual('C', s.name)
+
+     s = s.filter(lambda x : True, name='你好')
+     self.assertEqual('你好', s.name)
+     self.assertEqual('Filter_oGwCfhWRg4', s.runtime_id)
+
+     s = s.map(lambda x : True, name='1€')
+     self.assertEqual('1€', s.name)
+     self.assertEqual('OneEuro', s.runtime_id)
+
+     with self.assertRaises(ValueError):
+         s.for_each(lambda x : None, name='TwoEuro')
+
 class TestSasNames(TestNames):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
