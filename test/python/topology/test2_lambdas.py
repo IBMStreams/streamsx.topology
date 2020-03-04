@@ -103,6 +103,15 @@ class TestLambdas(unittest.TestCase):
       tester.contents(hwf, ['World'])
       tester.test(self.test_ctxtype, self.test_config)
 
+  def test_TopologyLambdaWithModuleFilter(self):
+      topo = Topology("test_TopologyLambdaFilter")
+      hw = topo.source(['Hello', 'World'])
+      hwf = hw.filter(lambda t : test_functions.filter(t))
+
+      tester = Tester(topo)
+      tester.contents(hwf, ['World'])
+      tester.test(self.test_ctxtype, self.test_config)
+
   def test_local_capture(self):
       topo = Topology("test_local_capture")
       n = topo.source([1,2,4])
