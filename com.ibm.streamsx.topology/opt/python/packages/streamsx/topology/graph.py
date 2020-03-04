@@ -501,7 +501,9 @@ class _SPLInvocation(object):
         self.language = 'python'
 
         # Wrap a lambda as a callable class instance
+        inline_fn = False
         if isinstance(function, types.LambdaType) and function.__name__ == "<lambda>" :
+            inline_fn = True
             if nargs:
                 function = streamsx.topology.runtime._Callable1(function, no_context=True)
             else:
@@ -509,13 +511,19 @@ class _SPLInvocation(object):
         elif function.__module__ == '__main__':
             # Function/Class defined in main, create a callable wrapping its
             # dill'ed form
+            inline_fn = True
             if nargs:
                 function = streamsx.topology.runtime._Callable1(function,
                     no_context = True if inspect.isroutine(function) else None)
             else:
                 function = streamsx.topology.runtime._Callable0(function,
                     no_context = True if inspect.isroutine(function) else None)
-         
+
+        if inline_fn and function._modules:
+            for mod in function._modules.values():
+                if mod in sys.modules:
+                   self.graph.add_dependency(sys.modules[mod])
+
         if inspect.isroutine(function):
             # callable is a function
             self.params["pyName"] = function.__name__
