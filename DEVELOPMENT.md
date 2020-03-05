@@ -184,3 +184,35 @@ For a pull request:
  * Describe what tests were run.
  
  It's recommended that you use branches for your development, modifying the target branch (e.g. `master` or the feature branch) directly (even locally in the clone) is not recommended, as multiple changes by other developers may be made to the official copy before you have a chance to merge.  
+ 
+ ## Making a release
+ 
+ Assuming code has been tested.
+ 
+1. Obtain a clean clone of `IBMStreams/streamsx.topology`
+    
+    * Ensure clone is clean using `git status` or `git clean -xfd` from top level
+    
+2. Change these two files to have the **equivalent** correct version:
+
+    *  `com.ibm.streamsx.topology/info.xml` - Uses SPL convention, e.g. for alpha 1.14.3_alpha, 1.14.5_beta, 1.14.8
+    *  `com.ibm.streamsx.topology/opt/python/packages/streamsx/_streams/_version.py` - Use Python PEP396 convention, 1.14.3a, 1.14.5b, 1.14.8 - Note the third value is always bumped for a release within the same X.Y sequence.
+    * Once a GA (non-alpha, non-beta) release is made in an X.Y.Z series then all future releases X.Y.W (W>Z) are GA
+    
+3. Build using `ant release` at the top-level
+
+    * This creates the release artifacts for the topology release under a newly created release directory at the top level.
+    
+4. Draft a new release at https://github.com/IBMStreams/streamsx.topology/releases
+
+    * Typically can copy the release notes from the previous release and modify as needed.
+    * Mark as pre-release if release is alpha or beta
+    * Save as needed
+
+5. Attach jars from step 3 to the release
+
+6. Publish the release
+
+7. Make a release of the Python `streamsx` package following:
+    * https://github.com/IBMStreams/pypi.streamsx/blob/master/build/README.md
+    * This uses the release artifact uploaded to the release in step 5.
