@@ -236,3 +236,6 @@ For a pull request:
     * https://github.com/IBMStreams/pypi.streamsx/blob/master/build/README.md
     * This uses the release artifact uploaded to the release in step 7.
     * Note: Select the correct branch in `pypi.streamsx`
+    
+10. At readthedocs for streamsx.topology if required you can make the specific doc set for the tag active. The tag is based upon the tag in the streamsx.topology release.
+    * https://readthedocs.org/projects/streamsxtopology/versions/
