@@ -204,6 +204,11 @@ For a pull request:
     *  `com.ibm.streamsx.topology/info.xml` - Uses SPL convention, e.g. for alpha 1.14.3_alpha, 1.14.5_beta, 1.14.8
     *  `com.ibm.streamsx.topology/opt/python/packages/streamsx/_streams/_version.py` - Use Python PEP396 convention, 1.14.3a, 1.14.5b, 1.14.8 - Note the third value is always bumped for a release within the same X.Y sequence.
     * Once a GA (non-alpha, non-beta) release is made in an X.Y.Z series then all future releases X.Y.W (W>Z) are GA
+    
+3a. If creating an new X.Y+1 sequence (e.g. 1.15 replacing 1.14) then:
+
+    * Change the `X.Y` in the `releasefilename` of `build.xml`
+    * Worth searching all files in the repo for the fixed string `X.Y` (e.g. `fgrep 1.14`) to see if anything else should be changed.
   
 4. Add and commit the two files changed **and push to IBMStreams**
 
@@ -213,7 +218,7 @@ For a pull request:
     
 5. Build using `ant release` at the top-level
 
-    * This creates the release artifacts for the topology release under a newly created release directory at the top level.
+    * This creates the release artifacts for the topology release under a newly created release directory `release-streamsx.topology` at the top level.
     
 6. Draft a new release at https://github.com/IBMStreams/streamsx.topology/releases
 
