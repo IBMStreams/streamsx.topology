@@ -193,26 +193,40 @@ For a pull request:
     
     * Ensure clone is clean using `git status` or `git clean -xfd` from top level
     
-2. Change these two files to have the **equivalent** correct version:
+2. Switch to the correct branch for the release - `git checkout master` or `git checkout v1_13`
+
+    * Traditionally initial releases for an X.Y sequence are from master until master needs to have new development for X.Y+1
+    * At that point a branch is created vX_Y based off master (e.g. v1_14)
+    * Bug fix releases of older releases are from the vX_Y branch
+    
+3. Change these two files to have the **equivalent** correct version:
 
     *  `com.ibm.streamsx.topology/info.xml` - Uses SPL convention, e.g. for alpha 1.14.3_alpha, 1.14.5_beta, 1.14.8
     *  `com.ibm.streamsx.topology/opt/python/packages/streamsx/_streams/_version.py` - Use Python PEP396 convention, 1.14.3a, 1.14.5b, 1.14.8 - Note the third value is always bumped for a release within the same X.Y sequence.
     * Once a GA (non-alpha, non-beta) release is made in an X.Y.Z series then all future releases X.Y.W (W>Z) are GA
+  
+4. Add and commit the two files changed **and push to IBMStreams**
+
+    * `git add com.ibm.streamsx.topology/info.xml com.ibm.streamsx.topology/opt/python/packages/streamsx/_streams/_version.py`
+    * `git commit -m "1.14.8 release"`
+    * `git push origin master` using the release branch
     
-3. Build using `ant release` at the top-level
+5. Build using `ant release` at the top-level
 
     * This creates the release artifacts for the topology release under a newly created release directory at the top level.
     
-4. Draft a new release at https://github.com/IBMStreams/streamsx.topology/releases
+6. Draft a new release at https://github.com/IBMStreams/streamsx.topology/releases
 
     * Typically can copy the release notes from the previous release and modify as needed.
     * Mark as pre-release if release is alpha or beta
+    * Add a tag **on the correct release branch** that matches the version from `info.xml`
     * Save as needed
 
-5. Attach jars from step 3 to the release
+7. Attach jars from step 5 to the release
 
-6. Publish the release
+8. Publish the release
 
-7. Make a release of the Python `streamsx` package following:
+9. Make a release of the Python `streamsx` package following:
     * https://github.com/IBMStreams/pypi.streamsx/blob/master/build/README.md
-    * This uses the release artifact uploaded to the release in step 5.
+    * This uses the release artifact uploaded to the release in step 7.
+    * Note: Select the correct branch in `pypi.streamsx`
