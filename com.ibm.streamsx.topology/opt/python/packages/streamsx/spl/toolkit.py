@@ -64,6 +64,6 @@ def add_toolkit_dependency(topology, name, version):
     assert isinstance(topology, streamsx.topology.topology.Topology)
     tkinfo = dict()
     tkinfo['name'] = name
-    tkinfo['version'] = version
+    tkinfo['version'] = version.replace(' ', '')
     topology.graph._spl_toolkits.append(tkinfo)
 
