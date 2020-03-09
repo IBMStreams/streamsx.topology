@@ -35,6 +35,19 @@
       <fileset dir="${tk}/impl/nl" includes="*.dat"/>
     </delete>
     <delete dir="${release.base}"/>
+    <delete>
+      <fileset dir="${tk.opt}/python/templates/common" includes="py_pyTupleTosplTuple.cgt,py_splTupleCheckForBlobs.cgt,py_disallow_cr_trigger.cgt,py_enable_cr.cgt,py_no_checkpoint_support.cgt,pyversion2.sh,pyversion3.sh,splpy.pm,py_state.cgt"/>
+    </delete>
+    <delete dir="test/spl/testtk/impl/java/lib"/>
+    <delete>
+      <fileset dir="test/spl/testtk/testspl/ScOptionTester" includes="*.pm"/>
+    </delete>
+    <delete>
+      <fileset dir="test/python/spl/testtkpy" includes="info.xml"/>
+    </delete>
+    <delete>
+      <fileset dir="test/python/spl/testtkpy/opt/python/streams" includes="spl_kwargs.py,spl_samples.py,spl_sources.py"/>
+    </delete>
   </target>
 
   <target name="test" >
