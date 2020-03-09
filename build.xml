@@ -48,6 +48,33 @@
     <delete>
       <fileset dir="test/python/spl/testtkpy/opt/python/streams" includes="spl_kwargs.py,spl_samples.py,spl_sources.py"/>
     </delete>
+    <delete includeemptydirs="true">
+      <fileset dir="." includes="**/__pycache__/**"/>
+    </delete>
+    <delete dir="samples/java/functional/javadoc"/>
+    <delete>
+      <fileset dir="samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams" includes=".lockfile"/>
+    </delete>
+    <delete dir="${tk}/com.ibm.streamsx.topology.file/DirectoryWatcher"/>
+    <delete dir="${tk}/com.ibm.streamsx.topology.file/TextFileReader"/>
+    <delete dir="${tk}/com.ibm.streamsx.topology.functional.java/Aggregate"/>
+    <delete dir="${tk}/com.ibm.streamsx.topology.functional.java/FlatMap"/>
+    <delete dir="${tk}/com.ibm.streamsx.topology.functional.java/FunctionPeriodicSource"/>
+    <delete dir="${tk}/com.ibm.streamsx.topology.functional.java/HashRemover"/>
+    <delete dir="${tk}/com.ibm.streamsx.topology.functional.java/Map"/>
+    <delete dir="${tk}/com.ibm.streamsx.topology.functional.java/PassThrough"/>
+    <delete dir="${tk}/com.ibm.streamsx.topology.functional.java/Split"/>
+    <delete dir="${tk}/com.ibm.streamsx.topology.functional.java/Filter"/>
+    <delete dir="${tk}/com.ibm.streamsx.topology.functional.java/ForEach"/>
+    <delete dir="${tk}/com.ibm.streamsx.topology.functional.java/HashAdder"/>
+    <delete dir="${tk}/com.ibm.streamsx.topology.functional.java/ToSPL"/>
+    <delete dir="${tk}/com.ibm.streamsx.topology.functional.java/Source"/>
+    <delete dir="${tk}/com.ibm.streamsx.topology.functional.java/Join"/>
+    <delete>
+      <fileset dir="${tk}/com.ibm.streamsx.topology.functional.python" includes="**/*.pm"/>
+    </delete>
+    <delete dir="${tk}/com.ibm.streamsx.topology.testing/TesterSink"/>
+    <delete dir="${tk}/com.ibm.streamsx.topology.testing.consistent/Resetter"/>
   </target>
 
   <target name="test" >
