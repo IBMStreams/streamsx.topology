@@ -62,6 +62,7 @@
 
   <target name="init" if="env.SCALA_HOME">
      <echo message="Scala:${scala.home}"/>
+     <mkdir dir="${classes}"/>
   </target>
 
   <target name="compile" depends="init" if="env.SCALA_HOME">
