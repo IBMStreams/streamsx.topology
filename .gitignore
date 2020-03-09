@@ -5,6 +5,14 @@ toolkit.xml
 *_cpp.pm
 *_h.pm
 
+.DS_Store
+/**/.DS_Store
+
+com.ibm.streamsx.topology/doc/
+release-streamsx.topology/
+samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/.lockfile
+
+
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.file/DirectoryWatcher/*
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.file/TextFileReader/*
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.java/FunctionAggregate/*
@@ -496,6 +504,7 @@ com.ibm.streamsx.topology/opt/python/templates/common/py_no_checkpoint_support.c
 com.ibm.streamsx.topology/opt/python/templates/common/pyversion2.sh
 com.ibm.streamsx.topology/opt/python/templates/common/pyversion3.sh
 com.ibm.streamsx.topology/opt/python/templates/common/splpy.pm
+com.ibm.streamsx.topology/opt/python/templates/common/py_state.cgt
 samples/java/functional/javadoc/allclasses-frame.html
 samples/java/functional/javadoc/allclasses-noframe.html
 samples/java/functional/javadoc/bluemix/Submit2StreamingAnalyticService.html
