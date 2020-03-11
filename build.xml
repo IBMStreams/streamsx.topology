@@ -126,6 +126,10 @@
     <ant dir="test/python" target="test" inheritAll="true"/>
   </target>
 
+  <target name="test.python" >
+    <ant dir="test/python" target="test" inheritAll="true"/>
+  </target>
+
   <target name="test.quick" >
     <ant dir="test/java" inheritAll="true">
        <target name="unittest.quick"/>
