@@ -17,7 +17,8 @@ test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.mt/
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pykwargs/
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pymap.opttype/
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pysource.opttype/
-
+jacoco.exec
+test/java/junit*.properties
 
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.file/DirectoryWatcher/*
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.file/TextFileReader/*
