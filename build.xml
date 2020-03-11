@@ -103,6 +103,15 @@
     <delete dir="test/python/spl/testtkpy/opt/.splpy"/>
     <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyec/PyTestMetrics"/>
     <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyec/PyTestOperatorContext"/>
+    <delete>
+      <fileset dir="test/python/topology" includes="*.sab,*.json"/>
+    </delete>
+    <delete>
+      <fileset dir="test/python/spl/tests" includes="*.sab,*.json"/>
+    </delete>
+    <delete>
+      <fileset dir="test/python/scripts/spl_app" includes="toolkit.xml"/>
+    </delete>
   </target>
 
   <target name="test" >
