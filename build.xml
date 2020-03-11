@@ -75,6 +75,34 @@
     </delete>
     <delete dir="${tk}/com.ibm.streamsx.topology.testing/TesterSink"/>
     <delete dir="${tk}/com.ibm.streamsx.topology.testing.consistent/Resetter"/>
+    <delete>
+      <fileset dir="test/python/spl/testtkpy/opt/python/streams" includes=".lockfile"/>
+    </delete>
+    <delete>
+      <fileset dir="test/java" includes="jacoco.exec"/>
+    </delete>
+    <delete dir="test/java/unittest"/>
+    <delete>
+      <fileset dir="test/python/spl/testtkpy" includes="toolkit.xml"/>
+    </delete>
+    <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.mt"/>
+    <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pykwargs"/>
+    <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pymap.opttype"/>
+    <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pysource.opttype"/>
+    <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pysamples.kwargs"/>
+    <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pysamples.positional"/>
+    <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pysamples.sources"/>
+    <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.checkpoint"/>
+    <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyexceptions"/>
+    <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pymap"/>
+    <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives"/>
+    <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pysource"/>
+    <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pytypes"/>
+    <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyvers"/>
+    <delete dir="test/python/spl/testtkpy/impl"/>
+    <delete dir="test/python/spl/testtkpy/opt/.splpy"/>
+    <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyec/PyTestMetrics"/>
+    <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyec/PyTestOperatorContext"/>
   </target>
 
   <target name="test" >
