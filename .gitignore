@@ -13,6 +13,7 @@ release-streamsx.topology/
 samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/.lockfile
 test/python/spl/testtkpy/opt/python/streams/.lockfile
 test/java/unittests/
+test/python/unittests/
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.mt/
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pykwargs/
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pymap.opttype/
