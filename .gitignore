@@ -11,6 +11,12 @@ toolkit.xml
 com.ibm.streamsx.topology/doc/
 release-streamsx.topology/
 samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/.lockfile
+test/python/spl/testtkpy/opt/python/streams/.lockfile
+test/java/unittests/
+test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.mt/
+test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pykwargs/
+test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pymap.opttype/
+test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pysource.opttype/
 
 
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.file/DirectoryWatcher/*

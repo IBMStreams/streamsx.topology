@@ -134,10 +134,10 @@ void MY_OPERATOR::process(uint32_t idx)
 <%if ($pyoutstyle eq 'dict') {%>
                     if (PyTuple_Check(pyReturnVar)) {
                         fromPyTupleToSPLTuple(pyReturnVar, otuple);
-                        Py_DECREF(pyReturnVar);
+                        //Py_DECREF(pyReturnVar); // causing trouble with multiple sources in same PE, why Py_DECREF when there is Py_CLEAR in the loop?
                     } else if (PyDict_Check(pyReturnVar)) {
                         fromPyDictToSPLTuple(pyReturnVar, otuple);
-                        Py_DECREF(pyReturnVar);
+                        //Py_DECREF(pyReturnVar); // causing trouble with multiple sources in same PE, why Py_DECREF when there is Py_CLEAR in the loop?
                     } else {
                         throw SplpyGeneral::generalException("submit",
                 "Fatal error: Value submitted must be a Python tuple or dict.");

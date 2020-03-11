@@ -1,5 +1,7 @@
 # Testing
 
+Note: Build the toolkit prior testing, run `ant` in repository root directory
+
 ## Test targets:
 
 See end of document for tests run to verify a release.
@@ -10,19 +12,18 @@ These Ant targets include the Scala tests.
 
 Some of the JUnit tests include Python application API and decorator operator tests (e.g. test packages with `python`, `splpy`).
 
-* `unitest.quick` - Runs Java application api tests using `EMBEDDED_TESTER` context 
-* `unitest.standalone` - Runs Java application api tests using `STANDALONE_TESTER` context
-* `unitest.distributed` - Runs Java application api tests using `DISTRIBUTED_TESTER` context
+* `unittest.quick` - Runs Java application api tests using `EMBEDDED_TESTER` context 
+* `unittest.standalone` - Runs Java application api tests using `STANDALONE_TESTER` context
+* `unittest.distributed` - Runs Java application api tests using `DISTRIBUTED_TESTER` context
 * `unittest.streaminganalytics` - Runs Java application api tests using the `STREAMING_ANALYTICS_SERVICE` context.
 * `unittest.streaminganalytics.remote` - Runs Java application api tests using the `STREAMING_ANALYTICS_SERVICE` context and performs builds remotely.
-* `unittest.restapi.distributed' - Runs the Java rest tests using the `DISTRIBUTED` context.
+* `unittest.restapi.distributed` - Runs the Java rest tests using the `DISTRIBUTED` context.
 * `unittest.restapi.distributed.streaminganalytics` - Runs the Java rest tests using the `STREAMING_ANALYTICS_SERVICE` context.
 
 ### `test/python`
 
 Ant targets:
 
-* `test.python2` - Runs a subset of the tests for functionality that is supported on Python 2.
 * `test.python3` - Runs Python tests.
 
 Most testing is performed using Python unittest.
@@ -60,10 +61,10 @@ Full set of tests assumes setup is correct for running distributed and Streaming
 
 Run these `ant` targets in `test/java`
 
-* `unitest.main`
-* `unitest.standalone`
-* `unitest.distributed`
-* `unittest.restapi.distributed'
+* `unittest.main`
+* `unittest.standalone`
+* `unittest.distributed`
+* `unittest.restapi.distributed`
 * `unittest.restapi.distributed.streaminganalytics`
 
 
@@ -75,7 +76,7 @@ Run `python3 -u -m unittest` in each of these directories:
 
 ### test/python
 
-#### Python 3.5
+#### Python 3.6
 
 Run `python3 -u -m unittest` in each of these directories:
 
@@ -88,14 +89,5 @@ Run `python3 -u -m unittest` in each of these directories:
  
 #### Python 2.7
 
-Since Streaming Analytics is only Python 3.5 these tests should be run without a `VCAP_SERVICES` environment variable set.
- 
+No longer supported with v1.14 and later.
 
-Run `python -u -m unittest discover` in each of these directories:
-
-A distributed environment with a 2.7 Python setup must exist (and `STREAMS_INSTANCE_ID` set to it.)
-
-   * `test/python/topology`
-   * `test/python/spl/tests`
-   
- Ideally this would be a single command (nosetests) but it's not yet supported.
