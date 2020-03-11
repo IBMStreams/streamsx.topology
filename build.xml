@@ -81,6 +81,9 @@
     <delete>
       <fileset dir="test/java" includes="jacoco.exec"/>
     </delete>
+    <delete>
+      <fileset dir="." includes="jacoco.exec"/>
+    </delete>
     <delete dir="test/java/unittest"/>
     <delete>
       <fileset dir="test/python/spl/testtkpy" includes="toolkit.xml"/>
@@ -112,6 +115,7 @@
     <delete>
       <fileset dir="test/python/scripts/spl_app" includes="toolkit.xml"/>
     </delete>
+    <delete dir="test/python/unittests"/>
   </target>
 
   <target name="test" >
@@ -120,6 +124,10 @@
        <target name="junit.report"/>
        <target name="coverage.report"/>
     </ant>
+    <ant dir="test/python" target="test" inheritAll="true"/>
+  </target>
+
+  <target name="test.python" >
     <ant dir="test/python" target="test" inheritAll="true"/>
   </target>
 
