@@ -12,6 +12,7 @@ toolkit.xml
 /**/*.sab
 /**/splpy_operator.pm
 /**/.lockfile
+/**/*JobConfig.json
 
 com.ibm.streamsx.topology/doc/
 release-streamsx.topology/
