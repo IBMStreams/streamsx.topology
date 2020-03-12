@@ -119,6 +119,9 @@
       <fileset dir="test/python/spl/tests" includes="*.sab,*.json"/>
     </delete>
     <delete>
+      <fileset dir="test/python" includes="*.sab,*JobConfig.json"/>
+    </delete>
+    <delete>
       <fileset dir="test/python/scripts/spl_app" includes="toolkit.xml"/>
     </delete>
     <delete dir="test/python/unittests"/>
