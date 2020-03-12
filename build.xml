@@ -51,6 +51,9 @@
     <delete includeemptydirs="true">
       <fileset dir="." includes="**/__pycache__/**"/>
     </delete>
+    <delete includeemptydirs="true">
+      <fileset dir="test" includes="**/job*.tar.gz"/>
+    </delete>
     <delete dir="samples/java/functional/javadoc"/>
     <delete>
       <fileset dir="samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams" includes=".lockfile"/>
@@ -72,6 +75,9 @@
     <delete dir="${tk}/com.ibm.streamsx.topology.functional.java/Join"/>
     <delete>
       <fileset dir="${tk}/com.ibm.streamsx.topology.functional.python" includes="**/*.pm"/>
+    </delete>
+    <delete>
+      <fileset dir="test/python/spl/tk17/com.ibm.streamsx.topology.pytest.tk17" includes="**/M*.pm"/>
     </delete>
     <delete dir="${tk}/com.ibm.streamsx.topology.testing/TesterSink"/>
     <delete dir="${tk}/com.ibm.streamsx.topology.testing.consistent/Resetter"/>
@@ -116,6 +122,21 @@
       <fileset dir="test/python/scripts/spl_app" includes="toolkit.xml"/>
     </delete>
     <delete dir="test/python/unittests"/>
+    <delete>
+      <fileset dir="test/python/spl/testtkpy_pip_op" includes="info.xml,toolkit.xml"/>
+    </delete>
+    <delete dir="test/python/spl/testtkpy_pip_op/impl"/>
+    <delete dir="test/python/spl/testtkpy_pip_op/com.ibm.streamsx.topology.pytest.pypip"/>
+    <delete dir="test/python/spl/testtkpy_pip_op/opt/.splpy"/>
+    <delete>
+      <fileset dir="test/python/spl/testtkpy_pip_toolkit" includes="info.xml,toolkit.xml"/>
+    </delete>
+    <delete dir="test/python/spl/testtkpy_pip_toolkit/impl"/>
+    <delete dir="test/python/spl/testtkpy_pip_toolkit/com.ibm.streamsx.topology.pytest.pypip"/>
+    <delete dir="test/python/spl/testtkpy_pip_toolkit/opt/.splpy"/>
+    <delete>
+      <fileset dir="test/python/spl" includes="**/.lockfile"/>
+    </delete>
   </target>
 
   <target name="test" >
