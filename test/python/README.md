@@ -44,6 +44,15 @@ python -u -m unittest test2_spl.TestSPL
 python -u -m unittest test2_spl.TestSPL.test_map_attr
 ```
 
+### Running distributed test
+
+Uses the python package of this repository, run `ant all` in repository root prior testing.
+
+```
+cd test/python
+ant test.distributed
+```
+
 ## Running tests with nose
 
 Running with nose produces xunit (for Jenkins) and coverage reports.

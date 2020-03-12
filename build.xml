@@ -119,6 +119,9 @@
       <fileset dir="test/python/spl/tests" includes="*.sab,*.json"/>
     </delete>
     <delete>
+      <fileset dir="test/python" includes="*.sab,*JobConfig.json"/>
+    </delete>
+    <delete>
       <fileset dir="test/python/scripts/spl_app" includes="toolkit.xml"/>
     </delete>
     <delete dir="test/python/unittests"/>
@@ -139,7 +142,7 @@
     </delete>
   </target>
 
-  <target name="test" >
+  <target name="test">
     <ant dir="test/java" inheritAll="true">
        <target name="unittest"/>
        <target name="junit.report"/>
@@ -148,11 +151,11 @@
     <ant dir="test/python" target="test" inheritAll="true"/>
   </target>
 
-  <target name="test.python" >
-    <ant dir="test/python" target="test" inheritAll="true"/>
+  <target name="test.python">
+    <ant dir="test/python" target="test.distributed" inheritAll="true"/>
   </target>
 
-  <target name="test.quick" >
+  <target name="test.quick">
     <ant dir="test/java" inheritAll="true">
        <target name="unittest.quick"/>
        <target name="junit.report"/>
