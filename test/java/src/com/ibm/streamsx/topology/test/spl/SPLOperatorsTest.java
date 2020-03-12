@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.test.spl;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -95,6 +96,7 @@ public class SPLOperatorsTest extends TestTopology {
     }
     @Test
     public void testSCoptionsSingle() throws Exception {
+        assumeTrue(!System.getProperty("os.version").contains("el6"));
         _testSCoptions("--c++std=c++11", "CPP11", "NOOPT");
     }
     @Test
@@ -103,6 +105,7 @@ public class SPLOperatorsTest extends TestTopology {
     }
     @Test
     public void testSCoptionsMulti() throws Exception {
+        assumeTrue(!System.getProperty("os.version").contains("el6"));
         List<String> opts = new ArrayList<>();
         opts.add("--cxx-flags=-DSCOPT_TESTING=1");
         opts.add("--c++std=c++11");
