@@ -11,6 +11,7 @@ import os
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
+from streamsx.topology.context import ConfigParams
 import streamsx.ec
 
 def _trc_msg_direct(level):
@@ -218,6 +219,7 @@ class TestEc(unittest.TestCase):
 class TestDistributedEc(TestEc):
   def setUp(self):
       Tester.setup_distributed(self)
+      self.test_config[ConfigParams.SSL_VERIFY] = False
 
 class TestSasEc(TestEc):
   def setUp(self):

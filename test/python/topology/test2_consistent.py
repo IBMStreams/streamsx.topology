@@ -3,6 +3,7 @@ from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology.tester_runtime import _StreamCondition
 from streamsx.topology.state import ConsistentRegionConfig
+from streamsx.topology.context import ConfigParams
 import streamsx.spl.op as op
 import streamsx.ec as ec
 
@@ -456,6 +457,7 @@ class TestWithoutConsistentRegion(unittest.TestCase):
 class TestDistributedConsistentRegion(TestWithoutConsistentRegion):
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
     def test_enter_exit(self):
         iterations = 3000
@@ -482,6 +484,7 @@ class TestSasConsistentRegion(TestDistributedConsistentRegion):
 class TestOperatorDriven(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
     def test_opdriven_aggregate(self):
         topo = Topology()

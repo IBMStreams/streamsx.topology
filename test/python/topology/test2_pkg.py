@@ -12,6 +12,7 @@ from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology import schema
 import streamsx.topology.context
+from streamsx.topology.context import ConfigParams
 
 import test_package.test_subpackage.test_module
 import test2_pkg_helpers
@@ -67,6 +68,7 @@ class TestPackages(unittest.TestCase):
 class TestDistributedPackages(TestPackages):
   def setUp(self):
       Tester.setup_distributed(self)
+      self.test_config[ConfigParams.SSL_VERIFY] = False
 
 class TestSasPackages(TestPackages):
     def setUp(self):

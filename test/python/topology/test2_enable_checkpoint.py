@@ -1,5 +1,6 @@
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
+from streamsx.topology.context import ConfigParams
 
 import unittest
 from datetime import timedelta
@@ -81,6 +82,7 @@ class TestDillable(unittest.TestCase):
 class TestDistributedDillable(TestDillable):
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
     # Distributed and cloud should fail to become healthy.
     def test_undillable_class(self):

@@ -8,6 +8,7 @@ import random
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
+from streamsx.topology.context import ConfigParams
 from streamsx.topology import schema
 import streamsx.topology.context
 from streamsx.topology.schema import StreamSchema as StSc
@@ -25,6 +26,7 @@ class TestPubSub(unittest.TestCase):
 
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
     def _check_topics(self):
         ins = self.tester.submission_result.job.get_instance()

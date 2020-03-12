@@ -12,6 +12,7 @@ import time
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
+from streamsx.topology.context import ConfigParams
 
 import streamsx.scripts.extract
 import streamsx.spl.toolkit
@@ -256,6 +257,7 @@ class TestSuppressMetric(TestBaseExceptions):
     def setUp(self):
         self.tf = None
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
     def test_suppress_metric(self):
         schema = 'tuple<int32 a, int32 b, int32 c, int32 d>'

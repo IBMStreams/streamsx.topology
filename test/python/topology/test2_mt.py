@@ -12,6 +12,7 @@ import time
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology.state import ConsistentRegionConfig
+from streamsx.topology.context import ConfigParams
 
 class MTSource(object):
     def __init__(self, N):
@@ -136,6 +137,7 @@ class TestMT(unittest.TestCase):
 class TestDistributedMTCheckpoint(TestMT):
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
     def add_stateful(self, topo, s=None):
         topo.checkpoint_period = 0.5
@@ -143,6 +145,7 @@ class TestDistributedMTCheckpoint(TestMT):
 class TestDistributedMTConsistentRegion(TestMT):
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
     def add_stateful(self, topo, streams):
         for s in streams:

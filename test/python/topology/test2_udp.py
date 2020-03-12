@@ -10,6 +10,7 @@ import threading
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
+from streamsx.topology.context import ConfigParams
 import streamsx.ec as ec
 import streamsx.spl.op as op
 
@@ -236,6 +237,7 @@ class TestUDP(unittest.TestCase):
 class TestDistributedUDP(TestUDP):
   def setUp(self):
       Tester.setup_distributed(self)
+      self.test_config[ConfigParams.SSL_VERIFY] = False
 
 class TestSasUDP(TestUDP):
   def setUp(self):

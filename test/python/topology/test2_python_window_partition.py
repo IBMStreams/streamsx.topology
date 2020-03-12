@@ -3,6 +3,7 @@ import time
 
 from streamsx.topology.topology import *
 from streamsx.topology import context
+from streamsx.topology.context import ConfigParams
 from streamsx.topology.schema import CommonSchema, StreamSchema
 from streamsx.topology.tester import Tester
 from streamsx.spl import op
@@ -279,6 +280,7 @@ class TestDistributedPythonWindowPartition(TestPythonWindowPartition):
 
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
     # Tests nCurrentPartitions metric reaches an eventual value
     def _partition_count_check(self):

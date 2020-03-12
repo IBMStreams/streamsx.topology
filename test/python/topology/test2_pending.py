@@ -11,7 +11,7 @@ from streamsx.topology.tester import Tester
 from streamsx.topology import schema
 import streamsx.topology.context
 import streamsx.spl.op as op
-
+from streamsx.topology.context import ConfigParams
 
 class TestPending(unittest.TestCase):
     _multiprocess_can_split_ = True
@@ -20,6 +20,7 @@ class TestPending(unittest.TestCase):
     """
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
     def test_simple_map(self):
         """Test pending connection simple case.

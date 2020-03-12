@@ -10,6 +10,7 @@ from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology import schema
 import streamsx.topology.context
+from streamsx.topology.context import ConfigParams
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
 import streamsx.scripts.extract
@@ -30,6 +31,7 @@ class TestPrimitives(unittest.TestCase):
 
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
     def _get_metric(self, name):
         job = self.tester.submission_result.job

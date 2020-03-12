@@ -7,6 +7,7 @@ import random
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology import context
+from streamsx.topology.context import ConfigParams
 from streamsx import rest
 import streamsx.ec as ec
 import streamsx.spl.op as op
@@ -24,6 +25,7 @@ class TestDistributedViews(unittest.TestCase):
 
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
     def _object_view(self):
         q = self._ov.start_data_fetch()

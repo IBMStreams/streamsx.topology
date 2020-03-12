@@ -6,6 +6,7 @@ from streamsx.topology import schema
 from streamsx.topology.tester import Tester
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
+from streamsx.topology.context import ConfigParams
 
 import spl_tests_utils as stu
 
@@ -89,6 +90,7 @@ class TestCheckpointing(unittest.TestCase):
 class TestDistributedCheckpointing(TestCheckpointing):
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
 class TestSasCheckpointing(TestCheckpointing):
     def setUp(self):

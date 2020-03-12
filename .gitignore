@@ -8,6 +8,11 @@ toolkit.xml
 .DS_Store
 /**/.DS_Store
 
+/**/job*.tar.gz
+/**/*.sab
+/**/splpy_operator.pm
+/**/.lockfile
+
 com.ibm.streamsx.topology/doc/
 release-streamsx.topology/
 samples/python/com.ibm.streamsx.topology.pysamples/opt/python/streams/.lockfile
@@ -20,6 +25,16 @@ test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pymap.opttype/
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pysource.opttype/
 jacoco.exec
 test/java/junit*.properties
+
+test/python/spl/testtkpy_pip_op/com.ibm.streamsx.topology.pytest.pypip/check_ec_active/check_ec_active.xml
+test/python/spl/testtkpy_pip_op/com.ibm.streamsx.topology.pytest.pypip/check_ec_active/check_ec_active_cpp.cgt
+test/python/spl/testtkpy_pip_op/com.ibm.streamsx.topology.pytest.pypip/check_ec_active/check_ec_active_h.cgt
+test/python/spl/testtkpy_pip_op/com.ibm.streamsx.topology.pytest.pypip/check_not_extracting/check_not_extracting.xml
+test/python/spl/testtkpy_pip_op/com.ibm.streamsx.topology.pytest.pypip/check_not_extracting/check_not_extracting_cpp.cgt
+test/python/spl/testtkpy_pip_op/com.ibm.streamsx.topology.pytest.pypip/check_not_extracting/check_not_extracting_h.cgt
+test/python/spl/testtkpy_pip_op/com.ibm.streamsx.topology.pytest.pypip/check_protected_import/check_protected_import.xml
+test/python/spl/testtkpy_pip_op/com.ibm.streamsx.topology.pytest.pypip/check_protected_import/check_protected_import_cpp.cgt
+test/python/spl/testtkpy_pip_op/com.ibm.streamsx.topology.pytest.pypip/check_protected_import/check_protected_import_h.cgt
 
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.file/DirectoryWatcher/*
 com.ibm.streamsx.topology/com.ibm.streamsx.topology.file/TextFileReader/*

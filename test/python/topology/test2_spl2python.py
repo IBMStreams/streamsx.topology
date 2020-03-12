@@ -9,6 +9,7 @@ from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology.schema import CommonSchema as cs
 import streamsx.spl.op as op
+from streamsx.topology.context import ConfigParams
 
 """
 Test that we can covert SPL tuples to all Python operators.
@@ -133,6 +134,7 @@ class TestSPL2Python(unittest.TestCase):
 class TestDistributedSPL(TestSPL2Python):
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
 class TestSasSPL(TestSPL2Python):
     def setUp(self):

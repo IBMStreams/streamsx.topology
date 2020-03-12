@@ -4,6 +4,7 @@ from streamsx.topology.tester import Tester
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
 from streamsx.topology.state import ConsistentRegionConfig
+from streamsx.topology.context import ConfigParams
 
 import spl_tests_utils as stu
 
@@ -20,6 +21,7 @@ from datetime import timedelta
 class TestDistributedConsistentRegion(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
     @classmethod
     def setUpClass(cls):
@@ -150,6 +152,7 @@ class TestSasConsistentRegion(TestDistributedConsistentRegion):
 class TestOperatorDriven(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
     @classmethod
     def setUpClass(cls):

@@ -71,6 +71,7 @@ class TestUnicode(unittest.TestCase):
 class TestDistributedUnicode(TestUnicode):
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
 class TestSasUnicode(TestUnicode):
     def setUp(self):

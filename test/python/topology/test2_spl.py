@@ -18,6 +18,7 @@ import streamsx.spl.op as op
 import streamsx.spl.toolkit
 import streamsx.spl.types
 from streamsx.spl.types import Timestamp
+from streamsx.topology.context import ConfigParams
 
 try:
     import numpy as np
@@ -258,6 +259,7 @@ class TestSPL(unittest.TestCase):
 class TestDistributedSPL(TestSPL):
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
 class TestSasSPL(TestSPL):
     def setUp(self):
