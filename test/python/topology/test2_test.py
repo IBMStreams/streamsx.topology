@@ -10,6 +10,7 @@ import random
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology import context
+from streamsx.topology.context import ConfigParams
 from streamsx import rest
 import streamsx.ec as ec
 
@@ -193,6 +194,7 @@ class _EROK(object):
 class TestDistributedTester(TestTester):
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
 
 class TestSasTester(TestTester):
@@ -228,6 +230,7 @@ class TestVersioning(unittest.TestCase):
     # assumes we only test against 4.2 or later
     def test_product_check_distributed(self):
          Tester.setup_distributed(self)
+         self.test_config[ConfigParams.SSL_VERIFY] = False
          self.assertTrue(Tester.minimum_streams_version(self, '4.2.0.0'))
          self.assertTrue(Tester.minimum_streams_version(self, '4.2.0'))
          self.assertTrue(Tester.minimum_streams_version(self, '4.2'))

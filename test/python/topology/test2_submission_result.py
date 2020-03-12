@@ -11,6 +11,7 @@ class TestSubmissionResult(unittest.TestCase):
 
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
     def _correct_job_ids(self):
         # Test that result.job exists and you can pull values from it.

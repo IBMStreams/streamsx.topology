@@ -274,6 +274,7 @@ class TestTopologyMethodsNew(unittest.TestCase):
 class TestDistributedTopologyMethodsNew(TestTopologyMethodsNew):
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
         self.result = {}
 
 class TestSasTopologyMethodsNew(TestTopologyMethodsNew):

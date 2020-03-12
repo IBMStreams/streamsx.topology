@@ -13,6 +13,7 @@ from streamsx.topology.schema import StreamSchema
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
 from streamsx.topology.context import JobConfig
+from streamsx.topology.context import ConfigParams
 import streamsx.spl.op as op
 
 
@@ -163,6 +164,7 @@ class TestDistributedSubmissionParams(TestSubmissionParams):
     """
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
     def test_spl(self):
         """

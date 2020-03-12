@@ -1,5 +1,6 @@
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
+from streamsx.topology.context import ConfigParams
 import streamsx.ec as ec
 import time
 
@@ -206,6 +207,7 @@ class TestCheckpointing(unittest.TestCase):
 class TestDistributedCheckpointing(TestCheckpointing):
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
 class TestSasCheckpointing(TestCheckpointing):
     def setUp(self):
