@@ -56,11 +56,13 @@ Use the `*.cfg` files in `test/python`.
  * `all_tests.cfg` - All Python tests supported under nose.
 
 ```
+cd test/python
+
 # All tests
 nosetests --config nose.cfg --config all_tests.cfg
 
 # Single test class
-nosetests --config nose.cfg ../topology/test2_spl.py
+nosetests --config nose.cfg topology/test2_spl.py
 ```
 
 ## Restricting test destination
