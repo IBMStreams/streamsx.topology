@@ -29,6 +29,29 @@
 	  	toDir="${testtk}"/>
    </target>
 
+	  <target name="test.distributed">
+             <mkdir dir="${test.dir}"/>
+             <tempfile property="pytests.test.dir" prefix="testrun" destDir="${test.dir}"/>
+             <mkdir dir="${pytests.test.dir}"/>
+	     <echo message="Topology python: ${topology.test.python}"/>
+		   <exec executable="${topology.test.python}" dir="${pytests.test.dir}" failonerror="true">
+		     <env key="PYTHONPATH" value="${topology.toolkit.release}/opt/python/packages:${topology}"/>
+		     <arg value="-u"/>
+		     <arg value="-m"/>
+		     <arg value="unittest"/>
+		     <arg value="test2.TestDistributedTopologyMethodsNew"/>
+		     <arg value="test2_checkpoint.TestDistributedCheckpointing"/>
+		     <arg value="test2_consistent.TestDistributedConsistentRegion"/>
+		     <arg value="test2_ec.TestDistributedEc"/>
+		     <arg value="test2_pending.TestPending"/>
+		     <arg value="test2_pubsub.TestPubSub"/>
+		     <arg value="test2_spl2python.TestDistributedSPL"/>
+		     <arg value="test2_udp.TestDistributedUDP"/>
+		     <arg value="test2_views.TestDistributedViews"/>
+		     <arg value="-v"/>
+		   </exec>
+	   </target>
+
 	  <target name="test.application.api">
              <mkdir dir="${test.dir}"/>
              <tempfile property="pytests.test.dir" prefix="testrun" destDir="${test.dir}"/>
