@@ -60,6 +60,13 @@ Naming pattern for Python test classes:
 * TestDistributedXyz - Tests Xyz using distributed
 * TestSasXyz - Tests Xyz using Streaming Analytics service
 
+#### Python `test2_scikit.py` requires `scikit-learn` installed:
+
+```
+pip install scikit-learn
+cd test/python/topology
+python3 -u -m unittest test2_scikit.TestScikit.test_scikit_learn
+```
  
 ## Full test set for a release
 
