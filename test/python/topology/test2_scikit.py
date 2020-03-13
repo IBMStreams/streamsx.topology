@@ -43,6 +43,6 @@ class TestScikit(unittest.TestCase):
         tester.test(self.test_ctxtype, self.test_config)
 
 @unittest.skipIf(SKIP, "Scikit-learn not available")
-class TestServiceScikit(TestScikit):
+class TestSasScikit(TestScikit):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)

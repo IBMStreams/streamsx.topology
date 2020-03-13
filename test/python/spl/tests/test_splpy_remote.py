@@ -10,7 +10,7 @@ import streamsx.spl.toolkit
 
 import spl_tests_utils as stu
 
-class TestRemote(unittest.TestCase):
+class TestSasRemote(unittest.TestCase):
     """ Test remote build with a SPL python primitive operator
         that has not been extracted, so the extraction and
         pip requirements install is all done remotly.
