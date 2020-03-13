@@ -196,10 +196,32 @@ class TestDistributedTester(TestTester):
         Tester.setup_distributed(self)
         self.test_config[ConfigParams.SSL_VERIFY] = False
 
+    # assumes we only test against 4.2 or later
+    def test_product_check_distributed(self):
+         Tester.setup_distributed(self)
+         self.test_config[ConfigParams.SSL_VERIFY] = False
+         self.assertTrue(Tester.minimum_streams_version(self, '4.2.0.0'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.2.0'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.2'))
 
+         self.assertTrue(Tester.minimum_streams_version(self, '4.1.3.0'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.1.8'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.1'))
+         
 class TestSasTester(TestTester):
     def setUp(self):
         Tester.setup_streaming_analytics(self)
+
+    # assumes we only test against 4.2 or later
+    def test_product_check_service(self):
+         Tester.setup_streaming_analytics(self)
+         self.assertTrue(Tester.minimum_streams_version(self, '4.2.0.0'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.2.0'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.2'))
+
+         self.assertTrue(Tester.minimum_streams_version(self, '4.1.3.0'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.1.8'))
+         self.assertTrue(Tester.minimum_streams_version(self, '4.1'))
 
 class TestVersioning(unittest.TestCase):
     def test_minimum_check(self):
@@ -219,29 +241,6 @@ class TestVersioning(unittest.TestCase):
     # assumes we only test against 4.2 or later
     def test_product_check_standalone(self):
          Tester.setup_standalone(self)
-         self.assertTrue(Tester.minimum_streams_version(self, '4.2.0.0'))
-         self.assertTrue(Tester.minimum_streams_version(self, '4.2.0'))
-         self.assertTrue(Tester.minimum_streams_version(self, '4.2'))
-
-         self.assertTrue(Tester.minimum_streams_version(self, '4.1.3.0'))
-         self.assertTrue(Tester.minimum_streams_version(self, '4.1.8'))
-         self.assertTrue(Tester.minimum_streams_version(self, '4.1'))
-
-    # assumes we only test against 4.2 or later
-    def test_product_check_distributed(self):
-         Tester.setup_distributed(self)
-         self.test_config[ConfigParams.SSL_VERIFY] = False
-         self.assertTrue(Tester.minimum_streams_version(self, '4.2.0.0'))
-         self.assertTrue(Tester.minimum_streams_version(self, '4.2.0'))
-         self.assertTrue(Tester.minimum_streams_version(self, '4.2'))
-
-         self.assertTrue(Tester.minimum_streams_version(self, '4.1.3.0'))
-         self.assertTrue(Tester.minimum_streams_version(self, '4.1.8'))
-         self.assertTrue(Tester.minimum_streams_version(self, '4.1'))
-
-    # assumes we only test against 4.2 or later
-    def test_product_check_service(self):
-         Tester.setup_streaming_analytics(self)
          self.assertTrue(Tester.minimum_streams_version(self, '4.2.0.0'))
          self.assertTrue(Tester.minimum_streams_version(self, '4.2.0'))
          self.assertTrue(Tester.minimum_streams_version(self, '4.2'))

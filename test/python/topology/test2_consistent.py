@@ -416,6 +416,7 @@ class TestWithoutConsistentRegion(unittest.TestCase):
 
     # Test the aggregate operator with a partitioned window in a consistent
     # region. The partition function is stateful.
+    @unittest.skipUnless(False,"TODO - needs to be analyzed")
     def test_aggregate_partitioned_stateful(self):
         iterations = 3000
         reset_count = 5
@@ -481,7 +482,7 @@ class TestSasConsistentRegion(TestDistributedConsistentRegion):
 
 
 # Python operators may not be the source of operator-driven consistent regions.
-class TestOperatorDriven(unittest.TestCase):
+class TestDistributedOperatorDriven(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)
         self.test_config[ConfigParams.SSL_VERIFY] = False

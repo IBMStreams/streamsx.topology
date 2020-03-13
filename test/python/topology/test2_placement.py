@@ -32,7 +32,7 @@ class RemoveDup(object):
          return t
 
 
-class TestPlacement(unittest.TestCase):
+class TestSasPlacement(unittest.TestCase):
     _multiprocess_can_split_ = True
 
     def setUp(self):

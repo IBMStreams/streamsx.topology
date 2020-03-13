@@ -14,7 +14,7 @@ from streamsx.topology.tester import Tester
 from streamsx import rest
 from streamsx.rest_primitives import _IAMConstants
 
-class TestJobConfig(unittest.TestCase):
+class TestSasJobConfig(unittest.TestCase):
   _multiprocess_can_split_ = True
 
   def setUp(self):
