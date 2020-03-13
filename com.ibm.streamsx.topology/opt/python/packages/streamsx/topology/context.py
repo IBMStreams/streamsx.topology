@@ -136,6 +136,12 @@ class _BaseSubmitter(object):
             # Make copy of config to avoid modifying
             # the callers config
             self.config.update(config)
+            # When SERVICE_DEFINITION is a String, it is assumed that 
+            # it is JSON SAS credentials, which must be converted to a JSON object
+            service_def = self.config.get(ConfigParams.SERVICE_DEFINITION)
+            if service_def:
+                if isinstance(service_def, str):
+                    self.config[ConfigParams.SERVICE_DEFINITION] = json.loads(service_def)
         self.config['contextType'] = str(self.ctxtype)
         if 'originator' not in self.config:
             self.config['originator'] = 'topology-' + __version__ + ':python-' + platform.python_version()
@@ -827,7 +833,7 @@ class ContextTypes(object):
     Environment variables:
         These environment variables define how the application is built and submitted.
 
-        * **STREAMS_INSTALL** - (optional) Location of a IBM Streams installation (4.0.1 or later). The install must be running on RedHat/CentOS 6 and `x86_64` architecture.
+        * **STREAMS_INSTALL** - (optional) Location of a IBM Streams installation (4.0.1 or later). The install must be running on RedHat/CentOS 7 and `x86_64` architecture.
 
     """
     DISTRIBUTED = 'DISTRIBUTED'
@@ -1068,8 +1074,12 @@ class ConfigParams(object):
     """Streaming Analytics service definition.
     Identifies the Streaming Analytics service to use. The definition can be one of
 
-        * The `service credentials` copied from the `Service credentials` page of the service console (not the Streams console). Credentials are provided in JSON format. They contain such as the API key and secret, as well as connection information for the service. 
-        * A JSON object (`dict`) of the form: ``{ "type": "streaming-analytics", "name": "service name", "credentials": {...} }`` with the `service credentials` as the value of the ``credentials`` key.
+        * The `service credentials` copied from the `Service credentials` page of the service console (not the Streams console).
+          Credentials are provided in JSON format. They contain such as the API key and secret, as well as connection information for the service.
+        * A JSON object (`dict`) created from the `service credentials`, for example with `json.loads(service_credentials)`
+        * A JSON object (`dict`) of the form: ``{ "type": "streaming-analytics", "name": "service name", "credentials": ... }``
+          with the `service credentials` as the value of the ``credentials`` key. The value of the ``credentials`` key can
+          be a JSON object (`dict`) or a `str` copied from the `Service credentials` page of the service console.
 
     This key takes precedence over :py:const:`VCAP_SERVICES` and :py:const:`SERVICE_NAME`.
 
@@ -1557,7 +1567,7 @@ def _vcap_from_service_definition(service_def):
         credentials = service_def
 
     service = {}
-    service['credentials'] = credentials
+    service['credentials'] = credentials if isinstance(credentials, dict) else json.loads(credentials)
     service['name'] = _name_from_service_definition(service_def)
     vcap = {'streaming-analytics': [service]}
     return vcap
