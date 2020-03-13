@@ -32,5 +32,5 @@ class TestSasRemote(unittest.TestCase):
         tester = Tester(topo)
         # We round off to ints because pint temp conversion
         # is actually incorrect!
-        tester.contents(r, [32.0, 212.0, 83.0])
+        tester.contents(r, [31.0, 211.0, 83.0])
         tester.test(self.test_ctxtype, self.test_config)
