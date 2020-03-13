@@ -416,6 +416,7 @@ class TestWithoutConsistentRegion(unittest.TestCase):
 
     # Test the aggregate operator with a partitioned window in a consistent
     # region. The partition function is stateful.
+    @unittest.skipUnless(False,"TODO - needs to be analyzed")
     def test_aggregate_partitioned_stateful(self):
         iterations = 3000
         reset_count = 5
