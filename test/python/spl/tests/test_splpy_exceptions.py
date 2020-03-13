@@ -248,7 +248,7 @@ class TestSuppressExceptions(TestBaseExceptions):
         self.assertEqual('ValueError\n', content[4])
         self.assertEqual('__exit__\n', content[5])
 
-class TestSuppressMetric(TestBaseExceptions):
+class TestDistributedSuppressMetric(TestBaseExceptions):
     @classmethod
     def setUpClass(cls):
         """Extract Python operators in toolkit"""

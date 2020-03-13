@@ -149,7 +149,7 @@ class TestSasConsistentRegion(TestDistributedConsistentRegion):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
 
 # Python operators may not be the source of operator-driven consistent regions.
-class TestOperatorDriven(unittest.TestCase):
+class TestDistributedOperatorDriven(unittest.TestCase):
     def setUp(self):
         Tester.setup_distributed(self)
         self.test_config[ConfigParams.SSL_VERIFY] = False

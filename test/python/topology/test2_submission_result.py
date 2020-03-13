@@ -6,7 +6,7 @@ from streamsx import rest
 import os
 import fnmatch
 
-class TestSubmissionResult(unittest.TestCase):
+class TestDistributedSubmissionResult(unittest.TestCase):
     _multiprocess_can_split_ = True
 
     def setUp(self):

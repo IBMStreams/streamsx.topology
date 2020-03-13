@@ -43,8 +43,8 @@
 		     <arg value="test2_checkpoint.TestDistributedCheckpointing"/>
 		     <arg value="test2_consistent.TestDistributedConsistentRegion"/>
 		     <arg value="test2_ec.TestDistributedEc"/>
-		     <arg value="test2_pending.TestPending"/>
-		     <arg value="test2_pubsub.TestPubSub"/>
+		     <arg value="test2_pending.TestDistributedPending"/>
+		     <arg value="test2_pubsub.TestDistributedPubSub"/>
 		     <arg value="test2_spl2python.TestDistributedSPL"/>
 		     <arg value="test2_udp.TestDistributedUDP"/>
 		     <arg value="test2_views.TestDistributedViews"/>
