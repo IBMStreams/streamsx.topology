@@ -148,6 +148,6 @@ class TestDistributedPubSub(unittest.TestCase):
         self.tester.local_check = self._check_buffer
         self.tester.test(self.test_ctxtype, self.test_config)
 
-class TestSasPubSub(TestPubSub):
+class TestSasPubSub(TestDistributedPubSub):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)

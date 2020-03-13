@@ -81,7 +81,7 @@ class TestDistributedSubmissionResult(unittest.TestCase):
                 os.remove(logs)                            
 
 
-class TestSasSubmissionResult(TestSubmissionResult):
+class TestSasSubmissionResult(TestDistributedSubmissionResult):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
 

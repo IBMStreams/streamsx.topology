@@ -339,7 +339,7 @@ class TestDistributedSuppressMetric(TestBaseExceptions):
             m = op.get_metrics(name='nExceptionsSuppressed')[0]
             self.assertEqual(exp, m.value, msg=op.name)
 
-class TestSasSuppressMetric(TestSuppressMetric):
+class TestSasSuppressMetric(TestDistributedSuppressMetric):
     def setUp(self):
         self.tf = None
         Tester.setup_streaming_analytics(self, force_remote_build=True)
