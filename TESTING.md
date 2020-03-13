@@ -2,6 +2,8 @@
 
 Note: Build the toolkit prior testing, run `ant` in repository root directory
 
+Note: Some "distributed" tests require consistent region be configured: [Configuring a checkpoint data store](https://www.ibm.com/support/knowledgecenter/SSCRJU_4.3.0/com.ibm.streams.cfg.doc/doc/ibminfospherestreams-configuring-checkpoint-data-store.html)
+
 ## Test targets:
 
 See end of document for tests run to verify a release.
@@ -51,7 +53,13 @@ Most testing is performed using Python unittest.
  # Run a single test
   python3 -u -m unittest test2_spl.TestDistributedSPL.test_SPLBeaconFilter
  ```
- 
+
+Naming pattern for Python test classes:
+
+* TestXyz - Tests Xyz using standalone or a test that does not require a Streams application (e.g. api testing)
+* TestDistributedXyz - Tests Xyz using distributed
+* TestSasXyz - Tests Xyz using Streaming Analytics service
+
  
 ## Full test set for a release
 
