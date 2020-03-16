@@ -14,13 +14,13 @@ These Ant targets include the Scala tests.
 
 Some of the JUnit tests include Python application API and decorator operator tests (e.g. test packages with `python`, `splpy`).
 
-* `unittest.quick` - Runs Java application api tests using `EMBEDDED_TESTER` context 
+* `unittest.quick` - Runs `unittest.main` and `unittest.standalone`
+* `unittest.main` - Runs Java application api tests using `EMBEDDED_TESTER` context
 * `unittest.standalone` - Runs Java application api tests using `STANDALONE_TESTER` context
 * `unittest.distributed` - Runs Java application api tests using `DISTRIBUTED_TESTER` context
 * `unittest.streaminganalytics` - Runs Java application api tests using the `STREAMING_ANALYTICS_SERVICE` context.
 * `unittest.streaminganalytics.remote` - Runs Java application api tests using the `STREAMING_ANALYTICS_SERVICE` context and performs builds remotely.
-* `unittest.restapi.distributed` - Runs the Java rest tests using the `DISTRIBUTED` context.
-* `unittest.restapi.distributed.streaminganalytics` - Runs the Java rest tests using the `STREAMING_ANALYTICS_SERVICE` context.
+* `unittest.restapi` - Runs the Java rest tests using the `DISTRIBUTED` context.
 
 ### `test/python`
 
@@ -60,6 +60,13 @@ Naming pattern for Python test classes:
 * TestDistributedXyz - Tests Xyz using distributed
 * TestSasXyz - Tests Xyz using Streaming Analytics service
 
+#### Running Python distributed test
+
+```
+cd test/python
+ant test.distributed
+```
+
 #### Python `test2_scikit.py` requires `scikit-learn` installed:
 
 ```
@@ -79,9 +86,7 @@ Run these `ant` targets in `test/java`
 * `unittest.main`
 * `unittest.standalone`
 * `unittest.distributed`
-* `unittest.restapi.distributed`
-* `unittest.restapi.distributed.streaminganalytics`
-
+* `unittest.restapi`
 
 ### test/spl
 
