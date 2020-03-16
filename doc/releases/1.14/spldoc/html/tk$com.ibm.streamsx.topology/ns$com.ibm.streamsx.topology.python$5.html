@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="Python classes as SPL operators"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_page"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>Python classes as SPL operators</title>
+</head>
+<body id="spldoc_page">
+
+
+<h1 class="title topictitle1">Python classes as SPL operators</h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.14.10</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$4.html">Creating SPL Operators from Python code</a> &gt; Python classes as SPL operators</p>
+
+</div>
+
+
+<div class="section">
+<p class="p">Decorating a Python <em class="ph i">class</em> creates a stateful SPL operator where the instance fields of the class are the operator's state. An instance of the class is created when the SPL operator invocation is initialized at SPL runtime. The instance of the Python class is private to the SPL operator and is maintained for the lifetime of the operator.
+</p>
+
+<p class="p">If the class has instance fields then they are the state of the operator and are private to each invocation of the operator.
+</p>
+
+<p class="p">If the <tt class="ph tt">__init__</tt> method has parameters beyond the first <tt class="ph tt">self</tt> parameter then they are mapped to operator parameters. Any parameter that has a default value becomes an optional parameter to the SPL operator. Parameters of the form <tt class="ph tt">*args</tt> and <tt class="ph tt">**kwargs</tt> are not supported.
+</p>
+
+<p class="p">The value of the operator parameters at SPL operator invocation are passed to the <tt class="ph tt">__init__</tt> method. This is equivalent to creating an instance of the class passing the operator parameters into the constructor.
+</p>
+
+<p class="p">For example, with this decorated class producing an SPL source operator:
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+@spl.source()
+class Range:
+  def __init__(self, stop, start=0):
+    self.start = start
+    self.stop = stop
+
+  def __iter__(self):
+      return zip(range(self.start, self.stop))
+</pre>
+
+
+</div>
+
+<p class="p">The SPL operator <tt class="ph tt">Range</tt> has two parameters, <tt class="ph tt">stop</tt> is mandatory and <tt class="ph tt">start</tt> is optional, defaulting to zero. Thus the SPL operator may be invoked as:
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+// Produces the sequence of values from 0 to 99
+//
+// Creates an instance of the Python class
+// Range using Range(100)
+//
+stream&lt;int32 seq&gt; R = Range() {
+  param
+    stop: 100;
+}
+</pre>
+
+
+</div>
+
+<p class="p">or both operator parameters can be set:
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+// Produces the sequence of values from 50 to 74
+//
+// Creates an instance of the Python class
+// Range using Range(75, 50)
+//
+stream&lt;int32 seq&gt; R = Range() {
+  param
+    start: 50;
+    stop: 75;
+}
+</pre>
+
+
+</div>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

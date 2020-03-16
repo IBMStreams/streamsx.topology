@@ -1,0 +1,47 @@
+streamsx.ec
+===========
+
+.. automodule:: streamsx.ec
+   
+   ***************
+   Module contents
+   ***************
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :nosignatures:
+   
+      channel
+      domain_id
+      get_application_configuration
+      get_application_directory
+      instance_id
+      is_active
+      is_standalone
+      job_id
+      local_channel
+      local_max_channels
+      max_channels
+      pe_id
+      shutdown
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :nosignatures:
+   
+      CustomMetric
+      MetricKind
+   
+   
+
+   
+   
+   

@@ -1,0 +1,28 @@
+streamsx.spl.toolkit
+====================
+
+.. automodule:: streamsx.spl.toolkit
+   
+   ***************
+   Module contents
+   ***************
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :nosignatures:
+   
+      add_toolkit
+      add_toolkit_dependency
+   
+   
+
+   
+   
+   
+
+   
+   
+   
