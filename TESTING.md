@@ -10,8 +10,6 @@ See end of document for tests run to verify a release.
 
 ### `test/java`
 
-These Ant targets include the Scala tests.
-
 Some of the JUnit tests include Python application API and decorator operator tests (e.g. test packages with `python`, `splpy`).
 
 * `unittest.quick` - Runs `unittest.main` and `unittest.standalone`
