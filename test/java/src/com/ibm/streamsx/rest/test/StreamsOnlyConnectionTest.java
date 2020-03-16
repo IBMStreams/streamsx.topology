@@ -9,6 +9,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeNotNull;
 
 import java.net.URL;
 import java.util.HashSet;
@@ -30,7 +31,7 @@ public class StreamsOnlyConnectionTest {
 
     @Test
     public void testBadConnections() throws Exception {
-
+    	assumeNotNull(System.getenv("STREAMS_REST_URL"));
         URL correctUrl = new URL(System.getenv("STREAMS_REST_URL"));
         
         URL badUrl = new URL(correctUrl.getProtocol(), correctUrl.getHost(),
@@ -83,6 +84,7 @@ public class StreamsOnlyConnectionTest {
 
     @Test
     public void testGetInstances() throws Exception {
+    	assumeNotNull(System.getenv("STREAMS_REST_URL"));
         StreamsConnection connection = StreamsConnection.createInstance(null, null, null);
         connection.allowInsecureHosts(true);
         // get all instances in the domain

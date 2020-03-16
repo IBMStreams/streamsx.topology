@@ -8,6 +8,7 @@ package com.ibm.streamsx.rest.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeNotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,6 +63,7 @@ public class AppBundleTest {
 	}
 	
 	protected Instance getInstance() throws IOException {
+		assumeNotNull(System.getenv("STREAMS_REST_URL"));
 		StreamsConnection sc = StreamsConnection.createInstance(null, null, null);
 		sc.allowInsecureHosts(true);
 
