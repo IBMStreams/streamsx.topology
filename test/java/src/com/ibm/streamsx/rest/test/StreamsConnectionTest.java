@@ -12,6 +12,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
+import static org.junit.Assume.assumeNotNull;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -65,6 +66,7 @@ public class StreamsConnectionTest {
 
     protected void setupConnection() throws Exception {
         if (connection == null) {
+        	assumeNotNull(System.getenv("STREAMS_REST_URL"));
             testType = "DISTRIBUTED";
 
             instanceName = System.getenv("STREAMS_INSTANCE_ID");

@@ -9,6 +9,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeNotNull;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -33,10 +34,11 @@ public class ParallelOperatorsTest {
 
     @After
     public void removeJob() throws Exception {
-        helper.removeJob();
+    	if (null != helper) {
+    		helper.removeJob();
+    	}
     }
 
-    @Before
     public void setupJob() throws Exception {
         if (null == helper) {
             helper = new StreamsConnectionTest();
@@ -81,6 +83,8 @@ public class ParallelOperatorsTest {
 
     @Test
     public void testParallelOperators() throws Exception {
+    	assumeNotNull(System.getenv("STREAMS_REST_URL"));
+    	setupJob();
         /*
          * Note: the order of the operators is
          * 

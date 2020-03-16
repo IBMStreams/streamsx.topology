@@ -20,7 +20,7 @@ Some of the JUnit tests include Python application API and decorator operator te
 * `unittest.distributed` - Runs Java application api tests using `DISTRIBUTED_TESTER` context
 * `unittest.streaminganalytics` - Runs Java application api tests using the `STREAMING_ANALYTICS_SERVICE` context.
 * `unittest.streaminganalytics.remote` - Runs Java application api tests using the `STREAMING_ANALYTICS_SERVICE` context and performs builds remotely.
-* `unittest.restapi` - Runs the Java rest tests using the `DISTRIBUTED` context.
+* `unittest.restapi` - Runs the Java rest tests using the `DISTRIBUTED` context (requires `STREAMS_REST_URL` environment variable) and the `STREAMING_ANALYTICS_SERVICE` context (requires `STREAMING_ANALYTICS_SERVICE_NAME` and `VCAP_SERVICES` environment variables).
 
 ### `test/python`
 
