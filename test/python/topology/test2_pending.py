@@ -13,7 +13,7 @@ import streamsx.topology.context
 import streamsx.spl.op as op
 from streamsx.topology.context import ConfigParams
 
-class TestPending(unittest.TestCase):
+class TestDistributedPending(unittest.TestCase):
     _multiprocess_can_split_ = True
 
     """ Test pending connections.
@@ -119,7 +119,7 @@ class TestPending(unittest.TestCase):
         tester.contents(result, expected)
         tester.test(self.test_ctxtype, self.test_config)
 
-class TestSasPending(TestPending):
+class TestSasPending(TestDistributedPending):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
 

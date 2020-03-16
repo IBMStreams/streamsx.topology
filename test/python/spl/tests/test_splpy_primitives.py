@@ -17,7 +17,7 @@ import streamsx.scripts.extract
 
 import spl_tests_utils as stu
 
-class TestPrimitives(unittest.TestCase):
+class TestDistributedPrimitives(unittest.TestCase):
     """ 
     Test @spl.primitive_operator decorated operators
     """

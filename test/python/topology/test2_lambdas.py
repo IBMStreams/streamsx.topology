@@ -87,7 +87,7 @@ def _rand_msg():
         yield random.randint(0,3)
         time.sleep(0.001)
 
-class TestLambdas(unittest.TestCase):
+class TestDistributedLambdas(unittest.TestCase):
   _multiprocess_can_split_ = True
 
   def setUp(self):

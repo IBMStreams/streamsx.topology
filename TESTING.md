@@ -2,6 +2,8 @@
 
 Note: Build the toolkit prior testing, run `ant` in repository root directory
 
+Note: Some "distributed" tests require consistent region be configured: [Configuring a checkpoint data store](https://www.ibm.com/support/knowledgecenter/SSCRJU_4.3.0/com.ibm.streams.cfg.doc/doc/ibminfospherestreams-configuring-checkpoint-data-store.html)
+
 ## Test targets:
 
 See end of document for tests run to verify a release.
@@ -12,13 +14,13 @@ These Ant targets include the Scala tests.
 
 Some of the JUnit tests include Python application API and decorator operator tests (e.g. test packages with `python`, `splpy`).
 
-* `unittest.quick` - Runs Java application api tests using `EMBEDDED_TESTER` context 
+* `unittest.quick` - Runs `unittest.main` and `unittest.standalone`
+* `unittest.main` - Runs Java application api tests using `EMBEDDED_TESTER` context
 * `unittest.standalone` - Runs Java application api tests using `STANDALONE_TESTER` context
 * `unittest.distributed` - Runs Java application api tests using `DISTRIBUTED_TESTER` context
 * `unittest.streaminganalytics` - Runs Java application api tests using the `STREAMING_ANALYTICS_SERVICE` context.
 * `unittest.streaminganalytics.remote` - Runs Java application api tests using the `STREAMING_ANALYTICS_SERVICE` context and performs builds remotely.
-* `unittest.restapi.distributed` - Runs the Java rest tests using the `DISTRIBUTED` context.
-* `unittest.restapi.distributed.streaminganalytics` - Runs the Java rest tests using the `STREAMING_ANALYTICS_SERVICE` context.
+* `unittest.restapi` - Runs the Java rest tests using the `DISTRIBUTED` context (requires `STREAMS_REST_URL` environment variable) and the `STREAMING_ANALYTICS_SERVICE` context (requires `STREAMING_ANALYTICS_SERVICE_NAME` and `VCAP_SERVICES` environment variables).
 
 ### `test/python`
 
@@ -51,7 +53,27 @@ Most testing is performed using Python unittest.
  # Run a single test
   python3 -u -m unittest test2_spl.TestDistributedSPL.test_SPLBeaconFilter
  ```
- 
+
+Naming pattern for Python test classes:
+
+* TestXyz - Tests Xyz using standalone or a test that does not require a Streams application (e.g. api testing)
+* TestDistributedXyz - Tests Xyz using distributed
+* TestSasXyz - Tests Xyz using Streaming Analytics service
+
+#### Running Python distributed test
+
+```
+cd test/python
+ant test.distributed
+```
+
+#### Python `test2_scikit.py` requires `scikit-learn` installed:
+
+```
+pip install scikit-learn
+cd test/python/topology
+python3 -u -m unittest test2_scikit.TestScikit.test_scikit_learn
+```
  
 ## Full test set for a release
 
@@ -64,9 +86,7 @@ Run these `ant` targets in `test/java`
 * `unittest.main`
 * `unittest.standalone`
 * `unittest.distributed`
-* `unittest.restapi.distributed`
-* `unittest.restapi.distributed.streaminganalytics`
-
+* `unittest.restapi`
 
 ### test/spl
 

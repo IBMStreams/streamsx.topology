@@ -248,7 +248,7 @@ class TestSuppressExceptions(TestBaseExceptions):
         self.assertEqual('ValueError\n', content[4])
         self.assertEqual('__exit__\n', content[5])
 
-class TestSuppressMetric(TestBaseExceptions):
+class TestDistributedSuppressMetric(TestBaseExceptions):
     @classmethod
     def setUpClass(cls):
         """Extract Python operators in toolkit"""
@@ -339,7 +339,7 @@ class TestSuppressMetric(TestBaseExceptions):
             m = op.get_metrics(name='nExceptionsSuppressed')[0]
             self.assertEqual(exp, m.value, msg=op.name)
 
-class TestSasSuppressMetric(TestSuppressMetric):
+class TestSasSuppressMetric(TestDistributedSuppressMetric):
     def setUp(self):
         self.tf = None
         Tester.setup_streaming_analytics(self, force_remote_build=True)

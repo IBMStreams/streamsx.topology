@@ -6,7 +6,7 @@ from streamsx import rest
 import os
 import fnmatch
 
-class TestSubmissionResult(unittest.TestCase):
+class TestDistributedSubmissionResult(unittest.TestCase):
     _multiprocess_can_split_ = True
 
     def setUp(self):
@@ -81,7 +81,7 @@ class TestSubmissionResult(unittest.TestCase):
                 os.remove(logs)                            
 
 
-class TestSubmissionResultStreamingAnalytics(TestSubmissionResult):
+class TestSasSubmissionResult(TestDistributedSubmissionResult):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
 

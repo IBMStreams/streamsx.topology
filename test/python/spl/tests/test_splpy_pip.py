@@ -31,7 +31,7 @@ class TestLocal(unittest.TestCase):
     def test_no_pints(self):
         self.assertEqual("NoPintsForYou", down_a_pint())
 
-class TestPipInstalls(unittest.TestCase):
+class TestSasPipInstalls(unittest.TestCase):
     """ Test remote pip install of packages.
     """
 

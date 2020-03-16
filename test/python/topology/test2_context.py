@@ -66,7 +66,7 @@ class TestContext(unittest.TestCase):
 
 
 @unittest.skipUnless('STREAMS_INSTALL' in os.environ and 'STREAMS_INSTANCE_ID' in os.environ and 'STREAMS_DOMAIN_ID' in os.environ, "requires STREAMS_INSTALL, STREAMS_INSTANCE_ID,STREAMS_DOMAIN_ID")
-class TestContextRun(unittest.TestCase):
+class TestDistributedContextRun(unittest.TestCase):
 
     def setUp(self):
         Tester.setup_distributed(self)
