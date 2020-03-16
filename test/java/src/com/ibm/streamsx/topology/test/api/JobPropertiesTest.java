@@ -73,6 +73,7 @@ public class JobPropertiesTest extends TestTopology {
 
     @Test(expected=Exception.class)
     public void testGroupPropertyNeg() throws Exception {
+    	assumeTrue(!isStreamingAnalyticsRun());
         testItDirect("testGroupPropertyNeg", JobProperties.GROUP,
                 "myJobGroup-"+((long)(Math.random() + 10000)));
     }
