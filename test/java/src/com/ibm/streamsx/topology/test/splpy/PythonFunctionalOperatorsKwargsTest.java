@@ -47,6 +47,7 @@ public class PythonFunctionalOperatorsKwargsTest extends TestTopology {
     
     @Test
     public void testFilter() throws Exception {
+        assumeTrue(!isStreamingAnalyticsRun());
         Topology topology = new Topology("testFilter");
         
         SPLStream tuples = sampleFilterStream(topology);
@@ -69,6 +70,7 @@ public class PythonFunctionalOperatorsKwargsTest extends TestTopology {
     }
     @Test
     public void testFilterOptionalOutput() throws Exception {
+        assumeTrue(!isStreamingAnalyticsRun());
         Topology topology = new Topology("testFilterOptionalOutput");
         
         SPLStream tuples = sampleFilterStream(topology);
@@ -101,6 +103,7 @@ public class PythonFunctionalOperatorsKwargsTest extends TestTopology {
     }
     @Test
     public void testMap() throws Exception {
+        assumeTrue(!isStreamingAnalyticsRun());
         Topology topology = new Topology("testMap");
                 
         SPLStream tuples = sampleFilterStream(topology);

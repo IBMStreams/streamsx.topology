@@ -149,7 +149,7 @@ public class LowLatencyTest extends TestTopology {
     
     @Test
     public void testLowLatencySplit() throws Exception {
-        
+    	assumeTrue(!isStreamingAnalyticsRun());
         // lowLatency().split() is an interesting case because split()
         // has >1 oports.
         
