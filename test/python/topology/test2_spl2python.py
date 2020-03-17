@@ -4,6 +4,7 @@ import unittest
 import sys
 import itertools
 import threading
+import os
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
@@ -111,10 +112,31 @@ class TestSPL2Python(unittest.TestCase):
                 tester.tuple_count(b, 100)
                 tester.test(self.test_ctxtype, self.test_config)
 
+    @unittest.skipUnless('STREAMS_INSTALL' in os.environ, "requires STREAMS_INSTALL")
     def test_map_opt(self):
         """Test optional type value and no value are passed correctly
         """
-        Tester.require_streams_version(self, '4.3')
+        Tester.require_streams_version(self, '4.3') # requires STREAMS_INSTALL
+        topo = Topology('test_map_opt')
+        schema='tuple<optional<uint64> i>'
+        b = op.Source(topo, "spl.utility::Beacon", schema,
+            params = {'iterations':3})
+        b.i = b.output('IterationCount() % 2ul == 0ul ?' +
+           'IterationCount() : (optional<uint64>) null')
+        s = b.stream
+        f = s.map(lambda tuple :
+            (1,) if tuple['i'] == None
+            else (None,) if tuple['i'] == 2
+            else (tuple['i'],), schema=schema)
+        tester = Tester(topo)
+        tester.contents(s, [{'i':0}, {'i':None}, {'i':2}])
+        tester.contents(f, [{'i':0}, {'i':1}, {'i':None}])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    @unittest.skipUnless('CP4D_URL' in os.environ, "requires CD4D_URL")
+    def test_map_opt_cpd(self):
+        """Test optional type value and no value are passed correctly
+        """
         topo = Topology('test_map_opt')
         schema='tuple<optional<uint64> i>'
         b = op.Source(topo, "spl.utility::Beacon", schema,
