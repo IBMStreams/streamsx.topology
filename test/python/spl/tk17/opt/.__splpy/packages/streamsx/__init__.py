@@ -60,7 +60,7 @@ installs may be downloaded at: https://www.continuum.io/downloads .
     An Anaconda distribution for Python 2.7 or 3.5 must be used.
 
 If building Python from source then it must be built to support embedding
-of the runtime with shared libraries (``--enabled-shared`` option to `configure`).
+of the runtime with shared libraries (``--enable-shared`` option to `configure`).
 
 The Streams application environment variable **PYTHONHOME** must be set
 to the Python install path.

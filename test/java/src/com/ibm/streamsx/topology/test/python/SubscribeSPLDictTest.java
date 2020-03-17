@@ -40,6 +40,7 @@ public class SubscribeSPLDictTest extends PublishSubscribePython {
     
     @Test
     public void testSubscribeSPLDictMap() throws Exception {
+    	assumeTrue(!isStreamingAnalyticsRun());
         Topology topology = new Topology("testSubscribeMap");
         
         // Publish a stream with all the SPL types supported by Python including sets

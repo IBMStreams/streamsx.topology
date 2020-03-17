@@ -85,7 +85,7 @@ Anaconda or Miniconda distributions may be used as the Python runtime, these hav
 Ananconda installs may be downloaded at: https://www.continuum.io/downloads .
 
 If building Python from source then it must be built to support embedding
-of the runtime with shared libraries (``--enabled-shared`` option to `configure`).
+of the runtime with shared libraries (``--enable-shared`` option to `configure`).
 
 Distributed
 ===========

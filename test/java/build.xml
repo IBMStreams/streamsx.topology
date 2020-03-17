@@ -231,6 +231,7 @@
      </antcall>
      <fail message="Unittests failed" if="topology.tests.failed"/>
   </target>
+
   <target name="unittest.streaminganalytics">
      <antcall target="unittest.base" inheritAll="no">
        <param name="topology.test.type" value="STREAMING_ANALYTICS_SERVICE_TESTER"/>
@@ -264,7 +265,7 @@
       <propertyref prefix="topology.test."/>
  </propertyset>
 
-  <target name="unittest.base" depends="unittest.base.scala">
+  <target name="unittest.base">
     <echo message="topology.samples.jar=${topology.samples.jar}"/>
      <mkdir dir="${test.dir}"/>
      <tempfile property="topology.test.dir" prefix="testrun" destDir="${test.dir}"/>
