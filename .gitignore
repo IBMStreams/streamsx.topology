@@ -959,6 +959,11 @@ test/java/jacoco.exec
 test/java/path
 test/java/streamsx.topology.test.jar
 test/python/scripts/test_sc_old_toolkit_name.txt
+test/python/scripts/sc_test_files/test_sc_old_toolkit_name.txt
+test/python/scripts/sc_test_files/apps/**/info.xml
+test/python/scripts/sc_test_files/apps/**/samplemain/
+test/python/scripts/sc_test_files/toolkits/**/info.xml
+test/python/scripts/sc_test_files/toolkits/**/com.example*
 test/python/rest/test.out
 test/python/rest/test_rest_local.basicViewTest_JobConfig.json
 test/python/rest/test_rest_local.jobRefreshTest_JobConfig.json
