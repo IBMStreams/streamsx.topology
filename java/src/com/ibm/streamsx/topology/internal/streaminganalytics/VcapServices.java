@@ -13,6 +13,7 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -56,10 +57,14 @@ public class VcapServices {
                                 + VCAP_SERVICES);
             }
             // resulting string can be either the serialized JSON or filename
-            if (Files.isRegularFile(Paths.get(vcapString))) {
-                Path vcapFile = Paths.get(vcapString);
-                vcapContents = new String(Files.readAllBytes(vcapFile), StandardCharsets.UTF_8);
-            } else {
+            try {
+                final Path f = Paths.get(vcapString);
+                if (Files.isRegularFile(f)) {
+                    vcapContents = new String(Files.readAllBytes(f), StandardCharsets.UTF_8);
+                } else {
+                    vcapContents = vcapString;
+                }
+            } catch (InvalidPathException e) {
                 vcapContents = vcapString;
             }
         } else if (rawServices.isJsonObject()) {
@@ -67,11 +72,16 @@ public class VcapServices {
         } else if (rawServices.isJsonPrimitive()) {
             // String can be either the serialized JSON or filename
             String rawString = rawServices.getAsString();
-            if (Files.isRegularFile(Paths.get(rawString))) {
-                Path vcapFile = Paths.get(rawString);
-                vcapContents = new String(Files.readAllBytes(vcapFile), StandardCharsets.UTF_8);
-            } else
+            try {
+                final Path f = Paths.get(rawString);
+                if (Files.isRegularFile(f)) {
+                    vcapContents = new String(Files.readAllBytes(f), StandardCharsets.UTF_8);
+                } else {
+                    vcapContents = rawString;
+                }
+            } catch (InvalidPathException e) {
                 vcapContents = rawString;
+            }
         } else {
             throw new IllegalArgumentException("Unknown VCAP_SERVICES object class: " + rawServices.getClass());
         }
