@@ -153,6 +153,7 @@ class TestEc(unittest.TestCase):
       tester.contents(s, [('A211', 'EcSource_enter', 'M523', 'EcMap_enter', 'METRIC1', True)])
       tester.test(self.test_ctxtype, self.test_config)
 
+  @unittest.skipIf('CP4D_URL' in os.environ, "TODO - needs to be analyzed")
   def test_sys_argv(self):
       topo = Topology()
       s = topo.source(get_sys_argv)
