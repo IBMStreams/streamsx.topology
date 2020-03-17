@@ -12,6 +12,8 @@ See end of document for tests run to verify a release.
 
 Some of the JUnit tests include Python application API and decorator operator tests (e.g. test packages with `python`, `splpy`).
 
+Ant targets:
+
 * `unittest.quick` - Runs `unittest.main` and `unittest.standalone`
 * `unittest.main` - Runs Java application api tests using `EMBEDDED_TESTER` context
 * `unittest.standalone` - Runs Java application api tests using `STANDALONE_TESTER` context
@@ -24,7 +26,9 @@ Some of the JUnit tests include Python application API and decorator operator te
 
 Ant targets:
 
-* `test.python3` - Runs Python tests.
+* `test` - Runs Python tests calling the targets `test.application.api` and `test.translation`
+* `test.distributed` - Runs some TestDistributed* tests using Streams instance
+
 
 Most testing is performed using Python unittest.
 * `test/python/topology` - Python topology tests (application API).
