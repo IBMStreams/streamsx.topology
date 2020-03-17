@@ -57,13 +57,13 @@ class Testrmtoolkit(unittest.TestCase):
         # Call shell script to create the info.xml and toolkit.xml for each toolkit, and the info.xml for each app to build
         # Also updates toolkit names so different users can run tests concurrently
         # Ex. 'com.example.test_tk_2' -> 'com.example.tmyuuwkpjittfjla.test_tk_2'
-        script = (my_path / "toolkits/create_test_sc_files.sh").resolve()
+        script = (my_path / "sc_test_files/toolkits/create_test_sc_files.sh").resolve()
         subprocess.call([script])
 
     @classmethod
     def tearDownClass(cls):
         # Call shell script to delete the info.xml and toolkit.xml for each toolkit, and the info.xml for each app to build
-        script = (my_path / "toolkits/delete_test_sc_files.sh").resolve()
+        script = (my_path / "sc_test_files/toolkits/delete_test_sc_files.sh").resolve()
         subprocess.call([script])
 
     def setUp(self):
