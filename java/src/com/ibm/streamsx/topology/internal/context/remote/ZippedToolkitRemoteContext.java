@@ -136,9 +136,13 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
 
         // tkManifest is the list of toolkits contained in the archive
         try (PrintWriter tkManifest = new PrintWriter(manifestTmp.toFile(), "UTF-8")) {
-            if (tkName != null)
-                tkManifest.println(tkName);
-            tkManifest.println(topologyToolkitName);
+            // create the manifest file with '\n' as line separator, as it is read in a Linux system
+            if (tkName != null) {
+                tkManifest.print(tkName);
+                tkManifest.print("\n");
+            }
+            tkManifest.print(topologyToolkitName);
+            tkManifest.print("\n");
             JsonObject configSpl = object(graph, CONFIG, "spl");
             if (configSpl != null) {
                 objectArray(configSpl, "toolkits",
@@ -154,11 +158,13 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
                                         splmm_dir[0] = tkRootName;
                                         toolkits.put(tkRoot.toPath(), tkRootName);
                                     } else {
-                                        tkManifest.println(tkRootName);
+                                        tkManifest.print(tkRootName);
+                                        tkManifest.print("\n");
                                         toolkits.put(tkRoot.toPath(), tkRootName);
                                     }
                                 } else {
-                                    tkManifest.println(tkRootName);
+                                    tkManifest.print(tkRootName);
+                                    tkManifest.print("\n");
                                     toolkits.put(tkRoot.toPath(), tkRootName);
                                 }
                             }
