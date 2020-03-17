@@ -2,14 +2,7 @@
 
 Tests are written using unittest.
 
-Initially the topology tester was not supported on Python 2.7
-so a naming convention was used that test2_xxx.py was for tests
-that used the topology tester. ('2' for nextgen, not Python 2!).
-
-Now all tests run on Python 2.7, 3.5 and 3.6.
-
-Note testing using `nose` is experimental and has only been
-tried with Python 3.5.
+Run tests on Python 3.6.
 
 Python path must include the streamsx code either by:
 

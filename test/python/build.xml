@@ -76,37 +76,6 @@
 	   </target>	   
 
 
-     <target name="test.python3" description="Run all Python tests with python executable (assumed to be Python 3)">
-         <property name="topology.test.python.force" value="python3"/>
-        <!-- SPL Python operators are only supported in Python 3 -->
-         <antcall inheritAll="yes">
-            <target name="test.python2"/>
-         </antcall>
-         <ant inheritAll="no" dir="../java">
-            <property name="topology.test.python" value="${topology.test.python.force}"/>
-            <property name="topology.test.base.pattern" value="**/splpy/*Test.java"/>
-            <target name="unittest.standalone"/>
-            <target name="unittest.distributed"/>
-         </ant>
-     </target>
-
-     <target name="test.python2" description="Run all Python tests with python executable (assumed to be Python 2)">
-         <property name="topology.test.python.force" value="python"/>
-         <exec executable="${topology.test.python.force}">
-            <arg value="-V"/>
-         </exec>
-         <antcall inheritAll="no">
-            <param name="topology.test.python" value="${topology.test.python.force}"/>
-            <target name="test.application.api"/>
-         </antcall>
-         <ant inheritAll="no" dir="../java">
-            <property name="topology.test.python" value="${topology.test.python.force}"/>
-            <property name="topology.test.base.pattern" value="**/python/*Test.java"/>
-            <target name="unittest.standalone"/>
-            <target name="unittest.distributed"/>
-         </ant>
-     </target>
-
     <target name="test.translation" description="Run the translation tests">
         <exec executable="/bin/bash" dir="spl/translation" failonerror="true">
             <env key="PYTHONHOME" value="${topology.test.python.prefix}"/>
