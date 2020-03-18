@@ -127,6 +127,9 @@
     <delete>
       <fileset dir="test/python/scripts/sc_test_files" includes="test_sc_old_toolkit_name.txt"/>
     </delete>
+    <delete includeemptydirs="true">
+      <fileset dir="test/python/scripts/sc_test_files/apps/" includes="test_app_*/output"/>
+    </delete>
     <delete dir="test/python/unittests"/>
     <delete>
       <fileset dir="test/python/spl/testtkpy_pip_op" includes="info.xml,toolkit.xml"/>
