@@ -130,7 +130,7 @@ class Testrmtoolkit(unittest.TestCase):
     def _get_test_toolkit_paths(self):
         # Get a list of all the test toolkit paths, each element representing 1 toolkit_path
         toolkit_paths = []
-        path = (my_path / "toolkits").resolve()
+        path = (my_path / "sc_test_files/toolkits").resolve()
 
         # Get all direct subfolders in toolkits folder
         toolkits = path.glob("*/")
