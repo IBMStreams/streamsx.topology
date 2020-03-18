@@ -18,7 +18,7 @@ cd -
 echo "--------------------"
 echo "Testing scripts ..."
 cd scripts
-python3 -u -m unittest test_sc.py test_st_appconfig.py test_st_lsjobs.py test_st_lstoolkit.py -v
+python3 -u -m unittest test_sc.py test_st_appconfig.py test_st_canceljob.py test_st_lsjobs.py test_st_lstoolkit.py test_st_submitjob.py -v
 cd -
 
 echo "--------------------"
