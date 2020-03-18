@@ -73,7 +73,7 @@ class Testrmtoolkit(unittest.TestCase):
             self.skipTest("Build REST API is not available")
         else:
             # delete all the test toolkits from the buildserver, in case they were left behind by a previous test failure.
-            file_name = (my_path / "test_sc_old_toolkit_name.txt").resolve()
+            file_name = (my_path / "sc_test_files/test_sc_old_toolkit_name.txt").resolve()
             old_toolkit_name = None
             if os.path.isfile(file_name):
                 with open(file_name) as f:
@@ -92,10 +92,11 @@ class Testrmtoolkit(unittest.TestCase):
             # Get and store the randomly generated toolkit name, thus in case of network failure, on next run on test suite,
             # can read old randomly generated toolkit name, and delete toolkits off buildserver
             # Ex. 'com.example.tmyuuwkpjittfjla.test_tk_2' -> 'com.example.tmyuuwkpjittfjla.'
-            tk1 = self._get_toolkit_objects([self.test_toolkit_paths[0]])[0]
-            self.random_name_variable = re.sub("test_tk_.", "", tk1.name)
-            with open((my_path / "test_sc_old_toolkit_name.txt").resolve(), "w") as file1:
-                file1.write(self.random_name_variable)
+            if len(self.test_toolkit_paths) > 0:
+                tk1 = self._get_toolkit_objects([self.test_toolkit_paths[0]])[0]
+                self.random_name_variable = re.sub("test_tk_.", "", tk1.name)
+                with open((my_path / "sc_test_files/test_sc_old_toolkit_name.txt").resolve(), "w") as file1:
+                    file1.write(self.random_name_variable)
 
             # Upload these toolkits to the buildserver
             try:
@@ -270,49 +271,49 @@ class Testrmtoolkit(unittest.TestCase):
     # Delete a single test toolkit with id
     def test_simple_1(self):
         remote_test_tk_objects = self._get_remote_test_tk_objects()
+        if len(remote_test_tk_objects) > 0:
+            # Chose 1 random toolkit to delete
+            random_tk_to_delete = random.choice(remote_test_tk_objects)
 
-        # Chose 1 random toolkit to delete
-        random_tk_to_delete = random.choice(remote_test_tk_objects)
+            # Delete random toolkit by id
+            args = ['-i', random_tk_to_delete.id]
+            rc, return_message = self._run_rmtoolkit(args)
 
-        # Delete random toolkit by id
-        args = ['-i', random_tk_to_delete.id]
-        rc, return_message = self._run_rmtoolkit(args)
-
-        # Check random toolkit is deleted
-        self._check_toolkit_deleted(toolkit_id=random_tk_to_delete.id)
-        self.assertEqual(rc, 0)
+            # Check random toolkit is deleted
+            self._check_toolkit_deleted(toolkit_id=random_tk_to_delete.id)
+            self.assertEqual(rc, 0)
 
     # Delete all test toolkits with name
     def test_simple_2(self):
         remote_test_tk_objects = self._get_remote_test_tk_objects()
+        if len(remote_test_tk_objects) > 0:
+            # Chose 1 random toolkit to delete
+            random_tk_to_delete = random.choice(remote_test_tk_objects)
 
-        # Chose 1 random toolkit to delete
-        random_tk_to_delete = random.choice(remote_test_tk_objects)
+            # Delete random toolkit by name
+            args = ['-n', random_tk_to_delete.name]
+            rc, return_message = self._run_rmtoolkit(args)
 
-        # Delete random toolkit by name
-        args = ['-n', random_tk_to_delete.name]
-        rc, return_message = self._run_rmtoolkit(args)
-
-        # Check random toolkit is deleted
-        self._check_toolkit_deleted(toolkit_name=random_tk_to_delete.name)
-        self.assertEqual(rc, 0)
+            # Check random toolkit is deleted
+            self._check_toolkit_deleted(toolkit_name=random_tk_to_delete.name)
+            self.assertEqual(rc, 0)
 
     # Delete all test toolkits by regex pattern
     def test_simple_3(self):
         remote_test_tk_names = [x.name for x in self._get_remote_test_tk_objects()]
+        if len(remote_test_tk_names) > 0:
+           # Regex pattern to delete toolkits by
+           pattern = self.random_name_variable + 'test_tk_1'
+           p = re.compile(pattern)
 
-        # Regex pattern to delete toolkits by
-        pattern = self.random_name_variable + 'test_tk_1'
-        p = re.compile(pattern)
+           # Check at least 1 remote test toolkit object matches our pattern, so we can check later that it is deleted
+           matched_toolkits = [x for x in remote_test_tk_names if p.match(x)]
+           assert len(matched_toolkits) > 0
 
-        # Check at least 1 remote test toolkit object matches our pattern, so we can check later that it is deleted
-        matched_toolkits = [x for x in remote_test_tk_names if p.match(x)]
-        assert len(matched_toolkits) > 0
+           # Delete random toolkit by pattern
+           args = ['-r', pattern]
+           rc, return_message = self._run_rmtoolkit(args)
 
-        # Delete random toolkit by pattern
-        args = ['-r', pattern]
-        rc, return_message = self._run_rmtoolkit(args)
-
-        # Check random toolkit is deleted
-        self._check_toolkit_deleted(toolkit_regex=pattern)
-        self.assertEqual(rc, 0)
+           # Check random toolkit is deleted
+           self._check_toolkit_deleted(toolkit_regex=pattern)
+           self.assertEqual(rc, 0)
