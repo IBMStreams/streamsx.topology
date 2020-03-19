@@ -7,6 +7,7 @@
 
   <property name="release.base" location="release-${ant.project.name}" />
   <property name="streamsx.py" location="${tk.opt}/python/packages/streamsx"/>
+  <property name="gentk" location="test/python/scripts/sc_test_files/toolkits"/>
 
   <target name="all">
     <ant dir="java" inheritAll="true"/>
@@ -129,6 +130,26 @@
     </delete>
     <delete includeemptydirs="true">
       <fileset dir="test/python/scripts/sc_test_files/apps/" includes="test_app_*/output"/>
+    </delete>
+    <delete includeemptydirs="true">
+      <fileset dir="test/python/scripts/sc_test_files/apps/" includes="test_app_*/info.xml"/>
+    </delete>
+    <delete dir="test/python/scripts/sc_test_files/apps/test_app_1/samplemain"/>
+    <delete dir="test/python/scripts/sc_test_files/apps/test_app_2/samplemain"/>
+    <delete dir="test/python/scripts/sc_test_files/apps/test_app_3/samplemain"/>
+    <delete dir="test/python/scripts/sc_test_files/apps/test_app_4/samplemain"/>
+    <delete dir="test/python/scripts/sc_test_files/apps/test_app_5/samplemain"/>
+    <delete dir="test/python/scripts/sc_test_files/apps/test_app_6/samplemain"/>
+    <delete dir="test/python/scripts/sc_test_files/apps/test_app_7/samplemain"/>
+    <delete dir="test/python/scripts/sc_test_files/apps/test_app_8/samplemain"/>
+    <delete dir="test/python/scripts/sc_test_files/apps/test_app_9/samplemain"/>
+    <delete includeemptydirs="true">
+      <fileset dir="test/python/scripts/sc_test_files/toolkits/" includes="test_tk_*/info.xml,test_tk_*/toolkit.xml"/>
+    </delete>
+    <exec executable="./delete_test_sc_files.sh" failonerror="false" dir="test/python/scripts/sc_test_files/toolkits">
+    </exec>
+    <delete>
+      <fileset dir="test/python/scripts" includes="jobconfig.json"/>
     </delete>
     <delete dir="test/python/unittests"/>
     <delete>
