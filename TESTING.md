@@ -22,6 +22,38 @@ Ant targets:
 * `unittest.streaminganalytics.remote` - Runs Java application api tests using the `STREAMING_ANALYTICS_SERVICE` context and performs builds remotely.
 * `unittest.restapi` - Runs the Java rest tests using the `DISTRIBUTED` context (requires `STREAMS_REST_URL` environment variable) and the `STREAMING_ANALYTICS_SERVICE` context (requires `STREAMING_ANALYTICS_SERVICE_NAME` and `VCAP_SERVICES` environment variables).
 
+#### Changing Streams install or toolkit release
+
+By default the tests run against:
+ * Streams release at $STREAMS_INSTALL
+   * including compiling the underlying SPL applications
+   * running or submitting the bundles
+ * Toolkit at `streamsx.topology/com.ibm.streamsx.topology`
+
+The version of Streams used to compile the applications can be
+set by using the `topology.install.compile` ant property.
+
+```
+cd test/java
+ant unittest.distributed -Dtopology.install.compile=/opt/ibm/InfoSphere_Streams/4.3.0.0
+```
+
+The release of the toolkit used can be specified using `topology.toolkit.release` ant property.
+
+```
+cd test/java
+ant unittest.distributed -Dtopology.toolkit.release=$HOME/testtk/com.ibm.streamsx.topology
+```
+
+#### Running selected test classes
+
+The tests can be specified using `topology.test.base.pattern` ant property.
+
+```
+cd test/java
+ant unittest.distributed -Dtopology.test.base.pattern='**/FileStreamsTest.java'
+```
+
 ### `test/python`
 
 Ant targets:
