@@ -958,6 +958,7 @@ test/java/classes/com/ibm/streamsx/topology/test/tester/TesterTest.class
 test/java/jacoco.exec
 test/java/path
 test/java/streamsx.topology.test.jar
+test/python/scripts/jobconfig.json
 test/python/scripts/test_sc_old_toolkit_name.txt
 test/python/scripts/sc_test_files/test_sc_old_toolkit_name.txt
 test/python/scripts/sc_test_files/apps/**/info.xml
