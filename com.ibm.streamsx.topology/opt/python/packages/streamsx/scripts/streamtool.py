@@ -843,7 +843,12 @@ def _parse_args(args):
     _uploadtoolkit_parser(subparsers)
     _updateops_parser(subparsers)
 
-    return cmd_parser.parse_args(args)
+    cmd_args = cmd_parser.parse_args(args)
+    if cmd_args.subcmd is None:
+        cmd_parser.print_help()
+        exit(0)
+    else:
+        return cmd_args
 
 def _user_arg(parser):
     parser.add_argument('--User', '-U', help='Specifies an IBM Streams user ID that has authority to run the command.', metavar='user')
