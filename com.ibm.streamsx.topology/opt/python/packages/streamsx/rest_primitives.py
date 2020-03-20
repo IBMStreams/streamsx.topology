@@ -14,7 +14,7 @@ Contains classes representing primitive Streams objects, such as
 
 """
 
-__all__ = ['ActiveService', 'ActiveVersion', 'ApplicationBundle', 'ApplicationConfiguration', 'Domain', 'ExportedStream', 'Host', 'ImportedStream', 'Installation', 'Instance', 'Job', 'Metric', 'OperatorConnection', 'OperatorInputPort', 'OperatorOutputPort', 'Operator', 'PEConnection', 'PE', 'PublishedTopic', 'ResourceAllocation', 'Resource', 'ResourceTag', 'RestResource', 'StreamingAnalyticsService', 'Toolkit', 'ViewItem', 'View', 'get_view_obj']
+__all__ = ['ActiveService', 'ActiveVersion', 'ApplicationBundle', 'ApplicationConfiguration', 'Domain', 'ExportedStream', 'Host', 'ImportedStream', 'Installation', 'Instance', 'Job', 'Metric', 'OperatorConnection', 'OperatorInputPort', 'OperatorOutputPort', 'Operator', 'PEConnection', 'PE', 'PublishedTopic', 'ResourceAllocation', 'Resource', 'ResourceTag', 'RestResource', 'StreamingAnalyticsService', 'Toolkit', 'ViewItem', 'View']
 
 import logging
 import requests
@@ -2390,14 +2390,6 @@ class RestResource(_ResourceElement):
         """
         return self.rest_client.make_request(self.resource)
 
-
-def get_view_obj(_view, rc):
-    for domain in rc.get_domains():
-        for instance in domain.get_instances():
-            for view in instance.get_views():
-                if view.name == _view.name:
-                    return view
-    return None
 
 class StreamingAnalyticsService(object):
     """Streaming Analytics service running on IBM Cloud.
