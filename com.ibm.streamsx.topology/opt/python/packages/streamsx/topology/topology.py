@@ -818,7 +818,7 @@ class Topology(object):
              self._files[location].append(path)
         return location + '/' + os.path.basename(path)
 
-    def add_pip_package(self, requirement):
+    def add_pip_package(self, requirement, name=None):
         """
         Add a Python package dependency for this topology.
 
@@ -854,9 +854,16 @@ class Topology(object):
             # and astral at version 0.8.1
             topo.add_pip_package('pint')
             topo.add_pip_package('astral==0.8.1')
+
+        Example for packages not provided on pypi.org::
+
+            topo = Topology()
+            # Add dependency on package using whl file
+            topo.add_pip_package(requirement='https://github.com/myrepo/raw/mydir/mypkg-1.0-py3-none-any.whl', name='mypkg')
         
         Args:
             requirement(str): Package requirements specifier.
+            name(str): Name added to :py:attr:`~exclude_packages`. Set this argument when adding URLs only.
 
         .. warning::
             Only supported when using the build service with
@@ -874,8 +881,11 @@ class Topology(object):
         .. versionadded:: 1.9
         """
         self._pip_packages.append(str(requirement))
-        pr = pkg_resources.Requirement.parse(requirement) 
-        self.exclude_packages.add(pr.project_name)
+        if name is None:
+            pr = pkg_resources.Requirement.parse(requirement)
+            self.exclude_packages.add(pr.project_name)
+        else:
+            self.exclude_packages.add(name)
 
     def create_submission_parameter(self, name, default=None, type_=None):
         """ Create a submission parameter.

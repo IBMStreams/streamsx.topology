@@ -66,13 +66,10 @@ class TestPackages(unittest.TestCase):
               os.environ['PYTHONPATH'] = pypath
 
 class TestDistributedPackages(TestPackages):
-  def setUp(self):
-      Tester.setup_distributed(self)
-      self.test_config[ConfigParams.SSL_VERIFY] = False
 
-class TestSasPackages(TestPackages):
     def setUp(self):
-        Tester.setup_streaming_analytics(self, force_remote_build=True)
+        Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
     def test_add_pip_package(self):
         topo = Topology()
@@ -82,3 +79,19 @@ class TestSasPackages(TestPackages):
         tester = Tester(topo)
         tester.contents(s, ['pint'])
         tester.test(self.test_ctxtype, self.test_config)
+
+    def test_add_pip_package_whl_from_url(self):
+        topo = Topology()
+        topo.add_pip_package('https://github.com/markheger/streamsx.health/raw/pypackage/samples/HealthcareJupyterDemo/whl/healthdemo-1.0-py3-none-any.whl', name='healthdemo')
+        s = topo.source([1])
+        s = s.map(lambda x : __import__('healthdemo').__name__)
+        tester = Tester(topo)
+        tester.contents(s, ['healthdemo'])
+        tester.test(self.test_ctxtype, self.test_config)
+
+class TestSasPackages(TestDistributedPackages):
+
+    def setUp(self):
+        Tester.setup_streaming_analytics(self, force_remote_build=True)
+
+
