@@ -82,11 +82,11 @@ class TestDistributedPackages(TestPackages):
 
     def test_add_pip_package_whl_from_url(self):
         topo = Topology()
-        topo.add_pip_package('https://github.com/markheger/streamsx.health/raw/pypackage/samples/HealthcareJupyterDemo/whl/healthdemo-1.0-py3-none-any.whl', name='healthdemo')
+        topo.add_pip_package('https://github.com/markheger/streamsx.topology/raw/master/test/python/topology/test_package_whl/whl/tstexamplepkg-1.0-py3-none-any.whl', name='tstexamplepkg')
         s = topo.source([1])
-        s = s.map(lambda x : __import__('healthdemo').__name__)
+        s = s.map(lambda x : __import__('tstexamplepkg').__name__)
         tester = Tester(topo)
-        tester.contents(s, ['healthdemo'])
+        tester.contents(s, ['tstexamplepkg'])
         tester.test(self.test_ctxtype, self.test_config)
 
 class TestSasPackages(TestDistributedPackages):
