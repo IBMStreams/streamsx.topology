@@ -1,7 +1,7 @@
 from setuptools import setup
 setup(
-  name = 'tst-example-pkg',
-  packages = ['tst_example_pkg'],
+  name = 'tstexamplepkg',
+  packages = ['tstexamplepkg'],
   version = '1.0',
   description = 'Test example package',
   author = 'IBM Streams @ github.com',
