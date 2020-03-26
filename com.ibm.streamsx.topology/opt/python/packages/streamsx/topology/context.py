@@ -54,12 +54,12 @@ def submit(ctxtype, graph, config=None, username=None, password=None):
     Args:
         ctxtype(str): Type of context the application will be submitted to. A value from :py:class:`ContextTypes`.
         graph(Topology): The application topology to be submitted.
-        config(dict): Configuration for the submission.
+        config(dict): Configuration for the submission, augmented with values such as a :py:class:`JobConfig` or keys from :py:class:`ConfigParams`.
         username(str): Deprecated: Username for the Streams REST api. Use environment variable ``STREAMS_USERNAME`` if using user-password authentication.
         password(str): Deprecated: Password for `username`. Use environment variable ``STREAMS_PASSWORD`` if using user-password authentication.
 
     Returns:
-        SubmissionResult: Result of the submission. For details of what is contained see the :py:class:`ContextTypes`
+        SubmissionResult: Result of the submission. Content depends on :py:class:`ContextTypes`
         constant passed as `ctxtype`.
     """
     streamsx._streams._version._mismatch_check(__name__)
@@ -1449,7 +1449,28 @@ class JobConfig(object):
 
 class SubmissionResult(object):
     """Passed back to the user after a call to submit.
-    Allows the user to use dot notation to access dictionary elements."""
+    Allows the user to use dot notation to access dictionary elements.
+
+    Example accessing result files when using :py:const:`~ContextTypes.BUNDLE`::
+
+        submission_result = submit(ContextTypes.BUNDLE, topology, config)
+        print(submission_result.bundlePath)
+        ...
+        os.remove(submission_result.bundlePath)
+        os.remove(submission_result.jobConfigPath)
+
+    Result contains the generated toolkit location when using :py:const:`~ContextTypes.TOOLKIT`::
+
+        submission_result = submit(ContextTypes.TOOLKIT, topology, config)
+        print(submission_result.toolkitRoot)
+
+    Result when using :py:const:`~ContextTypes.DISTRIBUTED` depends if the `Topology` is compiled locally and the resultant Streams application bundle
+    (sab file) is submitted to an IBM Streams instance or if the `Topology` is compiled on build-service and submitted to an instance in Cloud Pak for Data::
+
+        submission_result = submit(ContextTypes.DISTRIBUTED, topology, config)
+        print(submission_result)
+
+"""
     def __init__(self, results):
         self.results = results
         self._submitter = None
