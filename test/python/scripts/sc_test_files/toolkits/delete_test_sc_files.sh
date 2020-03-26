@@ -20,3 +20,7 @@ find ${PARENT_PATH}/../apps/ -type d -name samplemain | xargs rm -rf
 
 # Delete generated info.xml files for the apps, located in /scripts/sc_test_files/apps/
 find ${PARENT_PATH}/../apps/ -name info.xml | xargs rm -f
+
+# Delete generated SPL/SPLMM files that do not live in a namespace
+find ${PARENT_PATH}/../apps/ -name test_no_ns.splmm | xargs rm -f
+find ${PARENT_PATH}/../apps/ -name test_no_ns.spl | xargs rm -f

@@ -368,7 +368,7 @@ def _index_tk():
         ri = 0
     return ri,tkl
 
-@unittest.skipIf('STREAMS_INSTALL' not in os.environ and 'STREAMS_REST_URL' not in os.environ, 'STREAMS_INSTALL/STREAMS_REST_URL not set')
+#@unittest.skipIf('CP4D_URL' not in os.environ and 'STREAMS_INSTALL' not in os.environ and 'STREAMS_REST_URL' not in os.environ, 'STREAMS_INSTALL/STREAMS_REST_URL not set')
 class TestMainComposite(unittest.TestCase):
     def test_main_composite(self):
         ri,tkl = _index_tk()
@@ -386,9 +386,94 @@ class TestMainComposite(unittest.TestCase):
         self.assertEqual(0, rc['return_code'])
         shutil.rmtree(tkl)
         self.assertEqual('app.MyMain.sab', os.path.basename(rc['bundlePath']))
-        self.assertEqual('app.MyMain_JobConfig.json', os.path.basename(rc['jobConfigPath']))
         os.remove(rc['bundlePath'])
-        os.remove(rc['jobConfigPath'])
+        if 'CP4D_URL' in os.environ or 'STREAMS_INSTALL' in os.environ or 'STREAMS_REST_URL' in os.environ:
+            self.assertEqual('app.MyMain_JobConfig.json', os.path.basename(rc['jobConfigPath']))
+            os.remove(rc['jobConfigPath'])
+
+    def test_main_composite_flow_added(self):
+        ri,tkl = _index_tk()
+        self.assertEqual(0, ri)
+        r = op.main_composite(kind='app::MyMain', toolkits=[tkl])
+        self.assertIsInstance(r, tuple)
+        self.assertIsInstance(r[0], Topology)
+        self.assertIsInstance(r[1], op.Invoke)
+
+        # add another independent flow to the topology
+        topology = r[0]
+        ints = topology.source([1, 2, 3], name='Integers3')
+        ints.as_string().print()
+
+        cfg = {}
+        if not 'STREAMS_INSTALL' in os.environ:
+            cfg[streamsx.topology.context.ConfigParams.SSL_VERIFY] = False
+
+        rc = streamsx.topology.context.submit('BUNDLE', topology, cfg)
+        self.assertEqual(0, rc['return_code'])
+        shutil.rmtree(tkl)
+        self.assertEqual('app._spl.MyMain.sab', os.path.basename(rc['bundlePath']))
+        os.remove(rc['bundlePath'])
+        if 'CP4D_URL' in os.environ or 'STREAMS_INSTALL' in os.environ or 'STREAMS_REST_URL' in os.environ:
+            self.assertEqual('app._spl.MyMain_JobConfig.json', os.path.basename(rc['jobConfigPath']))
+            os.remove(rc['jobConfigPath'])
+
+    def test_main_composite_no_namespace(self):
+        ri,tkl = _index_tk()
+        self.assertEqual(0, ri)
+        self.assertRaises(ValueError, op.main_composite, kind='MyMainNoNs', toolkits=[tkl])
+        shutil.rmtree(tkl)
+
+    def test_main_composite_wrapped(self):
+        ri,tkl = _index_tk()
+        self.assertEqual(0, ri)
+        wrapper_name = 'Wrapper'
+        r = op.main_composite(kind='app::MyMain', toolkits=[tkl], name=wrapper_name)
+        self.assertIsInstance(r, tuple)
+        self.assertIsInstance(r[0], Topology)
+        self.assertIsInstance(r[1], op.Invoke)
+
+        cfg = {}
+        if not 'STREAMS_INSTALL' in os.environ:
+            cfg[streamsx.topology.context.ConfigParams.SSL_VERIFY] = False
+
+        rc = streamsx.topology.context.submit('BUNDLE', r[0], cfg)
+        self.assertEqual(0, rc['return_code'])
+        shutil.rmtree(tkl)
+        self.assertEqual('app._spl.' + wrapper_name + '.sab', os.path.basename(rc['bundlePath']))
+
+        os.remove(rc['bundlePath'])
+        if 'CP4D_URL' in os.environ or 'STREAMS_INSTALL' in os.environ or 'STREAMS_REST_URL' in os.environ:
+            self.assertEqual('app._spl.' + wrapper_name + '_JobConfig.json', os.path.basename(rc['jobConfigPath']))
+            os.remove(rc['jobConfigPath'])
+
+    def test_main_composite_private_no_namespace(self):
+        ri,tkl = _index_tk()
+        self.assertEqual(0, ri)
+        r = op._main_composite(kind='MyMainNoNs', toolkits=[tkl])
+        self.assertIsInstance(r, tuple)
+        self.assertIsInstance(r[0], Topology)
+        self.assertIsInstance(r[1], op.Invoke)
+        topology = r[0]
+        # do not touch the topology, for example by creating a source
+        cfg = {}
+        if not 'STREAMS_INSTALL' in os.environ:
+            cfg[streamsx.topology.context.ConfigParams.SSL_VERIFY] = False
+
+        rc = streamsx.topology.context.submit('BUNDLE', topology, cfg)
+        self.assertEqual(0, rc['return_code'])
+        shutil.rmtree(tkl)
+        self.assertEqual('MyMainNoNs.sab', os.path.basename(rc['bundlePath']))
+        os.remove(rc['bundlePath'])
+        if 'CP4D_URL' in os.environ or 'STREAMS_INSTALL' in os.environ or 'STREAMS_REST_URL' in os.environ:
+            self.assertEqual('MyMainNoNs_JobConfig.json', os.path.basename(rc['jobConfigPath']))
+            os.remove(rc['jobConfigPath'])
+
+    def test_main_composite_private_no_namespace_wrapped(self):
+        ri,tkl = _index_tk()
+        self.assertEqual(0, ri)
+        wrapper_name = 'Wrapper'
+        self.assertRaises(ValueError, op._main_composite, kind='MyMainNoNs', toolkits=[tkl], name=wrapper_name)
+        shutil.rmtree(tkl)
 
 @unittest.skipIf('STREAMS_INSTALL' not in os.environ and 'STREAMS_REST_URL' not in os.environ, 'STREAMS_INSTALL/STREAMS_REST_URL not set')
 class TestParamTypes(unittest.TestCase):

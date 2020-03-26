@@ -107,7 +107,11 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         if (mainCompositeKind == null) {
             String namespace = splAppNamespace(graph);
             String name = splAppName(graph);
-            mainCompositeKind = namespace + "::" + name;
+            if (namespace != null && !namespace.isEmpty()) {
+                mainCompositeKind = namespace + "::" + name;
+            } else {
+                mainCompositeKind = name;
+            }
         }
         
         Path zipFilePath = Files.createTempFile("code_archive", ".zip");

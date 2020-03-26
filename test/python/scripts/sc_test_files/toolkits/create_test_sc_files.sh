@@ -53,10 +53,20 @@ for i in $(find $NEWDIR_PATH2 -name test.spl.tmpl); do
     sed -e "s/test_tk/${NAME}.test_tk/" "$i" > "${i/.tmpl/}"
     rm $i
 done
+# same for spl.tmpl files not living in a namespace directory
+for i in $(find ${PARENT_PATH}/../apps/ -name test_no_ns.spl.tmpl); do
+    # substitute toolkit name in use directives
+    sed -e "s/test_tk/${NAME}.test_tk/" "$i" > "${i/.tmpl/}"
+done
 
 for i in $(find $NEWDIR_PATH2 -name test.splmm.tmpl); do
     sed -e "s/test_tk/${NAME}.test_tk/" "$i" > "${i/.tmpl/}"
     rm $i
+done
+# same for splmm.tmpl files not living in a namespace directory
+for i in $(find ${PARENT_PATH}/../apps/ -name test_no_ns.splmm.tmpl); do
+    # substitute toolkit name in use directives
+    sed -e "s/test_tk/${NAME}.test_tk/" "$i" > "${i/.tmpl/}"
 done
 
 # Create info.xml files for the apps, located in /scripts/sc_test_files/apps/

@@ -10,7 +10,7 @@ import urllib3
 import shutil
 import streamsx.rest
 import pkg_resources
-from streamsx.spl.op import main_composite
+from streamsx.spl.op import _main_composite
 from streamsx.spl.toolkit import add_toolkit
 from streamsx.topology.context import submit, ConfigParams
 from streamsx.build import BuildService
@@ -328,7 +328,8 @@ def _is_likely_toolkit(tkdir):
             return True
 
 def _create_topo(cmd_args):
-    topo,invoke = main_composite(kind=cmd_args.main_composite)
+    # the private function permits main composites w/o a namespace
+    topo,invoke = _main_composite(kind=cmd_args.main_composite)
     return topo
 
 def _parse_args(args):
