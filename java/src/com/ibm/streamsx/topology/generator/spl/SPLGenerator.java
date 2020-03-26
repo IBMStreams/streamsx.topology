@@ -303,6 +303,7 @@ public class SPLGenerator {
      * @param startsEndsAndOperators
      * @param opDefinition
      */
+    @SuppressWarnings("unused")
     private void fixCompositeInputNaming(JsonObject graph, List<List<JsonObject>> startsEndsAndOperators,
             JsonObject opDefinition) {   
         // For each start
@@ -349,6 +350,7 @@ public class SPLGenerator {
      * @param startsEndsAndOperators
      * @param opDefinition
      */
+    @SuppressWarnings("unused")
     private void fixCompositeOutputNaming(JsonObject graph, List<List<JsonObject>> startsEndsAndOperators,
             JsonObject opDefinition, JsonObject opInvocation) {   
         // We iterate like this because we need the index into the operatorDefinition's inputNames list.
@@ -980,6 +982,8 @@ public class SPLGenerator {
         return stvHelper;
     }
 
+    private static final int NAME_LEN = 80;
+    
     /**
      * Takes a name String that might have characters which are incompatible in
      * an SPL stream name (which just supports ASCII) and returns a valid SPL
@@ -1004,12 +1008,11 @@ public class SPLGenerator {
      * @return A string which can be a valid SPL stream name. If name is valid
      * as an SPL identifier and less than 80 chars then it is returned (same reference).
      */
-    private static final int NAME_LEN = 80;
     public static String getSPLCompatibleName(String name) {
 
-        if (name.length() <= NAME_LEN && name.matches("^[a-zA-Z_][a-zA-Z0-9_]*$"))
+        if (name.length() <= NAME_LEN && name.matches("^[a-zA-Z_][a-zA-Z0-9_]*$")) {
             return name;
-        
+        }
         final byte[] original = name.getBytes(StandardCharsets.UTF_8);
         return "__spl_" + md5Name(original);
     }
