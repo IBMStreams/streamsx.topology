@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.topology &mdash; streamsx 1.14.11 documentation</title>
+  <title>streamsx.topology.topology &mdash; streamsx 1.14.12 documentation</title>
   
 
   
@@ -655,7 +655,7 @@ For example the path above at runtime is
 
 <dl class="method">
 <dt id="streamsx.topology.topology.Topology.add_pip_package">
-<code class="sig-name descname">add_pip_package</code><span class="sig-paren">(</span><em class="sig-param">requirement</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Topology.add_pip_package" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_pip_package</code><span class="sig-paren">(</span><em class="sig-param">requirement</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Topology.add_pip_package" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a Python package dependency for this topology.</p>
 <p>If the package defined by the requirement specifier
 is not pre-installed on the build system then the
@@ -685,9 +685,18 @@ any packages added by this method.</p>
 <span class="n">topo</span><span class="o">.</span><span class="n">add_pip_package</span><span class="p">(</span><span class="s1">&#39;astral==0.8.1&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>Example for packages not provided on pypi.org:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">topo</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">()</span>
+<span class="c1"># Add dependency on package using whl file</span>
+<span class="n">topo</span><span class="o">.</span><span class="n">add_pip_package</span><span class="p">(</span><span class="n">requirement</span><span class="o">=</span><span class="s1">&#39;https://github.com/myrepo/raw/mydir/mypkg-1.0-py3-none-any.whl&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;mypkg&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>requirement</strong> (<em>str</em>) – Package requirements specifier.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>requirement</strong> (<em>str</em>) – Package requirements specifier.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Name added to <a class="reference internal" href="#streamsx.topology.topology.Topology.exclude_packages" title="streamsx.topology.topology.Topology.exclude_packages"><code class="xref py py-attr docutils literal notranslate"><span class="pre">exclude_packages</span></code></a>. Set this argument when adding URLs only.</p></li>
+</ul>
 </dd>
 </dl>
 <div class="admonition warning">

@@ -9,13 +9,6 @@ streamsx.rest\_primitives
 
    
    
-   .. rubric:: Functions
-
-   .. autosummary::
-      :nosignatures:
-   
-      get_view_obj
-   
    
 
    

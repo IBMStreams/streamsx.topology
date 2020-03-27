@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.context &mdash; streamsx 1.14.11 documentation</title>
+  <title>streamsx.topology.context &mdash; streamsx 1.14.12 documentation</title>
   
 
   
@@ -814,6 +814,25 @@ or None.</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Passed back to the user after a call to submit.
 Allows the user to use dot notation to access dictionary elements.</p>
+<p>Example accessing result files when using <a class="reference internal" href="#streamsx.topology.context.ContextTypes.BUNDLE" title="streamsx.topology.context.ContextTypes.BUNDLE"><code class="xref py py-const docutils literal notranslate"><span class="pre">BUNDLE</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">submission_result</span> <span class="o">=</span> <span class="n">submit</span><span class="p">(</span><span class="n">ContextTypes</span><span class="o">.</span><span class="n">BUNDLE</span><span class="p">,</span> <span class="n">topology</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">submission_result</span><span class="o">.</span><span class="n">bundlePath</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">submission_result</span><span class="o">.</span><span class="n">bundlePath</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">submission_result</span><span class="o">.</span><span class="n">jobConfigPath</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Result contains the generated toolkit location when using <a class="reference internal" href="#streamsx.topology.context.ContextTypes.TOOLKIT" title="streamsx.topology.context.ContextTypes.TOOLKIT"><code class="xref py py-const docutils literal notranslate"><span class="pre">TOOLKIT</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">submission_result</span> <span class="o">=</span> <span class="n">submit</span><span class="p">(</span><span class="n">ContextTypes</span><span class="o">.</span><span class="n">TOOLKIT</span><span class="p">,</span> <span class="n">topology</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">submission_result</span><span class="o">.</span><span class="n">toolkitRoot</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Result when using <a class="reference internal" href="#streamsx.topology.context.ContextTypes.DISTRIBUTED" title="streamsx.topology.context.ContextTypes.DISTRIBUTED"><code class="xref py py-const docutils literal notranslate"><span class="pre">DISTRIBUTED</span></code></a> depends if the <cite>Topology</cite> is compiled locally and the resultant Streams application bundle
+(sab file) is submitted to an IBM Streams instance or if the <cite>Topology</cite> is compiled on build-service and submitted to an instance in Cloud Pak for Data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">submission_result</span> <span class="o">=</span> <span class="n">submit</span><span class="p">(</span><span class="n">ContextTypes</span><span class="o">.</span><span class="n">DISTRIBUTED</span><span class="p">,</span> <span class="n">topology</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">submission_result</span><span class="p">)</span>
+</pre></div>
+</div>
 <dl class="method">
 <dt id="streamsx.topology.context.SubmissionResult.cancel_job_button">
 <code class="sig-name descname">cancel_job_button</code><span class="sig-paren">(</span><em class="sig-param">description=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.context.SubmissionResult.cancel_job_button" title="Permalink to this definition">¶</a></dt>
@@ -872,13 +891,13 @@ code performing the submit. Accessing data from views created by
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ctxtype</strong> (<em>str</em>) – Type of context the application will be submitted to. A value from <a class="reference internal" href="#streamsx.topology.context.ContextTypes" title="streamsx.topology.context.ContextTypes"><code class="xref py py-class docutils literal notranslate"><span class="pre">ContextTypes</span></code></a>.</p></li>
 <li><p><strong>graph</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology" title="streamsx.topology.topology.Topology"><em>Topology</em></a>) – The application topology to be submitted.</p></li>
-<li><p><strong>config</strong> (<em>dict</em>) – Configuration for the submission.</p></li>
+<li><p><strong>config</strong> (<em>dict</em>) – Configuration for the submission, augmented with values such as a <a class="reference internal" href="#streamsx.topology.context.JobConfig" title="streamsx.topology.context.JobConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">JobConfig</span></code></a> or keys from <a class="reference internal" href="#streamsx.topology.context.ConfigParams" title="streamsx.topology.context.ConfigParams"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigParams</span></code></a>.</p></li>
 <li><p><strong>username</strong> (<em>str</em>) – Deprecated: Username for the Streams REST api. Use environment variable <code class="docutils literal notranslate"><span class="pre">STREAMS_USERNAME</span></code> if using user-password authentication.</p></li>
 <li><p><strong>password</strong> (<em>str</em>) – Deprecated: Password for <cite>username</cite>. Use environment variable <code class="docutils literal notranslate"><span class="pre">STREAMS_PASSWORD</span></code> if using user-password authentication.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Result of the submission. For details of what is contained see the <a class="reference internal" href="#streamsx.topology.context.ContextTypes" title="streamsx.topology.context.ContextTypes"><code class="xref py py-class docutils literal notranslate"><span class="pre">ContextTypes</span></code></a>
+<dd class="field-even"><p>Result of the submission. Content depends on <a class="reference internal" href="#streamsx.topology.context.ContextTypes" title="streamsx.topology.context.ContextTypes"><code class="xref py py-class docutils literal notranslate"><span class="pre">ContextTypes</span></code></a>
 constant passed as <cite>ctxtype</cite>.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
