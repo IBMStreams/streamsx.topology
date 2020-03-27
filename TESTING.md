@@ -108,7 +108,16 @@ pip install scikit-learn
 cd test/python/topology
 python3 -u -m unittest test2_scikit.TestScikit.test_scikit_learn
 ```
+
+## Quick test set for a release
+
+Tests assume setup is correct for running distributed.
+
+* `ant unittest.quick` in `test/java`
  
+* `ant test.distributed` in `test/java`
+
+
 ## Full test set for a release
 
 Full set of tests assumes setup is correct for running distributed and Streaming Analytics
