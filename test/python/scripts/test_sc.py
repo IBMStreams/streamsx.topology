@@ -425,7 +425,7 @@ class TestSC(unittest.TestCase):
         
         self.main_composite = "main_no_ns"
         self.output_directory = 'output'
-        self.sab_file = "main_no_ns.sab"  #TODO
+        self.sab_file = "main_no_ns.sab"
         
         self._run_sc(self.main_composite, self.local_toolkit_paths_string, compile_time_arguments=['3', 'foo=bar'])
 
