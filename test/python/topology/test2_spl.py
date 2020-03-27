@@ -368,7 +368,7 @@ def _index_tk():
         ri = 0
     return ri,tkl
 
-#@unittest.skipIf('CP4D_URL' not in os.environ and 'STREAMS_INSTALL' not in os.environ and 'STREAMS_REST_URL' not in os.environ, 'STREAMS_INSTALL/STREAMS_REST_URL not set')
+@unittest.skipIf('CP4D_URL' not in os.environ and 'STREAMS_INSTALL' not in os.environ and 'STREAMS_REST_URL' not in os.environ and 'VCAP_SERVICES' not in os.environ, 'STREAMS_INSTALL/STREAMS_REST_URL not set')
 class TestMainComposite(unittest.TestCase):
     def test_main_composite(self):
         ri,tkl = _index_tk()
