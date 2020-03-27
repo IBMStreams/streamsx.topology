@@ -39,7 +39,7 @@ public class InvokeSc {
             File applicationDir) throws URISyntaxException, IOException {
         super();
        
-        this.namespace = namespace;
+        this.namespace = namespace == null? "": namespace;
         this.mainComposite = mainComposite;
         this.applicationDir = applicationDir;
        
@@ -103,7 +103,7 @@ public class InvokeSc {
 
         List<String> commands = new ArrayList<>();
 
-        String mainCompositeName = namespace + "::" + mainComposite;
+        String mainCompositeName = namespace.isEmpty()? mainComposite: namespace + "::" + mainComposite;
 
         commands.add(sc.getAbsolutePath());
         commands.add("--rebuild-toolkits");

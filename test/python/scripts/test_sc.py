@@ -418,6 +418,19 @@ class TestSC(unittest.TestCase):
 
         self._check_sab()
 
+    def test_simple_4_no_namespace(self):
+        # Build test_app_8, (SPLMM app) requiring no dependencies
+        path = (my_path / "sc_test_files/apps/test_app_8/").resolve()
+        os.chdir(path)
+        
+        self.main_composite = "main_no_ns"
+        self.output_directory = 'output'
+        self.sab_file = "main_no_ns.sab"
+        
+        self._run_sc(self.main_composite, self.local_toolkit_paths_string, compile_time_arguments=['3', 'foo=bar'])
+
+        self._check_sab()
+
     def test_simple_5(self):
         # Build test_app_8, (SPLMM app) requiring no dependencies
         # test_app_8 fails w/o compile time args

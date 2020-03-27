@@ -437,6 +437,29 @@ class Expression(object):
     def __str__(self):
         return str(self._value)
 
+def _main_composite(kind, toolkits=None, name=None):
+    """This private function is used by the scripts to support compilation of SPL Main composites w/o a namespace.
+    """ 
+    if '::' in kind:
+        ns, topo_name = kind.rsplit('::', 1)
+        ns += '._spl'
+    elif not name:
+        ns = '_spl'
+        topo_name = kind
+    else:
+        # wrapping a composite w/o namespace with a namespace qualified name ('_spl')
+        # would fail to compile with Streamsx Compiler
+        raise ValueError('Main composite requires a namespace qualified name: ' + str(kind))
+    if name:
+        topo_name = name
+    topo = streamsx.topology.topology.Topology(name=topo_name, namespace=ns)
+    if toolkits:
+        for tk_path in toolkits:
+            streamsx.spl.toolkit.add_toolkit(topo, tk_path)
+    if not name:
+        topo.graph._main_composite = kind
+    return topo, Invoke(topo, kind, name=name)
+
 def main_composite(kind, toolkits=None, name=None):
     """Wrap a main composite invocation as a `Topology`.
   
@@ -457,7 +480,7 @@ def main_composite(kind, toolkits=None, name=None):
     composite invocation is invoked within a generated main composite.
 
     Args:
-        kind(str): Kind of the main composite operator invocation.
+        kind(str): Kind of the main composite operator invocation. Must be a namespace qualified name.
         toolkits(list[str]): Optional list of toolkits the main composite depends on.
         name(str): Invocation name for the main composite.
 
@@ -470,16 +493,14 @@ def main_composite(kind, toolkits=None, name=None):
     .. versionadded: 1.11
     """
     if '::' in kind:
-        ns, topo_name = kind.rsplit('::', 1)
-        ns += '._spl'
+        pass
     else:
+        # A composite w/o namespace fails to compile by sc when the given main composite 
+        # is wrapped by another composite. This happens when:
+        #   a) A name is used
+        #   b) The returned topology is touched by adding operators (tester, another independent flow)
+        # 
+        # a) could be checked here, b) cannot be checked here - we had to mark the 
+        # topology somehow immutable, so that additions raise an Exception (TODO).
         raise ValueError('Main composite requires a namespace qualified name: ' + str(kind))
-    if name:
-        topo_name = name
-    topo = streamsx.topology.topology.Topology(name=topo_name, namespace=ns)
-    if toolkits:
-        for tk_path in toolkits:
-            streamsx.spl.toolkit.add_toolkit(topo, tk_path)
-    if not name:
-        topo.graph._main_composite = kind
-    return topo, Invoke(topo, kind, name=name)
+    return _main_composite(kind, toolkits, name)

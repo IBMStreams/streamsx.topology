@@ -127,7 +127,8 @@ def _get_topology_app(cmd_args):
     return app
 
 def _get_spl_app(cmd_args):
-    topo = op.main_composite(kind=cmd_args.main_composite,
+    # the private function permits main_composite w/o namespace 
+    topo = op._main_composite(kind=cmd_args.main_composite,
         toolkits=cmd_args.toolkits)[0]
     if cmd_args.create_bundle and 'STREAMS_INSTALL' in os.environ:
         # Mimic what the build service does by indexing

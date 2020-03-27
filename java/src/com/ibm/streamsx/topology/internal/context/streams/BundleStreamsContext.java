@@ -74,13 +74,8 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
         JsonObject deploy = deploy(submission);
         
         File appDir;
-        if (mainCompositeKind == null) {
-            if (deploy.has(APP_DIR))
-                deploy.add(TOOLKIT_DIR, deploy.get(APP_DIR));
-
-            appDir = super.action(entity).get();
-        } else {
-            // Single main composite, no need for a toolkit.
+        if (mainCompositeKind != null) {
+            // Single main composite, no need to generate a toolkit before the SPL compile step.
             String namespace;
             String name;
             int sep = mainCompositeKind.indexOf("::");
@@ -88,15 +83,27 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
                 namespace = mainCompositeKind.substring(0, sep);
                 name = mainCompositeKind.substring(sep+2);
             } else {
-                namespace = null;
+                // main composite w/o namespace.
+                // Add an empty "splNamespace" for the compile step to the graph.
+                // If we did not do this, or added 'null', the "namespace" from the graph
+                // would be used for the compiler. This is the namespace of the _topology_, to which the
+                // main composite has been added. The namespace of the topology is always the SPL-namespace
+                // of the main composite extended by '._spl' or '_spl'. So, we tried to compile '_spl::Main'
+                // instead of 'Main' --> compiler error '_spl::Main not found'.
+                namespace = "";
                 name = mainCompositeKind;
             }
             graph.addProperty(GraphKeys.SPL_NAMESPACE, namespace);
             graph.addProperty(GraphKeys.SPL_NAME, name);
             
             appDir = Files.createTempDirectory("tk").toFile();
-            
             ToolkitRemoteContext.setupJobConfigOverlays(deploy, graph);
+        } else {
+            // generate a an SPL toolkit
+            if (deploy.has(APP_DIR))
+                deploy.add(TOOLKIT_DIR, deploy.get(APP_DIR));
+            
+            appDir = super.action(entity).get();
         }
     	Future<File> bundle = doSPLCompile(appDir, submission);
     	   
@@ -118,7 +125,6 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
 
     
     private Future<File> doSPLCompile(File appDir, JsonObject submission) throws Exception {
-    	 	
     	JsonObject deploy = deploy(submission);
     	JsonObject graph = GraphKeys.graph(submission);
     	
@@ -142,8 +148,9 @@ public class BundleStreamsContext extends ToolkitStreamsContext {
 
         sc.invoke();
 
+        final boolean haveNamespace = namespace != null && !namespace.isEmpty();
         File outputDir = new File(appDir, "output");
-        String bundleName = namespace + "." + name + ".sab";
+        String bundleName = haveNamespace? namespace + "." + name + ".sab": name + ".sab";
         File bundle = new File(outputDir, bundleName);
 
         File localBundle = new File(bundle.getName());

@@ -184,14 +184,25 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
         createNamespaceFile(toolkitRoot, jsonGraph, "spl", generator.generateSPL(jsonGraph));      
     }
     
+    /**
+     * Create a file in the SPL Namespace directory toolkitRoot/splnamespace/appName.suffix
+     * @param toolkitRoot The root directory of the toolkit
+     * @param json The JSON graph, from which the SPL namespace and the name of the file is derived 
+     * @param suffix the file suffix, separated with a dot (file extension)
+     * @param content The content of the file
+     * @throws IOException
+     */
     private void createNamespaceFile(File toolkitRoot, JsonObject json, String suffix, String content)
             throws IOException {
 
         String namespace = splAppNamespace(json);
         String name = splAppName(json);
-        
-        Path f = Paths.get(toolkitRoot.getAbsolutePath(), namespace, name + "." + suffix);
-
+        Path f;
+        if (namespace != null && !namespace.isEmpty()) {
+            f = Paths.get(toolkitRoot.getAbsolutePath(), namespace, name + "." + suffix);
+        } else {
+            f = Paths.get(toolkitRoot.getAbsolutePath(), name + "." + suffix);
+        }
         try (PrintWriter splFile = new PrintWriter(f.toFile(), UTF_8.name())) {
             splFile.print(content);
             splFile.flush();
@@ -200,14 +211,14 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
 
     public static void makeDirectoryStructure(File toolkitRoot, String namespace)
             throws Exception {
-
-        File tkNamespace = new File(toolkitRoot, namespace);
+        final boolean haveNamespace = namespace != null && !namespace.isEmpty();
+        File tkNamespace = haveNamespace? new File(toolkitRoot, namespace): toolkitRoot;
         File tkImplLib = new File(toolkitRoot, Paths.get("impl", "lib").toString());
         File tkEtc = new File(toolkitRoot, "etc");
         File tkOptDepends = new File(toolkitRoot, DEP_JAR_LOC);
 
-        tkImplLib.mkdirs();
         tkNamespace.mkdirs();
+        tkImplLib.mkdirs();
         tkEtc.mkdir();
         tkOptDepends.mkdirs();
     }
@@ -220,9 +231,15 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
         File infoFile = new File(toolkitRoot, "info.xml");
         
         ToolkitInfoModelType info = new ToolkitInfoModelType();
-        
+        final String namespace = GraphKeys.splAppNamespace(jsonGraph);
+        final boolean haveNamespace = namespace != null && !namespace.isEmpty();
         info.setIdentity(new IdentityType());
-        info.getIdentity().setName(GraphKeys.splAppNamespace(jsonGraph) + "." + GraphKeys.splAppName(jsonGraph));
+        // toolkit name in info.xml
+        if (haveNamespace) {
+            info.getIdentity().setName(namespace + "." + GraphKeys.splAppName(jsonGraph));
+        } else {
+            info.getIdentity().setName(GraphKeys.splAppName(jsonGraph));
+        }
         info.getIdentity().setDescription(new DescriptionType());
         info.getIdentity().setVersion("1.0.0." + System.currentTimeMillis());
         info.getIdentity().setRequiredProductVersion(jstring(object(jsonGraph, "config"), CFG_STREAMS_VERSION));

@@ -1,5 +1,5 @@
-namespace app;
-public composite MyMain {
+// no SPL namespace
+public composite MyMainNoNs {
 graph
    stream<int32 a> M = Beacon() {
        param period: 1.0;
