@@ -19,6 +19,7 @@ __all__ = ['ActiveService', 'ActiveVersion', 'ApplicationBundle', 'ApplicationCo
 import logging
 import requests
 import requests.exceptions
+from requests.exceptions import RequestException
 import queue
 import os
 import threading
@@ -399,17 +400,40 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
             ('https', cluster_ip + ':' + str(cluster_port), 'zen-data/v2/serviceInstance/details', 'displayName=' + self._service_name, None))
         r = requests.get(details_url,
                          headers={"Authorization": "Bearer " + token}, verify=self._verify)
-
         sr = r.json()
+        mc = sr.get('_messageCode_')
+        if not mc or mc != 'success' or not 'requestObj' in sr:
+            raise RequestException('Query for Streams instance "' + self._service_name + '" failed: ' 
+                             + json.dumps(sr, sort_keys=True, indent=2, separators=(',', ': ')))
 
         sro = sr['requestObj']
 
-        service_id = sro['ID']
-        service_type = sro['ServiceInstanceType']
+        try:
+            service_id = sro['ID']
+            service_type = sro['ServiceInstanceType']
+            sca = sro['CreateArguments']
+        except KeyError as ke:
+            logger.critical('Mandatory JSON object missing in REST service response: requestObj/' + ke.args[0])
+            raise RequestException('Mandatory JSON object missing in REST service response: requestObj/' + ke.args[0])
+        
+        try:
+            metadata = sca['metadata']
+            connection_info = sca['connection-info']
+        except KeyError as ke:
+            logger.critical('Mandatory JSON object missing in REST service response: requestObj/CreateArguments/' + ke.args[0])
+            raise RequestException('Mandatory JSON object missing in REST service response: requestObj/CreateArguments/' + ke.args[0])
 
-        sca = sro['CreateArguments']
-        service_name = sca['metadata']['instance']['id']
-        connection_info = sca['connection-info']
+        try:
+            instance = metadata['instance']
+        except KeyError as ke:
+            logger.critical('Mandatory JSON object missing in REST service response: requestObj/CreateArguments/metadata/' + ke.args[0])
+            raise RequestException('Mandatory JSON object missing in REST service response: requestObj/CreateArguments/metadata/' + ke.args[0])
+
+        try:
+            service_name = instance['id']
+        except KeyError as ke:
+            logger.error('Mandatory JSON object missing in REST service response: requestObj/CreateArguments/metadata/instance/' + ke.args[0])
+            raise RequestException('mandatory JSON object missing in REST service response: requestObj/CreateArguments/metadata/instance/' + ke.args[0])
 
         service_token_url = up.urlunsplit(
             ('https', cluster_ip + ':' + str(cluster_port), 'zen-data/v2/serviceInstance/token', None, None))
