@@ -316,13 +316,28 @@ public class ToolkitRemoteContext extends RemoteContextImpl<File> {
                 targetDir.mkdirs();
             
             // Simple copy of a file or directory
-            if (inc.has("source")) {
+            if (inc.has("source")) {	
                 String source = jstring(inc, "source");
                 File srcFile = new File(source);
-                if (srcFile.isFile())
-                    copyFile(srcFile, targetDir);
-                else if (srcFile.isDirectory())
-                    copyDirectoryToDirectory(toolkitRoot, srcFile, targetDir);
+                boolean isSymbolicLink = Files.isSymbolicLink(srcFile.toPath());
+            	if (isSymbolicLink) {
+                    Path realPath = srcFile.toPath().toRealPath();
+                    File realSrcFile = realPath.toFile();
+                    if (realSrcFile.isFile()) {
+                        Files.copy(realSrcFile.toPath(), new File(targetDir, srcFile.getName()).toPath(), StandardCopyOption.REPLACE_EXISTING);                    	
+                    }
+                    else if (realSrcFile.isDirectory()) {
+                        String dirname = srcFile.getName();
+                        File dstDir = new File(targetDir, dirname);
+                        copyDirectory(toolkitRoot, realSrcFile, dstDir);
+                    }
+            	}
+            	else {
+                    if (srcFile.isFile())
+                        copyFile(srcFile, targetDir);
+                    else if (srcFile.isDirectory())
+                        copyDirectoryToDirectory(toolkitRoot, srcFile, targetDir);
+            	}
             }
             // Create a jar from a classes directory.
             else if (inc.has("classes")) {
