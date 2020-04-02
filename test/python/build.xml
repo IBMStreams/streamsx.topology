@@ -29,6 +29,27 @@
 	  	toDir="${testtk}"/>
    </target>
 
+   <!-- Allow the pattern of tests to run be set
+       ant -Dtopology.unittest.name='test2_pkg.TestPackages.test_TopologySymlinkFile'
+   -->
+   <property name="topology.unittest.name" value="test2_pkg.TestPackages.test_TopologySymlinkDir"/>
+
+	  <target name="test.single">
+             <mkdir dir="${test.dir}"/>
+             <tempfile property="pytests.test.dir" prefix="testrun" destDir="${test.dir}"/>
+             <mkdir dir="${pytests.test.dir}"/>
+	     <echo message="Topology python: ${topology.test.python}"/>
+             <echo message="unittest name: ${topology.unittest.name}"/>
+		   <exec executable="${topology.test.python}" dir="${pytests.test.dir}" failonerror="true">
+		     <env key="PYTHONPATH" value="${topology.toolkit.release}/opt/python/packages:${topology}"/>
+		     <arg value="-u"/>
+		     <arg value="-m"/>
+		     <arg value="unittest"/>
+		     <arg value="${topology.unittest.name}"/>
+		     <arg value="-v"/>
+		   </exec>
+	   </target>
+
 	  <target name="test.distributed">
              <mkdir dir="${test.dir}"/>
              <tempfile property="pytests.test.dir" prefix="testrun" destDir="${test.dir}"/>
@@ -82,4 +103,5 @@
             <arg value="autorun.sh"/>
         </exec>
     </target>
+
 </project>
