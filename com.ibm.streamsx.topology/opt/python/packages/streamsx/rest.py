@@ -69,7 +69,7 @@ __version__ = streamsx._streams._version.__version__
 
 from streamsx import st
 from .rest_primitives import (Domain, Instance, Installation, RestResource, Toolkit, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
-    _exact_resource, _IAMStreamsRestClient, _IAMConstants, _StreamsRestDelegator, _matching_resource)
+    _exact_resource, _IAMStreamsRestClient, _IAMConstants, _StreamsRestDelegator, _matching_resource, _TIMEOUTS)
 
 logger = logging.getLogger('streamsx.rest')
 
@@ -424,7 +424,7 @@ def _get_rest_api_url_from_creds(session, credentials):
     """
     resources_url = credentials['rest_url'] + credentials['resources_path']
     try:
-        response_raw = session.get(resources_url, auth=(credentials['userid'], credentials['password']))
+        response_raw = session.get(resources_url, auth=(credentials['userid'], credentials['password']), timeout=_TIMEOUTS['GET'])
         response = response_raw.json()
     except:
         logger.error("Error while retrieving rest REST url from: " + resources_url)
