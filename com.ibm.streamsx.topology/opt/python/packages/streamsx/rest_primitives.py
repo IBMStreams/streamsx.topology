@@ -2957,7 +2957,7 @@ class _StreamsRestDelegator(object):
             headers = {'Accept' : 'application/json'},
             json={'application': app_id, 'jobConfigurationOverlay':job_options, 'preview':False},
             verify=self.rest_client.session.verify,
-            timeout=self.rest_client.timeout_for('POST'))
+            timeout=None)
         _handle_http_errors(res)
         if res.status_code != 201:
             raise ValueError(str(res))
