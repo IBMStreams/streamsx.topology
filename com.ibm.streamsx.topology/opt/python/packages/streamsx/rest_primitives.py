@@ -18,8 +18,8 @@ __all__ = ['ActiveService', 'ActiveVersion', 'ApplicationBundle', 'ApplicationCo
 
 import logging
 import requests
-import requests.exceptions
-from requests.exceptions import RequestException
+from requests import RequestException
+from requests import Timeout
 import queue
 import os
 import threading
@@ -27,6 +27,7 @@ import time
 import json
 import re
 import socket
+import numbers
 import warnings
 import xml.etree.ElementTree as ElementTree
 
@@ -44,6 +45,18 @@ import streamsx.rest
 ##############################################################
 
 logger = logging.getLogger('streamsx.rest')
+_REST_CONNECT_TIMEOUT = 30.0     # timeout in seconds for creating a connection (including TLS)
+# to specify no timeout, use 'None' as value
+_TIMEOUTS = {
+    'GET': (_REST_CONNECT_TIMEOUT, 90.0),      # various resources, also large resorces like logs 
+    'POST': (_REST_CONNECT_TIMEOUT, 120.0),    # authentication, upload bundle, submit bundle, mk app config
+    'PUT': (_REST_CONNECT_TIMEOUT, 120.0),     # start/stop instance SASv1
+    'PATCH': (_REST_CONNECT_TIMEOUT, 120.0),   # start/stop instance SASv2, update app config, update operators
+    'DELETE': (_REST_CONNECT_TIMEOUT, 120.0),  # del toolkit, del app config, cancel job
+    'HEAD': (_REST_CONNECT_TIMEOUT, 120.0),    # not used
+    'OPTIONS': (_REST_CONNECT_TIMEOUT, 120.0)  # not used
+    }
+
 
 def _get_username(username=None):
     if not username:
@@ -203,12 +216,52 @@ class _StreamsRestClient(object):
     _blocked_ssl_warn = False
 
     """Session connection with the Streams REST API
+    
+    Args:
+        auth: A Callable that adds Authentication header(s) to requests
+        timeouts (Number|tuple|dict): timeouts
+        
+    Example:
+        >>> c = _StreamsRestClient(auth=None)               # default timeouts
+        >>> c = _StreamsRestClient(auth=None, timeouts=60)  # 60 seconds for all
+        >>> c = _StreamsRestClient(auth=None, timeouts=(30, 120))  # 30 seconds connect timeout, 120 seconds REST timeout
+        >>> # specify some timeouts, for all others, the default apply
+        >>> c = _StreamsRestClient(auth=None, timeouts={'GET': (10, 30), 'Post': (10, 60), 'options': 30, 'HEAD': None})
+        >>> c._timeouts
     """
-    def __init__(self, auth):
+    def __init__(self, auth, timeouts=_TIMEOUTS):
         self.session = requests.Session()
         self.session.auth = auth
         self._cache = {}
         self._cache_lock = threading.Lock()
+        _requests = _TIMEOUTS.keys() #['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']
+        if timeouts is None:
+            # intentionally no timeouts
+            self._timeouts = {key: None for key in _requests}
+        elif isinstance(timeouts, numbers.Number) or isinstance(timeouts, tuple):
+            # single timeout for all request methods
+            self._timeouts = {key: timeouts if isinstance(timeouts, tuple) else (float(timeouts), float(timeouts)) for key in _requests}
+        elif isinstance(timeouts, dict):
+            # individual timeouts per request method
+            self._timeouts = _TIMEOUTS.copy()
+            for key, val in timeouts.items():
+                key_upper = key.upper()
+                if key_upper in _requests:
+                    self._timeouts[key_upper] = val if val is None or isinstance(val, tuple) else (float(val), float(val))
+        else:
+            raise TypeError(timeouts)
+
+    def timeout_for(self, request_method):
+        """Returns the timeout for a request method. 
+        
+        Args:
+            request_method (str): the request method. Valid values are 'GET', 'POST', 'PUT',
+                'PATCH', 'DELETE', 'HEAD', and 'OPTIONS'. The request_method is case-insensitive.
+
+        Returns:
+            tuple: the timeouts for the given request method
+        """
+        return self._timeouts.get(request_method.upper(), None)
 
     def _cache_find(self, cls, url):
         if cls._USE_CACHE:
@@ -259,20 +312,21 @@ class _StreamsRestClient(object):
     # Create session to reuse TCP connection
     # https authentication
     @staticmethod
-    def _of_basic(username, password):
+    def _of_basic(username, password, timeouts=_TIMEOUTS):
         """
         Args:
             username(str): The username of an authorized Streams user.
             password(str): The password associated with the username.
+            timeouts (Number|tuple|dict): timeouts for connect and REST requests
         """
         auth = (username, password)
-        return _StreamsRestClient(auth)
+        return _StreamsRestClient(auth, timeouts=timeouts)
     
     def make_request(self, url):
         logger.debug('Beginning a REST request to: ' + url)
         self._block_ssl_warn()
         headers={ 'Accept': 'application/json'}
-        res = self.session.get(url, headers=headers, verify=self.session.verify)
+        res = self.session.get(url, headers=headers, verify=self.session.verify, timeout=self._timeouts['GET'])
         _handle_http_errors(res)
         return res.json()
 
@@ -282,7 +336,7 @@ class _StreamsRestClient(object):
         headers = {}
         if mimetype:
             headers['Accept'] = mimetype
-        res = self.session.get(url, stream=True, headers=headers, verify=self.session.verify)
+        res = self.session.get(url, stream=True, headers=headers, verify=self.session.verify, timeout=self._timeouts['GET'])
         _handle_http_errors(res)
         return res
 
@@ -353,6 +407,7 @@ class _ICPDAuthHandler(_BearerAuthHandler):
 
     def _refresh_auth(self):
         logger.debug("ICP4D:Token refresh:")
+        # import must be here since this code is specific for ICP4D
         from icpd_core import icpd_util
         self.token = icpd_util.get_instance_token(name=self._service_name)
         self._auth_expiry_time = time.time() + 19*60
@@ -392,14 +447,16 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
         cluster_ip = es.netloc.split(':')[0] if ':' in es.netloc else es.netloc
 
         auth_url = up.urlunsplit(('https', cluster_ip + ':' + str(cluster_port), '/icp4d-api/v1/authorize', None, None))
-        r = requests.post(auth_url, json=pd, verify=self._verify)
+        r = requests.post(auth_url, json=pd, verify=self._verify, timeout=_TIMEOUTS['POST'])
         _handle_http_errors(r)
         token = r.json()['token']
 
         details_url = up.urlunsplit(
             ('https', cluster_ip + ':' + str(cluster_port), 'zen-data/v2/serviceInstance/details', 'displayName=' + self._service_name, None))
         r = requests.get(details_url,
-                         headers={"Authorization": "Bearer " + token}, verify=self._verify)
+                         headers={"Authorization": "Bearer " + token},
+                         verify=self._verify,
+                         timeout=_TIMEOUTS['GET'])
         sr = r.json()
         mc = sr.get('_messageCode_')
         if not mc or mc != 'success' or not 'requestObj' in sr:
@@ -439,7 +496,8 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
             ('https', cluster_ip + ':' + str(cluster_port), 'zen-data/v2/serviceInstance/token', None, None))
         pd = {"serviceInstanceId": str(service_id)}
         r = requests.post(service_token_url, json=pd,
-                          headers={"Authorization": "Bearer " + token}, verify=self._verify)
+                          headers={"Authorization": "Bearer " + token}, verify=self._verify,
+                          timeout=_TIMEOUTS['POST'])
 
         service_token = r.json()['AccessToken']
         self.token = service_token
@@ -503,8 +561,9 @@ class _JWTAuthHandler(_BearerAuthHandler):
         import urllib.parse as up
 
         pd = {'audience': 'streams'}
-        r = requests.post(self.security_url, json=pd, verify=self._verify, auth=(self._username, self._password), headers={'Content-Type' : 'application/json',
-                                           'Accept' : 'application/json'})
+        r = requests.post(self.security_url, json=pd, verify=self._verify, auth=(self._username, self._password),
+                          headers={'Content-Type' : 'application/json', 'Accept' : 'application/json'},
+                          timeout=_TIMEOUTS['POST'])
         _handle_http_errors(r)
         self.token = r.json()['accessToken']
         self._auth_expiry_time=time.time() + 4 * 60
@@ -550,7 +609,8 @@ class _IAMAuthHandler(_BearerAuthHandler):
     def _refresh_auth(self):
         post_url = self._token_url + '?' + self._get_token_params(self._api_key)
         res = requests.post(post_url, headers = {'Accept' : 'application/json',
-                                                 'Content-Type' : 'application/x-www-form-urlencoded'})
+                                                 'Content-Type' : 'application/x-www-form-urlencoded'},
+                            timeout=_TIMEOUTS['POST'])
         _handle_http_errors(res)
         res = res.json()
 
@@ -573,7 +633,7 @@ class _IAMStreamsRestClient(_StreamsRestClient):
 
     # Re-use client across the same thread (Session is not thread safe).
     @staticmethod
-    def _create(credentials):
+    def _create(credentials, timeouts=_TIMEOUTS):
         clients = _IAMStreamsRestClient._CLIENTS
         if not hasattr(clients, '_clients'):
             clients._clients = {}
@@ -581,16 +641,16 @@ class _IAMStreamsRestClient(_StreamsRestClient):
         if service_id in clients._clients:
             return clients._clients[service_id]
 
-        client = _IAMStreamsRestClient(credentials)
+        client = _IAMStreamsRestClient(credentials, timeouts=timeouts)
         clients._clients[service_id] = client
         return client
         
-    def __init__(self, credentials):
+    def __init__(self, credentials, timeouts=_TIMEOUTS):
         """
         Args:
             credentials: The credentials of the Streaming Analytics service.
         """
-        super(_IAMStreamsRestClient, self).__init__(_IAMAuthHandler(credentials))
+        super(_IAMStreamsRestClient, self).__init__(_IAMAuthHandler(credentials), timeouts=timeouts)
 
 
 class _ViewDataFetcher(object):
@@ -732,6 +792,7 @@ class View(_ResourceElement):
                     tuple_fn = _get_view_string_tuple
         self._data_fetcher = None
         self._tuple_fn = tuple_fn
+        self._rest_timeout_logged_once = False
 
     def get_domain(self):
         """Get the Streams domain for the instance that owns this view.
@@ -918,10 +979,17 @@ class View(_ResourceElement):
         Returns:
             list(ViewItem): List of ViewItem(s) associated with this view.
         """
-        view_items = [ViewItem(json_view_items, self.rest_client) for json_view_items
-                      in self.rest_client.make_request(self.viewItems)['viewItems']]
-        logger.debug("Retrieved " + str(len(view_items)) + " items from view " + self.name)
-        return view_items
+        try:
+            view_items = [ViewItem(json_view_items, self.rest_client) for json_view_items
+                          in self.rest_client.make_request(self.viewItems)['viewItems']]
+            logger.debug("Retrieved " + str(len(view_items)) + " items from view " + self.name)
+            return view_items
+        except Timeout as to:
+            # catches both ConnectTimeout and ReadTimeout error
+            if not self._rest_timeout_logged_once:
+                self._rest_timeout_logged_once = True
+                logger.error("Timeout retrieving items for view " + self.name + ". timeouts = " + str(self.rest_client.timeout_for('GET')))
+            return []
 
 
 class ViewItem(_ResourceElement):
@@ -2236,7 +2304,8 @@ class Instance(_ResourceElement):
 
         res = self.rest_client.session.post(self.applicationConfigurations,
             headers = {'Accept' : 'application/json'},
-            json=cv)
+            json=cv,
+            timeout=self.rest_client.timeout_for('POST'))
         _handle_http_errors(res)
         return ApplicationConfiguration(res.json(), self.rest_client)
 
@@ -2531,7 +2600,8 @@ class _StreamingAnalyticsServiceV2Delegator(object):
                 ]
             res = self.rest_client.session.post(self._get_jobs_url(),
                 headers = {'Accept' : 'application/json'},
-                files=files)
+                files=files,
+                timeout=None)
             _handle_http_errors(res)
             return res.json()
 
@@ -2552,22 +2622,24 @@ class _StreamingAnalyticsServiceV2Delegator(object):
         # Cancel the job using the job id
         cancel_url = self._get_jobs_url() + '/' + str(job_id)
         headers = { 'Accept' : 'application/json'}
-        res = self.rest_client.session.delete(cancel_url, headers=headers)
+        res = self.rest_client.session.delete(cancel_url, headers=headers, timeout=self.rest_client.timeout_for('DELETE'))
         _handle_http_errors(res)
         return res.json()
 
     def start_instance(self):
         res = self.rest_client.session.patch(self._v2_rest_url, json={'state' : 'STARTED'},
-                               headers = {
-                                          'Content-Type' : 'application/json',
-                                          'Accept' : 'application/json'})
+                                             headers={
+                                                 'Content-Type' : 'application/json',
+                                                 'Accept' : 'application/json'},
+                                             timeout=None)
         _handle_http_errors(res)
         return res.json()
 
     def stop_instance(self):
         res = self.rest_client.session.patch(self._v2_rest_url, json={'state' : 'STOPPED'},
-                               headers = { 'Content-Type' : 'application/json',
-                                          'Accept' : 'application/json'})
+                                             headers = { 'Content-Type' : 'application/json',
+                                                         'Accept' : 'application/json'},
+                                             timeout=None)
         _handle_http_errors(res)
         return res.json()
 
@@ -2618,7 +2690,7 @@ class _StreamingAnalyticsServiceV1Delegator(object):
                 ('bundle_file', (sab_name, bundle_fp, 'application/octet-stream')),
                 ('job_options', ('job_options', json.dumps(job_options), 'application/json'))
                 ]
-            return self.rest_client.session.post(url=url, params=params, files=files).json()
+            return self.rest_client.session.post(url=url, params=params, files=files, timeout=None).json()
 
     def cancel_job(self, job_id=None, job_name=None):
         """Cancel a running job.
@@ -2637,7 +2709,7 @@ class _StreamingAnalyticsServiceV1Delegator(object):
             payload['job_id'] = job_id
 
         jobs_url = self._get_url('jobs_path')
-        res = self.rest_client.session.delete(jobs_url, params=payload)
+        res = self.rest_client.session.delete(jobs_url, params=payload, timeout=self.rest_client.timeout_for('DELETE'))
         _handle_http_errors(res)
         return res.json()
 
@@ -2648,7 +2720,7 @@ class _StreamingAnalyticsServiceV1Delegator(object):
             dict: JSON response for the instance start operation.
         """
         start_url = self._get_url('start_path')
-        res = self.rest_client.session.put(start_url, json={})
+        res = self.rest_client.session.put(start_url, json={}, timeout=None)
         _handle_http_errors(res)
         return res.json()
 
@@ -2659,7 +2731,7 @@ class _StreamingAnalyticsServiceV1Delegator(object):
             dict: JSON response for the instance stop operation.
         """
         stop_url = self._get_url('stop_path')
-        res = self.rest_client.session.put(stop_url, json={})
+        res = self.rest_client.session.put(stop_url, json={}, timeout=None)
         _handle_http_errors(res)
         return res.json()
 
@@ -2839,9 +2911,10 @@ class ApplicationConfiguration(_ResourceElement):
         """
         cv = ApplicationConfiguration._props(properties=properties, description=description)
         res = self.rest_client.session.patch(self.rest_self,
-            headers = {'Accept' : 'application/json',
-                       'Content-Type' : 'application/json'},
-            json=cv)
+                                             headers = {'Accept' : 'application/json',
+                                                        'Content-Type' : 'application/json'},
+                                             json=cv,
+                                             timeout=self.rest_client.timeout_for('PATCH'))
         _handle_http_errors(res)
         self.json_rep = res.json()
         return self
@@ -2849,7 +2922,7 @@ class ApplicationConfiguration(_ResourceElement):
     def delete(self):
         """Delete this application configuration.
         """
-        res = self.rest_client.session.delete(self.rest_self)
+        res = self.rest_client.session.delete(self.rest_self, timeout=self.rest_client.timeout_for('DELETE'))
         _handle_http_errors(res)
 
 
@@ -2869,7 +2942,8 @@ class _StreamsRestDelegator(object):
             res = self.rest_client.session.post(app_bundle_url,
                 headers = {'Accept' : 'application/json', 'Content-Type': 'application/x-jar'},
                 data=bundle_fp,
-                verify=self.rest_client.session.verify)
+                verify=self.rest_client.session.verify,
+                timeout=None)
             _handle_http_errors(res)
             if res.status_code != 200:
                 raise ValueError(str(res))
@@ -2880,8 +2954,10 @@ class _StreamsRestDelegator(object):
         job_options = job_config.as_overlays() if job_config else {}
         app_id = bundle._app_id()
         res = self.rest_client.session.post(bundle._instance.jobs,
-            headers = {'Accept' : 'application/json'}, json={'application': app_id, 'jobConfigurationOverlay':job_options, 'preview':False},
-            verify=self.rest_client.session.verify)
+            headers = {'Accept' : 'application/json'},
+            json={'application': app_id, 'jobConfigurationOverlay':job_options, 'preview':False},
+            verify=self.rest_client.session.verify,
+            timeout=None)
         _handle_http_errors(res)
         if res.status_code != 201:
             raise ValueError(str(res))
@@ -2892,7 +2968,8 @@ class _StreamsRestDelegator(object):
         cancel_url = job.instance + '/jobs/' + job.id
         res = self.rest_client.session.delete(cancel_url,
                 headers = {'Accept' : 'application/json'},
-                verify=self.rest_client.session.verify)
+                verify=self.rest_client.session.verify,
+                timeout=self.rest_client.timeout_for('DELETE'))
 
         if res.status_code == 204:
             return True
@@ -2915,7 +2992,8 @@ class _StreamsRestDelegator(object):
         res = self.rest_client.session.patch(update_url,
                 headers = {'Accept' : 'application/json'},
                 json = {'jobConfigurationOverlay':job_options},
-                verify=self.rest_client.session.verify)
+                verify=self.rest_client.session.verify,
+                timeout=self.rest_client.timeout_for('PATCH'))
         _handle_http_errors(res)
         if res.status_code != 200:
             raise ValueError(str(res))
@@ -2953,7 +3031,8 @@ class Toolkit(_ResourceElement):
     def delete(self):
         res = self.rest_client.session.delete(self.self, 
                 headers = {'Accept' : 'application/json'},
-                verify=self.rest_client.session.verify)
+                verify=self.rest_client.session.verify,
+                timeout=self.rest_client.timeout_for('DELETE'))
 
         # 204 is success
         if res.status_code == 204:
