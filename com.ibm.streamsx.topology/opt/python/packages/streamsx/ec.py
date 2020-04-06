@@ -136,7 +136,7 @@ def _is_supported():
     return _State._state is not None and _State._state._supported
 
 def is_active():
-    """Tests is code is active within a IBM Streams exection context.
+    """Tests is code is active within a IBM Streams execution context.
  
     Returns a true value when called from within a
     IBM Streams distributed job or standalone execution.
