@@ -30,7 +30,7 @@
    </target>
 
    <!-- Allow the pattern of tests to run be set
-       ant -Dtopology.unittest.name='test2_pkg.TestPackages.test_TopologySymlinkFile'
+       ant test.single -Dtopology.unittest.name='test2_pkg.TestPackages.test_TopologySymlinkFile'
    -->
    <property name="topology.unittest.name" value="test2_pkg.TestPackages.test_TopologySymlinkDir"/>
 
