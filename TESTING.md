@@ -107,6 +107,13 @@ Naming pattern for Python test classes:
 * TestDistributedXyz - Tests Xyz using distributed
 * TestSasXyz - Tests Xyz using Streaming Analytics service
 
+#### Running selected Python test
+
+```
+cd test/python
+ant test.single -Dtopology.unittest.name='test2_pkg.TestPackages.test_TopologySymlinkFile'
+```
+
 #### Running Python distributed test
 
 ```
