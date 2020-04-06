@@ -2255,7 +2255,7 @@ class View(object):
         >>> view = rands.view()       
         >>> submit(ContextTypes.DISTRIBUTED, topology)
         >>> queue = view.start_data_fetch()
-        >>> for val in iter(queue.get, None):
+        >>> for val in iter(queue.get, 60):
         ...     print(val)
         ...
         0.6527
