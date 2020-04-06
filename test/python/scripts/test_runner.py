@@ -174,9 +174,3 @@ class TestRunnerService(unittest.TestCase):
         os.remove(sr['bundlePath'])
         os.remove(sr['jobConfigPath'])
 
-    def test_simple_main(self):
-        args = self._service_args()
-        args.append('--main-composite')
-        args.append('Main')
-        with unittest.mock.patch('sys.argv', args):
-             self.assertRaises(ValueError, streamsx.scripts.runner.main)
