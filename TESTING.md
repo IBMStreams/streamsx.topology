@@ -45,13 +45,26 @@ cd test/java
 ant unittest.distributed -Dtopology.toolkit.release=$HOME/testtk/com.ibm.streamsx.topology
 ```
 
-#### Running selected test classes
+#### Running selected Java test classes
 
 The tests can be specified using `topology.test.base.pattern` ant property.
 
+Run using `EMBEDDED_TESTER` context:
 ```
 cd test/java
-ant unittest.distributed -Dtopology.test.base.pattern='**/FileStreamsTest.java'
+ant unittest.main -Dtopology.test.base.pattern='**/SimpleEmbeddedTest.java'
+```
+
+Run using `STANDALONE_TESTER` context:
+```
+cd test/java
+ant unittest.standalone -Dtopology.test.base.pattern='**/FileStreamsTest.java'
+```
+
+Run using `DISTRIBUTED_TESTER` context:
+```
+cd test/java
+ant unittest.distributed -Dtopology.test.base.pattern='**/PublishSubscribeTest.java'
 ```
 
 ### `test/python`
