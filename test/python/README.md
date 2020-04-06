@@ -87,3 +87,13 @@ cd test/python
 nosetests --config nose.cfg --config all_tests.cfg
 ```
 
+For example, only run tests with streaming analytics service (remote build):
+
+```
+unset STREAMS_INSTALL
+unset STREAMS_DOMAIN_ID
+unset STREAMS_INSTANCE_ID
+nosetests --config nose.cfg --config all_tests.cfg
+```
+
+

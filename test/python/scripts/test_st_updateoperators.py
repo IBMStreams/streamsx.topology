@@ -50,10 +50,11 @@ class Testupdateoperator(unittest.TestCase):
         src = submit("BUNDLE", topo, cfg)
 
         cls.sab_path = str(src['bundlePath'])
-        cls.initial_config = str(src['jobConfigPath'])
+        if cpd_setup():
+            cls.initial_config = str(src['jobConfigPath'])
 
-        cls.files_to_remove = [src['bundlePath'], src['jobConfigPath']]
-        cls.new_parallelRegionWidth = 'test*=2'
+            cls.files_to_remove = [src['bundlePath'], src['jobConfigPath']]
+            cls.new_parallelRegionWidth = 'test*=2'
 
     @classmethod
     def tearDownClass(cls):

@@ -88,10 +88,16 @@ class TestToolkitMethodsNew(unittest.TestCase):
         removeArtifacts(self.result)
 
     def test_NoKeepArtifacts(self):
+        if ("TestBundleMethodsNew" in str(self)):
+            if 'STREAMS_INSTALL' not in os.environ:
+                self.skipTest('TestBundleMethodsNew requires STREAMS_INSTALL')
         self.result = submit(self.test_ctxtype, self.topo, self.test_config)
         verifyArtifacts(self)
 
     def test_KeepArtifacts(self):
+        if ("TestBundleMethodsNew" in str(self)):
+            if 'STREAMS_INSTALL' not in os.environ:
+                self.skipTest('TestBundleMethodsNew requires STREAMS_INSTALL')
         self.test_config['topology.keepArtifacts'] = True
         self.result = submit(self.test_ctxtype, self.topo, self.test_config)
         verifyArtifacts(self)
