@@ -91,7 +91,14 @@ class TestSPL(unittest.TestCase):
         """Test a Source and a Map operator with optional types.
            Including with operator parameters and output clauses.
         """
-        Tester.require_streams_version(self, '4.3')
+        if ("TestSas" in str(self)) or 'CP4D_URL' in os.environ:
+            print('Testing with Streams supporting optional types')
+        else:
+            if 'STREAMS_INSTALL' in os.environ:
+                Tester.require_streams_version(self, '4.3')
+            else:
+                self.skipTest("STREAMS_INSTALL not set")
+                
         topo = Topology('test_map_attr_opt')
         this_dir = os.path.dirname(os.path.realpath(__file__))
         spl_dir = os.path.join(os.path.dirname(os.path.dirname(this_dir)), 'spl')

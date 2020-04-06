@@ -6,6 +6,7 @@ import itertools
 import datetime
 import time
 import random
+import os
 
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
@@ -198,15 +199,18 @@ class TestDistributedTester(TestTester):
 
     # assumes we only test against 4.2 or later
     def test_product_check_distributed(self):
-         Tester.setup_distributed(self)
-         self.test_config[ConfigParams.SSL_VERIFY] = False
-         self.assertTrue(Tester.minimum_streams_version(self, '4.2.0.0'))
-         self.assertTrue(Tester.minimum_streams_version(self, '4.2.0'))
-         self.assertTrue(Tester.minimum_streams_version(self, '4.2'))
+         if 'STREAMS_INSTALL' not in os.environ:
+             self.skipTest("STREAMS_INSTALL not set")
+         else:
+             Tester.setup_distributed(self)
+             self.test_config[ConfigParams.SSL_VERIFY] = False
+             self.assertTrue(Tester.minimum_streams_version(self, '4.2.0.0'))
+             self.assertTrue(Tester.minimum_streams_version(self, '4.2.0'))
+             self.assertTrue(Tester.minimum_streams_version(self, '4.2'))
 
-         self.assertTrue(Tester.minimum_streams_version(self, '4.1.3.0'))
-         self.assertTrue(Tester.minimum_streams_version(self, '4.1.8'))
-         self.assertTrue(Tester.minimum_streams_version(self, '4.1'))
+             self.assertTrue(Tester.minimum_streams_version(self, '4.1.3.0'))
+             self.assertTrue(Tester.minimum_streams_version(self, '4.1.8'))
+             self.assertTrue(Tester.minimum_streams_version(self, '4.1'))
          
 class TestSasTester(TestTester):
     def setUp(self):
