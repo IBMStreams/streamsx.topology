@@ -190,13 +190,7 @@
     </delete>
   </target>
 
-  <target name="test">
-    <ant dir="test/java" inheritAll="true">
-       <target name="unittest"/>
-       <target name="junit.report"/>
-       <target name="coverage.report"/>
-    </ant>
-    <ant dir="test/python" target="test" inheritAll="true"/>
+  <target name="test" depends="test.quick,test.python">
   </target>
 
   <target name="test.python">
@@ -205,7 +199,7 @@
 
   <target name="test.quick">
     <ant dir="test/java" inheritAll="true">
-       <target name="unittest.quick"/>
+       <target name="unittest.standalone"/>
        <target name="junit.report"/>
     </ant>
   </target>

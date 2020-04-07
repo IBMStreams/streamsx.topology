@@ -2,7 +2,7 @@
     xmlns:jacoco="antlib:org.jacoco.ant"
     >
     <description>
-        Build a release and test against it.
+        Build a release and test against it (STANDALONE and DISTRIBUTED, local STREAMS required).
     </description>
 
   <property environment="env"/>
@@ -17,15 +17,9 @@
   <property name="unpack.dir"
        value="${rel.dir}/unpack"/>
 
-  <target name="all" depends="standalone"/> 
-  <target name="distributed" depends="build_release,unpack"> 
-     <ant dir="${streamsx.topology}/test/java" target="unittest.distributed">
-        <property name="topology.toolkit.release"
-            value="${unpack.dir}/com.ibm.streamsx.topology"/>
-     </ant>
-  </target>
+  <target name="all" depends="quicktest"/> 
 
-  <target name="standalone" depends="build_release,unpack">
+  <target name="quicktest" depends="build_release,unpack">
      <ant dir="${streamsx.topology}" target="test">
         <property name="topology.toolkit.release"
             value="${unpack.dir}/com.ibm.streamsx.topology"/>

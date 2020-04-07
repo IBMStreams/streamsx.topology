@@ -102,7 +102,7 @@ Most testing is performed using Python unittest.
  python3 -u -m unittest test2_spl.TestDistributedSPL
  
  # Run a single test
-  python3 -u -m unittest test2_spl.TestDistributedSPL.test_SPLBeaconFilter
+ python3 -u -m unittest test2_spl.TestDistributedSPL.test_SPLBeaconFilter
  ```
 
 Naming pattern for Python test classes:
@@ -159,6 +159,14 @@ cd test/python
 ant test.distributed
 ```
 
+### Perform quick tests on release package 
+
+To create a release package and perform a quick test (standalone and distributed) on this package, run the following:
+
+```
+cd test/release
+ant
+```
 
 ## Full test set for a release
 
@@ -177,20 +185,18 @@ Run these `ant` targets in `test/java`
 Run basic pub-sub in SPL (distributed and Streaming Analytics):
 ```
 cd test/spl/tests
-python3 -u -m unittest test_pubsub.py -v 
+python3 -u -m unittest discover -v 
 ```
 
 ### test/python
 
 #### Python 3.6
 
-Run `python3 -u -m unittest` in each of these directories:
+Run `python3 -u -m unittest discover -v` in each of these directories:
 
    * `test/python/topology`
    * `test/python/spl/tests`
    * `test/python/scripts`
    * `test/python/rest`
-   
- Ideally this would be a single command (nosetests) but it's not yet supported.
 
 
