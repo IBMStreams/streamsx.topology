@@ -9,6 +9,7 @@
 	<property name="testtk_pip_op" location="spl/testtkpy_pip_op"/>
 	<property name="testtk_pip_tk" location="spl/testtkpy_pip_toolkit"/>
 	<property name="topology" location="topology"/>
+	<property name="rest" location="rest"/>
         <property name="test.dir" location="unittests"/>
 
   <import file="../../common-build.xml"/>
@@ -69,6 +70,21 @@
 		     <arg value="test2_spl2python.TestDistributedSPL"/>
 		     <arg value="test2_udp.TestDistributedUDP"/>
 		     <arg value="test2_views.TestDistributedViews"/>
+		     <arg value="-v"/>
+		   </exec>
+	   </target>
+
+	  <target name="test.rest">
+             <mkdir dir="${test.dir}"/>
+             <tempfile property="pytests.test.dir" prefix="testrun" destDir="${test.dir}"/>
+             <mkdir dir="${pytests.test.dir}"/>
+	     <echo message="Topology python: ${topology.test.python}"/>
+		   <exec executable="${topology.test.python}" dir="${pytests.test.dir}" failonerror="true">
+		     <env key="PYTHONPATH" value="${topology.toolkit.release}/opt/python/packages:${rest}"/>
+		     <arg value="-u"/>
+		     <arg value="-m"/>
+		     <arg value="unittest"/>
+		     <arg value="test_rest.TestDistributedRestFeatures"/>
 		     <arg value="-v"/>
 		   </exec>
 	   </target>
