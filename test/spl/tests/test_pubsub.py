@@ -10,6 +10,7 @@ import random
 from streamsx.topology.schema import StreamSchema
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
+from streamsx.topology.context import ConfigParams
 import streamsx.topology.context
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
@@ -31,6 +32,7 @@ class TestDistributedPubSub(unittest.TestCase):
     """
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
     def _publish(self, topo, N, topic, width=None, allow_filter=False):
         b = op.Source(topo, "spl.utility::Beacon",
