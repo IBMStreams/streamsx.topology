@@ -58,9 +58,10 @@ class Testupdateoperator(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        for file in cls.files_to_remove:
-            if os.path.exists(file):
-                os.remove(file)
+        if cpd_setup():
+            for file in cls.files_to_remove:
+                if os.path.exists(file):
+                    os.remove(file)
 
     def _submitjob(self, sab, job_config):
         args = ["--disable-ssl-verify", "submitjob", sab, '-g', job_config]
