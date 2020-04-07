@@ -76,6 +76,7 @@ class TestDistributedRestToolkitAPI(unittest.TestCase):
 
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
         self.sc = _get_distributed_sc()
         if self.sc.resource_url is None:
             self.skipTest("Build REST API is not available")

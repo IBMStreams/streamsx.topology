@@ -143,6 +143,15 @@
     <delete dir="test/python/scripts/sc_test_files/apps/test_app_7/samplemain"/>
     <delete dir="test/python/scripts/sc_test_files/apps/test_app_8/samplemain"/>
     <delete dir="test/python/scripts/sc_test_files/apps/test_app_9/samplemain"/>
+    <delete dir="test/python/scripts/sc_test_files/apps/test_app_1/output"/>
+    <delete dir="test/python/scripts/sc_test_files/apps/test_app_2/output"/>
+    <delete dir="test/python/scripts/sc_test_files/apps/test_app_3/output"/>
+    <delete dir="test/python/scripts/sc_test_files/apps/test_app_4/output"/>
+    <delete dir="test/python/scripts/sc_test_files/apps/test_app_5/output"/>
+    <delete dir="test/python/scripts/sc_test_files/apps/test_app_6/output"/>
+    <delete dir="test/python/scripts/sc_test_files/apps/test_app_7/output"/>
+    <delete dir="test/python/scripts/sc_test_files/apps/test_app_8/output"/>
+    <delete dir="test/python/scripts/sc_test_files/apps/test_app_9/output"/>
     <delete includeemptydirs="true">
       <fileset dir="test/python/scripts/sc_test_files/toolkits/" includes="test_tk_*/info.xml,test_tk_*/toolkit.xml"/>
     </delete>
@@ -167,15 +176,21 @@
     <delete>
       <fileset dir="test/python/spl" includes="**/.lockfile"/>
     </delete>
+    <delete>
+      <fileset dir="test/python/spl/translation" includes="toolkit.xml"/>
+    </delete>
+    <delete dir="test/python/spl/translation//opt/.splpy"/>
+    <delete dir="test/python/spl/translation/doc"/>
+    <delete dir="test/python/spl/translation/impl"/>
+    <delete dir="test/python/spl/translation/com.ibm.streamsx.topology.pysamples.positional"/>
+    <delete dir="test/python/spl/translation/output"/>
+    <delete dir="test/python/spl/translation/logs"/>
+    <delete>
+      <fileset dir="test/spl/tests/" includes="*.sab,*.json"/>
+    </delete>
   </target>
 
-  <target name="test">
-    <ant dir="test/java" inheritAll="true">
-       <target name="unittest"/>
-       <target name="junit.report"/>
-       <target name="coverage.report"/>
-    </ant>
-    <ant dir="test/python" target="test" inheritAll="true"/>
+  <target name="test" depends="test.quick,test.python">
   </target>
 
   <target name="test.python">
@@ -184,7 +199,7 @@
 
   <target name="test.quick">
     <ant dir="test/java" inheritAll="true">
-       <target name="unittest.quick"/>
+       <target name="unittest.standalone"/>
        <target name="junit.report"/>
     </ant>
   </target>

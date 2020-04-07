@@ -5,10 +5,12 @@ import unittest
 import os
 import sys
 import time
+import random
 
 from streamsx.topology.schema import StreamSchema
 from streamsx.topology.topology import *
 from streamsx.topology.tester import Tester
+from streamsx.topology.context import ConfigParams
 import streamsx.topology.context
 import streamsx.spl.op as op
 import streamsx.spl.toolkit
@@ -25,11 +27,12 @@ def slowme(t):
 def check_lt_87(t):
     return t['seq'] < 87
 
-class TestPubSub(unittest.TestCase):
+class TestDistributedPubSub(unittest.TestCase):
     """ Test basic pub-sub in SPL
     """
     def setUp(self):
         Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
 
     def _publish(self, topo, N, topic, width=None, allow_filter=False):
         b = op.Source(topo, "spl.utility::Beacon",
@@ -304,7 +307,7 @@ class TestPubSub(unittest.TestCase):
             self.tester.test(self.test_ctxtype, self.test_config)
 
 
-class TestSasPubSub(TestPubSub):
+class TestSasPubSub(TestDistributedPubSub):
     """ Test basic pub-sub in SPL
     """
     def setUp(self):
