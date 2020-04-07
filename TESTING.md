@@ -161,7 +161,7 @@ ant test.distributed
 
 ### Perform quick tests on release package 
 
-To create a release package and perform a quick test (standalone and distributed) on this package, run the following:
+To create a release package and perform a quick test (python rest test, distributed only) on this package, run the following:
 
 ```
 cd test/release

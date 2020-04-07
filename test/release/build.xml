@@ -2,7 +2,7 @@
     xmlns:jacoco="antlib:org.jacoco.ant"
     >
     <description>
-        Build a release and test against it (STANDALONE and DISTRIBUTED, local STREAMS required).
+        Build a release and test against it (DISTRIBUTED, local STREAMS required).
     </description>
 
   <property environment="env"/>
@@ -20,7 +20,7 @@
   <target name="all" depends="quicktest"/> 
 
   <target name="quicktest" depends="build_release,unpack">
-     <ant dir="${streamsx.topology}" target="test">
+     <ant dir="${streamsx.topology}" target="test.rest">
         <property name="topology.toolkit.release"
             value="${unpack.dir}/com.ibm.streamsx.topology"/>
      </ant>

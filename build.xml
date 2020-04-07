@@ -193,6 +193,10 @@
   <target name="test" depends="test.quick,test.python">
   </target>
 
+  <target name="test.rest">
+    <ant dir="test/python" target="test.rest" inheritAll="true"/>
+  </target>
+
   <target name="test.python">
     <ant dir="test/python" target="test.distributed" inheritAll="true"/>
   </target>
