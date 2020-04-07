@@ -73,6 +73,37 @@
 		   </exec>
 	   </target>
 
+	  <target name="test.sas">
+             <mkdir dir="${test.dir}"/>
+             <tempfile property="pytests.test.dir" prefix="testrun" destDir="${test.dir}"/>
+             <mkdir dir="${pytests.test.dir}"/>
+	     <echo message="Topology python: ${topology.test.python}"/>
+		   <exec executable="${topology.test.python}" dir="${pytests.test.dir}" failonerror="true">
+		     <env key="PYTHONPATH" value="${topology.toolkit.release}/opt/python/packages:${topology}"/>
+		     <arg value="-u"/>
+		     <arg value="-m"/>
+		     <arg value="unittest"/>
+		     <arg value="test2.TestSasTopologyMethodsNew"/>
+		     <arg value="test2_checkpoint.TestSasCheckpointing"/>
+		     <arg value="test2_consistent.TestSasConsistentRegion"/>
+		     <arg value="test2_ec.TestSasEc"/>
+		     <arg value="test2_job_config.TestSasJobConfig"/>
+		     <arg value="test2_names.TestSasNames"/>
+		     <arg value="test2_pending.TestSasPending"/>
+		     <arg value="test2_pkg.TestSasPackages"/>
+		     <arg value="test2_placement.TestSasPlacement"/>
+		     <arg value="test2_pubsub.TestSasPubSub"/>
+		     <arg value="test2_spl.TestSasSPL"/>
+		     <arg value="test2_spl2python.TestSasSPL"/>
+		     <arg value="test2_submission_params.TestSasSubmissionParams"/>
+		     <arg value="test2_submission_result.TestSasSubmissionResult"/>
+		     <arg value="test2_unicode.TestSasUnicode"/>
+		     <arg value="test2_udp.TestSasUDP"/>
+		     <arg value="test2_views.TestSasViews"/>
+		     <arg value="-v"/>
+		   </exec>
+	   </target>
+
 	  <target name="test.application.api">
              <mkdir dir="${test.dir}"/>
              <tempfile property="pytests.test.dir" prefix="testrun" destDir="${test.dir}"/>
