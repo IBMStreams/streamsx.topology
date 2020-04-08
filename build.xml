@@ -190,7 +190,7 @@
     </delete>
   </target>
 
-  <target name="test" depends="test.quick,test.python">
+  <target name="test" depends="test.quick">
   </target>
 
   <target name="test.rest">
