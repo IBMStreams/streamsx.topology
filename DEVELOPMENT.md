@@ -28,9 +28,12 @@ The Apache Ant `build.xml` files are setup to assume that the Junit and Jacoco j
 jacocoagent.jar  jacocoant.jar  junit-4.10.jar
 ```
 
-The project also requires a local install of IBM InfoSphere Streams 4.x (>= 4.2), with the environment variable `STREAMS_INSTALL` set to the root of the install. The recommended setup is to source the `bin/streamsprofile.sh` script in the Streams install.
+The project also requires a local install of IBM InfoSphere Streams 4.x (>= 4.2), with the environment variable `STREAMS_INSTALL` set to the root of the install. The recommended setup is to source the `bin/streamsprofile.sh` script in the Streams install, see [Configuring the IBM Streams environment by running streamsprofile.sh](https://www.ibm.com/support/knowledgecenter/SSCRJU_4.3.0/com.ibm.streams.install.doc/doc/ibminfospherestreams-configuring-streams-environment.html)
+
+Use a local installation of the Streams runtime: [Install version 4.3 or later of IBM Streams](https://www.ibm.com/support/knowledgecenter/SSCRJU_4.3.0/com.ibm.streams.install.doc/doc/installstreams-container.html) or the free [Streams Quick Start Edition](https://www.ibm.com/support/knowledgecenter/SSCRJU_4.3.0/com.ibm.streams.qse.doc/doc/installtrial-container.html).
+
 ```
-> source /opt/ibm/InfoSphere_Streams/4.0.1.0/bin/streamsprofile.sh
+> source /opt/ibm/InfoSphere_Streams/4.3.0.0/bin/streamsprofile.sh
 InfoSphere Streams environment variables have been set.
 ```
 
@@ -59,8 +62,6 @@ The top-level Ant file `streamsx.topology/build.xml` has these main targets:
 * `all` (default) : Build the project, including the Java code for the Java Application API, the SPL `com.ibm.streamsx.topology` SPL toolkit and the sample applications. If SCALA_HOME is set then Scala support is also built.
 * `clean` : Clean the project
 * `test` : Run the JUnit tests, most of the tests are run twice, once in embedded mode (within the JVM) and once in Streams standalone mode.
-* `test.report` : Build a test report for the JUnit test runs. This is invoked automatically when the `test` target passes, but in case of a failure, this may be invoked to produce a test report to easily display the failure(s).
-* `test.quick` : Run the Junit tests quickly as a sanity check, this runs a subset of the tests, avoiding SPL generation & compilation and code coverage. *This target currently may still invoke some SPL compilation (sc) so may not be a quick as it could be.*
 
 ### Implementing toolkit messages
 This toolkit supports globalized messages with unique message IDs. The guidelines for implementing a message bundle are described in [Messages and National Language Support for Toolkits](https://github.com/IBMStreams/administration/wiki/Messages-and-National-Language-Support-for-toolkits).
@@ -68,11 +69,20 @@ This toolkit supports globalized messages with unique message IDs. The guideline
 ### Distributed testing
 
 By default the Ant `test` target does not run the tests against a Streams instance (distributed), as it requires an instance to be running, which may not always be the case. A sub-set of the tests can also be run against a Streams instance like this:
+
 ```
 cd test/java
 ant unittest.distributed
 ```
-This requires that your environment is setup so that `streamtool submitjob` submit jobs to an instance without requiring any authentication. This is the case for the [Streams Quicksttart VM image](http://www-01.ibm.com/software/data/infosphere/stream-computing/trials.html).
+
+or
+
+```
+cd test/python
+ant test.distributed
+```
+
+This requires that your environment is setup so that `streamtool submitjob` submit jobs to an instance without requiring any authentication. This is the case for the [Streams Quick Start Edition](https://www.ibm.com/support/knowledgecenter/SSCRJU_4.3.0/com.ibm.streams.qse.doc/doc/installtrial-container.html).
 
 ### IBM Cloud Streaming Analytics service testing
 
@@ -85,7 +95,7 @@ e.g.
 
 ```
 export VCAP_SERVICES=$HOME/vcap/my_vcap
-export STREAMING_ANALYTICS_SERVICE_NAME=debrunne-streams2
+export STREAMING_ANALYTICS_SERVICE_NAME=user-streams
 ```
 
 The tests are run with this target:
