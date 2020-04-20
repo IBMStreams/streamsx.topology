@@ -34,6 +34,9 @@
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
    pyInStyleObj_(NULL),
+<%if ($pyoutstyle eq 'dict') {%>    
+   pyOutNames_0(NULL),
+<%}%>    
    loads(NULL),
    occ_(-1),
    window_(<%=$windowCppInitializer%>),
@@ -96,6 +99,9 @@ MY_OPERATOR::MY_OPERATOR() :
     // Obtain the function that loads the tuple's value in process()
     {
     SplpyGIL lock;
+    <%if ($pyoutstyle eq 'dict') {%>
+    pyOutNames_0 = Splpy::pyAttributeNames(getOutputPortAt(0));
+    <%}%>    
     <%if ($pystyle eq 'pickle'){%>
     loads = SplpyGeneral::loadFunction("pickle", "loads");
     <% } elsif ($pystyle eq 'json'){ %>
@@ -145,6 +151,12 @@ MY_OPERATOR::MY_OPERATOR() :
 
 MY_OPERATOR::~MY_OPERATOR() 
 {
+  <%if ($pyoutstyle eq 'dict') {%> 
+  {
+    SplpyGIL lock;
+    Py_CLEAR(pyOutNames_0);
+  }
+  <%}%>  	
   delete funcop_;
 
 #if SPLPY_PARTITION_IS_STATEFUL == 1
@@ -161,6 +173,7 @@ MY_OPERATOR::~MY_OPERATOR()
 #endif
   }
   <% } %>
+  
 }
 
 void MY_OPERATOR::prepareToShutdown() 
@@ -345,14 +358,32 @@ void MY_OPERATOR::beforeWindowFlushEvent(
     try {
       SplpyGIL lock;
       SPLAPPTRC(L_DEBUG, "aggregation: call", SPLPY_SH_ASPECT);
+      <%if ($pyoutstyle eq 'dict') {%>
+	    PyObject * ret = streamsx::topology::Splpy::pyTupleMap(funcop_->callable(), items);
+	    if (ret == NULL)
+		  return;
+	    if (PyTuple_Check(ret)) {
+		  fromPyTupleToSPLTuple(ret, otuple);
+		  Py_DECREF(ret);
+	    } else if (PyDict_Check(ret)) {
+		  fromPyDictToSPLTuple(ret, otuple);
+		  Py_DECREF(ret);
+	    } else {
+		  throw SplpyGeneral::generalException("submit",
+		   "Fatal error: Value submitted must be a Python tuple or dict.");
+	    }
+	  SPLAPPTRC(L_DEBUG, "aggregation: submit", SPLPY_SH_ASPECT);
+      submit(otuple, 0);
+      <% } else { %>
       if (SPLPY_AGGREGATE(funcop_->callable(), items,
-        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_)){  
+        otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), occ_)){
         SPLAPPTRC(L_DEBUG, "aggregation: submit", SPLPY_SH_ASPECT);
         submit(otuple, 0);
       } 
       else {
         SPLAPPTRC(L_DEBUG, "aggregation: fail", SPLPY_SH_ASPECT);
-      }	    
+      }	   
+      <%}%>
     } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
       SPLAPPTRC(L_DEBUG, "aggregation: caught", SPLPY_SH_ASPECT);
       SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
@@ -461,5 +492,25 @@ void MY_OPERATOR::resetToInitialState() {
   }
 
 #endif
+
+<%
+  if ($pyoutstyle eq 'dict') {
+	my %cpp_tuple_types;  
+    # In this case we don't want the function that
+    # converts the Python tuple to an SPL tuple to
+    # copy attributes from the input port
+    my $iport;
+
+    my $oport = $model->getOutputPortAt(0);
+    my $oport_submission = 0;
+    my $otupleType = $oport->getSPLTupleType();
+    my @onames = SPL::CodeGen::Type::getAttributeNames($otupleType);
+    my @otypes = SPL::CodeGen::Type::getAttributeTypes($otupleType);
+
+%>
+// Create member function that converts Python tuple to SPL tuple
+@include  "../../opt/python/codegen/py_pyTupleTosplTuple.cgt"
+<%}%>
+
 
 <%SPL::CodeGen::implementationEpilogue($model);%>
