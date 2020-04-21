@@ -201,7 +201,7 @@ class TestDistributedAggregate(TestAggregate):
         Tester.setup_distributed(self)
         self.test_config[ConfigParams.SSL_VERIFY] = False
 
-class TestSasCheckpointing(TestAggregate):
+class TestSasAggregate(TestAggregate):
     def setUp(self):
         Tester.setup_streaming_analytics(self, force_remote_build=True)
 
