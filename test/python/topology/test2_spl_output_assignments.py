@@ -71,3 +71,15 @@ class TestSplOutAttrAssignmentEqProperties(unittest.TestCase):
         tester.contents(fs0, [{'seq':0, 'category':'category', 'params':True, 'resource_tags':42, 'extension':'extension_attr_val'},
                               {'seq':2, 'category':'category', 'params':True, 'resource_tags':42, 'extension':'extension_attr_val'}], ordered=True)
         tester.test(self.test_ctxtype, self.test_config)
+
+
+class TestDistributedSplOutAttrAssignmentEqProperties(TestSplOutAttrAssignmentEqProperties):
+    def setUp(self):
+        Tester.setup_distributed(self)
+        self.test_config[ConfigParams.SSL_VERIFY] = False
+
+class TestSasSplOutAttrAssignmentEqProperties(TestSplOutAttrAssignmentEqProperties):
+    def setUp(self):
+        Tester.setup_streaming_analytics(self, force_remote_build=True)
+
+
