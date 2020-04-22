@@ -850,7 +850,7 @@ class ContextTypes(object):
     The instance is specified in the configuration passed into :py:func:`submit`. The code that selects a service instance by name is::
 
         from icpd_core import icpd_util
-        cfg = icpd_util.get_service_instance_details(name='instanceName')
+        cfg = icpd_util.get_service_instance_details(name='instanceName', instance_type="streams")
 
         topo = Topology()
         ...
@@ -949,7 +949,7 @@ class ContextTypes(object):
     The instance is specified in the configuration passed into :py:func:`submit`. The code that selects a service instance by name is::
 
         from icpd_core import icpd_util
-        cfg = icpd_util.get_service_instance_details(name='instanceName')
+        cfg = icpd_util.get_service_instance_details(name='instanceName', instance_type="streams")
 
         topo = Topology()
         ...
