@@ -204,6 +204,16 @@ class Invoke(streamsx._streams._placement._Placement, streamsx.topology.exop.Ext
         if name:
             self._op()._layout(name=self._op().runtime_id, orig_name=name)
 
+    def __setattr__(self, name, value):
+        # control attribute setting.
+        # When an output attribute assignment is done,
+        # an attribute is added to the current instance, which must be reflected
+        # in the attribute map of the instance (__dict__). When it is not an
+        # output assignment, the MRO of the superclass is applied to set the attribute.
+        if self._is_output_assignment_expression(value):
+            self.__dict__[name] = value
+        else:
+            super().__setattr__(name, value)
 
     def attribute(self, stream, name):
         """Expression for an input attribute.
@@ -256,13 +266,16 @@ class Invoke(streamsx._streams._placement._Placement, streamsx.topology.exop.Ext
         e._stream = stream
         return e
 
+    def _is_output_assignment_expression(self, obj):
+        return True if isinstance(obj, Expression) and hasattr(obj, '_stream') else False
+
     def _generate(self, opjson):
 
         # For any attribute that is an expression
         # set it as an output clause assignment
         for attr in self.__dict__:
             e = self.__dict__[attr]
-            if isinstance(e, Expression) and hasattr(e, '_stream'):
+            if self._is_output_assignment_expression(e):
                 opi = e._stream.oport.index
                 port = opjson['outputs'][opi]
                 if 'assigns' in port:
