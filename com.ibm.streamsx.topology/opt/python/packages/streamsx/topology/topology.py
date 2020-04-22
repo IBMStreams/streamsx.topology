@@ -2623,6 +2623,49 @@ class Window(object):
         
             win = s.last(10).trigger(2).partition(key='id')
             moving_averages = win.aggregate(summarize_sensors)
+
+        Example for building a rolling average window aggregation with stream tuples passed as a `named tuple`::
+        
+            from streamsx.topology.topology import Topology
+            from streamsx.topology import context
+            from streamsx.topology.context import submit, ContextTypes, ConfigParams
+            import random
+            import itertools
+            from typing import Iterable, NamedTuple
+
+            class AggregateSchema(NamedTuple):
+                count: int = 0
+                avg: float = 0.0
+                min: int = 0
+                max: int = 0
+
+            class Average:
+                def __call__(self, tuples_in_window) -> AggregateSchema:
+                    values = [tpl.value for tpl in tuples_in_window]
+                    mn = min(values)
+                    mx = max(values)
+                    num_of_tuples = len(tuples_in_window)
+                    average = sum(values) / len(tuples_in_window)
+                    output_event = AggregateSchema(
+                        count = num_of_tuples,
+                        avg = average,
+                        min = mn,
+                        max = mx
+                    )
+                    return output_event
+
+            class NumbersSchema(NamedTuple):
+                value: int = 0
+
+            class Numbers(object):
+                def __call__(self) -> Iterable[NumbersSchema]:
+                    for num in itertools.count(1):
+                        yield {"value": num}
+
+            topo = Topology("Rolling Average")
+            src = topo.source(Numbers())
+            window = src.last(size=10)
+            rolling_average = window.aggregate(Average())
         
 
         .. note:: If a tumbling (:py:meth:`~Stream.batch`) window's stream

@@ -62,6 +62,7 @@
 		     <arg value="-m"/>
 		     <arg value="unittest"/>
 		     <arg value="test2.TestDistributedTopologyMethodsNew"/>
+		     <arg value="test2_aggregate.TestDistributedAggregate"/>
 		     <arg value="test2_checkpoint.TestDistributedCheckpointing"/>
 		     <arg value="test2_consistent.TestDistributedConsistentRegion"/>
 		     <arg value="test2_ec.TestDistributedEc"/>
@@ -100,6 +101,7 @@
 		     <arg value="-m"/>
 		     <arg value="unittest"/>
 		     <arg value="test2.TestSasTopologyMethodsNew"/>
+		     <arg value="test2_aggregate.TestSasAggregate"/>
 		     <arg value="test2_checkpoint.TestSasCheckpointing"/>
 		     <arg value="test2_consistent.TestSasConsistentRegion"/>
 		     <arg value="test2_ec.TestSasEc"/>

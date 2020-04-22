@@ -97,6 +97,11 @@ SPLPY_PARTITION_BY_PYTHON will also be 1.
 #define SPLPY_AGGREGATE_TIME_POLICIES <%=$window->getEvictionPolicyType() == $SPL::Operator::Instance::Window::Time || ($window->hasTriggerPolicy() && $window->getEvictionPolicyType() == $SPL::Operator::Instance::Window::Time) ? 1 : 0%>
 
 @include "../pyspltuple.cgt"
+
+<%
+ my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
+%>
+
 class MY_OPERATOR : public MY_BASE_OPERATOR,
       public <%=$windowEventCppType%>
 #if SPLPY_OP_STATE_HANDLER == 1
@@ -155,6 +160,13 @@ public:
 #endif
 
 private:
+<%
+if ($pyoutstyle eq 'dict') {
+%>
+    void fromPyTupleToSPLTuple(PyObject *pyDict, OPort0Type & otuple);
+    void fromPyDictToSPLTuple(PyObject *pyTuple, OPort0Type & otuple);
+<%}%>
+  
     SplpyOp * op() const { return funcop_; }
 <% if ($window->isTumbling()) {%>
    void aggregateRemaining();
@@ -178,6 +190,9 @@ private:
     PyObject *spl_in_object_out;
     
     PyObject *pyInStyleObj_;
+<%if ($pyoutstyle eq 'dict') {%>    
+    PyObject *pyOutNames_0;
+<%}%>    
 
     PyObject *loads;
 
