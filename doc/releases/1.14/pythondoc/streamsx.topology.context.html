@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.context &mdash; streamsx 1.14.13 documentation</title>
+  <title>streamsx.topology.context &mdash; streamsx 1.14.14 documentation</title>
   
 
   
@@ -285,7 +285,7 @@ a Streams service instance running in the same Cloud Pak for
 Data cluster as the Jupyter notebook or script declaring the application.</p>
 <p>The instance is specified in the configuration passed into <a class="reference internal" href="#streamsx.topology.context.submit" title="streamsx.topology.context.submit"><code class="xref py py-func docutils literal notranslate"><span class="pre">submit()</span></code></a>. The code that selects a service instance by name is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">icpd_core</span> <span class="k">import</span> <span class="n">icpd_util</span>
-<span class="n">cfg</span> <span class="o">=</span> <span class="n">icpd_util</span><span class="o">.</span><span class="n">get_service_instance_details</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;instanceName&#39;</span><span class="p">)</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">icpd_util</span><span class="o">.</span><span class="n">get_service_instance_details</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;instanceName&#39;</span><span class="p">,</span> <span class="n">instance_type</span><span class="o">=</span><span class="s2">&quot;streams&quot;</span><span class="p">)</span>
 
 <span class="n">topo</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">()</span>
 <span class="o">...</span>
@@ -339,7 +339,7 @@ to an Streams service instance running in the same Cloud Pak for
 Data cluster as the Jupyter notebook or script declaring the application.</p>
 <p>The instance is specified in the configuration passed into <a class="reference internal" href="#streamsx.topology.context.submit" title="streamsx.topology.context.submit"><code class="xref py py-func docutils literal notranslate"><span class="pre">submit()</span></code></a>. The code that selects a service instance by name is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">icpd_core</span> <span class="k">import</span> <span class="n">icpd_util</span>
-<span class="n">cfg</span> <span class="o">=</span> <span class="n">icpd_util</span><span class="o">.</span><span class="n">get_service_instance_details</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;instanceName&#39;</span><span class="p">)</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">icpd_util</span><span class="o">.</span><span class="n">get_service_instance_details</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;instanceName&#39;</span><span class="p">,</span> <span class="n">instance_type</span><span class="o">=</span><span class="s2">&quot;streams&quot;</span><span class="p">)</span>
 
 <span class="n">topo</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">()</span>
 <span class="o">...</span>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.topology &mdash; streamsx 1.14.13 documentation</title>
+  <title>streamsx.topology.topology &mdash; streamsx 1.14.14 documentation</title>
   
 
   
@@ -2132,7 +2132,7 @@ A view object is produced by <a class="reference internal" href="#streamsx.topol
 <span class="gp">&gt;&gt;&gt; </span><span class="n">view</span> <span class="o">=</span> <span class="n">rands</span><span class="o">.</span><span class="n">view</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">submit</span><span class="p">(</span><span class="n">ContextTypes</span><span class="o">.</span><span class="n">DISTRIBUTED</span><span class="p">,</span> <span class="n">topology</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">queue</span> <span class="o">=</span> <span class="n">view</span><span class="o">.</span><span class="n">start_data_fetch</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">queue</span><span class="o">.</span><span class="n">get</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">queue</span><span class="o">.</span><span class="n">get</span><span class="p">,</span> <span class="mi">60</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
 <span class="gp">...</span>
 <span class="go">0.6527</span>
@@ -2336,6 +2336,49 @@ when triggered. Each partition triggers independently so that
 two tuples with that <cite>id</cite> have been inserted into the window partition:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">win</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">last</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">trigger</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">)</span>
 <span class="n">moving_averages</span> <span class="o">=</span> <span class="n">win</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">summarize_sensors</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Example for building a rolling average window aggregation with stream tuples passed as a <cite>named tuple</cite>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">streamsx.topology.topology</span> <span class="k">import</span> <span class="n">Topology</span>
+<span class="kn">from</span> <span class="nn">streamsx.topology</span> <span class="k">import</span> <span class="n">context</span>
+<span class="kn">from</span> <span class="nn">streamsx.topology.context</span> <span class="k">import</span> <span class="n">submit</span><span class="p">,</span> <span class="n">ContextTypes</span><span class="p">,</span> <span class="n">ConfigParams</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">NamedTuple</span>
+
+<span class="k">class</span> <span class="nc">AggregateSchema</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">avg</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="nb">min</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="nb">max</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">class</span> <span class="nc">Average</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tuples_in_window</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AggregateSchema</span><span class="p">:</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">tpl</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">tpl</span> <span class="ow">in</span> <span class="n">tuples_in_window</span><span class="p">]</span>
+        <span class="n">mn</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">mx</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">num_of_tuples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tuples_in_window</span><span class="p">)</span>
+        <span class="n">average</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">tuples_in_window</span><span class="p">)</span>
+        <span class="n">output_event</span> <span class="o">=</span> <span class="n">AggregateSchema</span><span class="p">(</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="n">num_of_tuples</span><span class="p">,</span>
+            <span class="n">avg</span> <span class="o">=</span> <span class="n">average</span><span class="p">,</span>
+            <span class="nb">min</span> <span class="o">=</span> <span class="n">mn</span><span class="p">,</span>
+            <span class="nb">max</span> <span class="o">=</span> <span class="n">mx</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">output_event</span>
+
+<span class="k">class</span> <span class="nc">NumbersSchema</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">class</span> <span class="nc">Numbers</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">NumbersSchema</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">num</span><span class="p">}</span>
+
+<span class="n">topo</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">(</span><span class="s2">&quot;Rolling Average&quot;</span><span class="p">)</span>
+<span class="n">src</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="n">Numbers</span><span class="p">())</span>
+<span class="n">window</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">last</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">rolling_average</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">Average</span><span class="p">())</span>
 </pre></div>
 </div>
 <div class="admonition note">
