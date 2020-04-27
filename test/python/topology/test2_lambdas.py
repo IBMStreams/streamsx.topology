@@ -28,6 +28,7 @@ except ImportError:
 from streamsx.topology.topology import *
 from streamsx.topology import schema
 import streamsx.topology.context
+from streamsx.topology.context import ContextTypes, ConfigParams, JobConfig
 
 # One inline referencing another
 def c1(tuple_):
@@ -87,12 +88,11 @@ def _rand_msg():
         yield random.randint(0,3)
         time.sleep(0.001)
 
-class TestDistributedLambdas(unittest.TestCase):
+class TestLambdas(unittest.TestCase):
   _multiprocess_can_split_ = True
 
   def setUp(self):
       Tester.setup_standalone(self)
-      #Tester.setup_distributed(self)
 
   def test_TopologyLambdaFilter(self):
       topo = Topology("test_TopologyLambdaFilter")
@@ -214,6 +214,14 @@ class TestDistributedLambdas(unittest.TestCase):
       s = topo.source([])
       with self.assertRaises(TypeError):
           s.map(cbad)
+
+
+class TestDistributedLambdas(TestLambdas):
+
+  def setUp(self):
+      Tester.setup_distributed(self)
+      self.test_config[ConfigParams.SSL_VERIFY] = False
+
 
 if __name__ == '__main__':
     unittest.main()
