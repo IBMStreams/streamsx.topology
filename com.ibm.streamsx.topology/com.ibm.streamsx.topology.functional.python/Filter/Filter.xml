@@ -135,7 +135,17 @@
         <tupleMutationAllowed>false</tupleMutationAllowed>
         <cardinality>1</cardinality>
         <optional>false</optional>
-      </outputPortSet>          
+      </outputPortSet>
+      <outputPortSet>
+        <expressionMode>Nonexistent</expressionMode> 
+        <autoAssignment>false</autoAssignment>
+        <completeAssignment>false</completeAssignment>
+        <rewriteAllowed>false</rewriteAllowed>
+        <windowPunctuationOutputMode>Preserving</windowPunctuationOutputMode>
+        <tupleMutationAllowed>false</tupleMutationAllowed>
+        <cardinality>1</cardinality>
+        <optional>true</optional>
+      </outputPortSet>
     </outputPorts>
   </cppOperatorModel>
 </operatorModel>

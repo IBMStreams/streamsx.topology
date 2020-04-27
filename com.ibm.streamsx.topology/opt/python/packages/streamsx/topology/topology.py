@@ -1246,7 +1246,7 @@ class Stream(_placement._Placement, object):
         op._layout(kind='ForEach', name=op.runtime_id, orig_name=name)
         return Sink(op)
 
-    def filter(self, func, name=None):
+    def filter(self, func, non_matching=False, name=None):
         """
         Filters tuples from this stream using the supplied callable `func`.
 
@@ -1255,6 +1255,7 @@ class Stream(_placement._Placement, object):
         
         Args:
             func: Filter callable that takes a single parameter for the stream tuple.
+            non_matching(bool): Non-matching tuples are sent to a second optional output stream
             name(str): Name of the stream, defaults to a generated name.
 
         If invoking ``func`` for a stream tuple raises an exception
@@ -1266,8 +1267,14 @@ class Stream(_placement._Placement, object):
         exception is suppressed no tuple is submitted to the filtered
         stream corresponding to the input tuple that caused the exception.
 
+        Example with matching and non matching streams::
+
+            topo = Topology()
+            s = topo.source(['Hello', 'World'])
+            matches, non_matches = s.filter((lambda t : "Wor" in t), non_matching=True)
+
         Returns:
-            Stream: A Stream containing tuples that have not been filtered out. The schema of the returned stream is the same as this stream's schema.
+            Stream: A Stream containing tuples that have not been filtered out. The schema of the returned stream is the same as this stream's schema. Optional second stream is returned for non matching tuples, if parameter non_matching is set to True.
 
         .. rubric:: Type hints
 
@@ -1283,8 +1290,13 @@ class Stream(_placement._Placement, object):
         op.addInputPort(outputPort=self.oport)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         op._layout(kind='Filter', name=op.runtime_id, orig_name=name)
-        oport = op.addOutputPort(schema=self.oport.schema, name=_name)
-        return Stream(self.topology, oport)._make_placeable()
+        if non_matching:
+            oport = op.addOutputPort(schema=self.oport.schema, name=_name+'_matching')
+            oport_non_matching = op.addOutputPort(schema=self.oport.schema, name=_name+'_non_matching')
+            return Stream(self.topology, oport)._make_placeable(), Stream(self.topology, oport_non_matching)._make_placeable()
+        else:
+            oport = op.addOutputPort(schema=self.oport.schema, name=_name)
+            return Stream(self.topology, oport)._make_placeable()
 
     def split(self, into, func, names=None, name=None):
         """
