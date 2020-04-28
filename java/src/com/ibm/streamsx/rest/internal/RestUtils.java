@@ -16,7 +16,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.Objects;
 import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
@@ -26,6 +25,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.auth.AUTH;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
@@ -40,7 +40,6 @@ import org.apache.http.util.EntityUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.topology.internal.streams.Util;
 
 public interface RestUtils {
     
@@ -52,6 +51,8 @@ public interface RestUtils {
     
     String AUTH_BEARER = "Bearer ";
     String AUTH_BASIC = "Basic ";
+    
+    int CONNECT_TIMEOUT_MILLISECONDS = 30000;
 
     /**
      * Create an encoded Basic auth header for the given credentials.
@@ -105,6 +106,14 @@ public interface RestUtils {
 
     static CloseableHttpClient createHttpClient(boolean allowInsecure) {
         CloseableHttpClient client = null;
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(CONNECT_TIMEOUT_MILLISECONDS) // timeout to connect with server
+                // we don't change the socket (receive) timeout as it affects ALL REST requests
+                // system defaults would be used when setting to -1, system defaults are usually 0, however.
+//                .setSocketTimeout(-1)             // socket idle timeout between data packages
+//                .setConnectionRequestTimeout(0)   // timeout for a connection manager to obtain a connection
+                .build();
+        
         if (allowInsecure) {
             try {
                 SSLContext sslContext = SSLContexts.custom()
@@ -112,6 +121,7 @@ public interface RestUtils {
                             @Override
                             public boolean isTrusted(X509Certificate[] chain,
                                     String authType) throws CertificateException {
+                                // simply trust all certificates
                                 return true;
                             }
                         }).build();
@@ -126,6 +136,7 @@ public interface RestUtils {
                                 NoopHostnameVerifier.INSTANCE);
                 client = HttpClients.custom()
                         .setSSLSocketFactory(factory)
+                        .setDefaultRequestConfig(requestConfig)
                         .build();
                 TRACE.warning("Insecure host connections enabled.");
             } catch (KeyStoreException | KeyManagementException | NoSuchAlgorithmException e) {
@@ -133,7 +144,13 @@ public interface RestUtils {
             }
         }
         if (null == client) {
-            client = HttpClients.createSystem();
+            // Obtain default SSL socket factory with an SSL context based on system properties
+            // as described in Java Secure Socket Extension (JSSE) Reference Guide.
+            SSLConnectionSocketFactory factory = SSLConnectionSocketFactory.getSystemSocketFactory();
+            client = HttpClients.custom()
+                    .setSSLSocketFactory(factory)
+                    .setDefaultRequestConfig(requestConfig)
+                    .build();
         }
         return client;
     }
