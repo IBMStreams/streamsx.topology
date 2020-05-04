@@ -148,7 +148,7 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
     private static final String HEXES = "0123456789ABCDEF";
     private static final int HEXES_L = HEXES.length();
 
-    private static String randomHex(final int length) {
+    protected static String randomHex(final int length) {
         char[] name = new char[length];
         for (int i = 0; i < length; i++) {
             name[i] = HEXES.charAt(ThreadLocalRandom.current().nextInt(HEXES_L));

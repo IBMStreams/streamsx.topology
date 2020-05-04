@@ -1013,6 +1013,13 @@ class ContextTypes(object):
         `BUILD_ARCHIVE` is typically only used when diagnosing issues with bundle generation.
     """
 
+    EDGE = 'EDGE'
+    """Submission to build service running on IBM Cloud Pak for Data to create images for Edge.
+
+    The `Topology` is compiled and the resultant Streams application bundle
+    (sab file) is added to a Streams Docker image for Edge.
+
+    """
 
 class ConfigParams(object):
     """
