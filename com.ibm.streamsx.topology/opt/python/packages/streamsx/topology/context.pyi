@@ -35,7 +35,7 @@ class ContextTypes(object):
     BUNDLE : str
     TOOLKIT : str
     BUILD_ARCHIVE : str
-
+    EDGE : str
 
 class ConfigParams(object):
     VCAP_SERVICES : str

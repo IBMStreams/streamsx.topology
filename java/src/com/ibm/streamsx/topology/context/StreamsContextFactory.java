@@ -12,6 +12,7 @@ import com.ibm.streamsx.topology.internal.context.service.RemoteStreamingAnalyti
 import com.ibm.streamsx.topology.internal.context.streams.AnalyticsServiceStreamsContext;
 import com.ibm.streamsx.topology.internal.context.streams.BundleStreamsContext;
 import com.ibm.streamsx.topology.internal.context.streams.RemoteDistributedStreamsContext;
+import com.ibm.streamsx.topology.internal.context.streams.RemoteEdgeContext;
 import com.ibm.streamsx.topology.internal.streams.Util;
 import com.ibm.streamsx.topology.internal.messages.Messages;
 
@@ -99,6 +100,10 @@ public class StreamsContextFactory {
             
         case STREAMING_ANALYTICS_SERVICE_TESTER:
             return new RemoteStreamingAnalyticsTester();
+            
+        case EDGE:
+        	return new RemoteEdgeContext();
+
         default:
             throw new IllegalArgumentException(Messages.getString("CONTEXT_UNKNOWN_TYPE", type));
         }
