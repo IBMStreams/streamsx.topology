@@ -511,6 +511,48 @@ class _BundleSubmitter(_BaseSubmitter):
         if self._remote:
             env.pop('STREAMS_INSTALL', None)
         return env
+        
+class _EdgeSubmitter(_BaseSubmitter):
+    """
+    A submitter which supports the EDGE context (force remote build).
+    """
+    def __init__(self, ctxtype, config, graph):
+        _BaseSubmitter.__init__(self, ctxtype, config, graph)
+        config[ConfigParams.FORCE_REMOTE_BUILD] = True # EDGE is always remote build
+        self._remote = config.get(ConfigParams.FORCE_REMOTE_BUILD)
+        self._streams_connection = config.get(ConfigParams.STREAMS_CONNECTION)
+
+        if self._streams_connection is not None:
+            pass
+        else:
+            # Look for a service definition
+            svc_info = streamsx.rest_primitives.Instance._find_service_def(config)
+            if not svc_info:
+                # Look for endpoint set by env vars.
+                inst = streamsx.rest_primitives.Instance.of_endpoint(verify=config.get(ConfigParams.SSL_VERIFY))
+                if inst is not None:
+                    self._streams_connection = inst.rest_client._sc
+
+        if isinstance(self._streams_connection, streamsx.rest.StreamsConnection):
+            if isinstance(self._streams_connection.session.auth, streamsx.rest_primitives._ICPDExternalAuthHandler):
+                svc_info = self._streams_connection.session.auth._cfg
+                self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
+                if  self._streams_connection.session.verify == False:
+                    self._config()[ConfigParams.SSL_VERIFY] = False
+        else:
+            svc_info =  streamsx.rest_primitives.Instance._find_service_def(config)
+            if svc_info:
+                self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
+                streamsx.rest_primitives.Instance._clear_service_info(self._config())
+
+    def _get_java_env(self):
+        "Set env vars from connection if set"
+        env = super(_EdgeSubmitter, self)._get_java_env()
+        env.pop('STREAMS_DOMAIN_ID', None)
+        env.pop('STREAMS_INSTANCE_ID', None)
+        if self._remote:
+            env.pop('STREAMS_INSTALL', None)
+        return env
 
 def _get_distributed_submitter(config, graph, username, password):
     # CP4D integrated environment and within project
@@ -727,6 +769,12 @@ class _SubmitContextFactory(object):
                 if sbs._remote:
                     return sbs
             return _BundleSubmitter(ctxtype, self.config, self.graph)
+        elif ctxtype == 'EDGE':
+            logger.debug("Selecting the EDGE context for submission")
+            return _EdgeSubmitter(ctxtype, self.config, self.graph)
+        elif ctxtype == 'EDGE_BUNDLE':
+            logger.debug("Selecting the EDGE_BUNDLE context for submission")
+            return _EdgeSubmitter(ctxtype, self.config, self.graph)
         else:
             logger.debug("Using the BaseSubmitter, and passing the context type through to java.")
             return _BaseSubmitter(ctxtype, self.config, self.graph)
@@ -1018,6 +1066,18 @@ class ContextTypes(object):
 
     The `Topology` is compiled and the resultant Streams application bundle
     (sab file) is added to a Streams Docker image for Edge.
+
+    """
+
+    EDGE_BUNDLE = 'EDGE_BUNDLE'
+    """Submission to build service running on IBM Cloud Pak for Data to build bundles without creating Streams Docker image unlike `EDGE`.
+
+    The `Topology` is compiled and the resultant Streams application bundle
+    (sab file) is downloaded.
+
+    .. note::
+
+        `EDGE_BUNDLE` is typically only used when diagnosing issues with applications for EDGE.
 
     """
 
