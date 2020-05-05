@@ -32,29 +32,8 @@ import com.ibm.streamsx.topology.internal.streams.Util;
  */
 public interface BuildService {
 
-    /**
-     * Build types for the build service.
-     * Use {@link #getJsonValue()} to create the value for the JSON of the request body.
-     */
-    public static enum BuildType {
-        APPLICATION ("application"),
-        STREAMS_DOCKER_IMAGE ("streamsDockerImage");
-
-        private final String jsonValue;
-        BuildType (final String jsonValue) {
-            this.jsonValue = jsonValue;
-        }
-
-        /**
-         * @return the value as it must go into the JSON of the request body.
-         */
-        public String getJsonValue() {
-            return jsonValue;
-        }
-    }
-
     public static BuildService ofEndpoint(String endpoint, String name, String userName, String password,
-            boolean verify, BuildType buildType) throws IOException {
+            boolean verify) throws IOException {
 	    if (name == null && System.getenv(Util.STREAMS_INSTANCE_ID) == null) {
 	        // StandaloneAuthenticator, needs resources endpoint.
             if (endpoint == null) {
@@ -82,17 +61,17 @@ public interface BuildService {
 	                        url.getPort(), STREAMS_BUILD_PATH);
 	                buildsEndpoint = buildUrl.toExternalForm();
 	            }
-	            return StreamsBuildService.of(e -> basicAuth, buildsEndpoint, verify, buildType);
+	            return StreamsBuildService.of(e -> basicAuth, buildsEndpoint, verify);
 	        }
-	        return StreamsBuildService.of(auth, serviceDefinition, verify, buildType);
+	        return StreamsBuildService.of(auth, serviceDefinition, verify);
 	    } else {
 	        ICP4DAuthenticator auth = ICP4DAuthenticator.of(endpoint, name, userName, password);
-	        return StreamsBuildService.of(auth, auth.config(verify), verify, buildType);
+	        return StreamsBuildService.of(auth, auth.config(verify), verify);
 	    }
 	}
 
     public static BuildService ofServiceDefinition(JsonObject serviceDefinition,
-            boolean verify, BuildType buildType) throws IOException {
+            boolean verify) throws IOException {
         String name = jstring(serviceDefinition, "service_name");
         Function<Executor,String> authenticator;
         if (name == null) {
@@ -101,7 +80,7 @@ public interface BuildService {
             authenticator = ICP4DAuthenticator.of(serviceDefinition);
         }
 
-        return StreamsBuildService.of(authenticator, serviceDefinition, verify, buildType);
+        return StreamsBuildService.of(authenticator, serviceDefinition, verify);
     }
 	
 	void allowInsecureHosts();

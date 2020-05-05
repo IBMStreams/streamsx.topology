@@ -19,7 +19,6 @@ import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.build.Artifact;
 import com.ibm.streamsx.rest.build.Build;
 import com.ibm.streamsx.rest.build.BuildService;
-import com.ibm.streamsx.rest.build.BuildService.BuildType;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.internal.context.remote.BuildRemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
@@ -63,10 +62,10 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
     protected BuildService createSubmissionContext(JsonObject deploy) throws Exception {
         JsonObject serviceDefinition = object(deploy, StreamsKeys.SERVICE_DEFINITION);
         if (serviceDefinition != null)
-            return BuildService.ofServiceDefinition(serviceDefinition, sslVerify(deploy), BuildType.APPLICATION);
+            return BuildService.ofServiceDefinition(serviceDefinition, sslVerify(deploy));
         
         // Remote environment context set through environment variables.
-        return BuildService.ofEndpoint(null, null, null, null, sslVerify(deploy), BuildType.APPLICATION);
+        return BuildService.ofEndpoint(null, null, null, null, sslVerify(deploy));
     }
 
     @Override
