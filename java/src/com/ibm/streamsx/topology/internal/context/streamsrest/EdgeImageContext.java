@@ -65,8 +65,8 @@ public class EdgeImageContext extends BuildServiceContext {
             imageBuilder = BuildService.ofEndpoint(null, null, null, null, sslVerify(deploy), BuildType.STREAMS_DOCKER_IMAGE);
         }
 
-        System.out.println("BuildServiceEdgeContext.postBuildAction: result = " + result);
-        System.out.println("BuildServiceEdgeContext.postBuildAction: jco = " + jco);
+        System.out.println("EdgeImageContext.postBuildAction: result = " + result);
+        System.out.println("EdgeImageContext.postBuildAction: jco = " + jco);
         System.out.println("TODO: submit with build type streamsDockerImage using the imageBuilder: " + imageBuilder);
 
         if (instance == null) {
