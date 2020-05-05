@@ -9,65 +9,68 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
-import java.io.File;
 import java.net.URL;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Map.Entry;
 import java.util.function.Function;
 
 import org.apache.http.client.fluent.Executor;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.ibm.streamsx.rest.ApplicationBundle;
 import com.ibm.streamsx.rest.Instance;
-import com.ibm.streamsx.rest.Job;
-import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.rest.build.BuildService;
+import com.ibm.streamsx.rest.build.BuildService.BuildType;
 import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
 import com.ibm.streamsx.rest.internal.StandaloneAuthenticator;
-import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
  * Streams V5 (ICP4D) build service context for EDGE.
+ * This context submits a build with "streamsDockerImage" type. It creates an image (for example docker)
+ * by using a previously creates application build, which is kept on the build service.
+ * 
  */
-public class BuildServiceEdgeContext extends BuildServiceContext {
-    
+public class EdgeImageContext extends BuildServiceContext {
+
+    /**
+     * @param downloadArtifacts
+     */
+    public EdgeImageContext() {
+        super(/*downloadArtifacts=*/false);
+        System.out.println (this.getClass().getName() + " instantiated");
+    }
+
     @Override
     public Type getType() {
         return Type.EDGE;
     }
-    
+
     private Instance instance;
-    
+
     public Instance instance() { return instance;}
-    
-    @Override
-    protected BuildService createSubmissionContext(JsonObject deploy) throws Exception {
-        
-        if (!deploy.has(StreamsKeys.SERVICE_DEFINITION)) {
-            // Configuration from environment.
-            instance = Instance.ofEndpoint((String)null, (String)null, (String)null, (String)null, sslVerify(deploy));           
-        } else {
-        
-            // Verify the Streams service endpoint has the correct format.
-            StreamsKeys.getStreamsInstanceURL(deploy);
-        }
-        
-        BuildService builder = super.createSubmissionContext(deploy);
-             
-        return builder;
-    }
-    
+
+
+    /**
+     * performs the image build
+     */
     @Override
     protected void postBuildAction(JsonObject deploy, JsonObject jco, JsonObject result) throws Exception {
-        
+        // create the Build service for the image build type:
+        JsonObject serviceDefinition = object(deploy, StreamsKeys.SERVICE_DEFINITION);
+        BuildService imageBuilder = null;
+        if (serviceDefinition != null)
+            imageBuilder = BuildService.ofServiceDefinition(serviceDefinition, sslVerify(deploy), BuildType.STREAMS_DOCKER_IMAGE);
+        else {
+            // Remote environment context set through environment variables.
+            imageBuilder = BuildService.ofEndpoint(null, null, null, null, sslVerify(deploy), BuildType.STREAMS_DOCKER_IMAGE);
+        }
+
+        System.out.println("BuildServiceEdgeContext.postBuildAction: result = " + result);
+        System.out.println("BuildServiceEdgeContext.postBuildAction: jco = " + jco);
+        System.out.println("TODO: submit with build type streamsDockerImage using the imageBuilder: " + imageBuilder);
+
         if (instance == null) {
-        
+
             URL instanceUrl = new URL(StreamsKeys.getStreamsInstanceURL(deploy));
 
             String path = instanceUrl.getPath();
@@ -82,56 +85,37 @@ public class BuildServiceEdgeContext extends BuildServiceContext {
                         path.replaceFirst("/streams-rest/", "/streams-resource/"));
             }
 
-            JsonObject serviceDefinition = object(deploy, StreamsKeys.SERVICE_DEFINITION);
             String name = jstring(serviceDefinition, "service_name");
             Function<Executor, String> authenticator = (name == null
                     || name.isEmpty())
-                            ? StandaloneAuthenticator.of(serviceDefinition)
+                    ? StandaloneAuthenticator.of(serviceDefinition)
                             : ICP4DAuthenticator.of(serviceDefinition);
-            StreamsConnection conn = StreamsConnection
-                    .ofAuthenticator(restUrl.toExternalForm(), authenticator);
+                    StreamsConnection conn = StreamsConnection
+                            .ofAuthenticator(restUrl.toExternalForm(), authenticator);
 
-            if (!sslVerify(deploy))
-                conn.allowInsecureHosts(true);
+                    if (!sslVerify(deploy))
+                        conn.allowInsecureHosts(true);
 
-            // Create the instance directly from the URL
-            instance = conn.getInstance(instanceUrl.toExternalForm());
+                    // Create the instance directly from the URL
+                    instance = conn.getInstance(instanceUrl.toExternalForm());
         }
-        
+
         JsonArray artifacts = GsonUtilities.array(GsonUtilities.object(result, "build"), "artifacts");
+
         try {
             if (artifacts == null || artifacts.size() == 0)
                 throw new IllegalStateException("No build artifacts produced.");
             if (artifacts.size() != 1)
                 throw new IllegalStateException("Multiple build artifacts produced.");
 
-            String location = GsonUtilities
-                    .jstring(artifacts.get(0).getAsJsonObject(), "location");
 
-            report("Uploading bundle");
-            ApplicationBundle bundle = instance
-                    .uploadBundle(new File(location));
 
-            report("Submitting job");
-            Result<Job, JsonObject> submissionResult = bundle.submitJob(jco);
 
-            for (Entry<String, JsonElement> entry : submissionResult
-                    .getRawResult().entrySet())
-                result.add(entry.getKey(), entry.getValue());
-            
-            report("Job id:" + submissionResult.getId());
         } finally {
             if (!jboolean(deploy, KEEP_ARTIFACTS)) {
-                for (JsonElement e : artifacts) {
-                    JsonObject artifact = e.getAsJsonObject();
-                    if (artifact.has("location")) {
-                        new File(GsonUtilities.jstring(artifact, "location")).delete();
-                    }
-                }
-                if (result.has(SubmissionResultsKeys.BUNDLE_PATH))
-                    result.remove(SubmissionResultsKeys.BUNDLE_PATH);
+                //TODO: delete build on build service?
             }
         }
     }
-    
+
 }
