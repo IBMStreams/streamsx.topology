@@ -19,6 +19,7 @@ import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.build.Artifact;
 import com.ibm.streamsx.rest.build.Build;
 import com.ibm.streamsx.rest.build.BuildService;
+import com.ibm.streamsx.rest.build.BuildService.BuildType;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.internal.context.remote.BuildRemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
@@ -29,6 +30,24 @@ import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
  */
 public class BuildServiceContext extends BuildRemoteContext<BuildService> {
     
+    private boolean downloadArtifacts = true;
+    
+    
+    /**
+     * @param downloadArtifacts
+     */
+    public BuildServiceContext (boolean downloadArtifacts) {
+        super();
+        this.downloadArtifacts = downloadArtifacts;
+    }
+
+    /**
+     * creates a BuildServiceContext that downloads the build artifacts
+     */
+    public BuildServiceContext() {
+        this (true);
+    }
+
     @Override
     public Type getType() {
         return Type.BUNDLE;
@@ -36,7 +55,7 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
     
     protected boolean sslVerify(JsonObject deploy) {
         if (deploy.has(ContextProperties.SSL_VERIFY))
-            return GsonUtilities.jboolean(deploy, ContextProperties.SSL_VERIFY);                
+            return GsonUtilities.jboolean(deploy, ContextProperties.SSL_VERIFY);
         return true;
     }
 
@@ -44,10 +63,10 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
     protected BuildService createSubmissionContext(JsonObject deploy) throws Exception {
         JsonObject serviceDefinition = object(deploy, StreamsKeys.SERVICE_DEFINITION);
         if (serviceDefinition != null)
-            return BuildService.ofServiceDefinition(serviceDefinition, sslVerify(deploy));
+            return BuildService.ofServiceDefinition(serviceDefinition, sslVerify(deploy), BuildType.APPLICATION);
         
         // Remote environment context set through environment variables.
-        return BuildService.ofEndpoint(null, null, null, null, sslVerify(deploy));
+        return BuildService.ofEndpoint(null, null, null, null, sslVerify(deploy), BuildType.APPLICATION);
     }
 
     @Override
@@ -61,7 +80,7 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
         buildName = getSPLCompatibleName(buildName) + "_" + randomHex(16);
         
         report("Building bundle");
-
+        System.out.println (this.downloadArtifacts? "Building bundle with download": "Building bundle without download");
         Build build = context.createBuild(buildName, buildConfig);
         
         try {
@@ -69,7 +88,7 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
             JsonObject result = new JsonObject();
             result.add(SubmissionResultsKeys.SUBMIT_METRICS, build.getMetrics());
             JsonObject buildInfo = new JsonObject();
-            result.add("build", buildInfo);           
+            result.add("build", buildInfo);
             buildInfo.addProperty("name", build.getName());
 
             build.uploadArchiveAndBuild(buildArchive);
@@ -80,8 +99,7 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
 
             JsonArray artifacts = new JsonArray();
             buildInfo.add("artifacts", artifacts);
-            
-            if (!build.getArtifacts().isEmpty()) {
+            if (this.downloadArtifacts && !build.getArtifacts().isEmpty()) {
                 report("Downloading bundle");
                 final long startDownloadSabTime = System.currentTimeMillis();
                 for (Artifact artifact : build.getArtifacts()) {
@@ -131,18 +149,22 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
             
             return result;
         } finally {
-            try {
-                build.delete();
-            } catch (IOException e) {
-                TRACE.warning(
-                        "Exception deleting build: " + e.getMessage());
+            // TODO: was macht build.delete()? Löscht das die Artifakte vom Build service? 
+            if (this.downloadArtifacts) {
+                try {
+                    build.delete();
+                } catch (IOException e) {
+                    TRACE.warning(
+                            "Exception deleting build: " + e.getMessage());
+                }
             }
         }
 
        
     }
 
-    protected void postBuildAction(JsonObject deploy, JsonObject jco, JsonObject result) throws Exception { 
+    protected void postBuildAction(JsonObject deploy, JsonObject jco, JsonObject result) throws Exception {
+        System.out.println ("BuildServiceContext.postBuildAction(...) - empty implementation");
     }
     
     private static final String HEXES = "0123456789ABCDEF";

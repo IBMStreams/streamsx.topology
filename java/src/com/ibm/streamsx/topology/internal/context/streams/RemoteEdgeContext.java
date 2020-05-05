@@ -19,8 +19,7 @@ import com.ibm.streamsx.rest.internal.StandaloneAuthenticator;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.internal.context.RemoteContextForwarderStreamsContext;
-import com.ibm.streamsx.topology.internal.context.JSONStreamsContext.AppEntity;
-import com.ibm.streamsx.topology.internal.context.streamsrest.BuildServiceEdgeContext;
+import com.ibm.streamsx.topology.internal.context.streamsrest.EdgeImageContext;
 import com.ibm.streamsx.topology.internal.context.streamsrest.StreamsKeys;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
@@ -34,7 +33,7 @@ import com.ibm.streamsx.topology.internal.streams.Util;
 public final class RemoteEdgeContext extends RemoteContextForwarderStreamsContext<BuildService> {
 
     public RemoteEdgeContext() {
-        super(new BuildServiceEdgeContext());
+        super(new EdgeImageContext());
     }
 
     @Override

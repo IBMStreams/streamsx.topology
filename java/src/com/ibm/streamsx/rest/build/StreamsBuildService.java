@@ -29,8 +29,8 @@ class StreamsBuildService extends AbstractConnection implements BuildService {
     static final String STREAMS_REST_RESOURCES = "/streams/rest/resources";
     static final String STREAMS_BUILD_PATH = "/streams/rest/builds";
 
-
-    static BuildService of(Function<Executor,String> authenticator, JsonObject serviceDefinition, boolean verify) throws IOException {
+    static BuildService of(Function<Executor,String> authenticator, JsonObject serviceDefinition,
+            boolean verify, BuildType buildType) throws IOException {
         
         String buildServiceEndpoint = jstring(object(serviceDefinition, "connection_info"), "serviceBuildEndpoint");
         if (authenticator instanceof StandaloneAuthenticator) {
@@ -43,12 +43,13 @@ class StreamsBuildService extends AbstractConnection implements BuildService {
                 URL buildsUrl = new URL(url.getProtocol(), url.getHost(), url.getPort(), STREAMS_BUILD_PATH);
                 buildServiceEndpoint = buildsUrl.toExternalForm();
             }
-            return StreamsBuildService.of(authenticator, buildServiceEndpoint, verify);
+            return StreamsBuildService.of(authenticator, buildServiceEndpoint, verify, buildType);
         }
-        return new StreamsBuildService(buildServiceEndpoint, authenticator, verify);
+        return new StreamsBuildService(buildServiceEndpoint, authenticator, verify, buildType);
     }
 
-    static BuildService of(Function<Executor,String> authenticator, String buildServiceEndpoint, boolean verify) throws IOException {
+    static BuildService of(Function<Executor,String> authenticator, String buildServiceEndpoint,
+            boolean verify, BuildType buildType) throws IOException {
 
         if (buildServiceEndpoint == null) {
             buildServiceEndpoint = Util.getenv(Util.STREAMS_BUILD_URL);
@@ -59,20 +60,21 @@ class StreamsBuildService extends AbstractConnection implements BuildService {
                 buildServiceEndpoint = buildsUrl.toExternalForm();
             }
         }
-        return new StreamsBuildService(buildServiceEndpoint, authenticator, verify);
+        return new StreamsBuildService(buildServiceEndpoint, authenticator, verify, buildType);
     }
 	
 	private static final String TOOLKITS_RESOURCE_NAME = "toolkits";
 
 	private String endpoint;
-	private String authorization;
+	private BuildType buildType = BuildType.APPLICATION;
 	private String toolkitsUrl;
 	private Function<Executor, String> authenticator;
 
-	private StreamsBuildService(String endpoint, Function<Executor, String> authenticator, boolean verify) {
+	private StreamsBuildService(String endpoint, Function<Executor, String> authenticator, boolean verify, BuildType buildType) {
 		super(!verify);
 		this.endpoint = endpoint;
 		this.authenticator = authenticator;
+		this.buildType = buildType;
 	}
 	
 	@Override
@@ -90,7 +92,7 @@ class StreamsBuildService extends AbstractConnection implements BuildService {
 		
 		JsonObject buildParams = new JsonObject();
 
-		buildParams.addProperty("type", "application");
+		buildParams.addProperty("type", buildType.getJsonValue());
 		buildParams.addProperty("incremental", false);		
 		if (name != null)
 			buildParams.addProperty("name", name);
@@ -99,8 +101,11 @@ class StreamsBuildService extends AbstractConnection implements BuildService {
 		    .addHeader("Authorization", getAuthorization())
 		    .bodyString(buildParams.toString(),
 		                ContentType.APPLICATION_JSON);
+//        System.out.println("=======> POST = " + post);
+        System.out.println("StreamsBuildService: =======> POST body = " + buildParams.toString());
 		
 		Build build = Build.create(this, this, StreamsRestUtils.requestGsonResponse(executor, post));
+		System.out.println("StreamsBuildService: =======> build = " + build);
 		return build;
 	}
 
