@@ -19,7 +19,7 @@ import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.StreamsConnection;
 import com.ibm.streamsx.rest.build.BuildService;
-import com.ibm.streamsx.rest.build.BuildService.BuildType;
+import com.ibm.streamsx.rest.internal.BuildType;
 import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
 import com.ibm.streamsx.rest.internal.StandaloneAuthenticator;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
@@ -59,10 +59,13 @@ public class EdgeImageContext extends BuildServiceContext {
         JsonObject serviceDefinition = object(deploy, StreamsKeys.SERVICE_DEFINITION);
         BuildService imageBuilder = null;
         if (serviceDefinition != null)
-            imageBuilder = BuildService.ofServiceDefinition(serviceDefinition, sslVerify(deploy), BuildType.STREAMS_DOCKER_IMAGE);
+            imageBuilder = BuildService.ofServiceDefinition(serviceDefinition, sslVerify(deploy));
         else {
             // Remote environment context set through environment variables.
-            imageBuilder = BuildService.ofEndpoint(null, null, null, null, sslVerify(deploy), BuildType.STREAMS_DOCKER_IMAGE);
+            imageBuilder = BuildService.ofEndpoint(null, null, null, null, sslVerify(deploy));
+        }
+        if (imageBuilder instanceof BuildServiceSetters) {
+            ((BuildServiceSetters)imageBuilder).setBuildType(BuildType.STREAMS_DOCKER_IMAGE);
         }
 
         System.out.println("EdgeImageContext.postBuildAction: result = " + result);
