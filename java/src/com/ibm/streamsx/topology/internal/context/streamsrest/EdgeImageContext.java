@@ -6,23 +6,17 @@ package com.ibm.streamsx.topology.internal.context.streamsrest;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
-import java.net.URL;
-import java.util.function.Function;
-
-import org.apache.http.client.fluent.Executor;
+import java.io.IOException;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Instance;
-import com.ibm.streamsx.rest.StreamsConnection;
+import com.ibm.streamsx.rest.build.Build;
 import com.ibm.streamsx.rest.build.BuildService;
 import com.ibm.streamsx.rest.internal.BuildType;
-import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
-import com.ibm.streamsx.rest.internal.StandaloneAuthenticator;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 
 /**
  * Streams V5 (ICP4D) build service context for EDGE.
@@ -55,6 +49,11 @@ public class EdgeImageContext extends BuildServiceContext {
      */
     @Override
     protected void postBuildAction(JsonObject deploy, JsonObject jco, JsonObject result) throws Exception {
+
+        System.out.println("===========================================================");
+        System.out.println("==== application build result: \n" + result);
+        System.out.println("===========================================================");
+
         // create the Build service for the image build type:
         JsonObject serviceDefinition = object(deploy, StreamsKeys.SERVICE_DEFINITION);
         BuildService imageBuilder = null;
@@ -67,58 +66,125 @@ public class EdgeImageContext extends BuildServiceContext {
         if (imageBuilder instanceof BuildServiceSetters) {
             ((BuildServiceSetters)imageBuilder).setBuildType(BuildType.STREAMS_DOCKER_IMAGE);
         }
-
-        System.out.println("EdgeImageContext.postBuildAction: result = " + result);
-        System.out.println("EdgeImageContext.postBuildAction: jco = " + jco);
         System.out.println("TODO: submit with build type streamsDockerImage using the imageBuilder: " + imageBuilder);
+        report("Building edge image");
+        JsonObject buildConfig = new JsonObject();
+        JsonArray applicationBundles = new JsonArray();
+        JsonObject application = new JsonObject();
+        JsonArray artifacts = result.getAsJsonObject("build").getAsJsonArray("artifacts");
+        JsonObject artifact0 = (JsonObject)artifacts.get(0);
 
-        if (instance == null) {
+        String sabUrl = artifact0.get("sabUrl").getAsString();
+        System.out.println ("---- sabUrl for Buildconfig = " + sabUrl);
+        application.addProperty("application", sabUrl);
+        applicationBundles.add(application);
+        buildConfig.add("applicationBundles", applicationBundles);
+        System.out.println ("Buildconfig = " + buildConfig);
+        //        
+        //        "applicationBundles": [
+        //                               { "application": "https://10.6.24.71:31233/streams/rest/builds/2/artifacts/0/applicationbundle",
+        //                                 "applicationCredentials": {
+        //                                   "user": "streamsadmin",
+        //                                   "password": "install"
+        //                                 }
+        //                               }
+        //                             ],
+        //
+        //        {
+        //            "submitMetrics": {
+        //               "buildArchiveSize":3728424,
+        //               "buildArchiveUploadTime_ms":5455,
+        //               "buildState_submittedTime_ms":723,
+        //               "buildState_buildingTime_ms":30759,
+        //               "totalBuildTime_ms":32705},
+        //            "build": {
+        //               "name":null,
+        //               "artifacts":[
+        //                            {
+        //                                "sabUrl":"https://edge-cpd-demo-cpd-edge-cpd-demo.apps.streams-ocp-43-1.os.fyre.ibm.com:443/streams-build/instances/sample-streams/edge-cpd-demo/82/artifacts/0/applicationbundle"
+        //                            }
+        //                           ]
+        //             }
+        //         }
 
-            URL instanceUrl = new URL(StreamsKeys.getStreamsInstanceURL(deploy));
 
-            String path = instanceUrl.getPath();
-            URL restUrl;
-            if (path.startsWith("/streams/rest/instances/")) {
-                restUrl = new URL(instanceUrl.getProtocol(),
-                        instanceUrl.getHost(), instanceUrl.getPort(),
-                        "/streams/rest/resources");
-            } else {
-                restUrl = new URL(instanceUrl.getProtocol(),
-                        instanceUrl.getHost(), instanceUrl.getPort(),
-                        path.replaceFirst("/streams-rest/", "/streams-resource/"));
+        // TODO: create a valid build config
+        Build imageBuild = null;
+        try {
+            imageBuild = imageBuilder.createBuild(getApplicationBuild().getName() + "_img", buildConfig);
+
+            final long startBuildTime = System.currentTimeMillis();
+            long lastCheckTime = startBuildTime;
+
+            imageBuild.submit();
+
+            String buildStatus;
+            do {
+                imageBuild.refresh();
+                buildStatus = imageBuild.getStatus();
+                JsonObject buildMetrics = imageBuild.getMetrics();
+                if ("built".equals(buildStatus)) {
+                    final long endBuildTime = System.currentTimeMillis();
+                    buildMetrics.addProperty(SubmissionResultsKeys.SUBMIT_TOTAL_BUILD_TIME, (endBuildTime - startBuildTime));
+                    // build done
+                    break;
+                }
+
+                String mkey = SubmissionResultsKeys.buildStateMetricKey(buildStatus);
+                long now = System.currentTimeMillis();
+                long duration;
+                if (buildMetrics.has(mkey)) {
+                    duration = buildMetrics.get(mkey).getAsLong();
+                } else {
+                    duration = 0;
+                }
+                duration += (now - lastCheckTime);
+                buildMetrics.addProperty(mkey, duration);
+                lastCheckTime = now;
+
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw e;
+                }
+                buildStatus = imageBuild.getStatus();
+            } while ("building".equals(buildStatus) || "waiting".equals(buildStatus) || "submitted".equals(buildStatus));
+            
+            System.out.println("imageBuild ended with status " + buildStatus);
+            System.out.println("imageBuilds artifacts: " + imageBuild.getArtifacts());
+            
+            if (! "built".equals(buildStatus)) {
+                TRACE.severe("The image failed to build with status " + buildStatus + ".");
+                // TODO: Make error handling regarding the result when postBuildAction(...) in DistributedStreamsRestContext fails?
+            }
+            else {
+                // TODO add "something" to the result JsonObject
             }
 
-            String name = jstring(serviceDefinition, "service_name");
-            Function<Executor, String> authenticator = (name == null
-                    || name.isEmpty())
-                    ? StandaloneAuthenticator.of(serviceDefinition)
-                            : ICP4DAuthenticator.of(serviceDefinition);
-                    StreamsConnection conn = StreamsConnection
-                            .ofAuthenticator(restUrl.toExternalForm(), authenticator);
-
-                    if (!sslVerify(deploy))
-                        conn.allowInsecureHosts(true);
-
-                    // Create the instance directly from the URL
-                    instance = conn.getInstance(instanceUrl.toExternalForm());
         }
-
-        JsonArray artifacts = GsonUtilities.array(GsonUtilities.object(result, "build"), "artifacts");
-
-        try {
-            if (artifacts == null || artifacts.size() == 0)
-                throw new IllegalStateException("No build artifacts produced.");
-            if (artifacts.size() != 1)
-                throw new IllegalStateException("Multiple build artifacts produced.");
-
-
-
-
-        } finally {
+        finally {
             if (!jboolean(deploy, KEEP_ARTIFACTS)) {
-                //TODO: delete build on build service?
+                Build applicationBuild = getApplicationBuild();
+                if (applicationBuild != null) {
+                    try {
+                        applicationBuild.delete();
+                        System.out.println ("application build deleted.");
+                    }
+                    catch (Exception e) {
+                        TRACE.warning(e.toString());
+                    }
+                }
+                if (imageBuild != null) {
+                    try {
+                        imageBuild.delete();
+                        System.out.println ("imageBuild deleted");
+                    }
+                    catch (Exception e) {
+                        System.out.println (e);
+                    }
+
+                }
             }
         }
     }
-
 }
