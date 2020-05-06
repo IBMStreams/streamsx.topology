@@ -47,6 +47,7 @@ public class Build extends Element {
     
     static final Build create(BuildService service, AbstractConnection connection, JsonObject gsonString) {
         // Build element = gson.fromJson(gsonString, Build.class);
+        System.out.println("Build.create (3rd argument) = " + gsonString);
         Build element = new Build();
         element.self = GsonUtilities.jstring(gsonString, "build");
         element.setConnection(connection);
@@ -183,9 +184,13 @@ public class Build extends Element {
     	return this;
     }
     
+    //TODO: remove this function as it seems not be necessary
+    public Build submitEdge() throws IOException {
+        action("streamsDockerImage");
+        return this;
+    }
 
-    
-    public Build submit() throws IOException {   	
+    public Build submit() throws IOException {
     	action("submit");
     	return this;
     }

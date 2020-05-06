@@ -28,16 +28,24 @@ import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
  * Streams V5 (ICP4D) build service context.
  */
 public class BuildServiceContext extends BuildRemoteContext<BuildService> {
-    
+
     private boolean downloadArtifacts = true;
-    
-    
+    private Build build = null;
+
     /**
      * @param downloadArtifacts
      */
     public BuildServiceContext (boolean downloadArtifacts) {
         super();
         this.downloadArtifacts = downloadArtifacts;
+    }
+
+    /**
+     * returns the Build object from the application build (SAB build) or <tt>null</tt> if a build is not yet created.
+     * @return the applicationBuild
+     */
+    protected Build getApplicationBuild() {
+        return build;
     }
 
     /**
@@ -51,7 +59,7 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
     public Type getType() {
         return Type.BUNDLE;
     }
-    
+
     protected boolean sslVerify(JsonObject deploy) {
         if (deploy.has(ContextProperties.SSL_VERIFY))
             return GsonUtilities.jboolean(deploy, ContextProperties.SSL_VERIFY);
@@ -63,7 +71,7 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
         JsonObject serviceDefinition = object(deploy, StreamsKeys.SERVICE_DEFINITION);
         if (serviceDefinition != null)
             return BuildService.ofServiceDefinition(serviceDefinition, sslVerify(deploy));
-        
+
         // Remote environment context set through environment variables.
         return BuildService.ofEndpoint(null, null, null, null, sslVerify(deploy));
     }
@@ -72,18 +80,17 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
     protected JsonObject submitBuildArchive(BuildService context, File buildArchive,
             JsonObject deploy, JsonObject jco, String buildName,
             JsonObject buildConfig) throws Exception {
-            
+
         if (!sslVerify(deploy))
             context.allowInsecureHosts();
-        
+
         buildName = getSPLCompatibleName(buildName) + "_" + randomHex(16);
-        
+
         report("Building bundle");
         System.out.println (this.downloadArtifacts? "Building bundle with download": "Building bundle without download");
-        Build build = context.createBuild(buildName, buildConfig);
-        
+        this.build = context.createBuild(buildName, buildConfig);
         try {
-            
+
             JsonObject result = new JsonObject();
             result.add(SubmissionResultsKeys.SUBMIT_METRICS, build.getMetrics());
             JsonObject buildInfo = new JsonObject();
@@ -91,61 +98,70 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
             buildInfo.addProperty("name", build.getName());
 
             build.uploadArchiveAndBuild(buildArchive);
-            
+
             if (!"built".equals(build.getStatus())) {
                 throw new IllegalStateException("Error submitting archive for build: " + buildName);
             }
 
             JsonArray artifacts = new JsonArray();
             buildInfo.add("artifacts", artifacts);
-            if (this.downloadArtifacts && !build.getArtifacts().isEmpty()) {
-                report("Downloading bundle");
-                final long startDownloadSabTime = System.currentTimeMillis();
-                for (Artifact artifact : build.getArtifacts()) {
-                    File sab = artifact.download(null);
-                    JsonObject sabInfo = new JsonObject();
-                    sabInfo.addProperty("name", artifact.getName());
-                    sabInfo.addProperty("size", artifact.getSize());
-                    sabInfo.addProperty("location", sab.getAbsolutePath());
-                    sabInfo.addProperty("url", artifact.getURL());
-                    artifacts.add(sabInfo);
-                }
-                final long endDownloadSabTime = System.currentTimeMillis();
-                build.getMetrics().addProperty(SubmissionResultsKeys.DOWNLOAD_SABS_TIME,
-                        (endDownloadSabTime - startDownloadSabTime));
-                
-
-                if (artifacts.size() == 1) {
-                    String location = GsonUtilities
-                            .jstring(artifacts.get(0).getAsJsonObject(), "location");
-                    
-                    result.addProperty(SubmissionResultsKeys.BUNDLE_PATH, location);
-                    
-                    // Create a Job Config Overlays file if this is creating
-                    // a sab for subsequent distributed deployment
-                    // or keepArtifacts is set.
-                    final File sabFile = new File(location);
-                    final String sabBaseName = sabFile.getName().substring(0, sabFile.getName().length()-4);
-                    final int lastDot = sabBaseName.lastIndexOf('.');
-                    final String namespace, name;
-                    if (lastDot == -1) {                      
-                        namespace = null;
-                        name = sabBaseName;
-                    } else {
-                        namespace = sabBaseName.substring(0, lastDot);
-                        name = sabBaseName.substring(lastDot+1);
+            if (!build.getArtifacts().isEmpty()) {
+                if (!this.downloadArtifacts) {
+                    for (Artifact artifact : build.getArtifacts()) {
+                        System.out.println("build-artifact: " + artifact);
+                        JsonObject buildArtifact = new JsonObject();
+                        buildArtifact.addProperty("sabUrl", artifact.getURL());
+                        artifacts.add(buildArtifact);
                     }
-                    if (getClass() == BuildServiceContext.class || jboolean(deploy, KEEP_ARTIFACTS)) {
-                        createJobConfigOverlayFile(sabFile.getParentFile(),
-                                jco, namespace, name, result);
+                }
+                else {
+                    report("Downloading bundle");
+                    final long startDownloadSabTime = System.currentTimeMillis();
+                    for (Artifact artifact : build.getArtifacts()) {
+                        File sab = artifact.download(null);
+                        JsonObject sabInfo = new JsonObject();
+                        sabInfo.addProperty("name", artifact.getName());
+                        sabInfo.addProperty("size", artifact.getSize());
+                        sabInfo.addProperty("location", sab.getAbsolutePath());
+                        sabInfo.addProperty("url", artifact.getURL());
+                        artifacts.add(sabInfo);
+                    }
+                    final long endDownloadSabTime = System.currentTimeMillis();
+                    build.getMetrics().addProperty(SubmissionResultsKeys.DOWNLOAD_SABS_TIME,
+                            (endDownloadSabTime - startDownloadSabTime));
+
+
+                    if (artifacts.size() == 1) {
+                        String location = GsonUtilities
+                                .jstring(artifacts.get(0).getAsJsonObject(), "location");
+
+                        result.addProperty(SubmissionResultsKeys.BUNDLE_PATH, location);
+
+                        // Create a Job Config Overlays file if this is creating
+                        // a sab for subsequent distributed deployment
+                        // or keepArtifacts is set.
+                        final File sabFile = new File(location);
+                        final String sabBaseName = sabFile.getName().substring(0, sabFile.getName().length()-4);
+                        final int lastDot = sabBaseName.lastIndexOf('.');
+                        final String namespace, name;
+                        if (lastDot == -1) {                      
+                            namespace = null;
+                            name = sabBaseName;
+                        } else {
+                            namespace = sabBaseName.substring(0, lastDot);
+                            name = sabBaseName.substring(lastDot+1);
+                        }
+                        if (getClass() == BuildServiceContext.class || jboolean(deploy, KEEP_ARTIFACTS)) {
+                            createJobConfigOverlayFile(sabFile.getParentFile(),
+                                    jco, namespace, name, result);
+                        }
+
                     }
 
                 }
-
             }
-            
             postBuildAction(deploy, jco, result);
-            
+
             return result;
         } finally {
             // TODO: was macht build.delete()? Löscht das die Artifakte vom Build service? 
@@ -159,13 +175,13 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
             }
         }
 
-       
+
     }
 
     protected void postBuildAction(JsonObject deploy, JsonObject jco, JsonObject result) throws Exception {
         System.out.println ("BuildServiceContext.postBuildAction(...) - empty implementation");
     }
-    
+
     private static final String HEXES = "0123456789ABCDEF";
     private static final int HEXES_L = HEXES.length();
 
