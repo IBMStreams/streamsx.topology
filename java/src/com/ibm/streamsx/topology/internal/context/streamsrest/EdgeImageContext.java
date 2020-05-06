@@ -44,6 +44,8 @@ public class EdgeImageContext extends BuildServiceContext {
     public Instance instance() { return instance;}
 
 
+    
+    
     /**
      * performs the image build
      */
@@ -79,7 +81,7 @@ public class EdgeImageContext extends BuildServiceContext {
         application.addProperty("application", sabUrl);
         applicationBundles.add(application);
         buildConfig.add("applicationBundles", applicationBundles);
-        System.out.println ("Buildconfig = " + buildConfig);
+        
         //        
         //        "applicationBundles": [
         //                               { "application": "https://10.6.24.71:31233/streams/rest/builds/2/artifacts/0/applicationbundle",
@@ -109,6 +111,21 @@ public class EdgeImageContext extends BuildServiceContext {
 
 
         // TODO: create a valid build config
+        buildConfig.addProperty("baseImage", "image-registry.openshift-image-registry.svc:5000/edge-cpd-demo/streams-base-edge-conda-el7:v5.1_f_edge_latest");
+        buildConfig.addProperty("image", "image-registry.openshift-image-registry.svc:5000/edge-cpd-demo/shalver-edge-app:shalver");
+        buildConfig.addProperty("baseImageName", "streams-base-edge-conda-el7");
+/*
+        buildConfig.addProperty("baseImageRegistry", "image-registry.openshift-image-registry.svc:5000");
+        buildConfig.addProperty("baseImagePrefix", "<namespace>");
+        buildConfig.addProperty("baseImageName", "streams-base-edge-conda-el7");
+        buildConfig.addProperty("baseImageTag", "v5.1_f_edge_latest");
+        buildConfig.addProperty("imageRegistry", "image-registry.openshift-image-registry.svc:5000");
+        buildConfig.addProperty("imagePrefix", "<namespace>");
+        buildConfig.addProperty("imageName", "shalver-edge-app");
+        buildConfig.addProperty("imageTag", "shalver");
+ */
+        System.out.println ("Buildconfig = " + buildConfig);
+        
         Build imageBuild = null;
         try {
             imageBuild = imageBuilder.createBuild(getApplicationBuild().getName() + "_img", buildConfig);

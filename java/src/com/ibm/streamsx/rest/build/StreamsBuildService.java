@@ -102,13 +102,16 @@ class StreamsBuildService extends AbstractConnection implements BuildService, Bu
 		buildParams.addProperty("incremental", false);		
 		if (name != null)
 			buildParams.addProperty("name", name);
-		
+		if ((buildConfig != null) && (this.buildType == BuildType.STREAMS_DOCKER_IMAGE)) {
+			buildParams.add("buildConfigOverrides", buildConfig);
+		}
+		String bodyStr = buildParams.toString();
 		Request post = Request.Post(endpoint)	      
 		    .addHeader("Authorization", getAuthorization())
-		    .bodyString(buildParams.toString(),
+		    .bodyString(bodyStr,
 		                ContentType.APPLICATION_JSON);
 //        System.out.println("=======> POST = " + post);
-        System.out.println("StreamsBuildService: =======> POST body = " + buildParams.toString());
+        System.out.println("StreamsBuildService: =======> POST body = " + bodyStr);
 		
 		Build build = Build.create(this, this, StreamsRestUtils.requestGsonResponse(executor, post));
 		System.out.println("StreamsBuildService: =======> build = " + build);
