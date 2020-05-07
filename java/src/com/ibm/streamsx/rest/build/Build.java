@@ -184,25 +184,30 @@ public class Build extends Element {
     	return this;
     }
     
-    //TODO: remove this function as it seems not be necessary
-    public Build submitEdge() throws IOException {
-        action("streamsDockerImage");
+    public Build submit(String propertyName, JsonObject property) throws IOException {
+        action("submit", propertyName, property);
         return this;
     }
 
     public Build submit() throws IOException {
-    	action("submit");
+    	action("submit", null, null);
     	return this;
     }
     
-    public void action(String type) throws IOException {
+    public void action(String type, String propertyName, JsonObject property) throws IOException {
     	
     	JsonObject action = new JsonObject();
     	action.addProperty("type", type);
+    	
+		if ((propertyName != null) && (property != null)) {
+			action.add(propertyName, property);
+		}
+		String bodyStr = action.toString();
+    	System.out.println("Build::action =======> POST body = " + bodyStr);
 		
 		Request post = Request.Post(self + "/actions")	      
 		    .addHeader("Authorization", connection().getAuthorization())
-		    .bodyString(action.toString(), ContentType.APPLICATION_JSON);
+		    .bodyString(bodyStr, ContentType.APPLICATION_JSON);
 		
 		refresh( StreamsRestUtils.requestGsonResponse(connection().executor, post));
     }

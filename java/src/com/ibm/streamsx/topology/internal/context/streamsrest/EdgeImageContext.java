@@ -68,72 +68,30 @@ public class EdgeImageContext extends BuildServiceContext {
         if (imageBuilder instanceof BuildServiceSetters) {
             ((BuildServiceSetters)imageBuilder).setBuildType(BuildType.STREAMS_DOCKER_IMAGE);
         }
-        System.out.println("TODO: submit with build type streamsDockerImage using the imageBuilder: " + imageBuilder);
+        System.out.println("submit with build type streamsDockerImage using the imageBuilder: " + imageBuilder);
         report("Building edge image");
-        JsonObject buildConfig = new JsonObject();
+        JsonObject buildConfigOverrides = new JsonObject();
         JsonArray applicationBundles = new JsonArray();
         JsonObject application = new JsonObject();
         JsonArray artifacts = result.getAsJsonObject("build").getAsJsonArray("artifacts");
         JsonObject artifact0 = (JsonObject)artifacts.get(0);
 
         String sabUrl = artifact0.get("sabUrl").getAsString();
-        System.out.println ("---- sabUrl for Buildconfig = " + sabUrl);
+        System.out.println ("---- sabUrl for buildConfigOverrides = " + sabUrl);
         application.addProperty("application", sabUrl);
         applicationBundles.add(application);
-        buildConfig.add("applicationBundles", applicationBundles);
-        
-        //        
-        //        "applicationBundles": [
-        //                               { "application": "https://10.6.24.71:31233/streams/rest/builds/2/artifacts/0/applicationbundle",
-        //                                 "applicationCredentials": {
-        //                                   "user": "streamsadmin",
-        //                                   "password": "install"
-        //                                 }
-        //                               }
-        //                             ],
-        //
-        //        {
-        //            "submitMetrics": {
-        //               "buildArchiveSize":3728424,
-        //               "buildArchiveUploadTime_ms":5455,
-        //               "buildState_submittedTime_ms":723,
-        //               "buildState_buildingTime_ms":30759,
-        //               "totalBuildTime_ms":32705},
-        //            "build": {
-        //               "name":null,
-        //               "artifacts":[
-        //                            {
-        //                                "sabUrl":"https://edge-cpd-demo-cpd-edge-cpd-demo.apps.streams-ocp-43-1.os.fyre.ibm.com:443/streams-build/instances/sample-streams/edge-cpd-demo/82/artifacts/0/applicationbundle"
-        //                            }
-        //                           ]
-        //             }
-        //         }
-
-
-        // TODO: create a valid build config
-        buildConfig.addProperty("baseImage", "image-registry.openshift-image-registry.svc:5000/edge-cpd-demo/streams-base-edge-conda-el7:v5.1_f_edge_latest");
-        buildConfig.addProperty("image", "image-registry.openshift-image-registry.svc:5000/edge-cpd-demo/shalver-edge-app:shalver");
-        buildConfig.addProperty("baseImageName", "streams-base-edge-conda-el7");
-/*
-        buildConfig.addProperty("baseImageRegistry", "image-registry.openshift-image-registry.svc:5000");
-        buildConfig.addProperty("baseImagePrefix", "<namespace>");
-        buildConfig.addProperty("baseImageName", "streams-base-edge-conda-el7");
-        buildConfig.addProperty("baseImageTag", "v5.1_f_edge_latest");
-        buildConfig.addProperty("imageRegistry", "image-registry.openshift-image-registry.svc:5000");
-        buildConfig.addProperty("imagePrefix", "<namespace>");
-        buildConfig.addProperty("imageName", "shalver-edge-app");
-        buildConfig.addProperty("imageTag", "shalver");
- */
-        System.out.println ("Buildconfig = " + buildConfig);
+        buildConfigOverrides.add("applicationBundles", applicationBundles);
+        buildConfigOverrides.addProperty("baseImage", "image-registry.openshift-image-registry.svc:5000/edge-cpd-demo/streams-base-edge-conda-el7:v5.1_f_edge_latest");
+        buildConfigOverrides.addProperty("image", "image-registry.openshift-image-registry.svc:5000/edge-cpd-demo/shalver-edge-app:shalver");
         
         Build imageBuild = null;
         try {
-            imageBuild = imageBuilder.createBuild(getApplicationBuild().getName() + "_img", buildConfig);
+            imageBuild = imageBuilder.createBuild(getApplicationBuild().getName() + "_img", null);
 
             final long startBuildTime = System.currentTimeMillis();
             long lastCheckTime = startBuildTime;
 
-            imageBuild.submit();
+            imageBuild.submit("buildConfigOverrides", buildConfigOverrides);
 
             String buildStatus;
             do {
