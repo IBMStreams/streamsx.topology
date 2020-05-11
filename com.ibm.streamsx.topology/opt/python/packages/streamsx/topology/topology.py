@@ -234,9 +234,17 @@ Example of using ``__enter__`` to create custom metrics::
 When an instance defines a valid ``__exit__`` method then it will be called with an exception when:
 
  * the instance raises an exception during processing of a tuple
- * a data conversion exception is raised converting a value to an structutured schema tuple or attribute
+ * a data conversion exception is raised converting a value to an structured schema tuple or attribute
 
 If ``__exit__`` returns a true value then the exception is suppressed and processing continues, otherwise the enclosing processing element will be terminated.
+
+.. note::
+    The ``__exit__`` method requires four parameters, whereas the last three parameters are set when exception is raised only:: 
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            if exc_type:
+                print(str(exc_type.__name__))
+                ...
 
 Tuple semantics
 ===============
