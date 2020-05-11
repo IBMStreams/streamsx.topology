@@ -8,8 +8,6 @@ import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
-import java.io.IOException;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Instance;
@@ -79,6 +77,10 @@ public class EdgeImageContext extends BuildServiceContext {
         String sabUrl = artifact0.get("sabUrl").getAsString();
         System.out.println ("---- sabUrl for buildConfigOverrides = " + sabUrl);
         application.addProperty("application", sabUrl);
+        JsonObject applicationCredentials = new JsonObject();
+        final String token = StreamsKeys.getBearerToken(deploy);
+        applicationCredentials.addProperty("bearerToken", token);
+        application.add("applicationCredentials", applicationCredentials);
         applicationBundles.add(application);
         buildConfigOverrides.add("applicationBundles", applicationBundles);
         buildConfigOverrides.addProperty("baseImage", "image-registry.openshift-image-registry.svc:5000/edge-cpd-demo/streams-base-edge-conda-el7:v5.1_f_edge_latest");
