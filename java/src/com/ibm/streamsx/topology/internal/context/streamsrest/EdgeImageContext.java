@@ -5,17 +5,19 @@
 package com.ibm.streamsx.topology.internal.context.streamsrest;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import java.util.List;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Instance;
+import com.ibm.streamsx.rest.build.Artifact;
 import com.ibm.streamsx.rest.build.Build;
 import com.ibm.streamsx.rest.build.BuildService;
 import com.ibm.streamsx.rest.internal.BuildType;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
+//import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
  * Streams V5 (ICP4D) build service context for EDGE.
@@ -43,8 +45,8 @@ public class EdgeImageContext extends BuildServiceContext {
     public Instance instance() { return instance;}
 
 
-    
-    
+
+
     /**
      * performs the image build
      */
@@ -56,7 +58,7 @@ public class EdgeImageContext extends BuildServiceContext {
         System.out.println("===========================================================");
 
         // create the Build service for the image build type:
-        JsonObject serviceDefinition = object(deploy, StreamsKeys.SERVICE_DEFINITION);
+        JsonObject serviceDefinition = GsonUtilities.object(deploy, StreamsKeys.SERVICE_DEFINITION);
         BuildService imageBuilder = null;
         if (serviceDefinition != null)
             imageBuilder = BuildService.ofServiceDefinition(serviceDefinition, sslVerify(deploy));
@@ -72,7 +74,8 @@ public class EdgeImageContext extends BuildServiceContext {
         JsonObject buildConfigOverrides = new JsonObject();
         JsonArray applicationBundles = new JsonArray();
         JsonObject application = new JsonObject();
-        JsonArray artifacts = result.getAsJsonObject("build").getAsJsonArray("artifacts");
+        
+        JsonArray artifacts = GsonUtilities.array(GsonUtilities.object(result, "build"), "artifacts");
         JsonObject artifact0 = (JsonObject)artifacts.get(0);
 
         String sabUrl = artifact0.get("sabUrl").getAsString();
@@ -84,13 +87,18 @@ public class EdgeImageContext extends BuildServiceContext {
         application.add("applicationCredentials", applicationCredentials);
         applicationBundles.add(application);
         buildConfigOverrides.add("applicationBundles", applicationBundles);
+        
         // TODO retrieve values for baseImage and image
         buildConfigOverrides.addProperty("baseImage", "image-registry.openshift-image-registry.svc:5000/edge-cpd-demo/streams-base-edge-conda-el7:v5.1_f_edge_latest");
-        buildConfigOverrides.addProperty("image", "image-registry.openshift-image-registry.svc:5000/edge-cpd-demo/shalver-edge-app:shalver");
-        
+        final String imageRegistry = "image-registry.openshift-image-registry.svc:5000";
+        final String imagePrefix = "edge-cpd-demo";
+        final String imageName = getBuildName();
+        final String imageTag = "streamsx";
+        buildConfigOverrides.addProperty("image", imageRegistry + "/" + imagePrefix + "/" + imageName + ":" + imageTag);
+
         Build imageBuild = null;
         try {
-        	String buildName = getApplicationBuild().getName() + "_img";
+            String buildName = getApplicationBuild().getName() + "_img";
             imageBuild = imageBuilder.createBuild(buildName, null);
 
             final long startBuildTime = System.currentTimeMillis();
@@ -130,26 +138,47 @@ public class EdgeImageContext extends BuildServiceContext {
                 }
                 buildStatus = imageBuild.getStatus();
             } while ("building".equals(buildStatus) || "waiting".equals(buildStatus) || "submitted".equals(buildStatus));
-            
+
             System.out.println("imageBuild ended with status " + buildStatus);
-            System.out.println("imageBuilds artifacts: " + imageBuild.getArtifacts());
-            
+
             if (! "built".equals(buildStatus)) {
-        		TRACE.severe("The submitted image " + buildName + " failed to build with status " + buildStatus + ".");
-        		List<String> errorMessages = imageBuild.getLogMessages();
-        		for (String line : errorMessages) {
-        			TRACE.severe(line);
+                TRACE.severe("The submitted image " + buildName + " failed to build with status " + buildStatus + ".");
+                List<String> errorMessages = imageBuild.getLogMessages();
+                for (String line : errorMessages) {
+                    TRACE.severe(line);
                 }
             }
             else {
-            	// add build metrics to the result JsonObject
-            	result.add(SubmissionResultsKeys.SUBMIT_IMAGE_METRICS, imageBuild.getMetrics());
-                // TODO add "something" from the artifact to the result JsonObject ?
+                List<Artifact> buildArtifacts = imageBuild.getArtifacts();
+                System.out.println("imageBuilds artifacts: " + buildArtifacts);
+                if (buildArtifacts == null || buildArtifacts.size() == 0)
+                    throw new IllegalStateException("No image build artifacts produced.");
+                if (buildArtifacts.size() != 1)
+                    throw new IllegalStateException("Multiple image build artifacts produced.");
+                Artifact buildArtifact = buildArtifacts.get(0);
+
+                // add build metrics to the result JsonObject
+                result.add(SubmissionResultsKeys.SUBMIT_IMAGE_METRICS, imageBuild.getMetrics());
+                // total build time of bundle + image on result root level
+                result.addProperty(SubmissionResultsKeys.SUBMIT_TOTAL_BUILD_TIME, 
+                        buildMetrics.get(SubmissionResultsKeys.SUBMIT_TOTAL_BUILD_TIME).getAsLong() +
+                        getApplicationBuild().getMetrics().get(SubmissionResultsKeys.SUBMIT_TOTAL_BUILD_TIME).getAsLong());
+
+                artifacts = GsonUtilities.array(GsonUtilities.object(result, "build"), "artifacts");
+                final String imgDigest = buildArtifact.getImageDigest();
+                final String imgName = buildArtifact.getName();
+                artifacts.forEach(artfct -> {
+                    JsonObject jso = artfct.getAsJsonObject();
+                    jso.addProperty(SubmissionResultsKeys.IMAGE_DIGEST, imgDigest);
+                    jso.addProperty(SubmissionResultsKeys.DOCKER_IMAGE, imgName);
+                });
+                result.addProperty(SubmissionResultsKeys.IMAGE_DIGEST, imgDigest);
+                result.addProperty(SubmissionResultsKeys.DOCKER_IMAGE, imgName);
             }
 
         }
         finally {
-            if (!jboolean(deploy, KEEP_ARTIFACTS)) {
+            if (!GsonUtilities.jboolean(deploy, KEEP_ARTIFACTS)) {
                 Build applicationBuild = getApplicationBuild();
                 if (applicationBuild != null) {
                     try {
