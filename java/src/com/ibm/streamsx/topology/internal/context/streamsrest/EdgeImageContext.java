@@ -137,6 +137,9 @@ public class EdgeImageContext extends BuildServiceContext {
             if (! "built".equals(buildStatus)) {
         		TRACE.severe("The submitted image " + buildName + " failed to build with status " + buildStatus + ".");
         		List<String> errorMessages = imageBuild.getLogMessages();
+        		for (String line : errorMessages) {
+        			TRACE.severe(line);
+                }
             }
             else {
             	// add build metrics to the result JsonObject

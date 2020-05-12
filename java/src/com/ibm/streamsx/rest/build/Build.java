@@ -174,7 +174,10 @@ public class Build extends Element {
 		} while ("building".equals(getStatus()) || "waiting".equals(getStatus()) || "submitted".equals(getStatus()));
 		
 		StreamsRestUtils.TRACE.severe("The submitted archive " + archive.getName() + " failed to build with status " + getStatus() + ".");
-		getLogMessages();
+		List<String> errorMessages = getLogMessages();
+		for (String line : errorMessages) {
+			StreamsRestUtils.TRACE.severe(line);
+        }
     	
     	return this;
     }
@@ -187,7 +190,6 @@ public class Build extends Element {
 		String output = StreamsRestUtils.requestTextResponse(connection().executor, gr);
 		String[] lines = output.split("\\R");
 		for (String line : lines) {
-		    StreamsRestUtils.TRACE.severe(line);
 		    result.add(line);
 		}
 		return result;
