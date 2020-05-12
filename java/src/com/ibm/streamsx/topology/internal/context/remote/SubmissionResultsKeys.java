@@ -41,6 +41,7 @@ public interface SubmissionResultsKeys {
      */
     String BUILD_STATUS = "buildStatus";
     String SUBMIT_METRICS = "submitMetrics";
+    String SUBMIT_IMAGE_METRICS = "submitImageMetrics"; // EdgeImageContext
     String TIME_MS_SUFFIX = "Time_ms";
             
     /**

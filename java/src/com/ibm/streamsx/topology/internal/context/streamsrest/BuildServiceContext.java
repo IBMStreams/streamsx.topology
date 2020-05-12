@@ -94,8 +94,8 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
             JsonObject result = new JsonObject();
             result.add(SubmissionResultsKeys.SUBMIT_METRICS, build.getMetrics());
             JsonObject buildInfo = new JsonObject();
-            result.add("build", buildInfo);
             buildInfo.addProperty("name", build.getName());
+            result.add("build", buildInfo);
 
             build.uploadArchiveAndBuild(buildArchive);
 
@@ -164,7 +164,6 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
 
             return result;
         } finally {
-            // TODO: was macht build.delete()? Löscht das die Artifakte vom Build service? 
             if (this.downloadArtifacts) {
                 try {
                     build.delete();

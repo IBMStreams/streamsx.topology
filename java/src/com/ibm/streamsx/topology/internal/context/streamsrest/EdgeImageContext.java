@@ -83,12 +83,14 @@ public class EdgeImageContext extends BuildServiceContext {
         application.add("applicationCredentials", applicationCredentials);
         applicationBundles.add(application);
         buildConfigOverrides.add("applicationBundles", applicationBundles);
+        // TODO retrieve values for baseImage and image
         buildConfigOverrides.addProperty("baseImage", "image-registry.openshift-image-registry.svc:5000/edge-cpd-demo/streams-base-edge-conda-el7:v5.1_f_edge_latest");
         buildConfigOverrides.addProperty("image", "image-registry.openshift-image-registry.svc:5000/edge-cpd-demo/shalver-edge-app:shalver");
         
         Build imageBuild = null;
         try {
-            imageBuild = imageBuilder.createBuild(getApplicationBuild().getName() + "_img", null);
+        	String buildName = getApplicationBuild().getName() + "_img";
+            imageBuild = imageBuilder.createBuild(buildName, null);
 
             final long startBuildTime = System.currentTimeMillis();
             long lastCheckTime = startBuildTime;
@@ -96,10 +98,11 @@ public class EdgeImageContext extends BuildServiceContext {
             imageBuild.submit("buildConfigOverrides", buildConfigOverrides);
 
             String buildStatus;
+            JsonObject buildMetrics;
             do {
                 imageBuild.refresh();
                 buildStatus = imageBuild.getStatus();
-                JsonObject buildMetrics = imageBuild.getMetrics();
+                buildMetrics = imageBuild.getMetrics();
                 if ("built".equals(buildStatus)) {
                     final long endBuildTime = System.currentTimeMillis();
                     buildMetrics.addProperty(SubmissionResultsKeys.SUBMIT_TOTAL_BUILD_TIME, (endBuildTime - startBuildTime));
@@ -132,10 +135,12 @@ public class EdgeImageContext extends BuildServiceContext {
             
             if (! "built".equals(buildStatus)) {
                 TRACE.severe("The image failed to build with status " + buildStatus + ".");
-                // TODO: Make error handling regarding the result when postBuildAction(...) in DistributedStreamsRestContext fails?
+                throw new IllegalStateException("Error submitting bundle for build edge image: " + buildName);
             }
             else {
-                // TODO add "something" to the result JsonObject
+            	// add build metrics to the result JsonObject
+            	result.add(SubmissionResultsKeys.SUBMIT_IMAGE_METRICS, imageBuild.getMetrics());
+                // TODO add "something" from the artifact to the result JsonObject ?
             }
 
         }
