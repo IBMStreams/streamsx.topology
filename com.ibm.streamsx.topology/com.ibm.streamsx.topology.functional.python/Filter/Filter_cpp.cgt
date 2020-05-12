@@ -38,6 +38,9 @@ void MY_OPERATOR::prepareToShutdown()
     funcop_->prepareToShutdown();
 }
 
+<%
+my $nonMatchOutput = $model->getNumberOfOutputPorts() == 2;
+%>
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
     bool passed = false;
@@ -69,6 +72,10 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
     }
     if (passed)
          submit(tuple, 0);
+    <%if ($nonMatchOutput) {%>
+    else
+         submit(tuple, 1);
+    <%}%>
 }
 
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)

@@ -122,12 +122,18 @@ class Optimizer {
                 if (connCounts.length == 1)
                      value.addProperty("value", connCounts[0]);
                 else {
-                    JsonArray ocs = new JsonArray();
-                    for (int oc : connCounts)
-                        ocs.add(new JsonPrimitive(oc));
-                    value.add("value", ocs);
+                	value = null; // TODO: Check how to handle multiple output ports (prevent generating invalid SPL code)
+                	// TODO: What was intended here, still required for multiple output ports?
+                	// origin code below generates invalid SPL code for parameter outputConnections, that is of type int32 and cardinality 1:
+                	// outputConnections: '1', '1';
+                	//     	
+                    //JsonArray ocs = new JsonArray();
+                    //for (int oc : connCounts)
+                    //    ocs.add(new JsonPrimitive(oc));
+                    //value.add("value", ocs);
                 }
-                GraphUtilities.addOpParameter(pyop, "outputConnections", value);
+                if (null != value)
+                    GraphUtilities.addOpParameter(pyop, "outputConnections", value);
             }
         }
     }
