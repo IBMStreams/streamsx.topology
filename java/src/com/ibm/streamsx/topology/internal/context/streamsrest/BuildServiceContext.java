@@ -31,6 +31,7 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
 
     private boolean downloadArtifacts = true;
     private Build build = null;
+    private String buildNameSPLCompatible = null;
 
     /**
      * @param downloadArtifacts
@@ -59,6 +60,14 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
     public Type getType() {
         return Type.BUNDLE;
     }
+    
+    private void setBuildName(String name) {
+        this.buildNameSPLCompatible = getSPLCompatibleName(name);
+    }
+    
+    public String getBuildName() {
+        return this.buildNameSPLCompatible;
+    }
 
     protected boolean sslVerify(JsonObject deploy) {
         if (deploy.has(ContextProperties.SSL_VERIFY))
@@ -84,10 +93,10 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
         if (!sslVerify(deploy))
             context.allowInsecureHosts();
 
-        buildName = getSPLCompatibleName(buildName) + "_" + randomHex(16);
+        setBuildName(buildName);
+        buildName = getBuildName() + "_" + randomHex(16);
 
         report("Building bundle");
-        System.out.println (this.downloadArtifacts? "Building bundle with download": "Building bundle without download");
         this.build = context.createBuild(buildName, buildConfig);
         try {
 
@@ -108,7 +117,6 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
             if (!build.getArtifacts().isEmpty()) {
                 if (!this.downloadArtifacts) {
                     for (Artifact artifact : build.getArtifacts()) {
-                        System.out.println("build-artifact: " + artifact);
                         JsonObject buildArtifact = new JsonObject();
                         buildArtifact.addProperty("sabUrl", artifact.getURL());
                         artifacts.add(buildArtifact);
@@ -178,7 +186,6 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
     }
 
     protected void postBuildAction(JsonObject deploy, JsonObject jco, JsonObject result) throws Exception {
-        System.out.println ("BuildServiceContext.postBuildAction(...) - empty implementation");
     }
 
     private static final String HEXES = "0123456789ABCDEF";
