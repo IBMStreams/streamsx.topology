@@ -371,6 +371,14 @@ class Routing(Enum):
     Each tuple is only sent to a single channel.
     """
     KEY_PARTITIONED=2
+    """
+    Tuples are routed based upon specified partitioning keys.
+    The splitter routes tuples that have the same values for these keys (list of attributes) to the same parallel channel.
+    The keys must exist in the tuple type that is specified for the input stream.
+    Requires a structured stream :py:class:`StreamSchema` or named tuple as input stream.
+    
+    Each tuple is only sent to a single channel.
+    """
     HASH_PARTITIONED=3
     """
     Tuples are routed based upon a hash value so that tuples with the same hash
@@ -1656,7 +1664,7 @@ class Stream(_placement._Placement, object):
         oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport, other=self)
     
-    def parallel(self, width, routing=Routing.ROUND_ROBIN, func=None, name=None):
+    def parallel(self, width, routing=Routing.ROUND_ROBIN, func=None, keys=None, name=None):
         """
         Split stream into channels and start a parallel region.
 
@@ -1737,6 +1745,7 @@ class Stream(_placement._Placement, object):
             func: Optional function called when :py:const:`Routing.HASH_PARTITIONED` routing is specified.
                 The function provides an integer value to be used as the hash that determines
                 the tuple channel routing.
+            keys([str]): Optional list of keys required when :py:const:`Routing.KEY_PARTITIONED` routing is specified. Each key represents a tuple attribute.
             name (str): The name to display for the parallel region.
 
         Returns:
@@ -1759,7 +1768,6 @@ class Stream(_placement._Placement, object):
                 oport = op2.addOutputPort(width, schema=self.oport.schema, routing="BROADCAST", name=_name)
             else:
                 oport = op2.addOutputPort(width, schema=self.oport.schema, routing="ROUND_ROBIN", name=_name)
-
                 
             return Stream(self.topology, oport, other=self)
         elif routing == Routing.HASH_PARTITIONED:
@@ -1798,6 +1806,27 @@ class Stream(_placement._Placement, object):
                 parallel_op_port = hrop.addOutputPort(schema=self.oport.schema)
 
             return Stream(self.topology, parallel_op_port, other=self)
+        elif routing == Routing.KEY_PARTITIONED:
+            if (keys is None):        
+                raise NotImplementedError("KEY_PARTITIONED for schema {0} requires a array of keys set in keys parameter.".format(self.oport.schema))
+                
+            if False == isinstance(keys, list):
+                raise TypeError("Invalid keys {0}, list type required.".format(keys))
+
+            if False == isinstance(self.oport.schema, streamsx.topology.schema.StreamSchema):
+                raise TypeError("Routing type KEY_PARTITIONED requires structured schema, use StreamsSchema or named tuple.")
+                
+            for key in keys:
+                if key not in str(self.oport.schema):
+                    raise ValueError("Invalid keys {0} for routing type KEY_PARTITIONED and schema {1}.".format(keys, self.oport.schema))
+            
+            op2 = self.topology.graph.addOperator("$Parallel$", name=_name)
+            if name is not None:
+                op2.config['regionName'] = _name
+            op2.addInputPort(outputPort=self.oport)
+            oport = op2.addOutputPort(oWidth=width, schema=self.oport.schema, partitioned_keys=keys, routing="KEY_PARTITIONED", name=_name)
+                
+            return Stream(self.topology, oport, other=self)
         else :
             raise TypeError("Invalid routing type supplied to the parallel operator")    
 
