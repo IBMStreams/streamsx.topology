@@ -7,6 +7,7 @@ package com.ibm.streamsx.rest.build;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.ArrayList;
 
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
@@ -173,15 +174,25 @@ public class Build extends Element {
 		} while ("building".equals(getStatus()) || "waiting".equals(getStatus()) || "submitted".equals(getStatus()));
 		
 		StreamsRestUtils.TRACE.severe("The submitted archive " + archive.getName() + " failed to build with status " + getStatus() + ".");
-		
+		List<String> errorMessages = getLogMessages();
+		for (String line : errorMessages) {
+			StreamsRestUtils.TRACE.severe(line);
+        }
+    	
+    	return this;
+    }
+    
+    public List<String> getLogMessages() throws IOException, InterruptedException {
+    	List<String> result = new ArrayList<>();
+    	
 		Request gr = Request.Get(this.logMessages).addHeader("Authorization", connection().getAuthorization());
 				
 		String output = StreamsRestUtils.requestTextResponse(connection().executor, gr);
 		String[] lines = output.split("\\R");
-		for (String line : lines)
-		    StreamsRestUtils.TRACE.severe(line);
-    	
-    	return this;
+		for (String line : lines) {
+		    result.add(line);
+		}
+		return result;
     }
     
     public Build submit(String propertyName, JsonObject property) throws IOException {

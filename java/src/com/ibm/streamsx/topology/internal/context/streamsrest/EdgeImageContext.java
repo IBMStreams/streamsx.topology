@@ -8,6 +8,7 @@ import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
+import java.util.List;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Instance;
@@ -134,8 +135,11 @@ public class EdgeImageContext extends BuildServiceContext {
             System.out.println("imageBuilds artifacts: " + imageBuild.getArtifacts());
             
             if (! "built".equals(buildStatus)) {
-                TRACE.severe("The image failed to build with status " + buildStatus + ".");
-                throw new IllegalStateException("Error submitting bundle for build edge image: " + buildName);
+        		TRACE.severe("The submitted image " + buildName + " failed to build with status " + buildStatus + ".");
+        		List<String> errorMessages = imageBuild.getLogMessages();
+        		for (String line : errorMessages) {
+        			TRACE.severe(line);
+                }
             }
             else {
             	// add build metrics to the result JsonObject
