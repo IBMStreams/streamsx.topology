@@ -50,6 +50,12 @@
     <pathelement location="${tk.opt}/gson-2.3.1/gson-2.3.1.jar" />
   </path>
 
+  <path id="jaxb.classpath">
+    <fileset dir="${tk.opt}/jaxb">
+       <include name="*.jar"/>
+    </fileset>
+  </path>
+
   <path id="compress.classpath">
     <pathelement location="${tk.opt}/client/apache-commons/commons-compress-1.18.jar"/>
   </path>
@@ -59,6 +65,7 @@
     <path refid="gson.classpath" />
     <path refid="httpclient.classpath" />
     <path refid="compress.classpath" />
+    <path refid="jaxb.classpath"/>
   </path>
 
 </project>
