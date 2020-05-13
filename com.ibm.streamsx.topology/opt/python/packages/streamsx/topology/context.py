@@ -545,6 +545,12 @@ class _EdgeSubmitter(_BaseSubmitter):
                 self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
                 streamsx.rest_primitives.Instance._clear_service_info(self._config())
 
+        # check that serviceBuildPoolsEndpoint is set
+        try:
+            serviceBuildPoolsEndpoint = self._config()[ConfigParams.SERVICE_DEFINITION]['connection_info']['serviceBuildPoolsEndpoint']
+        except KeyError: 
+                raise RuntimeError('Build service is not configured for EDGE submission')
+
     def _get_java_env(self):
         "Set env vars from connection if set"
         env = super(_EdgeSubmitter, self)._get_java_env()
