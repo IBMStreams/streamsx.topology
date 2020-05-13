@@ -78,7 +78,7 @@ public class EdgeImageContext extends BuildServiceContext {
             }
             if (this.baseImage == null) {
                 this.baseImage = baseImages.get(0);
-                TRACE.warning("No baseImage with 'conda' or 'python' in its name or tag found. Using " + this.baseImage.getRestid() + " instead.");
+                TRACE.warning("No base image with 'conda' or 'python' in its name or tag found. Using " + this.baseImage.getRestid() + " instead.");
             }
         }
         catch (IOException e) {
