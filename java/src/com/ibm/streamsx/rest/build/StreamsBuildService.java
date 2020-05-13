@@ -10,7 +10,6 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -179,8 +178,8 @@ class StreamsBuildService extends AbstractConnection implements BuildService, Bu
     public List<BaseImage> getBaseImages() throws IOException {
         final String BUILD_POOLS = "buildPools";
         if (this.poolsEndpoint == null) {
-            // exposed endpoint for the build pools is optional
-            return Collections.emptyList();
+            // exposed endpoint for the build pools is optional, but required for getting base images
+            throw new IOException("No REST build pool endpoint available.");
         }
         // find out the right build pool; we use the first build pool with type 'image'
         JsonObject jsonResponse = new Gson().fromJson(this.getResponseString(this.poolsEndpoint), JsonObject.class);
