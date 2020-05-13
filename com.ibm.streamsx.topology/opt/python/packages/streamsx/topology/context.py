@@ -1068,17 +1068,49 @@ class ContextTypes(object):
     """
 
     EDGE = 'EDGE'
-    """Submission to build service running on IBM Cloud Pak for Data to create images for Edge.
+    """Submission to build service running on IBM Cloud Pak for Data to create an image for Edge.
 
     The `Topology` is compiled and the resultant Streams application bundle
-    (sab file) is added to a Streams Docker image for Edge.
+    (sab file) is added to an image for Edge.
+
+    .. rubric:: IBM Cloud Pak for Data integated configuration
+
+    *Projects (within cluster)*
+
+    The `Topology` is compiled using the Streams build service for 
+    a Streams service instance running in the same Cloud Pak for
+    Data cluster as the Jupyter notebook or script declaring the application.
+
+    The instance is specified in the configuration passed into :py:func:`submit`. The code that selects a service instance by name is::
+
+        from icpd_core import icpd_util
+        cfg = icpd_util.get_service_instance_details(name='instanceName', instance_type="streams")
+
+        topo = Topology()
+        ...
+        submit(ContextTypes.EDGE, topo, cfg)
+
+    The resultant `cfg` dict may be augmented with other values such as
+    keys from :py:class:`ConfigParams`.
+
+    *External to cluster or project*
+
+    The `Topology` is compiled using the Streams build service for a Streams service instance running in Cloud Pak for Data.
+
+    Environment variables:
+        These environment variables define how the application is built and submitted.
+
+        * **CP4D_URL** - Cloud Pak for Data deployment URL, e.g. `https://cp4d_server:31843`
+        * **STREAMS_INSTANCE_ID** - Streams service instance name.
+        * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
+        * **STREAMS_PASSWORD** - Password for authentication.
 
     """
 
     EDGE_BUNDLE = 'EDGE_BUNDLE'
-    """Submission to build service running on IBM Cloud Pak for Data to build bundles without creating Streams Docker image unlike `EDGE`.
+    """Creates a Streams application bundle.
 
-    The `Topology` is compiled and the resultant Streams application bundle
+    The `Topology` is compiled on build service running on IBM Cloud Pak for Data and the resultant Streams application bundle
     (sab file) is downloaded.
 
     .. note::
@@ -1542,6 +1574,12 @@ class SubmissionResult(object):
 
         submission_result = submit(ContextTypes.DISTRIBUTED, topology, config)
         print(submission_result)
+
+    Result contains the generated `image`, `imageDigest`, `submitMetrics` (building the bundle), `submitImageMetrics` (building the image) when using :py:const:`~ContextTypes.EDGE`::
+
+        submission_result = submit(ContextTypes.EDGE, topology, config)
+        print(submission_result.image)
+        print(submission_result.imageDigest)
 
 """
     def __init__(self, results):
