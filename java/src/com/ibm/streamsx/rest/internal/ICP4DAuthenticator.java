@@ -78,12 +78,13 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         URL url = null;
         try {
             url = new URL(externalEndpoint);
+            // here we should end with CPD < 2.5
         } catch (MalformedURLException e) {
-            // not a valid URL; create a valid URL with externalEndpoint as the path
+            // CPD 2.5 switched to path-absolute; not a valid URL; create a valid URL with externalEndpoint as the path
             url = new URL("https", this.icpdUrl.getHost(), this.icpdUrl.getPort(), externalEndpoint);
         }
         // Ensure the build endpoint matches the fully external ICP4D URL
-        URL ret = new URL("https", this.icpdUrl.getHost(), this.icpdUrl.getPort(), url.getPath());
+        URL ret = new URL("https", this.icpdUrl.getHost(), url.getPort(), url.getPath());
         return ret;
     }
 
