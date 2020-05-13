@@ -48,7 +48,6 @@ public class Build extends Element {
     
     static final Build create(BuildService service, AbstractConnection connection, JsonObject gsonString) {
         // Build element = gson.fromJson(gsonString, Build.class);
-        System.out.println("Build.create (3rd argument) = " + gsonString);
         Build element = new Build();
         element.self = GsonUtilities.jstring(gsonString, "build");
         element.setConnection(connection);
@@ -214,7 +213,7 @@ public class Build extends Element {
 			action.add(propertyName, property);
 		}
 		String bodyStr = action.toString();
-    	System.out.println("Build::action =======> POST body = " + bodyStr);
+//    	System.out.println("Build::action =======> POST body = " + bodyStr);
 		
 		Request post = Request.Post(self + "/actions")	      
 		    .addHeader("Authorization", connection().getAuthorization())

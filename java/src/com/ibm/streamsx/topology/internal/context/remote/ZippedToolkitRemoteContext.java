@@ -104,7 +104,9 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     private static Path pack(final File appTkRoot, JsonObject submission, String tkName, String mainCompositeKind) throws IOException, URISyntaxException {
         JsonObject deploy = deploy(submission);
         Type contextType = contextType(deploy);
-        System.out.println("ZippedToolkitRemoteContext: Here we could implement context type specific archive creation. context type = " + contextType);
+        if (contextType == Type.EDGE || contextType == Type.EDGE_BUNDLE) {
+//            System.out.println("ZippedToolkitRemoteContext: Here we could implement context type specific archive creation. context type = " + contextType);
+        }
         JsonObject graph = graph(submission);
         
         if (mainCompositeKind == null) {
