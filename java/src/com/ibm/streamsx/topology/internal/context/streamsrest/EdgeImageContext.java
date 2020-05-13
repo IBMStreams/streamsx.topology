@@ -6,6 +6,8 @@ package com.ibm.streamsx.topology.internal.context.streamsrest;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import com.google.gson.JsonArray;
@@ -14,9 +16,9 @@ import com.ibm.streamsx.rest.Instance;
 import com.ibm.streamsx.rest.build.Artifact;
 import com.ibm.streamsx.rest.build.Build;
 import com.ibm.streamsx.rest.build.BuildService;
+import com.ibm.streamsx.rest.build.BaseImage;
 import com.ibm.streamsx.rest.internal.BuildType;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
-//import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
@@ -41,11 +43,50 @@ public class EdgeImageContext extends BuildServiceContext {
     }
 
     private Instance instance;
+    private BaseImage baseImage;
 
     public Instance instance() { return instance;}
 
+    /**
+     * returns the base image to use for the image build.
+     * @return
+     */
+    public BaseImage getBaseImage() {
+        return baseImage;
+    }
 
 
+    /**
+     * @see com.ibm.streamsx.topology.internal.context.streamsrest.BuildServiceContext#submitBuildArchive(com.ibm.streamsx.rest.build.BuildService, java.io.File, com.google.gson.JsonObject, com.google.gson.JsonObject, java.lang.String, com.google.gson.JsonObject)
+     */
+    @Override
+    protected JsonObject submitBuildArchive (BuildService context, File buildArchive, JsonObject deploy, JsonObject jco,
+            String buildName, JsonObject buildConfig) throws Exception {
+        // find the base image to use for image build in postBuildAction()
+        try {
+            List<BaseImage> baseImages = context.getBaseImages();
+            if (baseImages.size() == 0) {
+                TRACE.severe("No base images found on build service.");
+                throw new IllegalStateException("No base images found on build service.");
+            }
+            for (BaseImage bi: baseImages) {
+                final String biNameTag = (bi.getName() + " " + bi.getTag()).toLowerCase();
+                if (biNameTag.contains("conda") || biNameTag.contains("python")) {
+                    this.baseImage = bi;
+                    break;
+                }
+            }
+            if (this.baseImage == null) {
+                this.baseImage = baseImages.get(0);
+                TRACE.warning("No baseImage with 'conda' or 'python' in its name or tag found. Using " + this.baseImage.getRestid() + " instead.");
+            }
+        }
+        catch (IOException e) {
+            throw new IllegalStateException("No base images found on build service.", e);
+        }
+
+        return super.submitBuildArchive(context, buildArchive, deploy, jco, buildName, buildConfig);
+    }
 
     /**
      * performs the image build
@@ -53,10 +94,9 @@ public class EdgeImageContext extends BuildServiceContext {
     @Override
     protected void postBuildAction(JsonObject deploy, JsonObject jco, JsonObject result) throws Exception {
 
-        System.out.println("===========================================================");
-        System.out.println("==== application build result: \n" + result);
-        System.out.println("===========================================================");
-
+        if (this.baseImage == null) {
+            throw new IllegalStateException("No base image available for application image build");
+        }
         // create the Build service for the image build type:
         JsonObject serviceDefinition = GsonUtilities.object(deploy, StreamsKeys.SERVICE_DEFINITION);
         BuildService imageBuilder = null;
@@ -74,7 +114,7 @@ public class EdgeImageContext extends BuildServiceContext {
         JsonObject buildConfigOverrides = new JsonObject();
         JsonArray applicationBundles = new JsonArray();
         JsonObject application = new JsonObject();
-        
+
         JsonArray artifacts = GsonUtilities.array(GsonUtilities.object(result, "build"), "artifacts");
         JsonObject artifact0 = (JsonObject)artifacts.get(0);
 
@@ -87,12 +127,13 @@ public class EdgeImageContext extends BuildServiceContext {
         application.add("applicationCredentials", applicationCredentials);
         applicationBundles.add(application);
         buildConfigOverrides.add("applicationBundles", applicationBundles);
-        
-        // TODO retrieve values for baseImage and image
-        buildConfigOverrides.addProperty("baseImage", "image-registry.openshift-image-registry.svc:5000/edge-cpd-demo/streams-base-edge-conda-el7:v5.1_f_edge_latest");
-        final String imageRegistry = "image-registry.openshift-image-registry.svc:5000";
-        final String imagePrefix = "edge-cpd-demo";
+
+        buildConfigOverrides.addProperty("baseImage", this.baseImage.getId());
+        // use same registry and prefix as used for the base image
+        final String imageRegistry = this.baseImage.getRegistry();
+        final String imagePrefix = this.baseImage.getPrefix();
         final String imageName = getBuildName();
+        // TODO: add date-time token to the tag?
         final String imageTag = "streamsx";
         buildConfigOverrides.addProperty("image", imageRegistry + "/" + imagePrefix + "/" + imageName + ":" + imageTag);
 
