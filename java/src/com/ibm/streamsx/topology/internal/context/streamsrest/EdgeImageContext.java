@@ -34,7 +34,6 @@ public class EdgeImageContext extends BuildServiceContext {
      */
     public EdgeImageContext() {
         super(/*downloadArtifacts=*/false);
-        System.out.println (this.getClass().getName() + " instantiated");
     }
 
     @Override
@@ -78,7 +77,7 @@ public class EdgeImageContext extends BuildServiceContext {
             }
             if (this.baseImage == null) {
                 this.baseImage = baseImages.get(0);
-                TRACE.warning("No baseImage with 'conda' or 'python' in its name or tag found. Using " + this.baseImage.getRestid() + " instead.");
+                TRACE.warning("No base image with 'conda' or 'python' in its name or tag found. Using " + this.baseImage.getRestid() + " instead.");
             }
         }
         catch (IOException e) {
@@ -109,7 +108,6 @@ public class EdgeImageContext extends BuildServiceContext {
         if (imageBuilder instanceof BuildServiceSetters) {
             ((BuildServiceSetters)imageBuilder).setBuildType(BuildType.STREAMS_DOCKER_IMAGE);
         }
-        System.out.println("submit with build type streamsDockerImage using the imageBuilder: " + imageBuilder);
         report("Building edge image");
         JsonObject buildConfigOverrides = new JsonObject();
         JsonArray applicationBundles = new JsonArray();
@@ -119,7 +117,7 @@ public class EdgeImageContext extends BuildServiceContext {
         JsonObject artifact0 = (JsonObject)artifacts.get(0);
 
         String sabUrl = artifact0.get("sabUrl").getAsString();
-        System.out.println ("---- sabUrl for buildConfigOverrides = " + sabUrl);
+//        System.out.println ("---- sabUrl for buildConfigOverrides = " + sabUrl);
         application.addProperty("application", sabUrl);
         JsonObject applicationCredentials = new JsonObject();
         final String token = StreamsKeys.getBearerToken(deploy);
@@ -180,7 +178,8 @@ public class EdgeImageContext extends BuildServiceContext {
                 buildStatus = imageBuild.getStatus();
             } while ("building".equals(buildStatus) || "waiting".equals(buildStatus) || "submitted".equals(buildStatus));
 
-            System.out.println("imageBuild ended with status " + buildStatus);
+            TRACE.info("imageBuild ended with status " + buildStatus);
+            System.out.println("INFO: imageBuild ended with status " + buildStatus);
 
             if (! "built".equals(buildStatus)) {
                 TRACE.severe("The submitted image " + buildName + " failed to build with status " + buildStatus + ".");
@@ -191,7 +190,7 @@ public class EdgeImageContext extends BuildServiceContext {
             }
             else {
                 List<Artifact> buildArtifacts = imageBuild.getArtifacts();
-                System.out.println("imageBuilds artifacts: " + buildArtifacts);
+//                System.out.println("imageBuilds artifacts: " + buildArtifacts);
                 if (buildArtifacts == null || buildArtifacts.size() == 0)
                     throw new IllegalStateException("No image build artifacts produced.");
                 if (buildArtifacts.size() != 1)
@@ -216,7 +215,6 @@ public class EdgeImageContext extends BuildServiceContext {
                 result.addProperty(SubmissionResultsKeys.IMAGE_DIGEST, imgDigest);
                 result.addProperty(SubmissionResultsKeys.DOCKER_IMAGE, imgName);
             }
-
         }
         finally {
             if (!GsonUtilities.jboolean(deploy, KEEP_ARTIFACTS)) {
@@ -224,21 +222,20 @@ public class EdgeImageContext extends BuildServiceContext {
                 if (applicationBuild != null) {
                     try {
                         applicationBuild.delete();
-                        System.out.println ("application build deleted.");
                     }
                     catch (Exception e) {
-                        TRACE.warning(e.toString());
+                        final String buildId = applicationBuild.getId() == null? "": applicationBuild.getId();
+                        TRACE.warning("failed to delete build " + buildId + ": " + e.toString());
                     }
                 }
                 if (imageBuild != null) {
                     try {
                         imageBuild.delete();
-                        System.out.println ("imageBuild deleted");
                     }
                     catch (Exception e) {
-                        System.out.println (e);
+                        final String buildId = imageBuild.getId() == null? "": imageBuild.getId();
+                        TRACE.warning("failed to delete build " + buildId + ": " + e.toString());
                     }
-
                 }
             }
         }

@@ -10,7 +10,6 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -29,7 +28,6 @@ import com.ibm.streamsx.rest.internal.BuildType;
 import com.ibm.streamsx.rest.internal.RestUtils;
 import com.ibm.streamsx.rest.internal.StandaloneAuthenticator;
 import com.ibm.streamsx.topology.internal.context.streamsrest.BuildServiceSetters;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
 class StreamsBuildService extends AbstractConnection implements BuildService, BuildServiceSetters {
@@ -41,6 +39,8 @@ class StreamsBuildService extends AbstractConnection implements BuildService, Bu
             boolean verify) throws IOException {
 
         String buildServiceEndpoint = jstring(object(serviceDefinition, "connection_info"), "serviceBuildEndpoint");
+        String buildServicePoolsEndpoint = jstring(object(serviceDefinition, "connection_info"), "serviceBuildPoolsEndpoint");
+        // buildServicePoolsEndpoint is null when "connection_info" JSON element has no "serviceBuildPoolsEndpoint"
         if (authenticator instanceof StandaloneAuthenticator) {
             if (buildServiceEndpoint == null) {
                 buildServiceEndpoint = Util.getenv(Util.STREAMS_BUILD_URL);
@@ -53,7 +53,7 @@ class StreamsBuildService extends AbstractConnection implements BuildService, Bu
             }
             return StreamsBuildService.of(authenticator, buildServiceEndpoint, verify);
         }
-        return new StreamsBuildService(buildServiceEndpoint, authenticator, verify);
+        return new StreamsBuildService(buildServiceEndpoint, buildServicePoolsEndpoint, authenticator, verify);
     }
 
     static BuildService of(Function<Executor,String> authenticator, String buildServiceEndpoint,
@@ -68,7 +68,7 @@ class StreamsBuildService extends AbstractConnection implements BuildService, Bu
                 buildServiceEndpoint = buildsUrl.toExternalForm();
             }
         }
-        return new StreamsBuildService(buildServiceEndpoint, authenticator, verify);
+        return new StreamsBuildService(buildServiceEndpoint, null, authenticator, verify);
     }
 	
 	private static final String TOOLKITS_RESOURCE_NAME = "toolkits";
@@ -79,15 +79,10 @@ class StreamsBuildService extends AbstractConnection implements BuildService, Bu
 	private String toolkitsUrl;
 	private Function<Executor, String> authenticator;
 
-	private StreamsBuildService(String endpoint, Function<Executor, String> authenticator, boolean verify) throws MalformedURLException {
+	private StreamsBuildService(String endpoint, String poolsEndpoint, Function<Executor, String> authenticator, boolean verify) throws MalformedURLException {
 		super(!verify);
 		this.endpoint = endpoint;
-		// TODO: The poolsEndpoint must come through the constructor, via one of the of... functions from the deploy JSON
-		// as the endpoint. What we are doing here is a bad hack.
-		final URL buildEp = new URL(endpoint);
-		final String poolsPath = buildEp.getPath().replaceFirst("streams-build", "streams-buildpools");
-		final URL poolsEndpointURL = new URL(buildEp.getProtocol(), buildEp.getHost(), buildEp.getPort(), poolsPath);
-		this.poolsEndpoint = poolsEndpointURL.toExternalForm();
+		this.poolsEndpoint = poolsEndpoint;
 		this.authenticator = authenticator;
 	}
 
@@ -116,14 +111,13 @@ class StreamsBuildService extends AbstractConnection implements BuildService, Bu
 		if (name != null)
 			buildParams.addProperty("name", name);
 		String bodyStr = buildParams.toString();
-        System.out.println("StreamsBuildService: =======> POST body = " + bodyStr);
+//        System.out.println("StreamsBuildService: =======> POST body = " + bodyStr);
 		Request post = Request.Post(endpoint)	      
 		    .addHeader("Authorization", getAuthorization())
 		    .bodyString(bodyStr,
 		                ContentType.APPLICATION_JSON);
 		
 		Build build = Build.create(this, this, StreamsRestUtils.requestGsonResponse(executor, post));
-		System.out.println("StreamsBuildService: =======> build = " + build);
 		return build;
 	}
 
@@ -183,9 +177,9 @@ class StreamsBuildService extends AbstractConnection implements BuildService, Bu
     @Override
     public List<BaseImage> getBaseImages() throws IOException {
         final String BUILD_POOLS = "buildPools";
-        if (this.poolsEndpoint == null || this.poolsEndpoint.isEmpty()) {
-            // exposed endpoint for the build pools is optional
-            return Collections.emptyList();
+        if (this.poolsEndpoint == null) {
+            // exposed endpoint for the build pools is optional, but required for getting base images
+            throw new IOException("No REST build pool endpoint available.");
         }
         // find out the right build pool; we use the first build pool with type 'image'
         JsonObject jsonResponse = new Gson().fromJson(this.getResponseString(this.poolsEndpoint), JsonObject.class);

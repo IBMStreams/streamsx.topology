@@ -503,6 +503,10 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
         self.token = service_token
         self._auth_expiry_time = time.time() + 19 * 60
 
+        # already observed a 'None' connection_info, avoid KeyError later on
+        if not connection_info:
+            raise RequestException('Unable to retrieve connection details for Streams instance: ' + service_name)
+
         # Convert the external endpoints to use the passed in cluster ip.
         ebe = connection_info['externalBuildEndpoint']
         if ebe.startswith('https:'):
