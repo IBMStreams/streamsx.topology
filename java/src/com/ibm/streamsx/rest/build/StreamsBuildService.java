@@ -176,31 +176,17 @@ class StreamsBuildService extends AbstractConnection implements BuildService, Bu
      */
     @Override
     public List<BaseImage> getBaseImages() throws IOException {
-        final String BUILD_POOLS = "buildPools";
         if (this.poolsEndpoint == null) {
             // exposed endpoint for the build pools is optional, but required for getting base images
             throw new IOException("No REST build pool endpoint available.");
         }
         // find out the right build pool; we use the first build pool with type 'image'
-        JsonObject jsonResponse = new Gson().fromJson(this.getResponseString(this.poolsEndpoint), JsonObject.class);
-        if (!jsonResponse.has(BUILD_POOLS)) {
-            throw new IOException("No 'buildPools' JSON element at " + this.poolsEndpoint + ".");
+        final String poolType = "image";
+        List<BuildPool> imageBuildPools = BuildPool.createPoolList(this, this.poolsEndpoint, poolType);
+        if (imageBuildPools.size() == 0) {
+            throw new IOException("No build pool of '" + poolType + "' type found.");
         }
-        if (!jsonResponse.get(BUILD_POOLS).isJsonArray()) {
-            throw new IOException("The '" + BUILD_POOLS + "' JSON element is not an Array.");
-        }
-        JsonArray pools = jsonResponse.getAsJsonArray(BUILD_POOLS);
-        String poolId = null;
-        for (JsonElement pool: pools) {
-            final String poolType = pool.getAsJsonObject().get("type").getAsString();
-            if ("image".equals(poolType)) {
-                poolId = pool.getAsJsonObject().get("restid").getAsString();
-                break;
-            }
-        }
-        if (poolId == null) {
-            throw new IOException("No build pool of 'image' type found.");
-        }
+        final String poolId = imageBuildPools.get(0).getRestid();
         final String baseImagesUri = this.poolsEndpoint + (this.poolsEndpoint.endsWith("/")? "": "/") + poolId + "/baseimages";
         return BaseImage.createImageList(this, baseImagesUri);
     }
