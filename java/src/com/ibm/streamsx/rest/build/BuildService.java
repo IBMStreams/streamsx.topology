@@ -70,7 +70,8 @@ public interface BuildService {
 	    }
 	}
 
-    public static BuildService ofServiceDefinition(JsonObject serviceDefinition, boolean verify) throws IOException {
+    public static BuildService ofServiceDefinition(JsonObject serviceDefinition,
+            boolean verify) throws IOException {
         String name = jstring(serviceDefinition, "service_name");
         Function<Executor,String> authenticator;
         if (name == null) {
@@ -137,4 +138,11 @@ public interface BuildService {
 	 * @throws IOException
 	 */
 	public Toolkit uploadToolkit(File path) throws IOException;
+	
+	/**
+	 * Gets a list of {@link BaseImage baseImages} for EDGE applications available in the build service.
+	 * @return The base images or an empty list
+	 * @throws IOException
+	 */
+	public List<BaseImage> getBaseImages()  throws IOException;
 }

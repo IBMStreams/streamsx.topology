@@ -5,6 +5,7 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -16,23 +17,30 @@ import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 import com.ibm.streamsx.rest.RESTException;
+import com.ibm.streamsx.rest.internal.BuildType;
 import com.ibm.streamsx.rest.internal.RestUtils;
 import com.ibm.streamsx.rest.internal.StandaloneAuthenticator;
+import com.ibm.streamsx.topology.internal.context.streamsrest.BuildServiceSetters;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
-class StreamsBuildService extends AbstractConnection implements BuildService {
-    
+class StreamsBuildService extends AbstractConnection implements BuildService, BuildServiceSetters {
+
     static final String STREAMS_REST_RESOURCES = "/streams/rest/resources";
     static final String STREAMS_BUILD_PATH = "/streams/rest/builds";
 
+    static BuildService of(Function<Executor,String> authenticator, JsonObject serviceDefinition,
+            boolean verify) throws IOException {
 
-    static BuildService of(Function<Executor,String> authenticator, JsonObject serviceDefinition, boolean verify) throws IOException {
-        
         String buildServiceEndpoint = jstring(object(serviceDefinition, "connection_info"), "serviceBuildEndpoint");
+        String buildServicePoolsEndpoint = jstring(object(serviceDefinition, "connection_info"), "serviceBuildPoolsEndpoint");
+        // buildServicePoolsEndpoint is null when "connection_info" JSON element has no "serviceBuildPoolsEndpoint"
         if (authenticator instanceof StandaloneAuthenticator) {
             if (buildServiceEndpoint == null) {
                 buildServiceEndpoint = Util.getenv(Util.STREAMS_BUILD_URL);
@@ -45,10 +53,11 @@ class StreamsBuildService extends AbstractConnection implements BuildService {
             }
             return StreamsBuildService.of(authenticator, buildServiceEndpoint, verify);
         }
-        return new StreamsBuildService(buildServiceEndpoint, authenticator, verify);
+        return new StreamsBuildService(buildServiceEndpoint, buildServicePoolsEndpoint, authenticator, verify);
     }
 
-    static BuildService of(Function<Executor,String> authenticator, String buildServiceEndpoint, boolean verify) throws IOException {
+    static BuildService of(Function<Executor,String> authenticator, String buildServiceEndpoint,
+            boolean verify) throws IOException {
 
         if (buildServiceEndpoint == null) {
             buildServiceEndpoint = Util.getenv(Util.STREAMS_BUILD_URL);
@@ -59,22 +68,29 @@ class StreamsBuildService extends AbstractConnection implements BuildService {
                 buildServiceEndpoint = buildsUrl.toExternalForm();
             }
         }
-        return new StreamsBuildService(buildServiceEndpoint, authenticator, verify);
+        return new StreamsBuildService(buildServiceEndpoint, null, authenticator, verify);
     }
 	
 	private static final String TOOLKITS_RESOURCE_NAME = "toolkits";
 
 	private String endpoint;
-	private String authorization;
+	private String poolsEndpoint;
+	private BuildType buildType = BuildType.APPLICATION;
 	private String toolkitsUrl;
 	private Function<Executor, String> authenticator;
 
-	private StreamsBuildService(String endpoint, Function<Executor, String> authenticator, boolean verify) {
+	private StreamsBuildService(String endpoint, String poolsEndpoint, Function<Executor, String> authenticator, boolean verify) throws MalformedURLException {
 		super(!verify);
 		this.endpoint = endpoint;
+		this.poolsEndpoint = poolsEndpoint;
 		this.authenticator = authenticator;
 	}
-	
+
+    @Override
+    public void setBuildType(BuildType buildType) {
+        this.buildType = buildType;
+    }
+
 	@Override
 	String getAuthorization() {
 		return authenticator.apply(getExecutor());
@@ -86,18 +102,19 @@ class StreamsBuildService extends AbstractConnection implements BuildService {
 	}
 
 	@Override
-	public Build createBuild(String name, JsonObject parameters) throws IOException {
+	public Build createBuild(String name, JsonObject buildConfig) throws IOException {
 		
 		JsonObject buildParams = new JsonObject();
 
-		buildParams.addProperty("type", "application");
+		buildParams.addProperty("type", buildType.getJsonValue());
 		buildParams.addProperty("incremental", false);		
 		if (name != null)
 			buildParams.addProperty("name", name);
-		
+		String bodyStr = buildParams.toString();
+//        System.out.println("StreamsBuildService: =======> POST body = " + bodyStr);
 		Request post = Request.Post(endpoint)	      
 		    .addHeader("Authorization", getAuthorization())
-		    .bodyString(buildParams.toString(),
+		    .bodyString(bodyStr,
 		                ContentType.APPLICATION_JSON);
 		
 		Build build = Build.create(this, this, StreamsRestUtils.requestGsonResponse(executor, post));
@@ -154,7 +171,29 @@ class StreamsBuildService extends AbstractConnection implements BuildService {
 		return StreamsRestActions.deleteToolkit(toolkit);
 	}
 
-	private static class Resource {
+	/**
+     * @see com.ibm.streamsx.rest.build.BuildService#getBaseImages()
+     */
+    @Override
+    public List<BaseImage> getBaseImages() throws IOException {
+        if (this.poolsEndpoint == null) {
+            // exposed endpoint for the build pools is optional, but required for getting base images
+            throw new IOException("No REST build pool endpoint available.");
+        }
+        // find out the right build pool; we use the first build pool with type 'image'
+        final String poolType = "image";
+        List<BuildPool> imageBuildPools = BuildPool.createPoolList(this, this.poolsEndpoint, poolType);
+        if (imageBuildPools.size() == 0) {
+            throw new IOException("No build pool of '" + poolType + "' type found.");
+        }
+        final String poolId = imageBuildPools.get(0).getRestid();
+        final String baseImagesUri = this.poolsEndpoint + (this.poolsEndpoint.endsWith("/")? "": "/") + poolId + "/baseimages";
+        return BaseImage.createImageList(this, baseImagesUri);
+    }
+
+
+
+    private static class Resource {
 		@Expose
 		public String name;
 

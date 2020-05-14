@@ -17,6 +17,16 @@ public interface SubmissionResultsKeys {
     String ARCHIVE_PATH = "archivePath";
     
     /**
+     * image digest for streamsDockerImage build
+     */
+    String IMAGE_DIGEST = "imageDigest";
+    
+    /**
+     * docker image (registry/prefix/img_name:tag) for streamsDockerImage build
+     */
+    String DOCKER_IMAGE = "image";
+
+    /**
      * The file path of the compiled application bundle.
      */
     String BUNDLE_PATH = "bundlePath";
@@ -41,6 +51,7 @@ public interface SubmissionResultsKeys {
      */
     String BUILD_STATUS = "buildStatus";
     String SUBMIT_METRICS = "submitMetrics";
+    String SUBMIT_IMAGE_METRICS = "submitImageMetrics"; // EdgeImageContext
     String TIME_MS_SUFFIX = "Time_ms";
             
     /**

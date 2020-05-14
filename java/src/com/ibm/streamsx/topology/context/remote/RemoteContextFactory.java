@@ -1,6 +1,7 @@
 package com.ibm.streamsx.topology.context.remote;
 
 import com.ibm.streamsx.topology.internal.context.streamsrest.BuildServiceContext;
+import com.ibm.streamsx.topology.internal.context.streamsrest.EdgeImageContext;
 import com.ibm.streamsx.topology.internal.context.streamsrest.DistributedStreamsRestContext;
 import com.ibm.streamsx.topology.internal.context.remote.RemoteBuildAndSubmitRemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.Sas4BuildContext;
@@ -24,11 +25,14 @@ public class RemoteContextFactory {
         case STREAMING_ANALYTICS_SERVICE:
         	return new RemoteBuildAndSubmitRemoteContext();
         case BUNDLE:
+        case EDGE_BUNDLE:
             return new BuildServiceContext();
         case DISTRIBUTED:
             return new DistributedStreamsRestContext();
         case SAS_BUNDLE:
             return new Sas4BuildContext();
+        case EDGE:
+            return new EdgeImageContext();
         default:
             throw new IllegalArgumentException(Messages.getString("CONTEXT_UNKNOWN_TYPE", type));
         }

@@ -11,7 +11,6 @@ import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppName;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.splAppNamespace;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.gson;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
-import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.objectCreate;
 
 import java.io.File;
@@ -23,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.topology.context.remote.RemoteContext;
+import com.ibm.streamsx.topology.context.remote.RemoteContext.Type;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 /**
@@ -34,6 +34,11 @@ public interface DeployKeys {
      * Key for deploy information in top-level submission object.
      */
     String DEPLOY = "deploy";
+    
+    /**
+     * Key for context type in deploy information
+     */
+    String CONTEXT_TYPE = "contextType";
     
     /**
      * Optional time in milliseconds since epoch that the last time
@@ -120,6 +125,14 @@ public interface DeployKeys {
             jcos.add(JOB_CONFIG_OVERLAYS, deploy.get(JOB_CONFIG_OVERLAYS));
         
         return jcos;
+    }
+    
+    /**
+     * Returns the contextType from the deploy information
+     * @param deploy the deploy information
+     */
+    static Type contextType(JsonObject deploy) {
+        return Type.valueOf(GsonUtilities.jstring(deploy, CONTEXT_TYPE));
     }
     
     /**

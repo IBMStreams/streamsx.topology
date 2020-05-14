@@ -24,13 +24,15 @@ public interface RemoteContext<T> {
      * 
      */
     public enum Type {
-        TOOLKIT,        
+        TOOLKIT,
         BUILD_ARCHIVE,
         ANALYTICS_SERVICE,
         STREAMING_ANALYTICS_SERVICE,
         BUNDLE,
         DISTRIBUTED,
-        SAS_BUNDLE, // Internal value only for v4 Sas service.
+        EDGE,
+        EDGE_BUNDLE, // downloaded bundle suitable for EDGE submission, intended for debugging
+        SAS_BUNDLE,  // Internal value only for v4 Sas service.
     }
     
     

@@ -29,6 +29,16 @@ public interface StreamsContext<T> {
     public enum Type {
 
         /**
+         * Submission of the topology produces an Streams Docker image on the build service for Edge.
+         */
+        EDGE,
+        
+        /**
+         * Submission of the topology produces a bundle for a Streams Docker image for debug purpose.
+         */
+        EDGE_BUNDLE,
+        
+        /**
          * Topology is executed within the Java virtual machine that declared
          * it. This requires that the topology only contains Java functions
          * or primitive operators.
