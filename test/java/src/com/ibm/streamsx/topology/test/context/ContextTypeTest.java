@@ -23,6 +23,7 @@ public class ContextTypeTest extends TestTopology {
     public void testFactoryByType() {
         assumeTrue(isMainRun());
         for (StreamsContext.Type type : StreamsContext.Type.values()) {
+            if (type == StreamsContext.Type.EDGE_BUNDLE) continue;
             StreamsContext<?> context = StreamsContextFactory
                     .getStreamsContext(type);
             assertNotNull(context);
