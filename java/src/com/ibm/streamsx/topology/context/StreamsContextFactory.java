@@ -105,7 +105,7 @@ public class StreamsContextFactory {
         	return new RemoteEdgeContext();
 
         case EDGE_BUNDLE:
-            throw new IllegalArgumentException("STREAMS_INSTALL must not be set when submitting to " + type);
+            throw new IllegalArgumentException(type.name() + " is not supported for submitting to local Streams install.");
         default:
             throw new IllegalArgumentException(Messages.getString("CONTEXT_UNKNOWN_TYPE", type));
         }
