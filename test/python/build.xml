@@ -61,6 +61,8 @@
 		     <arg value="-u"/>
 		     <arg value="-m"/>
 		     <arg value="unittest"/>
+		     <arg value="test2_filter.TestDistributedFilter"/>
+		     <arg value="test2_parallel_key_partitioned.TestDistributedParallel"/>
 		     <arg value="test2.TestDistributedTopologyMethodsNew"/>
 		     <arg value="test2_aggregate.TestDistributedAggregate"/>
 		     <arg value="test2_checkpoint.TestDistributedCheckpointing"/>

@@ -30,7 +30,7 @@ cd -
 echo "--------------------"
 echo "Testing topology ..."
 cd topology
-python3 -u -m unittest test2.TestDistributedTopologyMethodsNew test2_ec.TestDistributedEc test2_pending.TestDistributedPending test2_pubsub.TestDistributedPubSub test2_spl2python.TestDistributedSPL test2_views.TestDistributedViews -v
+python3 -u -m unittest test2_filter.TestDistributedFilter test2_parallel_key_partitioned.TestDistributedParallel test2.TestDistributedTopologyMethodsNew test2_ec.TestDistributedEc test2_pending.TestDistributedPending test2_pubsub.TestDistributedPubSub test2_spl2python.TestDistributedSPL test2_views.TestDistributedViews -v
 #test2_checkpoint.TestDistributedCheckpointing test2_consistent.TestDistributedConsistentRegion test2_udp.TestDistributedUDP
 cd -
 
