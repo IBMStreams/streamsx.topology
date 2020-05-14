@@ -511,6 +511,54 @@ class _BundleSubmitter(_BaseSubmitter):
         if self._remote:
             env.pop('STREAMS_INSTALL', None)
         return env
+        
+class _EdgeSubmitter(_BaseSubmitter):
+    """
+    A submitter which supports the EDGE context (force remote build).
+    """
+    def __init__(self, ctxtype, config, graph):
+        _BaseSubmitter.__init__(self, ctxtype, config, graph)
+        config[ConfigParams.FORCE_REMOTE_BUILD] = True # EDGE is always remote build
+        self._remote = config.get(ConfigParams.FORCE_REMOTE_BUILD)
+        self._streams_connection = config.get(ConfigParams.STREAMS_CONNECTION)
+
+        if self._streams_connection is not None:
+            pass
+        else:
+            # Look for a service definition
+            svc_info = streamsx.rest_primitives.Instance._find_service_def(config)
+            if not svc_info:
+                # Look for endpoint set by env vars.
+                inst = streamsx.rest_primitives.Instance.of_endpoint(verify=config.get(ConfigParams.SSL_VERIFY))
+                if inst is not None:
+                    self._streams_connection = inst.rest_client._sc
+
+        if isinstance(self._streams_connection, streamsx.rest.StreamsConnection):
+            if isinstance(self._streams_connection.session.auth, streamsx.rest_primitives._ICPDExternalAuthHandler):
+                svc_info = self._streams_connection.session.auth._cfg
+                self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
+                if  self._streams_connection.session.verify == False:
+                    self._config()[ConfigParams.SSL_VERIFY] = False
+        else:
+            svc_info =  streamsx.rest_primitives.Instance._find_service_def(config)
+            if svc_info:
+                self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
+                streamsx.rest_primitives.Instance._clear_service_info(self._config())
+
+        # check that serviceBuildPoolsEndpoint is set
+        try:
+            serviceBuildPoolsEndpoint = self._config()[ConfigParams.SERVICE_DEFINITION]['connection_info']['serviceBuildPoolsEndpoint']
+        except KeyError: 
+                raise RuntimeError('Build service is not configured for EDGE submission')
+
+    def _get_java_env(self):
+        "Set env vars from connection if set"
+        env = super(_EdgeSubmitter, self)._get_java_env()
+        env.pop('STREAMS_DOMAIN_ID', None)
+        env.pop('STREAMS_INSTANCE_ID', None)
+        if self._remote:
+            env.pop('STREAMS_INSTALL', None)
+        return env
 
 def _get_distributed_submitter(config, graph, username, password):
     # CP4D integrated environment and within project
@@ -727,6 +775,12 @@ class _SubmitContextFactory(object):
                 if sbs._remote:
                     return sbs
             return _BundleSubmitter(ctxtype, self.config, self.graph)
+        elif ctxtype == 'EDGE':
+            logger.debug("Selecting the EDGE context for submission")
+            return _EdgeSubmitter(ctxtype, self.config, self.graph)
+        elif ctxtype == 'EDGE_BUNDLE':
+            logger.debug("Selecting the EDGE_BUNDLE context for submission")
+            return _EdgeSubmitter(ctxtype, self.config, self.graph)
         else:
             logger.debug("Using the BaseSubmitter, and passing the context type through to java.")
             return _BaseSubmitter(ctxtype, self.config, self.graph)
@@ -1013,6 +1067,57 @@ class ContextTypes(object):
         `BUILD_ARCHIVE` is typically only used when diagnosing issues with bundle generation.
     """
 
+    EDGE = 'EDGE'
+    """Submission to build service running on IBM Cloud Pak for Data to create an image for Edge.
+
+    The `Topology` is compiled and the resultant Streams application bundle
+    (sab file) is added to an image for Edge.
+
+    .. rubric:: IBM Cloud Pak for Data integated configuration
+
+    *Projects (within cluster)*
+
+    The `Topology` is compiled using the Streams build service for 
+    a Streams service instance running in the same Cloud Pak for
+    Data cluster as the Jupyter notebook or script declaring the application.
+
+    The instance is specified in the configuration passed into :py:func:`submit`. The code that selects a service instance by name is::
+
+        from icpd_core import icpd_util
+        cfg = icpd_util.get_service_instance_details(name='instanceName', instance_type="streams")
+
+        topo = Topology()
+        ...
+        submit(ContextTypes.EDGE, topo, cfg)
+
+    The resultant `cfg` dict may be augmented with other values such as
+    keys from :py:class:`ConfigParams`.
+
+    *External to cluster or project*
+
+    The `Topology` is compiled using the Streams build service for a Streams service instance running in Cloud Pak for Data.
+
+    Environment variables:
+        These environment variables define how the application is built and submitted.
+
+        * **CP4D_URL** - Cloud Pak for Data deployment URL, e.g. `https://cp4d_server:31843`
+        * **STREAMS_INSTANCE_ID** - Streams service instance name.
+        * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
+        * **STREAMS_PASSWORD** - Password for authentication.
+
+    """
+
+    EDGE_BUNDLE = 'EDGE_BUNDLE'
+    """Creates a Streams application bundle.
+
+    The `Topology` is compiled on build service running on IBM Cloud Pak for Data and the resultant Streams application bundle
+    (sab file) is downloaded.
+
+    .. note::
+
+        `EDGE_BUNDLE` is typically only used when diagnosing issues with applications for EDGE.
+
+    """
 
 class ConfigParams(object):
     """
@@ -1469,6 +1574,12 @@ class SubmissionResult(object):
 
         submission_result = submit(ContextTypes.DISTRIBUTED, topology, config)
         print(submission_result)
+
+    Result contains the generated `image`, `imageDigest`, `submitMetrics` (building the bundle), `submitImageMetrics` (building the image) when using :py:const:`~ContextTypes.EDGE`::
+
+        submission_result = submit(ContextTypes.EDGE, topology, config)
+        print(submission_result.image)
+        print(submission_result.imageDigest)
 
 """
     def __init__(self, results):

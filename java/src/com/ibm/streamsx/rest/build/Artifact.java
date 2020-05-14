@@ -25,6 +25,8 @@ public class Artifact extends Element {
     @Expose
     private String name;
     @Expose
+    private String imageDigest;
+    @Expose
     private String applicationBundle;
     
     static final Artifact create(AbstractConnection connection, String gsonJobString) {
@@ -60,6 +62,13 @@ public class Artifact extends Element {
     	return size;
     }
     
+    /**
+     * @return the imageDigest or null if not present
+     */
+    public String getImageDigest() {
+        return imageDigest;
+    }
+
     public String getURL() {
     	return applicationBundle;
     }

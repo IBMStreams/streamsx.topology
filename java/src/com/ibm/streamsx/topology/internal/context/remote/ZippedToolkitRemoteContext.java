@@ -5,6 +5,7 @@
 package com.ibm.streamsx.topology.internal.context.remote;
 
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deploy;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.contextType;
 import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.keepArtifacts;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.CONFIG;
 import static com.ibm.streamsx.topology.internal.graph.GraphKeys.graph;
@@ -101,7 +102,11 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
     }
         
     private static Path pack(final File appTkRoot, JsonObject submission, String tkName, String mainCompositeKind) throws IOException, URISyntaxException {
-        
+        JsonObject deploy = deploy(submission);
+        Type contextType = contextType(deploy);
+        if (contextType == Type.EDGE || contextType == Type.EDGE_BUNDLE) {
+//            System.out.println("ZippedToolkitRemoteContext: Here we could implement context type specific archive creation. context type = " + contextType);
+        }
         JsonObject graph = graph(submission);
         
         if (mainCompositeKind == null) {
@@ -182,8 +187,6 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
         try (PrintWriter mainComposite = new PrintWriter(mainCompTmp.toFile(), "UTF-8")) {
             mainComposite.print(mainCompositeKind);
         }
-        
-        JsonObject deploy = deploy(submission);
         
         if (deploy.has(ContextProperties.SC_OPTIONS)) {
             List<String> scOptions;

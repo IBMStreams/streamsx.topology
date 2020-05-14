@@ -503,6 +503,10 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
         self.token = service_token
         self._auth_expiry_time = time.time() + 19 * 60
 
+        # already observed a 'None' connection_info, avoid KeyError later on
+        if not connection_info:
+            raise RequestException('Unable to retrieve connection details for Streams instance: ' + service_name)
+
         # Convert the external endpoints to use the passed in cluster ip.
         ebe = connection_info['externalBuildEndpoint']
         if ebe.startswith('https:'):
@@ -515,6 +519,22 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
             
         build_url = up.urlunsplit(('https', cluster_ip + ':' + str(ebe_port), ebe_path, None, None))
 
+        # optional build pools endpoint for edge
+        build_pools_url = None
+        try:
+            ebpe = connection_info['externalBuildPoolsEndpoint']
+            if ebpe.startswith('https:'):
+                bpu = up.urlsplit(ebpe)
+                ebpe_port = bpu.port
+                ebpe_path = bpu.path
+            else: # CPD 2.5 switched to path-absolute
+                ebpe_port = cluster_port
+                ebpe_path = ebpe
+
+            build_pools_url = up.urlunsplit(('https', cluster_ip + ':' + str(ebpe_port), ebpe_path, None, None))
+        except KeyError: 
+            pass
+
         ere = connection_info['externalRestEndpoint']
         if ere.startswith('https:'):
             ru = up.urlsplit(ere)
@@ -525,7 +545,25 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
             ere_path = ere
         streams_url = up.urlunsplit(('https', cluster_ip + ':' + str(ere_port), ere_path, None, None))
 
-        cfg = {
+        if build_pools_url:
+            cfg = {
+                'type': 'streams',
+                'connection_info': {
+                    'serviceBuildEndpoint': build_url,
+                    'serviceBuildPoolsEndpoint': build_pools_url,
+                    'serviceRestEndpoint': streams_url},
+                'serviceTokenEndpoint': service_token_url,
+                'service_token': service_token,
+                'service_token_expire': int(self._auth_expiry_time * 1000.0),
+                'service_name': service_name,
+                'cluster_ip': cluster_ip,
+                'cluster_port': cluster_port,
+                'service_id': service_id,
+                'externalClient':True,
+            }
+            return cfg
+        else:
+            cfg = {
                 'type': 'streams',
                 'connection_info': {
                     'serviceBuildEndpoint': build_url,
@@ -538,9 +576,8 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
                 'cluster_port': cluster_port,
                 'service_id': service_id,
                 'externalClient':True,
-        }
-
-        return cfg
+            }
+            return cfg
 
 class _JWTAuthHandler(_BearerAuthHandler):
     def __init__(self, security_url, username, password, verify):

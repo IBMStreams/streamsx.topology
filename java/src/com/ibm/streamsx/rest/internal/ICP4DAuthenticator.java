@@ -25,30 +25,30 @@ import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
 public class ICP4DAuthenticator implements Function<Executor,String> {
-    
+
     public static ICP4DAuthenticator of(String urlS, String instanceName, String user, String password) throws MalformedURLException, UnsupportedEncodingException {
 
         if (urlS == null)
             urlS = Util.getenv(Util.ICP4D_DEPLOYMENT_URL);
         if (instanceName == null)
             instanceName = Util.getenv(Util.STREAMS_INSTANCE_ID);
-        
+
         URL icpdUrl = new URL(urlS);
-                
+
         URL authorizeUrl = new URL("https", icpdUrl.getHost(), icpdUrl.getPort(),
                 "/icp4d-api/v1/authorize");
-        
+
         URL detailsUrl = new URL("https", icpdUrl.getHost(), icpdUrl.getPort(),
                 "/zen-data/v2/serviceInstance/details?displayName=" + URLEncoder.encode(instanceName, StandardCharsets.UTF_8.name()));
-        
+
         URL serviceTokenUrl = new URL("https", icpdUrl.getHost(), icpdUrl.getPort(),
                 "/zen-data/v2/serviceInstance/token");
-        
+
         return new ICP4DAuthenticator(icpdUrl, authorizeUrl, detailsUrl, serviceTokenUrl, instanceName, user, password);
     }
-    
 
-    
+
+
     private final URL icpdUrl;
     private final URL authorizeUrl;
     private final URL detailsUrl;
@@ -56,12 +56,12 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
     private final String instanceName;
     private final String user;
     private final String password;
-    
+
     private String serviceAuth;
     private long expire;
-    
+
     private JsonObject cfg;
-    
+
     ICP4DAuthenticator(URL icpdUrl, URL authorizeUrl, URL detailsUrl, URL serviceTokenUrl,
             String instanceName, String user, String password) {
         this.icpdUrl = icpdUrl;
@@ -72,24 +72,38 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         this.user = user;
         this.password = password;
     }
-    
+
+    /** creates a vaild external URL from an external endpoint from the connection-info JSON structure */
+    private URL urlFromEndPoint(String externalEndpoint) throws MalformedURLException {
+        URL url = null;
+        try {
+            url = new URL(externalEndpoint);
+            // here we should end with CPD < 2.5
+        } catch (MalformedURLException e) {
+            // CPD 2.5 switched to path-absolute; not a valid URL; create a valid URL with externalEndpoint as the path
+            url = new URL("https", this.icpdUrl.getHost(), this.icpdUrl.getPort(), externalEndpoint);
+        }
+        // Ensure the build endpoint matches the fully external ICP4D URL
+        URL ret = new URL("https", this.icpdUrl.getHost(), url.getPort(), url.getPath());
+        return ret;
+    }
+
     public JsonObject config(boolean verify) throws IOException {
-        
         if (cfg != null)
             return cfg;
-        
+
         Executor executor = RestUtils.createExecutor(!verify);
-        
+
         JsonObject namepwd = new JsonObject();
         String[] userPwd = Util.getDefaultUserPassword(user, password);
         namepwd.addProperty("username", userPwd[0]);
         namepwd.addProperty("password", userPwd[1]);
         Request post = Request.Post(authorizeUrl.toExternalForm())         
                 .bodyString(namepwd.toString(), ContentType.APPLICATION_JSON);
-               
+
         JsonObject resp = RestUtils.requestGsonResponse(executor, post);
         String icp4dToken = GsonUtilities.jstring(resp, "token");
-        
+
         String icpdAuth = RestUtils.createBearerAuth(icp4dToken);
 
         String serviceId = null;
@@ -113,46 +127,45 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
             } catch (InterruptedException e) {
                 break;
             }
-            
+
         }
         if (sci == null)
             throw new IllegalStateException("Unable to retrieve connection details for Streams instance: " + instanceName);
-        
+
         JsonObject pd = new JsonObject();
         pd.addProperty("serviceInstanceId", serviceId);
-               
+
         post = Request.Post(serviceTokenUrl.toExternalForm())         
                 .addHeader("Authorization", icpdAuth)
                 .bodyString(pd.toString(), ContentType.APPLICATION_JSON);
-            
+
         resp = RestUtils.requestGsonResponse(executor, post);
         String serviceToken = jstring(resp, "AccessToken");
-        
+
         serviceAuth = RestUtils.createBearerAuth(serviceToken);
         expire = System.currentTimeMillis() + 19 * 60;
-                
-        URL buildEndpoint = new URL(jstring(sci, "externalBuildEndpoint"));
+
+        JsonObject connInfo = new JsonObject();
+
+        final String externalBuildPoolsEndpoint = jstring(sci, "externalBuildPoolsEndpoint");
+        if (externalBuildPoolsEndpoint != null) {
+            URL buildPoolsUrl = urlFromEndPoint(externalBuildPoolsEndpoint);
+            connInfo.addProperty("serviceBuildPoolsEndpoint", buildPoolsUrl.toExternalForm());
+        }
+        final String externalBuildEndpoint = jstring(sci, "externalBuildEndpoint");
+        URL buildUrl = urlFromEndPoint(externalBuildEndpoint);
         
-        // Ensure the build endpoint matches the fully external ICP4D URL
-        URL buildUrl = new URL("https", icpdUrl.getHost(),
-                buildEndpoint.getPort(), buildEndpoint.getPath());
-        
-        URL streamsEndpoint = new URL(jstring(sci, "externalRestEndpoint"));
-        
-        // Ensure the build endpoint matches the fully external ICP4D URL
-        URL streamsUrl = new URL("https", icpdUrl.getHost(),
-                streamsEndpoint.getPort(), streamsEndpoint.getPath());
-        
+        final String externalRestEndpoint = jstring(sci, "externalRestEndpoint");
+        URL streamsUrl = urlFromEndPoint(externalRestEndpoint);
+
         JsonObject instance = object(sca,  "metadata", "instance");
         String serviceName = jstring(instance, "id");
-       
+
         // Return object matches one created in Python.
-        JsonObject connInfo = new JsonObject();       
         connInfo.addProperty("serviceRestEndpoint", streamsUrl.toExternalForm());
         connInfo.addProperty("serviceBuildEndpoint", buildUrl.toExternalForm());
-
         JsonObject cfg = new JsonObject();
-      
+
         cfg.addProperty("type", "streams");
         cfg.addProperty("externalClient", true);
         cfg.add("connection_info", connInfo);
@@ -162,13 +175,13 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         cfg.addProperty("cluster_ip", icpdUrl.getHost());
         cfg.addProperty("cluster_port", icpdUrl.getPort());
         cfg.addProperty("service_id", serviceId);
-        
+
         this.cfg = cfg;
         return cfg;
     }
-    
+
     public static ICP4DAuthenticator of(JsonObject service) throws MalformedURLException, UnsupportedEncodingException {
-        
+
         String serviceName = jstring(service, "service_name");
         final ICP4DAuthenticator auth;
         if (jboolean(service, "externalClient")) {
@@ -180,7 +193,7 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         } else {
             auth = new ICP4DAuthenticator(null, null, null, null, serviceName, null, null);
         }
-    
+
         String serviceToken = jstring(service, "service_token");
 
         if (serviceToken != null) {
