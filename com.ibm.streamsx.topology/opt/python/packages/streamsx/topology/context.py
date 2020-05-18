@@ -148,6 +148,9 @@ class _BaseSubmitter(object):
         self.graph = graph
         self.fn = None
         self.results_file = None
+        self.keepArtifacts = False
+        if 'topology.keepArtifacts' in self.config:
+            self.keepArtifacts = self.config.get('topology.keepArtifacts')
 
     def _config(self):
         "Return the submit configuration"
@@ -170,7 +173,8 @@ class _BaseSubmitter(object):
         try:
             return self._submit_exec()
         finally:
-            _delete_json(self)
+            if not self.keepArtifacts:
+                _delete_json(self)
 
     def _submit_exec(self):
 
