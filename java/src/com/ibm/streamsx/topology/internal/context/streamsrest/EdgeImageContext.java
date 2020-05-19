@@ -5,11 +5,13 @@
 package com.ibm.streamsx.topology.internal.context.streamsrest;
 
 import static com.ibm.streamsx.topology.context.ContextProperties.KEEP_ARTIFACTS;
+import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.JOB_CONFIG_OVERLAYS;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-
+import java.util.Iterator;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Instance;
@@ -43,6 +45,10 @@ public class EdgeImageContext extends BuildServiceContext {
 
     private Instance instance;
     private BaseImage baseImage;
+    private String edgeConfigImageName = null;
+    private String edgeConfigImageTag = null;
+    private String edgeConfigImagePrefix = null;
+    private String edgeConfigBaseImage = null;    
 
     public Instance instance() { return instance;}
 
@@ -54,6 +60,23 @@ public class EdgeImageContext extends BuildServiceContext {
         return baseImage;
     }
 
+    private void parseEdgeConfig(JsonObject jco) {
+        //System.out.println("--- parseEdgeConfig jco="+jco); 
+        JsonArray jcos = GsonUtilities.array(jco, JOB_CONFIG_OVERLAYS);
+        if (jcos != null) {
+            Iterator<JsonElement> it = jcos.iterator();
+            while (it.hasNext()) {
+                JsonObject element = (JsonObject) it.next();
+                if(element.has("edgeConfig")) {
+                    JsonObject edgeConfig = (JsonObject) element.get("edgeConfig");
+                    edgeConfigImageName = (edgeConfig.has("imageName")) ? edgeConfig.get("imageName").getAsString() : null;
+                    edgeConfigImageTag = (edgeConfig.has("imageTag")) ? edgeConfig.get("imageTag").getAsString() : null;
+                    edgeConfigImagePrefix = (edgeConfig.has("imagePrefix")) ? edgeConfig.get("imagePrefix").getAsString() : null;
+                    edgeConfigBaseImage = (edgeConfig.has("baseImage")) ? edgeConfig.get("baseImage").getAsString() : null;
+                }
+            }
+        }
+    }
 
     /**
      * @see com.ibm.streamsx.topology.internal.context.streamsrest.BuildServiceContext#submitBuildArchive(com.ibm.streamsx.rest.build.BuildService, java.io.File, com.google.gson.JsonObject, com.google.gson.JsonObject, java.lang.String, com.google.gson.JsonObject)
@@ -61,6 +84,7 @@ public class EdgeImageContext extends BuildServiceContext {
     @Override
     protected JsonObject submitBuildArchive (BuildService context, File buildArchive, JsonObject deploy, JsonObject jco,
             String buildName, JsonObject buildConfig) throws Exception {
+    	parseEdgeConfig(jco);
         // find the base image to use for image build in postBuildAction()
         try {
             List<BaseImage> baseImages = context.getBaseImages();
@@ -69,15 +93,29 @@ public class EdgeImageContext extends BuildServiceContext {
                 throw new IllegalStateException("No base images found on build service.");
             }
             for (BaseImage bi: baseImages) {
-                final String biNameTag = (bi.getName() + " " + bi.getTag()).toLowerCase();
-                if (biNameTag.contains("conda") || biNameTag.contains("python")) {
-                    this.baseImage = bi;
-                    break;
+                if (null != edgeConfigBaseImage) {
+                	final String biNameTag = (bi.getName() + ":" + bi.getTag()).toLowerCase();
+                  	if (edgeConfigBaseImage.toLowerCase().contains(biNameTag)) {
+                		this.baseImage = bi;
+                		break;
+                  	}
+                }
+                else {
+                	final String biNameTag = (bi.getName() + " " + bi.getTag()).toLowerCase();
+                	if (biNameTag.contains("conda") || biNameTag.contains("python")) {
+                		this.baseImage = bi;
+                		break;
+                	}
                 }
             }
             if (this.baseImage == null) {
-                this.baseImage = baseImages.get(0);
-                TRACE.warning("No base image with 'conda' or 'python' in its name or tag found. Using " + this.baseImage.getRestid() + " instead.");
+            	if (null != edgeConfigBaseImage) {
+            		throw new IllegalStateException("Base image not found on build service.");
+            	}
+            	else {
+                    this.baseImage = baseImages.get(0);
+                    TRACE.warning("No base image with 'conda' or 'python' in its name or tag found. Using " + this.baseImage.getRestid() + " instead.");
+            	}
             }
         }
         catch (IOException e) {
@@ -125,15 +163,16 @@ public class EdgeImageContext extends BuildServiceContext {
         application.add("applicationCredentials", applicationCredentials);
         applicationBundles.add(application);
         buildConfigOverrides.add("applicationBundles", applicationBundles);
-
+        System.out.println("INFO: baseImage = " + this.baseImage.getId());
         buildConfigOverrides.addProperty("baseImage", this.baseImage.getId());
-        // use same registry and prefix as used for the base image
+        // use same registry and prefix as used for the base image if not set in edgeConfig
         final String imageRegistry = this.baseImage.getRegistry();
-        final String imagePrefix = this.baseImage.getPrefix();
-        final String imageName = getBuildName();
-        // TODO: add date-time token to the tag?
-        final String imageTag = "streamsx";
-        buildConfigOverrides.addProperty("image", imageRegistry + "/" + imagePrefix + "/" + imageName + ":" + imageTag);
+        final String imagePrefix = (edgeConfigImagePrefix != null) ? edgeConfigImagePrefix : this.baseImage.getPrefix();
+        final String imageName = (edgeConfigImageName != null) ? edgeConfigImageName : getBuildName();
+        final String imageTag = (edgeConfigImageTag != null) ? edgeConfigImageTag : "streamsx";
+        String imageStr = imageRegistry + "/" + imagePrefix + "/" + imageName + ":" + imageTag;
+        System.out.println("INFO: image = " + imageStr);
+        buildConfigOverrides.addProperty("image", imageStr);
 
         Build imageBuild = null;
         try {
