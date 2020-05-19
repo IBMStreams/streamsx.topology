@@ -183,7 +183,7 @@ class BuildService(_AbstractStreamsConnection):
         """Returns the build pools via the new resource type 'buildPools' from Edge enabled build services.
 
         Returns:
-            :py:obj:`list` of :py:class:`~.rest_primitives._BuildPool`: A list of _BuildPool instances or ``None`` if no Build pools are not available.
+            :py:obj:`list` of :py:class:`~.rest_primitives._BuildPool`: A list of _BuildPool instances or ``None`` if build pools are not available.
         """
         buildpools = self._get_elements('buildPools', _BuildPool, name=name)
         if buildpools is None:
