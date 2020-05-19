@@ -3128,3 +3128,63 @@ class Toolkit(_ResourceElement):
             version = dependency_element.find('{http://www.ibm.com/xmlns/prod/streams/spl/common}version').text
             deps.append(Toolkit.Dependency(name, version))
         return deps
+
+
+class _BuildPool(_ResourceElement):
+    """A build pool.
+    
+    Attributes:
+        baseimages(str): optional URL to query the base images
+        buildInactivityTimeout(int): 15,
+        buildProcessingTimeout": 15,
+        buildProcessingTimeoutMaximum": 15,
+        buildProductVersion": "",
+        buildingCount": 0,
+        name(str): The name of the build pool
+        resourceType(str): Identifies the REST resource type, which is *buildPool*
+        resourceWaitTimeout(int):
+        restid(str): The pool identifier
+        sizeMaximum(int):
+        sizeMinimum(int):
+        status(str): 
+        type(str): The type of the build pool. The type can be *application*, or *image*.
+        waitingCount(int)
+
+    Example:
+        >>> from streamsx.build import BuildService
+        >>> build_service = BuildService.of_endpoint()
+        >>> buildpools = build_service._get_builPools()
+        >>> print (buildpools[0].resourceType)
+        buildPool
+
+        .. versionadded:: 1.15
+    """
+    def __init__(self, json_rep, rest_client):
+        super(_BuildPool, self).__init__(json_rep, rest_client)
+
+class BaseImage(_ResourceElement):
+    """A base image used for an Edge image build using the EDGE context type.
+    
+    Attributes:
+        buildPool(str): REST URL of the build pool that contains the image
+        id(str): identifier in the form of registry/prefix/imagename:tag
+        name(str): the image name
+        prefix(str): the "image prefix
+        registry(str): the registry where the image is stored
+        resourceType(str): the REST resource type, which is *image*
+        restid(str): "image-registry.openshift-image-registry.svc:5000/edge-cpd-demo/streams-base-edge-application-el7:5.3.0.0",
+        tag(str): the image tag
+    
+    Example:
+        >>> from streamsx.build import BuildService
+        >>> build_service = BuildService.of_endpoint()
+        >>> baseimages = build_service.get_base_images()
+        >>> print(type(baseimages[0]))
+        <class 'streamsx.rest_primitives.BaseImage'>
+        >>> print (baseimages[0].resourceType)
+        image
+
+        .. versionadded:: 1.15
+    """
+    def __init__(self, json_rep, rest_client):
+        super(BaseImage, self).__init__(json_rep, rest_client)

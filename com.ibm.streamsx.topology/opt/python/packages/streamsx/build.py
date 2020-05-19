@@ -45,7 +45,7 @@ from streamsx import st
 from .rest import _AbstractStreamsConnection
 from .rest_primitives import (Domain, Instance, Installation, RestResource, Toolkit, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
     _exact_resource, _IAMStreamsRestClient, _IAMConstants, _get_username,
-    _ICPDExternalAuthHandler, _handle_http_errors, _JWTAuthHandler)
+    _ICPDExternalAuthHandler, _handle_http_errors, _JWTAuthHandler, _BuildPool, BaseImage)
 
 logger = logging.getLogger('streamsx.build')
 
@@ -179,6 +179,45 @@ class BuildService(_AbstractStreamsConnection):
                         return new_toolkits[0]    
                     return None
 
+    def _get_buildPools(self, name=None):
+        """Returns the build pools via the new resource type 'buildPools' from Edge enabled build services.
+
+        Returns:
+            :py:obj:`list` of :py:class:`~.rest_primitives._BuildPool`: A list of _BuildPool instances or ``None`` if build pools are not available.
+        """
+        buildpools = self._get_elements('buildPools', _BuildPool, name=name)
+        if buildpools is None:
+            # workaround as long as 'buildPools' resource is not available
+            #print("'buildPools' resource is not available. Query via connection-info")
+            buildpools_url = self.rest_client.session.auth._cfg['connection_info'].get('serviceBuildPoolsEndpoint')
+            if not buildpools_url:
+                # We do NOT get the deprecated BuildPool REST resource here as
+                # it will not be a build pool of 'image' type
+                return None
+            buildpools_json = self.rest_client.make_request(buildpools_url)['buildPools']
+            buildpools = [_BuildPool(json_rep, self.rest_client) for json_rep in buildpools_json]
+
+        return buildpools
+    
+    def get_base_images(self):
+        """Retrieves a list of all installed base images for Edge applications.
+
+        Returns:
+            :py:obj:`list` of :py:class:`~.rest_primitives.BaseImage`: List of all base images, ``None`` if there are no base images
+
+        """
+        buildpools = self._get_buildPools()
+        if not buildpools:
+            # None or empty list
+            return None
+        images = []
+        for pool in buildpools:
+            if hasattr(pool, 'baseimages'):
+                images.extend([BaseImage(json_rep, self.rest_client) for json_rep in self.rest_client.make_request(pool.baseimages)['images']])
+        if images:
+            return images
+        return None
+    
     @staticmethod
     def of_endpoint(endpoint=None, service_name=None, username=None, password=None, verify=None):
         """
