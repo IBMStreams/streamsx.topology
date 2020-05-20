@@ -1087,6 +1087,7 @@ class ContextTypes(object):
 
     The instance is specified in the configuration passed into :py:func:`submit`. The code that selects a service instance by name is::
 
+        from streamsx.topology.context import submit, ContextTypes
         from icpd_core import icpd_util
         cfg = icpd_util.get_service_instance_details(name='instanceName', instance_type="streams")
 
@@ -1095,7 +1096,20 @@ class ContextTypes(object):
         submit(ContextTypes.EDGE, topo, cfg)
 
     The resultant `cfg` dict may be augmented with other values such as
-    keys from :py:class:`ConfigParams`.
+    keys from :py:class:`ConfigParams` or :py:class:`JobConfig`.
+    For example, apply `imageName` and `imageTag`::
+
+        from streamsx.topology.context import submit, ContextTypes, JobConfig
+        from icpd_core import icpd_util
+        cfg = icpd_util.get_service_instance_details(name='instanceName', instance_type="streams")
+
+        topo = Topology()
+        ...
+        jc = JobConfig()
+        jc.raw_overlay = {'edgeConfig': {'imageName':'py-sample-app', 'imageTag':'v1.0'}}
+        jc.add(cfg)
+
+        submit(ContextTypes.EDGE, topo, cfg)
 
     *External to cluster or project*
 
@@ -1108,6 +1122,28 @@ class ContextTypes(object):
         * **STREAMS_INSTANCE_ID** - Streams service instance name.
         * **STREAMS_USERNAME** - (optional) User name to submit the job as, defaulting to the current operating system user name.
         * **STREAMS_PASSWORD** - Password for authentication.
+
+    Example code to query the base images::
+
+        from streamsx.build import BuildService
+
+        bs = BuildService.of_endpoint(verify=False)
+        baseImages = bs.get_base_images()
+        print('# images = ' + str(len(baseImages)))
+        for i in baseImages:
+            print(i.id)
+            print(i.registry)
+
+    Example code to select a base image for the image build::
+
+        from streamsx.topology.context import submit, ContextTypes, JobConfig
+        topo = Topology()
+        ...
+        jc = JobConfig()
+        jc.raw_overlay = {'edgeConfig': {'imageName':'py-sample-app', 'imageTag':'v1.0', 'baseImage':'streams-base-edge-conda-el7:5.3.0.0'}}
+        jc.add(cfg)
+
+        submit(ContextTypes.EDGE, topo, cfg)
 
     """
 
