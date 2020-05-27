@@ -1,0 +1,424 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx.build &mdash; streamsx 1.15.0b documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="streamsx.rest" href="streamsx.rest.html" />
+    <link rel="prev" title="streamsx.spl.spl" href="streamsx.spl.spl.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.15
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.html">streamsx.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.topology.html">streamsx.topology.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.context.html">streamsx.topology.context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.schema.html">streamsx.topology.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.state.html">streamsx.topology.state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.composite.html">streamsx.topology.composite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester.html">streamsx.topology.tester</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester_runtime.html">streamsx.topology.tester_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.ec.html">streamsx.ec</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.op.html">streamsx.spl.op</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.types.html">streamsx.spl.types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.toolkit.html">streamsx.spl.toolkit</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.spl.html">streamsx.spl.spl</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">streamsx.build</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#streams-build-rest-api">Streams Build REST API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cloud-pak-for-data">Cloud Pak for Data</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest.html">streamsx.rest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest_primitives.html">streamsx.rest_primitives</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="scripts/extract.html">spl-python-extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/info.html">streamsx-info</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/runner.html">streamsx-runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/sc.html">streamsx-sc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/service.html">streamsx-service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/streamtool.html">streamsx-streamtool</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysetup.html">IBM Streams Python setup</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">streamsx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>streamsx.build</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/streamsx.build.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-streamsx.build">
+<span id="streamsx-build"></span><h1>streamsx.build<a class="headerlink" href="#module-streamsx.build" title="Permalink to this headline">¶</a></h1>
+<p>REST API bindings for IBM® Streams Cloud Pak for Data build service.</p>
+<div class="section" id="streams-build-rest-api">
+<h2>Streams Build REST API<a class="headerlink" href="#streams-build-rest-api" title="Permalink to this headline">¶</a></h2>
+<p>The REST Build API provides programmatic support for creating, submitting and managing Streams builds. You can use the REST Build API from any application that can establish an HTTPS connection to the server that is running the build service.  The current support includes only methods for managing toolkits in the build service.</p>
+<div class="section" id="cloud-pak-for-data">
+<h3>Cloud Pak for Data<a class="headerlink" href="#cloud-pak-for-data" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Instance.of_endpoint" title="streamsx.rest_primitives.Instance.of_endpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">of_endpoint()</span></code></a> is the entry point to using the Streams Build REST API bindings,
+returning an <a class="reference internal" href="#streamsx.build.BuildService" title="streamsx.build.BuildService"><code class="xref py py-class docutils literal notranslate"><span class="pre">BuildService</span></code></a>.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="service.html#sas-main"><span class="std std-ref">IBM Streaming Analytics service</span></a></p>
+</div>
+</div>
+</div>
+<div class="section" id="module-contents">
+<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Classes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.build.BuildService" title="streamsx.build.BuildService"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BuildService</span></code></a></p></td>
+<td><p>IBM Streams build service.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="streamsx.build.BuildService">
+<em class="property">class </em><code class="sig-prename descclassname">streamsx.build.</code><code class="sig-name descname">BuildService</code><span class="sig-paren">(</span><em class="sig-param">username=None</em>, <em class="sig-param">password=None</em>, <em class="sig-param">resource_url=None</em>, <em class="sig-param">auth=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.build.BuildService" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">streamsx.rest._AbstractStreamsConnection</span></code></p>
+<p>IBM Streams build service.</p>
+<p>A instance of a <cite>BuildService</cite> is created using <a class="reference internal" href="#streamsx.build.BuildService.of_endpoint" title="streamsx.build.BuildService.of_endpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">of_endpoint()</span></code></a>.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.13.</span></p>
+</div>
+<dl class="method">
+<dt id="streamsx.build.BuildService.get_base_images">
+<code class="sig-name descname">get_base_images</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.build.BuildService.get_base_images" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves a list of all installed base images for Edge applications.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>List of all base images, <code class="docutils literal notranslate"><span class="pre">None</span></code> if there are no base images</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code> of <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseImage</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.build.BuildService.get_resources">
+<code class="sig-name descname">get_resources</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.build.BuildService.get_resources" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves a list of all known Streams high-level Build REST resources.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>List of all Streams high-level Build REST resources.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code> of <a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.RestResource" title="streamsx.rest_primitives.RestResource"><code class="xref py py-class docutils literal notranslate"><span class="pre">RestResource</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.build.BuildService.get_toolkit">
+<code class="sig-name descname">get_toolkit</code><span class="sig-paren">(</span><em class="sig-param">id</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.build.BuildService.get_toolkit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves available toolkit matching a specific toolkit ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>id</strong> (<em>str</em>) – Toolkit identifier to retrieve.  This is the name and
+version of a toolkit.  For sample, <cite>com.ibm.streamsx.rabbitmq-1.1.3</cite></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Toolkit matching <cite>id</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Toolkit" title="streamsx.rest_primitives.Toolkit"><code class="xref py py-class docutils literal notranslate"><span class="pre">Toolkit</span></code></a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – No matching toolkit exists.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.build.BuildService.get_toolkits">
+<code class="sig-name descname">get_toolkits</code><span class="sig-paren">(</span><em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.build.BuildService.get_toolkits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves a list of all installed Streams Toolkits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>List of all Toolkit resources.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code> of <a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Toolkit" title="streamsx.rest_primitives.Toolkit"><code class="xref py py-class docutils literal notranslate"><span class="pre">Toolkit</span></code></a></p>
+</dd>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Return toolkits matching name as a regular expression.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.build.BuildService.of_endpoint">
+<em class="property">static </em><code class="sig-name descname">of_endpoint</code><span class="sig-paren">(</span><em class="sig-param">endpoint=None</em>, <em class="sig-param">service_name=None</em>, <em class="sig-param">username=None</em>, <em class="sig-param">password=None</em>, <em class="sig-param">verify=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.build.BuildService.of_endpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect to a Cloud Pak for Data IBM Streams build service instance.</p>
+<p>Two configurations are supported.</p>
+<p class="rubric">Integrated configuration</p>
+<p>The build service is bound to a Streams instance and is defined
+using the Cloud Pak for Data deployment endpoint (URL) and
+the Streams service name.</p>
+<p>The endpoint is passed in as <cite>endpoint</cite> defaulting the the
+environment variable <code class="docutils literal notranslate"><span class="pre">CP4D_URL</span></code>.
+An example is <cite>https://cp4d_server:31843</cite>.</p>
+<p>The Streams service name is passed in as <cite>service_name</cite> defaulting
+to the environment variable <code class="docutils literal notranslate"><span class="pre">STREAMS_INSTANCE_ID</span></code>.</p>
+<p class="rubric">Standalone configuration</p>
+<p>A build service is independent of a Streams instance and is defined
+using the build service endpoint.</p>
+<p>The endpoint is passed in as <cite>endpoint</cite> defaulting the the
+environment variable <code class="docutils literal notranslate"><span class="pre">STREAMS_BUILD_URL</span></code>.
+An example is <cite>https://build_service:34679</cite>.</p>
+<p>No service name is specified thus <cite>service_name</cite> should be passed
+as <code class="docutils literal notranslate"><span class="pre">None</span></code> or not set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>endpoint</strong> (<em>str</em>) – Endpoint defining the build service.</p></li>
+<li><p><strong>service_name</strong> (<em>str</em>) – Streams instance name for a integrated configuration.  This value is ignored for a standalone configuration.</p></li>
+<li><p><strong>username</strong> (<em>str</em>) – User name to authenticate as. Defaults to the environment variable <code class="docutils literal notranslate"><span class="pre">STREAMS_USERNAME</span></code> or the operating system identifier if not set.</p></li>
+<li><p><strong>password</strong> (<em>str</em>) – Password for authentication. Defaults to the environment variable <code class="docutils literal notranslate"><span class="pre">STREAMS_PASSWORD</span></code> or the operating system identifier if not set.</p></li>
+<li><p><strong>verify</strong> – SSL verification. Set to <code class="docutils literal notranslate"><span class="pre">False</span></code> to disable SSL verification. Defaults to SSL verification being enabled.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Connection to Streams build service or <code class="docutils literal notranslate"><span class="pre">None</span></code> of insufficient configuration was provided.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#streamsx.build.BuildService" title="streamsx.build.BuildService">BuildService</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.build.BuildService.resource_url">
+<em class="property">property </em><code class="sig-name descname">resource_url</code><a class="headerlink" href="#streamsx.build.BuildService.resource_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Endpoint URL for IBM Streams REST build API.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.build.BuildService.upload_toolkit">
+<code class="sig-name descname">upload_toolkit</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.build.BuildService.upload_toolkit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upload a toolkit from a directory in the local filesystem to
+the Streams build service.</p>
+<p>Multiple versions of a toolkit may be uploaded as long as each has
+a unique version.  If a toolkit is uploaded with a name and version
+matching an existing toolkit, it will not replace the existing
+toolkit, and <code class="docutils literal notranslate"><span class="pre">None</span></code> will be returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – The path to the toolkit directory in the local filesystem.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The created Toolkit, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if it was not uploaded.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Toolkit" title="streamsx.rest_primitives.Toolkit">Toolkit</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="streamsx.rest.html" class="btn btn-neutral float-right" title="streamsx.rest" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="streamsx.spl.spl.html" class="btn btn-neutral float-left" title="streamsx.spl.spl" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2020 IBM Corp.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="SPL File types.spl"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_compilationunit"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>SPL File types.spl</title>
+</head>
+<body id="spldoc_compilationunit">
+
+
+<h1 class="title topictitle1">SPL File <tt class="ph tt">types.spl</tt></h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.15.0.beta</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology</a> &gt; types.spl</p>
+
+</div>
+
+<div class="section">
+
+<p class="p">Interchangeable SPL types. SPL tuple types that can be used to interchange streams between IBM Streams applications implemented in different languages, such as SPL, Python, Java &amp; Scala.
+</p>
+
+<p class="p">SPL uses structural equivalence for types, which means that types of the same structural composition are considered identical. This means that another toolkit or application need not use these type definitions, and thus can avoid being dependent on this toolkit. For example all these streams definitions are identical:
+</p>
+
+<div class="p">
+<ul class="ul">
+<li class="li"> <tt class="ph tt">stream&lt;rstring jsonString&gt;</tt></li>
+
+<li class="li"> <tt class="ph tt">stream&lt;com.ibm.streamsx.json.Json&gt;</tt></li>
+
+<li class="li"> <tt class="ph tt">stream&lt;com.ibm.streamsx.topology.Json&gt;</tt> </li>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle splhead-1">Content</h2>
+  
+  <dl class="dl">
+    <dt class="dt dlterm"/>
+<dd class="dd"/>
+
+    
+      <dt class="dt dlterm splhead-2">Types</dt>
+
+      <dd class="dd">
+<ul class="sl simple">
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology$types.html#spldoc_compilationunit__type__Blob">Blob</a></strong>: Tuple type representing binary tuples.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology$types.html#spldoc_compilationunit__type__Json">Json</a></strong>: Tuple type for representing JSON.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology$types.html#spldoc_compilationunit__type__String">String</a></strong>: Tuple type representing string tuples.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology$types.html#spldoc_compilationunit__type__XML">XML</a></strong>: Tuple type representing XML tuples.
+</li>
+
+</ul>
+
+      </dd>
+
+    
+  </dl>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle splhead-1">Types</h2>
+  
+</div>
+
+<div class="section" id="spldoc_compilationunit__type__Json"><h2 class="title sectiontitle splpart">Json</h2>
+  
+</div>
+<div class="section">
+
+<p class="p">Tuple type for representing JSON.
+</p>
+
+<p class="p">Using this schema in an SPL application with <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Publish">com.ibm.streamsx.topology.topic::Publish</a> and <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Subscribe">com.ibm.streamsx.topology.topic::Subscribe</a> allows exchange of tuples between SPL, Python, Java &amp; Scala. SPL applications can use the <tt class="ph tt">com.ibm.streamsx.json</tt> toolkit to convert SPL tuples into JSON.
+</p>
+
+<p class="p">Any stream published by a Python application using <tt class="ph tt">schema.CommonSchema.Json</tt> will have this schema.
+</p>
+
+<p class="p">Any stream of type <tt class="ph tt">TStream&lt;JSONObject&gt;</tt> published by a Java application will have this schema.
+</p>
+
+<p class="p">Any stream of type <tt class="ph tt">TStream[JSONObject]</tt> published by a Scala application will have this schema. 
+</p>
+
+</div>
+
+<div class="section">
+   <p class="p">
+<tt class="ph tt">Json = rstring jsonString;</tt>
+   </p>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__type__String"><h2 class="title sectiontitle splpart">String</h2>
+  
+</div>
+<div class="section">
+
+<p class="p">Tuple type representing string tuples.
+</p>
+
+<p class="p">Using this schema in an SPL application with <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Publish">com.ibm.streamsx.topology.topic::Publish</a> and <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Subscribe">com.ibm.streamsx.topology.topic::Subscribe</a> allows exchange of tuples between SPL, Python, Java &amp; Scala.
+</p>
+
+<p class="p">Any stream published by a Python application using <tt class="ph tt">schema.CommonSchema.String</tt> will have this schema.
+</p>
+
+<p class="p">Any stream of type <tt class="ph tt">TStream&lt;String&gt;</tt> published by a Java application will have this schema.
+</p>
+
+<p class="p">Any stream of type <tt class="ph tt">TStream[String]</tt> published by a Scala application will have this schema. 
+</p>
+
+</div>
+
+<div class="section">
+   <p class="p">
+<tt class="ph tt">String = rstring string;</tt>
+   </p>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__type__XML"><h2 class="title sectiontitle splpart">XML</h2>
+  
+</div>
+<div class="section">
+
+<p class="p">Tuple type representing XML tuples.
+</p>
+
+<p class="p">Using this schema in an SPL application with <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Publish">com.ibm.streamsx.topology.topic::Publish</a> and <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Subscribe">com.ibm.streamsx.topology.topic::Subscribe</a> allows exchange of tuples between SPL, Java &amp; Scala.
+</p>
+
+<p class="p">Any stream of type <tt class="ph tt">TStream&lt;com.ibm.streams.operator.types.XML&gt;</tt> published by a Java application will have this schema.
+</p>
+
+<p class="p">Any stream of type <tt class="ph tt">TStream[com.ibm.streams.operator.types.XML]</tt> published by a Scala application will have this schema. 
+</p>
+
+</div>
+
+<div class="section">
+   <p class="p">
+<tt class="ph tt">XML = xml document;</tt>
+   </p>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__type__Blob"><h2 class="title sectiontitle splpart">Blob</h2>
+  
+</div>
+<div class="section">
+
+<p class="p">Tuple type representing binary tuples.
+</p>
+
+<p class="p">Using this schema in an SPL application with <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Publish">com.ibm.streamsx.topology.topic::Publish</a> and <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Subscribe">com.ibm.streamsx.topology.topic::Subscribe</a> allows exchange of tuples between SPL, Java &amp; Scala.
+</p>
+
+<p class="p">Any stream of type <tt class="ph tt">TStream&lt;com.ibm.streams.operator.types.Blob&gt;</tt> published by a Java application will have this schema.
+</p>
+
+<p class="p">Any stream of type <tt class="ph tt">TStream[com.ibm.streams.operator.types.Blob]</tt> published by a Scala application will have this schema. 
+</p>
+
+</div>
+
+<div class="section">
+   <p class="p">
+<tt class="ph tt">Blob = blob binary;</tt>
+   </p>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

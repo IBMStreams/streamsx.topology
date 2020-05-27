@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="Processing SPL tuples in Python"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_page"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>Processing SPL tuples in Python</title>
+</head>
+<body id="spldoc_page">
+
+
+<h1 class="title topictitle1">Processing SPL tuples in Python</h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.15.0.beta</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$4.html">Creating SPL Operators from Python code</a> &gt; Processing SPL tuples in Python</p>
+
+</div>
+
+
+<div class="section">
+<p class="p">SPL tuples are converted to Python objects and passed to a decorated callable.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Overview
+</h2>
+
+<p class="p">For each SPL tuple arriving at an input port a Python callable is invoked with the SPL tuple converted to Python values suitable for the function call. How the tuple is passed is defined by the tuple passing style.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Tuple Passing Styles
+</h2>
+
+<div class="p">An input tuple can be passed to Python function using a number of different styles:
+<ul class="ul">
+<li class="li"> <em class="ph i">dictionary</em></li>
+
+<li class="li"> <em class="ph i">tuple</em></li>
+
+<li class="li"> <em class="ph i">attributes by name</em> <strong class="ph b">not yet implemented</strong></li>
+
+<li class="li"> <em class="ph i">attributes by position</em></li>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Dictionary
+</h2>
+
+<p class="p">Passing the SPL tuple as a Python dictionary is flexible and makes the operator independent of any schema. A disadvantage is the reduction in code readability for Python function by not having formal parameters, though getters such as <tt class="ph tt">tuple['id']</tt> mitigate that to some extent. If the function is general purpose and can derive meaning from the keys that are the attribute names then <tt class="ph tt">**kwargs</tt> can be useful.
+</p>
+
+<p class="p">When the only function parameter is <tt class="ph tt">**kwargs</tt>, e.g. <tt class="ph tt">def myfunc(**tuple):</tt>, then the passing style is <em class="ph i">dictionary</em>.
+</p>
+
+<p class="p">All of the attributes are passed in the dictionary using the attribute name as the key.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Tuple
+</h2>
+
+<p class="p">Passing the SPL tuple as a Python tuple is flexible and makes the operator independent of any schema but is brittle to changes in the SPL schema. Another disadvantage is the reduction in code readability for Python function by not having formal parameters. However if the function is general purpose and independent of the tuple contents <tt class="ph tt">*args</tt> can be useful.
+</p>
+
+<p class="p">When the only function parameter is <tt class="ph tt">*args</tt> (e.g. <tt class="ph tt">def myfunc(*tuple):</tt>) then the passing style is <em class="ph i">tuple</em>.
+</p>
+
+<p class="p">All of the attributes are passed as a Python tuple with the order of values matching the order of the SPL schema.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Attributes by name
+</h2>
+
+<p class="p">(<strong class="ph b">not yet implemented</strong>)
+</p>
+
+<p class="p">Passing attributes by name can be robust against changes in the SPL scheme, e.g. additional attributes being added in the middle of the schema, but does require that the SPL schema has matching attribute names.
+</p>
+
+<p class="p">When <em class="ph i">attributes by name</em> is used then SPL tuple attributes are passed to the function by name for formal parameters. Order of the attributes and parameters need not match. This is supported for function parameters of kind <tt class="ph tt">POSITIONAL_OR_KEYWORD</tt> and <tt class="ph tt">KEYWORD_ONLY</tt>.
+</p>
+
+<p class="p">If the function signature also contains a parameter of the form <tt class="ph tt">**kwargs</tt> (<tt class="ph tt">VAR_KEYWORD</tt>) then any attributes not bound to formal parameters are passed in its dictionary using the attribute name as the key.
+</p>
+
+<p class="p">If the function signature also contains an arbitrary argument list <tt class="ph tt">*args</tt> then any attributes not bound to formal parameters or to <tt class="ph tt">**kwargs</tt> are passed in order of the SPL schema.
+</p>
+
+<p class="p">If there are only formal parameters any non-bound attributes are not passed into the function.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Attributes by position
+</h2>
+
+<p class="p">Passing attributes by position allows the SPL operator to be independent of the SPL schema but is brittle to changes in the SPL schema. For example a function expecting an identifier and a sensor reading as the first two attributes would break if an attribute representing region was added as the first SPL attribute.
+</p>
+
+<p class="p">When <em class="ph i">attributes by position</em> is used then SPL tuple attributes are passed to the function by position for formal parameters. The first SPL attribute in the tuple is passed as the first parameter. This is supported for function parameters of kind <tt class="ph tt">POSITIONAL_OR_KEYWORD</tt>.
+</p>
+
+<p class="p">If the function signature also contains an arbitrary argument list <tt class="ph tt">*args</tt> (<tt class="ph tt">VAR_POSITIONAL</tt>) then any attributes not bound to formal parameters are passed in order of the SPL schema.
+</p>
+
+<p class="p">The function signature must not contain a parameter of the form <tt class="ph tt">**kwargs</tt> (<tt class="ph tt">VAR_KEYWORD</tt>).
+</p>
+
+<p class="p">If there are only formal parameters any non-bound attributes are not passed into the function.
+</p>
+
+<p class="p">The SPL schema must have at least the number of positional arguments the function requires.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Selecting the style
+</h2>
+
+<p class="p">For signatures only containing a parameter of the form  *args` or <tt class="ph tt">**kwargs</tt> the style is implicitly defined:
+</p>
+
+<div class="p">
+<ul class="ul">
+<li class="li"> <tt class="ph tt">def f(**tuple)</tt> - <em class="ph i">dictionary</em> - <tt class="ph tt">tuple</tt> will contain a dictionary of all of the SPL tuple attribute's values with the keys being the attribute names.</li>
+
+<li class="li"> <tt class="ph tt">def f(*tuple)</tt> - <em class="ph i">tuple</em> - <tt class="ph tt">tuple</tt> will contain all of the SPL tuple attribute's values in order of the SPL schema definition.</li>
+
+</ul>
+
+</div>
+
+<div class="p">Otherwise the style is set by the <tt class="ph tt">style</tt> parameter to the decorator, defaulting to <em class="ph i">attributes by name</em>. The style value can be set to:
+<ul class="ul">
+<li class="li"> <tt class="ph tt">'name'</tt> - <em class="ph i">attributes by name</em></li>
+
+<li class="li"> <tt class="ph tt">'position'</tt> - <em class="ph i">attributes by position</em></li>
+
+</ul>
+
+</div>
+
+<p class="p"><strong class="ph b">Note</strong>: For backwards compatibility <tt class="ph tt">@spl.pipe</tt> and <tt class="ph tt">@spl.sink</tt> <strong class="ph b">always</strong> use <em class="ph i">attributes by position</em> and do not support <tt class="ph tt">**kwargs</tt>. They do not support the <tt class="ph tt">style</tt> parameter.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Examples
+</h2>
+
+<p class="p">These examples how a SPL tuple with the schema and value:
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+tuple&lt;rstring id, float64 temp, boolean increase&gt;
+{id='battery', temp=23.7, increase=true}
+</pre>
+
+
+</div>
+
+<p class="p">is passed into a variety of functions by showing the effective Python call and the resulting values of the function's parameters.
+</p>
+
+<div class="p"><em class="ph i">Dictionary</em> consuming all attributes by <tt class="ph tt">**kwargs</tt>:
+<pre class="pre codeblock">
+@spl.map()
+def f(**tuple)
+    pass
+# f({'id':'battery', 'temp':23.7, 'increase': True})
+#     tuple={'id':'battery', 'temp':23.7, 'increase':True}
+</pre>
+
+
+</div>
+
+<div class="p"><em class="ph i">Tuple</em> consuming all attributes by <tt class="ph tt">*args</tt>:
+<pre class="pre codeblock">
+@spl.map()
+def f(*tuple)
+    pass
+# f('battery', 23.7, True)
+#     tuple=('battery',23.7, True)
+</pre>
+
+
+</div>
+
+<div class="p"><em class="ph i">Attributes by name</em> consuming all attributes:
+<pre class="pre codeblock">
+@spl.map()
+def f(id, temp, increase)
+    pass
+# f(id='battery', temp=23.7, increase=True)
+#     id='battery'
+#     temp=23.7
+#     increase=True
+</pre>
+
+
+</div>
+
+<div class="p"><em class="ph i">Attributes by name</em> consuming a subset of attributes:
+<pre class="pre codeblock">
+@spl.map()
+def f(id, temp)
+    pass
+# f(id='battery', temp=23.7)
+#    id='battery'
+#    temp=23.7
+</pre>
+
+
+</div>
+
+<div class="p"><em class="ph i">Attributes by name</em> consuming a subset of attributes in a different order:
+<pre class="pre codeblock">
+@spl.map()
+def f(increase, temp)
+    pass
+# f(temp=23.7, increase=True)
+#    increase=True
+#    temp=23.7
+</pre>
+
+
+</div>
+
+<div class="p"><em class="ph i">Attributes by name</em> consuming <tt class="ph tt">id</tt> by name and remaining attributes by <tt class="ph tt">**kwargs</tt>:
+<pre class="pre codeblock">
+@spl.map()
+def f(id, **tuple)
+    pass
+# f(id='battery', {'temp':23.7, 'increase':True})
+#    id='battery'
+#    tuple={'temp':23.7, 'increase':True}
+</pre>
+
+
+</div>
+
+<div class="p"><em class="ph i">Attributes by name</em> consuming <tt class="ph tt">id</tt> by name and remaining attributes by <tt class="ph tt">*args</tt>:
+<pre class="pre codeblock">
+@spl.map()
+def f(id, *tuple)
+    pass
+# f(id='battery', 23.7, True)
+#    id='battery'
+#    tuple=(23.7, True)
+</pre>
+
+
+</div>
+
+<div class="p"><em class="ph i">Attributes by position</em> consuming all attributes:
+<pre class="pre codeblock">
+@spl.map(style='position')
+def f(key, value, up)
+     pass
+# f('battery', 23.7, True)
+#    key='battery'
+#    value=23.7
+#    up=True
+</pre>
+
+
+</div>
+
+<div class="p"><em class="ph i">Attributes by position</em> consuming a subset of attributes:
+<pre class="pre codeblock">
+@spl.map(style='position')
+def f(a, b)
+   pass
+# f('battery', 23.7)
+#    a='battery'
+#    b=23.7
+</pre>
+
+
+</div>
+
+<div class="p"><em class="ph i">Attributes by position</em> consuming <tt class="ph tt">id</tt> by position and remaining attributes by <tt class="ph tt">*args</tt>:
+<pre class="pre codeblock">
+@spl.map(style='position')
+def f(key, *tuple)
+    pass
+# f('battery', 23.7, True)
+#    key='battery'
+#    tuple=(23.7, True)
+</pre>
+
+
+</div>
+
+<p class="p">In all cases the SPL tuple must be able to provide all parameters required by the function. If the SPL schema is insufficient then an error will result, typically a SPL compile time error.
+</p>
+
+<p class="p">The SPL schema can provide a subset of the formal parameters if the remaining attributes are optional (having a default).
+</p>
+
+<div class="p"><em class="ph i">Attributes by name</em> consuming a subset of attributes with an optional parameter not matched by the schema:
+<pre class="pre codeblock">
+@spl.map()
+def f(id, temp, pressure=None)
+   pass
+# f(id='battery', temp=23.7)
+#     id='battery'
+#     temp=23.7
+#     pressure=None
+</pre>
+
+
+</div>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

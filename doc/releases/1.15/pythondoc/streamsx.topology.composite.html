@@ -1,0 +1,421 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx.topology.composite &mdash; streamsx 1.15.0b documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="streamsx.topology.tester" href="streamsx.topology.tester.html" />
+    <link rel="prev" title="streamsx.topology.state" href="streamsx.topology.state.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.15
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.html">streamsx.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.topology.html">streamsx.topology.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.context.html">streamsx.topology.context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.schema.html">streamsx.topology.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.state.html">streamsx.topology.state</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">streamsx.topology.composite</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester.html">streamsx.topology.tester</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester_runtime.html">streamsx.topology.tester_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.ec.html">streamsx.ec</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.op.html">streamsx.spl.op</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.types.html">streamsx.spl.types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.toolkit.html">streamsx.spl.toolkit</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.spl.html">streamsx.spl.spl</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.build.html">streamsx.build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest.html">streamsx.rest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest_primitives.html">streamsx.rest_primitives</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="scripts/extract.html">spl-python-extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/info.html">streamsx-info</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/runner.html">streamsx-runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/sc.html">streamsx-sc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/service.html">streamsx-service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/streamtool.html">streamsx-streamtool</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysetup.html">IBM Streams Python setup</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">streamsx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>streamsx.topology.composite</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/streamsx.topology.composite.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-streamsx.topology.composite">
+<span id="streamsx-topology-composite"></span><h1>streamsx.topology.composite<a class="headerlink" href="#module-streamsx.topology.composite" title="Permalink to this headline">¶</a></h1>
+<p>Composite transformations.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.14.</span></p>
+</div>
+<div class="section" id="module-contents">
+<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Classes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.topology.composite.Composite" title="streamsx.topology.composite.Composite"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Composite</span></code></a></p></td>
+<td><p>Composite transformations support a single logical transformation being a composite of one or more basic transformations.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#streamsx.topology.composite.ForEach" title="streamsx.topology.composite.ForEach"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ForEach</span></code></a></p></td>
+<td><p>Abstract composite for each transformation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.topology.composite.Map" title="streamsx.topology.composite.Map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Map</span></code></a></p></td>
+<td><p>Abstract composite map transformation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#streamsx.topology.composite.Source" title="streamsx.topology.composite.Source"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Source</span></code></a></p></td>
+<td><p>Abstract composite source.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="streamsx.topology.composite.Composite">
+<em class="property">class </em><code class="sig-prename descclassname">streamsx.topology.composite.</code><code class="sig-name descname">Composite</code><a class="headerlink" href="#streamsx.topology.composite.Composite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>Composite transformations support a single logical transformation
+being a composite of one or more basic transformations.</p>
+<p>A composite transformation is implemented as a sub-class
+of <a class="reference internal" href="#streamsx.topology.composite.Source" title="streamsx.topology.composite.Source"><code class="xref py py-class docutils literal notranslate"><span class="pre">Source</span></code></a>, <a class="reference internal" href="#streamsx.topology.composite.Map" title="streamsx.topology.composite.Map"><code class="xref py py-class docutils literal notranslate"><span class="pre">Map</span></code></a> or <a class="reference internal" href="#streamsx.topology.composite.ForEach" title="streamsx.topology.composite.ForEach"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForEach</span></code></a>
+whose <code class="docutils literal notranslate"><span class="pre">populate</span></code> method populates the topology with the
+required basic transformations. For example a <code class="docutils literal notranslate"><span class="pre">Source</span></code> composite
+might have use <code class="xref py py-meth docutils literal notranslate"><span class="pre">source()</span></code> followed by a
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">filter()</span></code> to filter out unwanted events
+and then a <code class="xref py py-meth docutils literal notranslate"><span class="pre">map()</span></code> to parse the event into
+a structured schema.</p>
+<p>Composites may use other composites during <code class="docutils literal notranslate"><span class="pre">populate</span></code>.</p>
+<p>Composites can control how the basic transformations are
+visually represented. By default any transformations within
+a composite are grouped visually. A composite may alter this using these
+attributes of the composite instance:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">kind</span></code> - Sets the name of operator kind for a group or single operator.  Defaults to a combination of the module and class name of the composite, e.g. <code class="docutils literal notranslate"><span class="pre">streamsx.standard.utility::Sequence</span></code>. Set to a false value to disable any modification of the visual representation of the composite’s transformations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">group</span></code> - Set to a false value to disable any grouping of multiple transformations. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code> to enable grouping.</p></li>
+</ul>
+</div></blockquote>
+<p>The values of <code class="docutils literal notranslate"><span class="pre">kind</span></code> and <code class="docutils literal notranslate"><span class="pre">group</span></code> are checked after the expansion
+of the composite using <code class="docutils literal notranslate"><span class="pre">populate</span></code>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.topology.composite.Source">
+<em class="property">class </em><code class="sig-prename descclassname">streamsx.topology.composite.</code><code class="sig-name descname">Source</code><a class="headerlink" href="#streamsx.topology.composite.Source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#streamsx.topology.composite.Composite" title="streamsx.topology.composite.Composite"><code class="xref py py-class docutils literal notranslate"><span class="pre">streamsx.topology.composite.Composite</span></code></a></p>
+<p>Abstract composite source.</p>
+<p>An instance of a subclass can be passed to <code class="xref py py-meth docutils literal notranslate"><span class="pre">source()</span></code>
+to create a source stream that is composed of one or more basic transformations.</p>
+<p>Example assuming <code class="docutils literal notranslate"><span class="pre">RawTweets</span></code> is Python iterable that produces
+raw tweets:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Tweets</span><span class="p">(</span><span class="n">streamsx</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">composite</span><span class="o">.</span><span class="n">Source</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">track</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">track</span> <span class="o">=</span> <span class="n">track</span>
+
+    <span class="k">def</span> <span class="nf">populate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">topology</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="c1"># get all the tweets</span>
+        <span class="n">tweets</span> <span class="o">=</span> <span class="n">topology</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="n">RawTweets</span><span class="p">(</span><span class="n">track</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">track</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="c1"># filter so that only with a message are returned</span>
+        <span class="k">return</span> <span class="n">tweets</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">tweet</span> <span class="p">:</span> <span class="n">tweet</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>This class can then be used as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">topo</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">()</span>
+<span class="n">gf_tweets</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="n">Tweets</span><span class="p">(</span><span class="n">track</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;glutenfree&#39;</span><span class="p">,</span> <span class="s1">&#39;gf&#39;</span><span class="p">]))</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.topology.composite.Source.populate">
+<em class="property">abstract </em><code class="sig-name descname">populate</code><span class="sig-paren">(</span><em class="sig-param">topology</em>, <em class="sig-param">name</em>, <em class="sig-param">**options</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.composite.Source.populate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Populate the topology with this composite source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>topology</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology" title="streamsx.topology.topology.Topology"><code class="xref py py-class docutils literal notranslate"><span class="pre">Topology</span></code></a>) – Topology containing the source.</p></li>
+<li><p><strong>name</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – Name passed into <code class="docutils literal notranslate"><span class="pre">source</span></code>.</p></li>
+<li><p><strong>**options</strong> – Future options passed to <code class="docutils literal notranslate"><span class="pre">source</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Single stream representing the source.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.topology.composite.Map">
+<em class="property">class </em><code class="sig-prename descclassname">streamsx.topology.composite.</code><code class="sig-name descname">Map</code><a class="headerlink" href="#streamsx.topology.composite.Map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#streamsx.topology.composite.Composite" title="streamsx.topology.composite.Composite"><code class="xref py py-class docutils literal notranslate"><span class="pre">streamsx.topology.composite.Composite</span></code></a></p>
+<p>Abstract composite map transformation.</p>
+<p>An instance of a subclass can be passed to <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.map" title="streamsx.topology.topology.Stream.map"><code class="xref py py-meth docutils literal notranslate"><span class="pre">map()</span></code></a>
+to create a stream that is composed of one or more basic transformations
+of an input stream.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">WordCount</span><span class="p">(</span><span class="n">streamsx</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">composite</span><span class="o">.</span><span class="n">Map</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">update</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">period</span> <span class="o">=</span> <span class="n">period</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span> <span class="o">=</span> <span class="n">update</span>
+
+    <span class="k">def</span> <span class="nf">populate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">topology</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="n">words</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">flat_map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">line</span> <span class="p">:</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+        <span class="n">win</span> <span class="o">=</span> <span class="n">words</span><span class="o">.</span><span class="n">last</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">period</span><span class="p">)</span><span class="o">.</span><span class="n">trigger</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">)</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span> <span class="p">:</span> <span class="n">s</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">win</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="k">lambda</span> <span class="n">values</span> <span class="p">:</span> <span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)))</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="streamsx.topology.composite.Map.populate">
+<em class="property">abstract </em><code class="sig-name descname">populate</code><span class="sig-paren">(</span><em class="sig-param">topology</em>, <em class="sig-param">stream</em>, <em class="sig-param">schema</em>, <em class="sig-param">name</em>, <em class="sig-param">**options</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.composite.Map.populate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Populate the topology with this composite map transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>topology</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology" title="streamsx.topology.topology.Topology"><code class="xref py py-class docutils literal notranslate"><span class="pre">Topology</span></code></a>) – Topology containing the composite map.</p></li>
+<li><p><strong>stream</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></a>) – Stream to be transformed.</p></li>
+<li><p><strong>schema</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.StreamSchema" title="streamsx.topology.schema.StreamSchema"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamSchema</span></code></a>, <a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.CommonSchema" title="streamsx.topology.schema.CommonSchema"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommonSchema</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">NamedTuple</span></code>]) – Schema passed into <code class="docutils literal notranslate"><span class="pre">map</span></code>.</p></li>
+<li><p><strong>name</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – Name passed into <code class="docutils literal notranslate"><span class="pre">map</span></code>.</p></li>
+<li><p><strong>**options</strong> – Future options passed to <code class="docutils literal notranslate"><span class="pre">map</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Single stream representing the transformation of <cite>stream</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.topology.composite.ForEach">
+<em class="property">class </em><code class="sig-prename descclassname">streamsx.topology.composite.</code><code class="sig-name descname">ForEach</code><a class="headerlink" href="#streamsx.topology.composite.ForEach" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#streamsx.topology.composite.Composite" title="streamsx.topology.composite.Composite"><code class="xref py py-class docutils literal notranslate"><span class="pre">streamsx.topology.composite.Composite</span></code></a></p>
+<p>Abstract composite for each transformation.</p>
+<p>An instance of a subclass can be passed to <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.for_each" title="streamsx.topology.topology.Stream.for_each"><code class="xref py py-meth docutils literal notranslate"><span class="pre">for_each()</span></code></a> to create a sink (stream termination) that is
+composed of one or more basic transformations of an input stream.</p>
+<dl class="method">
+<dt id="streamsx.topology.composite.ForEach.populate">
+<em class="property">abstract </em><code class="sig-name descname">populate</code><span class="sig-paren">(</span><em class="sig-param">topology</em>, <em class="sig-param">stream</em>, <em class="sig-param">name</em>, <em class="sig-param">**options</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.composite.ForEach.populate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Populate the topology with this composite for each transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>topology</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology" title="streamsx.topology.topology.Topology"><code class="xref py py-class docutils literal notranslate"><span class="pre">Topology</span></code></a>) – Topology containing the composite map.</p></li>
+<li><p><strong>stream</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></a>) – Stream to be transformed.</p></li>
+<li><p><strong>name</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – Name passed into <code class="docutils literal notranslate"><span class="pre">for_each</span></code>.</p></li>
+<li><p><strong>**options</strong> – Future options passed to <code class="docutils literal notranslate"><span class="pre">for_each</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Termination for this composite transformation of <cite>stream</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Sink" title="streamsx.topology.topology.Sink">Sink</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="streamsx.topology.tester.html" class="btn btn-neutral float-right" title="streamsx.topology.tester" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="streamsx.topology.state.html" class="btn btn-neutral float-left" title="streamsx.topology.state" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2020 IBM Corp.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

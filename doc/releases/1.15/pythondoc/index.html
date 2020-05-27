@@ -1,0 +1,452 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>IBM Streams Python support &mdash; streamsx 1.15.0b documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="streamsx.topology" href="streamsx.topology.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="#" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.15
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.html">streamsx.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.topology.html">streamsx.topology.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.context.html">streamsx.topology.context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.schema.html">streamsx.topology.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.state.html">streamsx.topology.state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.composite.html">streamsx.topology.composite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester.html">streamsx.topology.tester</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester_runtime.html">streamsx.topology.tester_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.ec.html">streamsx.ec</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.op.html">streamsx.spl.op</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.types.html">streamsx.spl.types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.toolkit.html">streamsx.spl.toolkit</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.spl.html">streamsx.spl.spl</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.build.html">streamsx.build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest.html">streamsx.rest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest_primitives.html">streamsx.rest_primitives</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="scripts/extract.html">spl-python-extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/info.html">streamsx-info</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/runner.html">streamsx-runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/sc.html">streamsx-sc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/service.html">streamsx-service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/streamtool.html">streamsx-streamtool</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysetup.html">IBM Streams Python setup</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">streamsx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#">Docs</a> &raquo;</li>
+        
+      <li>IBM Streams Python support</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ibm-streams-python-support">
+<h1>IBM Streams Python support<a class="headerlink" href="#ibm-streams-python-support" title="Permalink to this headline">¶</a></h1>
+<p>Python APIs for use with IBM® Streaming Analytics service on
+IBM Cloud and on-premises IBM Streams.</p>
+<div class="section" id="python-application-api-for-streams">
+<h2>Python Application API for Streams<a class="headerlink" href="#python-application-api-for-streams" title="Permalink to this headline">¶</a></h2>
+<p>Module that allows the definition and execution of streaming
+applications implemented in Python.
+Applications use Python code to process tuples and tuples are Python objects.</p>
+<p>SPL operators may also be invoked from Python applications to allow
+use of existing IBM Streams toolkits.</p>
+<p>See <a class="reference internal" href="streamsx.topology.html#module-streamsx.topology" title="streamsx.topology"><code class="xref py py-mod docutils literal notranslate"><span class="pre">topology</span></code></a></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="streamsx.topology.html#module-streamsx.topology" title="streamsx.topology"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streamsx.topology</span></code></a></p></td>
+<td><p>Python application support for IBM Streams.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="streamsx.topology.topology.html#module-streamsx.topology.topology" title="streamsx.topology.topology"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streamsx.topology.topology</span></code></a></p></td>
+<td><p>Streaming application definition.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="streamsx.topology.context.html#module-streamsx.topology.context" title="streamsx.topology.context"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streamsx.topology.context</span></code></a></p></td>
+<td><p>Context for submission and build of topologies.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="streamsx.topology.schema.html#module-streamsx.topology.schema" title="streamsx.topology.schema"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streamsx.topology.schema</span></code></a></p></td>
+<td><p>Schemas for streams.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="streamsx.topology.state.html#module-streamsx.topology.state" title="streamsx.topology.state"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streamsx.topology.state</span></code></a></p></td>
+<td><p>Application state.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="streamsx.topology.composite.html#module-streamsx.topology.composite" title="streamsx.topology.composite"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streamsx.topology.composite</span></code></a></p></td>
+<td><p>Composite transformations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="streamsx.topology.tester.html#module-streamsx.topology.tester" title="streamsx.topology.tester"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streamsx.topology.tester</span></code></a></p></td>
+<td><p>Testing support for streaming applications.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="streamsx.topology.tester_runtime.html#module-streamsx.topology.tester_runtime" title="streamsx.topology.tester_runtime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streamsx.topology.tester_runtime</span></code></a></p></td>
+<td><p>Runtime tester functionality.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="streamsx.ec.html#module-streamsx.ec" title="streamsx.ec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streamsx.ec</span></code></a></p></td>
+<td><p>Access to the IBM Streams execution context.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="streamsx.spl.op.html#module-streamsx.spl.op" title="streamsx.spl.op"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streamsx.spl.op</span></code></a></p></td>
+<td><p>Integration of SPL operators.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="streamsx.spl.types.html#module-streamsx.spl.types" title="streamsx.spl.types"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streamsx.spl.types</span></code></a></p></td>
+<td><p>SPL type definitions.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="streamsx.spl.toolkit.html#module-streamsx.spl.toolkit" title="streamsx.spl.toolkit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streamsx.spl.toolkit</span></code></a></p></td>
+<td><p>SPL toolkit integration.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="spl-primitive-python-operators">
+<h2>SPL primitive Python operators<a class="headerlink" href="#spl-primitive-python-operators" title="Permalink to this headline">¶</a></h2>
+<p>SPL primitive Python operators provide the ability
+to perform tuple processing using Python in an SPL application.</p>
+<p>A Python function or class is simply turned into an SPL primitive operator
+through provided decorators.</p>
+<p>SPL (Streams Processing Language) is a domain specific language for streaming
+analytics supported by Streams.</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="streamsx.spl.spl.html#module-streamsx.spl.spl" title="streamsx.spl.spl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streamsx.spl.spl</span></code></a></p></td>
+<td><p>SPL Python primitive operators.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="streams-python-rest-api">
+<h2>Streams Python REST API<a class="headerlink" href="#streams-python-rest-api" title="Permalink to this headline">¶</a></h2>
+<p>Module that allows interaction with an running Streams instance or
+service through HTTPS REST APIs.</p>
+<hr class="docutils" />
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="streamsx.build.html#module-streamsx.build" title="streamsx.build"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streamsx.build</span></code></a></p></td>
+<td><p>REST API bindings for IBM® Streams Cloud Pak for Data build service.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="streamsx.rest.html#module-streamsx.rest" title="streamsx.rest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streamsx.rest</span></code></a></p></td>
+<td><p>REST API bindings for IBM® Streams &amp; Streaming Analytics service.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="streamsx.rest_primitives.html#module-streamsx.rest_primitives" title="streamsx.rest_primitives"><code class="xref py py-obj docutils literal notranslate"><span class="pre">streamsx.rest_primitives</span></code></a></p></td>
+<td><p>Primitive objects for REST bindings.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="scripts">
+<h2>Scripts<a class="headerlink" href="#scripts" title="Permalink to this headline">¶</a></h2>
+<p>The <cite>streamsx</cite> package provides a number of command line scripts.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="scripts/extract.html">spl-python-extract</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="scripts/extract.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/extract.html#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/extract.html#spl-python-primitive-operators">SPL Python primitive operators</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/info.html">streamsx-info</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="scripts/info.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/info.html#usage">Usage</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/runner.html">streamsx-runner</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="scripts/runner.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/runner.html#streaming-analytics-service">Streaming Analytics service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/runner.html#job-submission">Job submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/runner.html#bundle-creation">Bundle creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/runner.html#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/runner.html#submitting-to-streaming-analytics-service">Submitting to Streaming Analytics service</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scripts/runner.html#python-applications">Python applications</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scripts/runner.html#spl-applications">SPL applications</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scripts/runner.html#streams-application-bundles">Streams application bundles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="scripts/runner.html#job-options">Job options</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/runner.html#creating-streams-application-bundles">Creating Streams application bundles</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/sc.html">streamsx-sc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="scripts/sc.html#overview">Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scripts/sc.html#cloud-pak-for-data-configuration">Cloud Pak for Data configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="scripts/sc.html#integrated-configuration">Integrated configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="scripts/sc.html#standalone-configuration">Standalone configuration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/sc.html#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/sc.html#toolkits">Toolkits</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/service.html">streamsx-service</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="scripts/service.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/service.html#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/service.html#controlling-a-streaming-analytics-service">Controlling a Streaming Analytics service</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/streamtool.html">streamsx-streamtool</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="scripts/streamtool.html#overview">Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="scripts/streamtool.html#cloud-pak-for-data-configuration">Cloud Pak for Data configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="scripts/streamtool.html#integrated-configuration">Integrated configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="scripts/streamtool.html#standalone-configuration">Standalone configuration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/streamtool.html#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/streamtool.html#submitjob">submitjob</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/streamtool.html#canceljob">canceljob</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/streamtool.html#lsjobs">lsjobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/streamtool.html#lsappconfig">lsappconfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/streamtool.html#mkappconfig">mkappconfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/streamtool.html#rmappconfig">rmappconfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/streamtool.html#chappconfig">chappconfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/streamtool.html#getappconfig">getappconfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/streamtool.html#lstoolkit">lstoolkit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/streamtool.html#rmtoolkit">rmtoolkit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/streamtool.html#uploadtoolkit">uploadtoolkit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scripts/streamtool.html#updateoperators">updateoperators</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="environments">
+<h2>Environments<a class="headerlink" href="#environments" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="service.html">IBM Streaming Analytics service</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="service.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="service.html#package-support">Package support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="service.html#accessing-a-service">Accessing a service</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="service.html#vcap-services">VCAP services</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="service.html#cloud-foundry-applications">Cloud Foundry applications</a></li>
+<li class="toctree-l4"><a class="reference internal" href="service.html#client-applications">Client applications</a></li>
+<li class="toctree-l4"><a class="reference internal" href="service.html#selecting-the-service">Selecting the service</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="service.html#service-definition">Service definition</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pysetup.html">IBM Streams Python setup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pysetup.html#developer-setup">Developer setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pysetup.html#streaming-analytics-service">Streaming Analytics service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pysetup.html#ibm-cloud-pak-for-data">IBM Cloud Pak for Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pysetup.html#ibm-streams-4-2-4-3">IBM Streams 4.2, 4.3</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysetup.html#distributed">Distributed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysetup.html#standalone">Standalone</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysetup.html#bundle-python-version-compatibility">Bundle Python version compatibility</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="indices-and-tables">
+<h3>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="streamsx.topology.html" class="btn btn-neutral float-right" title="streamsx.topology" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2020 IBM Corp.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
