@@ -2,6 +2,7 @@
 ==========
 
 ## v1.15.0:
+* [#2466](https://github.com/IBMStreams/streamsx.topology/issues/2466) Javadoc: Wrong version information resolved
 * [#2447](https://github.com/IBMStreams/streamsx.topology/issues/2447) Support invocation to build an application for the edge
 * [#2427](https://github.com/IBMStreams/streamsx.topology/issues/2427) streamsx can be used with Java 8 to 11.
 * [#1478](https://github.com/IBMStreams/streamsx.topology/issues/1478) Python: Stream.filter() supports additional output stream for non-matching tuples 
