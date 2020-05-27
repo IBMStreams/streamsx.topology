@@ -5,8 +5,6 @@
         Common definitions for streamsx.topology
     </description>
 
-  <property name="streamsx.topology.version" value="1.10"/>
-
   <dirname property="streamsx.topology" file="${ant.file.streamsx.topology.common}"/>
 
   <property environment="env"/>
@@ -17,7 +15,14 @@
   <property name="tk.opt" location="${tk}/opt"/>
   <property name="tk.lib" location="${tk}/lib"/>
   <property name="tk.doc" location="${tk}/doc"/>
-   
+
+  <!-- derive property streamsx.topology.version from info.xml of the toolkit -->
+  <xmlproperty file="${tk}/info.xml" prefix="tkinfo" keepRoot="no"/>
+  <script language="javascript">
+    a = project.getProperty('tkinfo.identity.version').split('.')
+    project.setProperty('streamsx.topology.version', a[0] + '.' + a[1]);
+  </script>
+
   <!-- Default to the junit in $HOME/.ant/lib -->
   <!-- Can be overridden with the -Djunit.jar=some_path when building -->
   <fileset  id="junit.path" dir="${user.home}/.ant/lib" includes="junit-*.jar" erroronmissingdir="no"/>
