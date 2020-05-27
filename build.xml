@@ -278,6 +278,12 @@
 
   <target name="get_name">
     <xmlproperty file="${tk}/info.xml" prefix="tkinfo" keepRoot="no"/>
+    <script language="javascript">
+      a = project.getProperty('tkinfo.identity.version').split('.')
+      // to overwrite existing xyz property use
+      // project.setProperty('xyz' ...);
+      project.setProperty('tkinfo.identity.version', 'v' + a[0] + '.' + a[1]);
+    </script>
     <echo message="Toolkit Name: ${tkinfo.identity.name}"/>
     <echo message="Toolkit Version: ${tkinfo.identity.version}"/>
   </target>
