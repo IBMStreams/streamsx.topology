@@ -216,10 +216,9 @@ class StreamsRestUtils {
         return rawStreamingGet(executor, auth, url, new InputStreamConsumer<File>() {
 
             @Override
-            public File consume(InputStream is) throws IOException {
+            public void consume(InputStream is) throws IOException {
                 try {
                     Files.copy(is, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    return file;
                 }
                 catch(IOException ioe) {
                     if (file.delete()) {

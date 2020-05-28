@@ -25,11 +25,11 @@ public interface InputStreamConsumer<T> {
      * @param is The input stream to consume.
      * @throws IOException
      */
-    public T consume(InputStream is) throws IOException;
+    public void consume(InputStream is) throws IOException;
     
     /**
-     * Returns the Object created from the InputStream
-     * @return
+     * Gets the Object created after consuming the InputStream
+     * @return the Object created after consuming the InputStream
      */
     public T getResult(); 
 }
