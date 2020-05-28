@@ -16,7 +16,10 @@ import java.util.logging.Logger;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
 import org.apache.http.auth.AUTH;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
@@ -30,11 +33,12 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.RESTException;
+import com.ibm.streamsx.rest.internal.InputStreamConsumer;
 
 class StreamsRestUtils {
-    
-    static final Logger TRACE = Logger.getLogger("com.ibm.streamsx.rest");
 
+    static final Logger TRACE = Logger.getLogger("com.ibm.streamsx.rest");
+    static final int STREAMING_GET_SO_TIMEOUT_MILLIS = 60000;   // socket read timeout
     private StreamsRestUtils() {}
 
 
@@ -71,23 +75,23 @@ class StreamsRestUtils {
             throws IOException {
         TRACE.fine("HTTP GET: " + inputString);
         Request request = Request.Get(inputString).useExpectContinue();
-        
+
         if (null != auth) {
             request = request.addHeader(AUTH.WWW_AUTH_RESP, auth);
         }
-        
+
         return requestGsonResponse(executor, request);
     }
-    
+
     /**
      * Gets a JSON response to an HTTP request call
      */
     static JsonObject requestGsonResponse(Executor executor, Request request) throws IOException {
-    	request.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
+        request.addHeader("accept", ContentType.APPLICATION_JSON.getMimeType());
         Response response = executor.execute(request);
         return gsonFromResponse(response.returnResponse());
     }
-    
+
     static String requestTextResponse(Executor executor, Request request) throws IOException {
         request.addHeader("accept", ContentType.TEXT_PLAIN.getMimeType());
         Response response = executor.execute(request);
@@ -159,37 +163,76 @@ class StreamsRestUtils {
         TRACE.finest(rcResponse + ": " + sReturn);
         return sReturn;
     }
-    
-    static InputStream rawStreamingGet(Executor executor,
-            String auth, String url) throws IOException {
+
+    /**
+     * Gets an entity in streaming mode.
+     * @param executor 
+     * @param auth
+     * @param url
+     * @param streamConsumer
+     * @return The return of {@link InputStreamConsumer#getResult()}
+     * @throws IOException
+     */
+    static <T> T rawStreamingGet(Executor executor,
+            String auth, String url, final InputStreamConsumer<T> streamConsumer) throws IOException {
         TRACE.fine("HTTP GET: " + url);
         Request request = Request
                 .Get(url)
                 .addHeader("accept", ContentType.APPLICATION_JSON.getMimeType())
-                .useExpectContinue();
+                .useExpectContinue()
+                .socketTimeout(STREAMING_GET_SO_TIMEOUT_MILLIS);  // throw Exception when we do not read data for more than x millis 
         if (null != auth) {
             request = request.addHeader(AUTH.WWW_AUTH_RESP, auth);
         }
-        
         Response response = executor.execute(request);
-        HttpResponse hResponse = response.returnResponse();
-        int rcResponse = hResponse.getStatusLine().getStatusCode();
-        
-        if (HttpStatus.SC_OK == rcResponse) {
-            return hResponse.getEntity().getContent();
-        } else {
-            // all other errors...
-            String httpError = "HttpStatus is " + rcResponse + " for url " + url;
-            throw new RESTException(rcResponse, httpError);
-        }
+        response.handleResponse(new ResponseHandler<InputStreamConsumer<T>>() {
+
+            @Override
+            public InputStreamConsumer<T> handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
+                StatusLine statusLine = response.getStatusLine();
+                int rcResponse = statusLine.getStatusCode();
+                HttpEntity entity = response.getEntity();
+                if (HttpStatus.SC_OK == rcResponse) {
+                    if (entity != null) {
+                        try (InputStream is = entity.getContent()) {
+                            streamConsumer.consume(is);
+                        }
+                        return streamConsumer;
+                    }
+                    else {
+                        throw new ClientProtocolException("Response contains no content");
+                    }
+                } else {
+                    // all other errors...
+                    String httpError = "HttpStatus is " + rcResponse + " for url " + url;
+                    throw new RESTException(rcResponse, httpError);
+                }
+            }
+        });
+        return streamConsumer.getResult();
     }
-    
+
     static File getFile(Executor executor, String auth, String url, File file) throws IOException {
-    	try (InputStream is = rawStreamingGet(executor, auth, url)) {
-    		Files.copy(is, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-    	}
-    	
-    	return file;
+        return rawStreamingGet(executor, auth, url, new InputStreamConsumer<File>() {
+
+            @Override
+            public void consume(InputStream is) throws IOException {
+                try {
+                    Files.copy(is, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
+                catch(IOException ioe) {
+                    if (file.delete()) {
+                        TRACE.fine("downloaded fragment " + file + " deleted");
+                    }
+                    throw ioe;
+                }
+            }
+
+            @Override
+            public File getResult() {
+                return file;
+            }
+        });
     }
 
     // TODO: unify error handling between this and getResponseString()
@@ -197,13 +240,11 @@ class StreamsRestUtils {
         HttpEntity entity = response.getEntity();
         final int statusCode = response.getStatusLine().getStatusCode();
         switch (statusCode) {
-            case HttpStatus.SC_OK:
-            case HttpStatus.SC_CREATED:
-            case HttpStatus.SC_ACCEPTED:
-                break;
-            default:
-            
-            {
+        case HttpStatus.SC_OK:
+        case HttpStatus.SC_CREATED:
+        case HttpStatus.SC_ACCEPTED:
+            break;
+        default: {
             final String errorInfo;
             if (entity != null)
                 errorInfo = " -- " + EntityUtils.toString(entity);
@@ -213,7 +254,7 @@ class StreamsRestUtils {
                     "Unexpected HTTP resource from service:"
                             + response.getStatusLine().getStatusCode() + ":" +
                             response.getStatusLine().getReasonPhrase() + errorInfo);
-            }
+        }
         }
 
         if (entity == null)
@@ -224,19 +265,17 @@ class StreamsRestUtils {
         EntityUtils.consume(entity);
         return jsonResponse;
     }
-    
+
     // TODO: unify error handling between this and getResponseString()
     private static String textFromResponse(HttpResponse response) throws IOException {
         HttpEntity entity = response.getEntity();
         final int statusCode = response.getStatusLine().getStatusCode();
         switch (statusCode) {
-            case HttpStatus.SC_OK:
-            case HttpStatus.SC_CREATED:
-            case HttpStatus.SC_ACCEPTED:
-                break;
-            default:
-            
-            {
+        case HttpStatus.SC_OK:
+        case HttpStatus.SC_CREATED:
+        case HttpStatus.SC_ACCEPTED:
+            break;
+        default: {
             final String errorInfo;
             if (entity != null)
                 errorInfo = " -- " + EntityUtils.toString(entity);
@@ -246,12 +285,12 @@ class StreamsRestUtils {
                     "Unexpected HTTP resource from service:"
                             + response.getStatusLine().getStatusCode() + ":" +
                             response.getStatusLine().getReasonPhrase() + errorInfo);
-            }
         }
-        
+        }
+
         if (entity == null)
             throw new IllegalStateException("No HTTP resource from service");
-        
+
         return EntityUtils.toString(entity);
     }
 }
