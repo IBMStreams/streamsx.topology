@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.rest_primitives &mdash; streamsx 1.15.0b documentation</title>
+  <title>streamsx.rest_primitives &mdash; streamsx 1.15.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -214,7 +214,7 @@
 <tr class="row-even"><td><p><a class="reference internal" href="#streamsx.rest_primitives.ApplicationConfiguration" title="streamsx.rest_primitives.ApplicationConfiguration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ApplicationConfiguration</span></code></a></p></td>
 <td><p>An application configuration.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseImage</span></code></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.rest_primitives.BaseImage" title="streamsx.rest_primitives.BaseImage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseImage</span></code></a></p></td>
 <td><p>A base image used for an Edge image build using the EDGE context type.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#streamsx.rest_primitives.Domain" title="streamsx.rest_primitives.Domain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Domain</span></code></a></p></td>
@@ -609,6 +609,120 @@ in properties.</p>
 <dd class="field-odd"><p><a class="reference internal" href="#streamsx.rest_primitives.ApplicationConfiguration" title="streamsx.rest_primitives.ApplicationConfiguration">ApplicationConfiguration</a></p>
 </dd>
 </dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.rest_primitives.BaseImage">
+<em class="property">class </em><code class="sig-prename descclassname">streamsx.rest_primitives.</code><code class="sig-name descname">BaseImage</code><span class="sig-paren">(</span><em class="sig-param">json_rep</em>, <em class="sig-param">rest_client</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.BaseImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">streamsx.rest_primitives._ResourceElement</span></code></p>
+<p>A base image used for an Edge image build using the EDGE context type.</p>
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.BaseImage.buildPool">
+<code class="sig-name descname">buildPool</code><a class="headerlink" href="#streamsx.rest_primitives.BaseImage.buildPool" title="Permalink to this definition">¶</a></dt>
+<dd><p>REST URL of the build pool that contains the image</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.BaseImage.id">
+<code class="sig-name descname">id</code><a class="headerlink" href="#streamsx.rest_primitives.BaseImage.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>identifier in the form <em>registry/prefix/imagename:tag</em></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.BaseImage.name">
+<code class="sig-name descname">name</code><a class="headerlink" href="#streamsx.rest_primitives.BaseImage.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>the image name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.BaseImage.prefix">
+<code class="sig-name descname">prefix</code><a class="headerlink" href="#streamsx.rest_primitives.BaseImage.prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>the image prefix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.BaseImage.registry">
+<code class="sig-name descname">registry</code><a class="headerlink" href="#streamsx.rest_primitives.BaseImage.registry" title="Permalink to this definition">¶</a></dt>
+<dd><p>the registry where the image is stored</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.BaseImage.resourceType">
+<code class="sig-name descname">resourceType</code><a class="headerlink" href="#streamsx.rest_primitives.BaseImage.resourceType" title="Permalink to this definition">¶</a></dt>
+<dd><p>the REST resource type, which is <em>image</em></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.BaseImage.restid">
+<code class="sig-name descname">restid</code><a class="headerlink" href="#streamsx.rest_primitives.BaseImage.restid" title="Permalink to this definition">¶</a></dt>
+<dd><p>identifier in the form <em>registry/prefix/imagename:tag</em></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.rest_primitives.BaseImage.tag">
+<code class="sig-name descname">tag</code><a class="headerlink" href="#streamsx.rest_primitives.BaseImage.tag" title="Permalink to this definition">¶</a></dt>
+<dd><p>the image tag</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">streamsx.build</span> <span class="k">import</span> <span class="n">BuildService</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">build_service</span> <span class="o">=</span> <span class="n">BuildService</span><span class="o">.</span><span class="n">of_endpoint</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">baseimages</span> <span class="o">=</span> <span class="n">build_service</span><span class="o">.</span><span class="n">get_base_images</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">baseimages</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+<span class="go">&lt;class &#39;streamsx.rest_primitives.BaseImage&#39;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="p">(</span><span class="n">baseimages</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">resourceType</span><span class="p">)</span>
+<span class="go">image</span>
+</pre></div>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.15.</span></p>
+</div>
+<dl class="method">
+<dt id="streamsx.rest_primitives.BaseImage.refresh">
+<code class="sig-name descname">refresh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.rest_primitives.BaseImage.refresh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Refresh the resource and update the attributes to reflect the latest status.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1521,7 +1635,7 @@ as <code class="docutils literal notranslate"><span class="pre">None</span></cod
 in a Jupyter notebook running in ICPD or manually created. The code that selects a service instance by name is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Two lines are code injected in a Jupyter notebook by selecting the service instance</span>
 <span class="kn">from</span> <span class="nn">icpd_core</span> <span class="k">import</span> <span class="n">ipcd_util</span>
-<span class="n">cfg</span> <span class="o">=</span> <span class="n">icpd_util</span><span class="o">.</span><span class="n">get_service_details</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;instanceName&#39;</span><span class="p">)</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">icpd_util</span><span class="o">.</span><span class="n">get_service_details</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;instanceName&#39;</span><span class="p">,</span> <span class="n">instance_type</span><span class="o">=</span><span class="s1">&#39;streams&#39;</span><span class="p">)</span>
 
 <span class="n">instance</span> <span class="o">=</span> <span class="n">Instance</span><span class="o">.</span><span class="n">of_service</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
 </pre></div>

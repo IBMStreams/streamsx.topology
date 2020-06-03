@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.build &mdash; streamsx 1.15.0b documentation</title>
+  <title>streamsx.build &mdash; streamsx 1.15.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -193,11 +193,14 @@
 <p>REST API bindings for IBM® Streams Cloud Pak for Data build service.</p>
 <div class="section" id="streams-build-rest-api">
 <h2>Streams Build REST API<a class="headerlink" href="#streams-build-rest-api" title="Permalink to this headline">¶</a></h2>
-<p>The REST Build API provides programmatic support for creating, submitting and managing Streams builds. You can use the REST Build API from any application that can establish an HTTPS connection to the server that is running the build service.  The current support includes only methods for managing toolkits in the build service.</p>
+<p>The REST Build API provides programmatic support for creating, submitting and managing Streams builds.
+You can use the REST Build API from any application that can establish an HTTPS connection to the server
+that is running the build service.  The current support includes methods for managing toolkits in the build service
+and for retrieving base images for Edge image builds.</p>
 <div class="section" id="cloud-pak-for-data">
 <h3>Cloud Pak for Data<a class="headerlink" href="#cloud-pak-for-data" title="Permalink to this headline">¶</a></h3>
-<p><a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.Instance.of_endpoint" title="streamsx.rest_primitives.Instance.of_endpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">of_endpoint()</span></code></a> is the entry point to using the Streams Build REST API bindings,
-returning an <a class="reference internal" href="#streamsx.build.BuildService" title="streamsx.build.BuildService"><code class="xref py py-class docutils literal notranslate"><span class="pre">BuildService</span></code></a>.</p>
+<p><a class="reference internal" href="#streamsx.build.BuildService.of_endpoint" title="streamsx.build.BuildService.of_endpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">of_endpoint()</span></code></a> or <a class="reference internal" href="#streamsx.build.BuildService.of_service" title="streamsx.build.BuildService.of_service"><code class="xref py py-meth docutils literal notranslate"><span class="pre">of_service()</span></code></a>
+is the entry point to using the Streams Build REST API bindings, returning a <a class="reference internal" href="#streamsx.build.BuildService" title="streamsx.build.BuildService"><code class="xref py py-class docutils literal notranslate"><span class="pre">BuildService</span></code></a>.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <p><a class="reference internal" href="service.html#sas-main"><span class="std std-ref">IBM Streaming Analytics service</span></a></p>
@@ -220,10 +223,10 @@ returning an <a class="reference internal" href="#streamsx.build.BuildService" t
 </table>
 <dl class="class">
 <dt id="streamsx.build.BuildService">
-<em class="property">class </em><code class="sig-prename descclassname">streamsx.build.</code><code class="sig-name descname">BuildService</code><span class="sig-paren">(</span><em class="sig-param">username=None</em>, <em class="sig-param">password=None</em>, <em class="sig-param">resource_url=None</em>, <em class="sig-param">auth=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.build.BuildService" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">streamsx.build.</code><code class="sig-name descname">BuildService</code><span class="sig-paren">(</span><em class="sig-param">username=None</em>, <em class="sig-param">password=None</em>, <em class="sig-param">resource_url=None</em>, <em class="sig-param">buildpools_url=None</em>, <em class="sig-param">auth=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.build.BuildService" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">streamsx.rest._AbstractStreamsConnection</span></code></p>
 <p>IBM Streams build service.</p>
-<p>A instance of a <cite>BuildService</cite> is created using <a class="reference internal" href="#streamsx.build.BuildService.of_endpoint" title="streamsx.build.BuildService.of_endpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">of_endpoint()</span></code></a>.</p>
+<p>An instance of a <cite>BuildService</cite> is created using <a class="reference internal" href="#streamsx.build.BuildService.of_endpoint" title="streamsx.build.BuildService.of_endpoint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">of_endpoint()</span></code></a> or <a class="reference internal" href="#streamsx.build.BuildService.of_service" title="streamsx.build.BuildService.of_service"><code class="xref py py-meth docutils literal notranslate"><span class="pre">of_service()</span></code></a>.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">New in version 1.13.</span></p>
 </div>
@@ -236,9 +239,12 @@ returning an <a class="reference internal" href="#streamsx.build.BuildService" t
 <dd class="field-odd"><p>List of all base images, <code class="docutils literal notranslate"><span class="pre">None</span></code> if there are no base images</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code> of <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseImage</span></code></p>
+<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code> of <a class="reference internal" href="streamsx.rest_primitives.html#streamsx.rest_primitives.BaseImage" title="streamsx.rest_primitives.BaseImage"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseImage</span></code></a></p>
 </dd>
 </dl>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.15.</span></p>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -329,9 +335,51 @@ as <code class="docutils literal notranslate"><span class="pre">None</span></cod
 <dd class="field-even"><p>Connection to Streams build service or <code class="docutils literal notranslate"><span class="pre">None</span></code> of insufficient configuration was provided.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#streamsx.build.BuildService" title="streamsx.build.BuildService">BuildService</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="#streamsx.build.BuildService" title="streamsx.build.BuildService"><code class="xref py py-class docutils literal notranslate"><span class="pre">BuildService</span></code></a></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.build.BuildService.of_service">
+<em class="property">static </em><code class="sig-name descname">of_service</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.build.BuildService.of_service" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect to a Cloud Pak for Data IBM Streams build service instance.</p>
+<p>The instance is specified in <cite>config</cite>. The configuration may be code injected from the list of services
+in a Jupyter notebook running in ICPD or manually created. The code that selects a service instance by name is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">icpd_core</span> <span class="k">import</span> <span class="n">ipcd_util</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">icpd_util</span><span class="o">.</span><span class="n">get_service_details</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;instanceName&#39;</span><span class="p">,</span> <span class="n">instance_type</span><span class="o">=</span><span class="s1">&#39;streams&#39;</span><span class="p">)</span>
+
+<span class="n">buildService</span> <span class="o">=</span> <span class="n">BuildService</span><span class="o">.</span><span class="n">of_service</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>SSL host verification is disabled by setting <a class="reference internal" href="streamsx.topology.context.html#streamsx.topology.context.ConfigParams.SSL_VERIFY" title="streamsx.topology.context.ConfigParams.SSL_VERIFY"><code class="xref py py-const docutils literal notranslate"><span class="pre">SSL_VERIFY</span></code></a>
+to <code class="docutils literal notranslate"><span class="pre">False</span></code> within <cite>config</cite> before calling this method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">icpd_core</span> <span class="k">import</span> <span class="n">ipcd_util</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">icpd_util</span><span class="o">.</span><span class="n">get_service_details</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;instanceName&#39;</span><span class="p">,</span> <span class="n">instance_type</span><span class="o">=</span><span class="s1">&#39;streams&#39;</span><span class="p">)</span>
+
+<span class="n">cfg</span><span class="p">[</span><span class="n">ConfigParams</span><span class="o">.</span><span class="n">SSL_VERIFY</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">buildService</span> <span class="o">=</span> <span class="n">BuildService</span><span class="o">.</span><span class="n">of_service</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>dict</em>) – Configuration of IBM Streams service instance.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Connection to Streams build service.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#streamsx.build.BuildService" title="streamsx.build.BuildService"><code class="xref py py-class docutils literal notranslate"><span class="pre">BuildService</span></code></a></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only supported when running within the ICPD cluster,
+for example in a Jupyter notebook within an ICPD project.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.15.</span></p>
+</div>
 </dd></dl>
 
 <dl class="method">
