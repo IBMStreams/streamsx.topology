@@ -10,13 +10,16 @@ REST API bindings for IBM® Streams Cloud Pak for Data build service.
 Streams Build REST API
 **********************
 
-The REST Build API provides programmatic support for creating, submitting and managing Streams builds. You can use the REST Build API from any application that can establish an HTTPS connection to the server that is running the build service.  The current support includes only methods for managing toolkits in the build service.
+The REST Build API provides programmatic support for creating, submitting and managing Streams builds. 
+You can use the REST Build API from any application that can establish an HTTPS connection to the server 
+that is running the build service.  The current support includes methods for managing toolkits in the build service 
+and for retrieving base images for Edge image builds.
 
 Cloud Pak for Data
 ==================
 
-:py:meth:`~streamsx.rest_primitives.Instance.of_endpoint` is the entry point to using the Streams Build REST API bindings,
-returning an :py:class:`~streamsx.build.BuildService`.
+:py:meth:`~streamsx.build.BuildService.of_endpoint` or :py:meth:`~streamsx.build.BuildService.of_service` 
+is the entry point to using the Streams Build REST API bindings, returning a :py:class:`~streamsx.build.BuildService`.
 
 
 .. seealso:: :ref:`sas-main`
@@ -25,6 +28,7 @@ returning an :py:class:`~streamsx.build.BuildService`.
 __all__ = ['BuildService']
 
 import os
+import time
 import json
 import logging
 import re
@@ -45,7 +49,7 @@ from streamsx import st
 from .rest import _AbstractStreamsConnection
 from .rest_primitives import (Domain, Instance, Installation, RestResource, Toolkit, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
     _exact_resource, _IAMStreamsRestClient, _IAMConstants, _get_username,
-    _ICPDExternalAuthHandler, _handle_http_errors, _JWTAuthHandler, _BuildPool, BaseImage)
+    _ICPDExternalAuthHandler, _ICPDAuthHandler, _handle_http_errors, _JWTAuthHandler, _BuildPool, BaseImage)
 
 logger = logging.getLogger('streamsx.build')
 
@@ -53,11 +57,11 @@ logger = logging.getLogger('streamsx.build')
 class BuildService(_AbstractStreamsConnection):
     """IBM Streams build service.
 
-    A instance of a `BuildService` is created using :py:meth:`of_endpoint`.
+    An instance of a `BuildService` is created using :py:meth:`of_endpoint` or :py:meth:`of_service`.
 
     .. versionadded:: 1.13
     """
-    def __init__(self, username=None, password=None, resource_url=None, auth=None):
+    def __init__(self, username=None, password=None, resource_url=None, buildpools_url=None, auth=None):
         """specify username, password, and resource_url"""
         streamsx._streams._version._mismatch_check(__name__)
         if auth:
@@ -72,6 +76,7 @@ class BuildService(_AbstractStreamsConnection):
             resource_url = os.environ['STREAMS_REST_URL']
         
         self._build_url = resource_url
+        self._buildpools_url = buildpools_url
         if auth:
             self.rest_client = _StreamsRestClient(auth)
         else:
@@ -84,7 +89,7 @@ class BuildService(_AbstractStreamsConnection):
         """str: Endpoint URL for IBM Streams REST build API.
 
         """
-        if self._build_url:            
+        if self._build_url:
             return re.sub('/builds$','/resources', self._build_url)
         return None
 
@@ -188,8 +193,7 @@ class BuildService(_AbstractStreamsConnection):
         buildpools = self._get_elements('buildPools', _BuildPool, name=name)
         if buildpools is None:
             # workaround as long as 'buildPools' resource is not available
-            #print("'buildPools' resource is not available. Query via connection-info")
-            buildpools_url = self.rest_client.session.auth._cfg['connection_info'].get('serviceBuildPoolsEndpoint')
+            buildpools_url = self._buildpools_url
             if not buildpools_url:
                 # We do NOT get the deprecated BuildPool REST resource here as
                 # it will not be a build pool of 'image' type
@@ -205,6 +209,7 @@ class BuildService(_AbstractStreamsConnection):
         Returns:
             :py:obj:`list` of :py:class:`~.rest_primitives.BaseImage`: List of all base images, ``None`` if there are no base images
 
+        .. versionadded:: 1.15
         """
         buildpools = self._get_buildPools()
         if not buildpools:
@@ -217,7 +222,84 @@ class BuildService(_AbstractStreamsConnection):
         if images:
             return images
         return None
-    
+
+    @staticmethod
+    def _is_service_def(config):
+        return 'connection_info' in config and config.get('type', None) == 'streams' and 'service_token' in config
+
+    @staticmethod
+    def _find_service_def(config):
+        if BuildService._is_service_def(config):
+            service = config
+        else:
+            service = config.get(streamsx.topology.context.ConfigParams.SERVICE_DEFINITION)
+
+        if service and BuildService._is_service_def(service):
+            svc_info = {}
+            svc_info['connection_info'] = service['connection_info']
+            svc_info['type'] = service['type']
+            svc_name = service['connection_info']['serviceRestEndpoint'].split('/')[-1]
+            svc_info['service_name'] = svc_name
+            try:
+                # Get a new token as we don't know how much
+                # time has passed since the cell containing
+                # get_service_instance_details was run
+                from icpd_core import icpd_util
+                svc_info['service_token'] = icpd_util.get_instance_token(name=svc_name)
+                svc_info['service_token_expire'] = int((time.time() + 19 * 60)*1000)
+            except:
+                svc_info['service_token'] = service['service_token']
+                svc_info['service_token_expire'] = int((time.time() + 5 * 60)*1000)
+            if 'user_token' in service:
+                svc_info['user_token'] = service['user_token']
+            return svc_info
+        return None
+
+    @staticmethod
+    def of_service(config):
+        """Connect to a Cloud Pak for Data IBM Streams build service instance.
+
+        The instance is specified in `config`. The configuration may be code injected from the list of services
+        in a Jupyter notebook running in ICPD or manually created. The code that selects a service instance by name is::
+
+            from icpd_core import ipcd_util
+            cfg = icpd_util.get_service_details(name='instanceName', instance_type='streams')
+
+            buildService = BuildService.of_service(cfg)
+            
+        SSL host verification is disabled by setting :py:const:`~streamsx.topology.context.ConfigParams.SSL_VERIFY`
+        to ``False`` within `config` before calling this method::
+
+            from icpd_core import ipcd_util
+            cfg = icpd_util.get_service_details(name='instanceName', instance_type='streams')
+
+            cfg[ConfigParams.SSL_VERIFY] = False
+            buildService = BuildService.of_service(cfg)
+
+        Args:
+            config(dict): Configuration of IBM Streams service instance.
+
+        Returns:
+            :py:class:`BuildService`: Connection to Streams build service.
+
+        .. note:: Only supported when running within the ICPD cluster,
+            for example in a Jupyter notebook within an ICPD project.
+
+        .. versionadded:: 1.15
+        """
+        service = BuildService._find_service_def(config)
+        if not service:
+            raise ValueError()
+        # service_name is the instance name
+        service_name = service['service_name']
+        auth = _ICPDAuthHandler(service_name, service['service_token'])
+        build_url = BuildService._root_from_endpoint(service['connection_info'].get('serviceBuildEndpoint'))
+        buildpools_url = service['connection_info'].get('serviceBuildPoolsEndpoint', None)
+        sc = BuildService(resource_url=build_url, buildpools_url=buildpools_url, auth=auth)
+        if streamsx.topology.context.ConfigParams.SSL_VERIFY in config:
+            sc.rest_client.session.verify = config[streamsx.topology.context.ConfigParams.SSL_VERIFY]
+        return sc
+
     @staticmethod
     def of_endpoint(endpoint=None, service_name=None, username=None, password=None, verify=None):
         """
@@ -258,8 +340,7 @@ class BuildService(_AbstractStreamsConnection):
             verify: SSL verification. Set to ``False`` to disable SSL verification. Defaults to SSL verification being enabled.
        
         Returns:
-            BuildService: Connection to Streams build service or ``None`` of insufficient configuration was provided.
-
+            :py:class:`BuildService`: Connection to Streams build service or ``None`` of insufficient configuration was provided.
         """
         possible_integ = True
         if not endpoint:
@@ -285,8 +366,13 @@ class BuildService(_AbstractStreamsConnection):
             # this is an integrated config
             auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
             build_url = BuildService._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
+            buildpools_ep = auth._cfg['connection_info'].get('serviceBuildPoolsEndpoint', None)
+            if buildpools_ep:
+                buildpools_url = buildpools_ep
+            else:
+                buildpools_url = None
             service_name=auth._cfg['service_name']
-            sc = BuildService(resource_url=build_url, auth=auth)
+            sc = BuildService(resource_url=build_url, buildpools_url=buildpools_url, auth=auth)
             if verify is not None:
                 sc.rest_client.session.verify = verify
 
@@ -312,7 +398,7 @@ class BuildService(_AbstractStreamsConnection):
                         # so revert to basic auth
                         socket.gethostbyname(atinfo.hostname)
                         auth=_JWTAuthHandler(resource.resource, username, password, verify)
-                        sc = BuildService(resource_url=build_url, auth=auth)
+                        sc = BuildService(resource_url=build_url, buildpools_url=None, auth=auth)
                         if verify is not None:
                             sc.rest_client.session.verify = verify
                         break

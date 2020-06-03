@@ -14,7 +14,10 @@ Contains classes representing primitive Streams objects, such as
 
 """
 
-__all__ = ['ActiveService', 'ActiveVersion', 'ApplicationBundle', 'ApplicationConfiguration', 'Domain', 'ExportedStream', 'Host', 'ImportedStream', 'Installation', 'Instance', 'Job', 'Metric', 'OperatorConnection', 'OperatorInputPort', 'OperatorOutputPort', 'Operator', 'PEConnection', 'PE', 'PublishedTopic', 'ResourceAllocation', 'Resource', 'ResourceTag', 'RestResource', 'StreamingAnalyticsService', 'Toolkit', 'ViewItem', 'View']
+__all__ = ['ActiveService', 'ActiveVersion', 'ApplicationBundle', 'ApplicationConfiguration', 'BaseImage', 'Domain',
+           'ExportedStream', 'Host', 'ImportedStream', 'Installation', 'Instance', 'Job', 'Metric', 
+           'OperatorConnection', 'OperatorInputPort', 'OperatorOutputPort', 'Operator', 'PEConnection', 'PE',
+           'PublishedTopic', 'ResourceAllocation', 'Resource', 'ResourceTag', 'RestResource', 'StreamingAnalyticsService', 'Toolkit', 'ViewItem', 'View']
 
 import logging
 import requests
@@ -1921,7 +1924,7 @@ class Instance(_ResourceElement):
 
             # Two lines are code injected in a Jupyter notebook by selecting the service instance
             from icpd_core import ipcd_util
-            cfg = icpd_util.get_service_details(name='instanceName')
+            cfg = icpd_util.get_service_details(name='instanceName', instance_type='streams')
 
             instance = Instance.of_service(cfg)
 
@@ -3167,12 +3170,12 @@ class BaseImage(_ResourceElement):
     
     Attributes:
         buildPool(str): REST URL of the build pool that contains the image
-        id(str): identifier in the form of registry/prefix/imagename:tag
+        id(str): identifier in the form *registry/prefix/imagename:tag*
         name(str): the image name
-        prefix(str): the "image prefix
+        prefix(str): the image prefix
         registry(str): the registry where the image is stored
         resourceType(str): the REST resource type, which is *image*
-        restid(str): "image-registry.openshift-image-registry.svc:5000/edge-cpd-demo/streams-base-edge-application-el7:5.3.0.0",
+        restid(str): identifier in the form *registry/prefix/imagename:tag*
         tag(str): the image tag
     
     Example:

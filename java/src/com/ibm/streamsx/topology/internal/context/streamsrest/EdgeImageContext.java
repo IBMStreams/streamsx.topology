@@ -10,6 +10,7 @@ import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.JOB_C
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Arrays;
 import java.util.Iterator;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonArray;
@@ -48,7 +49,7 @@ public class EdgeImageContext extends BuildServiceContext {
     private String edgeConfigImageName = null;
     private String edgeConfigImageTag = null;
     private String edgeConfigImagePrefix = null;
-    private String edgeConfigBaseImage = null;    
+    private String edgeConfigBaseImage = null;
 
     public Instance instance() { return instance;}
 
@@ -92,29 +93,44 @@ public class EdgeImageContext extends BuildServiceContext {
                 TRACE.severe("No base images found on build service.");
                 throw new IllegalStateException("No base images found on build service.");
             }
-            for (BaseImage bi: baseImages) {
-                if (null != edgeConfigBaseImage) {
-                	final String biNameTag = (bi.getName() + ":" + bi.getTag()).toLowerCase();
-                  	if (edgeConfigBaseImage.toLowerCase().contains(biNameTag)) {
-                		this.baseImage = bi;
-                		break;
-                  	}
+            if (edgeConfigBaseImage != null) {
+                List<String> toks = Arrays.asList(edgeConfigBaseImage.split("/"));
+                if (toks.size() == 3) {
+                    // edgeConfigBaseImage = registry/prefix/name:tag
+                    for (BaseImage bi: baseImages) {
+                        if (edgeConfigBaseImage.equals(bi.getId())) {
+                            this.baseImage = bi;
+                            break;
+                        }
+                    }
+                } else {
+                    // edgeConfigBaseImage expected as name:tag 
+                    for (BaseImage bi: baseImages) {
+                        final String biNameTag = (bi.getName() + ":" + bi.getTag());
+                        if (edgeConfigBaseImage.contains(biNameTag)) {
+                            this.baseImage = bi;
+                            break;
+                        }
+                    }
                 }
-                else {
-                	final String biNameTag = (bi.getName() + " " + bi.getTag()).toLowerCase();
-                	if (biNameTag.contains("conda") || biNameTag.contains("python")) {
-                		this.baseImage = bi;
-                		break;
-                	}
+            }
+            else {
+                // no edgeConfigBaseImage given
+                for (BaseImage bi: baseImages) {
+                    final String biNameTagLower = (bi.getName() + " " + bi.getTag()).toLowerCase();
+                    if (biNameTagLower.contains("conda") || biNameTagLower.contains("python")) {
+                        this.baseImage = bi;
+                        break;
+                    }
                 }
             }
             if (this.baseImage == null) {
             	if (null != edgeConfigBaseImage) {
-            		throw new IllegalStateException("Base image not found on build service.");
+            		throw new IllegalStateException("Base image '" + edgeConfigBaseImage + "' not found on build service.");
             	}
             	else {
                     this.baseImage = baseImages.get(0);
-                    TRACE.warning("No base image with 'conda' or 'python' in its name or tag found. Using " + this.baseImage.getRestid() + " instead.");
+                    TRACE.warning("No base image with 'conda' or 'python' in its name or tag found. Using " + this.baseImage.getId() + " instead.");
             	}
             }
         }
