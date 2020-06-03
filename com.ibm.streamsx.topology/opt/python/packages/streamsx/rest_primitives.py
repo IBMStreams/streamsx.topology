@@ -1921,7 +1921,7 @@ class Instance(_ResourceElement):
 
             # Two lines are code injected in a Jupyter notebook by selecting the service instance
             from icpd_core import ipcd_util
-            cfg = icpd_util.get_service_details(name='instanceName')
+            cfg = icpd_util.get_service_details(name='instanceName', instance_type='streams')
 
             instance = Instance.of_service(cfg)
 
