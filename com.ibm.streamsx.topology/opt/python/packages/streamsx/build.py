@@ -10,13 +10,16 @@ REST API bindings for IBM® Streams Cloud Pak for Data build service.
 Streams Build REST API
 **********************
 
-The REST Build API provides programmatic support for creating, submitting and managing Streams builds. You can use the REST Build API from any application that can establish an HTTPS connection to the server that is running the build service.  The current support includes only methods for managing toolkits in the build service.
+The REST Build API provides programmatic support for creating, submitting and managing Streams builds. 
+You can use the REST Build API from any application that can establish an HTTPS connection to the server 
+that is running the build service.  The current support includes methods for managing toolkits in the build service 
+and for retrieving base images for Edge image builds.
 
 Cloud Pak for Data
 ==================
 
-:py:meth:`~streamsx.rest_primitives.Instance.of_endpoint` is the entry point to using the Streams Build REST API bindings,
-returning an :py:class:`~streamsx.build.BuildService`.
+:py:meth:`~streamsx.build.BuildService.of_endpoint` or :py:meth:`~streamsx.build.BuildService.of_service` 
+is the entry point to using the Streams Build REST API bindings, returning a :py:class:`~streamsx.build.BuildService`.
 
 
 .. seealso:: :ref:`sas-main`
@@ -54,7 +57,7 @@ logger = logging.getLogger('streamsx.build')
 class BuildService(_AbstractStreamsConnection):
     """IBM Streams build service.
 
-    A instance of a `BuildService` is created using :py:meth:`of_endpoint`.
+    An instance of a `BuildService` is created using :py:meth:`of_endpoint` or :py:meth:`of_service`.
 
     .. versionadded:: 1.13
     """
@@ -206,6 +209,7 @@ class BuildService(_AbstractStreamsConnection):
         Returns:
             :py:obj:`list` of :py:class:`~.rest_primitives.BaseImage`: List of all base images, ``None`` if there are no base images
 
+        .. versionadded:: 1.15
         """
         buildpools = self._get_buildPools()
         if not buildpools:
@@ -258,7 +262,6 @@ class BuildService(_AbstractStreamsConnection):
         The instance is specified in `config`. The configuration may be code injected from the list of services
         in a Jupyter notebook running in ICPD or manually created. The code that selects a service instance by name is::
 
-            # Two lines are code injected in a Jupyter notebook by selecting the service instance
             from icpd_core import ipcd_util
             cfg = icpd_util.get_service_details(name='instanceName', instance_type='streams')
 
@@ -267,6 +270,9 @@ class BuildService(_AbstractStreamsConnection):
         SSL host verification is disabled by setting :py:const:`~streamsx.topology.context.ConfigParams.SSL_VERIFY`
         to ``False`` within `config` before calling this method::
 
+            from icpd_core import ipcd_util
+            cfg = icpd_util.get_service_details(name='instanceName', instance_type='streams')
+
             cfg[ConfigParams.SSL_VERIFY] = False
             buildService = BuildService.of_service(cfg)
 
@@ -274,10 +280,10 @@ class BuildService(_AbstractStreamsConnection):
             config(dict): Configuration of IBM Streams service instance.
 
         Returns:
-            Connection to Streams build service.
+            :py:class:`BuildService`: Connection to Streams build service.
 
         .. note:: Only supported when running within the ICPD cluster,
-            for example in a Jupyter notebook within a ICPD project.
+            for example in a Jupyter notebook within an ICPD project.
 
         .. versionadded:: 1.15
         """
@@ -334,8 +340,7 @@ class BuildService(_AbstractStreamsConnection):
             verify: SSL verification. Set to ``False`` to disable SSL verification. Defaults to SSL verification being enabled.
        
         Returns:
-            BuildService: Connection to Streams build service or ``None`` of insufficient configuration was provided.
-
+            :py:class:`BuildService`: Connection to Streams build service or ``None`` of insufficient configuration was provided.
         """
         possible_integ = True
         if not endpoint:
