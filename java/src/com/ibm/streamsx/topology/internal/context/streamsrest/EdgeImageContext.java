@@ -171,7 +171,6 @@ public class EdgeImageContext extends BuildServiceContext {
         JsonObject artifact0 = (JsonObject)artifacts.get(0);
 
         String sabUrl = artifact0.get("sabUrl").getAsString();
-//        System.out.println ("---- sabUrl for buildConfigOverrides = " + sabUrl);
         application.addProperty("application", sabUrl);
         JsonObject applicationCredentials = new JsonObject();
         final String token = StreamsKeys.getBearerToken(deploy);
@@ -179,7 +178,7 @@ public class EdgeImageContext extends BuildServiceContext {
         application.add("applicationCredentials", applicationCredentials);
         applicationBundles.add(application);
         buildConfigOverrides.add("applicationBundles", applicationBundles);
-        System.out.println("INFO: baseImage = " + this.baseImage.getId());
+        //System.out.println("INFO: baseImage = " + this.baseImage.getId());
         buildConfigOverrides.addProperty("baseImage", this.baseImage.getId());
         // use same registry and prefix as used for the base image if not set in edgeConfig
         final String imageRegistry = this.baseImage.getRegistry();
@@ -187,7 +186,7 @@ public class EdgeImageContext extends BuildServiceContext {
         final String imageName = (edgeConfigImageName != null) ? edgeConfigImageName : getBuildName();
         final String imageTag = (edgeConfigImageTag != null) ? edgeConfigImageTag : "streamsx";
         String imageStr = imageRegistry + "/" + imagePrefix + "/" + imageName + ":" + imageTag;
-        System.out.println("INFO: image = " + imageStr);
+        //System.out.println("INFO: image = " + imageStr);
         buildConfigOverrides.addProperty("image", imageStr);
 
         Build imageBuild = null;
@@ -234,7 +233,7 @@ public class EdgeImageContext extends BuildServiceContext {
             } while ("building".equals(buildStatus) || "waiting".equals(buildStatus) || "submitted".equals(buildStatus));
 
             TRACE.info("imageBuild ended with status " + buildStatus);
-            System.out.println("INFO: imageBuild ended with status " + buildStatus);
+            //System.out.println("INFO: imageBuild ended with status " + buildStatus);
 
             if (! "built".equals(buildStatus)) {
                 TRACE.severe("The submitted image " + buildName + " failed to build with status " + buildStatus + ".");
