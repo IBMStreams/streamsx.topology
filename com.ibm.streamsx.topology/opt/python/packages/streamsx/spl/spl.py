@@ -604,20 +604,26 @@ _OperatorType.Sink.spl_template = 'PythonFunctionSink'
 _OperatorType.Filter.spl_template = 'PythonFunctionFilter'
 _OperatorType.Primitive.spl_template = 'PythonPrimitive'
 
-_SPL_KEYWORDS = {'graph', 'stream', 'public', 'composite', 'input', 'output', 'type', 'config', 'logic',
-                 'window', 'param', 'onTuple', 'onPunct', 'onProcess', 'state', 'stateful', 'mutable', 'static',
-                 'if', 'for', 'while', 'break', 'continue', 'return', 'attribute', 'function', 'operator', 'expression',
-                 'true', 'false', 'null',
-                 'boolean', 'enum',
-                 'int8', 'int16', 'int32', 'int64',
-                 'uint8', 'uint16', 'uint32', 'uint64',
-                 'float32', 'float64',
-                 'decimal32', 'decimal64', 'decimal128',
-                 'complex32', 'complex64',
-                 'timestamp', 'blob',
-                 'rstring', 'ustring', 'xml',
-                 'list', 'map', 'set', 'optional', 'tuple'
-                }
+_SPL_KEYWORDS = {'as', 'attribute', 
+                 'blob', 'boolean', 'break',
+                 'complex32', 'complex64', 'composite', 'config', 'continue',
+                 'decimal128', 'decimal32', 'decimal64', 'do',
+                 'else', 'enum', 'expression',
+                 'false', 'float32', 'float64', 'for', 'function',
+                 'graph',
+                 'if', 'in', 'input', 'int', 'int16', 'int32', 'int64', 'int8',
+                 'list', 'logic',
+                 'map', 'mutable',
+                 'namespace', 'null',
+                 'onProcess', 'onPunct', 'onTuple', 'operator', 'optional', 'output',
+                 'param', 'public',
+                 'return', 'rstring',
+                 'set', 'state', 'stateful', 'static', 'stream', 'streams',
+                 'timestamp', 'true', 'tuple', 'type',
+                 'uint16', 'uint32', 'uint64', 'uint8', 'use', 'ustring',
+                 'void',
+                 'while', 'window',
+                 'xml'}
 
 def _is_identifier(id):
     return re.match('^[a-zA-Z_][a-zA-Z_0-9]*$', id) and id not in _SPL_KEYWORDS
