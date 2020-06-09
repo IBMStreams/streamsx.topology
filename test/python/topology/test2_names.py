@@ -64,7 +64,6 @@ class TestNames(unittest.TestCase):
 
      self.assertEqual(n, topo.name)
      self.assertEqual('streams5', topo.namespace)
-#     self.assertEqual('__spl_yuDU45HWfFk', topo.namespace)
      hw = topo.source(["Hello", "Tester"])
      tester = Tester(topo)
      tester.contents(hw, ["Hello", "Tester"])
