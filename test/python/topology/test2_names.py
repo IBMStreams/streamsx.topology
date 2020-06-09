@@ -41,6 +41,35 @@ class TestNames(unittest.TestCase):
      tester.contents(hw, ["Hello", "Tester"])
      tester.test(self.test_ctxtype, self.test_config)
 
+  def test_SPLReservedNames(self):
+     """ Test names and namespaces that are reserved words in SPL
+     """
+     n = 'graph'
+     ns = 'stream'
+     topo = Topology(name=n, namespace=ns)
+
+     self.assertEqual('__spl_RxjjoYWRhqU', topo.name)
+     self.assertEqual('__spl_yuDU45HWfFk', topo.namespace)
+     hw = topo.source(["Hello", "Tester"])
+     tester = Tester(topo)
+     tester.contents(hw, ["Hello", "Tester"])
+     tester.test(self.test_ctxtype, self.test_config)
+
+  def test_EmptyNamspaceTokens(self):
+     """ Test namespaces tokens that are empty after cleanup of non-word characters
+     """
+     n = 'MyNname'
+     ns = '## .streams5 . '
+     topo = Topology(name=n, namespace=ns)
+
+     self.assertEqual(n, topo.name)
+     self.assertEqual('streams5', topo.namespace)
+#     self.assertEqual('__spl_yuDU45HWfFk', topo.namespace)
+     hw = topo.source(["Hello", "Tester"])
+     tester = Tester(topo)
+     tester.contents(hw, ["Hello", "Tester"])
+     tester.test(self.test_ctxtype, self.test_config)
+
   def test_LongTopoNames(self):
      """ Test long topo names
      """
