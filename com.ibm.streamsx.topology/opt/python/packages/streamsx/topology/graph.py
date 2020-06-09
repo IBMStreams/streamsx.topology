@@ -38,21 +38,37 @@ def _get_project_name():
     except:
         pass
 
-def _fix_namespace(ns):
+_RT_ID_REMOVE = {ord('='):None,ord('+'):None,ord('/'):None}
+
+def _fix_namespace(ns, default="__spl_NAMESPACE"):
+    '''Removes everything not [^a-zA-Z0-9_] from each namespace token.
+    Empty tokens are removed from the namespace.
+    If the remains is a not a valid identifier, i.e. an SPL keyword, or begins with a digit, the token is transformed to __spl_ + hash_fn(token).
+    If there are no tokens left, the default is returned.
+    '''
     ns = str(ns)
     sns = ns.split('.')
-    if len(sns) == 1:
-        return re.sub(r'\W+', '', ns, flags=re.UNICODE)
-    for i in range(0,len(sns)):
+    for i in range(len(sns)-1, -1, -1):
+        # remove everything that is not a Word character; in ASCII this would be equivalent to [^a-zA-Z0-9_]
         sns[i] = re.sub(r'\W+', '', sns[i], flags=re.UNICODE)
-
-    for i in range(len(sns), 0):
         if len(sns[i]) == 0:
             sns.pop(i)
-
-    return '.'.join(sns)
-
-_RT_ID_REMOVE = {ord('='):None,ord('+'):None,ord('/'):None}
+        else:
+            if sns[i] in streamsx.spl.spl._SPL_KEYWORDS:
+                md = hashlib.md5()
+                md.update(sns[i].encode('utf-8'))
+                d = md.digest()
+                # Xor fold to reduce length
+                f = bytes(f^b for (f,b) in zip(d[0:8], d[8:16]))
+                # Base 64 encode to make somewhat readable
+                # Use _ for +,/
+                # Strip padding
+                sns[i] = '__spl_' + base64.b64encode(f).decode('ascii').translate(_RT_ID_REMOVE)
+    
+    if len(sns) > 0:
+        return '.'.join(sns)
+    # nothing left.
+    return default
 
 def _get_runtime_id(kind, name):
     if len(name) <= 80 and streamsx.spl.spl._is_identifier(name):
@@ -105,17 +121,18 @@ def _as_spl_json(value, fn=None):
 class SPLGraph(object):
 
     def __init__(self, topology, name=None, namespace=None):
+        uuid_name = str(uuid.uuid1()).replace("-", "")
         if name is None:
-            name = str(uuid.uuid1()).replace("-", "")
+            name = uuid_name
 
         if namespace is None:
             namespace = name
         
         # Allows Topology or SPLGraph to be passed to submit
         self.graph = self
-        # Remove 'awkward characters' from names
-        self.name = re.sub(r'\W+', '', str(name), flags=re.UNICODE)
-        self.namespace = _fix_namespace(namespace)
+        # Remove 'awkward characters' from names and replace SPL reserved words
+        self.name = _fix_namespace(re.sub(r'\W+', '', str(name), flags=re.UNICODE), default=uuid_name)
+        self.namespace = _fix_namespace(namespace, default=uuid_name)
         self.topology = topology
         self.operators = []
         self.resolver = streamsx.topology.dependency._DependencyResolver(self.topology)
