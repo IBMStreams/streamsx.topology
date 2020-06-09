@@ -1,6 +1,10 @@
 # Changes
 ==========
 
+## master/latest
+
+* [#2474](https://github.com/IBMStreams/streamsx.topology/issues/2474) Fix topology name and namespace when one of them is an SPL reserved word
+
 ## v1.15.0:
 * [#2466](https://github.com/IBMStreams/streamsx.topology/issues/2466) Javadoc: Wrong version information resolved
 * [#2447](https://github.com/IBMStreams/streamsx.topology/issues/2447) Support invocation to build an application for the edge
