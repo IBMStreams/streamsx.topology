@@ -340,7 +340,7 @@ class BuildService(_AbstractStreamsConnection):
             verify: SSL verification. Set to ``False`` to disable SSL verification. Defaults to SSL verification being enabled.
        
         Returns:
-            :py:class:`BuildService`: Connection to Streams build service or ``None`` of insufficient configuration was provided.
+            :py:class:`BuildService`: Connection to Streams build service or ``None`` if insufficient configuration was provided.
         """
         possible_integ = True
         if not endpoint:
