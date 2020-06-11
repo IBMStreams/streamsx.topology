@@ -3,6 +3,7 @@
 
 ## master/latest
 
+* [#2476[(https://github.com/IBMStreams/streamsx.topology/issues/2476) Python: import streamsx.rest_primitives raises ImportError
 * [#2474](https://github.com/IBMStreams/streamsx.topology/issues/2474) Fix topology name and namespace when one of them is an SPL reserved word
 
 ## v1.15.0:
