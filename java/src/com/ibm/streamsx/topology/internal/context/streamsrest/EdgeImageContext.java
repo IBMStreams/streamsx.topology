@@ -50,6 +50,10 @@ public class EdgeImageContext extends BuildServiceContext {
     private String edgeConfigImageTag = null;
     private String edgeConfigImagePrefix = null;
     private String edgeConfigBaseImage = null;
+    private JsonArray edgeConfigPipPackages = null;
+    private JsonArray edgeConfigRpms = null;
+    private JsonArray edgeConfigCondaPackages = null;
+    private JsonArray edgeConfigLocales = null;
 
     public Instance instance() { return instance;}
 
@@ -74,6 +78,10 @@ public class EdgeImageContext extends BuildServiceContext {
                     edgeConfigImageTag = (edgeConfig.has("imageTag")) ? edgeConfig.get("imageTag").getAsString() : null;
                     edgeConfigImagePrefix = (edgeConfig.has("imagePrefix")) ? edgeConfig.get("imagePrefix").getAsString() : null;
                     edgeConfigBaseImage = (edgeConfig.has("baseImage")) ? edgeConfig.get("baseImage").getAsString() : null;
+                    edgeConfigPipPackages = (edgeConfig.has("pipPackages")) ? GsonUtilities.array(edgeConfig, "pipPackages") : null;
+                    edgeConfigRpms = (edgeConfig.has("rpms")) ? GsonUtilities.array(edgeConfig, "rpms") : null;
+                    edgeConfigCondaPackages = (edgeConfig.has("condaPackages")) ? GsonUtilities.array(edgeConfig, "condaPackages") : null;
+                    edgeConfigLocales = (edgeConfig.has("locales")) ? GsonUtilities.array(edgeConfig, "locales") : null;
                 }
             }
         }
@@ -188,7 +196,18 @@ public class EdgeImageContext extends BuildServiceContext {
         String imageStr = imageRegistry + "/" + imagePrefix + "/" + imageName + ":" + imageTag;
         //System.out.println("INFO: image = " + imageStr);
         buildConfigOverrides.addProperty("image", imageStr);
-
+        if (edgeConfigPipPackages != null) {
+        	buildConfigOverrides.add("pipPackages", edgeConfigPipPackages);
+        }
+        if (edgeConfigRpms != null) {
+        	buildConfigOverrides.add("rpms", edgeConfigRpms);
+        }
+        if (edgeConfigCondaPackages != null) {
+        	buildConfigOverrides.add("condaPackages", edgeConfigCondaPackages);
+        }
+        if (edgeConfigLocales != null) {
+        	buildConfigOverrides.add("locales", edgeConfigLocales);
+        }
         Build imageBuild = null;
         try {
             String buildName = getApplicationBuild().getName() + "_img";
@@ -197,6 +216,7 @@ public class EdgeImageContext extends BuildServiceContext {
             final long startBuildTime = System.currentTimeMillis();
             long lastCheckTime = startBuildTime;
 
+            //System.out.println("--- buildConfigOverrides="+buildConfigOverrides);
             imageBuild.submit("buildConfigOverrides", buildConfigOverrides);
 
             String buildStatus;

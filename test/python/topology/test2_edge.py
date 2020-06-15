@@ -48,7 +48,7 @@ class TestEdge(unittest.TestCase):
             ConfigParams.SSL_VERIFY: False
         }
         jc = JobConfig()
-        jc.raw_overlay = {'edgeConfig': {'imageName': image_name, 'imageTag': image_tag}}
+        jc.raw_overlay = {'edgeConfig': {'imageName': image_name, 'imageTag': image_tag, 'pipPackages':['pandas','numpy'], 'rpms':['atlas-devel']}}
         jc.add(cfg)
         try:
             submission_result = submit(ContextTypes.EDGE, topo.graph, cfg)

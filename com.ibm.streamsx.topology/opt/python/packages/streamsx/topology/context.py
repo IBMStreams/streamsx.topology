@@ -1145,6 +1145,22 @@ class ContextTypes(object):
 
         submit(ContextTypes.EDGE, topo, cfg)
 
+    .. rubric:: EDGE configuration
+    
+    The dict *edgeConfig* supports the following fields that are used for the image creation:
+
+        * **imageName** - [str] name of the image
+        * **imageTag** - [str] name of the image tag
+        * **baseImage** - [str] identify the name of the base image
+        * **pipPackages** - [list] identify one or more Python install packages that are to be included in the image.
+        * **condaPackages** - [list] identify one or more anaconda packages that are to be included in the image.
+        * **rpms** - [list] identify one or more linux RPMs that are to be included in the image
+        * **locales** - [list] identify one or more locales that are to be included in the image. The first item in the list is the "default" locale. The locales are identified in the java format  <language>_<county>_<variant>. Example: "en_US"
+
+    Example with adding pip packages and rpms::
+
+        jc.raw_overlay = {'edgeConfig': {'imageName': image_name, 'imageTag': image_tag, 'pipPackages':['pandas','numpy'], 'rpms':['atlas-devel']}} 
+
     """
 
     EDGE_BUNDLE = 'EDGE_BUNDLE'
