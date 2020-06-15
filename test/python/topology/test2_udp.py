@@ -86,6 +86,15 @@ class TestUDP(unittest.TestCase):
       tester.contents(s, [1,1,1,1,1])
       tester.test(self.test_ctxtype, self.test_config)
 
+  def test_InvalidEndParallelMarker(self):
+      topo = Topology("test_InvalidEndParallelMarker")
+      s = topo.source([1])
+      s.end_parallel()
+      
+      tester = Tester(topo)
+      tester.contents(s, [1])
+      tester.test(self.test_ctxtype, self.test_config)
+
   def test_TopologyMultiSetParallel(self):
       topo = Topology("test_TopologyMultiSetParallel")
 
