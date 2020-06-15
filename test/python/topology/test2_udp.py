@@ -63,7 +63,7 @@ class TestUDP(unittest.TestCase):
   def test_TopologyNestedParallel(self):
       if 'TestSas' in str(self):
           self.skipTest("Skip for SAS - since job is not healthy there")
-      topo = Topology()
+      topo = Topology("test_TopologyNestedParallel")
       s = topo.source([1])
       s = s.parallel(5, routing=Routing.BROADCAST)
       s = s.parallel(5, routing=Routing.BROADCAST)
@@ -93,6 +93,24 @@ class TestUDP(unittest.TestCase):
       
       tester = Tester(topo)
       tester.contents(s, [1])
+      tester.test(self.test_ctxtype, self.test_config)
+
+  def test_TopologyNestedParallelInvalidEndParallelMarker(self):
+      if 'TestSas' in str(self):
+          self.skipTest("Skip for SAS - since job is not healthy there")
+      topo = Topology("test_TopologyNestedParallelInvalidEndParallelMarker")
+      s = topo.source([1])
+      s = s.parallel(5, routing=Routing.BROADCAST)
+      s = s.parallel(5, routing=Routing.BROADCAST)
+      s = s.map(lambda x: x)
+      s = s.end_parallel()
+      s = s.end_parallel()
+      s = s.end_parallel() # invalid
+      s = s.end_parallel() # invalid
+      
+      tester = Tester(topo)
+      tester.run_for(60)
+      tester.contents(s, [1 for i in range(25)])
       tester.test(self.test_ctxtype, self.test_config)
 
   def test_TopologyMultiSetParallel(self):
