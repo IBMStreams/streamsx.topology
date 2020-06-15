@@ -94,6 +94,11 @@ public class SPLGenerator {
         
         separateIntoComposites(graph);
         
+        // some additional END_PARALLEL (end_parallel on non-parallel stream) cause invalid SPL, hence removed here
+        // it is important to remove those END_PARALLEL markers after composites creation
+        List<JsonObject> remainingEndParallel = GraphUtilities.findOperatorByKind(BVirtualMarker.END_PARALLEL, graph);
+        GraphUtilities.removeOperators(remainingEndParallel, graph);
+        
         //Make Main composite
         JsonObject mainCompsiteDef = new JsonObject();
         mainCompsiteDef.addProperty(KIND, graph.get("name").getAsString());
