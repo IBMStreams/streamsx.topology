@@ -68,8 +68,7 @@ import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
 
 from streamsx import st
-from .rest_primitives import (Domain, Instance, Installation, RestResource, Toolkit, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
-    _exact_resource, _IAMStreamsRestClient, _IAMConstants, _StreamsRestDelegator, _matching_resource, _TIMEOUTS)
+import streamsx.rest_primitives
 
 logger = logging.getLogger('streamsx.rest')
 
@@ -87,16 +86,16 @@ class _AbstractStreamsConnection(object):
             :py:obj:`list` of :py:class:`~.rest_primitives.RestResource`: List of all Streams high-level REST resources.
         """
         json_resources = self.rest_client.make_request(self.resource_url)['resources']
-        return [RestResource(resource, self.rest_client) for resource in json_resources]
+        return [streamsx.rest_primitives.RestResource(resource, self.rest_client) for resource in json_resources]
 
     def _get_elements(self, resource_name, eclass, id=None, name=None):
         for resource in self.get_resources():
             if resource.name == resource_name:
                 elements = []
                 for json_element in resource.get_resource()[resource_name]:
-                    if not _exact_resource(json_element, id):
+                    if not streamsx.rest_primitives._exact_resource(json_element, id):
                         continue
-                    if not _matching_resource(json_element, name):
+                    if not streamsx.rest_primitives._matching_resource(json_element, name):
                         continue
                     elements.append(eclass(json_element, self.rest_client))
                 return elements
@@ -160,9 +159,9 @@ class StreamsConnection(_AbstractStreamsConnection):
         
         self._resource_url = resource_url
         if auth:
-            self.rest_client = _StreamsRestClient(auth)
+            self.rest_client = streamsx.rest_primitives._StreamsRestClient(auth)
         else:
-            self.rest_client = _StreamsRestClient._of_basic(username, password)
+            self.rest_client = streamsx.rest_primitives._StreamsRestClient._of_basic(username, password)
         self.rest_client._sc = self
         self.session = self.rest_client.session
         self._analytics_service = False
@@ -172,7 +171,7 @@ class StreamsConnection(_AbstractStreamsConnection):
     @property
     def _delegator(self):
         if self._delegator_impl is None:
-            self._delegator_impl = _streams_delegator(self)
+            self._delegator_impl = streamsx.rest_primitives._streams_delegator(self)
         return self._delegator_impl
 
     @property
@@ -189,7 +188,7 @@ class StreamsConnection(_AbstractStreamsConnection):
         """
         # Domains are fixed and actually only one per REST api.
         if self._domains is None:
-            self._domains = self._get_elements('domains', Domain)
+            self._domains = self._get_elements('domains', streamsx.rest_primitives.Domain)
         return self._domains
 
     def get_domain(self, id):
@@ -204,7 +203,7 @@ class StreamsConnection(_AbstractStreamsConnection):
         Raises:
             ValueError: No matching domain exists.
         """
-        return self._get_element_by_id('domains', Domain, id)
+        return self._get_element_by_id('domains', streamsx.rest_primitives.Domain, id)
   
     def get_instances(self):
         """Retrieves available instances.
@@ -212,7 +211,7 @@ class StreamsConnection(_AbstractStreamsConnection):
         Returns:
             :py:obj:`list` of :py:class:`~.rest_primitives.Instance`: List of available instances
         """
-        return self._get_elements('instances', Instance)
+        return self._get_elements('instances', streamsx.rest_primitives.Instance)
 
     def get_instance(self, id):
         """Retrieves available instance matching a specific instance ID.
@@ -226,7 +225,7 @@ class StreamsConnection(_AbstractStreamsConnection):
         Raises:
             ValueError: No matching instance exists or multiple matching instances exist.
         """
-        return self._get_element_by_id('instances', Instance, id)
+        return self._get_element_by_id('instances', streamsx.rest_primitives.Instance, id)
 
     def get_installations(self):
         """Retrieves a list of all known Streams installations.
@@ -234,7 +233,7 @@ class StreamsConnection(_AbstractStreamsConnection):
         Returns:
             :py:obj:`list` of :py:class:`~.rest_primitives.Installation`: List of all Installation resources.
         """
-        return self._get_elements('installations', Installation)
+        return self._get_elements('installations', streamsx.rest_primitives.Installation)
 
     def get_resources(self):
         """Retrieves a list of all known Streams high-level REST resources.
@@ -256,17 +255,17 @@ class _InstanceSc(StreamsConnection):
     def get_instance(url, auth, verify):
         if '/streams-rest' in url:
             resource_url = url.replace('/streams-rest/', '/streams-resource/', 1)
-        rest_client = _StreamsRestClient(auth)
+        rest_client = streamsx.rest_primitives._StreamsRestClient(auth)
         if verify is not None:
             rest_client.session.verify = verify
         _InstanceSc(resource_url, rest_client)
-        return Instance(rest_client.make_request(url), rest_client)
+        return streamsx.rest_primitives.Instance(rest_client.make_request(url), rest_client)
 
     def __init__(self, resource_url, rest_client):
         self._resource_url = resource_url
         self.rest_client = rest_client
         self.rest_client._sc = self
-        self._delegator_impl = _StreamsRestDelegator(rest_client)
+        self._delegator_impl = streamsx.rest_primitives._StreamsRestDelegator(rest_client)
         self.session = self.rest_client.session
         self._domains = None
 
@@ -295,17 +294,17 @@ class StreamingAnalyticsConnection(StreamsConnection):
         self._resource_url = None
 
         self._iam = False
-        if _IAMConstants.V2_REST_URL in self.credentials and not ('userid' in self.credentials and 'password' in self.credentials):
+        if streamsx.rest_primitives._IAMConstants.V2_REST_URL in self.credentials and not ('userid' in self.credentials and 'password' in self.credentials):
             self._iam = True
 
         if self._iam:
-            self.rest_client = _IAMStreamsRestClient._create(self.credentials)
+            self.rest_client = streamsx.rest_primitives._IAMStreamsRestClient._create(self.credentials)
         else:
-            self.rest_client = _StreamsRestClient._of_basic(self.credentials['userid'], self.credentials['password'])
+            self.rest_client = streamsx.rest_primitives._StreamsRestClient._of_basic(self.credentials['userid'], self.credentials['password'])
         self.rest_client._sc = self
         self.session = self.rest_client.session
         self._analytics_service = True
-        self._sas = StreamingAnalyticsService(self.rest_client, self.credentials)
+        self._sas = streamsx.rest_primitives.StreamingAnalyticsService(self.rest_client, self.credentials)
         self._delegator_impl = self._sas._delegator
         self._domains = None
 
@@ -424,7 +423,7 @@ def _get_rest_api_url_from_creds(session, credentials):
     """
     resources_url = credentials['rest_url'] + credentials['resources_path']
     try:
-        response_raw = session.get(resources_url, auth=(credentials['userid'], credentials['password']), timeout=_TIMEOUTS['GET'])
+        response_raw = session.get(resources_url, auth=(credentials['userid'], credentials['password']), timeout=streamsx.rest_primitives._TIMEOUTS['GET'])
         response = response_raw.json()
     except:
         logger.error("Error while retrieving rest REST url from: " + resources_url)
@@ -443,7 +442,7 @@ def _get_iam_rest_api_url_from_creds(rest_client, credentials):
     Returns:
         str: The remote Streams REST API URL.
     """
-    res = rest_client.make_request(credentials[_IAMConstants.V2_REST_URL])
+    res = rest_client.make_request(credentials[streamsx.rest_primitives._IAMConstants.V2_REST_URL])
     base = res['streams_self']
     end = base.find('/instances')
     return base[:end] + '/resources'

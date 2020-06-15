@@ -46,15 +46,13 @@ import streamsx._streams._version
 __version__ = streamsx._streams._version.__version__
 
 from streamsx import st
-from .rest import _AbstractStreamsConnection
-from .rest_primitives import (Domain, Instance, Installation, RestResource, Toolkit, _StreamsRestClient, StreamingAnalyticsService, _streams_delegator,
-    _exact_resource, _IAMStreamsRestClient, _IAMConstants, _get_username,
-    _ICPDExternalAuthHandler, _ICPDAuthHandler, _handle_http_errors, _JWTAuthHandler, _BuildPool, BaseImage)
+import streamsx.rest
+import streamsx.rest_primitives
 
 logger = logging.getLogger('streamsx.build')
 
 
-class BuildService(_AbstractStreamsConnection):
+class BuildService(streamsx.rest._AbstractStreamsConnection):
     """IBM Streams build service.
 
     An instance of a `BuildService` is created using :py:meth:`of_endpoint` or :py:meth:`of_service`.
@@ -78,9 +76,9 @@ class BuildService(_AbstractStreamsConnection):
         self._build_url = resource_url
         self._buildpools_url = buildpools_url
         if auth:
-            self.rest_client = _StreamsRestClient(auth)
+            self.rest_client = streamsx.rest_primitives._StreamsRestClient(auth)
         else:
-            self.rest_client = _StreamsRestClient._of_basic(username, password)
+            self.rest_client = streamsx.rest_primitives._StreamsRestClient._of_basic(username, password)
         self.rest_client._sc = self
         self.session = self.rest_client.session
 
@@ -112,7 +110,7 @@ class BuildService(_AbstractStreamsConnection):
            name(str): Return toolkits matching name as a regular expression.
 
         """
-        return self._get_elements('toolkits', Toolkit, name=name)
+        return self._get_elements('toolkits', streamsx.rest_primitives.Toolkit, name=name)
      
     def get_toolkit(self, id):
         """Retrieves available toolkit matching a specific toolkit ID.
@@ -128,7 +126,7 @@ class BuildService(_AbstractStreamsConnection):
             ValueError: No matching toolkit exists.
 
         """
-        return self._get_element_by_id('toolkits', Toolkit, id)
+        return self._get_element_by_id('toolkits', streamsx.rest_primitives.Toolkit, id)
 
     def upload_toolkit(self, path):
         """
@@ -166,13 +164,13 @@ class BuildService(_AbstractStreamsConnection):
                 zipfile.close()
             
                 with open(filename, 'rb') as toolkit_fp:
-                    res = self.rest_client.session.post(Toolkit._toolkits_url(self),
+                    res = self.rest_client.session.post(streamsx.rest_primitives.Toolkit._toolkits_url(self),
                         headers = {'Accept' : 'application/json',
                                    'Content-Type' : 'application/zip'},
                         data=toolkit_fp,
                         verify=self.rest_client.session.verify)
-                    _handle_http_errors(res)
-                    new_toolkits = list(Toolkit(t, self.rest_client) for t in res.json()['toolkits'])
+                    streamsx.rest_primitives._handle_http_errors(res)
+                    new_toolkits = list(streamsx.rest_primitives.Toolkit(t, self.rest_client) for t in res.json()['toolkits'])
 
                     # It may be possible to upload multiple toolkits in one 
                     # post, but we are only uploading a single toolkit, so the
@@ -190,7 +188,7 @@ class BuildService(_AbstractStreamsConnection):
         Returns:
             :py:obj:`list` of :py:class:`~.rest_primitives._BuildPool`: A list of _BuildPool instances or ``None`` if build pools are not available.
         """
-        buildpools = self._get_elements('buildPools', _BuildPool, name=name)
+        buildpools = self._get_elements('buildPools', streamsx.rest_primitives._BuildPool, name=name)
         if buildpools is None:
             # workaround as long as 'buildPools' resource is not available
             buildpools_url = self._buildpools_url
@@ -199,7 +197,7 @@ class BuildService(_AbstractStreamsConnection):
                 # it will not be a build pool of 'image' type
                 return None
             buildpools_json = self.rest_client.make_request(buildpools_url)['buildPools']
-            buildpools = [_BuildPool(json_rep, self.rest_client) for json_rep in buildpools_json]
+            buildpools = [streamsx.rest_primitives._BuildPool(json_rep, self.rest_client) for json_rep in buildpools_json]
 
         return buildpools
     
@@ -218,7 +216,7 @@ class BuildService(_AbstractStreamsConnection):
         images = []
         for pool in buildpools:
             if hasattr(pool, 'baseimages'):
-                images.extend([BaseImage(json_rep, self.rest_client) for json_rep in self.rest_client.make_request(pool.baseimages)['images']])
+                images.extend([streamsx.rest_primitives.BaseImage(json_rep, self.rest_client) for json_rep in self.rest_client.make_request(pool.baseimages)['images']])
         if images:
             return images
         return None
@@ -292,7 +290,7 @@ class BuildService(_AbstractStreamsConnection):
             raise ValueError()
         # service_name is the instance name
         service_name = service['service_name']
-        auth = _ICPDAuthHandler(service_name, service['service_token'])
+        auth = streamsx.rest_primitives._ICPDAuthHandler(service_name, service['service_token'])
         build_url = BuildService._root_from_endpoint(service['connection_info'].get('serviceBuildEndpoint'))
         buildpools_url = service['connection_info'].get('serviceBuildPoolsEndpoint', None)
         sc = BuildService(resource_url=build_url, buildpools_url=buildpools_url, auth=auth)
@@ -340,7 +338,7 @@ class BuildService(_AbstractStreamsConnection):
             verify: SSL verification. Set to ``False`` to disable SSL verification. Defaults to SSL verification being enabled.
        
         Returns:
-            :py:class:`BuildService`: Connection to Streams build service or ``None`` of insufficient configuration was provided.
+            :py:class:`BuildService`: Connection to Streams build service or ``None`` if insufficient configuration was provided.
         """
         possible_integ = True
         if not endpoint:
@@ -360,11 +358,11 @@ class BuildService(_AbstractStreamsConnection):
             password = os.environ.get('STREAMS_PASSWORD')
         if not password:
             return None
-        username = _get_username(username)
+        username = streamsx.rest_primitives._get_username(username)
 
         if service_name:
             # this is an integrated config
-            auth=_ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
+            auth=streamsx.rest_primitives._ICPDExternalAuthHandler(endpoint, username, password, verify, service_name)
             build_url = BuildService._root_from_endpoint(auth._cfg['connection_info'].get('serviceBuildEndpoint'))
             buildpools_ep = auth._cfg['connection_info'].get('serviceBuildPoolsEndpoint', None)
             if buildpools_ep:
@@ -397,7 +395,7 @@ class BuildService(_AbstractStreamsConnection):
                         # We can't resolve the security manager
                         # so revert to basic auth
                         socket.gethostbyname(atinfo.hostname)
-                        auth=_JWTAuthHandler(resource.resource, username, password, verify)
+                        auth=streamsx.rest_primitives._JWTAuthHandler(resource.resource, username, password, verify)
                         sc = BuildService(resource_url=build_url, buildpools_url=None, auth=auth)
                         if verify is not None:
                             sc.rest_client.session.verify = verify

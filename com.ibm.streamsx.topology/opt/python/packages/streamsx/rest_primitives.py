@@ -2008,7 +2008,7 @@ class Instance(_ResourceElement):
             verify: SSL verification. Set to ``False`` to disable SSL verification. Defaults to SSL verification being enabled.
 
         Returns:
-            Instance: Connection to Streams instance or ``None`` of insufficient configuration was provided.
+            Instance: Connection to Streams instance or ``None`` if insufficient configuration was provided.
 
         .. versionadded:: 1.13
         """
