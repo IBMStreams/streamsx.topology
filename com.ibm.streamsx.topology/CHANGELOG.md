@@ -1,19 +1,19 @@
 # Changes
 ==========
 
-## master/latest
-
-* [#1666](https://github.com/IBMStreams/streamsx.topology/issues/1666) Prevent sc error caused by end_parallel on non-parallel stream
-* [#2476](https://github.com/IBMStreams/streamsx.topology/issues/2476) Python: import streamsx.rest_primitives raises ImportError
+## v1.15.1
+* [#2484](https://github.com/IBMStreams/streamsx.topology/issues/2484) Document known issues in Python doc
 * [#2478](https://github.com/IBMStreams/streamsx.topology/issues/2478) Support additional fields like `pipPackages` and `rpms` be provisioned for the "edge" image creation
+* [#2476](https://github.com/IBMStreams/streamsx.topology/issues/2476) Python: `import streamsx.rest_primitives` raises `ImportError`
 * [#2474](https://github.com/IBMStreams/streamsx.topology/issues/2474) Fix topology name and namespace when one of them is an SPL reserved word
+* [#1666](https://github.com/IBMStreams/streamsx.topology/issues/1666) Prevent sc error caused by end_parallel on non-parallel stream
 
 ## v1.15.0:
 * [#2466](https://github.com/IBMStreams/streamsx.topology/issues/2466) Javadoc: Wrong version information resolved
 * [#2447](https://github.com/IBMStreams/streamsx.topology/issues/2447) Support invocation to build an application for the edge
 * [#2429](https://github.com/IBMStreams/streamsx.topology/issues/2429) Out of memory error when using large python packages
 * [#2427](https://github.com/IBMStreams/streamsx.topology/issues/2427) streamsx can be used with Java 8 to 11.
-* [#1478](https://github.com/IBMStreams/streamsx.topology/issues/1478) Python: Stream.filter() supports additional output stream for non-matching tuples 
+* [#1478](https://github.com/IBMStreams/streamsx.topology/issues/1478) Python: Stream.filter() supports additional output stream for non-matching tuples
 * [#1469](https://github.com/IBMStreams/streamsx.topology/issues/1469) Python: Support parallel partitioning by attribute for structured streams
 
 ## v1.14.15:
