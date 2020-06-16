@@ -100,6 +100,13 @@ Environments
    service.rst
    pysetup.rst
 
+***************************
+Restrictions and known bugs
+***************************
+
+.. toctree::
+
+   restrictions.rst
 
 Indices and tables
 ==================

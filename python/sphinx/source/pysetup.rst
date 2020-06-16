@@ -20,13 +20,13 @@ A local install of IBM Streams is **not** required when:
     * Using the Streams and Streaming Analytics REST bindings :py:mod:`streamsx.rest`.
     * Devloping and submitting streaming applications using :py:mod:`streamsx.topology.topology` to Cloud Pak for Data or Streaming Analytics service on IBM Cloud.
 
-        * The environment variable ``JAVA_HOME`` must reference a Java 1.8 JRE or JDK/SDK.
+        * The environment variable ``JAVA_HOME`` must reference a Java JRE or JDK/SDK version 8 or higher.
 
 A local install of IBM Streams is required when:
 
     * Developing and submitting streaming applications using :py:mod:`streamsx.topology.topology` to IBM Streams 4.2, 4.3 distributed or standalone contexts.
 
-        * If set the environment variable ``JAVA_HOME`` must reference a Java 1.8 JRE or JDK/SDK, otherwise the Java install from ``$STREAMS_INSTALL/java`` is used.
+        * If set the environment variable ``JAVA_HOME`` must reference a Java JRE or JDK/SDK version 8 or higher, otherwise the Java install from ``$STREAMS_INSTALL/java`` is used.
     * Creating SPL toolkits with Python primitive operators using :py:mod:`streamsx.spl.spl` decorators for use with 4.2, 4.3 distributed or standalone applications.
 
 .. warning::
