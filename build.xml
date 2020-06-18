@@ -114,7 +114,7 @@
     <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyec/PyTestMetrics"/>
     <delete dir="test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyec/PyTestOperatorContext"/>
     <delete>
-      <fileset dir="test/python/topology" includes="*.sab,*.json"/>
+      <fileset dir="test/python/topology" includes="*.sab,*.json,*.out,*.txt"/>
     </delete>
     <delete>
       <fileset dir="test/python/spl/tests" includes="*.sab,*.json"/>
