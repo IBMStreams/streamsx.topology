@@ -1,6 +1,10 @@
 # Changes
 ==========
 
+## master/latest
+
+* [#2486](https://github.com/IBMStreams/streamsx.topology/issues/2486) Support type hints with Python `flat_map`
+
 ## v1.15.1
 * [#2484](https://github.com/IBMStreams/streamsx.topology/issues/2484) Document known issues in Python doc
 * [#2478](https://github.com/IBMStreams/streamsx.topology/issues/2478) Support additional fields like `pipPackages` and `rpms` be provisioned for the "edge" image creation
