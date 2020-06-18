@@ -1390,6 +1390,7 @@ test/python/spl/testtkpy_pip_toolkit/opt/.splpy/**
 test/python/topology/symlinkmodule.py
 test/python/topology/test_symlink_to_module
 test/python/topology/test.out
+test/python/topology/flat_map.txt
 test/python/topology/test1.test_TopologyLowLatency_JobConfig.json
 test/python/topology/test2_pending.test_pure_loop_JobConfig.json
 test/spl/testtk/impl/java/bin/testjava/MyPipe$StreamsModel.class
