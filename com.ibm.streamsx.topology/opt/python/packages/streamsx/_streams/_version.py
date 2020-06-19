@@ -3,7 +3,7 @@
 # Copyright IBM Corp. 2018,2019
 
 ## Common PEP396 version for modules shipped with streamsx packages
-__version__='1.15.1'
+__version__='1.15.2'
 
 import pkg_resources
 import sys
