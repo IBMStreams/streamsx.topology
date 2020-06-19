@@ -17,8 +17,6 @@ from streamsx.topology.context import ConfigParams
 import streamsx.spl.op as op
 
 
-#def add_submsission_param
-
 class AddIt(object):
     def __init__(self, sp):
         self.sp = sp
