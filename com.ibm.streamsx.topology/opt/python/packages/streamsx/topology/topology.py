@@ -1606,6 +1606,20 @@ class Stream(_placement._Placement, object):
         and mapped stream corresponding to the input tuple
         that caused the exception.
 
+        Example: For a list of dict the ``flat_map`` emits **n** tuples for each input tuple received, with **n** the number of elements in the list::
+            
+            from typing import Iterable, List, NamedTuple
+
+            class SampleSchema(NamedTuple):
+                id: str
+                flag: bool
+
+            def flatten_dict(tpl) -> Iterable[SampleSchema]:
+                return tpl
+
+            # list_stream is a stream of list from dict as Python object, for example [{'id': '0', 'flag':True}]       
+            sample_stream = list_stream.flat_map(flatten_dict) # sample_stream is a named tuple stream of SampleSchema
+
         Returns:
             Stream: A Stream containing flattened and mapped tuples.
         Raises:

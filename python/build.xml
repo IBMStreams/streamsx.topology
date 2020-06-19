@@ -34,7 +34,7 @@
     <delete>
      <fileset dir="${sphinx.dir}/source"
        includes="*.rst"
-       excludes="index.rst service.rst pysetup.rst"/>
+       excludes="index.rst service.rst pysetup.rst restrictions.rst"/>
    </delete>
   </target>
 </project>

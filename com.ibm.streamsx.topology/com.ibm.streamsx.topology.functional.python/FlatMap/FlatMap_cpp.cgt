@@ -2,8 +2,15 @@
 
 @include "../pyspltuple.cgt"
 <%
+ my $pyoutstyle = splpy_tuplestyle($model->getOutputPortAt(0));
+%>
+
+<%
  # Select the Python wrapper function
  my $pywrapfunc= $pystyle_fn . '_in__pickle_iter';
+ if ($pyoutstyle eq 'dict') {
+   $pywrapfunc= $pystyle_fn . '_in__object_iter';
+ }
 %>
 
 // Default case is pass by pickled value in which case
@@ -17,6 +24,9 @@
 MY_OPERATOR::MY_OPERATOR() :
    funcop_(NULL),
    pyInStyleObj_(NULL),
+ <%if ($pyoutstyle eq 'dict') {%>    
+   pyOutNames_0(NULL),
+ <%}%>
    occ_(-1)
 { 
     const char * wrapfn = "<%=$pywrapfunc%>";
@@ -58,6 +68,10 @@ MY_OPERATOR::MY_OPERATOR() :
 #if SPLPY_OP_STATE_HANDLER == 1
    this->getContext().registerStateHandler(*this);
 #endif
+
+<%if ($pyoutstyle eq 'dict') {%>
+    pyOutNames_0 = Splpy::pyAttributeNames(getOutputPortAt(0));
+<%}%> 
 }
 
 MY_OPERATOR::~MY_OPERATOR() 
@@ -108,11 +122,26 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
       // construct spl blob and tuple from pickled return value
       OPort0Type otuple;
 
+    <%if ($pyoutstyle eq 'dict') {%>     
+      if (item == NULL)
+          return;
+      if (PyTuple_Check(item)) {
+          fromPyTupleToSPLTuple(item, otuple);
+          Py_DECREF(item);
+      } else if (PyDict_Check(item)) {
+          fromPyDictToSPLTuple(item, otuple);
+          Py_DECREF(item);
+      } else {
+    	  pySplValueFromPyObject(otuple.get_<%=$model->getOutputPortAt(0)->getAttributeAt(0)->getName()%>(), item);
+    	  Py_DECREF(item);
+      }      
+    <% } else { %>
       SPLPY_OUT_TUPLE_FLAT_MAP_BY_REF(otuple.get___spl_po(), item, occ_)
       {
           pySplValueFromPyObject(otuple.get___spl_po(), item);
           Py_DECREF(item); 
       }
+    <%}%>
       output_tuples.push_back(otuple);
     }
     Py_DECREF(pyIterator);
@@ -132,5 +161,24 @@ void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
 {
    forwardWindowPunctuation(punct);
 }
+
+<%
+  if ($pyoutstyle eq 'dict') {
+	my %cpp_tuple_types;  
+    # In this case we don't want the function that
+    # converts the Python tuple to an SPL tuple to
+    # copy attributes from the input port
+    my $iport;
+
+    my $oport = $model->getOutputPortAt(0);
+    my $oport_submission = 0;
+    my $otupleType = $oport->getSPLTupleType();
+    my @onames = SPL::CodeGen::Type::getAttributeNames($otupleType);
+    my @otypes = SPL::CodeGen::Type::getAttributeTypes($otupleType);
+
+%>
+// Create member function that converts Python tuple to SPL tuple
+@include  "../../opt/python/codegen/py_pyTupleTosplTuple.cgt"
+<%}%>
 
 <%SPL::CodeGen::implementationEpilogue($model);%>
