@@ -13,7 +13,7 @@ import glob
 
 from streamsx.topology.topology import Topology
 from streamsx.topology.context import submit, ConfigParams, JobConfig
-from streamsx.rest import Instance
+from streamsx.rest_primitives import Instance
 import streamsx.scripts.streamtool as streamtool
 import streamsx.ec
 

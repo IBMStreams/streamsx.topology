@@ -9,7 +9,7 @@ import requests
 
 from streamsx.topology.topology import Topology
 from streamsx.topology.context import submit, ConfigParams
-from streamsx.rest import Instance
+from streamsx.rest_primitives import Instance
 import streamsx.scripts.streamtool as streamtool
 
 from contextlib import contextmanager
