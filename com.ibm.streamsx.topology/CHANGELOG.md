@@ -1,6 +1,10 @@
 # Changes
 ==========
 
+## v1.15.3
+
+* [#2490](https://github.com/IBMStreams/streamsx.topology/issues/2490) Resolve issue with streamsx-streamtool caused by changes in v1.15.1
+
 ## v1.15.2
 
 * [#2486](https://github.com/IBMStreams/streamsx.topology/issues/2486) Support type hints with Python `flat_map`
