@@ -954,6 +954,7 @@ class Topology(object):
             type_: Type of parameter value when default is not set. Supported values are `str`, `int`, `float` and `bool`.
 
         .. versionadded:: 1.9
+        .. seealso:: :py:meth:`streamsx.ec.get_submission_time_value`
         """
         
         if name in self._submission_parameters:

@@ -24,3 +24,5 @@ Restrictions and known bugs
 * Python Composites (derived from :py:class:`streamsx.topology.composite.Composite`) can have only one input port.
 * No support to process window markers or final marker (end of stream) in Python Callables like in SPL operators
 * No hook for drain processing in consistent region for Python Callables
+* Submission time parameters, which are defined in SPL composites of other toolkits, or created by using
+  `streamsx.spl.op.Expression` in the topology, cannot be accessed at runtime with `streamsx.ec.get_submission_time_value(name)`.
