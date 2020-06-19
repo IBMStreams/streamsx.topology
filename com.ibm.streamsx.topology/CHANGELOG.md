@@ -1,7 +1,7 @@
 # Changes
 ==========
 
-## master/latest
+## v1.15.2
 
 * [#2486](https://github.com/IBMStreams/streamsx.topology/issues/2486) Support type hints with Python `flat_map`
 
