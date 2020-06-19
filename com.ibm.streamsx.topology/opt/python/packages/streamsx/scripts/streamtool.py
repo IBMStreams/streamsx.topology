@@ -15,7 +15,7 @@ import locale
 import re
 
 import streamsx.topology.context
-from streamsx.rest import Instance
+from streamsx.rest_primitives import Instance
 from streamsx.build import BuildService
 
 
