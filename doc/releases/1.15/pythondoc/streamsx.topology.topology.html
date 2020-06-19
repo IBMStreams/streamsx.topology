@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.topology &mdash; streamsx 1.15.1 documentation</title>
+  <title>streamsx.topology.topology &mdash; streamsx 1.15.2 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -133,6 +133,9 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="service.html">IBM Streaming Analytics service</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pysetup.html">IBM Streams Python setup</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">Restrictions and known bugs</a></li>
 </ul>
 
             
@@ -1416,6 +1419,20 @@ by return a true value from its <code class="docutils literal notranslate"><span
 exception is suppressed no tuples are submitted to the flattened
 and mapped stream corresponding to the input tuple
 that caused the exception.</p>
+<p>Example: For a list of dict the <code class="docutils literal notranslate"><span class="pre">flat_map</span></code> emits <strong>n</strong> tuples for each input tuple received, with <strong>n</strong> the number of elements in the list:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">NamedTuple</span>
+
+<span class="k">class</span> <span class="nc">SampleSchema</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">flag</span><span class="p">:</span> <span class="nb">bool</span>
+
+<span class="k">def</span> <span class="nf">flatten_dict</span><span class="p">(</span><span class="n">tpl</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">SampleSchema</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="n">tpl</span>
+
+<span class="c1"># list_stream is a stream of list from dict as Python object, for example [{&#39;id&#39;: &#39;0&#39;, &#39;flag&#39;:True}]</span>
+<span class="n">sample_stream</span> <span class="o">=</span> <span class="n">list_stream</span><span class="o">.</span><span class="n">flat_map</span><span class="p">(</span><span class="n">flatten_dict</span><span class="p">)</span> <span class="c1"># sample_stream is a named tuple stream of SampleSchema</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>A Stream containing flattened and mapped tuples.</p>

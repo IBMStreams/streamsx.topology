@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.tester_runtime &mdash; streamsx 1.15.2 documentation</title>
+  <title>Restrictions and known bugs &mdash; streamsx 1.15.2 documentation</title>
   
 
   
@@ -35,8 +35,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="streamsx.ec" href="streamsx.ec.html" />
-    <link rel="prev" title="streamsx.topology.tester" href="streamsx.topology.tester.html" /> 
+    <link rel="prev" title="IBM Streams Python setup" href="pysetup.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -84,7 +83,7 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="streamsx.topology.html">streamsx.topology</a></li>
 <li class="toctree-l1"><a class="reference internal" href="streamsx.topology.topology.html">streamsx.topology.topology</a></li>
 <li class="toctree-l1"><a class="reference internal" href="streamsx.topology.context.html">streamsx.topology.context</a></li>
@@ -92,11 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="streamsx.topology.state.html">streamsx.topology.state</a></li>
 <li class="toctree-l1"><a class="reference internal" href="streamsx.topology.composite.html">streamsx.topology.composite</a></li>
 <li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester.html">streamsx.topology.tester</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">streamsx.topology.tester_runtime</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module contents</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester_runtime.html">streamsx.topology.tester_runtime</a></li>
 <li class="toctree-l1"><a class="reference internal" href="streamsx.ec.html">streamsx.ec</a></li>
 <li class="toctree-l1"><a class="reference internal" href="streamsx.spl.op.html">streamsx.spl.op</a></li>
 <li class="toctree-l1"><a class="reference internal" href="streamsx.spl.types.html">streamsx.spl.types</a></li>
@@ -122,8 +117,8 @@
 <li class="toctree-l1"><a class="reference internal" href="service.html">IBM Streaming Analytics service</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pysetup.html">IBM Streams Python setup</a></li>
 </ul>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="restrictions.html">Restrictions and known bugs</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Restrictions and known bugs</a></li>
 </ul>
 
             
@@ -169,13 +164,13 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>streamsx.topology.tester_runtime</li>
+      <li>Restrictions and known bugs</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/streamsx.topology.tester_runtime.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/restrictions.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -188,46 +183,34 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-streamsx.topology.tester_runtime">
-<span id="streamsx-topology-tester-runtime"></span><h1>streamsx.topology.tester_runtime<a class="headerlink" href="#module-streamsx.topology.tester_runtime" title="Permalink to this headline">¶</a></h1>
-<p>Runtime tester functionality.</p>
-<div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>Module containing runtime functionality for
-<a class="reference internal" href="streamsx.topology.tester.html#module-streamsx.topology.tester" title="streamsx.topology.tester"><code class="xref py py-mod docutils literal notranslate"><span class="pre">streamsx.topology.tester</span></code></a>.</p>
-<p>When test is executed any specified <a class="reference internal" href="#streamsx.topology.tester_runtime.Condition" title="streamsx.topology.tester_runtime.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a> instances
-are executed in the context of the application under test (and
-not the <code class="docutils literal notranslate"><span class="pre">unittest</span></code> class instance). This module separates out
-the runtime execution code from the test definition module
-<a class="reference internal" href="streamsx.topology.tester.html#module-streamsx.topology.tester" title="streamsx.topology.tester"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tester</span></code></a>.</p>
+  <div class="section" id="restrictions-and-known-bugs">
+<h1>Restrictions and known bugs<a class="headerlink" href="#restrictions-and-known-bugs" title="Permalink to this headline">¶</a></h1>
+<ul>
+<li><p>No support for nested parallel regions at sources, i.e. nested <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.set_parallel" title="streamsx.topology.topology.Stream.set_parallel"><code class="xref py py-func docutils literal notranslate"><span class="pre">streamsx.topology.topology.Stream.set_parallel()</span></code></a>, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">topo</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">()</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="n">S</span><span class="p">())</span>
+<span class="n">s</span><span class="o">.</span><span class="n">set_parallel</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">set_parallel</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
 </div>
-<div class="section" id="module-contents">
-<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
-<p class="rubric">Classes</p>
-<table class="longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.topology.tester_runtime.Condition" title="streamsx.topology.tester_runtime.Condition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Condition</span></code></a></p></td>
-<td><p>A condition for testing.</p></td>
-</tr>
-</tbody>
-</table>
-<dl class="class">
-<dt id="streamsx.topology.tester_runtime.Condition">
-<em class="property">class </em><code class="sig-prename descclassname">streamsx.topology.tester_runtime.</code><code class="sig-name descname">Condition</code><span class="sig-paren">(</span><em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.tester_runtime.Condition" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>A condition for testing.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Condition name, must be unique within the tester.</p>
-</dd>
-</dl>
-</dd></dl>
-
+<p>In this example, <cite>set_parallel(3)</cite> is ignored.</p>
+</li>
+<li><p>No support for nested types when defining stream schemas, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">NamedTupleNestedTupleSchema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">spotted</span><span class="p">:</span> <span class="n">SpottedSchema</span>
+</pre></div>
 </div>
+</li>
+<li><p>No support of collections of <cite>NamedTuple</cite> as stream schema, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">NamedTupleListOfTupleSchema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">spotted</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">SpottedSchema</span><span class="p">]</span>
+</pre></div>
+</div>
+</li>
+<li><p>Python Composites (derived from <a class="reference internal" href="streamsx.topology.composite.html#streamsx.topology.composite.Composite" title="streamsx.topology.composite.Composite"><code class="xref py py-class docutils literal notranslate"><span class="pre">streamsx.topology.composite.Composite</span></code></a>) can have only one input port.</p></li>
+<li><p>No support to process window markers or final marker (end of stream) in Python Callables like in SPL operators</p></li>
+<li><p>No hook for drain processing in consistent region for Python Callables</p></li>
+</ul>
 </div>
 
 
@@ -238,10 +221,8 @@ the runtime execution code from the test definition module
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="streamsx.ec.html" class="btn btn-neutral float-right" title="streamsx.ec" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-      
-        <a href="streamsx.topology.tester.html" class="btn btn-neutral float-left" title="streamsx.topology.tester" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="pysetup.html" class="btn btn-neutral float-left" title="IBM Streams Python setup" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
