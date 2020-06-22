@@ -189,7 +189,7 @@ def get_submission_time_value(name, type_=None):
     Raises:
         ValueError: The submission time parameter with the given name does not exist.
 
-    .. versionadded:: 1.16
+    .. versionadded:: 1.15
     """
     _check()
     if name not in _SUBMIT_PARAMS:
