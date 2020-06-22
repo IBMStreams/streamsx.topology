@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.ec &mdash; streamsx 1.15.3 documentation</title>
+  <title>streamsx.ec &mdash; streamsx 1.15.4 documentation</title>
   
 
   
@@ -300,31 +300,34 @@ being invoked in a Streams application.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#streamsx.ec.get_application_directory" title="streamsx.ec.get_application_directory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_application_directory</span></code></a></p></td>
 <td><p>Get the application directory.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.ec.instance_id" title="streamsx.ec.instance_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">instance_id</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.ec.get_submission_time_value" title="streamsx.ec.get_submission_time_value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_submission_time_value</span></code></a></p></td>
+<td><p>Gets the value of a submission time parameter.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#streamsx.ec.instance_id" title="streamsx.ec.instance_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">instance_id</span></code></a></p></td>
 <td><p>Return the instance identifier.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#streamsx.ec.is_active" title="streamsx.ec.is_active"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_active</span></code></a></p></td>
-<td><p>Tests is code is active within a IBM Streams execution context.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.ec.is_active" title="streamsx.ec.is_active"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_active</span></code></a></p></td>
+<td><p>Tests if code is active within a IBM Streams execution context.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.ec.is_standalone" title="streamsx.ec.is_standalone"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_standalone</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#streamsx.ec.is_standalone" title="streamsx.ec.is_standalone"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_standalone</span></code></a></p></td>
 <td><p>Is the execution context standalone.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#streamsx.ec.job_id" title="streamsx.ec.job_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">job_id</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.ec.job_id" title="streamsx.ec.job_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">job_id</span></code></a></p></td>
 <td><p>Return the job identifier.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.ec.local_channel" title="streamsx.ec.local_channel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">local_channel</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#streamsx.ec.local_channel" title="streamsx.ec.local_channel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">local_channel</span></code></a></p></td>
 <td><p>Return the parallel region local channel number <cite>obj</cite> is executing in.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#streamsx.ec.local_max_channels" title="streamsx.ec.local_max_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">local_max_channels</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.ec.local_max_channels" title="streamsx.ec.local_max_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">local_max_channels</span></code></a></p></td>
 <td><p>Return the local maximum number of channels for the parallel region <cite>obj</cite> is executing in.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.ec.max_channels" title="streamsx.ec.max_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">max_channels</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#streamsx.ec.max_channels" title="streamsx.ec.max_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">max_channels</span></code></a></p></td>
 <td><p>Return the global maximum number of channels for the parallel region <cite>obj</cite> is executing in.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#streamsx.ec.pe_id" title="streamsx.ec.pe_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pe_id</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.ec.pe_id" title="streamsx.ec.pe_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pe_id</span></code></a></p></td>
 <td><p>Return the PE identifier.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.ec.shutdown" title="streamsx.ec.shutdown"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shutdown</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#streamsx.ec.shutdown" title="streamsx.ec.shutdown"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shutdown</span></code></a></p></td>
 <td><p>Return the processing element (PE) shutdown event.</p></td>
 </tr>
 </tbody>
@@ -347,7 +350,7 @@ being invoked in a Streams application.</p>
 <dl class="function">
 <dt id="streamsx.ec.is_active">
 <code class="sig-prename descclassname">streamsx.ec.</code><code class="sig-name descname">is_active</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.is_active" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tests is code is active within a IBM Streams execution context.</p>
+<dd><p>Tests if code is active within a IBM Streams execution context.</p>
 <p>Returns a true value when called from within a
 IBM Streams distributed job or standalone execution.</p>
 <p>Can be used to only run code required at runtime, such as importing
@@ -472,6 +475,42 @@ IBM Streams applications require, such as:</p>
 <dd class="field-even"><p><strong>ValueError</strong> – Application configuration does not exist.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.ec.get_submission_time_value">
+<code class="sig-prename descclassname">streamsx.ec.</code><code class="sig-name descname">get_submission_time_value</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">type_=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.ec.get_submission_time_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the value of a submission time parameter.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Submission parameters must be created with <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology.create_submission_parameter" title="streamsx.topology.topology.Topology.create_submission_parameter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">streamsx.topology.topology.Topology.create_submission_parameter()</span></code></a>
+at topology declaration time before they can be accessed with this function.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Submission time parameters, which are defined within other toolkits that are used by this topology
+or created with <a class="reference internal" href="streamsx.spl.op.html#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression"><code class="xref py py-class docutils literal notranslate"><span class="pre">streamsx.spl.op.Expression</span></code></a> in this topology are not accessible with this function.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – The name of the submission time parameter</p></li>
+<li><p><strong>type_</strong> – Type of parameter value. Supported values are <code class="docutils literal notranslate"><span class="pre">str</span></code>, <code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code> and <code class="docutils literal notranslate"><span class="pre">bool</span></code>.
+<code class="docutils literal notranslate"><span class="pre">None</span></code> assumes that the type of the parameter is <code class="docutils literal notranslate"><span class="pre">str</span></code> and needs no conversion. The type must be
+the same as used in <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology.create_submission_parameter" title="streamsx.topology.topology.Topology.create_submission_parameter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">streamsx.topology.topology.Topology.create_submission_parameter()</span></code></a>
+or as deduced from the parameters default value.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The value of the submission time parameter. The return type is either <code class="docutils literal notranslate"><span class="pre">str</span></code> or the given <code class="docutils literal notranslate"><span class="pre">type_</span></code>.</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – The submission time parameter with the given name does not exist.</p>
+</dd>
+</dl>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.15.</span></p>
+</div>
 </dd></dl>
 
 <dl class="function">

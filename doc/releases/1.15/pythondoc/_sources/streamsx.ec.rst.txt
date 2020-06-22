@@ -18,6 +18,7 @@ streamsx.ec
       domain_id
       get_application_configuration
       get_application_directory
+      get_submission_time_value
       instance_id
       is_active
       is_standalone
