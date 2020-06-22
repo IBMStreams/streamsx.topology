@@ -27,6 +27,41 @@ class AddIt(object):
     def __call__(self, t):
         return str(t) + '-' + self.spv
 
+from streamsx.ec import get_submission_time_value
+
+# A wrapper that imports streamsx.ec so that the function can be used in a lambda expression at runtime
+# use in a lambda expression in a filter
+def wrap_get_int_submission_val(name):
+#    from streamsx.ec import get_submission_time_value
+    return get_submission_time_value(name, int)
+
+# use as function callable in a filter
+def is_dividable_by_modulo_submission_param(tuple):
+    #from streamsx.ec import get_submission_time_value
+    # assuming the tuple is an int python object
+    return tuple % get_submission_time_value(name='modulo', type_=int) == 0
+
+# use as function callable in a map
+def greet(tuple):
+    #from streamsx.ec import get_submission_time_value
+    # assume tuple is a string
+    return tuple.format(get_submission_time_value('p1'))
+
+# use as callable class in a filter
+# test if a number can be or cannot be divided by a modulo.
+# Which test is performed, is controlled by a submission time parameter
+class DivideTester(object):
+    def __init__(self, subm_param_name, modulo):
+        self.spn = subm_param_name
+        self.modulo = modulo
+    def __enter__(self):
+        self.spv = get_submission_time_value(self.spn, bool)
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
+    def __call__(self, t):
+        is_even = t % self.modulo == 0
+        return is_even == self.spv
+
 class TestSubmissionParams(unittest.TestCase):
     """ Test submission params (standalone).
     """
@@ -158,6 +193,65 @@ class TestSubmissionParams(unittest.TestCase):
         tester = Tester(topo)
         tester.contents(s,[0,15,30,45,60]*3, ordered=False)
         tester.test(self.test_ctxtype, self.test_config)
+
+    def test_int_parallel_with_ec(self):
+        topo = Topology()
+        sp_w1 = topo.create_submission_parameter('w1', type_=int)
+        sp_w2 = topo.create_submission_parameter('modulo', type_=int)
+        
+        s = topo.source(range(67)).set_parallel(sp_w1)
+        s = s.filter(lambda v : v % wrap_get_int_submission_val('w1') == 0)
+        s = s.filter(lambda v : v % get_submission_time_value('w1', int) == 0)
+        s = s.end_parallel()
+        s = s.parallel(width=sp_w2)
+        s = s.filter(is_dividable_by_modulo_submission_param)
+        s = s.end_parallel()
+
+        jc = JobConfig()
+        jc.submission_parameters['w1'] = 3
+        jc.submission_parameters['modulo'] = 5
+        jc.add(self.test_config)
+     
+        tester = Tester(topo)
+        tester.contents(s,[0,15,30,45,60]*3, ordered=False)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_no_type_with_ec(self):
+
+        topo = Topology()
+        topo.create_submission_parameter('p1')
+        
+        s = topo.source(['Hello {}!'])
+        s = s.map(greet)
+
+        jc = JobConfig()
+        jc.submission_parameters['p1'] = 'Rolef'
+        jc.add(self.test_config)
+     
+        tester = Tester(topo)
+        tester.contents(s,['Hello Rolef!'])
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_bool_default_with_ec(self):
+
+        topo = Topology()
+        topo.create_submission_parameter('pFalse', False, bool)
+        topo.create_submission_parameter('pTrue', False, bool)
+        
+        s = topo.source([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18])
+        # passes through all numbers that cannot be divided by 2, when pFalse is false
+        o = s.filter(DivideTester('pFalse', 2))
+        # passes through all numbers that can be divided by 3, when pTrue is true
+        s = o.filter(DivideTester('pTrue', 3))
+        jc = JobConfig()
+        #jc.submission_parameters['pFalse'] = False # leave the default
+        jc.submission_parameters['pTrue'] = True
+        jc.add(self.test_config)
+     
+        tester = Tester(topo)
+        tester.contents(s,[3, 9, 15]) # all odd multiples of 3
+        tester.test(self.test_ctxtype, self.test_config)
+
 
 class TestDistributedSubmissionParams(TestSubmissionParams):
     """ Test submission params (distributed).

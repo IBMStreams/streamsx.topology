@@ -101,7 +101,7 @@ being invoked in a Streams application.
 
 """
 
-__all__ = ['is_active', 'shutdown', 'domain_id', 'instance_id', 'job_id', 'pe_id', 'is_standalone', 'get_application_directory', 'get_application_configuration', 'channel', 'local_channel', 'max_channels', 'local_max_channels', 'MetricKind', 'CustomMetric']
+__all__ = ['is_active', 'shutdown', 'domain_id', 'instance_id', 'job_id', 'pe_id', 'is_standalone', 'get_application_directory', 'get_application_configuration', 'get_submission_time_value', 'channel', 'local_channel', 'max_channels', 'local_max_channels', 'MetricKind', 'CustomMetric']
 
 import enum
 import pickle
@@ -136,7 +136,7 @@ def _is_supported():
     return _State._state is not None and _State._state._supported
 
 def is_active():
-    """Tests is code is active within a IBM Streams execution context.
+    """Tests if code is active within a IBM Streams execution context.
  
     Returns a true value when called from within a
     IBM Streams distributed job or standalone execution.
@@ -166,6 +166,40 @@ _SHUTDOWN = threading.Event()
 
 def _prepare_shutdown():
     _SHUTDOWN.set()
+
+def get_submission_time_value(name, type_=None):
+    """Gets the value of a submission time parameter.
+    
+    .. note::
+        Submission parameters must be created with :py:meth:`streamsx.topology.topology.Topology.create_submission_parameter`
+        at topology declaration time before they can be accessed with this function.
+    
+    .. note::
+        Submission time parameters, which are defined within other toolkits that are used by this topology 
+        or created with :py:class:`streamsx.spl.op.Expression` in this topology are not accessible with this function.
+        
+    Arguments:
+        name(str): The name of the submission time parameter
+        type_: Type of parameter value. Supported values are ``str``, ``int``, ``float`` and ``bool``.
+            ``None`` assumes that the type of the parameter is ``str`` and needs no conversion. The type must be
+            the same as used in :py:meth:`streamsx.topology.topology.Topology.create_submission_parameter`
+            or as deduced from the parameters default value.
+    Returns:
+        The value of the submission time parameter. The return type is either ``str`` or the given ``type_``. 
+    Raises:
+        ValueError: The submission time parameter with the given name does not exist.
+
+    .. versionadded:: 1.15
+    """
+    _check()
+    if name not in _SUBMIT_PARAMS:
+        raise ValueError("Submission parameter {} not defined. Added to the topology with 'create_submission_parameter(name, type_)'?".format(name))
+    v = _SUBMIT_PARAMS[name]
+    if type_ is None:
+        return v
+    if type_ is bool:
+        return not v == 'false'
+    return type_(v)
 
 def shutdown():
     """Return the processing element (PE) shutdown event.

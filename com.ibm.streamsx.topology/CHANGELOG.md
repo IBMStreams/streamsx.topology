@@ -1,6 +1,9 @@
 # Changes
 ==========
 
+## main/latest
+* [#2488](https://github.com/IBMStreams/streamsx.topology/issues/2488) execution context: Make submission time parameters available without serializing the parameter callable
+
 ## v1.15.3
 
 * [#2490](https://github.com/IBMStreams/streamsx.topology/issues/2490) Resolve issue with streamsx-streamtool caused by changes in v1.15.1
