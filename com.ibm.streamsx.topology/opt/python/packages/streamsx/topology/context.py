@@ -1140,7 +1140,7 @@ class ContextTypes(object):
         topo = Topology()
         ...
         jc = JobConfig()
-        jc.raw_overlay = {'edgeConfig': {'imageName':'py-sample-app', 'imageTag':'v1.0', 'baseImage':'streams-base-edge-conda-el7:5.3.0.0'}}
+        jc.raw_overlay = {'edgeConfig': {'imageName':'py-sample-app', 'imageTag':'v1.0', 'baseImage':'streams-base-edge-python-el7:5.3.0.0'}}
         jc.add(cfg)
 
         submit(ContextTypes.EDGE, topo, cfg)
@@ -1153,7 +1153,6 @@ class ContextTypes(object):
         * **imageTag** - [str] name of the image tag
         * **baseImage** - [str] identify the name of the base image
         * **pipPackages** - [list] identify one or more Python install packages that are to be included in the image.
-        * **condaPackages** - [list] identify one or more anaconda packages that are to be included in the image.
         * **rpms** - [list] identify one or more linux RPMs that are to be included in the image
         * **locales** - [list] identify one or more locales that are to be included in the image. The first item in the list is the "default" locale. The locales are identified in the java format  <language>_<county>_<variant>. Example: "en_US"
 
