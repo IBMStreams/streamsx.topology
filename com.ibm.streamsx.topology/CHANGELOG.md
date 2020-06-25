@@ -1,6 +1,9 @@
 # Changes
 ==========
 
+## master latest
+* [#2495](https://github.com/IBMStreams/streamsx.topology/issues/2495) edgeConfig: `condaPackages` parameter is not supported anymore
+
 ## v1.15.4
 * [#2488](https://github.com/IBMStreams/streamsx.topology/issues/2488) execution context: Make submission time parameters available without serializing the parameter callable
 

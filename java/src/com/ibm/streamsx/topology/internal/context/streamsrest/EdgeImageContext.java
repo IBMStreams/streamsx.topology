@@ -52,7 +52,7 @@ public class EdgeImageContext extends BuildServiceContext {
     private String edgeConfigBaseImage = null;
     private JsonArray edgeConfigPipPackages = null;
     private JsonArray edgeConfigRpms = null;
-    private JsonArray edgeConfigCondaPackages = null;
+//    private JsonArray edgeConfigCondaPackages = null;
     private JsonArray edgeConfigLocales = null;
 
     public Instance instance() { return instance;}
@@ -80,7 +80,7 @@ public class EdgeImageContext extends BuildServiceContext {
                     edgeConfigBaseImage = (edgeConfig.has("baseImage")) ? edgeConfig.get("baseImage").getAsString() : null;
                     edgeConfigPipPackages = (edgeConfig.has("pipPackages")) ? GsonUtilities.array(edgeConfig, "pipPackages") : null;
                     edgeConfigRpms = (edgeConfig.has("rpms")) ? GsonUtilities.array(edgeConfig, "rpms") : null;
-                    edgeConfigCondaPackages = (edgeConfig.has("condaPackages")) ? GsonUtilities.array(edgeConfig, "condaPackages") : null;
+//                    edgeConfigCondaPackages = (edgeConfig.has("condaPackages")) ? GsonUtilities.array(edgeConfig, "condaPackages") : null;
                     edgeConfigLocales = (edgeConfig.has("locales")) ? GsonUtilities.array(edgeConfig, "locales") : null;
                 }
             }
@@ -202,9 +202,9 @@ public class EdgeImageContext extends BuildServiceContext {
         if (edgeConfigRpms != null) {
         	buildConfigOverrides.add("rpms", edgeConfigRpms);
         }
-        if (edgeConfigCondaPackages != null) {
-        	buildConfigOverrides.add("condaPackages", edgeConfigCondaPackages);
-        }
+//        if (edgeConfigCondaPackages != null) {
+//        	buildConfigOverrides.add("condaPackages", edgeConfigCondaPackages);
+//        }
         if (edgeConfigLocales != null) {
         	buildConfigOverrides.add("locales", edgeConfigLocales);
         }
