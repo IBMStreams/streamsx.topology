@@ -1,7 +1,7 @@
 # Changes
 ==========
 
-## master latest
+## main branch (latest)
 * [#2495](https://github.com/IBMStreams/streamsx.topology/issues/2495) edgeConfig: `condaPackages` parameter is not supported anymore
 
 ## v1.15.4
