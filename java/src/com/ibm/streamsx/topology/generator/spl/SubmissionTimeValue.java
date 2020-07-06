@@ -69,7 +69,7 @@ public class SubmissionTimeValue {
      * @param spName the submission parameter name
      * @return the composite parameter name
      */
-    private static String mkCompositeParamName(String spName) {
+    public static String mkCompositeParamName(String spName) {
         spName = spName.replace('.', '_');
         return "__spl_stv_" + SPLGenerator.getSPLCompatibleName(spName);
     }
