@@ -7,6 +7,7 @@ package com.ibm.streamsx.topology.builder;
 import java.util.concurrent.TimeUnit;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.function.Supplier;
 
 /**
  * Input ports don't have a name in SPL but the code generation
@@ -75,6 +76,11 @@ public class BInputPort extends BInput {
         if (partitioned) {
             winJson.addProperty("partitioned", partitioned);
         }
+        
+        //Supplier<Integer> spv;
+        //Supplier<Long> time = topology.createSubmissionParameter("time", Long.class);
+        //SubmissionParameter<?> spw = (SubmissionParameter<?>) spv;
+        //parallelOutput._json().add(PortProperties.WIDTH, SubmissionParameterFactory.asJSON(spw));
 
         _json().add("window", winJson);
 
