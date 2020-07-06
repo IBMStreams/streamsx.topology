@@ -133,7 +133,7 @@ class TestDistributedPackages(TestPackages):
     @unittest.skipIf('CP4D_URL' not in os.environ and 'STREAMS_REST_URL' not in os.environ, 'CP4D_URL/STREAMS_REST_URL not set')
     def test_add_pip_package_whl_from_url(self):
         topo = Topology()
-        topo.add_pip_package('https://github.com/IBMStreams/streamsx.topology/raw/master/test/python/topology/test_package_whl/whl/tstexamplepkg-1.0-py3-none-any.whl', name='tstexamplepkg')
+        topo.add_pip_package('https://github.com/IBMStreams/streamsx.topology/raw/develop/test/python/topology/test_package_whl/whl/tstexamplepkg-1.0-py3-none-any.whl', name='tstexamplepkg')
         s = topo.source([1])
         s = s.map(lambda x : __import__('tstexamplepkg').__name__)
         tester = Tester(topo)

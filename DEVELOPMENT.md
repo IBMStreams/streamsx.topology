@@ -9,7 +9,7 @@ Fork this repository and develop in feature branches in your fork. When ready, s
 
 **Please do not use of short-lived temporary development branches in the main IBMStreams/streamsx.topology repo**
 If a need does occur, please ensure the branch is deleted once merged.
-The main repo should only contain `master`, release branches (`vX_Y`)and shared development feature branches (`feature/xxx`).
+The main repo should only contain `develop`, release branches (`vX_Y`)and shared development feature branches (`feature/xxx`).
 
 ### Setup
 
@@ -177,7 +177,7 @@ Container types such as lists and dictionaries can use the following syntax:
 The `__init__` method should be documented on the `__init__` method itself (not in the class level docstring).  This results in better rendering for the builtin help() function. 
 
 ## Proposing changes
-Please submit changes through a pull request (PR), typically against `master` or a feature branch.
+Please submit changes through a pull request (PR), typically against `develop` or a feature branch.
 
 For a pull request:
 
@@ -193,7 +193,7 @@ For a pull request:
     * Help out reviewers with explanations, don't make them have to make assumuptions to review the code.
  * Describe what tests were run.
  
- It's recommended that you use branches for your development, modifying the target branch (e.g. `master` or the feature branch) directly (even locally in the clone) is not recommended, as multiple changes by other developers may be made to the official copy before you have a chance to merge.  
+ It's recommended that you use branches for your development, modifying the target branch (e.g. `develop` or the feature branch) directly (even locally in the clone) is not recommended, as multiple changes by other developers may be made to the official copy before you have a chance to merge.  
  
  ## Making a release
  
@@ -203,10 +203,10 @@ For a pull request:
     
     * Ensure clone is clean using `git status` or `git clean -xfd` from top level
     
-2. Switch to the correct branch for the release - `git checkout master` or `git checkout v1_13`
+2. Switch to the correct branch for the release - `git checkout develop` or `git checkout v1_13`
 
-    * Traditionally initial releases for an X.Y sequence are from master until master needs to have new development for X.Y+1
-    * At that point a branch is created vX_Y based off master (e.g. v1_14)
+    * Traditionally initial releases for an X.Y sequence are from develop until develop needs to have new development for X.Y+1
+    * At that point a branch is created vX_Y based off develop (e.g. v1_14)
     * Bug fix releases of older releases are from the vX_Y branch
     
 3. Change these two files to have the **equivalent** correct version:
@@ -225,7 +225,7 @@ For a pull request:
 
     * `git add com.ibm.streamsx.topology/info.xml com.ibm.streamsx.topology/opt/python/packages/streamsx/_streams/_version.py`
     * `git commit -m "1.14.8 release"`
-    * `git push origin master` using the release branch
+    * `git push origin develop` using the release branch
     
 5. Build using `ant release` at the top-level
 
@@ -243,7 +243,7 @@ For a pull request:
 8. Publish the release
 
 9. Make a release of the Python `streamsx` package following:
-    * https://github.com/IBMStreams/pypi.streamsx/blob/master/build/README.md
+    * https://github.com/IBMStreams/pypi.streamsx/blob/develop/build/README.md
     * This uses the release artifact uploaded to the release in step 7.
     * Note: Select the correct branch in `pypi.streamsx`
     
