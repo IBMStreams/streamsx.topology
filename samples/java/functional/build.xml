@@ -61,6 +61,13 @@
   <target name="run.helloworld">
      <java classname="simple.HelloWorld" classpathref="run.classpath" fork="yes"/>
   </target>
+
+  <target name="run.temperatureSensor">
+     <java classname="simple.TemperatureSensor" classpathref="run.classpath" fork="yes">
+       <arg value="STANDALONE"/>
+     </java>
+  </target>
+
   <target name="run.echo">
      <java classname="simple.Echo" classpathref="run.classpath" fork="yes">
        <arg value="this is"/>
