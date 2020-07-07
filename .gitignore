@@ -403,6 +403,7 @@ com.ibm.streamsx.topology/doc/samples/javadoc/simple/FilterEcho.html
 com.ibm.streamsx.topology/doc/samples/javadoc/simple/Grep.html
 com.ibm.streamsx.topology/doc/samples/javadoc/simple/HelloWorld.html
 com.ibm.streamsx.topology/doc/samples/javadoc/simple/RegexGrep.html
+com.ibm.streamsx.topology/doc/samples/javadoc/simple/TemperatureSensor.html
 com.ibm.streamsx.topology/doc/samples/javadoc/simple/Util.html
 com.ibm.streamsx.topology/doc/samples/javadoc/simple/package-frame.html
 com.ibm.streamsx.topology/doc/samples/javadoc/simple/package-summary.html
@@ -420,6 +421,7 @@ com.ibm.streamsx.topology/doc/samples/javadoc/src-html/simple/FilterEcho.html
 com.ibm.streamsx.topology/doc/samples/javadoc/src-html/simple/Grep.html
 com.ibm.streamsx.topology/doc/samples/javadoc/src-html/simple/HelloWorld.html
 com.ibm.streamsx.topology/doc/samples/javadoc/src-html/simple/RegexGrep.html
+com.ibm.streamsx.topology/doc/samples/javadoc/src-html/simple/TemperatureSensor.html
 com.ibm.streamsx.topology/doc/samples/javadoc/src-html/simple/Util.html
 com.ibm.streamsx.topology/doc/samples/javadoc/src-html/state/FindOutliers.html
 com.ibm.streamsx.topology/doc/samples/javadoc/src-html/topic/PublishBeacon.html
@@ -574,6 +576,7 @@ samples/java/functional/javadoc/simple/FilterEcho.html
 samples/java/functional/javadoc/simple/Grep.html
 samples/java/functional/javadoc/simple/HelloWorld.html
 samples/java/functional/javadoc/simple/RegexGrep.html
+samples/java/functional/javadoc/simple/TemperatureSensor.html
 samples/java/functional/javadoc/simple/Util.html
 samples/java/functional/javadoc/simple/package-frame.html
 samples/java/functional/javadoc/simple/package-summary.html
@@ -591,6 +594,7 @@ samples/java/functional/javadoc/src-html/simple/FilterEcho.html
 samples/java/functional/javadoc/src-html/simple/Grep.html
 samples/java/functional/javadoc/src-html/simple/HelloWorld.html
 samples/java/functional/javadoc/src-html/simple/RegexGrep.html
+samples/java/functional/javadoc/src-html/simple/TemperatureSensor.html
 samples/java/functional/javadoc/src-html/simple/Util.html
 samples/java/functional/javadoc/src-html/state/FindOutliers.html
 samples/java/functional/javadoc/src-html/topic/PublishBeacon.html
