@@ -71,7 +71,43 @@ public class WindowTest extends TestTopology {
         assertNotNull(window);
         assertWindow(f, window);
     }
+    
+    @Test
+    public void testSubmissionParamCount() throws Exception {
+        final Topology f = newTopology("CountWindowSubmissionParam");
+        TStream<String> source = f.strings("a", "b", "c");
+        Supplier<Integer> count = f.createSubmissionParameter("count", 10);
+        TWindow<String,?> window = source.last(count);
+        assertNotNull(window);
+        assertWindow(f, window);
+    }
 
+    @Test(expected=IllegalArgumentException.class)
+    public void testZeroCountWindowDefaultParam() throws Exception {
+        final Topology f = newTopology("testZeroCountWindowDefaultParam");
+        TStream<String> source = f.strings("a", "b", "c");
+        Supplier<Integer> count = f.createSubmissionParameter("count", 0);
+        source.last(count);
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void testZeroTimeWindowDefaultParam() throws Exception {
+        final Topology f = newTopology("testZeroTimeWindowDefaultParam");
+        TStream<String> source = f.strings("a", "b", "c");
+        Supplier<Integer> time = f.createSubmissionParameter("time", 0);
+        source.lastSeconds(time);
+    } 
+
+    @Test
+    public void testSubmissionParamTime() throws Exception {
+        final Topology f = newTopology("TimeWindowSubmissionParam");
+        TStream<String> source = f.strings("a", "b", "c");
+        Supplier<Integer> time = f.createSubmissionParameter("time", 10);
+        TWindow<String,?> window = source.lastSeconds(time);
+        assertNotNull(window);
+        assertWindow(f, window);
+    }    
+    
     @Test
     public void testBasicTime() throws Exception {
         final Topology f = newTopology("TimeWindow");
@@ -105,6 +141,18 @@ public class WindowTest extends TestTopology {
         
         completeAndValidate(aggregate, 10, "1", "3", "6", "9", "12", "15", "18");
     }
+    
+    @Test
+    public void testCountAggregateStv() throws Exception {
+    	assumeTrue(!isEmbedded());
+        final Topology f = newTopology("CountAggregateStv");
+        TStream<Number> source = f.numbers(1, 2, 3, 4, 5, 6, 7);
+        Supplier<Integer> count = f.createSubmissionParameter("count", 3);
+        TWindow<Number,?> window = source.last(count);
+        TStream<Integer> aggregate = window.aggregate(new SumInt());
+        
+        completeAndValidate(aggregate, 10, "1", "3", "6", "9", "12", "15", "18");
+    }    
 
     @Test
     public void testKeyedAggregate() throws Exception {
@@ -289,15 +337,38 @@ public class WindowTest extends TestTopology {
         
     }
     
-    
-    
+    /**
+     * Test a periodic aggregation with submission parameter.
+     */
+    @Test
+    public void testPeriodicAggregateLastSecondsStv() throws Exception {
+    	assumeTrue(!isEmbedded());
+        final Topology t = newTopology();
+        TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS);
+        
+        Supplier<Integer> time = t.createSubmissionParameter("time", 3);        
+        TStream<JSONObject> aggregate = source.lastSeconds(time).aggregate(
+                new AggregateStrings(), 1, TimeUnit.SECONDS);
+        TStream<String> strings = JSONStreams.serialize(aggregate);
+        
+        Tester tester = t.getTester();
+        
+        Condition<String> checker = tester.stringTupleTester(strings, new PeriodicAggregateTester());
+        
+        // 10 tuples per second, aggregate every second, so 15 seconds is around 15 tuples.
+        Condition<Long> ending = tester.atLeastTupleCount(strings, 15);
+        complete(tester, ending, 30, TimeUnit.SECONDS);
+        
+        assertTrue(ending.valid()); 
+        assertTrue(checker.valid()); 
+    }
     
     /**
      * Test a periodic aggregation.
      */
     @Test
     public void testPeriodicAggregateLastSeconds() throws Exception {
-        
+    	assumeTrue(!isEmbedded());
         final Topology t = newTopology();
         TStream<String> source = t.periodicSource(new PeriodicStrings(), 100, TimeUnit.MILLISECONDS);
         
