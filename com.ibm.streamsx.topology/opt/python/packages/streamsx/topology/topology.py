@@ -1763,7 +1763,7 @@ class Stream(_placement._Placement, object):
         by :py:meth:`set_parallel`.
         
         Args:
-            width (int): Degree of parallelism.
+            width(int|submission parameter created by :py:meth:`Topology.create_submission_parameter`): Degree of parallelism.
             routing(Routing): Denotes what type of tuple routing to use.
             func: Optional function called when :py:const:`Routing.HASH_PARTITIONED` routing is specified.
                 The function provides an integer value to be used as the hash that determines
@@ -1925,7 +1925,7 @@ class Stream(_placement._Placement, object):
         :py:meth:`parallel`.
 
         Args:
-            width: The degree of parallelism for the parallel region.
+            width(int|submission parameter created by :py:meth:`Topology.create_submission_parameter`): The degree of parallelism for the parallel region.
             name(str): Name of the parallel region. Defaults to the name of this stream.
 
         Returns:
@@ -1975,14 +1975,15 @@ class Stream(_placement._Placement, object):
         then the window contains any tuples that arrived in the last
         five minutes.
 
-        If `size` is an `submission parameter` then it is the count of tuples in the window.
+        If `size` is an `submission parameter` created by :py:meth:`Topology.create_submission_parameter` then it is the count of tuples in the window.
         For specifying the duration of the window with a submission parameter use :py:meth:`~Stream.lastSeconds`.
  
         Args:
-            size: The size of the window, either an `int` to define the
+            size(int|datetime.timedelta|submission parameter created by :py:meth:`Topology.create_submission_parameter`): The size of the window, either an `int` to define the
                 number of tuples or `datetime.timedelta` to define the
                 duration of the window or
-                submission parameter to define the number of tuples.
+                submission parameter created by :py:meth:`Topology.create_submission_parameter`
+                to define the number of tuples.
 
         Examples::
 
@@ -2017,12 +2018,13 @@ class Stream(_placement._Placement, object):
 
     def lastSeconds(self, size):
         """ Declares a slding window containing most recent tuples
-        on this stream using a submission parameter.
+        on this stream using a submission parameter created by
+        :py:meth:`Topology.create_submission_parameter`.
 
         The number of tuples maintained in the window is defined by `size` in seconds.
  
         Args:
-            size(streamsx.topology.runtime._SubmissionParam): The size of the window in seconds.
+            size(int|submission parameter created by :py:meth:`Topology.create_submission_parameter`): The size of the window in seconds.
 
         Examples::
 
