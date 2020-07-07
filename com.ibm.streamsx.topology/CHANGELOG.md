@@ -1,7 +1,8 @@
 # Changes
 ==========
 
-## main branch (latest)
+## develop branch (latest)
+* [#2494](https://github.com/IBMStreams/streamsx.topology/issues/2494) JAVA: Support window creation using submission parameter 
 * [#2495](https://github.com/IBMStreams/streamsx.topology/issues/2495) edgeConfig: `condaPackages` parameter is not supported anymore
 
 ## v1.15.4
