@@ -18,7 +18,10 @@ import com.ibm.streamsx.topology.builder.BInputPort;
 import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
+import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.generator.port.PortProperties;
 import com.ibm.streamsx.topology.internal.functional.FunctionalOpProperties;
+import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.logic.LogicUtils;
 import com.ibm.streamsx.topology.internal.logic.ObjectUtils;
 import com.ibm.streamsx.topology.internal.messages.Messages;
@@ -31,34 +34,56 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
     protected final String policy;
     protected final long config;
     protected final TimeUnit timeUnit;
+    protected final Supplier<Integer> supplierConfig;
         
     private final Function<? super T,? extends K> keyGetter;
     
-    private WindowDefinition(TStream<T> stream, String policy, long config, TimeUnit timeUnit, Function<? super T,? extends K> keyGetter) {
+    private WindowDefinition(TStream<T> stream, String policy, long config, TimeUnit timeUnit, Function<? super T,? extends K> keyGetter, Supplier<Integer> supplierConfig) {
         super(stream);
         this.stream = stream;
         this.policy = policy;
         this.config = config;
         this.keyGetter = keyGetter;
         this.timeUnit = timeUnit;
+        this.supplierConfig = supplierConfig;
         
         assert (timeUnit == null && !policy.equals(BInputPort.Window.TIME_POLICY)) ||
                (timeUnit != null && policy.equals(BInputPort.Window.TIME_POLICY));
+        
+        if (this.supplierConfig != null) {
+            Integer configVal;
+            if (this.supplierConfig.get() != null)
+            	configVal = this.supplierConfig.get();
+            else if (this.supplierConfig instanceof SubmissionParameter<?>)
+            	configVal = ((SubmissionParameter<Integer>)this.supplierConfig).getDefaultValue();
+            else
+                throw new IllegalArgumentException(Messages.getString("CORE_ILLEGAL_WINDOW_VALUE"));
+            if (configVal != null && configVal <= 0)
+                throw new IllegalArgumentException(Messages.getString("CORE_ILLEGAL_WINDOW_VALUE"));
+        }
     }
 
     public WindowDefinition(TStream<T> stream, int count) {
-        this(stream, BInputPort.Window.COUNT_POLICY, count, null, null);
+        this(stream, BInputPort.Window.COUNT_POLICY, count, null, null, null);
     }
 
     public WindowDefinition(TStream<T> stream, long time, TimeUnit unit) {
-        this(stream, BInputPort.Window.TIME_POLICY, time, unit, null);
+        this(stream, BInputPort.Window.TIME_POLICY, time, unit, null, null);
+    }
+    
+    public WindowDefinition(TStream<T> stream, Supplier<Integer> count) {
+        this(stream, BInputPort.Window.COUNT_POLICY, 0, null, null, count);
+    }
+
+    public WindowDefinition(TStream<T> stream, Supplier<Integer> time, TimeUnit unit) {
+        this(stream, BInputPort.Window.TIME_POLICY, 0, unit, null, time);
     }
 
     public WindowDefinition(TStream<T> stream, TWindow<?,?> configWindow) {
         this(stream, ((WindowDefinition<?,?>) configWindow).policy,
                 ((WindowDefinition<?,?>) configWindow).config,
                 ((WindowDefinition<?,?>) configWindow).timeUnit,
-                null);
+                null, null);
     }
     
     private final void setPartitioned(final java.lang.reflect.Type type) {
@@ -146,9 +171,8 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
             String triggerPolicy, Object triggerConfig, TimeUnit triggerTimeUnit) {
         BInputPort bi = stream.connectTo(aggOp, true, null);
         
-        
         return bi.window(BInputPort.Window.SLIDING, policy, config, timeUnit,
-                triggerPolicy, triggerConfig, triggerTimeUnit, isKeyed());
+                triggerPolicy, triggerConfig, triggerTimeUnit, isKeyed(), supplierConfig);
     }
     
     public <J, U> TStream<J> joinInternal(TStream<U> xstream,
@@ -182,7 +206,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
     public <U> TWindow<T,U> key(Function<? super T, ? extends U> keyGetter) {
         if (keyGetter == null)
             throw new NullPointerException();
-        return new WindowDefinition<T,U>(stream, policy, config, timeUnit, keyGetter);
+        return new WindowDefinition<T,U>(stream, policy, config, timeUnit, keyGetter, null);
     }
     @Override
     public TWindow<T, T> key() {

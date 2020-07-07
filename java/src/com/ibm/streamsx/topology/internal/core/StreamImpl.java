@@ -338,6 +338,16 @@ public class StreamImpl<T> extends TupleContainer<T> implements TStream<T> {
     }
 
     @Override
+    public TWindow<T,Object> lastSeconds(Supplier<Integer> time) {
+        return new WindowDefinition<T,Object>(this, time, java.util.concurrent.TimeUnit.SECONDS);
+    }
+
+    @Override
+    public TWindow<T,Object> last(Supplier<Integer> count) {
+    	return new WindowDefinition<T,Object>(this, count);
+    }
+    
+    @Override
     public TWindow<T,Object> last() {
         return last(1);
     }

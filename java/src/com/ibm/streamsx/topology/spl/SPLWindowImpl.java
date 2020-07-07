@@ -11,6 +11,7 @@ import com.ibm.streams.operator.window.StreamWindow;
 import com.ibm.streams.operator.window.StreamWindow.Policy;
 import com.ibm.streamsx.topology.TWindow;
 import com.ibm.streamsx.topology.builder.BInputPort;
+import com.ibm.streamsx.topology.function.Supplier;
 import com.ibm.streamsx.topology.internal.core.WindowDefinition;
 
 class SPLWindowImpl extends WindowDefinition<Tuple,Object> implements SPLWindow {
@@ -43,6 +44,6 @@ class SPLWindowImpl extends WindowDefinition<Tuple,Object> implements SPLWindow 
      */
     void windowInput(BInputPort inputPort) {
         inputPort.window(StreamWindow.Type.SLIDING.name(), policy, config, this.timeUnit,
-                triggerPolicy.name(), triggerConfig, triggerTimeUnit, false);
+                triggerPolicy.name(), triggerConfig, triggerTimeUnit, false, supplierConfig);
     }
 }

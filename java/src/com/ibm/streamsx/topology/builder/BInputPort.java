@@ -7,6 +7,10 @@ package com.ibm.streamsx.topology.builder;
 import java.util.concurrent.TimeUnit;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.generator.port.PortProperties;
+import com.ibm.streamsx.topology.internal.core.SubmissionParameterFactory;
+import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 
 /**
  * Input ports don't have a name in SPL but the code generation
@@ -39,7 +43,7 @@ public class BInputPort extends BInput {
     public BInputPort window(String type,
             String evictPolicy, Object evictConfig, TimeUnit evictTimeUnit,
             String triggerPolicy, Object triggerConfig, TimeUnit triggerTimeUnit,
-            boolean partitioned) {
+            boolean partitioned, Supplier<Integer> supplierConfig) {
 
         final JsonObject winJson = new JsonObject();
         winJson.addProperty("type", type);
@@ -53,7 +57,18 @@ public class BInputPort extends BInput {
             throw new UnsupportedOperationException(evictPolicy);
         }
         winJson.addProperty("evictPolicy", evictPolicy);
-        winJson.addProperty("evictConfig", (Number) evictConfig);
+        if (null != supplierConfig) {
+            if (supplierConfig.get() != null) {
+                winJson.addProperty("evictConfig", (Number) supplierConfig.get());
+            }
+            else {
+                SubmissionParameter<?> spw = (SubmissionParameter<?>) supplierConfig;
+                winJson.add("evictConfig", SubmissionParameterFactory.asJSON(spw));
+            }
+        }
+        else {
+            winJson.addProperty("evictConfig", (Number) evictConfig);
+        }
         if (evictPolicy.equals(Window.TIME_POLICY))
             winJson.addProperty("evictTimeUnit", evictTimeUnit.name());
 
@@ -75,7 +90,7 @@ public class BInputPort extends BInput {
         if (partitioned) {
             winJson.addProperty("partitioned", partitioned);
         }
-
+        
         _json().add("window", winJson);
 
         return this;

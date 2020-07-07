@@ -527,7 +527,12 @@ class OperatorGenerator {
         switch (policyName) {
         case POLICY_COUNT:
             sb.append("count(");
-            sb.append(config.getAsInt());
+            if (config.isJsonPrimitive()) {
+                sb.append(config.getAsInt());
+            } else {
+            	String name = jstring(jobject(config.getAsJsonObject(), "value"), "name");
+            	sb.append("$"+SubmissionTimeValue.mkCompositeParamName(name));
+            }
             sb.append(")");
             break;
         case POLICY_DELTA:
@@ -537,33 +542,38 @@ class OperatorGenerator {
         case POLICY_PUNCTUATION:
             break;
         case POLICY_TIME: {
-            TimeUnit unit = TimeUnit.valueOf(timeUnit.toString());
-            long time = config.getAsLong();
-            double secs;
-            switch (unit) {
-            case DAYS:
-            case HOURS:
-            case MINUTES:
-            case SECONDS:
-                secs = unit.toSeconds(time);
-                break;
-            case MILLISECONDS:
-                secs = ((double) time) / 1000.0;
-                break;
-
-            case MICROSECONDS:
-                secs = ((double) time) / 1000_000.0;
-                break;
-
-            case NANOSECONDS:
-                secs = ((double) time) / 1000_000_000.0;
-                break;
-
-            default:
-                throw new IllegalStateException();
+        	sb.append("time(");
+            if (config.isJsonPrimitive()) {
+	            TimeUnit unit = TimeUnit.valueOf(timeUnit.toString());
+	            long time = config.getAsLong();
+	            double secs;
+	            switch (unit) {
+	            case DAYS:
+	            case HOURS:
+	            case MINUTES:
+	            case SECONDS:
+	                secs = unit.toSeconds(time);
+	                break;
+	            case MILLISECONDS:
+	                secs = ((double) time) / 1000.0;
+	                break;
+	
+	            case MICROSECONDS:
+	                secs = ((double) time) / 1000_000.0;
+	                break;
+	
+	            case NANOSECONDS:
+	                secs = ((double) time) / 1000_000_000.0;
+	                break;
+	
+	            default:
+	                throw new IllegalStateException();
+	            }
+	            sb.append(secs);
+            } else {
+            	String name = jstring(jobject(config.getAsJsonObject(), "value"), "name");
+            	sb.append("$"+SubmissionTimeValue.mkCompositeParamName(name));
             }
-            sb.append("time(");
-            sb.append(secs);
             sb.append(")");
             break;
         }

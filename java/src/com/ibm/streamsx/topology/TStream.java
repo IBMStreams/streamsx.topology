@@ -601,6 +601,30 @@ public interface TStream<T> extends TopologyElement, Placeable<TStream<T>>  {
      * @return Window on this stream representing the last {@code time} seconds.
      */
     TWindow<T,Object> last(long time, TimeUnit unit);
+    
+    /**
+     * Declare a {@link TWindow} that continually represents the last {@code time} seconds
+     * of tuples (in the given time {@code unit}) on this stream.
+     * Same as {@link #last(long,TimeUnit)} except the {@code time} is
+     * specified with a {@code Supplier<Integer>} such as one created
+     * by {@link Topology#createSubmissionParameter(String, Class)}.
+     * 
+     * @param time Time size of the window in seconds
+     * @return Window on this stream representing the last {@code time} seconds.
+     */
+    TWindow<T,Object> lastSeconds(Supplier<Integer> time);
+
+    /**
+     * Declare a {@link TWindow} that continually represents the last {@code count} tuples
+     * seen on this stream.
+     * Same as {@link #last(int)} except the {@code count} is
+     * specified with a {@code Supplier<Integer>} such as one created
+     * by {@link Topology#createSubmissionParameter(String, Class)}.
+     * 
+     * @param count Tuple size of the window
+     * @return Window on this stream representing the last {@code count} tuples.
+     */
+    TWindow<T,Object> last(Supplier<Integer> count);
 
     /**
      * Declare a {@link TWindow} that continually represents the last {@code count} tuples
