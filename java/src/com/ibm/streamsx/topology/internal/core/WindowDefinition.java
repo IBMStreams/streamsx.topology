@@ -19,7 +19,9 @@ import com.ibm.streamsx.topology.builder.BOperatorInvocation;
 import com.ibm.streamsx.topology.function.BiFunction;
 import com.ibm.streamsx.topology.function.Function;
 import com.ibm.streamsx.topology.function.Supplier;
+import com.ibm.streamsx.topology.generator.port.PortProperties;
 import com.ibm.streamsx.topology.internal.functional.FunctionalOpProperties;
+import com.ibm.streamsx.topology.internal.functional.SubmissionParameter;
 import com.ibm.streamsx.topology.internal.logic.LogicUtils;
 import com.ibm.streamsx.topology.internal.logic.ObjectUtils;
 import com.ibm.streamsx.topology.internal.messages.Messages;
@@ -47,6 +49,18 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
         
         assert (timeUnit == null && !policy.equals(BInputPort.Window.TIME_POLICY)) ||
                (timeUnit != null && policy.equals(BInputPort.Window.TIME_POLICY));
+        
+        if (this.supplierConfig != null) {
+            Integer configVal;
+            if (this.supplierConfig.get() != null)
+            	configVal = this.supplierConfig.get();
+            else if (this.supplierConfig instanceof SubmissionParameter<?>)
+            	configVal = ((SubmissionParameter<Integer>)this.supplierConfig).getDefaultValue();
+            else
+                throw new IllegalArgumentException(Messages.getString("CORE_ILLEGAL_WINDOW_VALUE"));
+            if (configVal != null && configVal <= 0)
+                throw new IllegalArgumentException(Messages.getString("CORE_ILLEGAL_WINDOW_VALUE"));
+        }
     }
 
     public WindowDefinition(TStream<T> stream, int count) {
