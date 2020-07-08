@@ -929,6 +929,18 @@ class Topology(object):
             s = ...
             s = s.filter(lambda v : v > threshold())
 
+        Submission parameters may be used to specify the degree of parallelism. e.g.::
+
+            stv_channels = topo.create_submission_parameter('num_channels', type_=int)
+        
+            s = topo.source(range(67)).set_parallel(stv_channels)
+            s = s.filter(lambda v : v % stv_channels() == 0)
+            s = s.end_parallel()
+ 
+            jc = JobConfig()
+            jc.submission_parameters['num_channels'] = 3
+            jc.add(cfg)
+
         .. note::
             The parameter (value returned from this method) is only
             supported within a lambda expression or a callable
