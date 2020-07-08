@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.topology &mdash; streamsx 1.15.4 documentation</title>
+  <title>streamsx.topology.topology &mdash; streamsx 1.15.5 documentation</title>
   
 
   
@@ -795,6 +795,18 @@ within the executing topology returns the actual submission time value
 <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">v</span> <span class="p">:</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">())</span>
 </pre></div>
 </div>
+<p>Submission parameters may be used to specify the degree of parallelism. e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stv_channels</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">create_submission_parameter</span><span class="p">(</span><span class="s1">&#39;num_channels&#39;</span><span class="p">,</span> <span class="n">type_</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+<span class="n">s</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">67</span><span class="p">))</span><span class="o">.</span><span class="n">set_parallel</span><span class="p">(</span><span class="n">stv_channels</span><span class="p">)</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">v</span> <span class="p">:</span> <span class="n">v</span> <span class="o">%</span> <span class="n">stv_channels</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">end_parallel</span><span class="p">()</span>
+
+<span class="n">jc</span> <span class="o">=</span> <span class="n">JobConfig</span><span class="p">()</span>
+<span class="n">jc</span><span class="o">.</span><span class="n">submission_parameters</span><span class="p">[</span><span class="s1">&#39;num_channels&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">jc</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The parameter (value returned from this method) is only
@@ -1527,11 +1539,15 @@ last (most recent) ten tuples.</p>
 of the window. With a <cite>timedelta</cite> representing five minutes
 then the window contains any tuples that arrived in the last
 five minutes.</p>
+<p>If <cite>size</cite> is an <cite>submission parameter</cite> created by <a class="reference internal" href="#streamsx.topology.topology.Topology.create_submission_parameter" title="streamsx.topology.topology.Topology.create_submission_parameter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Topology.create_submission_parameter()</span></code></a> then it is the count of tuples in the window.
+For specifying the duration of the window with a submission parameter use <a class="reference internal" href="#streamsx.topology.topology.Stream.lastSeconds" title="streamsx.topology.topology.Stream.lastSeconds"><code class="xref py py-meth docutils literal notranslate"><span class="pre">lastSeconds()</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>size</strong> – The size of the window, either an <cite>int</cite> to define the
+<dd class="field-odd"><p><strong>size</strong> (int|datetime.timedelta|submission parameter created by <a class="reference internal" href="#streamsx.topology.topology.Topology.create_submission_parameter" title="streamsx.topology.topology.Topology.create_submission_parameter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Topology.create_submission_parameter()</span></code></a>) – The size of the window, either an <cite>int</cite> to define the
 number of tuples or <cite>datetime.timedelta</cite> to define the
-duration of the window.</p>
+duration of the window or
+submission parameter created by <a class="reference internal" href="#streamsx.topology.topology.Topology.create_submission_parameter" title="streamsx.topology.topology.Topology.create_submission_parameter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Topology.create_submission_parameter()</span></code></a>
+to define the number of tuples.</p>
 </dd>
 </dl>
 <p>Examples:</p>
@@ -1539,9 +1555,47 @@ duration of the window.</p>
 <span class="n">w</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">last</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 </pre></div>
 </div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a window against stream s of the last n tuples specified by submission parameter</span>
+<span class="n">count</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">create_submission_parameter</span><span class="p">(</span><span class="s1">&#39;count&#39;</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="n">w</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">last</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">count</span><span class="p">)</span>
+</pre></div>
+</div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a window against stream s of tuples</span>
 <span class="c1"># arrived on the stream in the last five minutes</span>
 <span class="n">w</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">last</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Window of the last (most recent) tuples on this stream.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#streamsx.topology.topology.Window" title="streamsx.topology.topology.Window">Window</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.lastSeconds">
+<code class="sig-name descname">lastSeconds</code><span class="sig-paren">(</span><em class="sig-param">size</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.lastSeconds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Declares a slding window containing most recent tuples
+on this stream using a submission parameter created by
+<a class="reference internal" href="#streamsx.topology.topology.Topology.create_submission_parameter" title="streamsx.topology.topology.Topology.create_submission_parameter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Topology.create_submission_parameter()</span></code></a>.</p>
+<p>The number of tuples maintained in the window is defined by <cite>size</cite> in seconds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>size</strong> (int|submission parameter created by <a class="reference internal" href="#streamsx.topology.topology.Topology.create_submission_parameter" title="streamsx.topology.topology.Topology.create_submission_parameter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Topology.create_submission_parameter()</span></code></a>) – The size of the window in seconds.</p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a window against stream s of the last with submission parameter `time` and the default value 10 seconds</span>
+<span class="n">time</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">create_submission_parameter</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">w</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">lastSeconds</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a window with submission parameter `secs` and no default value</span>
+<span class="n">time</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">create_submission_parameter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;secs&#39;</span><span class="p">,</span> <span class="n">type_</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">w</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">lastSeconds</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -1756,7 +1810,7 @@ by <a class="reference internal" href="#streamsx.topology.topology.Stream.set_pa
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>width</strong> (<em>int</em>) – Degree of parallelism.</p></li>
+<li><p><strong>width</strong> (int|submission parameter created by <a class="reference internal" href="#streamsx.topology.topology.Topology.create_submission_parameter" title="streamsx.topology.topology.Topology.create_submission_parameter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Topology.create_submission_parameter()</span></code></a>) – Degree of parallelism.</p></li>
 <li><p><strong>routing</strong> (<a class="reference internal" href="#streamsx.topology.topology.Routing" title="streamsx.topology.topology.Routing"><em>Routing</em></a>) – Denotes what type of tuple routing to use.</p></li>
 <li><p><strong>func</strong> – Optional function called when <a class="reference internal" href="#streamsx.topology.topology.Routing.HASH_PARTITIONED" title="streamsx.topology.topology.Routing.HASH_PARTITIONED"><code class="xref py py-const docutils literal notranslate"><span class="pre">Routing.HASH_PARTITIONED</span></code></a> routing is specified.
 The function provides an integer value to be used as the hash that determines
@@ -2014,7 +2068,7 @@ dynamically changed at runtime.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>width</strong> – The degree of parallelism for the parallel region.</p></li>
+<li><p><strong>width</strong> (int|submission parameter created by <a class="reference internal" href="#streamsx.topology.topology.Topology.create_submission_parameter" title="streamsx.topology.topology.Topology.create_submission_parameter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Topology.create_submission_parameter()</span></code></a>) – The degree of parallelism for the parallel region.</p></li>
 <li><p><strong>name</strong> (<em>str</em>) – Name of the parallel region. Defaults to the name of this stream.</p></li>
 </ul>
 </dd>
