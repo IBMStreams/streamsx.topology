@@ -1,7 +1,7 @@
 # Changes
 ==========
 
-## develop branch (latest)
+## v1.15.5
 * [#2499](https://github.com/IBMStreams/streamsx.topology/issues/2499) Pythondoc: Updated `Stream.parallel`,`Stream.set_parallel` args description regarding submission parameter 
 * [#2498](https://github.com/IBMStreams/streamsx.topology/issues/2498) Python: Support SPL window creation using submission parameter 
 * [#2494](https://github.com/IBMStreams/streamsx.topology/issues/2494) JAVA: Support window creation using submission parameter 
