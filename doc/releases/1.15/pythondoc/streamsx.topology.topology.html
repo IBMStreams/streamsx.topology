@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.topology &mdash; streamsx 1.15.5 documentation</title>
+  <title>streamsx.topology.topology &mdash; streamsx 1.15.6 documentation</title>
   
 
   
@@ -1245,6 +1245,7 @@ against any tuples on the stream in the first five minutes,
 then the next five minutes and then minutes ten to fifteen.
 A batch can contain no tuples if no tuples arrived on the stream
 in the defined duration.</p>
+<p>For specifying the duration of the window with a submission parameter use <a class="reference internal" href="#streamsx.topology.topology.Stream.batchSeconds" title="streamsx.topology.topology.Stream.batchSeconds"><code class="xref py py-meth docutils literal notranslate"><span class="pre">batchSeconds()</span></code></a>.</p>
 <p>Each tuple on the stream appears only in a single batch.</p>
 <p>The number of tuples seen by processing against the
 returned window may be less than <cite>size</cite> (count or time based)
@@ -1260,15 +1261,22 @@ when:</p>
 <span class="n">w</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 </pre></div>
 </div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a window size specified by submission parameter</span>
+<span class="n">count</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">create_submission_parameter</span><span class="p">(</span><span class="s1">&#39;count&#39;</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="n">w</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">count</span><span class="p">)</span>
+</pre></div>
+</div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create batches against stream s every five minutes</span>
 <span class="n">w</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">5</span><span class="p">))</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>size</strong> – The size of each batch, either an <cite>int</cite> to define the
+<dd class="field-odd"><p><strong>size</strong> (int|datetime.timedelta|submission parameter created by <a class="reference internal" href="#streamsx.topology.topology.Topology.create_submission_parameter" title="streamsx.topology.topology.Topology.create_submission_parameter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Topology.create_submission_parameter()</span></code></a>) – The size of each batch, either an <cite>int</cite> to define the
 number of tuples or <cite>datetime.timedelta</cite> to define the
-duration of the batch.</p>
+duration of the batch or
+submission parameter created by <a class="reference internal" href="#streamsx.topology.topology.Topology.create_submission_parameter" title="streamsx.topology.topology.Topology.create_submission_parameter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Topology.create_submission_parameter()</span></code></a>
+to define the number of tuples.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Window allowing batch processing on this stream.</p>
@@ -1280,6 +1288,39 @@ duration of the batch.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">New in version 1.11.</span></p>
 </div>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.topology.Stream.batchSeconds">
+<code class="sig-name descname">batchSeconds</code><span class="sig-paren">(</span><em class="sig-param">size</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.topology.Stream.batchSeconds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Declares a tumbling window to support batch processing
+against this stream using a submission parameter created by
+<a class="reference internal" href="#streamsx.topology.topology.Topology.create_submission_parameter" title="streamsx.topology.topology.Topology.create_submission_parameter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Topology.create_submission_parameter()</span></code></a>.</p>
+<p>The number of tuples in the batch is defined by <cite>size</cite> in seconds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>size</strong> (submission parameter created by <a class="reference internal" href="#streamsx.topology.topology.Topology.create_submission_parameter" title="streamsx.topology.topology.Topology.create_submission_parameter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Topology.create_submission_parameter()</span></code></a>) – The size of the window in seconds.</p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a tumbling window with submission parameter `time` and the default value 10 seconds</span>
+<span class="n">time</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">create_submission_parameter</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">w</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">batchSeconds</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a window with submission parameter `secs` and no default value</span>
+<span class="n">time</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">create_submission_parameter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;secs&#39;</span><span class="p">,</span> <span class="n">type_</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">w</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">batchSeconds</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Window allowing batch processing on this stream.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#streamsx.topology.topology.Window" title="streamsx.topology.topology.Window">Window</a></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -1584,7 +1625,7 @@ on this stream using a submission parameter created by
 <p>The number of tuples maintained in the window is defined by <cite>size</cite> in seconds.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>size</strong> (int|submission parameter created by <a class="reference internal" href="#streamsx.topology.topology.Topology.create_submission_parameter" title="streamsx.topology.topology.Topology.create_submission_parameter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Topology.create_submission_parameter()</span></code></a>) – The size of the window in seconds.</p>
+<dd class="field-odd"><p><strong>size</strong> (submission parameter created by <a class="reference internal" href="#streamsx.topology.topology.Topology.create_submission_parameter" title="streamsx.topology.topology.Topology.create_submission_parameter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Topology.create_submission_parameter()</span></code></a>) – The size of the window in seconds.</p>
 </dd>
 </dl>
 <p>Examples:</p>
@@ -2480,7 +2521,8 @@ two tuples with that <cite>id</cite> have been inserted into the window partitio
 
 <span class="n">topo</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">(</span><span class="s2">&quot;Rolling Average&quot;</span><span class="p">)</span>
 <span class="n">src</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="n">Numbers</span><span class="p">())</span>
-<span class="n">window</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">last</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="c1"># sliding window with eviction count as submission parameter</span>
+<span class="n">window</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">last</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">topo</span><span class="o">.</span><span class="n">create_submission_parameter</span><span class="p">(</span><span class="s1">&#39;count&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
 <span class="n">rolling_average</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">Average</span><span class="p">())</span>
 </pre></div>
 </div>
