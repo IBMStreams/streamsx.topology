@@ -345,6 +345,31 @@ class TestPythonWindowing(unittest.TestCase):
         tester.tuple_count(r, 5)
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_batch_count_stv(self):
+        topo = Topology()
+        s = topo.source(lambda : range(20))
+        wcount = topo.create_submission_parameter('count', 4)
+        b = s.batch(wcount)
+        r = b.aggregate(lambda items : sum(items))
+
+        tester = Tester(topo)
+        tester.contents(r, [0+1+2+3,4+5+6+7,8+9+10+11,12+13+14+15,16+17+18+19])
+        tester.tuple_count(r, 5)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_batch_time_stv(self):
+        topo = Topology()
+        s = topo.source(lambda : map(_delay, range(50)), name='A')
+        b = s.batchSeconds(topo.create_submission_parameter('secs', 2))
+        r = b.aggregate(lambda x : x)
+        rf = r.flat_map()
+
+        tester = Tester(topo)
+        tester.tuple_count(rf, 50)
+        tester.run_for((50*0.2) + 20)
+        tester.tuple_check(r, _BatchTimeCheck())
+        tester.test(self.test_ctxtype, self.test_config)
+
     def test_batch_time(self):
         topo = Topology()
         s = topo.source(lambda : map(_delay, range(50)), name='A')
