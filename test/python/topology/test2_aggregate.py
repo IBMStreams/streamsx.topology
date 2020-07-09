@@ -195,6 +195,15 @@ class TestAggregate(unittest.TestCase):
         rolling_average = window.aggregate(AverageNamedTuple())
         self._runTest(topo, rolling_average)
 
+    def test_named_tuple_in_named_tuple_out_stv(self):
+        # named tuple as input and named tuple as output
+        # stream<int64 value> generate_data_for_named_tuple_schema = com.ibm.streamsx.topology.functional.python::Source  ( )
+        # stream<int64 count, float64 avg, int64 min, int64 max, rstring mytext> AverageNamedTuple = com.ibm.streamsx.topology.functional.python::Aggregate  ( generate_data_for_named_tuple_schema)
+        topo = Topology("test_named_tuple_in_named_tuple_out_stv")
+        src = topo.source(generate_numbers_for_named_tuple_schema)
+        window = src.last(size=topo.create_submission_parameter('count', 10))
+        rolling_average = window.aggregate(AverageNamedTuple())
+        self._runTest(topo, rolling_average)
 
 class TestDistributedAggregate(TestAggregate):
     def setUp(self):

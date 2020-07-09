@@ -169,6 +169,7 @@
         <tupleMutationAllowed>false</tupleMutationAllowed>
         <windowingMode>Windowed</windowingMode>
         <windowPunctuationInputMode>WindowBound</windowPunctuationInputMode>
+        <windowExpressionMode>AttributeFree</windowExpressionMode>
         <cardinality>1</cardinality>
         <optional>false</optional>
       </inputPortSet>      
