@@ -1,8 +1,7 @@
 # Changes
 ==========
 
-## latest
-
+## v1.15.6
 * [#2508](https://github.com/IBMStreams/streamsx.topology/issues/2508) Python: Support tumbling window creation using submission params 
 * [#2506](https://github.com/IBMStreams/streamsx.topology/issues/2506) Python: Window.aggregate supports submission parameter for size of window eviction policy
 
