@@ -2794,7 +2794,8 @@ class Window(object):
 
             topo = Topology("Rolling Average")
             src = topo.source(Numbers())
-            window = src.last(size=10)
+            # sliding window with eviction count as submission parameter
+            window = src.last(size=topo.create_submission_parameter('count', 10))
             rolling_average = window.aggregate(Average())
         
 
