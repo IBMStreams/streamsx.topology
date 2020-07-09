@@ -3,6 +3,7 @@ import unittest
 from streamsx.topology.topology import *
 from streamsx.topology import context
 from streamsx.topology.schema import CommonSchema, StreamSchema
+from streamsx.topology.context import JobConfig
 from streamsx.topology.tester import Tester
 from streamsx.spl import op
 import time
@@ -130,6 +131,17 @@ class TestPythonWindowing(unittest.TestCase):
         tester.contents(s, [1.5,2.5,3.5,4.5,5.5,7.5,9.5])
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_BasicCountCountWindow_stv(self):
+        topo = Topology()
+        s = topo.source([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
+        count = topo.create_submission_parameter('count', 10)
+        # Need a float cast to make the value consistent with Python 2/3
+        s = s.last(count).trigger(2).aggregate(lambda x: float(sum(x))/float(len(x)))
+
+        tester = Tester(topo)
+        tester.contents(s, [1.5,2.5,3.5,4.5,5.5,7.5,9.5])
+        tester.test(self.test_ctxtype, self.test_config)
+
     def test_BasicCountTimeWindow(self):
         # Aggregate every 0.5 seconds
         aggregate_period = 0.5
@@ -153,6 +165,42 @@ class TestPythonWindowing(unittest.TestCase):
         s = topo.source(TimeCounter(iterations = 100, period = 0.1))
         s = s.map(lambda x: (x, time.time()))
         s = s.last(datetime.timedelta(seconds=window_span)).trigger(20).aggregate(TupleTimespanCheck(max_evict))
+        
+        tester = Tester(topo)
+        tester.tuple_check(s, lambda val: val)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_BasicTimeCountWindow_stv(self):
+        # Ensure tuples are evicted no later than (window_span*tolerance + window_span)
+        tolerance = 0.20
+        window_span = 2.0
+        max_evict = window_span*tolerance + window_span
+
+        topo = Topology()
+        s = topo.source(TimeCounter(iterations = 100, period = 0.1))
+        s = s.map(lambda x: (x, time.time()))
+        wtime = topo.create_submission_parameter('time', 2)
+        s = s.lastSeconds(wtime).trigger(20).aggregate(TupleTimespanCheck(max_evict))
+        
+        tester = Tester(topo)
+        tester.tuple_check(s, lambda val: val)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_BasicTimeCountWindow_stv_no_default(self):
+        # Ensure tuples are evicted no later than (window_span*tolerance + window_span)
+        tolerance = 0.20
+        window_span = 2.0
+        max_evict = window_span*tolerance + window_span
+
+        topo = Topology()
+        s = topo.source(TimeCounter(iterations = 100, period = 0.1))
+        s = s.map(lambda x: (x, time.time()))
+        wtime = topo.create_submission_parameter('secs', type_=int)
+        s = s.lastSeconds(wtime).trigger(20).aggregate(TupleTimespanCheck(max_evict))
+
+        jc = JobConfig()
+        jc.submission_parameters['secs'] = 2
+        jc.add(self.test_config)
         
         tester = Tester(topo)
         tester.tuple_check(s, lambda val: val)
