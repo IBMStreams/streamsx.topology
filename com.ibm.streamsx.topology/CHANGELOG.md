@@ -1,6 +1,9 @@
 # Changes
 ==========
 
+## latest
+* [#2506](https://github.com/IBMStreams/streamsx.topology/issues/2506) Python: Window.aggregate supports submission parameter for size of window eviction policy
+
 ## v1.15.5
 * [#2499](https://github.com/IBMStreams/streamsx.topology/issues/2499) Pythondoc: Updated `Stream.parallel`,`Stream.set_parallel` args description regarding submission parameter 
 * [#2498](https://github.com/IBMStreams/streamsx.topology/issues/2498) Python: Support SPL window creation using submission parameter 
