@@ -5,4 +5,4 @@ http://ibmstreams.github.io/streamsx.topology/
 
 
 ## Changes
-For the recent changes per release, please see [CHANGELOG.MD](com.ibm.streamsx.topology/CHANGELOG.md).
+[CHANGELOG.md](com.ibm.streamsx.topology/CHANGELOG.md).
