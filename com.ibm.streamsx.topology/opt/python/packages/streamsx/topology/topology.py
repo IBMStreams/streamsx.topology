@@ -2036,7 +2036,7 @@ class Stream(_placement._Placement, object):
         The number of tuples maintained in the window is defined by `size` in seconds.
  
         Args:
-            size(int|submission parameter created by :py:meth:`Topology.create_submission_parameter`): The size of the window in seconds.
+            size(submission parameter created by :py:meth:`Topology.create_submission_parameter`): The size of the window in seconds.
 
         Examples::
 
@@ -2088,6 +2088,8 @@ class Stream(_placement._Placement, object):
         A batch can contain no tuples if no tuples arrived on the stream
         in the defined duration.
 
+        For specifying the duration of the window with a submission parameter use :py:meth:`~Stream.batchSeconds`.
+
         Each tuple on the stream appears only in a single batch.
 
         The number of tuples seen by processing against the
@@ -2104,13 +2106,21 @@ class Stream(_placement._Placement, object):
 
         ::
 
+            # Create a window size specified by submission parameter
+            count = topo.create_submission_parameter('count', 100)
+            w = s.batch(size=count)
+
+        ::
+
             # Create batches against stream s every five minutes
             w = s.batch(size=datetime.timedelta(minutes=5))
 
         Args:
-            size: The size of each batch, either an `int` to define the
+            size(int|datetime.timedelta|submission parameter created by :py:meth:`Topology.create_submission_parameter`): The size of each batch, either an `int` to define the
                 number of tuples or `datetime.timedelta` to define the
-                duration of the batch.
+                duration of the batch or
+                submission parameter created by :py:meth:`Topology.create_submission_parameter`
+                to define the number of tuples.
 
         Returns:
             Window: Window allowing batch processing on this stream.
@@ -2122,6 +2132,40 @@ class Stream(_placement._Placement, object):
             win._evict_time(size)
         elif isinstance(size, int):
             win._evict_count(size)
+        elif isinstance(size, streamsx.topology.runtime._SubmissionParam):
+            win._evict_count_stv(size)
+        else:
+            raise ValueError(size)
+        return win
+
+    def batchSeconds(self, size):
+        """ Declares a tumbling window to support batch processing
+        against this stream using a submission parameter created by
+        :py:meth:`Topology.create_submission_parameter`.
+
+        The number of tuples in the batch is defined by `size` in seconds.
+ 
+        Args:
+            size(submission parameter created by :py:meth:`Topology.create_submission_parameter`): The size of the window in seconds.
+
+        Examples::
+
+            # Create a tumbling window with submission parameter `time` and the default value 10 seconds
+            time = topo.create_submission_parameter('time', 10)
+            w = s.batchSeconds(time)
+
+        ::
+
+            # Create a window with submission parameter `secs` and no default value 
+            time = topo.create_submission_parameter(name='secs', type_=int)
+            w = s.batchSeconds(time)
+
+        Returns:
+            Window: Window allowing batch processing on this stream.
+        """
+        win = Window(self, 'TUMBLING')
+        if isinstance(size, streamsx.topology.runtime._SubmissionParam):
+            win._evict_time_stv(size)
         else:
             raise ValueError(size)
         return win
