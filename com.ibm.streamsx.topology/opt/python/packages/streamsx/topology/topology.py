@@ -1275,6 +1275,54 @@ class Stream(_placement._Placement, object):
         op._layout(kind='ForEach', name=op.runtime_id, orig_name=name)
         return Sink(op)
 
+    def punctor(self, func, before=True, name=None):
+        """
+        Adds window punctuation to this stream using the supplied callable `func` as condition that determines when a window punctuation is to be generated.
+
+        For each stream tuple `t` on the stream ``func(t)`` is called, if the return evaluates to ``True`` the
+        window punctuation will be generated and the tuple is forwarded, otherwise the tuple is just forwarded.
+        
+        Args:
+            func: Punctor callable that takes a single parameter for the stream tuple.
+            before(bool): If the value is `True`, the punctuation is generated before the output tuple; otherwise it is generated after the output tuple.
+            name(str): Name of the stream, defaults to a generated name.
+
+        If invoking ``func`` for a stream tuple raises an exception
+        then its processing element will terminate. By default the processing
+        element will automatically restart though tuples may be lost.
+
+        If ``func`` is a callable object then it may suppress exceptions
+        by return a true value from its ``__exit__`` method. When an
+        exception is suppressed no tuple is submitted to the output
+        stream corresponding to the input tuple that caused the exception.
+
+        Returns:
+            Stream: A Stream containing tuples with generated punctuation. The schema of the returned stream is the same as this stream's schema.
+
+        .. rubric:: Type hints
+
+        The argument type hint on `func` is used (if present) to verify
+        at topology declaration time that it is compatible with the
+        type of tuples on this stream.
+        """
+        streamsx._streams._hints.check_punctor(func, self)
+        sl = _SourceLocation(_source_info(), 'punctor')
+        _name = self.topology.graph._requested_name(name, action="punctor", func=func)
+        stateful = _determine_statefulness(func)
+        params = {}
+        if before is not None:
+           if before:
+               params = {'before': True}
+           else:
+               params = {'before': False}
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Punctor", func, name=_name, sl=sl, stateful=stateful, params=params)
+        op.addInputPort(outputPort=self.oport)
+        streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
+        op._layout(kind='Punctor', name=op.runtime_id, orig_name=name)
+        oport = op.addOutputPort(schema=self.oport.schema, name=_name)
+        return Stream(self.topology, oport)._make_placeable()
+
+
     def filter(self, func, non_matching=False, name=None):
         """
         Filters tuples from this stream using the supplied callable `func`.
