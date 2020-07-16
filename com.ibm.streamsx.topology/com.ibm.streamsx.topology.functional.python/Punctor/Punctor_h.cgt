@@ -1,0 +1,45 @@
+@include "../py_pystateful.cgt"
+@include "../../opt/python/codegen/py_state.cgt"
+
+#include "splpy.h"
+#include "splpy_funcop.h"
+
+using namespace streamsx::topology;
+
+<%SPL::CodeGen::headerPrologue($model);%>
+
+@include "../../opt/python/codegen/py_disallow_cr_trigger.cgt"
+
+class MY_OPERATOR : public MY_BASE_OPERATOR
+#if SPLPY_OP_STATE_HANDLER == 1
+ , public SPL::StateHandler
+#endif
+{
+public:
+  MY_OPERATOR();
+  virtual ~MY_OPERATOR(); 
+  void prepareToShutdown(); 
+  void process(Tuple const & tuple, uint32_t port);
+
+#if SPLPY_OP_STATE_HANDLER == 1
+  virtual void checkpoint(SPL::Checkpoint & ckpt);
+  virtual void reset(SPL::Checkpoint & ckpt);
+  virtual void resetToInitialState();
+#endif
+
+private:
+    SplpyOp * op() { return funcop_; }
+
+    // Members
+    // Control for interaction with Python
+    SplpyFuncOp *funcop_;
+    
+    PyObject *pyInStyleObj_;
+
+#if SPLPY_CALLABLE_STATEFUL == 1
+    SPL::Mutex mutex_;
+#endif
+}; 
+
+<%SPL::CodeGen::headerEpilogue($model);%>
+
