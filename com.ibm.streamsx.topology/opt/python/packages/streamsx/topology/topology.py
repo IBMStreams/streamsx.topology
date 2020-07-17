@@ -1304,6 +1304,8 @@ class Stream(_placement._Placement, object):
         The argument type hint on `func` is used (if present) to verify
         at topology declaration time that it is compatible with the
         type of tuples on this stream.
+
+        .. versionadded:: 1.16
         """
         streamsx._streams._hints.check_punctor(func, self)
         sl = _SourceLocation(_source_info(), 'punctor')
@@ -2238,7 +2240,7 @@ class Stream(_placement._Placement, object):
         oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
-    def print(self, tag=None, name=None):
+    def print(self, tag=None, name=None, write_punctuations=None):
         """
         Prints each tuple to stdout flushing after each tuple.
 
@@ -2249,6 +2251,7 @@ class Stream(_placement._Placement, object):
             tag: A tag to prepend to each tuple.
             name(str): Name of the resulting stream.
                 When `None` defaults to a generated name.
+            write_punctuations(bool): Specifies to write punctuations to stdout
         Returns:
             streamsx.topology.topology.Sink: Stream termination.
 
@@ -2256,6 +2259,8 @@ class Stream(_placement._Placement, object):
 
         .. versionchanged:: 1.7
             Now returns a :py:class:`Sink` instance.
+
+        .. versionadded:: 1.16 `write_punctuations` parameter.
         """
         _name = name
         if _name is None:
@@ -2266,6 +2271,11 @@ class Stream(_placement._Placement, object):
             fn = lambda v : streamsx.topology.functions.print_flush(tag + str(v))
         sp = self.for_each(fn, name=_name)
         sp._op().sl = _SourceLocation(_source_info(), 'print')
+        if write_punctuations is not None:
+           if write_punctuations:
+               sp._op().params['writePunctuations'] = True
+               if tag is not None:
+                   sp._op().params['writeTag'] = tag
         return sp
 
     def publish(self, topic, schema=None, name=None):

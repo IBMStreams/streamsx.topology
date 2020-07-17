@@ -103,6 +103,24 @@
         <expressionMode>AttributeFree</expressionMode>
         <type>rstring</type>
       </parameter>
+      <parameter>
+        <name>writePunctuations</name>
+        <description>Specifies to write punctuations to stdout</description>
+        <optional>true</optional>
+        <rewriteAllowed>false</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>boolean</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
+        <name>writeTag</name>
+        <description>Specifies to write tag prefix to stdout, valid if writePunctuations is enabled only</description>
+        <optional>true</optional>
+        <rewriteAllowed>false</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>rstring</type>
+        <cardinality>1</cardinality>
+      </parameter>
     </parameters>
     <inputPorts>
       <inputPortSet>
