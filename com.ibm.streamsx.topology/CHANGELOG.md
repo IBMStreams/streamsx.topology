@@ -1,9 +1,8 @@
 # Changes
 ==========
 
-develop/latest
+## v1.15.7
 * [#2513](https://github.com/IBMStreams/streamsx.topology/issues/2513) Third-party lib updated to resolve security vulnerabilities (commons-codec: 1.14)
-
 
 ## v1.15.6
 * [#2508](https://github.com/IBMStreams/streamsx.topology/issues/2508) Python: Support tumbling window creation using submission params 
