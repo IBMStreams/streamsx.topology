@@ -234,4 +234,11 @@ void MY_OPERATOR::convertAndSubmit(uint32_t port, PyObject *tuple_) {
 <%}%>
 }
 
+void MY_OPERATOR::submitPunct(uint32_t port) {
+<% for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) { %>
+     if (port == <%=$p%>)
+         submit (Punctuation::WindowMarker, <%=$p%>);
+<%}%>
+}
+
 <%SPL::CodeGen::implementationEpilogue($model);%>

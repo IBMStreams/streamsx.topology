@@ -1264,6 +1264,10 @@ test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/MultiOutp
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/MultiOutputPorts/MultiOutputPorts_cpp.cgt
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/MultiOutputPorts/MultiOutputPorts_h.cgt
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/MultiOutputPorts/splpy_operator.pm
+test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/MultiOutputPortsPunct/MultiOutputPortsPunct.xml
+test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/MultiOutputPortsPunct/MultiOutputPortsPunct_cpp.cgt
+test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/MultiOutputPortsPunct/MultiOutputPortsPunct_h.cgt
+test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/MultiOutputPortsPunct/splpy_operator.pm
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/NoPorts/NoPorts.xml
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/NoPorts/NoPorts_cpp.cgt
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/NoPorts/NoPorts_h.cgt
@@ -1280,6 +1284,10 @@ test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/SingleOut
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/SingleOutputPort/SingleOutputPort_cpp.cgt
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/SingleOutputPort/SingleOutputPort_h.cgt
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/SingleOutputPort/splpy_operator.pm
+test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/SingleOutputPortPunct/SingleOutputPortPunct.xml
+test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/SingleOutputPortPunct/SingleOutputPortPunct_cpp.cgt
+test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/SingleOutputPortPunct/SingleOutputPortPunct_h.cgt
+test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/SingleOutputPortPunct/splpy_operator.pm
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pysource/DictTuple/DictTuple.xml
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pysource/DictTuple/DictTuple_cpp.cgt
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pysource/DictTuple/DictTuple_h.cgt

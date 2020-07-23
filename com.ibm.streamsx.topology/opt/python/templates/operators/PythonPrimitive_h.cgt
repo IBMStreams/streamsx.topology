@@ -32,6 +32,7 @@ public:
   void process(Tuple const & tuple, uint32_t port);
 
   void convertAndSubmit(uint32_t port, PyObject *tuple_);
+  void submitPunct(uint32_t port);
 
 private:
     SplpyOp *op() { return pyop_; }
