@@ -79,6 +79,16 @@ class SingleOutputPort(spl.PrimitiveOperator):
     def port0(self, *t):
         self.submit('A', t)
 
+@spl.primitive_operator(output_ports=['A'])
+class SingleOutputPortPunct(spl.PrimitiveOperator):
+    def __init__(self):
+        pass
+
+    @spl.input_port()
+    def port0(self, *t):
+        self.submit_punct('A')
+        self.submit('A', t)
+
 @spl.primitive_operator(output_ports=[1,2,3])
 class MultiOutputPorts(spl.PrimitiveOperator):
     def __init__(self):
@@ -89,6 +99,20 @@ class MultiOutputPorts(spl.PrimitiveOperator):
         self.submit(1, t)
         self.submit(2, (t[0] + 921,))
         self.submit(3, (t[0] - 407,))
+
+@spl.primitive_operator(output_ports=[1,2,3])
+class MultiOutputPortsPunct(spl.PrimitiveOperator):
+    def __init__(self):
+        pass
+
+    @spl.input_port()
+    def port0(self, *t):
+        self.submit(1, t)
+        self.submit_punct(1)
+        self.submit(2, (t[0] + 921,))
+        self.submit_punct(2)
+        self.submit(3, (t[0] - 407,))
+        self.submit_punct(3)
 
 @spl.primitive_operator(output_ports=['A', 'B'])
 class DictOutputPorts(spl.PrimitiveOperator):
