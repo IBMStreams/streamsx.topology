@@ -1,6 +1,10 @@
 # Changes
 ==========
 
+## branch feature/punct (enhancements for v1.16)
+* [#2517](https://github.com/IBMStreams/streamsx.topology/issues/2517) Python: Provide Stream.punctor()
+* [#2516](https://github.com/IBMStreams/streamsx.topology/issues/2516) Python: Write punctuation markers with Stream.print() to stdout
+
 ## v1.15.7
 * [#2513](https://github.com/IBMStreams/streamsx.topology/issues/2513) Third-party lib updated to resolve security vulnerabilities (commons-codec: 1.14)
 
