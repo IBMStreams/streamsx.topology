@@ -63,5 +63,25 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
        SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
     }
 }
+<%
+my $writePunctuations = $model->getParameterByName("writePunctuations");
+$writePunctuations = $writePunctuations ?  $writePunctuations->getValueAt(0)->getSPLExpression() eq "true" : 0;
+my $processPunct = $writePunctuations;
+
+my $writeTag = $model->getParameterByName("writeTag");
+my $useWriteTag = $writeTag ?  1 : 0;
+%>
+
+<%if ($processPunct) {%>
+void MY_OPERATOR::process(Punctuation const & punct, uint32_t port) {
+  <%if ($writePunctuations) {%>
+	<%if ($useWriteTag) {%>
+	std::cout << <%=$writeTag->getValueAt(0)->getSPLExpression()%> << "Punctuation received: " << punct << std::endl;
+	<%}else {%>
+	std::cout << "Punctuation received: " << punct << std::endl;
+	<%}%>
+  <%}%>
+}
+<%}%>
 
 <%SPL::CodeGen::implementationEpilogue($model);%>
