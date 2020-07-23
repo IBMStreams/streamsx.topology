@@ -1160,6 +1160,19 @@ class PrimitiveOperator(object):
         port_index = self._splpy_output_ports[port_id]
         ec._submit(self, port_index, tuple_)
 
+    def submit_punct(self, port_id):
+        """Submit a window punctuation marker to the output port.
+
+        Args:
+             port_id: Identifier of the port specified in the
+                  ``output_ports`` parameter of the ``@spl.primitive_operator``
+                  decorator.
+
+        .. versionadded:: 1.16
+        """
+        port_index = self._splpy_output_ports[port_id]
+        ec._submit_punct(self, port_index)
+
     def all_ports_ready(self):
         """Notifcation that the operator can submit tuples.
 

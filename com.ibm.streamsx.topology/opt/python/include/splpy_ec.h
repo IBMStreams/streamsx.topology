@@ -44,6 +44,7 @@ class SplpyPrimitiveOp
     public:
         virtual ~SplpyPrimitiveOp() {} 
         virtual void convertAndSubmit(uint32_t port, PyObject *tuple_) = 0;
+        virtual void submitPunct(uint32_t port) = 0;
 };
 
 }}
@@ -356,6 +357,25 @@ static PyObject * __splpy_ec_submit(PyObject *self, PyObject *args) {
    return pyport;
 }
 
+// Submit a tuple to the output ports of a primitive operator.
+static PyObject * __splpy_ec_submit_punct(PyObject *self, PyObject *args) {
+   PyObject *opc = PyTuple_GET_ITEM(args, 0);
+   PyObject *pyport = PyTuple_GET_ITEM(args, 1);
+
+   void * opptr = PyLong_AsVoidPtr(opc);
+   SPL::Operator *op = reinterpret_cast<SPL::Operator*>(opptr);
+   streamsx::topology::SplpyPrimitiveOp *op2 = dynamic_cast<streamsx::topology::SplpyPrimitiveOp*>(op);
+
+   uint32_t port = (uint32_t) PyLong_AsLong(pyport);
+
+   op2->submitPunct(port);
+
+   // Any return is going to be ignored
+   // so return an existing object with its reference bumped
+   Py_INCREF(pyport);
+   return pyport;
+}
+
 static PyMethodDef __splpy_ec_methods[] = {
     {"domain_id", __splpy_ec_domain_id, METH_NOARGS,
          "Return the domain identifier."},
@@ -395,6 +415,8 @@ static PyMethodDef __splpy_ec_methods[] = {
          "Set metric value."},
     {"_submit", __splpy_ec_submit, METH_O,
          "Submit tuple."},
+    {"_submit_punct", __splpy_ec_submit_punct, METH_O,
+         "Submit window punctuation."},
     {"get_application_directory", __splpy_ec_get_application_directory, METH_NOARGS,
          "Get the application directory."},
     {NULL, NULL, 0, NULL}
