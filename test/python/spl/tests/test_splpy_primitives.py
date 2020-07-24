@@ -189,11 +189,32 @@ class TestPrimitivesOutputs(unittest.TestCase):
 
         r = bop.stream
         r.print(write_punctuations=True)
-        #self.test_config['topology.keepArtifacts'] = True
     
         self.tester = Tester(topo)
         self.tester.tuple_count(s, 2)
         self.tester.contents(s, [{'v':9237}, {'v':-24}])
+        self.tester.test(self.test_ctxtype, self.test_config)
+
+    def test_single_output_port_punct_forward(self):
+        """Operator with receives and forwards window marker."""
+        topo = Topology()
+        streamsx.spl.toolkit.add_toolkit(topo, stu._tk_dir('testtkpy'))
+
+        s = topo.source([1,2,3,4])
+        s = s.punctor(func=(lambda t : 2 < t), before=False)
+        s = s.map(lambda x : (x,), schema='tuple<int32 z>')
+
+        s1 = op.Map("com.ibm.streamsx.topology.pytest.pyprimitives::SingleOutputPort", s) # has no on_punct
+        bop = op.Map("com.ibm.streamsx.topology.pytest.pyprimitives::SingleOutputPortPunctForward", s) # implements on_punct
+
+        r = bop.stream
+        op.Sink("com.ibm.streamsx.topology.pytest.pyprimitives::VerifyPosInt", r)
+        
+        r.print(write_punctuations=True)
+        #self.test_config['topology.keepArtifacts'] = True
+    
+        self.tester = Tester(topo)
+        self.tester.tuple_count(s, 4)
         self.tester.test(self.test_ctxtype, self.test_config)
 
     def test_multi_output_ports(self):
