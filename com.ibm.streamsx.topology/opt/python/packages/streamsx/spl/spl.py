@@ -1104,6 +1104,19 @@ class for_each(object):
     Example SPL invocation::
 
         () as PT = PrintTuple(SensorReadings) { }
+        
+    Example definition with handling window punctuations::
+    
+        @spl.for_each(style='position')
+        class PrintPunct(object):
+            def __init__(self): 
+                pass
+
+            def __call__(self, value):
+                assert value > 0
+        
+            def on_punct(self):
+                print('window marker received')
 
     Args:
        style: How the SPL tuple is passed into Python callable, see  :ref:`spl-tuple-to-python`.
@@ -1114,6 +1127,9 @@ class for_each(object):
     If ``__exit__`` returns a true value when called with the exception 
     then the expression is suppressed and the tuple that caused the
     exception is ignored.
+    
+    Supports handling window punctuation markers in the Sink operator in ``on_punct`` method (new in version 1.16).
+    
     """
     def __init__(self, style=None, docpy=True):
         self.style = style
@@ -1315,6 +1331,21 @@ class primitive_operator(object):
                 near_match: 0.8;
         }
 
+    Example definition of an operator with punctuation handling::
+        
+        @spl.primitive_operator(output_ports=['A'])
+        class SimpleForwarder(spl.PrimitiveOperator):
+        def __init__(self):
+            pass
+
+        @spl.input_port()
+        def port0(self, *t):
+            self.submit('A', t)
+
+        def on_punct(self):
+            self.submit_punct('A')
+            
+    Supports handling window punctuation markers in the primitive operator in ``on_punct`` method (new in version 1.16).
 
     Args:
        output_ports(list): List of identifiers for output ports.

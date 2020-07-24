@@ -89,6 +89,29 @@ class SingleOutputPortPunct(spl.PrimitiveOperator):
         self.submit_punct('A')
         self.submit('A', t)
 
+@spl.primitive_operator(output_ports=['A'])
+class SingleOutputPortPunctForward(spl.PrimitiveOperator):
+    def __init__(self):
+        pass
+
+    @spl.input_port()
+    def port0(self, *t):
+        self.submit('A', t)
+
+    def on_punct(self):
+        self.submit_punct('A')
+
+@spl.for_each(style='position')
+class VerifyPosInt(object):
+    def __init__(self): 
+        pass
+
+    def __call__(self, value):
+        assert value > 0
+        
+    def on_punct(self):
+        pass
+
 @spl.primitive_operator(output_ports=[1,2,3])
 class MultiOutputPorts(spl.PrimitiveOperator):
     def __init__(self):

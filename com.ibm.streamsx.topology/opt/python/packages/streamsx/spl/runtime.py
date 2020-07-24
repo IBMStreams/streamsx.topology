@@ -125,6 +125,18 @@ def _splpy_all_ports_ready(callable_):
             raise ei[1]
     return None
 
+def _splpy_on_punct(callable_):
+    """Call on_punct for a primitive operator."""
+    if hasattr(type(callable_), 'on_punct'):
+        try:
+            return callable_.on_punct()
+        except:
+            ei = sys.exc_info()
+            if streamsx._streams._runtime._call_exit(callable_, ei):
+                return None
+            raise ei[1]
+    return None
+
 _Timestamp = collections.namedtuple('Timestamp', ['seconds', 'nanoseconds', 'machine_id'])
 
 # Used by Timestamp.__reduce__ to avoid dill
