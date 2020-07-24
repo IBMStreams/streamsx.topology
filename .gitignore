@@ -1288,6 +1288,9 @@ test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/SingleOut
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/SingleOutputPortPunct/SingleOutputPortPunct_cpp.cgt
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/SingleOutputPortPunct/SingleOutputPortPunct_h.cgt
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/SingleOutputPortPunct/splpy_operator.pm
+test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/SingleOutputPortPunctForward/SingleOutputPortPunctForward.xml
+test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/SingleOutputPortPunctForward/SingleOutputPortPunctForward_cpp.cgt
+test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pyprimitives/SingleOutputPortPunctForward/SingleOutputPortPunctForward_h.cgt
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pysource/DictTuple/DictTuple.xml
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pysource/DictTuple/DictTuple_cpp.cgt
 test/python/spl/testtkpy/com.ibm.streamsx.topology.pytest.pysource/DictTuple/DictTuple_h.cgt
