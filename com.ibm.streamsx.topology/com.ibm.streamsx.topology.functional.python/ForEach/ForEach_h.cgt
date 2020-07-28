@@ -11,7 +11,9 @@ using namespace streamsx::topology;
 <%
 my $writePunctuations = $model->getParameterByName("writePunctuations");
 $writePunctuations = $writePunctuations ?  $writePunctuations->getValueAt(0)->getSPLExpression() eq "true" : 0;
-my $processPunct = $writePunctuations;
+my $processPunctuations = $model->getParameterByName("processPunctuations");
+$processPunctuations = $processPunctuations ?  $processPunctuations->getValueAt(0)->getSPLExpression() eq "true" : 0;
+my $processPunct = $writePunctuations | $processPunctuations;
 %>
 
 class MY_OPERATOR : public MY_BASE_OPERATOR
@@ -45,6 +47,12 @@ private:
 
 #if SPLPY_CALLABLE_STATEFUL == 1
     SPL::Mutex mutex_;
+#else
+<%if ($processPunct) {%>
+    SPL::Mutex mutex_; // processPunct
+<%} else {%>
+    // processPunct is false
+<%}%>
 #endif
 }; 
 

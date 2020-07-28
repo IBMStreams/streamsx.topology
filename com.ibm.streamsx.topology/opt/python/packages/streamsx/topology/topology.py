@@ -1215,7 +1215,7 @@ class Stream(_placement._Placement, object):
         stream._alias = name
         return stream
 
-    def for_each(self, func, name=None):
+    def for_each(self, func, name=None, process_punct=None):
         """
         Sends information as a stream to an external system.
 
@@ -1236,6 +1236,19 @@ class Stream(_placement._Placement, object):
         exception is suppressed no further processing occurs for the
         input tuple that caused the exception.
 
+        Example with class handling punctuations in the Sink operator::
+
+            class FEClass(object):
+                def __call__(self, t):
+                    return None
+
+                def on_punct(self):
+                    print ('window punctuation marker received')
+                    ...
+
+            ...
+            s.for_each(FEClass(), name='SinkHandlingPunctuations', process_punct=True)
+
         .. rubric:: Composite transformation
 
         A composite transformation is an instance of :py:class:`~streamsx.topology.composite.ForEach`. Composites allow the application developer to use
@@ -1246,6 +1259,7 @@ class Stream(_placement._Placement, object):
         Args:
             func: A callable that takes a single parameter for the tuple and returns None.
             name(str): Name of the stream, defaults to a generated name.
+            process_punct(bool): Specifies if ``on_punct`` on callable ``func`` is called when window punctuation markers are received.
 
         Returns:
             streamsx.topology.topology.Sink: Stream termination.
@@ -1260,6 +1274,8 @@ class Stream(_placement._Placement, object):
             Now returns a :py:class:`Sink` instance.
         .. versionchanged:: 1.14 
             Support for type hints and composite transformations.
+        .. versionchanged:: 1.16 
+            New parameter process_punct to support handling of window punctuation markers in callable.
         """
         import streamsx.topology.composite
         if isinstance(func, streamsx.topology.composite.ForEach):
@@ -1269,7 +1285,11 @@ class Stream(_placement._Placement, object):
         sl = _SourceLocation(_source_info(), 'for_each')
         _name = self.topology.graph._requested_name(name, action='for_each', func=func)
         stateful = _determine_statefulness(func)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=_name, sl=sl, stateful=stateful)
+        params = {}
+        if process_punct is not None:
+           if process_punct:
+               params = {'processPunctuations': True} # sets parameter of ForEach operator
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=_name, sl=sl, stateful=stateful, params=params)
         op.addInputPort(outputPort=self.oport)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         op._layout(kind='ForEach', name=op.runtime_id, orig_name=name)
@@ -1295,6 +1315,18 @@ class Stream(_placement._Placement, object):
         by return a true value from its ``__exit__`` method. When an
         exception is suppressed no tuple is submitted to the output
         stream corresponding to the input tuple that caused the exception.
+
+        Example with adding punctuation after each tuple::
+
+            topo = Topology()
+            s = topo.source([1,2,3,4])
+            s = s.punctor(lambda x: True, before=False)
+
+        Example with sending punctuation before a tuple::
+
+            topo = Topology()
+            s = topo.source([1,2,3,4])
+            s = s.punctor(lambda t : 2 < t)
 
         Returns:
             Stream: A Stream containing tuples with generated punctuation. The schema of the returned stream is the same as this stream's schema.
