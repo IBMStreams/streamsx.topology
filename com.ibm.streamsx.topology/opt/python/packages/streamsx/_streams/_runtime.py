@@ -186,6 +186,9 @@ class _WrapOpLogic(object):
 
         self._streamsx_ec_entered = False
 
+    def on_punct(self):
+        self._callable.on_punct()
+
     def __enter__(self):
         if self._streamsx_ec_context or self._streamsx_ec_cls:
             self._callable._streamsx_ec_opc = self._streamsx_ec_opc

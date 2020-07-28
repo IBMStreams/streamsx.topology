@@ -113,6 +113,15 @@
         <cardinality>1</cardinality>
       </parameter>
       <parameter>
+        <name>processPunctuations</name>
+        <description>Specifies if on_punct shall be called for window punctuations</description>
+        <optional>true</optional>
+        <rewriteAllowed>false</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>boolean</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
         <name>writeTag</name>
         <description>Specifies to write tag prefix to stdout, valid if writePunctuations is enabled only</description>
         <optional>true</optional>

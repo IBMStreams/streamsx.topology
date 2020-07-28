@@ -141,6 +141,23 @@ class SplpyOp : public OperatorWithCallable {
               setupStateHandler();
       }
 
+      void punct() {
+         PyObject *pyObjOnPunct = NULL;
+         SplpyGIL lock;
+         Py_INCREF(callable());
+         pyObjOnPunct = SplpyGeneral::callFunction("streamsx.spl.runtime", "_splpy_on_punct", callable(), NULL);
+         bool isCallable = (bool) PyCallable_Check(pyObjOnPunct);
+         if (isCallable) {
+            PyObject *rv = SplpyGeneral::pyCallObject(pyObjOnPunct, NULL);
+            Py_DECREF(rv);
+            Py_DECREF(pyObjOnPunct);
+         }
+         else if (NULL != pyObjOnPunct) {
+            Py_DECREF(pyObjOnPunct);
+         }
+      }
+
+
       /**
        * Actions for a Python operator on prepareToShutdown
        * Flush any pending output.
