@@ -1,6 +1,9 @@
 # Changes
 ==========
 
+## latest
+* [#2524](https://github.com/IBMStreams/streamsx.topology/issues/2524) JAVA: Resolve issue in keyed window definition and using submission parameter
+
 ## v1.15.7
 * [#2513](https://github.com/IBMStreams/streamsx.topology/issues/2513) Third-party lib updated to resolve security vulnerabilities (commons-codec: 1.14)
 
