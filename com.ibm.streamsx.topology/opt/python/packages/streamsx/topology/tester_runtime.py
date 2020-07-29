@@ -63,13 +63,17 @@ class _FunctionalCondition(Condition):
     """A condition for testing based on a functional callable.
     """
     
-    def __init__(self, name=None):
+    def __init__(self, name=None, process_punct=None):
         super(_FunctionalCondition, self).__init__(name)
         self._valid = False
         self._fail = False
+        self._process_punct = False
+        if process_punct is not None:
+            if process_punct:
+                self._process_punct = True
 
     def _attach(self, stream):
-        cond_sink = stream.for_each(self, self.name)
+        cond_sink = stream.for_each(self, self.name, self._process_punct)
         cond_sink.colocate(stream)
         cond_sink.category = 'Tester'
         cond_sink._op()._layout(hidden=True)
@@ -205,6 +209,70 @@ class _TupleAtLeastCount(_TupleCount):
 
     def __str__(self):
         return "Condition:{}: At least tuple count: expected:{} received:{}".format(self.name, self.target, self.count)
+
+
+class _PunctCount(_StreamCondition):
+    def __init__(self, target, name, exact=None):
+        super(_PunctCount, self).__init__(name=name, process_punct=True) # enables process_punct in for_each
+        self.target = target
+        self.count = 0
+        self.exact = exact
+        self._valid = target == 0
+
+    def __call__(self, tuple_):
+        pass
+
+    def on_punct(self):
+        super(_PunctCount, self).__call__(None)
+        self.count += 1
+        self._metric_count.value = self.count
+
+    def __enter__(self):
+        super(_PunctCount, self).__enter__()
+        self._metric_target = ec.CustomMetric(self, name='nPunctuationsExpected',  kind='Counter')
+        self._metric_count = ec.CustomMetric(self, name='nPunctuationsReceived',  kind='Counter')
+        if self.exact is not None:
+            self._metric_exact = ec.CustomMetric(self, name='exactCount',  kind='Gauge')
+            self._metric_exact.value = self.exact
+
+        self._metric_target.value = self.target
+        self._metric_count.value = self.count
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        super(_PunctCount, self).__exit__(exc_type, exc_value, traceback)
+
+class _PunctExactCount(_PunctCount):
+    def __init__(self, target, name):
+        super(_PunctExactCount, self).__init__(target, name, exact=1)
+
+    def __call__(self, tuple_):
+        pass
+
+    def on_punct(self):
+        super(_PunctExactCount, self).on_punct()
+        if self.target == self.count:
+            self.valid = True
+        elif self.count > self.target:
+            self.fail()
+
+    def __str__(self):
+        return "Condition:{}: Exact punctuation count: expected:{} received:{}".format(self.name, self.target, self.count)
+
+class _PunctAtLeastCount(_PunctCount):
+    def __init__(self, target, name):
+        super(_PunctAtLeastCount, self).__init__(target, name, exact=0)
+
+    def __call__(self, tuple_):
+        pass
+
+    def on_punct(self):
+        super(_PunctAtLeastCount, self).on_punct()
+        if self.target >= self.count:
+            self.valid = True
+
+    def __str__(self):
+        return "Condition:{}: At least punctuation count: expected:{} received:{}".format(self.name, self.target, self.count)
+
 
 class _StreamContents(_TupleCount):
     def __init__(self, expected, name=None):
