@@ -191,7 +191,8 @@ class TestPrimitivesOutputs(unittest.TestCase):
         r.print(write_punctuations=True)
     
         self.tester = Tester(topo)
-        self.tester.tuple_count(s, 2)
+        self.tester.tuple_count(r, 2)
+        self.tester.punct_count(r, 2)
         self.tester.contents(s, [{'v':9237}, {'v':-24}])
         self.tester.test(self.test_ctxtype, self.test_config)
 
@@ -214,7 +215,8 @@ class TestPrimitivesOutputs(unittest.TestCase):
         #self.test_config['topology.keepArtifacts'] = True
     
         self.tester = Tester(topo)
-        self.tester.tuple_count(s, 4)
+        self.tester.tuple_count(r, 4)
+        self.tester.punct_count(r, 2)
         self.tester.test(self.test_ctxtype, self.test_config)
 
     def test_multi_output_ports(self):
@@ -253,6 +255,9 @@ class TestPrimitivesOutputs(unittest.TestCase):
     
         self.tester = Tester(topo)
         self.tester.tuple_count(s, 2)
+        self.tester.punct_count(r[0], 2)
+        self.tester.punct_count(r[1], 2)
+        self.tester.punct_count(r[2], 2)
         self.tester.contents(r[0], [{'v1':9237}, {'v1':-24}])
         self.tester.contents(r[1], [{'v2':9237+921}, {'v2':-24+921}])
         self.tester.contents(r[2], [{'v3':9237-407}, {'v3':-24-407}])
