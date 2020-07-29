@@ -2,6 +2,8 @@
 ==========
 
 ## branch feature/punct (enhancements for v1.16)
+* [#2525](https://github.com/IBMStreams/streamsx.topology/issues/2525) Python: Provide punct_count() in TopologyTester to test the number of received punctuations
+* [#2520](https://github.com/IBMStreams/streamsx.topology/issues/2520) Python: Ability to handle received punctuations in for_each and streamsx.spl.spl.PrimitiveOperator
 * [#2518](https://github.com/IBMStreams/streamsx.topology/issues/2518) Python: Ability to submit punctuation in streamsx.spl.spl.PrimitiveOperator
 * [#2517](https://github.com/IBMStreams/streamsx.topology/issues/2517) Python: Provide Stream.punctor()
 * [#2516](https://github.com/IBMStreams/streamsx.topology/issues/2516) Python: Write punctuation markers with Stream.print() to stdout
