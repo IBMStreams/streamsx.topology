@@ -41,6 +41,8 @@ void MY_OPERATOR::prepareToShutdown()
 <%
 my $beforeParam = $model->getParameterByName("before");
 my $before = $beforeParam ? $beforeParam->getValueAt(0)->getSPLExpression() eq "true" : 1;
+my $replaceParam = $model->getParameterByName("replace");
+my $replace = $replaceParam ? $replaceParam->getValueAt(0)->getSPLExpression() eq "true" : 0;
 %>
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
@@ -72,13 +74,19 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
          }
     }
     
-    <%if ($before) {%>
+    <%if (($before) && (!$replace)) {%>
     if (passed) {
          submit (Punctuation::WindowMarker, 0);
     }
     <%}%>
+    <%if ($replace) {%>
+    if (!passed) {
+        submit(tuple, 0);
+    }
+    <%} else {%>
     submit(tuple, 0);
-    <%if (!$before) {%>
+    <%}%>
+    <%if ((!$before) || ($replace)) {%>
     if (passed) {
          submit (Punctuation::WindowMarker, 0);
     }

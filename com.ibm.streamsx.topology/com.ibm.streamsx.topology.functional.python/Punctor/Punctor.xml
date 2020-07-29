@@ -121,6 +121,15 @@
         <type>boolean</type>
         <cardinality>1</cardinality>
       </parameter>
+      <parameter>
+        <name>replace</name>
+        <description>Specifies if tuple shall be replaced by window punctuation when callable returns true (tuple is not forwarded)</description>
+        <optional>true</optional>
+        <rewriteAllowed>false</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>boolean</type>
+        <cardinality>1</cardinality>
+      </parameter>
     </parameters>
     <inputPorts>
       <inputPortSet>
