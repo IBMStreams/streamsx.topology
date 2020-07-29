@@ -43,7 +43,11 @@ Punctuation received: WindowMarker
 Punctuation received: FinalMarker
 """
 
-
+class FEClass(object):
+    def __call__(self, t):
+        return None
+    def on_punct(self):
+        print ('FEClass::on_punct')
 
 class TestPunctor(unittest.TestCase):
     _multiprocess_can_split_ = True
@@ -95,6 +99,14 @@ class TestPunctor(unittest.TestCase):
         s = s.punctor(func=(lambda t : 2 < t), before=False)
         self._test_punct_file(topo, s, expected_contents_punct_after, 4, 2)
 
+    def test_for_each(self):
+        topo = Topology('test_for_each')
+        s = topo.source([1,2,3,4])
+        s = s.punctor(func=(lambda t : 4 == t), before=False)
+        s.for_each(FEClass(), name='SINK_PUNCT', process_punct=True)
+        tester = Tester(topo)
+        tester.punct_count(s, 1)
+        tester.test(self.test_ctxtype, self.test_config)
 
 
 
