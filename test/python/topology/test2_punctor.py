@@ -8,7 +8,8 @@ from streamsx.topology.schema import CommonSchema, StreamSchema
 from streamsx.topology.tester import Tester
 from streamsx.topology.context import submit, ContextTypes, ConfigParams, JobConfig
 import streamsx.spl.op as op
-
+import typing
+from typing import NamedTuple
 
 """
 Test punctor function
@@ -48,6 +49,26 @@ class FEClass(object):
         return None
     def on_punct(self):
         print ('FEClass::on_punct')
+
+
+class NumbersSourceSchema(NamedTuple):
+    value: int = 0
+    punct_flag: bool = False
+
+def generate_numbers_for_named_tuple_schema() -> typing.Iterable[NumbersSourceSchema]:
+    idx = 0
+    while idx < 10:
+        idx += 1
+        if (idx == 5) or (idx == 10):
+            punct_flag = True
+        else:
+            punct_flag = False
+        output_event = NumbersSourceSchema(
+            value = idx,
+            punct_flag = punct_flag
+        )
+        yield output_event
+
 
 class TestPunctor(unittest.TestCase):
     _multiprocess_can_split_ = True
@@ -108,6 +129,14 @@ class TestPunctor(unittest.TestCase):
         tester.punct_count(s, 1)
         tester.test(self.test_ctxtype, self.test_config)
 
-
-
+    def test_punct_replaces_tuple(self):
+        topo = Topology("test_punct_replaces_tuple")
+        s = topo.source(generate_numbers_for_named_tuple_schema)
+        s = s.punctor(func=(lambda t : True == t.punct_flag), replace=True)
+        s = s.map(lambda x : (x.value,), schema='tuple<int32 z>')
+        s.print(write_punctuations=True)
+        tester = Tester(topo)
+        tester.tuple_count(s, 8)
+        tester.punct_count(s, 2)
+        tester.test(self.test_ctxtype, self.test_config)
 

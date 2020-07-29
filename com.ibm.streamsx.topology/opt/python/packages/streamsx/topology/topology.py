@@ -1295,7 +1295,7 @@ class Stream(_placement._Placement, object):
         op._layout(kind='ForEach', name=op.runtime_id, orig_name=name)
         return Sink(op)
 
-    def punctor(self, func, before=True, name=None):
+    def punctor(self, func, before=True, replace=False, name=None):
         """
         Adds window punctuation to this stream using the supplied callable `func` as condition that determines when a window punctuation is to be generated.
 
@@ -1305,6 +1305,7 @@ class Stream(_placement._Placement, object):
         Args:
             func: Punctor callable that takes a single parameter for the stream tuple.
             before(bool): If the value is `True`, the punctuation is generated before the output tuple; otherwise it is generated after the output tuple.
+            replace(bool): If the value is `True`, then in case ``func(t)`` returns ``True`` the window punctuation will be generated and the tuple is discarded (not forwarded). The parameter ``before`` is not ignored in this case.
             name(str): Name of the stream, defaults to a generated name.
 
         If invoking ``func`` for a stream tuple raises an exception
@@ -1344,11 +1345,15 @@ class Stream(_placement._Placement, object):
         _name = self.topology.graph._requested_name(name, action="punctor", func=func)
         stateful = _determine_statefulness(func)
         params = {}
+        _replace = False
+        if replace is not None:
+            if replace: 
+                _replace = True
         if before is not None:
            if before:
-               params = {'before': True}
+               params = {'before': True, 'replace': _replace}
            else:
-               params = {'before': False}
+               params = {'before': False, 'replace': _replace}
         op = self.topology.graph.addOperator(self.topology.opnamespace+"::Punctor", func, name=_name, sl=sl, stateful=stateful, params=params)
         op.addInputPort(outputPort=self.oport)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
