@@ -217,8 +217,7 @@ For a pull request:
     
 3a. If creating an new X.Y+1 sequence (e.g. 1.15 replacing 1.14) then:
 
-   * Change the `X.Y` in the `releasefilename` of `build.xml`
-   * Worth searching all files in the repo for the fixed string `X.Y` (e.g. `fgrep 1.14`) to see if anything else should be changed.
+   * Worth searching all files in the repo for the fixed string `X.Y` (e.g. `fgrep 1.15`) to see if anything else should be changed.
    * Add & commit any modified files.
   
 4. Add and commit the two files changed **and push to IBMStreams**
