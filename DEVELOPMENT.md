@@ -248,3 +248,15 @@ For a pull request:
     
 10. At readthedocs for streamsx.topology if required you can make the specific doc set for the tag active. The tag is based upon the tag in the streamsx.topology release.
     * https://readthedocs.org/projects/streamsxtopology/versions/
+
+11. Deploy the release on Maven central
+
+11.a Test install to local maven repository:
+
+   * `ant create_mvn_sources_jar`
+   * `mvn install:install-file -Dfile=com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar -DgroupId=com.ibm.streams -DartifactId=streamsx.topology -Dversion=x.y.z -Dpackaging=jar -Dsources=release-streamsx.topology/maven/topology-sources.jar`
+
+11.b Deploy to Maven central repository
+
+   * T.B.D.
+

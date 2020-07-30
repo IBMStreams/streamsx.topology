@@ -276,6 +276,17 @@
       <checksum algorithm="sha1" file="${releasefilename}"/>
   </target>
 
+  <target name="create_mvn_sources_jar">
+      <property name="release.dir" location="${release.base}" />
+      <mkdir dir="${release.dir}" />
+      <mkdir dir="${release.dir}/maven" />
+      <jar destfile = "${release.dir}/maven/topology-sources.jar">
+        <fileset dir="java/src" excludes="**/*.class, log4j.properties, overview.html"/>
+        <fileset dir="java/runtime/src" excludes="**/*.class"/>
+        <fileset dir="java/execute/src" excludes="**/*.class"/>
+      </jar>
+  </target>
+
   <target name="get_name">
     <echo message="Toolkit name: ${tkinfo.identity.name}"/>
     <echo message="Toolkit full version: ${tkinfo.identity.version}"/>
