@@ -1,20 +1,21 @@
 # Changes
 ==========
 
-## latest
+## v1.15.8
+* [#2529](https://github.com/IBMStreams/streamsx.topology/issues/2529) Provide failure reason if edge image build fails
 * [#2524](https://github.com/IBMStreams/streamsx.topology/issues/2524) JAVA: Resolve issue in keyed window definition and using submission parameter
 
 ## v1.15.7
 * [#2513](https://github.com/IBMStreams/streamsx.topology/issues/2513) Third-party lib updated to resolve security vulnerabilities (commons-codec: 1.14)
 
 ## v1.15.6
-* [#2508](https://github.com/IBMStreams/streamsx.topology/issues/2508) Python: Support tumbling window creation using submission params 
+* [#2508](https://github.com/IBMStreams/streamsx.topology/issues/2508) Python: Support tumbling window creation using submission params
 * [#2506](https://github.com/IBMStreams/streamsx.topology/issues/2506) Python: Window.aggregate supports submission parameter for size of window eviction policy
 
 ## v1.15.5
-* [#2499](https://github.com/IBMStreams/streamsx.topology/issues/2499) Pythondoc: Updated `Stream.parallel`,`Stream.set_parallel` args description regarding submission parameter 
-* [#2498](https://github.com/IBMStreams/streamsx.topology/issues/2498) Python: Support sliding window creation using submission parameter 
-* [#2494](https://github.com/IBMStreams/streamsx.topology/issues/2494) JAVA: Support sliding window creation using submission parameter 
+* [#2499](https://github.com/IBMStreams/streamsx.topology/issues/2499) Pythondoc: Updated `Stream.parallel`,`Stream.set_parallel` args description regarding submission parameter
+* [#2498](https://github.com/IBMStreams/streamsx.topology/issues/2498) Python: Support sliding window creation using submission parameter
+* [#2494](https://github.com/IBMStreams/streamsx.topology/issues/2494) JAVA: Support sliding window creation using submission parameter
 * [#2495](https://github.com/IBMStreams/streamsx.topology/issues/2495) edgeConfig: `condaPackages` parameter is not supported anymore
 
 ## v1.15.4

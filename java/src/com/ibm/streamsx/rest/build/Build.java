@@ -38,6 +38,8 @@ public class Build extends Element {
     private long lastActivityTime;
     @Expose
     private String type;
+    @Expose
+    private JsonObject failureReason;
     
     @Expose
     private String artifacts;
@@ -93,6 +95,8 @@ public class Build extends Element {
      *         <li>starting</li>
      *         <li>removing</li>
      *         <li>unknown</li>
+     *         <li>built</li>
+     *         <li>failed</li>
      *         </ul>
      * 
      */
@@ -108,7 +112,14 @@ public class Build extends Element {
     public String getName() {
         return name;
     }
-    
+
+    /**
+     * @return the failureReason
+     */
+    public JsonObject getFailureReason() {
+        return failureReason;
+    }
+
     public JsonObject getMetrics() {
         return metrics;
     }
