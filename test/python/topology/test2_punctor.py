@@ -69,6 +69,32 @@ def generate_numbers_for_named_tuple_schema() -> typing.Iterable[NumbersSourceSc
         )
         yield output_event
 
+def generate_puncts_schema() -> typing.Iterable[NumbersSourceSchema]:
+    idx = 0
+    while idx < 3:
+        idx += 1
+        punct_flag = True
+        output_event = NumbersSourceSchema(
+            value = idx,
+            punct_flag = punct_flag
+        )
+        yield output_event
+
+class AggregateSchema(NamedTuple):
+    sum: int = 0
+    max: int = 0
+
+class SumMaxValues:
+    def __call__(self, tuples_in_window) -> AggregateSchema:
+        values = [tpl.value for tpl in tuples_in_window]
+        mx = max(values)
+        sm = sum(values)
+        output_event = AggregateSchema(
+            sum = sm,
+            max = mx
+        )
+        return output_event
+
 
 class TestPunctor(unittest.TestCase):
     _multiprocess_can_split_ = True
@@ -140,8 +166,8 @@ class TestPunctor(unittest.TestCase):
         tester.punct_count(s, 2)
         tester.test(self.test_ctxtype, self.test_config)
 
-    def test_batch_punct(self):
-        topo = Topology("test_batch_punct")
+    def test_batch_punct_spl_aggregate(self):
+        topo = Topology("test_batch_punct_spl_aggregate")
         s = topo.source(generate_numbers_for_named_tuple_schema)
         s = s.punctor(func=(lambda t : True == t.punct_flag), before=False, replace=False)
         s = s.map(lambda x : (x.value,), schema='tuple<uint64 seq>')
@@ -155,5 +181,32 @@ class TestPunctor(unittest.TestCase):
         tester = Tester(topo)
         tester.tuple_count(s, 2)
         tester.punct_count(s, 2)
+        tester.test(self.test_ctxtype, self.test_config)
+
+
+    def test_batch_punct_aggregate(self):
+        topo = Topology("test_batch_punct_aggregate")
+        s = topo.source(generate_numbers_for_named_tuple_schema)
+        s = s.punctor(func=(lambda t : True == t.punct_flag), before=False, replace=False)
+        window = s.batch('punct')
+        a = window.aggregate(SumMaxValues())
+        a.print(write_punctuations=True)
+
+        tester = Tester(topo)
+        tester.tuple_count(a, 2)
+        tester.punct_count(a, 2)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    def test_batch_punct_aggregate_empty_window(self):
+        topo = Topology("test_batch_punct_aggregate_empty_window")
+        s = topo.source(generate_puncts_schema)
+        s = s.punctor(func=(lambda t : True == t.punct_flag), replace=True)
+        window = s.batch('punct')
+        a = window.aggregate(SumMaxValues())
+        a.print(write_punctuations=True)
+
+        tester = Tester(topo)
+        tester.tuple_count(a, 0)
+        tester.punct_count(a, 3)
         tester.test(self.test_ctxtype, self.test_config)
 
