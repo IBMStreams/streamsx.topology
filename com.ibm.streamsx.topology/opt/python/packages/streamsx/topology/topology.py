@@ -2202,6 +2202,11 @@ class Stream(_placement._Placement, object):
             # Create batches against stream s every five minutes
             w = s.batch(size=datetime.timedelta(minutes=5))
 
+        ::
+
+            # Create a tumbling punctuation-based window 
+            w = s.batch('punct')
+
         Args:
             size(int|datetime.timedelta|submission parameter created by :py:meth:`Topology.create_submission_parameter`): The size of each batch, either an `int` to define the
                 number of tuples or `datetime.timedelta` to define the
@@ -2221,6 +2226,11 @@ class Stream(_placement._Placement, object):
             win._evict_count(size)
         elif isinstance(size, streamsx.topology.runtime._SubmissionParam):
             win._evict_count_stv(size)
+        elif type(size) == str:
+            if (size.lower() == 'punct') or (size.lower() == 'punctuation'):
+                win._evict_punct()
+            else:
+                raise ValueError(size)
         else:
             raise ValueError(size)
         return win
@@ -2714,6 +2724,10 @@ class Window(object):
         wc = Window(self.stream, None)
         wc._config.update(self._config)
         return wc
+
+    def _evict_punct(self):
+        self._config['evictPolicy'] = 'PUNCTUATION'
+        self._config['evictConfig'] = 0
 
     def _evict_count(self, size):
         self._config['evictPolicy'] = 'COUNT'

@@ -540,6 +540,7 @@ class OperatorGenerator {
         case POLICY_NONE:
             break;
         case POLICY_PUNCTUATION:
+        	sb.append("punct()");
             break;
         case POLICY_TIME: {
         	sb.append("time(");

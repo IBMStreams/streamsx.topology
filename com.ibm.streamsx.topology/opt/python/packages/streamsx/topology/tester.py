@@ -489,7 +489,7 @@ class Tester(object):
             Stream: stream
         """
         _logger.debug("Adding punctuations count (%d) condition to stream %s.", count, stream)
-        name = stream.name + '_count'
+        name = stream.name + '_punct_count'
         if exact:
             cond = sttrt._PunctExactCount(count, name)
             cond._desc = "{0} stream expects punctuations count equal to {1}.".format(stream.name, count)
