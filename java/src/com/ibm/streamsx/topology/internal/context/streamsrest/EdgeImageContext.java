@@ -189,7 +189,7 @@ public class EdgeImageContext extends BuildServiceContext {
         // use same registry and prefix as used for the base image if not set in edgeConfig
         final String imageRegistry = this.baseImage.getRegistry();
         final String imagePrefix = (edgeConfigImagePrefix != null) ? edgeConfigImagePrefix : this.baseImage.getPrefix();
-        final String imageName = (edgeConfigImageName != null) ? edgeConfigImageName : getBuildName();
+        final String imageName = (edgeConfigImageName != null) ? edgeConfigImageName : getBuildName().toLowerCase();
         final String imageTag = (edgeConfigImageTag != null) ? edgeConfigImageTag : "streamsx";
         String imageStr = imageRegistry + "/" + imagePrefix + "/" + imageName + ":" + imageTag;
         //System.out.println("INFO: image = " + imageStr);
