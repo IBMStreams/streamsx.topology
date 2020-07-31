@@ -140,3 +140,20 @@ class TestPunctor(unittest.TestCase):
         tester.punct_count(s, 2)
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_batch_punct(self):
+        topo = Topology("test_batch_punct")
+        s = topo.source(generate_numbers_for_named_tuple_schema)
+        s = s.punctor(func=(lambda t : True == t.punct_flag), before=False, replace=False)
+        s = s.map(lambda x : (x.value,), schema='tuple<uint64 seq>')
+
+        agg = op.Map('spl.relational::Aggregate', s.batch('punct'), schema = 'tuple<uint64 sum, uint64 max>')
+        agg.sum = agg.output('Sum(seq)')
+        agg.max = agg.output('Max(seq)')
+        s = agg.stream
+
+        s.print(write_punctuations=True)
+        tester = Tester(topo)
+        tester.tuple_count(s, 2)
+        tester.punct_count(s, 2)
+        tester.test(self.test_ctxtype, self.test_config)
+
