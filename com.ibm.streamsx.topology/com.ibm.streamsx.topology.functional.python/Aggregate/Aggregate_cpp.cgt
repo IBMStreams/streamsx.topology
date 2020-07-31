@@ -58,6 +58,9 @@ MY_OPERATOR::MY_OPERATOR() :
 <% if ($window->isTumbling()) {%>
     window_.registerBeforeWindowFlushHandler(this);
 <%}%>
+<%if($isPunctWindow){%>
+    window_.registerOnEmptyWindowPunctEvent(this);
+<%}%>
 #if SPLPY_PARTITION_BY_PYTHON == 1
     window_.registerOnWindowPartitionEviction(this);
 #endif
