@@ -1,6 +1,9 @@
 # Changes
 ==========
 
+## Latest
+* [#2533](https://github.com/IBMStreams/streamsx.topology/issues/2533) Automatic creation of edge image name can result in illegal image name
+
 ## v1.15.8
 * [#2529](https://github.com/IBMStreams/streamsx.topology/issues/2529) Provide failure reason if edge image build fails
 * [#2524](https://github.com/IBMStreams/streamsx.topology/issues/2524) JAVA: Resolve issue in keyed window definition and using submission parameter
