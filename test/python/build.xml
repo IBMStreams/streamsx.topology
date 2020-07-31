@@ -68,6 +68,7 @@
 		     <arg value="test2_aggregate.TestAggregate"/>
 		     <arg value="test2_ec.TestEc"/>
 		     <arg value="test2_spl2python.TestSPL2Python"/>
+		     <arg value="test2_punctor.TestPunctor"/>
 		     <arg value="-v"/>
 		   </exec>
 	   </target>
