@@ -23,6 +23,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 
@@ -439,6 +443,39 @@ public class TestTopology {
     protected void adlOk() {
         assumeTrue(SC_OK);
         assumeTrue(getTesterType() == StreamsContext.Type.STANDALONE_TESTER);
+    }
+
+    protected boolean isRedHat6() {
+        boolean result = false;
+        System.out.println("TEST-OS-VERSION: System property os.version="+System.getProperty("os.version"));
+        if (System.getProperty("os.version").contains("el6")) {
+            result = true;
+        }
+        else  {
+            result = checkSystemReleaseVersion("6");
+        }
+        System.out.println("isRedHat6() returns "+result);
+        return result;
+    }
+
+    private boolean checkSystemReleaseVersion(String version) {
+        boolean result = false;
+        try {
+            String[] cmd = { "/bin/sh", "-c", "cat /etc/system-release-cpe | cut -d ':' -f5" };
+            Process process = Runtime.getRuntime().exec(cmd);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println("TEST-OS-VERSION: SystemReleaseVersion: "+line);
+                if (line.startsWith(version)) {
+                    result = true;
+                }
+            }
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
     
     /**
