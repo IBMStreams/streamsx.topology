@@ -96,8 +96,7 @@ public class SPLOperatorsTest extends TestTopology {
     }
     @Test
     public void testSCoptionsSingle() throws Exception {
-        System.out.println("TEST OS.VERSION: System property os.version="+System.getProperty("os.version"));
-        assumeTrue(!System.getProperty("os.version").contains("el6"));
+        assumeTrue(!isRedHat6());
         _testSCoptions("--c++std=c++11", "CPP11", "NOOPT");
     }
     @Test
@@ -106,7 +105,7 @@ public class SPLOperatorsTest extends TestTopology {
     }
     @Test
     public void testSCoptionsMulti() throws Exception {
-        assumeTrue(!System.getProperty("os.version").contains("el6"));
+        assumeTrue(!isRedHat6());
         List<String> opts = new ArrayList<>();
         opts.add("--cxx-flags=-DSCOPT_TESTING=1");
         opts.add("--c++std=c++11");
