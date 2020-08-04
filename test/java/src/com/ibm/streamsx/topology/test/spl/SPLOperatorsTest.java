@@ -96,6 +96,7 @@ public class SPLOperatorsTest extends TestTopology {
     }
     @Test
     public void testSCoptionsSingle() throws Exception {
+        System.out.println("TEST OS.VERSION: System property os.version="+System.getProperty("os.version"));
         assumeTrue(!System.getProperty("os.version").contains("el6"));
         _testSCoptions("--c++std=c++11", "CPP11", "NOOPT");
     }
