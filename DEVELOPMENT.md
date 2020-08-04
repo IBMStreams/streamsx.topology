@@ -253,10 +253,11 @@ For a pull request:
 
 11.a Test install to local maven repository:
 
-   * `ant create_mvn_sources_jar`
-   * `mvn install:install-file -Dfile=com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar -DgroupId=com.ibm.streams -DartifactId=streamsx.topology -Dversion=x.y.z -Dpackaging=jar -Dsources=release-streamsx.topology/maven/topology-sources.jar`
-
+   * `ant maven-install`
+   * Check local repository, for example: `~/.m2/repository/com/ibm/streams/streamsx.topology`
+   
 11.b Deploy to Maven central repository
 
-   * T.B.D.
+   * `ant maven-deploy`
+
 

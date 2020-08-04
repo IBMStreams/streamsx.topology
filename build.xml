@@ -278,6 +278,7 @@
 
   <target name="create_mvn_sources_jar">
       <property name="release.dir" location="${release.base}" />
+      <delete dir="${release.dir}/maven"/>
       <mkdir dir="${release.dir}" />
       <mkdir dir="${release.dir}/maven" />
       <jar destfile = "${release.dir}/maven/topology-sources.jar">
@@ -285,6 +286,51 @@
         <fileset dir="java/runtime/src" excludes="**/*.class"/>
         <fileset dir="java/execute/src" excludes="**/*.class"/>
       </jar>
+  </target>
+
+  <target name="maven-install" depends="create_mvn_sources_jar,nomaven" if="env.M2_HOME">
+    <exec executable="mvn"  failonerror="true">
+      <arg value="install:install-file"/>
+      <arg value="-Dfile=com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar"/>
+      <arg value="-Dsources=release-streamsx.topology/maven/topology-sources.jar"/>
+      <arg value="-DpomFile=release-pom.xml"/>
+      <arg value="-Dversion=1.15.8"/>
+    </exec>
+    <exec executable="mvn"  failonerror="true">
+      <arg value="install:install-file"/>
+      <arg value="-Dfile=release-streamsx.topology/streamsx.topology-v1.15-20200804-1435.tgz"/>
+      <arg value="-DpomFile=release-pom.xml"/>
+      <arg value="-Dpackaging=tgz"/>
+      <arg value="-Dclassifier=toolkit"/>
+      <arg value="-Dversion=1.15.8"/>
+    </exec>
+  </target>
+
+  <target name="maven-deploy" depends="create_mvn_sources_jar,nomaven" if="env.M2_HOME">
+    <exec executable="mvn"  failonerror="true">
+      <arg value="deploy:deploy-file"/>
+      <arg value="-Dfile=com.ibm.streamsx.topology/lib/com.ibm.streamsx.topology.jar"/>
+      <arg value="-Dsources=release-streamsx.topology/maven/topology-sources.jar"/>
+      <arg value="-DpomFile=release-pom.xml"/>
+      <arg value="-Dversion=1.15.8"/>
+      <arg value="-DrepositoryId=ossrh"/>
+      <arg value="-Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2/"/>
+    </exec>
+    <exec executable="mvn"  failonerror="true">
+      <arg value="deploy:deploy-file"/>
+      <arg value="-Dfile=release-streamsx.topology/streamsx.topology-v1.15-20200804-1435.tgz"/>
+      <arg value="-DpomFile=release-pom.xml"/>
+      <arg value="-Dpackaging=tgz"/>
+      <arg value="-Dclassifier=toolkit"/>
+      <arg value="-Dversion=1.15.8"/>
+      <arg value="-DrepositoryId=ossrh"/>
+      <arg value="-Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2/"/>
+    </exec>
+  </target>
+
+  <!-- Prints a message if no maven is found. -->
+  <target name="nomaven" unless="env.M2_HOME">
+    <echo message="M2_HOME not found in environment"/>
   </target>
 
   <target name="get_name">
