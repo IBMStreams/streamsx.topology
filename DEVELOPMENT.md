@@ -248,3 +248,9 @@ For a pull request:
     
 10. At readthedocs for streamsx.topology if required you can make the specific doc set for the tag active. The tag is based upon the tag in the streamsx.topology release.
     * https://readthedocs.org/projects/streamsxtopology/versions/
+
+11. Deploy the release on Maven central
+
+   * `ant maven-deploy -Drelease-version=x.y.z`, for example release-version=1.15.8
+
+
