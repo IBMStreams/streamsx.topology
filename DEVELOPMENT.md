@@ -251,13 +251,6 @@ For a pull request:
 
 11. Deploy the release on Maven central
 
-11.a Test install to local maven repository:
-
-   * `ant maven-install`
-   * Check local repository, for example: `~/.m2/repository/com/ibm/streams/streamsx.topology`
-   
-11.b Deploy to Maven central repository
-
-   * `ant maven-deploy`
+   * `ant maven-deploy -Drelease-version=x.y.z`, for example release-version=1.15.8
 
 

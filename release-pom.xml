@@ -10,7 +10,7 @@
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Java API to allow creation of streaming applications for IBM Streams</description>
-    <url>https://github.com/IBMStreams/streamsx.topology</url>
+    <url>http://ibmstreams.github.io/streamsx.topology/</url>
 
     <licenses>
       <license>
