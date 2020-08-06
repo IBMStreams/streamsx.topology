@@ -305,7 +305,7 @@
 
   <target name="maven-deploy" depends="prepare_mvn_files,nomaven" if="env.M2_HOME">
     <exec executable="mvn"  failonerror="true">
-      <arg value="--batch-mode"/>
+      <arg value="-B"/>
       <arg value="gpg:sign-and-deploy-file"/>
       <arg value="-Dfile=release-streamsx.topology/maven/com.ibm.streamsx.topology.jar"/>
       <arg value="-Dsources=release-streamsx.topology/maven/topology-sources.jar"/>
@@ -315,7 +315,7 @@
       <arg value="-Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2/"/>
     </exec>
     <exec executable="mvn"  failonerror="true">
-      <arg value="--batch-mode"/>
+      <arg value="-B"/>
       <arg value="gpg:sign-and-deploy-file"/>
       <arg value="-Dfile=release-streamsx.topology/maven/streamsx.topology.tgz"/>
       <arg value="-DpomFile=release-pom.xml"/>
