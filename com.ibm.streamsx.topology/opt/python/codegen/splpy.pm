@@ -77,7 +77,7 @@ sub splToPythonConversionCheck{
       splToPythonConversionCheck($value_type);
       return;
     }
-
+    return; # XXX NESTED in progress
     SPL::CodeGen::errorln("SPL type: " . $type . " is not supported for conversion to or from Python."); 
 }
 

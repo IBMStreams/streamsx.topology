@@ -159,7 +159,7 @@ class TestNamedTupleSource(unittest.TestCase):
         tester.test(self.test_ctxtype, self.test_config)
 
     # ValueError: Unsupported type: <class 'py36_types.SpottedSchema'>
-    def _test_list_of_tuple_spl_py(self):
+    def test_list_of_tuple_spl_py(self):
         # spl source -> python sink (NamedTupleListOfTupleSchema)
         topo = Topology()
         b = op.Source(topo, "spl.utility::Beacon",
@@ -167,14 +167,15 @@ class TestNamedTupleSource(unittest.TestCase):
             params = {'period': 0.1, 'iterations':3})
 
         st = b.stream
-        st.print()
+        sm1 = st.map(lambda x : x, name='M1')
+        sm1.print()
  
         tester = Tester(topo)
         tester.tuple_count(st, 3)
         tester.test(self.test_ctxtype, self.test_config)
 
     # ValueError: Unsupported type: <class 'py36_types.SpottedSchema'>
-    def _test_nested_tuple_spl_py(self):
+    def test_nested_tuple_spl_py(self):
         # spl source -> python sink (NamedTupleNestedTupleSchema)
         topo = Topology()
         b = op.Source(topo, "spl.utility::Beacon",
@@ -182,14 +183,15 @@ class TestNamedTupleSource(unittest.TestCase):
             params = {'period': 0.1, 'iterations':3})
 
         st = b.stream
-        st.print()
+        sm1 = st.map(lambda x : x, name='M1')
+        sm1.print()
  
         tester = Tester(topo)
         tester.tuple_count(st, 3)
         tester.test(self.test_ctxtype, self.test_config)
 
     # CDISP9164E ERROR: SPL type: tuple<float64 start_time,float64 end_time,float64 confidence> is not supported for conversion to or from Python.
-    def _test_nested_tuple_streamschema_spl_py(self):
+    def test_nested_tuple_streamschema_spl_py(self):
         # spl source -> python sink (StreamSchema)
         topo = Topology()
         b = op.Source(topo, "spl.utility::Beacon",
@@ -197,7 +199,8 @@ class TestNamedTupleSource(unittest.TestCase):
             params = {'period': 0.1, 'iterations':3})
 
         st = b.stream
-        st.print()
+        sm1 = st.map(lambda x : x, name='M1')
+        sm1.print()
  
         tester = Tester(topo)
         tester.tuple_count(st, 3)

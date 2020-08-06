@@ -763,21 +763,43 @@ class CommonSchema(enum.Enum):
         return str(self.schema())
 
 def _from_named_tuple(nt):
-    spl_types = []
-    for name in nt._fields:
-        spl_types.append(_spl_from_type(nt._field_types[name]))
+    print ('_from_named_tuple '+str(nt))
 
-    td = 'tuple<'
-    for i in range(len(nt._fields)):
+    i = 0
+    td = 'tuple<'    
+    for name in nt._fields:
         if i:
             td += ', '
-        td += spl_types[i]
+        typeval = _spl_from_type(nt._field_types[name])
+        print ('XXX nt2 ' + str(typeval))
+        td += typeval
         td += ' '
-        td += nt._fields[i]
+        td += name
+        i = i + 1
     td += '>'
-    return StreamSchema(td).as_tuple(named=nt.__name__)
+    
+    print ('XXX nt3 ' + td)
+    return StreamSchema(td)#.as_tuple(named=nt.__name__)
+    
+    
+def _from_named_tuple_subclass(nt):
+    print ('_from_named_tuple_subclass '+str(nt))
+
+    i = 0
+    td = ''
+    for name in nt._fields:
+        if i:
+            td += ', '
+        typeval = _spl_from_type(nt._field_types[name])
+        td += typeval
+        td += ' '
+        td += name
+        i = i + 1
+    return td
+ 
 
 def _spl_from_type(type_):
+    print ('_spl_from_type '+str(type_))
     _init_type_mappings()
     if type_ in _PYTYPE_TO_SPL:
         return _PYTYPE_TO_SPL[type_]
@@ -801,9 +823,14 @@ def _spl_from_type(type_):
             et = type_.__args__[0] if type_.__args__[1] is type(None) else type_.__args__[1]
             if typing.Optional[et] == type_:
                 return 'optional<' + _spl_from_type(et) + '>'
-    raise ValueError("Unsupported type: " + str(type_))
+    if _is_namedtuple(type_):
+        print ('XXX nt1 ' + str(type_))
+        return 'tuple<' + _from_named_tuple_subclass(type_) + '>'
+    else:
+        raise ValueError("Unsupported type: " + str(type_))
 
 def _type_from_spl(type_):
+    print ('_type_from_spl '+str(type_))
     _init_type_mappings()
     if type_ in _SPLTYPE_TO_PY:
         return _SPLTYPE_TO_PY[type_]
