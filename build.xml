@@ -91,6 +91,9 @@
     <delete>
       <fileset dir="." includes="jacoco.exec"/>
     </delete>
+    <delete>
+      <fileset dir="." includes="*.asc"/>
+    </delete>
     <delete dir="test/java/unittest"/>
     <delete>
       <fileset dir="test/python/spl/testtkpy" includes="toolkit.xml"/>
