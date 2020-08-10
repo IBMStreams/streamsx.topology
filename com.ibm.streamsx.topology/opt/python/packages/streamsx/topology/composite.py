@@ -23,7 +23,8 @@ class Composite(ABC):
     """
     Composite transformations support a single logical transformation
     being a composite of one or more basic transformations.
-
+    Composites encapsulate complex transformations for being re-used.
+    
     A composite transformation is implemented as a sub-class
     of :py:class:`Source`, :py:class:`Map` or :py:class:`ForEach`
     whose ``populate`` method populates the topology with the
@@ -33,7 +34,8 @@ class Composite(ABC):
     and then a :py:meth:`~Stream.map` to parse the event into
     a structured schema.
 
-    Composites may use other composites during ``populate``.
+    Composites may use other composites during ``populate``. The ``populate``
+    function implements the specific transformations of a composite.
 
 
     Composites can control how the basic transformations are
@@ -102,7 +104,8 @@ class Source(Composite):
     Abstract composite source.
 
     An instance of a subclass can be passed to :py:meth:`~Topology.source`
-    to create a source stream that is composed of one or more basic transformations.
+    to create a source stream that is composed of one or more basic transformations, 
+    which must be implemented by the :py:meth:`~Source.populate` method of the subclass.
 
     Example assuming ``RawTweets`` is Python iterable that produces
     raw tweets::
@@ -133,7 +136,11 @@ class Source(Composite):
     @abstractmethod
     def populate(self, topology:streamsx.topology.topology.Topology, name:Optional[str], **options) -> streamsx.topology.topology.Stream:
         """
-        Populate the topology with this composite source.
+        Populate the topology with this composite source. Subclasses must implement the ``populate`` function.
+        ``populate`` is called when the composite is added to the topology with::
+        
+            topo = Topology()
+            source_stream = topo.source(mySourceComposite)
 
         Args:
             topology: Topology containing the source.
@@ -152,7 +159,7 @@ class Map(Composite):
 
     An instance of a subclass can be passed to :py:meth:`~streamsx.topology.topology.Stream.map`
     to create a stream that is composed of one or more basic transformations
-    of an input stream.
+    of an input stream, which must be implemented by the :py:meth:`~Map.populate` method of the subclass.
 
     Example::
 
@@ -179,6 +186,10 @@ class Map(Composite):
     def populate(self, topology:streamsx.topology.topology.Topology, stream:streamsx.topology.topology.Stream, schema:streamsx.typing.Schema, name:Optional[str], **options) -> streamsx.topology.topology.Stream:
         """
         Populate the topology with this composite map transformation.
+        Subclasses must implement the ``populate`` function.
+        ``populate`` is called when the composite is added to the topology with::
+        
+            transformed_stream = input_stream.map(myMapComposite)
 
         Args:
             topology: Topology containing the composite map.
@@ -198,6 +209,7 @@ class ForEach(Composite):
 
     An instance of a subclass can be passed to :py:meth:`~streamsx.topology.topology.Stream.for_each` to create a sink (stream termination) that is
     composed of one or more basic transformations of an input stream.
+    These transformations and the sink function must be implemented by the :py:meth:`~ForEach.populate` method of the subclass. 
     """
 
     def _add(self, stream, name, **options):
@@ -210,6 +222,10 @@ class ForEach(Composite):
     def populate(self, topology:streamsx.topology.topology.Topology, stream:streamsx.topology.topology.Stream, name:Optional[str], **options) -> streamsx.topology.topology.Sink:
         """
         Populate the topology with this composite for each transformation.
+        Subclasses must implement the ``populate`` function.
+        ``populate`` is called when the composite is added to the topology with::
+        
+            sink = input_stream.for_each(myForEachComposite)
 
         Args:
             topology: Topology containing the composite map.
