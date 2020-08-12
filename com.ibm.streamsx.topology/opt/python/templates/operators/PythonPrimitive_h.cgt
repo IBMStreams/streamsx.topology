@@ -30,10 +30,13 @@ public:
   void process(uint32_t idx);
   void prepareToShutdown(); 
   void process(Tuple const & tuple, uint32_t port);
-
+  void process(Punctuation const & punct, uint32_t port);
+  
   void convertAndSubmit(uint32_t port, PyObject *tuple_);
+  void submitPunct(uint32_t port);
 
 private:
+    Mutex _mutex;
     SplpyOp *op() { return pyop_; }
 
     SplpyPyOp *pyop_;

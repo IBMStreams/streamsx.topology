@@ -1215,7 +1215,7 @@ class Stream(_placement._Placement, object):
         stream._alias = name
         return stream
 
-    def for_each(self, func, name=None):
+    def for_each(self, func, name=None, process_punct=None):
         """
         Sends information as a stream to an external system.
 
@@ -1236,6 +1236,19 @@ class Stream(_placement._Placement, object):
         exception is suppressed no further processing occurs for the
         input tuple that caused the exception.
 
+        Example with class handling punctuations in the Sink operator::
+
+            class FEClass(object):
+                def __call__(self, t):
+                    return None
+
+                def on_punct(self):
+                    print ('window punctuation marker received')
+                    ...
+
+            ...
+            s.for_each(FEClass(), name='SinkHandlingPunctuations', process_punct=True)
+
         .. rubric:: Composite transformation
 
         A composite transformation is an instance of :py:class:`~streamsx.topology.composite.ForEach`. Composites allow the application developer to use
@@ -1246,6 +1259,7 @@ class Stream(_placement._Placement, object):
         Args:
             func: A callable that takes a single parameter for the tuple and returns None.
             name(str): Name of the stream, defaults to a generated name.
+            process_punct(bool): Specifies if ``on_punct`` on callable ``func`` is called when window punctuation markers are received.
 
         Returns:
             streamsx.topology.topology.Sink: Stream termination.
@@ -1260,6 +1274,8 @@ class Stream(_placement._Placement, object):
             Now returns a :py:class:`Sink` instance.
         .. versionchanged:: 1.14 
             Support for type hints and composite transformations.
+        .. versionchanged:: 1.16 
+            New parameter process_punct to support handling of window punctuation markers in callable.
         """
         import streamsx.topology.composite
         if isinstance(func, streamsx.topology.composite.ForEach):
@@ -1269,11 +1285,82 @@ class Stream(_placement._Placement, object):
         sl = _SourceLocation(_source_info(), 'for_each')
         _name = self.topology.graph._requested_name(name, action='for_each', func=func)
         stateful = _determine_statefulness(func)
-        op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=_name, sl=sl, stateful=stateful)
+        params = {}
+        if process_punct is not None:
+           if process_punct:
+               params = {'processPunctuations': True} # sets parameter of ForEach operator
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::ForEach", func, name=_name, sl=sl, stateful=stateful, params=params)
         op.addInputPort(outputPort=self.oport)
         streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
         op._layout(kind='ForEach', name=op.runtime_id, orig_name=name)
         return Sink(op)
+
+    def punctor(self, func, before=True, replace=False, name=None):
+        """
+        Adds window punctuation to this stream using the supplied callable `func` as condition that determines when a window punctuation is to be generated.
+
+        For each stream tuple `t` on the stream ``func(t)`` is called, if the return evaluates to ``True`` the
+        window punctuation will be generated and the tuple is forwarded, otherwise the tuple is just forwarded.
+        
+        Args:
+            func: Punctor callable that takes a single parameter for the stream tuple.
+            before(bool): If the value is `True`, the punctuation is generated before the output tuple; otherwise it is generated after the output tuple.
+            replace(bool): If the value is `True`, then in case ``func(t)`` returns ``True`` the window punctuation will be generated and the tuple is discarded (not forwarded). The parameter ``before`` is not ignored in this case.
+            name(str): Name of the stream, defaults to a generated name.
+
+        If invoking ``func`` for a stream tuple raises an exception
+        then its processing element will terminate. By default the processing
+        element will automatically restart though tuples may be lost.
+
+        If ``func`` is a callable object then it may suppress exceptions
+        by return a true value from its ``__exit__`` method. When an
+        exception is suppressed no tuple is submitted to the output
+        stream corresponding to the input tuple that caused the exception.
+
+        Example with adding punctuation after each tuple::
+
+            topo = Topology()
+            s = topo.source([1,2,3,4])
+            s = s.punctor(lambda x: True, before=False)
+
+        Example with sending punctuation before a tuple::
+
+            topo = Topology()
+            s = topo.source([1,2,3,4])
+            s = s.punctor(lambda t : 2 < t)
+
+        Returns:
+            Stream: A Stream containing tuples with generated punctuation. The schema of the returned stream is the same as this stream's schema.
+
+        .. rubric:: Type hints
+
+        The argument type hint on `func` is used (if present) to verify
+        at topology declaration time that it is compatible with the
+        type of tuples on this stream.
+
+        .. versionadded:: 1.16
+        """
+        streamsx._streams._hints.check_punctor(func, self)
+        sl = _SourceLocation(_source_info(), 'punctor')
+        _name = self.topology.graph._requested_name(name, action="punctor", func=func)
+        stateful = _determine_statefulness(func)
+        params = {}
+        _replace = False
+        if replace is not None:
+            if replace: 
+                _replace = True
+        if before is not None:
+           if before:
+               params = {'before': True, 'replace': _replace}
+           else:
+               params = {'before': False, 'replace': _replace}
+        op = self.topology.graph.addOperator(self.topology.opnamespace+"::Punctor", func, name=_name, sl=sl, stateful=stateful, params=params)
+        op.addInputPort(outputPort=self.oport)
+        streamsx.topology.schema.StreamSchema._fnop_style(self.oport.schema, op, 'pyStyle')
+        op._layout(kind='Punctor', name=op.runtime_id, orig_name=name)
+        oport = op.addOutputPort(schema=self.oport.schema, name=_name)
+        return Stream(self.topology, oport)._make_placeable()
+
 
     def filter(self, func, non_matching=False, name=None):
         """
@@ -2115,6 +2202,11 @@ class Stream(_placement._Placement, object):
             # Create batches against stream s every five minutes
             w = s.batch(size=datetime.timedelta(minutes=5))
 
+        ::
+
+            # Create a tumbling punctuation-based window 
+            w = s.batch('punct')
+
         Args:
             size(int|datetime.timedelta|submission parameter created by :py:meth:`Topology.create_submission_parameter`): The size of each batch, either an `int` to define the
                 number of tuples or `datetime.timedelta` to define the
@@ -2134,6 +2226,11 @@ class Stream(_placement._Placement, object):
             win._evict_count(size)
         elif isinstance(size, streamsx.topology.runtime._SubmissionParam):
             win._evict_count_stv(size)
+        elif type(size) == str:
+            if (size.lower() == 'punct') or (size.lower() == 'punctuation'):
+                win._evict_punct()
+            else:
+                raise ValueError(size)
         else:
             raise ValueError(size)
         return win
@@ -2190,7 +2287,7 @@ class Stream(_placement._Placement, object):
         oport = op.addOutputPort(schema=self.oport.schema)
         return Stream(self.topology, oport)
 
-    def print(self, tag=None, name=None):
+    def print(self, tag=None, name=None, write_punctuations=None):
         """
         Prints each tuple to stdout flushing after each tuple.
 
@@ -2201,6 +2298,7 @@ class Stream(_placement._Placement, object):
             tag: A tag to prepend to each tuple.
             name(str): Name of the resulting stream.
                 When `None` defaults to a generated name.
+            write_punctuations(bool): Specifies to write punctuations to stdout
         Returns:
             streamsx.topology.topology.Sink: Stream termination.
 
@@ -2208,6 +2306,8 @@ class Stream(_placement._Placement, object):
 
         .. versionchanged:: 1.7
             Now returns a :py:class:`Sink` instance.
+
+        .. versionadded:: 1.16 `write_punctuations` parameter.
         """
         _name = name
         if _name is None:
@@ -2218,6 +2318,11 @@ class Stream(_placement._Placement, object):
             fn = lambda v : streamsx.topology.functions.print_flush(tag + str(v))
         sp = self.for_each(fn, name=_name)
         sp._op().sl = _SourceLocation(_source_info(), 'print')
+        if write_punctuations is not None:
+           if write_punctuations:
+               sp._op().params['writePunctuations'] = True
+               if tag is not None:
+                   sp._op().params['writeTag'] = tag
         return sp
 
     def publish(self, topic, schema=None, name=None):
@@ -2619,6 +2724,10 @@ class Window(object):
         wc = Window(self.stream, None)
         wc._config.update(self._config)
         return wc
+
+    def _evict_punct(self):
+        self._config['evictPolicy'] = 'PUNCTUATION'
+        self._config['evictConfig'] = 0
 
     def _evict_count(self, size):
         self._config['evictPolicy'] = 'COUNT'

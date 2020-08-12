@@ -1,6 +1,14 @@
 # Changes
 ==========
 
+## branch develop (v1.16 aplha)
+* [#2527](https://github.com/IBMStreams/streamsx.topology/issues/2527) Python: Support tumbling window based on punctuation
+* [#2525](https://github.com/IBMStreams/streamsx.topology/issues/2525) Python: Provide punct_count() in TopologyTester to test the number of received punctuations
+* [#2520](https://github.com/IBMStreams/streamsx.topology/issues/2520) Python: Ability to handle received punctuations in for_each and streamsx.spl.spl.PrimitiveOperator
+* [#2518](https://github.com/IBMStreams/streamsx.topology/issues/2518) Python: Ability to submit punctuation in streamsx.spl.spl.PrimitiveOperator
+* [#2517](https://github.com/IBMStreams/streamsx.topology/issues/2517) Python: Provide Stream.punctor()
+* [#2516](https://github.com/IBMStreams/streamsx.topology/issues/2516) Python: Write punctuation markers with Stream.print() to stdout
+
 ## v1.15.9
 * [#2522](https://github.com/IBMStreams/streamsx.topology/issues/2522) Build scripts prepared for publishing the release to Maven repository
 * [#2537](https://github.com/IBMStreams/streamsx.topology/issues/2537) TestTopology: Check OS version to skip tests in SPLOperatorsTest.java for RH6

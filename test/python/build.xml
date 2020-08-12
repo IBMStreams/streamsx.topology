@@ -10,6 +10,7 @@
 	<property name="testtk_pip_tk" location="spl/testtkpy_pip_toolkit"/>
 	<property name="topology" location="topology"/>
 	<property name="rest" location="rest"/>
+	<property name="spl.tests" location="spl/tests"/>
         <property name="test.dir" location="unittests"/>
 
   <import file="../../common-build.xml"/>
@@ -42,11 +43,32 @@
 	     <echo message="Topology python: ${topology.test.python}"/>
              <echo message="unittest name: ${topology.unittest.name}"/>
 		   <exec executable="${topology.test.python}" dir="${pytests.test.dir}" failonerror="true">
-		     <env key="PYTHONPATH" value="${topology.toolkit.release}/opt/python/packages:${topology}"/>
+		     <env key="PYTHONPATH" value="${topology.toolkit.release}/opt/python/packages:${topology}:${spl.tests}"/>
 		     <arg value="-u"/>
 		     <arg value="-m"/>
 		     <arg value="unittest"/>
 		     <arg value="${topology.unittest.name}"/>
+		     <arg value="-v"/>
+		   </exec>
+	   </target>
+
+	  <target name="test.standalone">
+             <mkdir dir="${test.dir}"/>
+             <tempfile property="pytests.test.dir" prefix="testrun" destDir="${test.dir}"/>
+             <mkdir dir="${pytests.test.dir}"/>
+	     <echo message="Topology python: ${topology.test.python}"/>
+		   <exec executable="${topology.test.python}" dir="${pytests.test.dir}" failonerror="true">
+		     <env key="PYTHONPATH" value="${topology.toolkit.release}/opt/python/packages:${topology}:${spl.tests}"/>
+		     <arg value="-u"/>
+		     <arg value="-m"/>
+		     <arg value="unittest"/>
+		     <arg value="test_splpy_types.TestTypes"/>
+		     <arg value="test_splpy_sources.TestSources"/>
+		     <arg value="test_splpy_primitives.TestPrimitivesOutputs"/>
+		     <arg value="test2_aggregate.TestAggregate"/>
+		     <arg value="test2_ec.TestEc"/>
+		     <arg value="test2_spl2python.TestSPL2Python"/>
+		     <arg value="test2_punctor.TestPunctor"/>
 		     <arg value="-v"/>
 		   </exec>
 	   </target>

@@ -46,7 +46,10 @@ def _fn_return_hint(fn):
     hints = typing.get_type_hints(fn)
     if hints and 'return' in hints:
         return hints['return']
-        
+
+def check_punctor(fn, stream):
+    check_filter(fn, stream)
+
 # Check the callable for a filter
 #
 # - Can be passed a single argument
