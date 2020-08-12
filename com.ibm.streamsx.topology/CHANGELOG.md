@@ -1,7 +1,7 @@
 # Changes
 ==========
 
-## branch develop (v1.16 aplha)
+## branch develop (v1.16 alpha)
 * [#2527](https://github.com/IBMStreams/streamsx.topology/issues/2527) Python: Support tumbling window based on punctuation
 * [#2525](https://github.com/IBMStreams/streamsx.topology/issues/2525) Python: Provide punct_count() in TopologyTester to test the number of received punctuations
 * [#2520](https://github.com/IBMStreams/streamsx.topology/issues/2520) Python: Ability to handle received punctuations in for_each and streamsx.spl.spl.PrimitiveOperator
