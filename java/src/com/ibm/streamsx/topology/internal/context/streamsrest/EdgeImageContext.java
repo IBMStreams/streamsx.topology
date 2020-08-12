@@ -32,9 +32,6 @@ import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
  */
 public class EdgeImageContext extends BuildServiceContext {
 
-    /**
-     * @param downloadArtifacts
-     */
     public EdgeImageContext() {
         super(/*downloadArtifacts=*/false);
     }
@@ -54,6 +51,7 @@ public class EdgeImageContext extends BuildServiceContext {
     private JsonArray edgeConfigRpms = null;
 //    private JsonArray edgeConfigCondaPackages = null;
     private JsonArray edgeConfigLocales = null;
+    private Build imageBuild = null;
 
     public Instance instance() { return instance;}
 
@@ -93,7 +91,7 @@ public class EdgeImageContext extends BuildServiceContext {
     @Override
     protected JsonObject submitBuildArchive (BuildService context, File buildArchive, JsonObject deploy, JsonObject jco,
             String buildName, JsonObject buildConfig) throws Exception {
-    	parseEdgeConfig(jco);
+        parseEdgeConfig(jco);
         // find the base image to use for image build in postBuildAction()
         try {
             List<BaseImage> baseImages = context.getBaseImages();
@@ -133,13 +131,13 @@ public class EdgeImageContext extends BuildServiceContext {
                 }
             }
             if (this.baseImage == null) {
-            	if (null != edgeConfigBaseImage) {
-            		throw new IllegalStateException("Base image '" + edgeConfigBaseImage + "' not found on build service.");
-            	}
-            	else {
+                if (null != edgeConfigBaseImage) {
+                    throw new IllegalStateException("Base image '" + edgeConfigBaseImage + "' not found on build service.");
+                }
+                else {
                     this.baseImage = baseImages.get(0);
                     TRACE.warning("No base image with 'conda' or 'python' in its name or tag found. Using " + this.baseImage.getId() + " instead.");
-            	}
+                }
             }
         }
         catch (IOException e) {
@@ -191,24 +189,23 @@ public class EdgeImageContext extends BuildServiceContext {
         // use same registry and prefix as used for the base image if not set in edgeConfig
         final String imageRegistry = this.baseImage.getRegistry();
         final String imagePrefix = (edgeConfigImagePrefix != null) ? edgeConfigImagePrefix : this.baseImage.getPrefix();
-        final String imageName = (edgeConfigImageName != null) ? edgeConfigImageName : getBuildName();
+        final String imageName = (edgeConfigImageName != null) ? edgeConfigImageName : getBuildName().toLowerCase();
         final String imageTag = (edgeConfigImageTag != null) ? edgeConfigImageTag : "streamsx";
         String imageStr = imageRegistry + "/" + imagePrefix + "/" + imageName + ":" + imageTag;
         //System.out.println("INFO: image = " + imageStr);
         buildConfigOverrides.addProperty("image", imageStr);
         if (edgeConfigPipPackages != null) {
-        	buildConfigOverrides.add("pipPackages", edgeConfigPipPackages);
+            buildConfigOverrides.add("pipPackages", edgeConfigPipPackages);
         }
         if (edgeConfigRpms != null) {
-        	buildConfigOverrides.add("rpms", edgeConfigRpms);
+            buildConfigOverrides.add("rpms", edgeConfigRpms);
         }
 //        if (edgeConfigCondaPackages != null) {
 //        	buildConfigOverrides.add("condaPackages", edgeConfigCondaPackages);
 //        }
         if (edgeConfigLocales != null) {
-        	buildConfigOverrides.add("locales", edgeConfigLocales);
+            buildConfigOverrides.add("locales", edgeConfigLocales);
         }
-        Build imageBuild = null;
         try {
             String buildName = getApplicationBuild().getName() + "_img";
             imageBuild = imageBuilder.createBuild(buildName, null);
@@ -252,15 +249,23 @@ public class EdgeImageContext extends BuildServiceContext {
                 buildStatus = imageBuild.getStatus();
             } while ("building".equals(buildStatus) || "waiting".equals(buildStatus) || "submitted".equals(buildStatus));
 
-            TRACE.info("imageBuild ended with status " + buildStatus);
+            TRACE.info("image build ended with status " + buildStatus);
             //System.out.println("INFO: imageBuild ended with status " + buildStatus);
 
             if (! "built".equals(buildStatus)) {
-                TRACE.severe("The submitted image " + buildName + " failed to build with status " + buildStatus + ".");
+                TRACE.severe("The submitted image build '" + buildName + "' failed to build with status " + buildStatus + ".");
                 List<String> errorMessages = imageBuild.getLogMessages();
                 for (String line : errorMessages) {
                     TRACE.severe(line);
                 }
+                JsonObject failureReason = imageBuild.getFailureReason();
+                if (failureReason != null && failureReason.get("message") != null) {
+                    final String failureMsg = failureReason.get("message").getAsString();
+                    TRACE.severe(failureMsg);
+                }
+                deleteBuilds(getApplicationBuild(), imageBuild);
+                // Note: finally is not called, when we System.exit() the program.
+                System.exit(1);
             }
             else {
                 List<Artifact> buildArtifacts = imageBuild.getArtifacts();
@@ -292,25 +297,7 @@ public class EdgeImageContext extends BuildServiceContext {
         }
         finally {
             if (!GsonUtilities.jboolean(deploy, KEEP_ARTIFACTS)) {
-                Build applicationBuild = getApplicationBuild();
-                if (applicationBuild != null) {
-                    try {
-                        applicationBuild.delete();
-                    }
-                    catch (Exception e) {
-                        final String buildId = applicationBuild.getId() == null? "": applicationBuild.getId();
-                        TRACE.warning("failed to delete build " + buildId + ": " + e.toString());
-                    }
-                }
-                if (imageBuild != null) {
-                    try {
-                        imageBuild.delete();
-                    }
-                    catch (Exception e) {
-                        final String buildId = imageBuild.getId() == null? "": imageBuild.getId();
-                        TRACE.warning("failed to delete build " + buildId + ": " + e.toString());
-                    }
-                }
+                deleteBuilds(getApplicationBuild(), imageBuild);
             }
         }
     }

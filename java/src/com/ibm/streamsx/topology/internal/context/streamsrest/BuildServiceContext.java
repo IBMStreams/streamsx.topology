@@ -11,7 +11,6 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.concurrent.ThreadLocalRandom;
 
 import com.google.gson.JsonArray;
@@ -173,18 +172,33 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
             return result;
         } finally {
             if (this.downloadArtifacts) {
-                try {
-                    build.delete();
-                } catch (IOException e) {
-                    TRACE.warning(
-                            "Exception deleting build: " + e.getMessage());
+                deleteBuilds(build);
+            }
+        }
+    }
+
+
+    /**
+     * Deletes Build from the build service.
+     * <tt>topology.keepArtifacts</tt> is <i>not</i> evaluated here.
+     * @param builds The builds to be deleted
+     */
+    protected void deleteBuilds (Build... builds) {
+        if (builds != null && builds.length > 0) {
+            for (Build b: builds) {
+                if (b != null) {
+                    try {
+                        b.delete();
+                    }
+                    catch (Exception e) {
+                        final String buildId = b.getId() == null? "": b.getId();
+                        TRACE.warning("failed to delete build " + buildId + ": " + e.toString());
+                    }
                 }
             }
         }
-
-
     }
-
+    
     protected void postBuildAction(JsonObject deploy, JsonObject jco, JsonObject result) throws Exception {
     }
 

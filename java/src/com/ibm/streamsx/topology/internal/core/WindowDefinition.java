@@ -206,7 +206,7 @@ public class WindowDefinition<T,K> extends TopologyItem implements TWindow<T,K> 
     public <U> TWindow<T,U> key(Function<? super T, ? extends U> keyGetter) {
         if (keyGetter == null)
             throw new NullPointerException();
-        return new WindowDefinition<T,U>(stream, policy, config, timeUnit, keyGetter, null);
+        return new WindowDefinition<T,U>(stream, policy, config, timeUnit, keyGetter, supplierConfig);
     }
     @Override
     public TWindow<T, T> key() {

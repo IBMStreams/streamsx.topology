@@ -1,7 +1,7 @@
 # Changes
 ==========
 
-## branch feature/punct (enhancements for v1.16)
+## branch develop (v1.16 aplha)
 * [#2527](https://github.com/IBMStreams/streamsx.topology/issues/2527) Python: Support tumbling window based on punctuation
 * [#2525](https://github.com/IBMStreams/streamsx.topology/issues/2525) Python: Provide punct_count() in TopologyTester to test the number of received punctuations
 * [#2520](https://github.com/IBMStreams/streamsx.topology/issues/2520) Python: Ability to handle received punctuations in for_each and streamsx.spl.spl.PrimitiveOperator
@@ -9,17 +9,26 @@
 * [#2517](https://github.com/IBMStreams/streamsx.topology/issues/2517) Python: Provide Stream.punctor()
 * [#2516](https://github.com/IBMStreams/streamsx.topology/issues/2516) Python: Write punctuation markers with Stream.print() to stdout
 
+## v1.15.9
+* [#2522](https://github.com/IBMStreams/streamsx.topology/issues/2522) Build scripts prepared for publishing the release to Maven repository
+* [#2537](https://github.com/IBMStreams/streamsx.topology/issues/2537) TestTopology: Check OS version to skip tests in SPLOperatorsTest.java for RH6
+* [#2533](https://github.com/IBMStreams/streamsx.topology/issues/2533) Automatic creation of edge image name can result in illegal image name
+
+## v1.15.8
+* [#2529](https://github.com/IBMStreams/streamsx.topology/issues/2529) Provide failure reason if edge image build fails
+* [#2524](https://github.com/IBMStreams/streamsx.topology/issues/2524) JAVA: Resolve issue in keyed window definition and using submission parameter
+
 ## v1.15.7
 * [#2513](https://github.com/IBMStreams/streamsx.topology/issues/2513) Third-party lib updated to resolve security vulnerabilities (commons-codec: 1.14)
 
 ## v1.15.6
-* [#2508](https://github.com/IBMStreams/streamsx.topology/issues/2508) Python: Support tumbling window creation using submission params 
+* [#2508](https://github.com/IBMStreams/streamsx.topology/issues/2508) Python: Support tumbling window creation using submission params
 * [#2506](https://github.com/IBMStreams/streamsx.topology/issues/2506) Python: Window.aggregate supports submission parameter for size of window eviction policy
 
 ## v1.15.5
-* [#2499](https://github.com/IBMStreams/streamsx.topology/issues/2499) Pythondoc: Updated `Stream.parallel`,`Stream.set_parallel` args description regarding submission parameter 
-* [#2498](https://github.com/IBMStreams/streamsx.topology/issues/2498) Python: Support sliding window creation using submission parameter 
-* [#2494](https://github.com/IBMStreams/streamsx.topology/issues/2494) JAVA: Support sliding window creation using submission parameter 
+* [#2499](https://github.com/IBMStreams/streamsx.topology/issues/2499) Pythondoc: Updated `Stream.parallel`,`Stream.set_parallel` args description regarding submission parameter
+* [#2498](https://github.com/IBMStreams/streamsx.topology/issues/2498) Python: Support sliding window creation using submission parameter
+* [#2494](https://github.com/IBMStreams/streamsx.topology/issues/2494) JAVA: Support sliding window creation using submission parameter
 * [#2495](https://github.com/IBMStreams/streamsx.topology/issues/2495) edgeConfig: `condaPackages` parameter is not supported anymore
 
 ## v1.15.4

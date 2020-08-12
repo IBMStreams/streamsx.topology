@@ -1428,3 +1428,4 @@ test/java/classes
 *.iml
 *.ipr
 *.iws
+/release-pom.xml.asc
