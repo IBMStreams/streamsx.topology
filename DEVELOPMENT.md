@@ -203,28 +203,28 @@ For a pull request:
     
     * Ensure clone is clean using `git status` or `git clean -xfd` from top level
     
-2. Switch to the correct branch for the release - `git checkout develop` or `git checkout v1_13`
+2. Switch to the correct branch for the release - `git checkout develop` or `git checkout v1_15`
 
     * Traditionally initial releases for an X.Y sequence are from develop until develop needs to have new development for X.Y+1
-    * At that point a branch is created vX_Y based off develop (e.g. v1_14)
+    * At that point a branch is created vX_Y based off develop (e.g. v1_15)
     * Bug fix releases of older releases are from the vX_Y branch
     
 3. Change these three files to have the **equivalent** correct version:
 
-    * `release-pom.xml` - replace version for Maven Central
-    * `com.ibm.streamsx.topology/info.xml` - Uses SPL convention, e.g. for alpha 1.14.3_alpha, 1.14.5_beta, 1.14.8
-    * `com.ibm.streamsx.topology/opt/python/packages/streamsx/_streams/_version.py` - Use Python PEP396 convention, 1.14.3a, 1.14.5b, 1.14.8 - Note the third value is always bumped for a release within the same X.Y sequence.
+    * `release-pom.xml` - replace version for Maven Central 1.16-alpha-0
+    * `com.ibm.streamsx.topology/info.xml` - Uses SPL convention, e.g. for alpha 1.16.0.alpha, 1.16.0.beta, 1.16.8
+    * `com.ibm.streamsx.topology/opt/python/packages/streamsx/_streams/_version.py` - Use Python PEP396 convention, 1.16.0a, 1.16.0b, 1.16.8 - Note the third value is always bumped for a release within the same X.Y sequence.
     * Once a GA (non-alpha, non-beta) release is made in an X.Y.Z series then all future releases X.Y.W (W>Z) are GA
     
-3a. If creating an new X.Y+1 sequence (e.g. 1.15 replacing 1.14) then:
+3a. If creating an new X.Y+1 sequence (e.g. 1.17 replacing 1.16) then:
 
-   * Worth searching all files in the repo for the fixed string `X.Y` (e.g. `fgrep 1.15`) to see if anything else should be changed.
+   * Worth searching all files in the repo for the fixed string `X.Y` (e.g. `fgrep 1.16`) to see if anything else should be changed.
    * Add & commit any modified files.
   
 4. Add and commit the two files changed **and push to IBMStreams**
 
     * `git add com.ibm.streamsx.topology/info.xml com.ibm.streamsx.topology/opt/python/packages/streamsx/_streams/_version.py release-pom.xml`
-    * `git commit -m "1.14.8 release"`
+    * `git commit -m "1.16.8 release"`
     * `git push origin develop` using the release branch
     
 5. Build using `ant release` at the top-level
