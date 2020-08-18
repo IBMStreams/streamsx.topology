@@ -42,12 +42,13 @@ class StreamsBuildService extends AbstractConnection implements BuildService, Bu
             if (buildServiceEndpoint == null) {
                 buildServiceEndpoint = Util.getenv(Util.STREAMS_BUILD_URL);
             }
-            if (!buildServiceEndpoint.endsWith(STREAMS_BUILD_PATH)) {
-                // URL was user-provided root of service, add the path
-                URL url = new URL(buildServiceEndpoint);
-                URL buildsUrl = new URL(url.getProtocol(), url.getHost(), url.getPort(), STREAMS_BUILD_PATH);
-                buildServiceEndpoint = buildsUrl.toExternalForm();
-            }
+            // TODO: URL completion cannot be done as the build path depends on Streams version - commented out
+//            if (!buildServiceEndpoint.endsWith(STREAMS_BUILD_PATH)) {
+//                // URL was user-provided root of service, add the path
+//                URL url = new URL(buildServiceEndpoint);
+//                URL buildsUrl = new URL(url.getProtocol(), url.getHost(), url.getPort(), STREAMS_BUILD_PATH);
+//                buildServiceEndpoint = buildsUrl.toExternalForm();
+//            }
             return StreamsBuildService.of(authenticator, buildServiceEndpoint, verify);
         }
         return new StreamsBuildService(buildServiceEndpoint, buildServicePoolsEndpoint, authenticator, verify);
@@ -58,12 +59,13 @@ class StreamsBuildService extends AbstractConnection implements BuildService, Bu
 
         if (buildServiceEndpoint == null) {
             buildServiceEndpoint = Util.getenv(Util.STREAMS_BUILD_URL);
-            if (!buildServiceEndpoint.endsWith(STREAMS_BUILD_PATH)) {
-                // URL was user-provided root of service, add the path
-                URL url = new URL(buildServiceEndpoint);
-                URL buildsUrl = new URL(url.getProtocol(), url.getHost(), url.getPort(), STREAMS_BUILD_PATH);
-                buildServiceEndpoint = buildsUrl.toExternalForm();
-            }
+            // TODO: URL completion cannot be done as the build path depends on Streams version - commented out
+//            if (!buildServiceEndpoint.endsWith(STREAMS_BUILD_PATH)) {
+//                // URL was user-provided root of service, add the path
+//                URL url = new URL(buildServiceEndpoint);
+//                URL buildsUrl = new URL(url.getProtocol(), url.getHost(), url.getPort(), STREAMS_BUILD_PATH);
+//                buildServiceEndpoint = buildsUrl.toExternalForm();
+//            }
         }
         return new StreamsBuildService(buildServiceEndpoint, null, authenticator, verify);
     }
@@ -102,13 +104,12 @@ class StreamsBuildService extends AbstractConnection implements BuildService, Bu
 	public Build createBuild(String name, JsonObject buildConfig) throws IOException {
 		
 		JsonObject buildParams = new JsonObject();
-
 		buildParams.addProperty("type", buildType.getJsonValue());
 		buildParams.addProperty("incremental", false);		
-		if (name != null)
+		if (name != null) {
 			buildParams.addProperty("name", name);
+		}
 		String bodyStr = buildParams.toString();
-//        System.out.println("StreamsBuildService: =======> POST body = " + bodyStr);
 		Request post = Request.Post(endpoint)	      
 		    .addHeader("Authorization", getAuthorization())
 		    .bodyString(bodyStr,
@@ -120,10 +121,44 @@ class StreamsBuildService extends AbstractConnection implements BuildService, Bu
 
 	String getToolkitsURL() throws IOException {
 		if (toolkitsUrl == null) {
-			String resourcesUrl = endpoint;
-			if (resourcesUrl.endsWith("/builds")) {
-				resourcesUrl = resourcesUrl.replaceFirst("builds$", "resources");
+		    // Examples for external build endpoints:
+		    // CPD < 3.5:  https://ivan34-cpd-ivan34.apps.cpstreamsx6.cp.fyre.ibm.com/streams-build/instances/sample-streams/ivan34/
+		    // CPD >= 3.5: https://nbgf2-cpd-nbgf2.apps.cpstreamsx8.cp.fyre.ibm.com/streams_build_service/v1/namespaces/nbgf2/instances/sample-streams/builds/
+
+		    // Examples for internal endpoints:
+		    // CPD < 3.5:  serviceBuildEndpoint": "https://build-sample-streams-build.ivan34:8445/streams/rest/builds"
+		    // CPD >= 3.5: serviceBuildEndpoint": "https://build-sample-streams-build.nbgf2:8445/streams/v1/builds"
+		    URL epUrl = new URL(endpoint);
+			String urlPath;
+			if (epUrl.getPath().startsWith("/streams-build/")) {
+			    // external URL, CPD < 3.5
+			    // /streams-build/instances/sample-streams/ivan34/
+			    // /streams-build-resource/instances/sample-streams/ivan34/
+			    urlPath = epUrl.getPath().replaceFirst("^/streams-build/", "/streams-build-resource/");
+			} else if (epUrl.getPath().startsWith("/streams_build_service/v1/")) {
+			    // external URL, CPD >= 3.5
+			    // /streams_build_service/v1/namespaces/nbgf2/instances/sample-streams/builds/
+			    // /streams_build_service/v1/namespaces/nbgf2/instances/sample-streams/roots/
+			    urlPath = epUrl.getPath().replaceFirst("/builds[/]?$", "/roots");
+			} else if (epUrl.getPath().startsWith("/streams/rest/")) {
+			    // internal URL, CPD < 3.5
+			    // https://build-sample-streams-build.ivan34:8445/streams/rest/builds
+			    // https://build-sample-streams-build.ivan34:8445/streams/rest/resources
+			    urlPath = epUrl.getPath().replaceFirst("/builds[/]?$", "/resources");
+			} else if (epUrl.getPath().startsWith("/streams/v1/")) {
+			    // internal URL, CPD >= 3.5
+			    // https://build-sample-streams-build.nbgf2:8445/streams/v1/builds
+			    // https://build-sample-streams-build.nbgf2:8445/streams/v1/roots
+			    urlPath = epUrl.getPath().replaceFirst("/builds[/]?$", "/roots");
 			}
+			else {
+			    // use the path "as-is"
+			    urlPath = epUrl.getPath();
+			}
+			String resourcesUrl = (new URL(epUrl.getProtocol(),
+			        epUrl.getHost(),
+			        epUrl.getPort(),
+			        urlPath)).toExternalForm();
 			// Query the resourcesUrl to find the resources URL
 			String response = getResponseString(resourcesUrl);
 			ResourcesArray resources = new GsonBuilder()
@@ -136,8 +171,22 @@ class StreamsBuildService extends AbstractConnection implements BuildService, Bu
 				}
 			}
 			if (toolkitsUrl == null) {
+			    // try to find toolkits URL under the application build pool
+		        if (this.poolsEndpoint == null) {
+		         // If we couldn't find toolkits something is wrong
+	                throw new RESTException("Unable to find toolkits resource in application build pool: No buildPools endpoint determined.");
+		        }
+		        // find out the right build pool; we use the first build pool with type 'image'
+		        final String poolType = "application";
+		        List<BuildPool> appBuildPools = BuildPool.createPoolList(this, this.poolsEndpoint, poolType);
+		        if (appBuildPools.size() == 0) {
+		            throw new RESTException("No build pool of '" + poolType + "' type found.");
+		        }
+		        toolkitsUrl = appBuildPools.get(0).getToolkits();
+			}
+			if (toolkitsUrl == null) {
 				// If we couldn't find toolkits something is wrong
-				throw new RESTException("Unable to find toolkits resource from resources URL: " + resourcesUrl);
+				throw new RESTException("Unable to find toolkits resource from resources URL: " + resourcesUrl + " or application build pool");
 			}
 		}
 		return toolkitsUrl;
