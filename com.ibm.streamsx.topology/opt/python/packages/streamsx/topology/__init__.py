@@ -49,7 +49,7 @@ Microservices
 
 Publish-subscribe provides the abiltity to connect streams between independent
 IBM Streams applications regardless of their implementation language.
-This allows a `microservice approach <https://developer.ibm.com/streamsdev/2016/09/02/analytics-microservice-architecture-with-ibm-streams/>`_
+This allows a `microservice approach <https://community.ibm.com/community/user/cloudpakfordata/viewdocument/analytics-microservice-architecture>`_
 where a Streams application acting as a service publishes one
 or more streams. Subscriber services then subscribe to those streams
 without requiring any knowledge of how a stream is published.
