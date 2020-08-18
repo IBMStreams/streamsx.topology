@@ -450,7 +450,6 @@ class BuildService(streamsx.rest._AbstractStreamsConnection):
 
     @staticmethod
     def _root_from_endpoint(endpoint):
-        print('### BuildService._root_from_endpoint: endpoint = ' +endpoint)
         import urllib.parse as up
         esu = up.urlsplit(endpoint)
         if esu.path.startswith('/streams-build/instances/'):
