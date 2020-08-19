@@ -466,7 +466,7 @@ class BuildService(streamsx.rest._AbstractStreamsConnection):
             # internal URL; CPD 2.5 ... < 3.5
             return up.urlunsplit((esu.scheme, esu.netloc, esu.path.replace('/builds', '/resources'), None, None))
         elif esu.path.startswith('/streams/v1/builds'):
-            # external URL, CPD >= 3.5
+            # internal URL, CPD >= 3.5
             return up.urlunsplit((esu.scheme, esu.netloc, esu.path.replace('/builds', '/roots'), None, None))
         
         raise ValueError("Can't convert build endpoint " + endpoint + " into resource URL")
