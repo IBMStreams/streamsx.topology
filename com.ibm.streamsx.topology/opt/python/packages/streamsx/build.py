@@ -329,9 +329,10 @@ class BuildService(streamsx.rest._AbstractStreamsConnection):
         # service_name is the instance name
         service_name = service['service_name']
         auth = streamsx.rest_primitives._ICPDAuthHandler(service_name, service['service_token'])
-        build_url = BuildService._root_from_endpoint(service['connection_info'].get('serviceBuildEndpoint'))
+        resource_url = BuildService._root_from_endpoint(service['connection_info'].get('serviceBuildEndpoint'))
+        print("## BuildService: resource_url = " + resource_url)
         buildpools_url = service['connection_info'].get('serviceBuildPoolsEndpoint', None)
-        sc = BuildService(resource_url=build_url, buildpools_url=buildpools_url, auth=auth)
+        sc = BuildService(resource_url=resource_url, buildpools_url=buildpools_url, auth=auth)
         if streamsx.topology.context.ConfigParams.SSL_VERIFY in config:
             sc.rest_client.session.verify = config[streamsx.topology.context.ConfigParams.SSL_VERIFY]
         return sc
@@ -450,21 +451,25 @@ class BuildService(streamsx.rest._AbstractStreamsConnection):
 
     @staticmethod
     def _root_from_endpoint(endpoint):
+        """
+        Returns the build resources URL from the build endpoint
+        """
         import urllib.parse as up
         esu = up.urlsplit(endpoint)
         if esu.path.startswith('/streams-build/instances/'):
-            # CPD 2.5 ... < 3.5
+            # external URL; CPD 2.5 ... < 3.5
             return endpoint.replace('/streams-build/instances', '/streams-build-resource/instances', 1)
         elif esu.path.startswith('/streams_build_service/v1/'):
-            # CPD >= 3.5
+            # external URL, CPD >= 3.5
             return up.urlunsplit((esu.scheme, esu.netloc, esu.path.replace('/builds', '/roots'), None, None))
-        if not esu.path.startswith('/streams/rest/builds'):
-            return None
-
-        es = endpoint.split('/')
-        root_url = endpoint.split('/streams/rest/builds')[0]
-        resource_url = root_url + '/streams/rest/resources'
-        return resource_url
+        elif esu.path.startswith('/streams/rest/builds'):
+            # internal URL; CPD 2.5 ... < 3.5
+            return up.urlunsplit((esu.scheme, esu.netloc, esu.path.replace('/builds', '/resources'), None, None))
+        elif esu.path.startswith('/streams/v1/builds'):
+            # external URL, CPD >= 3.5
+            return up.urlunsplit((esu.scheme, esu.netloc, esu.path.replace('/builds', '/roots'), None, None))
+        
+        raise ValueError("Can't convert build endpoint " + endpoint + " into resource URL")
 
     def __str__(self):
         return pformat(self.__dict__)

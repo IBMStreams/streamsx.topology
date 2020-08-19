@@ -6,7 +6,6 @@
 package com.ibm.streamsx.rest.build;
 
 import static com.ibm.streamsx.rest.build.StreamsBuildService.STREAMS_BUILD_PATH;
-import static com.ibm.streamsx.rest.build.StreamsBuildService.STREAMS_REST_RESOURCES;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.io.IOException;
@@ -73,12 +72,11 @@ public interface BuildService {
 	            }
 	            String basicAuth = RestUtils.createBasicAuth(userName, password);
 	            String buildsEndpoint = endpoint;
-	            // TODO: URL completion cannot be done as the build path depends on Streams version - commented out
-//	            if (!buildsEndpoint.endsWith(STREAMS_BUILD_PATH)) {
-//	                URL buildUrl = new URL(url.getProtocol(), url.getHost(),
-//	                        url.getPort(), STREAMS_BUILD_PATH);
-//	                buildsEndpoint = buildUrl.toExternalForm();
-//	            }
+	            if (!buildsEndpoint.endsWith(STREAMS_BUILD_PATH)) {
+	                URL buildUrl = new URL(url.getProtocol(), url.getHost(),
+	                        url.getPort(), STREAMS_BUILD_PATH);
+	                buildsEndpoint = buildUrl.toExternalForm();
+	            }
 	            return StreamsBuildService.of(e -> basicAuth, buildsEndpoint, verify);
 	        }
 	        return StreamsBuildService.of(auth, serviceDefinition, verify);

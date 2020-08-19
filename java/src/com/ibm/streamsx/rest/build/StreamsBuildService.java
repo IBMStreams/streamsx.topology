@@ -29,8 +29,8 @@ import com.ibm.streamsx.topology.internal.streams.Util;
 
 class StreamsBuildService extends AbstractConnection implements BuildService, BuildServiceSetters {
 
-    static final String STREAMS_REST_RESOURCES = "/streams/rest/resources";
-    static final String STREAMS_BUILD_PATH = "/streams/rest/builds";
+//    static final String STREAMS_REST_RESOURCES = "/streams/v1/roots";
+    static final String STREAMS_BUILD_PATH = "/streams/v1/builds";      // serviceBuildEndpoint
 
     static BuildService of(Function<Executor,String> authenticator, JsonObject serviceDefinition,
             boolean verify) throws IOException {
@@ -42,13 +42,12 @@ class StreamsBuildService extends AbstractConnection implements BuildService, Bu
             if (buildServiceEndpoint == null) {
                 buildServiceEndpoint = Util.getenv(Util.STREAMS_BUILD_URL);
             }
-            // TODO: URL completion cannot be done as the build path depends on Streams version - commented out
-//            if (!buildServiceEndpoint.endsWith(STREAMS_BUILD_PATH)) {
-//                // URL was user-provided root of service, add the path
-//                URL url = new URL(buildServiceEndpoint);
-//                URL buildsUrl = new URL(url.getProtocol(), url.getHost(), url.getPort(), STREAMS_BUILD_PATH);
-//                buildServiceEndpoint = buildsUrl.toExternalForm();
-//            }
+            if (!buildServiceEndpoint.endsWith(STREAMS_BUILD_PATH)) {
+                // URL was user-provided root of service, add the path
+                URL url = new URL(buildServiceEndpoint);
+                URL buildsUrl = new URL(url.getProtocol(), url.getHost(), url.getPort(), STREAMS_BUILD_PATH);
+                buildServiceEndpoint = buildsUrl.toExternalForm();
+            }
             return StreamsBuildService.of(authenticator, buildServiceEndpoint, verify);
         }
         return new StreamsBuildService(buildServiceEndpoint, buildServicePoolsEndpoint, authenticator, verify);
@@ -59,13 +58,12 @@ class StreamsBuildService extends AbstractConnection implements BuildService, Bu
 
         if (buildServiceEndpoint == null) {
             buildServiceEndpoint = Util.getenv(Util.STREAMS_BUILD_URL);
-            // TODO: URL completion cannot be done as the build path depends on Streams version - commented out
-//            if (!buildServiceEndpoint.endsWith(STREAMS_BUILD_PATH)) {
-//                // URL was user-provided root of service, add the path
-//                URL url = new URL(buildServiceEndpoint);
-//                URL buildsUrl = new URL(url.getProtocol(), url.getHost(), url.getPort(), STREAMS_BUILD_PATH);
-//                buildServiceEndpoint = buildsUrl.toExternalForm();
-//            }
+            if (!buildServiceEndpoint.endsWith(STREAMS_BUILD_PATH)) {
+                // URL was user-provided root of service, add the path
+                URL url = new URL(buildServiceEndpoint);
+                URL buildsUrl = new URL(url.getProtocol(), url.getHost(), url.getPort(), STREAMS_BUILD_PATH);
+                buildServiceEndpoint = buildsUrl.toExternalForm();
+            }
         }
         return new StreamsBuildService(buildServiceEndpoint, null, authenticator, verify);
     }
