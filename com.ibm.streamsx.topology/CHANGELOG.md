@@ -1,7 +1,7 @@
 # Changes
 ==========
 
-## branch develop (v1.16 alpha)
+## v1.16.0.alpha
 * [#2551](https://github.com/IBMStreams/streamsx.topology/issues/2551) Adapt streamsx for REST API changes
 * [#2527](https://github.com/IBMStreams/streamsx.topology/issues/2527) Python: Support tumbling window based on punctuation
 * [#2525](https://github.com/IBMStreams/streamsx.topology/issues/2525) Python: Provide punct_count() in TopologyTester to test the number of received punctuations
