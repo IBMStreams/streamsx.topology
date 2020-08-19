@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="Publish-subscribe Overview"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_page"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>Publish-subscribe Overview</title>
+</head>
+<body id="spldoc_page">
+
+
+<h1 class="title topictitle1">Publish-subscribe Overview</h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.16.0.alpha</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.topic.html">com.ibm.streamsx.topology.topic</a> &gt; Publish-subscribe Overview</p>
+
+</div>
+
+
+<div class="section">
+<p class="p">Applications can publish streams to a topic name which can then be subscribed to by other applications (or even the same application). Publish-subscribe works across applications written in SPL and those written using application APIs provided by this toolkit.
+</p>
+
+<p class="p">A subscriber matches a publisher if their topic filter matches a publisher's topic name and the stream type is an exact match to that of the publisher. It is recommended that a single stream type is used for a topic name.
+</p>
+
+<p class="p">A topic is a <tt class="ph tt">rstring</tt> value (encoded with UTF-8), based upon the <a class="xref" href="http://public.dhe.ibm.com/software/dw/webservices/ws-mqtt/mqtt-v3r1.html#appendix-a">MQTT topic style</a>.
+</p>
+
+<p class="p">Topic names for publishing a stream:
+</p>
+
+<div class="p">
+<ul class="ul">
+<li class="li"> Must be at least one character long.</li>
+
+<li class="li"> Use <tt class="ph tt">/</tt> as a level separator, zero length topic levels are valid.</li>
+
+<li class="li"> Must not include wild card characters <tt class="ph tt">+</tt> and <tt class="ph tt">#</tt>.</li>
+
+<li class="li"> Must not include the nul character <tt class="ph tt">\u0000</tt>.</li>
+
+</ul>
+
+</div>
+
+<div class="p">Topic filters for subscribing to streams:
+<ul class="ul">
+<li class="li"> Must be at least one character long.</li>
+
+<li class="li"> Use <tt class="ph tt">/</tt> as a level separator.</li>
+
+<li class="li"> Must not include the nul character <tt class="ph tt">\u0000</tt>.</li>
+
+<li class="li"> <tt class="ph tt">+</tt> is a single-level wildcard character that can be used at any level, but it must occupy the entire level. <tt class="ph tt">+</tt>, <tt class="ph tt">a/b/+</tt>, <tt class="ph tt">+/b/+</tt> and <tt class="ph tt">+/b</tt> are valid but <tt class="ph tt">a/b/c+</tt> is not valid.</li>
+
+<li class="li"> <tt class="ph tt">#</tt> is a wildcard character that matches any number of levels including the parent and any number of child levels. The multi-level wildcard character must be specified either on its own or following a topic level separator. In either case it must be the last character specified in the topic filter. <tt class="ph tt">#</tt> and 'a/b/#' are valid but <tt class="ph tt">a/b/c#</tt> and <tt class="ph tt">a/#/c</tt> are not valid.</li>
+
+</ul>
+
+</div>
+
+<p class="p">Without a wildcard character a topic filter is an exact match for a topic name so that filter <tt class="ph tt">a/b/c</tt> only matches <tt class="ph tt">a/b/c</tt>.
+</p>
+
+<div class="p">Single-level filter (<tt class="ph tt">+</tt>) match examples are:
+<ul class="ul">
+<li class="li"> filter <tt class="ph tt">+</tt> matches <tt class="ph tt">a</tt> and <tt class="ph tt">b</tt> but not <tt class="ph tt">a/b</tt></li>
+
+<li class="li"> filter <tt class="ph tt">a/+</tt> matches <tt class="ph tt">a/b</tt>, <tt class="ph tt">a/c</tt> and <tt class="ph tt">a/</tt> but not <tt class="ph tt">a</tt>, <tt class="ph tt">b/c</tt> or <tt class="ph tt">a/b/c</tt></li>
+
+<li class="li"> filter <tt class="ph tt">+/+</tt> matches <tt class="ph tt">a/b</tt>, <tt class="ph tt">b/c</tt>, <tt class="ph tt">d/</tt> and <tt class="ph tt">/</tt>  but not <tt class="ph tt">a</tt> or <tt class="ph tt">a/b/c</tt></li>
+
+</ul>
+
+</div>
+
+<div class="p">Multi-level filter (<tt class="ph tt">#</tt>) match examples are:
+<ul class="ul">
+<li class="li"> filter <tt class="ph tt">#</tt> matches every topic name such as <tt class="ph tt">a</tt>, <tt class="ph tt">b/c</tt>, <tt class="ph tt">//</tt></li>
+
+<li class="li"> filter <tt class="ph tt">a/b/#</tt> matches <tt class="ph tt">a/b</tt> (parent), <tt class="ph tt">a/b/c</tt>, <tt class="ph tt">a/b/d</tt> and <tt class="ph tt">a/b/c/d</tt></li>
+
+</ul>
+
+</div>
+
+<p class="p"><strong class="ph b">Note:</strong> <em class="ph i">a publish-subscribe match requires the stream type to match as well as the topic filter matching the topic name.</em>
+</p>
+
+<p class="p"><strong class="ph b">Note:</strong> <em class="ph i">For correct wildcard matching both pblisher and subscriber must have been compiled with version 1.3.0 or later.</em>
+</p>
+
+<p class="p">Publish-subscribe is a many to many relationship, any number of publishers can publish to the same topic and stream type, and there can be many subscribers to a topic.
+</p>
+
+<p class="p">For example a telco ingest application may process Call Detail Records from network switches and publish processed records on multiple topics, <tt class="ph tt">cdr/voice/normal</tt>, <tt class="ph tt">cdr/voice/dropped</tt>, <tt class="ph tt">cdr/sms</tt>, etc. by publishing each processed stream with its own topic. Then a dropped call analytic application would subscribe to the <tt class="ph tt">cdr/voice/dropped</tt> topic.
+</p>
+
+<p class="p">Publish-subscribe is dynamic, using IBM Streams dynamic connections, an application can be submitted that subscribes to topics published by other already running applications. Once the new application has initialized, it will start consuming tuples from published streams from existing applications. And any stream the new application publishes will be subscribed to by existing applications where the topic and stream type matches.
+</p>
+
+<p class="p">An application only receives tuples that are published while it is connected, thus tuples are lost during a connection failure.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">SPL Publish-Subscribe
+</h2>
+
+<p class="p">An SPL application uses <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Publish">Publish</a> to publish a stream to a topic, and <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Subscribe">Subscribe</a> to subscribe to a topic.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Java &amp; Scala Publish-Subscribe
+</h2>
+
+<p class="p">A Java application uses <a class="xref" href="../../../javadoc/com/ibm/streamsx/topology/TStream.html#publish(java.lang.String)">TStream.publish(topic)</a> to publish streams.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Python Publish-Subscribe
+</h2>
+
+<p class="p">A Python application uses <tt class="ph tt">Stream.publish(topic)</tt> to publish streams and <tt class="ph tt">Topology.subscribe(topic)</tt> to subscribe to published streams.
+</p>
+
+<p class="p">Python supports publishing and subscribing to streams containing Python, SPL (structured) schemas, <a class="xref" href="spl$com.ibm.streamsx.topology$types.html#spldoc_compilationunit__type__Json">JSON</a> or <a class="xref" href="spl$com.ibm.streamsx.topology$types.html#spldoc_compilationunit__type__String">String</a> objects. igy
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Interchangeable Stream Types
+</h2>
+
+<p class="p">Published streams can be subscribed to by IBM Streams applications written in different languages, by ensuring common stream types (schemas).
+</p>
+
+<div class="p">
+<ul class="ul">
+<li class="li"> SPL Tuples
+<ul class="ul">
+<li class="li"> SPL : SPL schema of the stream.</li>
+
+<li class="li"> Java : <a class="xref" href="../../../javadoc/com/ibm/streamsx/topology/spl/SPLStream.html">SPLStream</a> with a schema matching the SPL schema.</li>
+
+<li class="li"> Scala : <tt class="ph tt">com.ibm.streamsx.topology.spl.SPLStream</tt> with a schema matching the SPL schema.</li>
+
+<li class="li"> Python: <tt class="ph tt">streamsx.topology.schema.StreamSchema</tt> matching the SPL schema. Tuples are <tt class="ph tt">dict</tt>, <tt class="ph tt">tuple</tt> or namedtuple objects.</li>
+
+</ul>
+</li>
+
+<li class="li"> JSON tuples
+<ul class="ul">
+<li class="li"> SPL : <a class="xref" href="spl$com.ibm.streamsx.topology$types.html#spldoc_compilationunit__type__Json">com.ibm.streamsx.topology::Json</a>  </li>
+
+<li class="li"> Java: <tt class="ph tt">TStream&lt;JSONObject&gt;</tt>.     See <a class="xref" href="../../../javadoc/com/ibm/streamsx/topology/json/package-summary.html#package_description">com.ibm.streamsx.topology.json</a>.</li>
+
+<li class="li"> Scala: <tt class="ph tt">TStream[JSONObject]</tt></li>
+
+<li class="li"> Python: <tt class="ph tt">schema.CommonSchema.Json</tt> - Tuples are Python <tt class="ph tt">dict</tt> objects converted to from JSON using <tt class="ph tt">json.loads</tt> and <tt class="ph tt">json.dumps</tt>.</li>
+
+</ul>
+</li>
+
+<li class="li"> String tuples
+<ul class="ul">
+<li class="li"> SPL : <a class="xref" href="spl$com.ibm.streamsx.topology$types.html#spldoc_compilationunit__type__String">com.ibm.streamsx.topology::String</a></li>
+
+<li class="li"> Java: <tt class="ph tt">TStream&lt;String&gt;</tt></li>
+
+<li class="li"> Scala: <tt class="ph tt">TStream[String]</tt></li>
+
+<li class="li"> Python: <tt class="ph tt">schema.CommonSchema.String</tt> - Tuples are Python string objects. Python object tuples are converted to strings using <tt class="ph tt">str()</tt> when publishing as <tt class="ph tt">String</tt></li>
+
+</ul>
+</li>
+
+<li class="li"> XML tuples
+<ul class="ul">
+<li class="li"> SPL : <a class="xref" href="spl$com.ibm.streamsx.topology$types.html#spldoc_compilationunit__type__XML">com.ibm.streamsx.topology::XML</a></li>
+
+<li class="li"> Java: <tt class="ph tt">TStream&lt;com.ibm.streams.operator.types.XML&gt;</tt></li>
+
+<li class="li"> Scala: <tt class="ph tt">TStream[com.ibm.streams.operator.types.XML]</tt></li>
+
+</ul>
+</li>
+
+<li class="li"> Binary tuples
+<ul class="ul">
+<li class="li"> SPL : <a class="xref" href="spl$com.ibm.streamsx.topology$types.html#spldoc_compilationunit__type__Blob">com.ibm.streamsx.topology::Blob</a></li>
+
+<li class="li"> Java: <tt class="ph tt">TStream&lt;com.ibm.streams.operator.types.Blob&gt;</tt></li>
+
+<li class="li"> Scala: <tt class="ph tt">TStream[com.ibm.streams.operator.types.Blob]</tt></li>
+
+</ul>
+</li>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Behavior with parallel regions
+</h2>
+
+<p class="p">Topic publish-subscribe model was changed for releases 1.1.6 to have intuitive and defined behavior when the publisher or subscriber is in a parallel region (with width &gt; 1).
+</p>
+
+<div class="p"><em class="ph i">It is recommended that if either publisher or subscriber is in a parallel region then applications should be compiled against released versions of this toolkit</em>:
+<ul class="ul">
+<li class="li"> 1.1.x with x &gt;= 6</li>
+
+<li class="li"> 1.2.x with x &gt;= 6</li>
+
+<li class="li"> or any new version in future</li>
+
+</ul>
+
+</div>
+
+<p class="p">The intuitive case is that parallel regions are used to partition tuple processing across the channels, so that each channel processes a subset of the tuples, and each tuple is processed by a single channel.
+</p>
+
+<p class="p">Any subscriber connecting to a publisher must then process the complete output from the publisher and only process each published tuple only once. For example if a publisher is in a parallel region with width three, then there are three published channels. A connecting subscriber with width two will have two subscribing channels. Each published channel must connect to a single subscribing channel, and in this case one subscriber channel will connect to two published channels and the other to the remaining published channel.
+</p>
+
+<div class="p">
+
+<div class="tablenoborder"><table cellpadding="4" cellspacing="0" summary="" class="table" frame="border" border="1" rules="all"><caption><span class="tablecap">Table 1. Publish-Subscribe with Parallel Regions
+</span></caption>
+
+
+
+<thead class="thead" align="left">
+<tr class="row">
+<th class="entry" colspan="1" valign="top" id="d9823e572">
+<p class="p">Publisher
+</p>
+
+</th>
+
+<th class="entry" colspan="1" valign="top" id="d9823e578">
+<p class="p">Subscriber
+</p>
+
+</th>
+
+<th class="entry" colspan="1" valign="top" id="d9823e584">
+<p class="p">Behavior
+</p>
+
+</th>
+
+</tr>
+
+</thead>
+
+<tbody class="tbody">
+<tr class="row">
+<td class="entry" colspan="1" valign="top" headers="d9823e572 ">
+<p class="p"><em class="ph i">not-parallel</em>
+</p>
+
+</td>
+
+<td class="entry" colspan="1" valign="top" headers="d9823e578 ">
+<p class="p"><em class="ph i">not-parallel</em>
+</p>
+
+</td>
+
+<td class="entry" rowspan="2" colspan="1" valign="top" headers="d9823e584 ">
+<p class="p">Single connection between the publisher and subscriber containing all the tuples
+</p>
+
+</td>
+
+</tr>
+
+<tr class="row">
+<td class="entry" colspan="1" valign="top" headers="d9823e572 ">
+<p class="p"><em class="ph i">parallel(1)</em>
+</p>
+
+</td>
+
+<td class="entry" colspan="1" valign="top" headers="d9823e578 ">
+<p class="p"><em class="ph i">parallel(1)</em>
+</p>
+
+</td>
+
+</tr>
+
+<tr class="row">
+<td class="entry" colspan="1" valign="top" headers="d9823e572 ">
+<p class="p"><em class="ph i">not-parallel</em>
+</p>
+
+</td>
+
+<td class="entry" rowspan="2" colspan="1" valign="top" headers="d9823e578 ">
+<p class="p"><em class="ph i">parallel(N)</em>
+</p>
+
+<p class="p">  <em class="ph i">N &gt; 1</em>
+</p>
+
+</td>
+
+<td class="entry" rowspan="2" colspan="1" valign="top" headers="d9823e584 ">
+<p class="p">One and only one of the N subscribers connects to the single publisher and thus the subscriber region correctly processes the tuples once.  Note that which subscriber channel processes the single published channel is not defined, it could be any of 0,1,...,N-1.
+</p>
+
+</td>
+
+</tr>
+
+<tr class="row">
+<td class="entry" colspan="1" valign="top" headers="d9823e572 ">
+<p class="p"><em class="ph i">parallel(1)</em>
+</p>
+
+</td>
+
+</tr>
+
+<tr class="row">
+<td class="entry" rowspan="2" colspan="1" valign="top" headers="d9823e572 ">
+<p class="p"><em class="ph i">parallel(M)</em>
+</p>
+
+<p class="p"><em class="ph i">M &gt; 1</em>
+</p>
+
+</td>
+
+<td class="entry" colspan="1" valign="top" headers="d9823e578 ">
+<p class="p"><em class="ph i">not-parallel</em>
+</p>
+
+</td>
+
+<td class="entry" rowspan="2" colspan="1" valign="top" headers="d9823e584 ">
+<p class="p">Single subscriber connects to each of the M publishers so that the subscriber region will process all the the published tuples once.
+</p>
+
+</td>
+
+</tr>
+
+<tr class="row">
+<td class="entry" colspan="1" valign="top" headers="d9823e578 ">
+<p class="p"><em class="ph i">parallel(1)</em>
+</p>
+
+</td>
+
+</tr>
+
+<tr class="row">
+<td class="entry" colspan="1" valign="top" headers="d9823e572 ">
+<p class="p"><em class="ph i">parallel(M)</em> <em class="ph i">M &gt; 1</em>
+</p>
+
+</td>
+
+<td class="entry" colspan="1" valign="top" headers="d9823e578 ">
+<p class="p"><em class="ph i">parallel(N)</em> <em class="ph i">N &gt; 1</em>
+</p>
+
+</td>
+
+<td class="entry" colspan="1" valign="top" headers="d9823e584 ">
+<p class="p">Each published channel is connected to a single subscribe channel with channel number <tt class="ph tt">publish channel % N</tt>. Thus the subscriber region processes the tuples once. 
+</p>
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+</div>
+
+</div>
+
+<p class="p"><strong class="ph b">Note:</strong> <em class="ph i">It's important to remember there may be multiple applications publishing and/or subscribing to the same topic and thus publish/subscribe must work in all combinations, e.g. there may be a publishers to the same topic of non-parallel, parallel(5) and parallel(3), and subscribers of non-parallel and parallel(7). This is especially true in a microservices style architecture where analytic applications may come and go and there may not be pre-assigned agreement that publisher and subscribers will have matching channel numbers.</em>
+</p>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

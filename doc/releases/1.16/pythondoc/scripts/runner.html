@@ -1,0 +1,451 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx-runner &mdash; streamsx 1.16.0a documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="streamsx-sc" href="sc.html" />
+    <link rel="prev" title="streamsx-info" href="info.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.16
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.html">streamsx.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.topology.html">streamsx.topology.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.context.html">streamsx.topology.context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.schema.html">streamsx.topology.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.state.html">streamsx.topology.state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.composite.html">streamsx.topology.composite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.tester.html">streamsx.topology.tester</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.tester_runtime.html">streamsx.topology.tester_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.ec.html">streamsx.ec</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.spl.op.html">streamsx.spl.op</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.spl.types.html">streamsx.spl.types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.spl.toolkit.html">streamsx.spl.toolkit</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.spl.spl.html">streamsx.spl.spl</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.build.html">streamsx.build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.rest.html">streamsx.rest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.rest_primitives.html">streamsx.rest_primitives</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="extract.html">spl-python-extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="info.html">streamsx-info</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">streamsx-runner</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#streaming-analytics-service">Streaming Analytics service</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#job-submission">Job submission</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bundle-creation">Bundle creation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#submitting-to-streaming-analytics-service">Submitting to Streaming Analytics service</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#python-applications">Python applications</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#spl-applications">SPL applications</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#streams-application-bundles">Streams application bundles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#job-options">Job options</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-streams-application-bundles">Creating Streams application bundles</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sc.html">streamsx-sc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="service.html">streamsx-service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamtool.html">streamsx-streamtool</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pysetup.html">IBM Streams Python setup</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../restrictions.html">Restrictions and known bugs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">streamsx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>streamsx-runner</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/scripts/runner.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="streamsx-runner">
+<h1>streamsx-runner<a class="headerlink" href="#streamsx-runner" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Submits or builds a Streams application to the Streaming Analytics service.</p>
+<p>The application to be submitted can be:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>A Python application defined through <a class="reference internal" href="../streamsx.topology.topology.html#streamsx.topology.topology.Topology" title="streamsx.topology.topology.Topology"><code class="xref py py-class docutils literal notranslate"><span class="pre">Topology</span></code></a> using the <code class="docutils literal notranslate"><span class="pre">--topology</span></code> flag.</p></li>
+<li><p>An SPL application (main composite) using the <code class="docutils literal notranslate"><span class="pre">--main-composite</span></code> flag.</p></li>
+<li><p>A Streams application bundle (<code class="docutils literal notranslate"><span class="pre">sab</span></code> file) using the <code class="docutils literal notranslate"><span class="pre">--bundle</span></code> flag.</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="streaming-analytics-service">
+<h2>Streaming Analytics service<a class="headerlink" href="#streaming-analytics-service" title="Permalink to this headline">¶</a></h2>
+<p>The Streaming Analytics service is defined by:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Service name - <code class="docutils literal notranslate"><span class="pre">--service-name</span></code> defaulting to environment variable <code class="docutils literal notranslate"><span class="pre">STREAMING_ANALYTICS_SERVICE_NAME</span></code>. The service name must exist in the vcap services.</p></li>
+<li><p>Vcap services - Environment variable <code class="docutils literal notranslate"><span class="pre">VCAP_SERVICES</span></code> containing JSON representation of the service definitions or a file name containing the service definitions.</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="job-submission">
+<h2>Job submission<a class="headerlink" href="#job-submission" title="Permalink to this headline">¶</a></h2>
+<p>Job submission occurs unless <code class="docutils literal notranslate"><span class="pre">--create-bundle</span></code> is set.</p>
+</div>
+<div class="section" id="bundle-creation">
+<h2>Bundle creation<a class="headerlink" href="#bundle-creation" title="Permalink to this headline">¶</a></h2>
+<p>When <code class="docutils literal notranslate"><span class="pre">-create-bundle</span></code> is specified with <code class="docutils literal notranslate"><span class="pre">-main-composite</span></code> or <code class="docutils literal notranslate"><span class="pre">--topology</span></code>
+then a Streams application bundle (sab file) is created.</p>
+<p>If environment variable <cite>STREAMS_INSTALL</cite> is set the the build is local
+otherwise the build occurs in the IBM Cloud using the Streaming Analytics
+service.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">STREAMS_INSTALL</span></code> is not set then <cite>streamsx-runner</cite> can be executed
+with no local Streams install.</p>
+<p>When compiling an SPL application (<code class="docutils literal notranslate"><span class="pre">--main-composite</span></code>) then the
+path to the application toolkit containing the main composite must
+be listed with <code class="docutils literal notranslate"><span class="pre">--toolkits</span></code>.</p>
+<p>Any other required local toolkits must be listed with with <code class="docutils literal notranslate"><span class="pre">--toolkits</span></code>.</p>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>streamsx-runner [-h] [--service-name SERVICE_NAME] | [--create-bundle]
+             (--topology TOPOLOGY | --main-composite MAIN_COMPOSITE | --bundle BUNDLE)
+             [--toolkits TOOLKITS [TOOLKITS ...]] [--job-name JOB_NAME]
+             [--preload] [--trace {error,warn,info,debug,trace}]
+             [--submission-parameters SUBMISSION_PARAMETERS [SUBMISSION_PARAMETERS ...]]
+             [--job-config-overlays file]
+
+Execute a Streams application using a Streaming Analytics service.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --service-name SERVICE_NAME
+                        Submit to Streaming Analytics service
+  --create-bundle       Create a bundle (sab file). No job submission occurs.
+  --topology TOPOLOGY   Topology to call
+  --main-composite MAIN_COMPOSITE
+                        SPL main composite (namespace::composite_name)
+  --bundle BUNDLE       Streams application bundle (sab file) to submit to
+                        service
+
+Build options:
+  Application build options
+
+  --toolkits TOOLKITS [TOOLKITS ...]
+                        SPL toolkit path containing the main composite and any
+                        other required SPL toolkit paths.
+
+Job options:
+  Job configuration options
+
+  --job-name JOB_NAME   Job name
+  --preload             Preload job onto all resources in the instance
+  --trace {error,warn,info,debug,trace}
+                        Application trace level
+  --submission-parameters SUBMISSION_PARAMETERS [SUBMISSION_PARAMETERS ...], -p SUBMISSION_PARAMETERS [SUBMISSION_PARAMETERS ...]
+                        Submission parameters as name=value pairs
+  --job-config-overlays file
+                        Path to file containing job configuration overlays
+                        JSON. Overrides any job configuration set by the
+                        application.
+</pre></div>
+</div>
+</div>
+<div class="section" id="submitting-to-streaming-analytics-service">
+<h2>Submitting to Streaming Analytics service<a class="headerlink" href="#submitting-to-streaming-analytics-service" title="Permalink to this headline">¶</a></h2>
+<p>An application is submitted to a Streaming Analytics service using
+<code class="docutils literal notranslate"><span class="pre">--service-name</span> <span class="pre">SERVICE_NAME</span></code>. The named service must exist in the
+VCAP services definition pointed to by the <code class="docutils literal notranslate"><span class="pre">VCAP_SERVICES</span></code> environment
+variable.</p>
+<p>The application is submitted as source (except <code class="docutils literal notranslate"><span class="pre">--bundle</span></code>)  and compiled into
+a Streams application bundle (<code class="docutils literal notranslate"><span class="pre">sab</span></code> file) using the build service before
+being submitted as a running job to the service instance.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="../service.html#sas-access"><span class="std std-ref">Accessing a service</span></a></p>
+</div>
+<div class="section" id="python-applications">
+<span id="runner-python-apps"></span><h3>Python applications<a class="headerlink" href="#python-applications" title="Permalink to this headline">¶</a></h3>
+<p>To submit a Python application a Python function must be defined
+that returns the application (and optionally its configuration)
+to be submitted. The fully qualified name of this function is
+specified using the <code class="docutils literal notranslate"><span class="pre">--topology</span></code> flag.</p>
+<p>For example, an application can be submitted as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">streamsx</span><span class="o">-</span><span class="n">runner</span> <span class="o">--</span><span class="n">service</span><span class="o">-</span><span class="n">name</span> <span class="n">Streaming</span><span class="o">-</span><span class="n">Analytics</span><span class="o">-</span><span class="n">xd</span> \
+    <span class="o">--</span><span class="n">topology</span> <span class="n">com</span><span class="o">.</span><span class="n">example</span><span class="o">.</span><span class="n">apps</span><span class="o">.</span><span class="n">sensor_ingester</span>
+</pre></div>
+</div>
+<p>The function returns one of:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>a <a class="reference internal" href="../streamsx.topology.topology.html#streamsx.topology.topology.Topology" title="streamsx.topology.topology.Topology"><code class="xref py py-class docutils literal notranslate"><span class="pre">Topology</span></code></a> instance defining the application</p></li>
+<li><dl class="simple">
+<dt>a <code class="docutils literal notranslate"><span class="pre">tuple</span></code> containing two values, in order:</dt><dd><ul>
+<li><p>a <a class="reference internal" href="../streamsx.topology.topology.html#streamsx.topology.topology.Topology" title="streamsx.topology.topology.Topology"><code class="xref py py-class docutils literal notranslate"><span class="pre">Topology</span></code></a> instance defining the application</p></li>
+<li><dl class="simple">
+<dt>job configuration, one of:</dt><dd><ul>
+<li><p><a class="reference internal" href="../streamsx.topology.context.html#streamsx.topology.context.JobConfig" title="streamsx.topology.context.JobConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">JobConfig</span></code></a> instance</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dict</span></code> corresponding to the configuration object passed into <a class="reference internal" href="../streamsx.topology.context.html#streamsx.topology.context.submit" title="streamsx.topology.context.submit"><code class="xref py py-func docutils literal notranslate"><span class="pre">submit()</span></code></a></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>For example the above function might be defined as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">_create_sensor_ingester_app</span><span class="p">():</span>
+   <span class="n">topo</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">(</span><span class="s1">&#39;SensorIngesterApp&#39;</span><span class="p">)</span>
+
+   <span class="c1"># Application declaration omitted</span>
+   <span class="o">...</span>
+
+   <span class="k">return</span> <span class="n">topo</span>
+
+<span class="k">def</span> <span class="nf">sensor_ingester</span><span class="p">():</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">_create_sensor_ingester_app</span><span class="p">(),</span> <span class="n">JobConfig</span><span class="p">(</span><span class="n">job_name</span><span class="o">=</span><span class="s1">&#39;SensorIngester&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Thus when this application is submitted using the <cite>sensor_ingester</cite> function
+it is always submitted with the same job name <cite>SensorIngester</cite>.</p>
+<p>The function must be accessible from the current Python path
+(typically through environment variable <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code>).</p>
+</div>
+<div class="section" id="spl-applications">
+<span id="runner-spl-apps"></span><h3>SPL applications<a class="headerlink" href="#spl-applications" title="Permalink to this headline">¶</a></h3>
+<p>The main composite that defines the application is specified using the <code class="docutils literal notranslate"><span class="pre">-main-composite</span></code> flag specifing the fully namespace qualified name.</p>
+<p>Any required local SPL toolkits, <em>including the one containing the main composite</em>, must be indivdually specified by location to the <code class="docutils literal notranslate"><span class="pre">--toolkits</span></code> flag. Any SPL toolkit that is present on the IBM Cloud service need not be included.</p>
+<p>For example, an application that uses the Slack toolkit might be submitted as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>streamsx-runner --service-name Streaming-Analytics-xd \
+    --main-composite com.example.alert::SlackAlerter \
+    --toolkits $HOME/app/alerters $HOME/toolkits/com.ibm.streamsx.slack
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">$HOME/app/alerters</span></code> is the location of the SPL application toolkit containing the <code class="docutils literal notranslate"><span class="pre">com.example.alert::SlackAlerter</span></code> main composite.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The main composite name must be namespace qualified.
+Use of the default namespace for a main composite is not
+recommended as it increases the chance of a name clash with
+another SPL toolkit.</p>
+</div>
+</div>
+<div class="section" id="streams-application-bundles">
+<span id="runner-sab"></span><h3>Streams application bundles<a class="headerlink" href="#streams-application-bundles" title="Permalink to this headline">¶</a></h3>
+<p>A Streams application bundle is submitted to a service instance using <code class="docutils literal notranslate"><span class="pre">--bundle</span></code>.  The argument to <code class="docutils literal notranslate"><span class="pre">--bundle</span></code> is a locally accessible file that will be uploaded to the service.</p>
+<p>The bundle must have been created on using an IBM Streams install whose architecture and OS version matches the service instance. Currently this is <code class="docutils literal notranslate"><span class="pre">x86_64</span></code> and RedHat/CentOS 6 or 7 depending on the service instance.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">--toolkits</span></code> flag must not be specified when submitting a bundle.</p>
+</div>
+<div class="section" id="job-options">
+<h3>Job options<a class="headerlink" href="#job-options" title="Permalink to this headline">¶</a></h3>
+<p>Job options, such as <code class="docutils literal notranslate"><span class="pre">--job-name</span></code>, configure the running job.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">--topology</span></code> job options set as arguments to <code class="docutils literal notranslate"><span class="pre">streamsx-runner</span></code> override any configuration returned from the function defining the application.</p>
+</div>
+</div>
+<div class="section" id="creating-streams-application-bundles">
+<h2>Creating Streams application bundles<a class="headerlink" href="#creating-streams-application-bundles" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">--create-bundle</span></code> uses a local IBM Streams install to attempt to mimic the build that would occur with <code class="docutils literal notranslate"><span class="pre">-topology</span></code> or <code class="docutils literal notranslate"><span class="pre">--main-composite</span></code>. Differences between the local environment and the IBM Cloud Streaming Analytics build environment may cause build failures in one and not the other.</p>
+<p>This can be used as a mechanism to perform a local test build before using the service, or as a valid mechanism to create bundles for later upload with <code class="docutils literal notranslate"><span class="pre">--bundle</span></code>.</p>
+<p>For example simply changing the <code class="docutils literal notranslate"><span class="pre">--service-name</span> <span class="pre">name</span></code> to <code class="docutils literal notranslate"><span class="pre">--create-bundle</span></code> perfoms a local build of the same application:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># Submit to an Streaming Analytics service
+streamsx-runner --service-name Streaming-Analytics-xd \
+    --main-composite com.example.alert::SlackAlerter \
+    --toolkits $HOME/app/alerters $HOME/toolkits/com.ibm.streamsx.slack
+
+# Build the same application locally
+streamsx-runner --create-bundle \
+    --main-composite com.example.alert::SlackAlerter \
+    --toolkits $HOME/app/alerters $HOME/toolkits/com.ibm.streamsx.slack
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="sc.html" class="btn btn-neutral float-right" title="streamsx-sc" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="info.html" class="btn btn-neutral float-left" title="streamsx-info" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2020 IBM Corp.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,528 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="SPL File topicsfilter.spl"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_compilationunit"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>SPL File topicsfilter.spl</title>
+</head>
+<body id="spldoc_compilationunit">
+
+
+<h1 class="title topictitle1">SPL File <tt class="ph tt">topicsfilter.spl</tt></h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 1.16.0.alpha</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.topic.html">com.ibm.streamsx.topology.topic</a> &gt; topicsfilter.spl</p>
+
+</div>
+
+<div class="section">
+
+<p class="p">Subscribe functionality with data filters. <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topicsfilter.html#spldoc_compilationunit__composite_operator__FilteredSubscribe">FilteredSubscribe</a> subscribes to streams and filters the data, optimizing the filter where possible by pushing it to the publisher to reduce network traffic. 
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle splhead-1">Content</h2>
+  
+  <dl class="dl">
+    <dt class="dt dlterm"/>
+<dd class="dd"/>
+
+    
+      <dt class="dt dlterm splhead-2">Operators</dt>
+
+      <dd class="dd">
+<ul class="sl simple">
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology.topic$topicsfilter.html#spldoc_compilationunit__composite_operator__FilteredSubscribe">FilteredSubscribe</a></strong>: Filtered subscribe to a topic.
+</li>
+
+</ul>
+
+      </dd>
+
+    
+    
+      <dt class="dt dlterm splhead-2">Functions</dt>
+
+      <dd class="dd">
+<ul class="sl simple">
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology.topic$topicsfilter.html#spldoc_compilationunit__function__andFilter.rstring.rstring">andFilter(rstring, rstring)</a></strong>: Return a string representation of <tt class="ph tt">cond1 &amp;&amp; cond2</tt>.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology.topic$topicsfilter.html#spldoc_compilationunit__function__equalsFilter.rstring.float64">equalsFilter(rstring, float64)</a></strong>: Return a string representation of <tt class="ph tt">name == value</tt> for a <tt class="ph tt">float64</tt> attribute.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology.topic$topicsfilter.html#spldoc_compilationunit__function__equalsFilter.rstring.int64">equalsFilter(rstring, int64)</a></strong>: Return a string representation of <tt class="ph tt">name == value</tt> for a <tt class="ph tt">int64</tt> attribute.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology.topic$topicsfilter.html#spldoc_compilationunit__function__equalsFilter.rstring.rstring">equalsFilter(rstring, rstring)</a></strong>: Return a string representation of <tt class="ph tt">name == value</tt> for a <tt class="ph tt">rstring</tt> attribute.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology.topic$topicsfilter.html#spldoc_compilationunit__function__getTopicSubscription.rstring.boolean">getTopicSubscription(rstring, boolean)</a></strong>: Get the subscription that matches a topic for topic based subscription with explicit matching for the publisher allowing filters.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology.topic$topicsfilter.html#spldoc_compilationunit__function__inFilter.rstring.list:.:rstring:.:">inFilter(rstring, list&lt;rstring&gt;)</a></strong>: Return a string representation of filter <tt class="ph tt">name in values</tt> for a <tt class="ph tt">rstring</tt> attribute.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology.topic$topicsfilter.html#spldoc_compilationunit__function__orFilter.rstring.rstring">orFilter(rstring, rstring)</a></strong>: Return a string representation of <tt class="ph tt">cond1 || cond2</tt>.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology.topic$topicsfilter.html#spldoc_compilationunit__function__setSubscribeFilter.rstring">setSubscribeFilter(rstring)</a></strong>: Set filter for input port zero.
+</li>
+
+</ul>
+
+      </dd>
+
+    
+  </dl>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle splhead-1">Composites</h2>
+  
+</div>
+
+<div class="section" id="spldoc_compilationunit__composite_operator__FilteredSubscribe"><h2 class="title sectiontitle splpart">composite FilteredSubscribe(output FilteredTopic)</h2>
+  
+</div>
+
+<div class="section">
+
+<p class="p">Filtered subscribe to a topic. Generates a stream that is subscribed, through IBM Streams dynamic connections, to all streams published to the same <tt class="ph tt">topic</tt> and <tt class="ph tt">streamType</tt>.
+</p>
+
+<p class="p">The tuples on <tt class="ph tt">FilteredTopic</tt> are a subset of all tuples on streams published to <tt class="ph tt">topic</tt>.
+</p>
+
+<p class="p">For any published stream that allows filters (see <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Publish">Publish</a>) <tt class="ph tt">remoteFilter</tt> is pushed to the publishing application reducing the number of tuples sent over the network between applications by only sending tuples that match the filter.
+</p>
+
+<p class="p">Tuples that match the remote filter and those from published streams that do not allow filters are then filtered locally using the function <tt class="ph tt">localFilterFunction</tt>. For each tuple that arrives to this operator invocation from published streams <tt class="ph tt">localFilterFunction(tuple, localFilterParameter)</tt> is called. If <tt class="ph tt">localFilterFunction</tt> returns true then the tuple is present on <tt class="ph tt">FilteredTopic</tt>.
+</p>
+
+<p class="p">The benefit of this operator over a <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Publish">Publish</a> followed by a <tt class="ph tt">Filter</tt> is that remote filtering will reduce network use and local cpu processing cost by filtering tuples at the publishing side. The operator is also designed for microservice architecture so that an application can use this operator without any knowledge of how a topic is being published, and the output stream always contains the correctly filtered data.
+</p>
+
+<p class="p">Typically the remote filter and local filter are equivalent, for example, a parameterized composite that filters sensor readings by sensor identifier, in this case the filter expression is <tt class="ph tt">id == $id</tt> where <tt class="ph tt">$id</tt> is sensor identifier being filtered for:
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+type Sensor = tuple&lt;rstring id, float64 reading&gt;;
+
+// Function that acts as the local filter
+public boolean filterSensor(Sensor t, rstring id) {
+    return t.id == id;
+}
+
+public composite SensorById(output stream&lt;Sensor&gt; Readings) {
+    param expression&lt;rstring&gt; $id;
+
+    graph
+
+    stream&lt;Sensor&gt; Readings = FilteredSubscribe() {
+       param
+         topic: "sensors/readings";
+         streamType: Sensor;
+
+         // Remote filter uses a utility method to
+         // create the filter
+         remoteFilter: equalsFilter("id", $id);
+
+         // local filtering uses a function
+         localFilterFunction: filterSensor;
+         localFilterParameter: $id;
+    }
+}
+</pre>
+
+
+</div>
+
+<p class="p">The local filter can be different to the remote filter to take advantage of the richer programming model in SPL compared to filter expressions. To maintain expected behavior the filters should be consistent with each other so that if <tt class="ph tt">localFilterFunction</tt> returns <tt class="ph tt">true</tt> then remote filter should evaluate to <tt class="ph tt">true</tt>. The local filter thus passes through a strict subset of tuples that would pass the remote filter.
+</p>
+
+<p class="p">The remote filter is a filter expression represented as a <tt class="ph tt">rstring</tt> using the format specified by the <tt class="ph tt">Import</tt> operator. This namespace provides a number of utility functions to build an expression.
+</p>
+
+<p class="p">The local filter is a SPL function that takes two arguments, the tuple and the parameter. The type of the first argument, the tuple, must match the output stream type <tt class="ph tt">streamType</tt>. The second argument matches the parameter type <tt class="ph tt">localFilterParameter</tt> and is specific to the invocation of this operator. If local filtering does not need a parameter as the expression is only against tuple attributes, e.g. <tt class="ph tt">t.reading &gt; 80.0</tt>, then <tt class="ph tt">localFilterParameter</tt> need not be set. In this case <tt class="ph tt">int32 0</tt> is passed so the function would need to be:
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+public boolean filterByReading(Sensor t, int32 unused) {
+   return t.reading &gt; 80.0;
+}
+</pre>
+
+
+</div>
+
+<p class="p">Subscribe behavior in parallel regions matches the behavior described by <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Subscribe">Subscribe</a>.
+</p>
+
+<p class="p">See <a class="xref" href="ns$com.ibm.streamsx.topology.topic.html">namespace:com.ibm.streamsx.topology.topic</a> for details.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Parameters</h2>
+
+<ul class="sl simple">
+<li class="sli"><strong class="ph b">topic</strong>: Topic to subscribe to.
+</li>
+
+<li class="sli"><strong class="ph b">streamType</strong>: Type of output stream <tt class="ph tt">Topic</tt>.
+</li>
+
+<li class="sli"><strong class="ph b">remoteFilter</strong>: Filter expression as an <tt class="ph tt">rstring</tt> that is executed remotely in the publisher when it allows filters.
+</li>
+
+<li class="sli"><strong class="ph b">localFilterFunction</strong>: Boolean function that is executed against every tuple that arrives locally from a pubisher. The function is passed two arguments, the tuple and the value of <tt class="ph tt">localFilterParameter</tt>. If the function returns true` then the filter is present on <tt class="ph tt">FilteredTopic</tt>, otherwise it is discarded.
+</li>
+
+<li class="sli"><strong class="ph b">localFilterParameter</strong>: Optional parameter passed as the second argument to <tt class="ph tt">localFilterFunction</tt>. If not supplied then zero is passed as an <tt class="ph tt">int32</tt>.
+</li>
+
+<li class="sli"><strong class="ph b">connect</strong>: Connection mode between subscriber and publishers. Can be set to <a class="xref" href="spl$com.ibm.streamsx.topology.topic$connect.html#spldoc_compilationunit__composite_operator__Direct">Direct</a> or <a class="xref" href="spl$com.ibm.streamsx.topology.topic$connect.html#spldoc_compilationunit__composite_operator__Buffered">Buffered</a>. The default is <tt class="ph tt">Direct</tt>. See <a class="xref" href="spl$com.ibm.streamsx.topology.topic$connect.html">Connection mode</a>. 
+</li>
+
+<li class="sli"><strong class="ph b">bufferFullPolicy</strong>: Buffer policy when the buffer is full. Ignored when <tt class="ph tt">connect</tt> is set to <tt class="ph tt">Direct</tt>.
+</li>
+
+<li class="sli"><strong class="ph b">bufferCapacity</strong>: Capacity of the buffer in number of tuples. Ignored when <tt class="ph tt">connect</tt> is set to <tt class="ph tt">Direct</tt>.
+</li>
+
+</ul>
+
+</div>
+
+<div class="section">
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Output Ports</h2>
+
+<ul class="sl simple">
+<li class="sli"><strong class="ph b">FilteredTopic</strong>: Filtered subscription to <tt class="ph tt">topic</tt>.
+</li>
+
+</ul>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle splhead-1">Functions</h2>
+  
+</div>
+
+<div class="section" id="spldoc_compilationunit__function__getTopicSubscription.rstring.boolean"><h2 class="title sectiontitle splpart">rstring getTopicSubscription(rstring topic, boolean allowFilter)</h2>
+  
+</div>
+<div class="section">
+
+<p class="p">Get the subscription that matches a topic for topic based subscription with explicit matching for the publisher allowing filters.
+</p>
+
+<p class="p">This is a low-level function that allows applications to build custom composites with functionality similar to <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topicsfilter.html#spldoc_compilationunit__composite_operator__FilteredSubscribe">FilteredSubscribe</a>. The preference should be to use <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topicsfilter.html#spldoc_compilationunit__composite_operator__FilteredSubscribe">FilteredSubscribe</a> where possible.
+</p>
+
+<p class="p">See <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__function__getTopicSubscription.rstring">getTopicSubscription(rstring)</a>.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Parameters</h2>
+
+ <ul class="sl simple">
+   <li class="sli">
+<strong class="ph b">topic</strong>: Topic to subscribe to.
+   </li>
+
+   <li class="sli">
+<strong class="ph b">allowFilter</strong>: '<tt class="ph tt">true</tt> to match publishers that allow filters, <tt class="ph tt">false</tt> to match those that do not allow filters. *
+   </li>
+
+ </ul>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Returns</h2>
+
+<ul class="sl simple"><li class="sli">
+<tt class="ph tt">rstring</tt>
+</li>
+</ul>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__function__andFilter.rstring.rstring"><h2 class="title sectiontitle splpart">rstring andFilter(rstring cond1, rstring cond2)</h2>
+  
+</div>
+<div class="section">
+
+<p class="p">Return a string representation of <tt class="ph tt">cond1 &amp;&amp; cond2</tt>.
+</p>
+
+<p class="p">Suitable for use as a remote filter for <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topicsfilter.html#spldoc_compilationunit__composite_operator__FilteredSubscribe">FilteredSubscribe</a>.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Parameters</h2>
+
+ <ul class="sl simple">
+   <li class="sli">
+<strong class="ph b">cond1</strong>: Second condition
+   </li>
+
+   <li class="sli">
+<strong class="ph b">cond2</strong>
+   </li>
+
+ </ul>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Returns</h2>
+
+<ul class="sl simple"><li class="sli">
+<tt class="ph tt">rstring</tt>
+</li>
+</ul>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__function__orFilter.rstring.rstring"><h2 class="title sectiontitle splpart">rstring orFilter(rstring cond1, rstring cond2)</h2>
+  
+</div>
+<div class="section">
+
+<p class="p">Return a string representation of <tt class="ph tt">cond1 || cond2</tt>.
+</p>
+
+<p class="p">Suitable for use as a remote filter for <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topicsfilter.html#spldoc_compilationunit__composite_operator__FilteredSubscribe">FilteredSubscribe</a>.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Parameters</h2>
+
+ <ul class="sl simple">
+   <li class="sli">
+<strong class="ph b">cond1</strong>: Second condition
+   </li>
+
+   <li class="sli">
+<strong class="ph b">cond2</strong>
+   </li>
+
+ </ul>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Returns</h2>
+
+<ul class="sl simple"><li class="sli">
+<tt class="ph tt">rstring</tt>
+</li>
+</ul>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__function__equalsFilter.rstring.int64"><h2 class="title sectiontitle splpart">rstring equalsFilter(rstring name, int64 value)</h2>
+  
+</div>
+<div class="section">
+
+<p class="p">Return a string representation of <tt class="ph tt">name == value</tt> for a <tt class="ph tt">int64</tt> attribute.
+</p>
+
+<p class="p">Suitable for use as a remote filter for <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topicsfilter.html#spldoc_compilationunit__composite_operator__FilteredSubscribe">FilteredSubscribe</a>.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Parameters</h2>
+
+ <ul class="sl simple">
+   <li class="sli">
+<strong class="ph b">name</strong>: Attribute name.
+   </li>
+
+   <li class="sli">
+<strong class="ph b">value</strong>: Value attribute must equal.
+   </li>
+
+ </ul>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Returns</h2>
+
+<ul class="sl simple"><li class="sli">
+<tt class="ph tt">rstring</tt>
+</li>
+</ul>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__function__equalsFilter.rstring.rstring"><h2 class="title sectiontitle splpart">rstring equalsFilter(rstring name, rstring value)</h2>
+  
+</div>
+<div class="section">
+
+<p class="p">Return a string representation of <tt class="ph tt">name == value</tt> for a <tt class="ph tt">rstring</tt> attribute.
+</p>
+
+<p class="p">Suitable for use as a remote filter for <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topicsfilter.html#spldoc_compilationunit__composite_operator__FilteredSubscribe">FilteredSubscribe</a>.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Parameters</h2>
+
+ <ul class="sl simple">
+   <li class="sli">
+<strong class="ph b">name</strong>: Attribute name.
+   </li>
+
+   <li class="sli">
+<strong class="ph b">value</strong>: Value attribute must equal.
+   </li>
+
+ </ul>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Returns</h2>
+
+<ul class="sl simple"><li class="sli">
+<tt class="ph tt">rstring</tt>
+</li>
+</ul>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__function__equalsFilter.rstring.float64"><h2 class="title sectiontitle splpart">rstring equalsFilter(rstring name, float64 value)</h2>
+  
+</div>
+<div class="section">
+
+<p class="p">Return a string representation of <tt class="ph tt">name == value</tt> for a <tt class="ph tt">float64</tt> attribute.
+</p>
+
+<p class="p">Suitable for use as a remote filter for <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topicsfilter.html#spldoc_compilationunit__composite_operator__FilteredSubscribe">FilteredSubscribe</a>.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Parameters</h2>
+
+ <ul class="sl simple">
+   <li class="sli">
+<strong class="ph b">name</strong>: Attribute name.
+   </li>
+
+   <li class="sli">
+<strong class="ph b">value</strong>: Value attribute must equal.
+   </li>
+
+ </ul>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Returns</h2>
+
+<ul class="sl simple"><li class="sli">
+<tt class="ph tt">rstring</tt>
+</li>
+</ul>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__function__inFilter.rstring.list:.:rstring:.:"><h2 class="title sectiontitle splpart">rstring inFilter(rstring name, list&lt;rstring&gt; values)</h2>
+  
+</div>
+<div class="section">
+
+<p class="p">Return a string representation of filter <tt class="ph tt">name in values</tt> for a <tt class="ph tt">rstring</tt> attribute.
+</p>
+
+<p class="p">If <tt class="ph tt">values</tt> is empty then the filter expression is equivalent <tt class="ph tt">name != ""</tt> with the intention of passing all tuples.
+</p>
+
+<p class="p">Suitable for use as a remote filter for <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topicsfilter.html#spldoc_compilationunit__composite_operator__FilteredSubscribe">FilteredSubscribe</a>.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Parameters</h2>
+
+ <ul class="sl simple">
+   <li class="sli">
+<strong class="ph b">name</strong>: Attribute name.
+   </li>
+
+   <li class="sli">
+<strong class="ph b">values</strong>: Attribute must match one of values. If empty then the expression matches any non-empty string.
+   </li>
+
+ </ul>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Returns</h2>
+
+<ul class="sl simple"><li class="sli">
+<tt class="ph tt">rstring</tt>
+</li>
+</ul>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__function__setSubscribeFilter.rstring"><h2 class="title sectiontitle splpart">int32 setSubscribeFilter(rstring filter)</h2>
+  
+</div>
+<div class="section">
+
+<p class="p">Set filter for input port zero. Calls <tt class="ph tt">setInputPortImportFilterExpression</tt> logging an error if the filter could not be set. 
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Parameters</h2>
+
+ <ul class="sl simple">
+   <li class="sli">
+<strong class="ph b">filter</strong>
+   </li>
+
+ </ul>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Returns</h2>
+
+<ul class="sl simple"><li class="sli">
+<tt class="ph tt">int32</tt>
+</li>
+</ul>
+
+</div>
+
+</div>
+
+
+</body>
+</html>
