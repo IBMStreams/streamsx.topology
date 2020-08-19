@@ -19,6 +19,7 @@ import org.apache.http.client.fluent.Executor;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Job;
+import com.ibm.streamsx.rest.RESTException;
 import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
 import com.ibm.streamsx.rest.internal.RestUtils;
@@ -40,8 +41,24 @@ public interface BuildService {
                 endpoint = Util.getenv(Util.STREAMS_BUILD_URL);
             }
             URL url = new URL(endpoint);
+            // TODO: standalone: Not tested 
+            String path;
+            if (url.getPath().startsWith("/streams/rest/")) {
+                // internal URL, CPD < 3.5
+                // https://build-sample-streams-build.ivan34:8445/streams/rest/builds
+                // https://build-sample-streams-build.ivan34:8445/streams/rest/resources
+                path = url.getPath().replaceFirst("/builds[/]?$", "/resources");
+            } else if (url.getPath().startsWith("/streams/v1/")) {
+                // internal URL, CPD >= 3.5
+                // https://build-sample-streams-build.nbgf2:8445/streams/v1/builds
+                // https://build-sample-streams-build.nbgf2:8445/streams/v1/roots
+                path = url.getPath().replaceFirst("/builds[/]?$", "/roots");
+            }
+            else {
+                throw new RESTException("build endpoint '" + endpoint + "' cannot be transformed to build resources URL");
+            }
             URL resourcesUrl = new URL(url.getProtocol(), url.getHost(),
-                        url.getPort(), STREAMS_REST_RESOURCES);
+                        url.getPort(), path);
             String resourcesEndpoint = resourcesUrl.toExternalForm();
 
 	        StandaloneAuthenticator auth = StandaloneAuthenticator.of(resourcesEndpoint, userName, password);
@@ -56,11 +73,12 @@ public interface BuildService {
 	            }
 	            String basicAuth = RestUtils.createBasicAuth(userName, password);
 	            String buildsEndpoint = endpoint;
-	            if (!buildsEndpoint.endsWith(STREAMS_BUILD_PATH)) {
-	                URL buildUrl = new URL(url.getProtocol(), url.getHost(),
-	                        url.getPort(), STREAMS_BUILD_PATH);
-	                buildsEndpoint = buildUrl.toExternalForm();
-	            }
+	            // TODO: URL completion cannot be done as the build path depends on Streams version - commented out
+//	            if (!buildsEndpoint.endsWith(STREAMS_BUILD_PATH)) {
+//	                URL buildUrl = new URL(url.getProtocol(), url.getHost(),
+//	                        url.getPort(), STREAMS_BUILD_PATH);
+//	                buildsEndpoint = buildUrl.toExternalForm();
+//	            }
 	            return StreamsBuildService.of(e -> basicAuth, buildsEndpoint, verify);
 	        }
 	        return StreamsBuildService.of(auth, serviceDefinition, verify);

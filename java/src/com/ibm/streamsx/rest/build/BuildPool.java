@@ -27,7 +27,7 @@ import com.google.gson.annotations.Expose;
 public class BuildPool extends Element {
 
     /**
-     * internal usage to get list of images
+     * internal usage to get list of images and toolkits
      */
     private static class BuildPoolArray extends ElementArray<BuildPool> {
         @Expose
@@ -43,6 +43,9 @@ public class BuildPool extends Element {
     private String restid;
     @Expose
     private String type;
+    @Expose 
+    private String toolkits;
+    
     /**
      * @return the name
      */
@@ -62,6 +65,13 @@ public class BuildPool extends Element {
         return type;
     }
 
+    /**
+     * @return the toolkits URL. This field is only available for build pools of type 'application'
+     */
+    public String getToolkits() {
+        return toolkits;
+    }
+    
     /* more fields:
     buildInactivityTimeout  15
     buildProcessingTimeout  15

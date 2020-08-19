@@ -253,11 +253,22 @@ class StreamsConnection(_AbstractStreamsConnection):
 class _InstanceSc(StreamsConnection):
     @staticmethod
     def get_instance(url, auth, verify):
-        if '/streams-rest' in url:
-            resource_url = url.replace('/streams-rest/', '/streams-resource/', 1)
+        import urllib.parse as up
+
+        es = up.urlsplit(url)
+        if es.path.startswith('/streams-rest'):
+            # CPD < 3.5
+            resource_url = up.urlunsplit((es.scheme, es.netloc, es.path.replace('/streams-rest/', '/streams-resource/', 1), None, None))
+        elif es.path.startswith('/streams_instance/v1'):
+            # CPD >= 3.5
+            roots = 'roots' if es.path.endswith('/') else '/roots'
+            resource_url = up.urlunsplit((es.scheme, es.netloc, es.path + roots, None, None))
+
         rest_client = streamsx.rest_primitives._StreamsRestClient(auth)
         if verify is not None:
             rest_client.session.verify = verify
+        # as a side-effect in the constructor, the rest_client get the _InstanceSc object as the member '_sc',
+        # the _InstanceSc object itself is not needed here, but the constructor invocation must not be removed.
         _InstanceSc(resource_url, rest_client)
         return streamsx.rest_primitives.Instance(rest_client.make_request(url), rest_client)
 
