@@ -1118,6 +1118,9 @@ class for_each(object):
             def on_punct(self):
                 print('window marker received')
 
+    .. note::
+        Punctuation marks are in-band signals that are inserted between tuples in a stream. Window punctuations are inserted into a stream that are related to the semantics of the operator. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation.
+
     Args:
        style: How the SPL tuple is passed into Python callable, see  :ref:`spl-tuple-to-python`.
        docpy: Copy Python docstrings into SPL operator model for SPLDOC.
@@ -1178,6 +1181,9 @@ class PrimitiveOperator(object):
 
     def submit_punct(self, port_id):
         """Submit a window punctuation marker to the output port.
+        
+        .. note::
+            Punctuation marks are in-band signals that are inserted between tuples in a stream. Window punctuations are inserted into a stream that are related to the semantics of the operator. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation.
 
         Args:
              port_id: Identifier of the port specified in the
@@ -1346,6 +1352,9 @@ class primitive_operator(object):
             self.submit_punct('A')
             
     Supports handling window punctuation markers in the primitive operator in ``on_punct`` method (new in version 1.16).
+    
+    .. note::
+        Punctuation marks are in-band signals that are inserted between tuples in a stream. Window punctuations are inserted into a stream that are related to the semantics of the operator. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation.
 
     Args:
        output_ports(list): List of identifiers for output ports.
