@@ -823,7 +823,7 @@ is submitted to the first (mandatory) output port. If the return value
 evaluates to false then the same tuple is submitted to the second (optional)
 output port if it exists otherwise it is discarded.  
 
-A filter operator is punctuation perserving.
+A filter operator is punctuation preserving.
 
 # Decorated callable class
 
@@ -880,7 +880,7 @@ If the class has instance fields then they are the state of the
 operator and are private to each invocation of the operator and maintained
 across calls to its `__call__` function.
 
-A map operator is punctuation perserving.
+A map operator is punctuation preserving.
 
 # Decorated function
 
@@ -938,7 +938,7 @@ in the SPL output schema then the remaining attributes are copied from
 the input tuple if a matching attribute is found, otherwise they are set
 to the SPL default value.
 
-A pipe operator is punctuation perserving.
+A pipe operator is punctuation preserving.
 
 `@spl.map` is preferred to `@spl.pipe`.
 
