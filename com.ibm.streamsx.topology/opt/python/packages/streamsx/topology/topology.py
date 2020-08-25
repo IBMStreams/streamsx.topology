@@ -1250,7 +1250,7 @@ class Stream(_placement._Placement, object):
             s.for_each(FEClass(), name='SinkHandlingPunctuations', process_punct=True)
 
         .. note::
-            Punctuation marks are in-band signals that are inserted between tuples in a stream. Window punctuations are inserted into a stream that are related to the semantics of the operator. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation.
+            Punctuation marks are in-band signals that are inserted between tuples in a stream. If sources or stream transforms insert window markers at all, and when they insert them depends on the source or the semantic of the stream transformation. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation.
 
 
 
@@ -1308,7 +1308,7 @@ class Stream(_placement._Placement, object):
         window punctuation will be generated and the tuple is forwarded, otherwise the tuple is just forwarded.
 
         .. note::
-             Punctuation marks are in-band signals that are inserted between tuples in a stream. Window punctuations are inserted into a stream that are related to the semantics of the operator. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation.
+             Punctuation marks are in-band signals that are inserted between tuples in a stream. If sources or stream transforms insert window markers at all, and when they insert them depends on the source or the semantic of the stream transformation. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation.
 
              The :py:meth:`punctor` punctuation mode is "generating" and inserts punctuation into the output stream according to custom logic. Incoming window punctuation is not forwarded.
         
@@ -1409,7 +1409,7 @@ class Stream(_placement._Placement, object):
         type of tuples on this stream.
 
         .. note::
-            Punctuation marks are in-band signals that are inserted between tuples in a stream. Window punctuations are inserted into a stream that are related to the semantics of the operator. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation.
+            Punctuation marks are in-band signals that are inserted between tuples in a stream. If sources or stream transforms insert window markers at all, and when they insert them depends on the source or the semantic of the stream transformation. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation.
 
             The :py:meth:`filter` punctuation mode is "preserving". Incoming window punctuations are forwarded.
 
@@ -1472,7 +1472,7 @@ class Stream(_placement._Placement, object):
         type of tuples on this stream.
 
         .. note::
-            Punctuation marks are in-band signals that are inserted between tuples in a stream. Window punctuations are inserted into a stream that are related to the semantics of the operator. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation.
+            Punctuation marks are in-band signals that are inserted between tuples in a stream. If sources or stream transforms insert window markers at all, and when they insert them depends on the source or the semantic of the stream transformation. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation.
 
             The :py:meth:`split` punctuation mode is "preserving". Incoming window punctuations are forwarded to each output stream.
 
@@ -1623,7 +1623,7 @@ class Stream(_placement._Placement, object):
         * string value - Equivalent to passing ``StreamSchema(schema)``
 
         .. note::
-            Punctuation marks are in-band signals that are inserted between tuples in a stream. Window punctuations are inserted into a stream that are related to the semantics of the operator. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation.
+            Punctuation marks are in-band signals that are inserted between tuples in a stream. If sources or stream transforms insert window markers at all, and when they insert them depends on the source or the semantic of the stream transformation. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation.
 
             The :py:meth:`map` punctuation mode is "preserving". Incoming window punctuations are forwarded.
 
@@ -1749,7 +1749,7 @@ class Stream(_placement._Placement, object):
             sample_stream = list_stream.flat_map(flatten_dict) # sample_stream is a named tuple stream of SampleSchema
 
         .. note::
-            Punctuation marks are in-band signals that are inserted between tuples in a stream. Window punctuations are inserted into a stream that are related to the semantics of the operator. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation.
+            Punctuation marks are in-band signals that are inserted between tuples in a stream. If sources or stream transforms insert window markers at all, and when they insert them depends on the source or the semantic of the stream transformation. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation.
 
             The :py:meth:`flat_map` punctuation mode is "preserving". Incoming window punctuations are forwarded.
 
@@ -2329,11 +2329,11 @@ class Stream(_placement._Placement, object):
         to it before printing.
 
         .. note::
-             Punctuation marks are in-band signals that are inserted between tuples in a stream. Window punctuations are inserted into a stream that are related to the semantics of the operator. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation. 
+             Punctuation marks are in-band signals that are inserted between tuples in a stream. If sources or stream transforms insert window markers at all, and when they insert them depends on the source or the semantic of the stream transformation. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation. 
              
-             There are two kinds of punctuation markers, that are written to stdout when `write_punctuations` is set to `True`:
+             There are two kinds of punctuation markers, which are written to stdout when `write_punctuations` is set to `True`:
 
-             * Window punctuation: indicates breaks in the data, which can be used by the operator logic
+             * Window punctuation: indicates breaks in the data, which can be used by the transformation logic
              * Final punctuation: indicates the end of a stream
 
 
@@ -3004,7 +3004,7 @@ class Window(object):
 
 
         .. note::
-            Punctuation marks are in-band signals that are inserted between tuples in a stream. Window punctuations are inserted into a stream that are related to the semantics of the operator. 
+            Punctuation marks are in-band signals that are inserted between tuples in a stream. If sources or stream transforms insert window markers at all, and when they insert them depends on the source or the semantic of the stream transformation. 
 
             The :py:meth:`~Window.aggregate` inserts a window marker into the output stream after each aggregation.
 
