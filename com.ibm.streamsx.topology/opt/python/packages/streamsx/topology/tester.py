@@ -479,6 +479,9 @@ class Tester(object):
         punctuations are seen on `stream` and remains valid regardless of
         any additional punctuations.
 
+        .. note::
+             Punctuation marks are in-band signals that are inserted between tuples in a stream. If sources or stream transforms insert window markers at all, and when they insert them depends on the source or the semantic of the stream transformation. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation. 
+
         Args:
             stream(Stream): Stream to be tested.
             count(int): Number of punctuations expected.
