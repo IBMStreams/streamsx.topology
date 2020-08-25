@@ -38,6 +38,10 @@ SPLPY_PARTITION_BY_PYTHON will also be 1.
 # Configure Windowing
  my $inputPort = $model->getInputPortAt(0); 
  my $window = $inputPort->getWindow();
+ 
+ my $isPunctWindow = ($window->isTumbling() &&
+                      ($window->getEvictionPolicyType() ==
+                       $SPL::Operator::Instance::Window::PUNCT));
 
  my $partitionByParam = $model->getParameterByName("pyPartitionBy");
  my @partitionByTypes = SPL::CodeGen::getParameterCppTypes($partitionByParam);
@@ -127,7 +131,9 @@ public:
   void process(Tuple const & tuple, uint32_t port);
   void process(Punctuation const & punct, uint32_t port);
 
-  
+<%if($isPunctWindow) {%>
+  void onEmptyWindowPunctEvent(WindowEventType::WindowType & window);
+<%}%>  
 <% if ($window->isSliding()) {%>
   void onWindowTriggerEvent(
      WindowEventType::WindowType & window, WindowEventType::PartitionType const& key);

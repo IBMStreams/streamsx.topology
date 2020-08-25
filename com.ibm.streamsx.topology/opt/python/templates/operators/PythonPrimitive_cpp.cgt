@@ -164,6 +164,7 @@ void MY_OPERATOR::prepareToShutdown()
 
 void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 {
+	AutoPortMutex apm(_mutex, *this);
 <%
 if ($model->getNumberOfInputPorts() != 0) {
 my @portParamStyles = splpy_ParamStyle();
@@ -231,6 +232,32 @@ void MY_OPERATOR::convertAndSubmit(uint32_t port, PyObject *tuple_) {
 <% for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) { %>
      if (port == <%=$p%>)
          pySubmitTuplesPort<%=$p%>(tuple_);
+<%}%>
+}
+
+void MY_OPERATOR::process(Punctuation const & punct, uint32_t port) {
+    AutoPortMutex apm(_mutex, *this);
+    if (punct == Punctuation::WindowMarker) {
+        PyObject *pyObjOnPunct = NULL;
+        SplpyGIL lock;
+        Py_INCREF(pyop_->callable());
+        pyObjOnPunct = SplpyGeneral::callFunction("streamsx.spl.runtime", "_splpy_on_punct", pyop_->callable(), NULL);
+        bool callable = (bool) PyCallable_Check(pyObjOnPunct);
+        if (callable) {
+            PyObject *rv = SplpyGeneral::pyCallObject(pyObjOnPunct, NULL);
+            Py_DECREF(rv);
+            Py_DECREF(pyObjOnPunct);
+        }
+        else if (NULL != pyObjOnPunct) {
+            Py_DECREF(pyObjOnPunct);
+        }
+    }
+}
+
+void MY_OPERATOR::submitPunct(uint32_t port) {
+<% for (my $p = 0; $p < $model->getNumberOfOutputPorts(); $p++) { %>
+     if (port == <%=$p%>)
+         submit (Punctuation::WindowMarker, <%=$p%>);
 <%}%>
 }
 

@@ -6,7 +6,7 @@
   xsi:schemaLocation="http://www.ibm.com/xmlns/prod/streams/spl/operator operatorModel.xsd">
   <cppOperatorModel>
     <context> 
-      <description>Python functional sink. Each tuple results in a call to a function.</description>
+      <description>Python functional punctor.</description>
       <!-- some optional elements
       <metrics>
         <metric>
@@ -44,7 +44,7 @@
       </parameter>
       <parameter>
         <name>pyModule</name>
-        <description>Function's module </description>
+        <description>Function or callable class's module</description>
         <optional>false</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
@@ -53,7 +53,7 @@
       </parameter>
       <parameter>
         <name>pyName</name>
-        <description>Function's name </description>
+        <description>Function or callable class's name</description>
         <optional>false</optional>
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
@@ -67,6 +67,31 @@
         <rewriteAllowed>true</rewriteAllowed>
         <expressionMode>AttributeFree</expressionMode>
         <type>rstring</type>
+        <cardinality>1</cardinality>
+      </parameter>
+      <parameter>
+        <name>submissionParamNames</name>
+        <description>Submission parameter names</description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>rstring</type>
+      </parameter>
+      <parameter>
+        <name>submissionParamValues</name>
+        <description>Submission parameter values</description>
+        <optional>true</optional>
+        <rewriteAllowed>true</rewriteAllowed>
+        <expressionMode>AttributeFree</expressionMode>
+        <type>rstring</type>
+      </parameter>
+      <parameter>
+        <name>outputConnections</name>
+        <description>Number of output connections.</description>
+        <optional>true</optional>
+        <rewriteAllowed>false</rewriteAllowed>
+        <expressionMode>Constant</expressionMode>
+        <type>int32</type>
         <cardinality>1</cardinality>
       </parameter>
       <parameter>
@@ -88,24 +113,8 @@
         <cardinality>1</cardinality>
       </parameter>
       <parameter>
-        <name>submissionParamNames</name>
-        <description>Submission parameter names</description>
-        <optional>true</optional>
-        <rewriteAllowed>true</rewriteAllowed>
-        <expressionMode>Constant</expressionMode>
-        <type>rstring</type>
-      </parameter>
-      <parameter>
-        <name>submissionParamValues</name>
-        <description>Submission parameter values</description>
-        <optional>true</optional>
-        <rewriteAllowed>true</rewriteAllowed>
-        <expressionMode>AttributeFree</expressionMode>
-        <type>rstring</type>
-      </parameter>
-      <parameter>
-        <name>writePunctuations</name>
-        <description>Specifies to write punctuations to stdout</description>
+        <name>before</name>
+        <description>Specifies the position of the generated window punctuation with respect to the current tuple (true: before, false: after)</description>
         <optional>true</optional>
         <rewriteAllowed>false</rewriteAllowed>
         <expressionMode>Constant</expressionMode>
@@ -113,21 +122,12 @@
         <cardinality>1</cardinality>
       </parameter>
       <parameter>
-        <name>processPunctuations</name>
-        <description>Specifies if on_punct shall be called for window punctuations</description>
+        <name>replace</name>
+        <description>Specifies if tuple shall be replaced by window punctuation when callable returns true (tuple is not forwarded)</description>
         <optional>true</optional>
         <rewriteAllowed>false</rewriteAllowed>
         <expressionMode>Constant</expressionMode>
         <type>boolean</type>
-        <cardinality>1</cardinality>
-      </parameter>
-      <parameter>
-        <name>writeTag</name>
-        <description>Specifies to write tag prefix to stdout, valid if writePunctuations is enabled only</description>
-        <optional>true</optional>
-        <rewriteAllowed>false</rewriteAllowed>
-        <expressionMode>Constant</expressionMode>
-        <type>rstring</type>
         <cardinality>1</cardinality>
       </parameter>
     </parameters>
@@ -138,9 +138,19 @@
         <windowPunctuationInputMode>Oblivious</windowPunctuationInputMode>
         <cardinality>1</cardinality>
         <optional>false</optional>
-      </inputPortSet>      
+      </inputPortSet>           
     </inputPorts>
     <outputPorts>
+      <outputPortSet>
+        <expressionMode>Nonexistent</expressionMode> 
+        <autoAssignment>false</autoAssignment>
+        <completeAssignment>false</completeAssignment>
+        <rewriteAllowed>false</rewriteAllowed>
+        <windowPunctuationOutputMode>Generating</windowPunctuationOutputMode>
+        <tupleMutationAllowed>false</tupleMutationAllowed>
+        <cardinality>1</cardinality>
+        <optional>false</optional>
+      </outputPortSet>
     </outputPorts>
   </cppOperatorModel>
 </operatorModel>

@@ -20,6 +20,11 @@
 # Configure Windowing
  my $inputPort = $model->getInputPortAt(0); 
  my $window = $inputPort->getWindow();
+ 
+ my $isPunctWindow = ($window->isTumbling() &&
+                      ($window->getEvictionPolicyType() ==
+                       $SPL::Operator::Instance::Window::PUNCT));
+ 
  my $windowCppInitializer = SPL::CodeGen::getWindowCppInitializer($window,"PyObject *");
 
  # Select the Python wrapper function
@@ -52,6 +57,9 @@ MY_OPERATOR::MY_OPERATOR() :
 <%}%>
 <% if ($window->isTumbling()) {%>
     window_.registerBeforeWindowFlushHandler(this);
+<%}%>
+<%if($isPunctWindow){%>
+    window_.registerOnEmptyWindowPunctEvent(this);
 <%}%>
 #if SPLPY_PARTITION_BY_PYTHON == 1
     window_.registerOnWindowPartitionEviction(this);
@@ -257,12 +265,24 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
 
 void MY_OPERATOR::process(Punctuation const & punct, uint32_t port)
 {
+<%if($isPunctWindow){%>
+    if(punct==Punctuation::WindowMarker) {
+    	window_.insert(punct);
+    }
+<%}%>
 <% if ($window->isTumbling()) {%>
-   // Aggregate the remaining contents if there are some.
-   if (punct == Punctuation::FinalMarker)
-       aggregateRemaining();
+    // Aggregate the remaining contents if there are some.
+    if (punct == Punctuation::FinalMarker)
+        aggregateRemaining();
 <%}%>
 }
+
+<%if($isPunctWindow){%>
+void MY_OPERATOR::onEmptyWindowPunctEvent(WindowEventType::WindowType & window)
+{
+    submit(Punctuation::WindowMarker, 0);
+}
+<%}%>
 
 <% if ($window->isTumbling()) {%>
 void MY_OPERATOR::aggregateRemaining() {

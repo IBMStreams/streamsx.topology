@@ -83,6 +83,8 @@ void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
    SPL::AutoMutex am(mutex_);
 #elif SPLPY_CALLABLE_STATEFUL == 1
    SPL::AutoPortMutex am(mutex_, *this);
+#else
+   SPL::AutoPortMutex am(mutex_, *this);
 #endif
 try {
    SplpyGIL lock;
@@ -99,6 +101,31 @@ try {
  } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
     SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
  }
+}
+
+void MY_OPERATOR::process(Punctuation const & punct, uint32_t port) {
+#if SPLPY_OP_STATE_HANDLER == 1
+    SPL::AutoMutex am(mutex_);
+#elif SPLPY_CALLABLE_STATEFUL == 1
+    SPL::AutoPortMutex am(mutex_, *this);
+#else
+    SPL::AutoPortMutex am(mutex_, *this);
+#endif
+    if (punct == Punctuation::WindowMarker) {
+        PyObject *pyObjOnPunct = NULL;
+        SplpyGIL lock;
+        Py_INCREF(pyop_->callable());
+        pyObjOnPunct = SplpyGeneral::callFunction("streamsx.spl.runtime", "_splpy_on_punct", pyop_->callable(), NULL);
+        bool callable = (bool) PyCallable_Check(pyObjOnPunct);
+        if (callable) {
+            PyObject *rv = SplpyGeneral::pyCallObject(pyObjOnPunct, NULL);
+            Py_DECREF(rv);
+            Py_DECREF(pyObjOnPunct);
+        }
+        else if (NULL != pyObjOnPunct) {
+            Py_DECREF(pyObjOnPunct);
+        }
+    }
 }
 
 <%SPL::CodeGen::implementationEpilogue($model);%>

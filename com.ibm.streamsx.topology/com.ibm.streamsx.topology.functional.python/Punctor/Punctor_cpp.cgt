@@ -1,0 +1,96 @@
+<%SPL::CodeGen::implementationPrologue($model);%>
+
+@include "../pyspltuple.cgt"
+<%
+ # Select the Python wrapper function
+ my $pywrapfunc= $pystyle_fn . '_in';
+%>
+
+#if SPLPY_OP_STATE_HANDLER == 1
+#include "splpy_sh.h"
+#endif
+
+MY_OPERATOR::MY_OPERATOR() :
+   funcop_(NULL),
+   pyInStyleObj_(NULL)
+{
+    funcop_ = new SplpyFuncOp(this, SPLPY_CALLABLE_STATEFUL, "<%=$pywrapfunc%>");
+
+@include "../pyspltuple_constructor.cgt"
+
+#if SPLPY_OP_STATE_HANDLER == 1
+   this->getContext().registerStateHandler(*this);
+#endif
+}
+
+MY_OPERATOR::~MY_OPERATOR() 
+{
+    {
+      SplpyGIL lock;
+      Py_CLEAR(pyInStyleObj_);
+    }
+
+    delete funcop_;
+}
+
+void MY_OPERATOR::prepareToShutdown() 
+{
+    funcop_->prepareToShutdown();
+}
+
+<%
+my $beforeParam = $model->getParameterByName("before");
+my $before = $beforeParam ? $beforeParam->getValueAt(0)->getSPLExpression() eq "true" : 1;
+my $replaceParam = $model->getParameterByName("replace");
+my $replace = $replaceParam ? $replaceParam->getValueAt(0)->getSPLExpression() eq "true" : 0;
+%>
+void MY_OPERATOR::process(Tuple const & tuple, uint32_t port)
+{
+    bool passed = false;
+    {
+#if SPLPY_OP_STATE_HANDLER == 1
+         SPL::AutoMutex am(mutex_);
+#elif SPLPY_CALLABLE_STATEFUL == 1
+         SPL::AutoPortMutex am(mutex_, *this);
+#endif
+         try {
+             SplpyGIL lock;
+
+@include "../pyspltuple2value.cgt"
+
+             PyObject *ret = pySplProcessTuple(funcop_->callable(), value);
+
+             if (ret == NULL) {
+                 throw SplpyExceptionInfo::pythonError("punctor");
+             }
+
+             passed = PyObject_IsTrue(ret);
+
+             Py_DECREF(ret);
+
+         } catch (const streamsx::topology::SplpyExceptionInfo& excInfo) {
+             SPLPY_OP_HANDLE_EXCEPTION_INFO_GIL(excInfo);
+             return;
+         }
+    }
+    
+    <%if (($before) && (!$replace)) {%>
+    if (passed) {
+         submit (Punctuation::WindowMarker, 0);
+    }
+    <%}%>
+    <%if ($replace) {%>
+    if (!passed) {
+        submit(tuple, 0);
+    }
+    <%} else {%>
+    submit(tuple, 0);
+    <%}%>
+    <%if ((!$before) || ($replace)) {%>
+    if (passed) {
+         submit (Punctuation::WindowMarker, 0);
+    }
+    <%}%>
+}
+
+<%SPL::CodeGen::implementationEpilogue($model);%>

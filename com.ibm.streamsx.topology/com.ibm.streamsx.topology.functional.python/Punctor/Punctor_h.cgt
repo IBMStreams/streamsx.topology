@@ -1,19 +1,14 @@
-/*
- * # Licensed Materials - Property of IBM
- * # Copyright IBM Corp. 2015,2018
- */
-<%
-require "splpy_operator.pm";
-my $pyStateful = splpy_OperatorCallable() eq 'class' ? 1 : 0;
-%>
-@include "../../opt/.splpy/common/py_state.cgt"
+@include "../py_pystateful.cgt"
+@include "../../opt/python/codegen/py_state.cgt"
 
 #include "splpy.h"
-#include "splpy_pyop.h"
+#include "splpy_funcop.h"
 
 using namespace streamsx::topology;
 
 <%SPL::CodeGen::headerPrologue($model);%>
+
+@include "../../opt/python/codegen/py_disallow_cr_trigger.cgt"
 
 class MY_OPERATOR : public MY_BASE_OPERATOR
 #if SPLPY_OP_STATE_HANDLER == 1
@@ -25,7 +20,6 @@ public:
   virtual ~MY_OPERATOR(); 
   void prepareToShutdown(); 
   void process(Tuple const & tuple, uint32_t port);
-  void process(Punctuation const & punct, uint32_t port);
 
 #if SPLPY_OP_STATE_HANDLER == 1
   virtual void checkpoint(SPL::Checkpoint & ckpt);
@@ -34,15 +28,15 @@ public:
 #endif
 
 private:
-    SplpyOp *op() { return pyop_; }
+    SplpyOp * op() { return funcop_; }
 
-  // Members
-    SplpyPyOp *pyop_;
-    PyObject *pyInNames_;
+    // Members
+    // Control for interaction with Python
+    SplpyFuncOp *funcop_;
+    
+    PyObject *pyInStyleObj_;
 
 #if SPLPY_CALLABLE_STATEFUL == 1
-    SPL::Mutex mutex_;
-#else
     SPL::Mutex mutex_;
 #endif
 }; 

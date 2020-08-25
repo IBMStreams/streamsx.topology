@@ -438,7 +438,7 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
 
         es = up.urlsplit(self._endpoint)
 
-        if es.path.startswith('/streams/rest/instances/'):
+        if es.path.startswith('/streams/rest/instances/') or es.path.startswith('/streams/v1/instances/'):
             # Default to the default port
             cluster_port = 31843
             self._service_name = es.path.split('/')[-1]
@@ -548,39 +548,23 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
             ere_path = ere
         streams_url = up.urlunsplit(('https', cluster_ip + ':' + str(ere_port), ere_path, None, None))
 
+        cfg = {
+            'type': 'streams',
+            'connection_info': {
+                'serviceBuildEndpoint': build_url,
+                'serviceRestEndpoint': streams_url},
+            'serviceTokenEndpoint': service_token_url,
+            'service_token': service_token,
+            'service_token_expire': int(self._auth_expiry_time * 1000.0),
+            'service_name': service_name,
+            'cluster_ip': cluster_ip,
+            'cluster_port': cluster_port,
+            'service_id': service_id,
+            'externalClient':True,
+        }
         if build_pools_url:
-            cfg = {
-                'type': 'streams',
-                'connection_info': {
-                    'serviceBuildEndpoint': build_url,
-                    'serviceBuildPoolsEndpoint': build_pools_url,
-                    'serviceRestEndpoint': streams_url},
-                'serviceTokenEndpoint': service_token_url,
-                'service_token': service_token,
-                'service_token_expire': int(self._auth_expiry_time * 1000.0),
-                'service_name': service_name,
-                'cluster_ip': cluster_ip,
-                'cluster_port': cluster_port,
-                'service_id': service_id,
-                'externalClient':True,
-            }
-            return cfg
-        else:
-            cfg = {
-                'type': 'streams',
-                'connection_info': {
-                    'serviceBuildEndpoint': build_url,
-                    'serviceRestEndpoint': streams_url},
-                'serviceTokenEndpoint': service_token_url,
-                'service_token': service_token,
-                'service_token_expire': int(self._auth_expiry_time * 1000.0),
-                'service_name': service_name,
-                'cluster_ip': cluster_ip,
-                'cluster_port': cluster_port,
-                'service_id': service_id,
-                'externalClient':True,
-            }
-            return cfg
+            cfg['connection_info']['serviceBuildPoolsEndpoint'] = build_pools_url
+        return cfg
 
 class _JWTAuthHandler(_BearerAuthHandler):
     def __init__(self, security_url, username, password, verify):
@@ -1960,14 +1944,24 @@ class Instance(_ResourceElement):
     def _root_from_endpoint(endpoint):
         import urllib.parse as up
         esu = up.urlsplit(endpoint)
-        if not esu.path.startswith('/streams/rest/instances/'):
+        
+        if esu.path.startswith('/streams/rest/instances/'):
+            # CPD < 3.5
+            es = endpoint.split('/')
+            name = es[len(es)-1]
+            root_url = endpoint.split('/streams/rest/instances/')[0]
+            resource_url = root_url + '/streams/rest/resources'
+            return resource_url, name
+        elif esu.path.startswith('/streams/v1/instances/'):
+            # with CPD >= 3.5 '/streams/rest/...' changed to '/streams/v1/...'
+            es = endpoint.split('/')
+            name = es[len(es)-1]
+            root_url = endpoint.split('/streams/v1/instances/')[0]
+            # /streams/rest/resources --> streams/v1/roots
+            resource_url = root_url + '/streams/v1/roots'
+            return resource_url, name
+        else:
             return None, None
-
-        es = endpoint.split('/')
-        name = es[len(es)-1]
-        root_url = endpoint.split('/streams/rest/instances/')[0]
-        resource_url = root_url + '/streams/rest/resources'
-        return resource_url, name
 
     @staticmethod
     def of_endpoint(endpoint=None, service_name=None, username=None, password=None, verify=None):
@@ -2041,6 +2035,7 @@ class Instance(_ResourceElement):
             # this is a stand-alone config
             parsed = parse.urlparse(endpoint)
             resource_url = parse.urlunparse((parsed.scheme, parsed.netloc, "/streams/rest/resources", None, None, None))
+            # TODO standalone: Streams in CPD3.5: /streams/rest/resources changes to /streams/v1/roots
 
             # Create a connection using basic authentication.  This will be
             # used to attempt to discover the security service.  If there
@@ -3092,9 +3087,15 @@ class Toolkit(_ResourceElement):
             if resource.name == 'toolkits':
                 toolkits_url = resource.resource
                 break;
-        else:
-            raise ValueError('The toolkits REST API is not supported by the Streams instance')
-        return toolkits_url                 
+            if resource.name == 'buildPools':
+                buildpools_json = sc.rest_client.make_request(resource.resource)['buildPools']
+                for pool in [_BuildPool(json_rep, sc.rest_client) for json_rep in buildpools_json]:
+                    if pool.type == 'application' and hasattr(pool, 'toolkits'):
+                        toolkits_url = pool.toolkits
+                        break;
+        if toolkits_url:
+            return toolkits_url
+        raise ValueError('The toolkits REST API is not supported by the Streams instance')
 
     class Dependency:
         """

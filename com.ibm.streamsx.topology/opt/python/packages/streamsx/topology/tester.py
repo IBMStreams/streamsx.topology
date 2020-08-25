@@ -467,6 +467,40 @@ class Tester(object):
             cond._desc = "'{0}' stream expects tuple count of at least {1}.".format(stream.name, count)
         return self.add_condition(stream, cond)
 
+    def punct_count(self, stream, count, exact=True):
+        """Test that a stream contains a number of window punctuations.
+
+        If `exact` is `True`, then condition becomes valid when `count`
+        punctuations are seen on `stream` during the test. Subsequently if additional
+        punctuations are seen on `stream` then the condition fails and can never
+        become valid.
+
+        If `exact` is `False`, then the condition becomes valid once `count`
+        punctuations are seen on `stream` and remains valid regardless of
+        any additional punctuations.
+
+        .. note::
+             Punctuation marks are in-band signals that are inserted between tuples in a stream. If sources or stream transforms insert window markers at all, and when they insert them depends on the source or the semantic of the stream transformation. One example is the :py:meth:`~Window.aggregate`, which inserts a window marker into the output stream after each aggregation. 
+
+        Args:
+            stream(Stream): Stream to be tested.
+            count(int): Number of punctuations expected.
+            exact(bool): `True` if the stream must contain exactly `count`
+                punctuations, `False` if the stream must contain at least `count` punctuations.
+
+        Returns:
+            Stream: stream
+        """
+        _logger.debug("Adding punctuations count (%d) condition to stream %s.", count, stream)
+        name = stream.name + '_punct_count'
+        if exact:
+            cond = sttrt._PunctExactCount(count, name)
+            cond._desc = "{0} stream expects punctuations count equal to {1}.".format(stream.name, count)
+        else:
+            cond = sttrt._PunctAtLeastCount(count, name)
+            cond._desc = "'{0}' stream expects punctuations count of at least {1}.".format(stream.name, count)
+        return self.add_condition(stream, cond)
+
     def contents(self, stream, expected, ordered=True):
         """Test that a stream contains the expected tuples.
 

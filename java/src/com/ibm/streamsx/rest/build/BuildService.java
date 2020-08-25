@@ -6,7 +6,6 @@
 package com.ibm.streamsx.rest.build;
 
 import static com.ibm.streamsx.rest.build.StreamsBuildService.STREAMS_BUILD_PATH;
-import static com.ibm.streamsx.rest.build.StreamsBuildService.STREAMS_REST_RESOURCES;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jstring;
 
 import java.io.IOException;
@@ -19,6 +18,7 @@ import org.apache.http.client.fluent.Executor;
 
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.Job;
+import com.ibm.streamsx.rest.RESTException;
 import com.ibm.streamsx.rest.Result;
 import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
 import com.ibm.streamsx.rest.internal.RestUtils;
@@ -40,8 +40,24 @@ public interface BuildService {
                 endpoint = Util.getenv(Util.STREAMS_BUILD_URL);
             }
             URL url = new URL(endpoint);
+            // TODO: standalone: Not tested 
+            String path;
+            if (url.getPath().startsWith("/streams/rest/")) {
+                // internal URL, CPD < 3.5
+                // https://build-sample-streams-build.ivan34:8445/streams/rest/builds
+                // https://build-sample-streams-build.ivan34:8445/streams/rest/resources
+                path = url.getPath().replaceFirst("/builds[/]?$", "/resources");
+            } else if (url.getPath().startsWith("/streams/v1/")) {
+                // internal URL, CPD >= 3.5
+                // https://build-sample-streams-build.nbgf2:8445/streams/v1/builds
+                // https://build-sample-streams-build.nbgf2:8445/streams/v1/roots
+                path = url.getPath().replaceFirst("/builds[/]?$", "/roots");
+            }
+            else {
+                throw new RESTException("build endpoint '" + endpoint + "' cannot be transformed to build resources URL");
+            }
             URL resourcesUrl = new URL(url.getProtocol(), url.getHost(),
-                        url.getPort(), STREAMS_REST_RESOURCES);
+                        url.getPort(), path);
             String resourcesEndpoint = resourcesUrl.toExternalForm();
 
 	        StandaloneAuthenticator auth = StandaloneAuthenticator.of(resourcesEndpoint, userName, password);

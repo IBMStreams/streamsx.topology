@@ -525,6 +525,11 @@ def _submit(primitive, port_index, tuple_):
     args = (_get_opc(primitive), port_index, tuple_)
     _ec._submit(args)
 
+def _submit_punct(primitive, port_index):
+    """Internal method to submit window punctuation"""
+    args = (_get_opc(primitive), port_index)
+    _ec._submit_punct(args)
+
 #
 # Application Trace & Log
 #

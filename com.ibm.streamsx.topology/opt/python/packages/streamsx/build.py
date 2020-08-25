@@ -81,6 +81,8 @@ class BuildService(streamsx.rest._AbstractStreamsConnection):
             self.rest_client = streamsx.rest_primitives._StreamsRestClient._of_basic(username, password)
         self.rest_client._sc = self
         self.session = self.rest_client.session
+        self._resource_names = None
+
 
     @property
     def resource_url(self):
@@ -110,8 +112,24 @@ class BuildService(streamsx.rest._AbstractStreamsConnection):
            name(str): Return toolkits matching name as a regular expression.
 
         """
-        return self._get_elements('toolkits', streamsx.rest_primitives.Toolkit, name=name)
-     
+        if not self._resource_names:
+            self._resource_names = [res.name for res in self.get_resources()]
+        if 'toolkits' in self._resource_names:
+            return self._get_elements('toolkits', streamsx.rest_primitives.Toolkit, name=name)
+
+        # from CPD 3.5 on, the toolkits are not a high-level resource of the build service.
+        # They are under the application build pool.
+        # streamsx.rest_primitives.Toolkit._toolkits_url(self) will return the right URL
+        try:
+            toolkits = []
+            for tk_json_rep in self.rest_client.make_request(streamsx.rest_primitives.Toolkit._toolkits_url(self))['toolkits']:
+                if not streamsx.rest_primitives._matching_resource(tk_json_rep, name):
+                    continue
+                toolkits.append(streamsx.rest_primitives.Toolkit(tk_json_rep, self.rest_client))
+            return toolkits
+        except:
+            return []
+
     def get_toolkit(self, id):
         """Retrieves available toolkit matching a specific toolkit ID.
 
@@ -126,7 +144,27 @@ class BuildService(streamsx.rest._AbstractStreamsConnection):
             ValueError: No matching toolkit exists.
 
         """
-        return self._get_element_by_id('toolkits', streamsx.rest_primitives.Toolkit, id)
+        if not self._resource_names:
+            self._resource_names = [res.name for res in self.get_resources()]
+        if 'toolkits' in self._resource_names:
+            return self._get_element_by_id('toolkits', streamsx.rest_primitives.Toolkit, id)
+        
+        # from CPD 3.5 on, the toolkits are not a high-level resource of the build service.
+        # They are under the application build pool.
+        # streamsx.rest_primitives.Toolkit._toolkits_url(self) will return the right URL
+        try:
+            toolkits = []
+            for tk_json_rep in self.rest_client.make_request(streamsx.rest_primitives.Toolkit._toolkits_url(self))['toolkits']:
+                if not streamsx.rest_primitives._exact_resource(tk_json_rep, id):
+                    continue
+                toolkits.append(streamsx.rest_primitives.Toolkit(tk_json_rep, self.rest_client))
+            if not toolkits:
+                raise ValueError("No resource matching: {0}".format(id))
+            if len(toolkits) == 1:
+                return toolkits[0]
+            raise ValueError("Multiple resources matching: {0}".format(id))
+        except:
+            raise ValueError("No resources matching: {0}".format(id))
 
     def upload_toolkit(self, path):
         """
@@ -291,9 +329,10 @@ class BuildService(streamsx.rest._AbstractStreamsConnection):
         # service_name is the instance name
         service_name = service['service_name']
         auth = streamsx.rest_primitives._ICPDAuthHandler(service_name, service['service_token'])
-        build_url = BuildService._root_from_endpoint(service['connection_info'].get('serviceBuildEndpoint'))
+        resource_url = BuildService._root_from_endpoint(service['connection_info'].get('serviceBuildEndpoint'))
+        print("## BuildService: resource_url = " + resource_url)
         buildpools_url = service['connection_info'].get('serviceBuildPoolsEndpoint', None)
-        sc = BuildService(resource_url=build_url, buildpools_url=buildpools_url, auth=auth)
+        sc = BuildService(resource_url=resource_url, buildpools_url=buildpools_url, auth=auth)
         if streamsx.topology.context.ConfigParams.SSL_VERIFY in config:
             sc.rest_client.session.verify = config[streamsx.topology.context.ConfigParams.SSL_VERIFY]
         return sc
@@ -378,7 +417,8 @@ class BuildService(streamsx.rest._AbstractStreamsConnection):
             # This is a stand-alone config
             parsed = parse.urlparse(endpoint)
             build_url = parse.urlunparse((parsed.scheme, parsed.netloc, "/streams/rest/resources", None, None, None))
-
+            # TODO: standalone config of CPD 3.5
+            
             # Create a connection using basic authentication.  This will be
             # used to attempt to discover the security service.  If there
             # is no security service, this connection will continue to be
@@ -411,19 +451,25 @@ class BuildService(streamsx.rest._AbstractStreamsConnection):
 
     @staticmethod
     def _root_from_endpoint(endpoint):
+        """
+        Returns the build resources URL from the build endpoint
+        """
         import urllib.parse as up
         esu = up.urlsplit(endpoint)
-        # CPD 2.5
         if esu.path.startswith('/streams-build/instances/'):
+            # external URL; CPD 2.5 ... < 3.5
             return endpoint.replace('/streams-build/instances', '/streams-build-resource/instances', 1)
-
-        if not esu.path.startswith('/streams/rest/builds'):
-            return None
-
-        es = endpoint.split('/')
-        root_url = endpoint.split('/streams/rest/builds')[0]
-        resource_url = root_url + '/streams/rest/resources'
-        return resource_url
+        elif esu.path.startswith('/streams_build_service/v1/'):
+            # external URL, CPD >= 3.5
+            return up.urlunsplit((esu.scheme, esu.netloc, esu.path.replace('/builds', '/roots'), None, None))
+        elif esu.path.startswith('/streams/rest/builds'):
+            # internal URL; CPD 2.5 ... < 3.5
+            return up.urlunsplit((esu.scheme, esu.netloc, esu.path.replace('/builds', '/resources'), None, None))
+        elif esu.path.startswith('/streams/v1/builds'):
+            # internal URL, CPD >= 3.5
+            return up.urlunsplit((esu.scheme, esu.netloc, esu.path.replace('/builds', '/roots'), None, None))
+        
+        raise ValueError("Can't convert build endpoint " + endpoint + " into resource URL")
 
     def __str__(self):
         return pformat(self.__dict__)
