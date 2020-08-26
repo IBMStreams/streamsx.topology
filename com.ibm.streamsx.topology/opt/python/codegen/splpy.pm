@@ -77,7 +77,9 @@ sub splToPythonConversionCheck{
       splToPythonConversionCheck($value_type);
       return;
     }
-    return; # XXX NESTED in progress
+    if (SPL::CodeGen::Type::isTuple($type)) {
+      return; # XXX NESTED in progress
+    }
     SPL::CodeGen::errorln("SPL type: " . $type . " is not supported for conversion to or from Python."); 
 }
 
@@ -272,15 +274,101 @@ sub convertAndAddToPythonDictionaryObject {
   my $type = $_[2];
   my $name = $_[3];
   my $names = $_[4];
+  my $dictname = $_[5];
+  
+  # starts a C++ block and sets value
+  my $get;
+  my $nested_tuple = 0;
+  ########### PyList of PyDict - SPL: list of tuple #########################
+  if (SPL::CodeGen::Type::isList($type)) {
+    my $element_type = SPL::CodeGen::Type::getElementType($type);  
+    if (SPL::CodeGen::Type::isTuple($element_type)) {
+      $nested_tuple = 1;
+      $get = "//PyList of PyDict - SPL: list of tuple\n";
+      $get = $get . "//$type\n";
+      $get = $get . "//$name\n";
+      $get = $get . "{ PyObject * value = 0;\n";
+      $get = $get . "PyObject * pyList = PyList_New($ituple.get_$name().size());\n";
+      $get = $get . "for (int ii = 0; ii < $ituple.get_$name().size(); ii++) {\n";
+      $get = $get . "  { PyObject * pyDict1 = PyDict_New();\n";
 
-  # starts a C++ blockand sets value
-  my $get = _attr2Value($ituple, $type, $name);
+      my $fp;
+      my $ac = 0;
+      my @_attrTypes = SPL::CodeGen::Type::getAttributeTypes ($element_type);
+      for my $_attrName (SPL::CodeGen::Type::getAttributeNames ($element_type)) {  	
+        $fp .= ',' if ($ac > 0);
+        $fp .= $_attrName;
+        $fp .= ':';
+        $fp .= $_attrTypes[$ac];
+        $ac++;
+      }      
+      $get = $get . "// ".$fp."\n";
+
+      $get = $get . "    PyObject * pyNamesNestedTuple = PyTuple_New(".$ac.");\n";
+      my $j = 0;
+      for my $_attrName (SPL::CodeGen::Type::getAttributeNames ($element_type)) {   
+      	$get = $get . "    PyObject * pyName".$j." = pyUnicode_FromUTF8(\"".$_attrName."\");\n"; 
+        $get = $get . "    PyTuple_SET_ITEM(pyNamesNestedTuple, ".$j.", pyName".$j.");\n";
+        $j++;
+      }
+
+      my @attrTypes = SPL::CodeGen::Type::getAttributeTypes ($element_type);
+      my @attrNames = SPL::CodeGen::Type::getAttributeNames ($element_type); 
+      for (my $si = 0; $si < $ac; ++$si) {
+        $get = $get . convertAndAddToPythonDictionaryObject($ituple.'.get_'.$name.'()['.$si.']', $si, $attrTypes[$si], $attrNames[$si], 'pyNamesNestedTuple', 'pyDict1');
+      }
+            
+      $get = $get . "    PyList_SET_ITEM(pyList, ii, pyDict1);\n";
+      $get = $get . "  }\n";
+      $get = $get . "}\n";
+      $get = $get . "value = pyList;\n\n";
+    }
+  }
+  ########### PyDict of PyDict - SPL: tuple of tuple #########################
+  if (SPL::CodeGen::Type::isTuple($type)) {
+    $nested_tuple = 1;
+    $get = "//PyDict of PyDict - SPL: tuple of tuple\n";
+    $get = $get . "//$type\n";
+    $get = $get . "//$name\n";
+    $get = $get . "{PyObject * value = 0;\n";
+    $get = $get . "  PyObject * pyDict1 = PyDict_New();\n";
+      my $fp;
+      my $ac = 0;
+      my @_attrTypes = SPL::CodeGen::Type::getAttributeTypes ($type);
+      for my $_attrName (SPL::CodeGen::Type::getAttributeNames ($type)) {  	
+        $fp .= ',' if ($ac > 0);
+        $fp .= $_attrName;
+        $fp .= ':';
+        $fp .= $_attrTypes[$ac];
+        $ac++;
+      }      
+      $get = $get . "// ".$fp."\n";
+
+      $get = $get . "    PyObject * pyNamesNestedTuple = PyTuple_New(".$ac.");\n";
+      my $j = 0;
+      for my $_attrName (SPL::CodeGen::Type::getAttributeNames ($type)) {   
+      	$get = $get . "    PyObject * pyName".$j." = pyUnicode_FromUTF8(\"".$_attrName."\");\n"; 
+        $get = $get . "    PyTuple_SET_ITEM(pyNamesNestedTuple, ".$j.", pyName".$j.");\n";
+        $j++;
+      }
+
+      my @attrTypes = SPL::CodeGen::Type::getAttributeTypes ($type);
+      my @attrNames = SPL::CodeGen::Type::getAttributeNames ($type); 
+      for (my $si = 0; $si < $ac; ++$si) {
+        $get = $get . convertAndAddToPythonDictionaryObject($ituple.'.get_'.$name.'()', $si, $attrTypes[$si], $attrNames[$si], 'pyNamesNestedTuple', 'pyDict1');
+      }
+      $get = $get . "  value = pyDict1;\n";
+  }
+  ###########################################################################
+  if ($nested_tuple == 0){
+    $get = _attr2Value($ituple, $type, $name);
+  }
 
   # PyTuple_GET_ITEM returns a borrowed reference.
   $getkey = 'PyObject * key = PyTuple_GET_ITEM(' . $names . ',' . $i . ");\n";
 
-# Note PyDict_SetItem does not steal the references to the key and value
-  my $setdict =  "PyDict_SetItem(pyDict, key, value);\n";
+  # Note PyDict_SetItem does not steal the references to the key and value
+  my $setdict =  "PyDict_SetItem(".$dictname.", key, value);\n";
   $setdict =  $setdict . "Py_DECREF(value);\n";
 
   return $get . $getkey . $setdict . "}\n" ;

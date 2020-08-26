@@ -72,6 +72,16 @@ class check_numbers_tuple():
     else:
         raise TypeError("Invalid type")
 
+def simple_map(tpl):
+    print("simple_map: "+str(tpl))
+    return tpl
+
+
+def simple_map_to_named_tuple(tpl) -> NamedTupleNestedTupleSchema:
+    print("simple_map_to_named_tuple: "+str(tpl))
+    return tpl
+
+
 class TestNamedTupleSource(unittest.TestCase):
 
     def setUp(self):
@@ -158,7 +168,6 @@ class TestNamedTupleSource(unittest.TestCase):
         tester.tuple_count(st, 3)
         tester.test(self.test_ctxtype, self.test_config)
 
-    # ValueError: Unsupported type: <class 'py36_types.SpottedSchema'>
     def test_list_of_tuple_spl_py(self):
         # spl source -> python sink (NamedTupleListOfTupleSchema)
         topo = Topology()
@@ -167,43 +176,44 @@ class TestNamedTupleSource(unittest.TestCase):
             params = {'period': 0.1, 'iterations':3})
 
         st = b.stream
-        sm1 = st.map(lambda x : x, name='M1')
+        sm1 = st.map(simple_map, name='M1')
         sm1.print()
  
         tester = Tester(topo)
-        tester.tuple_count(st, 3)
+        tester.tuple_count(sm1, 3)
         tester.test(self.test_ctxtype, self.test_config)
 
-    # ValueError: Unsupported type: <class 'py36_types.SpottedSchema'>
     def test_nested_tuple_spl_py(self):
         # spl source -> python sink (NamedTupleNestedTupleSchema)
         topo = Topology()
         b = op.Source(topo, "spl.utility::Beacon",
             schema=NamedTupleNestedTupleSchema,
             params = {'period': 0.1, 'iterations':3})
-
+        b.key = b.output('(rstring)IterationCount()')
+        b.spotted = b.output('{start_time=(float64)0.1, end_time=(float64)0.2 , confidence=(float64)0.5}')
         st = b.stream
-        sm1 = st.map(lambda x : x, name='M1')
+        sm1 = st.map(simple_map_to_named_tuple, name='M1')
         sm1.print()
  
         tester = Tester(topo)
-        tester.tuple_count(st, 3)
+        tester.tuple_count(sm1, 3)
         tester.test(self.test_ctxtype, self.test_config)
 
-    # CDISP9164E ERROR: SPL type: tuple<float64 start_time,float64 end_time,float64 confidence> is not supported for conversion to or from Python.
     def test_nested_tuple_streamschema_spl_py(self):
         # spl source -> python sink (StreamSchema)
         topo = Topology()
         b = op.Source(topo, "spl.utility::Beacon",
             schema='tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>',
             params = {'period': 0.1, 'iterations':3})
+        b.key = b.output('(rstring)IterationCount()')
+        b.spotted = b.output('{start_time=(float64)0.1, end_time=(float64)0.2 , confidence=(float64)0.5}')
 
         st = b.stream
-        sm1 = st.map(lambda x : x, name='M1')
+        sm1 = st.map(simple_map, name='M1')
         sm1.print()
  
         tester = Tester(topo)
-        tester.tuple_count(st, 3)
+        tester.tuple_count(sm1, 3)
         tester.test(self.test_ctxtype, self.test_config)
 
 

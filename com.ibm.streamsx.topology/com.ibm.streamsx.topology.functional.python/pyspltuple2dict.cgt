@@ -15,7 +15,7 @@
 <%
      for (my $i = 0; $i < $inputAttrs2Py; ++$i) {
          my $la = $iport->getAttributeAt($i);
-         print convertAndAddToPythonDictionaryObject($iport->getCppTupleName(), $i, $la->getSPLType(), $la->getName(), 'pyInNames_');
+         print convertAndAddToPythonDictionaryObject($iport->getCppTupleName(), $i, $la->getSPLType(), $la->getName(), 'pyInNames_', 'pyDict');
      }
 %>
   value = pyDict;

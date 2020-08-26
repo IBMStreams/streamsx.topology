@@ -78,8 +78,13 @@ void MY_OPERATOR::fromPyTupleToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupl
          // Value from the Python function
          PyObject *pyAttrValue = PyTuple_GET_ITEM(pyTuple, <%=$ai%>);
          if (!SplpyGeneral::isNone(pyAttrValue)) {
+        	 <%if (SPL::CodeGen::Type::isTuple($atype)) {%>	 
+			      // tuple type
+        	      std::cout << "XXX fromPyTupleToSPLTuple - tuple type: " << "<%=$atype%>" << std::endl;
+        	 <%} else {%>
                   streamsx::topology::pySplValueFromPyObject(
                                otuple.get_<%=$name%>(), pyAttrValue);
+             <%}%>
 <%
     if (defined $iport) {
              print 'setAttr = true;';
@@ -145,8 +150,13 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
          if (pyAttrValue != NULL) {
              --available;
              if (!SplpyGeneral::isNone(pyAttrValue)) {
+            	 <%if (SPL::CodeGen::Type::isTuple($atype)) {%>	 
+    			      // tuple type
+            	      std::cout << "XXX fromPyDictToSPLTuple - tuple type: " << "<%=$atype%>" << std::endl;
+            	 <%} else {%>
                   streamsx::topology::pySplValueFromPyObject(
                                otuple.get_<%=$name%>(), pyAttrValue);
+            	 <%}%>
 <%
     if (defined $iport) {
              print 'setAttr = true;';
