@@ -763,7 +763,7 @@ class CommonSchema(enum.Enum):
         return str(self.schema())
 
 def _from_named_tuple(nt):
-    print ('_from_named_tuple '+str(nt))
+    nested = 0
 
     i = 0
     td = 'tuple<'    
@@ -771,20 +771,22 @@ def _from_named_tuple(nt):
         if i:
             td += ', '
         typeval = _spl_from_type(nt._field_types[name])
-        print ('XXX nt2 ' + str(typeval))
+        # special handling for nested tuple types
+        if typeval.startswith('tuple') or typeval.startswith('list<tuple'):
+            nested = 1
         td += typeval
         td += ' '
         td += name
         i = i + 1
     td += '>'
     
-    print ('XXX nt3 ' + td)
-    return StreamSchema(td)#.as_tuple(named=nt.__name__)
+    # For nested tuple types the function .as_tuple(named=nt.__name__) fails
+    if nested:
+        return StreamSchema(td)
+    return StreamSchema(td).as_tuple(named=nt.__name__)
     
     
 def _from_named_tuple_subclass(nt):
-    print ('_from_named_tuple_subclass '+str(nt))
-
     i = 0
     td = ''
     for name in nt._fields:
@@ -799,7 +801,6 @@ def _from_named_tuple_subclass(nt):
  
 
 def _spl_from_type(type_):
-    print ('_spl_from_type '+str(type_))
     _init_type_mappings()
     if type_ in _PYTYPE_TO_SPL:
         return _PYTYPE_TO_SPL[type_]
@@ -824,13 +825,12 @@ def _spl_from_type(type_):
             if typing.Optional[et] == type_:
                 return 'optional<' + _spl_from_type(et) + '>'
     if _is_namedtuple(type_):
-        print ('XXX nt1 ' + str(type_))
+        # special handling for nested tuple
         return 'tuple<' + _from_named_tuple_subclass(type_) + '>'
     else:
         raise ValueError("Unsupported type: " + str(type_))
 
 def _type_from_spl(type_):
-    print ('_type_from_spl '+str(type_))
     _init_type_mappings()
     if type_ in _SPLTYPE_TO_PY:
         return _SPLTYPE_TO_PY[type_]

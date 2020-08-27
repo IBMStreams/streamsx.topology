@@ -10,13 +10,13 @@
 
   PyObject *value = 0;
   {
-  SplpyGIL lockdict;
-  PyObject * pyDict = PyDict_New();
+    SplpyGIL lockdict;
+    PyObject * pyDict = PyDict_New();
 <%
      for (my $i = 0; $i < $inputAttrs2Py; ++$i) {
          my $la = $iport->getAttributeAt($i);
-         print convertAndAddToPythonDictionaryObject($iport->getCppTupleName(), $i, $la->getSPLType(), $la->getName(), 'pyInNames_', 'pyDict');
+         print convertAndAddToPythonDictionaryObject($iport->getCppTupleName(), $i, $la->getSPLType(), $la->getName(), 'pyInNames_', 'pyDict', "    ");
      }
 %>
-  value = pyDict;
+    value = pyDict;
   }

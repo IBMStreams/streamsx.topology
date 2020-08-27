@@ -174,6 +174,7 @@ class TestNamedTupleSource(unittest.TestCase):
         b = op.Source(topo, "spl.utility::Beacon",
             schema=NamedTupleListOfTupleSchema,
             params = {'period': 0.1, 'iterations':3})
+        b.spotted = b.output('[{start_time=(float64)0.1, end_time=(float64)0.2 , confidence=(float64)0.5}]')
 
         st = b.stream
         sm1 = st.map(simple_map, name='M1')
@@ -181,6 +182,7 @@ class TestNamedTupleSource(unittest.TestCase):
  
         tester = Tester(topo)
         tester.tuple_count(sm1, 3)
+        self.test_config['topology.keepArtifacts'] = True
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_nested_tuple_spl_py(self):
@@ -197,6 +199,7 @@ class TestNamedTupleSource(unittest.TestCase):
  
         tester = Tester(topo)
         tester.tuple_count(sm1, 3)
+        self.test_config['topology.keepArtifacts'] = True
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_nested_tuple_streamschema_spl_py(self):
@@ -214,6 +217,7 @@ class TestNamedTupleSource(unittest.TestCase):
  
         tester = Tester(topo)
         tester.tuple_count(sm1, 3)
+        self.test_config['topology.keepArtifacts'] = True
         tester.test(self.test_ctxtype, self.test_config)
 
 
