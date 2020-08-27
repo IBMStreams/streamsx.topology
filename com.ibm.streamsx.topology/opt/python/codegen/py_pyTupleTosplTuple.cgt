@@ -78,12 +78,17 @@ void MY_OPERATOR::fromPyTupleToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupl
          // Value from the Python function
          PyObject *pyAttrValue = PyTuple_GET_ITEM(pyTuple, <%=$ai%>);
          if (!SplpyGeneral::isNone(pyAttrValue)) {
-        	 <%if (SPL::CodeGen::Type::isTuple($atype)) {%>	 
-			      // tuple type
-        	      std::cout << "XXX fromPyTupleToSPLTuple - tuple type: " << "<%=$atype%>" << std::endl;
+             <%if (SPL::CodeGen::Type::isList($atype)) {
+                 my $element_type = SPL::CodeGen::Type::getElementType($atype);  
+                 if (SPL::CodeGen::Type::isTuple($element_type)) {%>          	 
+                // list of tuple <%=$atype%>
+                std::cout << "XXX fromPyTupleToSPLTuple - list of tuple: " << "<%=$atype%>" << std::endl;
+               <%}%>
+             <%} elsif (SPL::CodeGen::Type::isTuple($atype)) {%>
+			    // tuple type
+        	    std::cout << "XXX fromPyTupleToSPLTuple - tuple type: " << "<%=$atype%>" << std::endl;
         	 <%} else {%>
-                  streamsx::topology::pySplValueFromPyObject(
-                               otuple.get_<%=$name%>(), pyAttrValue);
+                streamsx::topology::pySplValueFromPyObject(otuple.get_<%=$name%>(), pyAttrValue);
              <%}%>
 <%
     if (defined $iport) {
@@ -134,7 +139,6 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
   }
 
   for (my $ai = $oport->getNumberOfAttributes() - 1; $ai >= 0; --$ai) {
-    
     my $attribute = $oport->getAttributeAt($ai);
     my $name = $attribute->getName();
     my $atype = $attribute->getSPLType();
@@ -144,19 +148,36 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
              print 'setAttr = false;';
     }
 %>
+    // attribute name=<%=$name%> type=<%=$atype%>
     if (available > 0) {
          // Value from the Python function
          PyObject *pyAttrValue = PyDict_GetItem(pyDict, PyTuple_GET_ITEM(pyOutNames_<%=$oport->getIndex()%>, <%=$ai%>));
          if (pyAttrValue != NULL) {
              --available;
              if (!SplpyGeneral::isNone(pyAttrValue)) {
-            	 <%if (SPL::CodeGen::Type::isTuple($atype)) {%>	 
-    			      // tuple type
-            	      std::cout << "XXX fromPyDictToSPLTuple - tuple type: " << "<%=$atype%>" << std::endl;
-            	 <%} else {%>
-                  streamsx::topology::pySplValueFromPyObject(
-                               otuple.get_<%=$name%>(), pyAttrValue);
-            	 <%}%>
+               <%if (SPL::CodeGen::Type::isList($atype)) {
+                   my $element_type = SPL::CodeGen::Type::getElementType($atype);  
+                   if (SPL::CodeGen::Type::isTuple($element_type)) {%>          	 
+                  // list of tuple <%=$atype%>
+                  std::cout << "XXX fromPyDictToSPLTuple - list of tuple: " << "<%=$atype%>" << std::endl;
+                  // TODO XXX from pylist dict to spl list tuple
+                 <%}%>
+               <%} elsif (SPL::CodeGen::Type::isTuple($atype)) {%>	 
+                  // tuple type <%=$atype%>
+                  <%my @attrNames = SPL::CodeGen::Type::getAttributeNames ($atype);%>
+                  std::cout << "XXX fromPyDictToSPLTuple - tuple type: " << "<%=$atype%>" << std::endl;
+                  PyObject *value = pyAttrValue;
+                  PyObject *k,*v;
+                  Py_ssize_t pos = 0;
+                  while (PyDict_Next(value, &pos, &k, &v)) {
+                     <%my $i=0; for my $_attrName (SPL::CodeGen::Type::getAttributeNames ($atype)) { $i++;%>
+                     if (pos == <%=$i%>)
+                       streamsx::topology::pySplValueFromPyObject(otuple.get_<%=$name%>().get_<%=$_attrName%>(), v);
+                     <%}%>
+                  }
+               <%} else {%>
+                  streamsx::topology::pySplValueFromPyObject(otuple.get_<%=$name%>(), pyAttrValue);
+               <%}%>
 <%
     if (defined $iport) {
              print 'setAttr = true;';

@@ -81,6 +81,10 @@ def simple_map_to_named_tuple(tpl) -> NamedTupleNestedTupleSchema:
     print("simple_map_to_named_tuple: "+str(tpl))
     return tpl
 
+def simple_map_to_named_tuple_list(tpl) -> NamedTupleListOfTupleSchema:
+    print("simple_map_to_named_tuple_list: "+str(tpl))
+    return tpl
+
 
 class TestNamedTupleSource(unittest.TestCase):
 
@@ -169,7 +173,7 @@ class TestNamedTupleSource(unittest.TestCase):
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_list_of_tuple_spl_py(self):
-        # spl source -> python sink (NamedTupleListOfTupleSchema)
+        # spl source -> python map (python object output) -> python sink (NamedTupleListOfTupleSchema)
         topo = Topology()
         b = op.Source(topo, "spl.utility::Beacon",
             schema=NamedTupleListOfTupleSchema,
@@ -177,13 +181,31 @@ class TestNamedTupleSource(unittest.TestCase):
         b.spotted = b.output('[{start_time=(float64)0.1, end_time=(float64)0.2 , confidence=(float64)0.5}]')
 
         st = b.stream
-        sm1 = st.map(simple_map, name='M1')
+        sm1 = st.map(simple_map, name='MapSPL2PY')
         sm1.print()
  
         tester = Tester(topo)
         tester.tuple_count(sm1, 3)
         self.test_config['topology.keepArtifacts'] = True
         tester.test(self.test_ctxtype, self.test_config)
+
+    def test_list_of_tuple_spl_py_namedtuple(self):
+        # spl source -> python map (named tuple output) -> python sink (NamedTupleListOfTupleSchema)
+        topo = Topology()
+        b = op.Source(topo, "spl.utility::Beacon",
+            schema=NamedTupleListOfTupleSchema,
+            params = {'period': 0.1, 'iterations':3})
+        b.spotted = b.output('[{start_time=(float64)0.1, end_time=(float64)0.2 , confidence=(float64)0.5}]')
+
+        st = b.stream
+        sm1 = st.map(simple_map_to_named_tuple_list, name='MapSPL2NamedTuple')
+        sm1.print()
+ 
+        tester = Tester(topo)
+        tester.tuple_count(sm1, 3)
+        self.test_config['topology.keepArtifacts'] = True
+        tester.test(self.test_ctxtype, self.test_config)
+
 
     def test_nested_tuple_spl_py(self):
         # spl source -> python sink (NamedTupleNestedTupleSchema)
@@ -194,7 +216,7 @@ class TestNamedTupleSource(unittest.TestCase):
         b.key = b.output('(rstring)IterationCount()')
         b.spotted = b.output('{start_time=(float64)0.1, end_time=(float64)0.2 , confidence=(float64)0.5}')
         st = b.stream
-        sm1 = st.map(simple_map_to_named_tuple, name='M1')
+        sm1 = st.map(simple_map_to_named_tuple, name='MapSPL2NamedTuple')
         sm1.print()
  
         tester = Tester(topo)
@@ -212,7 +234,7 @@ class TestNamedTupleSource(unittest.TestCase):
         b.spotted = b.output('{start_time=(float64)0.1, end_time=(float64)0.2 , confidence=(float64)0.5}')
 
         st = b.stream
-        sm1 = st.map(simple_map, name='M1')
+        sm1 = st.map(simple_map, name='MapSPL2PY')
         sm1.print()
  
         tester = Tester(topo)
