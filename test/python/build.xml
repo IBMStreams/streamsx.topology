@@ -62,7 +62,6 @@
 		     <arg value="-u"/>
 		     <arg value="-m"/>
 		     <arg value="unittest"/>
-		     <arg value="test_schemas.py"/>
 		     <arg value="test_splpy_types.TestTypes"/>
 		     <arg value="test_splpy_sources.TestSources"/>
 		     <arg value="test_splpy_primitives.TestPrimitivesOutputs"/>
