@@ -102,9 +102,9 @@ class TestPunctor(unittest.TestCase):
     def setUp(self):
         Tester.setup_standalone(self)
 
-    def _test_punct_file(self, topo, s, expected_content, expected_tuple_count, expected_punct_count=None):
+    def _test_punct_file(self, topo, s, test_name, expected_content, expected_tuple_count, expected_punct_count=None):
         s = s.map(lambda x : (x,), schema='tuple<int32 z>')
-        op_params = {'file' : 'punct_file', 'writePunctuations' : True, 'flushOnPunctuation' : True}
+        op_params = {'file' : 'punct_file_'+test_name, 'writePunctuations' : True, 'flushOnPunctuation' : True}
         op.Sink("spl.adapter::FileSink", s, params = op_params)
 
         # Copy the config, since it's shared across all tests, and not every test needs a data
@@ -119,7 +119,7 @@ class TestPunctor(unittest.TestCase):
             tester.punct_count(s, expected_punct_count)
         tester.test(self.test_ctxtype, cfg)
 
-        path = os.path.join(os.getcwd(), 'punct_file')
+        path = os.path.join(os.getcwd(), 'punct_file_'+test_name)
         
         # Validate the contents of the file.
         with open(path, 'r') as f:
@@ -132,19 +132,19 @@ class TestPunctor(unittest.TestCase):
         topo = Topology('test_punct_before_each_tuple')
         s = topo.source([1,2,3,4])
         s = s.punctor(lambda x: True)
-        self._test_punct_file(topo, s, expected_contents_punct_before_each_tuple, 4, 4)
+        self._test_punct_file(topo, s, 'test_punct_before_each_tuple', expected_contents_punct_before_each_tuple, 4, 4)
 
     def test_punct_before(self):
         topo = Topology('test_punct_before')
         s = topo.source([1,2,3,4])
         s = s.punctor(func=(lambda t : 2 < t), before=True)
-        self._test_punct_file(topo, s, expected_contents_punct_before, 4, 2)
+        self._test_punct_file(topo, s, 'test_punct_before', expected_contents_punct_before, 4, 2)
 
     def test_punct_after(self):
         topo = Topology('test_punct_after')
         s = topo.source([1,2,3,4])
         s = s.punctor(func=(lambda t : 2 < t), before=False)
-        self._test_punct_file(topo, s, expected_contents_punct_after, 4, 2)
+        self._test_punct_file(topo, s, 'test_punct_after', expected_contents_punct_after, 4, 2)
 
     def test_for_each(self):
         topo = Topology('test_for_each')
