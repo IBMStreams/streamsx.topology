@@ -11,7 +11,7 @@ from streamsx.topology.tester import Tester
 import streamsx.spl.op as op
 import typing
 import decimal
-from py36_types import NamedTupleBytesSchema, NamedTupleNumbersSchema, NamedTupleListOfTupleSchema, NamedTupleNestedTupleSchema
+from py36_types import NamedTupleBytesSchema, NamedTupleNumbersSchema, NamedTupleListOfTupleSchema, NamedTupleNestedTupleSchema, PersonSchema
 
 """
 Test that NamedTuples schemas can be passed from and into Python functions as tuples.
@@ -86,6 +86,12 @@ def simple_map_to_named_tuple_list(tpl) -> NamedTupleListOfTupleSchema:
     print("simple_map_to_named_tuple_list: "+str(tpl))
     return tpl
 
+def simple_map_to_named_tuple_person_schema(tpl) -> PersonSchema:
+    print("simple_map_to_named_tuple_person_schema: "+str(tpl))
+    return tpl
+
+
+
 expected_contents_nested1 = """{key="0",spotted={start_time=0.1,end_time=0.2,confidence=0.5}}
 {key="1",spotted={start_time=0.1,end_time=0.2,confidence=0.5}}
 {key="2",spotted={start_time=0.1,end_time=0.2,confidence=0.5}}
@@ -96,6 +102,12 @@ Punctuation received: FinalMarker
 expected_contents_list1 = """{spotted=[{start_time=0.1,end_time=0.2,confidence=0.5}]}
 {spotted=[{start_time=0.1,end_time=0.2,confidence=0.5}]}
 {spotted=[{start_time=0.1,end_time=0.2,confidence=0.5}]}
+Punctuation received: WindowMarker
+Punctuation received: FinalMarker
+"""
+
+expected_contents_nested_multi1 = """{name="Bacon0",age=20,address={street="Rue",city="Macon",contacts={mail="mymail@test.org",phone="+09875"}}}
+{name="Bacon1",age=21,address={street="Rue",city="Macon",contacts={mail="mymail@test.org",phone="+09875"}}}
 Punctuation received: WindowMarker
 Punctuation received: FinalMarker
 """
@@ -126,7 +138,7 @@ class TestNamedTupleSource(unittest.TestCase):
         with open(path, 'r') as f:
             file_contents = f.read()
             self.assertEqual(expected_content, file_contents)    
-        os.remove(path)
+        #os.remove(path)
 
 
     def test_bytes(self):
@@ -265,6 +277,34 @@ class TestNamedTupleSource(unittest.TestCase):
         #self.test_config['topology.keepArtifacts'] = True
         tester.test(self.test_ctxtype, self.test_config)
 
+    def test_multi_nested_tuple_streamschema_spl_py_object(self):
+        # spl source -> python map (python object) -> python sink
+        topo = Topology()
+        b = op.Source(topo, "spl.utility::Beacon",
+            schema='tuple<rstring name, int32 age, tuple<rstring street, rstring city, tuple<rstring mail, rstring phone> contacts> address>',
+            params = {'period': 0.1, 'iterations':2})
+        b.name = b.output('"Bacon"+(rstring)IterationCount()')
+        b.age = b.output('(int32)IterationCount()+20')
+        b.address = b.output('{street="Rue", city="Macon", contacts={mail="mymail@test.org", phone="+09875"}}')
+        bstream = b.stream
+        s = bstream.map(simple_map, name='MapSPL2PY')
+        tester = Tester(topo)
+        tester.tuple_count(s, 2)
+        tester.contents(s, [{'name': 'Bacon0', 'age': 20, 'address': {'street': 'Rue', 'city': 'Macon', 'contacts': {'mail': 'mymail@test.org', 'phone': '+09875'}}}, {'name': 'Bacon1', 'age': 21, 'address': {'street': 'Rue', 'city': 'Macon', 'contacts': {'mail': 'mymail@test.org', 'phone': '+09875'}}}])
+        #self.test_config['topology.keepArtifacts'] = True
+        tester.test(self.test_ctxtype, self.test_config)
 
+    def test_multi_nested_tuple_spl_py_named_tuple_spl(self):
+        # spl source -> python map (PersonSchema) -> spl sink
+        topo = Topology()
+        b = op.Source(topo, "spl.utility::Beacon",
+            schema=PersonSchema,
+            params = {'period': 0.1, 'iterations':2})
+        b.name = b.output('"Bacon"+(rstring)IterationCount()')
+        b.age = b.output('(int64)IterationCount()+20l')
+        b.address = b.output('{street="Rue", city="Macon", contacts={mail="mymail@test.org", phone="+09875"}}')
+        bstream = b.stream
+        s = bstream.map(simple_map_to_named_tuple_person_schema, name='MapSPL2NamedTuple')
+        self._test_spl_file(topo, s, 'test_multi_nested_tuple_spl_py_named_tuple_spl', expected_contents_nested_multi1, 2)
 
 

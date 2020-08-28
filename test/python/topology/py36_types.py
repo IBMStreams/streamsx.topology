@@ -47,3 +47,18 @@ class NamedTupleNestedTupleSchema(typing.NamedTuple):
     key: str
     spotted: SpottedSchema
 
+class ContactsSchema(typing.NamedTuple):
+    mail: str
+    phone: str
+
+class AddressSchema(typing.NamedTuple):
+    street: str
+    city: str
+    contacts: ContactsSchema
+
+class PersonSchema(typing.NamedTuple):
+    name: str
+    age: int
+    address: AddressSchema
+
+
