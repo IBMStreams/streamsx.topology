@@ -3,9 +3,10 @@
 import unittest
 import sys
 import itertools
-
+import os
 from streamsx.topology.topology import *
 from streamsx.topology.schema import CommonSchema, StreamSchema
+from streamsx.topology.context import submit, ContextTypes, ConfigParams, JobConfig
 from streamsx.topology.tester import Tester
 import streamsx.spl.op as op
 import typing
@@ -32,7 +33,7 @@ def generate_data_for_bytes_schema() -> typing.Iterable[NamedTupleBytesSchema]:
 
 class check_bytes_tuple():
   def __call__(self, t):
-    print(t)
+    #print(t)
     # attribute msg is of type memoryview (sequence of bytes)
     if isinstance(t.msg, memoryview):
         b = t.msg.tobytes()
@@ -66,7 +67,7 @@ def generate_data_for_numbers_schema() -> typing.Iterable[NamedTupleNumbersSchem
 
 class check_numbers_tuple():
   def __call__(self, t):
-    print(t) 
+    #print(t) 
     if isinstance(t.i64, int) and isinstance(t.f64, float) and isinstance(t.d128, decimal.Decimal) and isinstance(t.c64, complex):
         pass
     else:
@@ -85,11 +86,48 @@ def simple_map_to_named_tuple_list(tpl) -> NamedTupleListOfTupleSchema:
     print("simple_map_to_named_tuple_list: "+str(tpl))
     return tpl
 
+expected_contents_nested1 = """{key="0",spotted={start_time=0.1,end_time=0.2,confidence=0.5}}
+{key="1",spotted={start_time=0.1,end_time=0.2,confidence=0.5}}
+{key="2",spotted={start_time=0.1,end_time=0.2,confidence=0.5}}
+Punctuation received: WindowMarker
+Punctuation received: FinalMarker
+"""
+
+expected_contents_list1 = """{spotted=[{start_time=0.1,end_time=0.2,confidence=0.5}]}
+{spotted=[{start_time=0.1,end_time=0.2,confidence=0.5}]}
+{spotted=[{start_time=0.1,end_time=0.2,confidence=0.5}]}
+Punctuation received: WindowMarker
+Punctuation received: FinalMarker
+"""
 
 class TestNamedTupleSource(unittest.TestCase):
 
     def setUp(self):
         Tester.setup_standalone(self)
+
+    def _test_spl_file(self, topo, s, test_name, expected_content, expected_tuple_count):
+        op_params = {'file' : 'spl_file_'+test_name, 'format' : op.Expression.expression('txt'), 'writePunctuations' : True, 'flushOnPunctuation' : True}
+        op.Sink("spl.adapter::FileSink", s, params = op_params)
+
+        # Copy the config, since it's shared across all tests, and not every test needs a data
+        # directory.
+        cfg = self.test_config.copy()
+        jc = JobConfig(data_directory=os.getcwd())
+        jc.add(cfg)
+        #cfg['topology.keepArtifacts'] = True
+         
+        tester = Tester(topo)
+        tester.tuple_count(s, expected_tuple_count)
+        tester.test(self.test_ctxtype, cfg)
+
+        path = os.path.join(os.getcwd(), 'spl_file_'+test_name)
+        
+        # Validate the contents of the file.
+        with open(path, 'r') as f:
+            file_contents = f.read()
+            self.assertEqual(expected_content, file_contents)    
+        os.remove(path)
+
 
     def test_bytes(self):
         # python source -> python sink (NamedTupleBytesSchema)
@@ -172,74 +210,59 @@ class TestNamedTupleSource(unittest.TestCase):
         tester.tuple_count(st, 3)
         tester.test(self.test_ctxtype, self.test_config)
 
-    def test_list_of_tuple_spl_py(self):
-        # spl source -> python map (python object output) -> python sink (NamedTupleListOfTupleSchema)
+    def test_list_of_tuple_spl_py_object(self):
+        # spl source -> python map (python object output) -> python sink
         topo = Topology()
         b = op.Source(topo, "spl.utility::Beacon",
             schema=NamedTupleListOfTupleSchema,
             params = {'period': 0.1, 'iterations':3})
         b.spotted = b.output('[{start_time=(float64)0.1, end_time=(float64)0.2 , confidence=(float64)0.5}]')
-
-        st = b.stream
-        sm1 = st.map(simple_map, name='MapSPL2PY')
-        sm1.print()
- 
+        bstream = b.stream
+        s = bstream.map(simple_map, name='MapSPL2PY')
         tester = Tester(topo)
-        tester.tuple_count(sm1, 3)
-        self.test_config['topology.keepArtifacts'] = True
+        tester.tuple_count(s, 3)
+        tester.contents(s, [{'spotted': [{'start_time': 0.1, 'end_time': 0.2, 'confidence': 0.5}]}, {'spotted': [{'start_time': 0.1, 'end_time': 0.2, 'confidence': 0.5}]}, {'spotted': [{'start_time': 0.1, 'end_time': 0.2, 'confidence': 0.5}]}])
+        #self.test_config['topology.keepArtifacts'] = True
         tester.test(self.test_ctxtype, self.test_config)
 
-    def test_list_of_tuple_spl_py_namedtuple(self):
-        # spl source -> python map (named tuple output) -> python sink (NamedTupleListOfTupleSchema)
+    def test_list_of_tuple_spl_py_namedtuple_spl(self):
+        # spl source -> python map (NamedTupleListOfTupleSchema) -> spl sink
         topo = Topology()
         b = op.Source(topo, "spl.utility::Beacon",
             schema=NamedTupleListOfTupleSchema,
             params = {'period': 0.1, 'iterations':3})
         b.spotted = b.output('[{start_time=(float64)0.1, end_time=(float64)0.2 , confidence=(float64)0.5}]')
+        bstream = b.stream
+        s = bstream.map(simple_map_to_named_tuple_list, name='MapSPL2NamedTuple')
+        s.print()
+        self._test_spl_file(topo, s, 'test_list_of_tuple_spl_py_namedtuple_spl', expected_contents_list1, 3)
 
-        st = b.stream
-        sm1 = st.map(simple_map_to_named_tuple_list, name='MapSPL2NamedTuple')
-        sm1.print()
- 
-        tester = Tester(topo)
-        tester.tuple_count(sm1, 3)
-        self.test_config['topology.keepArtifacts'] = True
-        tester.test(self.test_ctxtype, self.test_config)
-
-
-    def test_nested_tuple_spl_py(self):
-        # spl source -> python sink (NamedTupleNestedTupleSchema)
+    def test_nested_tuple_spl_py_named_tuple_spl(self):
+        # spl source -> python map (NamedTupleNestedTupleSchema) -> spl sink
         topo = Topology()
         b = op.Source(topo, "spl.utility::Beacon",
             schema=NamedTupleNestedTupleSchema,
             params = {'period': 0.1, 'iterations':3})
         b.key = b.output('(rstring)IterationCount()')
         b.spotted = b.output('{start_time=(float64)0.1, end_time=(float64)0.2 , confidence=(float64)0.5}')
-        st = b.stream
-        sm1 = st.map(simple_map_to_named_tuple, name='MapSPL2NamedTuple')
-        sm1.print()
- 
-        tester = Tester(topo)
-        tester.tuple_count(sm1, 3)
-        self.test_config['topology.keepArtifacts'] = True
-        tester.test(self.test_ctxtype, self.test_config)
+        bstream = b.stream
+        s = bstream.map(simple_map_to_named_tuple, name='MapSPL2NamedTuple')
+        self._test_spl_file(topo, s, 'test_nested_tuple_spl_py_named_tuple_spl', expected_contents_nested1, 3)
 
-    def test_nested_tuple_streamschema_spl_py(self):
-        # spl source -> python sink (StreamSchema)
+    def test_nested_tuple_streamschema_spl_py_object(self):
+        # spl source -> python map (python object) -> python sink
         topo = Topology()
         b = op.Source(topo, "spl.utility::Beacon",
             schema='tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>',
             params = {'period': 0.1, 'iterations':3})
         b.key = b.output('(rstring)IterationCount()')
         b.spotted = b.output('{start_time=(float64)0.1, end_time=(float64)0.2 , confidence=(float64)0.5}')
-
-        st = b.stream
-        sm1 = st.map(simple_map, name='MapSPL2PY')
-        sm1.print()
- 
+        bstream = b.stream
+        s = bstream.map(simple_map, name='MapSPL2PY')
         tester = Tester(topo)
-        tester.tuple_count(sm1, 3)
-        self.test_config['topology.keepArtifacts'] = True
+        tester.tuple_count(s, 3)
+        tester.contents(s, [{'key':'0','spotted': {'start_time': 0.1, 'end_time': 0.2, 'confidence': 0.5}}, {'key':'1','spotted': {'start_time': 0.1, 'end_time': 0.2, 'confidence': 0.5}}, {'key':'2','spotted': {'start_time': 0.1, 'end_time': 0.2, 'confidence': 0.5}}])
+        #self.test_config['topology.keepArtifacts'] = True
         tester.test(self.test_ctxtype, self.test_config)
 
 
