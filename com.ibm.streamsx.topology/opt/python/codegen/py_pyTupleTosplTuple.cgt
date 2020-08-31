@@ -78,16 +78,20 @@ void MY_OPERATOR::fromPyTupleToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupl
          // Value from the Python function
          PyObject *pyAttrValue = PyTuple_GET_ITEM(pyTuple, <%=$ai%>);
          if (!SplpyGeneral::isNone(pyAttrValue)) {
+        	 <%my $nested_tuple = 0;%>
              <%if (SPL::CodeGen::Type::isList($atype)) {
                  my $element_type = SPL::CodeGen::Type::getElementType($atype);  
-                 if (SPL::CodeGen::Type::isTuple($element_type)) {%>          	 
+                 if (SPL::CodeGen::Type::isTuple($element_type)) {%> 
+                   <%$nested_tuple = 1;%>
                 // list of tuple <%=$atype%>
                 std::cout << "XXX fromPyTupleToSPLTuple - list of tuple: " << "<%=$atype%>" << std::endl;
                <%}%>
              <%} elsif (SPL::CodeGen::Type::isTuple($atype)) {%>
+                <%$nested_tuple = 1;%>
 			    // tuple type
         	    std::cout << "XXX fromPyTupleToSPLTuple - tuple type: " << "<%=$atype%>" << std::endl;
-        	 <%} else {%>
+             <%}%>
+             <%if ($nested_tuple == 0) {%>
                 streamsx::topology::pySplValueFromPyObject(otuple.get_<%=$name%>(), pyAttrValue);
              <%}%>
 <%
@@ -163,9 +167,11 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
          if (pyAttrValue != NULL) {
              --available;
              if (!SplpyGeneral::isNone(pyAttrValue)) {
+               <%my $nested_tuple = 0;%>
                <%if (SPL::CodeGen::Type::isList($atype)) {
                    my $element_type = SPL::CodeGen::Type::getElementType($atype);  
-                   if (SPL::CodeGen::Type::isTuple($element_type)) {%>          	 
+                   if (SPL::CodeGen::Type::isTuple($element_type)) {%>
+                     <%$nested_tuple = 1;%>
                   // list of tuple <%=$atype%>
                   int list_size = (int)PyList_Size(pyAttrValue);
                   std::cout << "XXX fromPyDictToSPLTuple - PyList_Size: " << list_size << std::endl;
@@ -173,7 +179,8 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
                       //PyObject *value = PyList_GET_ITEM(pyAttrValue, list_index);
                   }                
                  <%}%>
-               <%} elsif (SPL::CodeGen::Type::isTuple($atype)) {%>	 
+               <%} elsif (SPL::CodeGen::Type::isTuple($atype)) {%>
+                  <%$nested_tuple = 1;%>
                   // tuple type <%=$atype%>
                   std::cout << "XXX fromPyDictToSPLTuple - tuple type: " << "<%=$atype%>" << std::endl;
                   PyObject *value = pyAttrValue;
@@ -195,7 +202,8 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
                       }
                     }
                   }
-               <%} else {%>
+               <%}%>
+               <%if ($nested_tuple == 0) {%>
                   streamsx::topology::pySplValueFromPyObject(otuple.get_<%=$name%>(), pyAttrValue);
                <%}%>
 <%
