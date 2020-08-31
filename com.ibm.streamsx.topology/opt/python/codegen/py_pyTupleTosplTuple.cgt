@@ -203,8 +203,10 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
                   int list_size = (int)PyList_Size(pyAttrValue);
                   std::cout << "XXX fromPyDictToSPLTuple - PyList_Size: " << list_size << std::endl;
                   for (int list_index = 0; list_index < list_size; ++list_index) {
-                      //PyObject *value = PyList_GET_ITEM(pyAttrValue, list_index);
-                  }                
+                	  //PyObject* v = PyList_GET_ITEM(pyAttrValue, list_index);
+                      //std::cout << "XXX fromPyDictToSPLTuple - get list_index: " << std::endl;
+                      <%#print(convertNestedPythonDictionaryToSpl('otuple.get_'.$name.'()[list_index]', $element_type, "                          "));%>
+                  }
                  <%}%>
                <%} elsif (SPL::CodeGen::Type::isTuple($atype)) {%>
                   <%$nested_tuple = 1;%>
