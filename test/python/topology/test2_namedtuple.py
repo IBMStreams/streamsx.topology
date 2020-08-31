@@ -106,8 +106,8 @@ Punctuation received: WindowMarker
 Punctuation received: FinalMarker
 """
 
-expected_contents_nested_multi1 = """{name="Bacon0",age=20,address={street="Rue",city="Macon",contacts={mail="mymail@test.org",phone="+09875"}}}
-{name="Bacon1",age=21,address={street="Rue",city="Macon",contacts={mail="mymail@test.org",phone="+09875"}}}
+expected_contents_nested_multi1 = """{name="Bacon0",age=20,address={street="Rue",city="Macon",contacts={mail="mymail@test.org",phone="+09875",nested_tuple={flag=true,i64=123456789}}}}
+{name="Bacon1",age=21,address={street="Rue",city="Macon",contacts={mail="mymail@test.org",phone="+09875",nested_tuple={flag=true,i64=123456789}}}}
 Punctuation received: WindowMarker
 Punctuation received: FinalMarker
 """
@@ -126,7 +126,7 @@ class TestNamedTupleSource(unittest.TestCase):
         cfg = self.test_config.copy()
         jc = JobConfig(data_directory=os.getcwd())
         jc.add(cfg)
-        cfg['topology.keepArtifacts'] = True
+        #cfg['topology.keepArtifacts'] = True
          
         tester = Tester(topo)
         tester.tuple_count(s, expected_tuple_count)
@@ -302,7 +302,7 @@ class TestNamedTupleSource(unittest.TestCase):
             params = {'period': 0.1, 'iterations':2})
         b.name = b.output('"Bacon"+(rstring)IterationCount()')
         b.age = b.output('(int64)IterationCount()+20l')
-        b.address = b.output('{street="Rue", city="Macon", contacts={mail="mymail@test.org", phone="+09875"}}')
+        b.address = b.output('{street="Rue", city="Macon", contacts={mail="mymail@test.org", phone="+09875", nested_tuple={flag=true, i64=123456789l}}}')
         bstream = b.stream
         s = bstream.map(simple_map_to_named_tuple_person_schema, name='MapSPL2NamedTuple')
         self._test_spl_file(topo, s, 'test_multi_nested_tuple_spl_py_named_tuple_spl', expected_contents_nested_multi1, 2)

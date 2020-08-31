@@ -47,9 +47,14 @@ class NamedTupleNestedTupleSchema(typing.NamedTuple):
     key: str
     spotted: SpottedSchema
 
+class TestSchema(typing.NamedTuple):
+    flag: bool
+    i64: int
+
 class ContactsSchema(typing.NamedTuple):
     mail: str
     phone: str
+    nested_tuple: TestSchema
 
 class AddressSchema(typing.NamedTuple):
     street: str
