@@ -126,7 +126,7 @@ class TestNamedTupleSource(unittest.TestCase):
         cfg = self.test_config.copy()
         jc = JobConfig(data_directory=os.getcwd())
         jc.add(cfg)
-        #cfg['topology.keepArtifacts'] = True
+        cfg['topology.keepArtifacts'] = True
          
         tester = Tester(topo)
         tester.tuple_count(s, expected_tuple_count)
@@ -138,7 +138,7 @@ class TestNamedTupleSource(unittest.TestCase):
         with open(path, 'r') as f:
             file_contents = f.read()
             self.assertEqual(expected_content, file_contents)    
-        #os.remove(path)
+        os.remove(path)
 
 
     def test_bytes(self):
