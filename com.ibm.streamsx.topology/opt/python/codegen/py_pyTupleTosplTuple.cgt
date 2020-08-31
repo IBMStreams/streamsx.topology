@@ -143,11 +143,38 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
   }
 
   sub convertNestedPythonDictionaryToSpl {
-	  my $gencode;
-	  my $spaces = "                 ";
-	  $gencode = "\n";
-	  $gencode = $gencode . $spaces . "std::cout << \"XXX convertNestedPythonDictionaryToSpl \" << \"TODO\" << std::endl;\n";
-	  return $gencode;
+      my $otuple = $_[0];
+      my $atype = $_[1];
+      my $spaces = $_[2];
+      my $gencode;
+      $gencode = "\n";
+      $gencode = $gencode . $spaces . "{\n";
+      $gencode = $gencode . $spaces . "  PyObject *value = v;\n";
+      $gencode = $gencode . $spaces . "  PyObject *k,*v;\n";
+      $gencode = $gencode . $spaces . "  Py_ssize_t pos = 0;\n";
+      $gencode = $gencode . $spaces . "  while (PyDict_Next(value, &pos, &k, &v)) {\n";
+      $gencode = $gencode . $spaces . "    if (v != NULL) {\n";
+      $gencode = $gencode . $spaces . "      if (!SplpyGeneral::isNone(v)) {\n";
+      my @attrTypes = SPL::CodeGen::Type::getAttributeTypes ($atype);
+      my $i=0;
+      for my $attrName (SPL::CodeGen::Type::getAttributeNames ($atype)) {
+    	  $i++;
+          if (SPL::CodeGen::Type::isTuple($attrTypes[$i-1])) {
+      $gencode = $gencode . $spaces . "          if (pos == $i) { // attribute=$attrName\n";
+      $gencode = $gencode . $spaces . "            // tuple type $attrTypes[$i-1]\n";    
+      $gencode = $gencode . $spaces . "            " . convertNestedPythonDictionaryToSpl($otuple.'.get_'.$attrName.'()', $attrTypes[$i-1], '                                      ') . "\n";
+      $gencode = $gencode . $spaces . "          }\n";
+          }
+          else {                        
+      $gencode = $gencode . $spaces . "          if (pos == $i)\n";
+      $gencode = $gencode . $spaces . "            streamsx::topology::pySplValueFromPyObject($otuple.get_$attrName(), v);\n";
+          }
+      }
+      $gencode = $gencode . $spaces . "      }\n";
+      $gencode = $gencode . $spaces . "    }\n";
+      $gencode = $gencode . $spaces . "  }\n";
+      $gencode = $gencode . $spaces . "}\n";
+      return $gencode;
   }
 
   for (my $ai = $oport->getNumberOfAttributes() - 1; $ai >= 0; --$ai) {
@@ -182,7 +209,6 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
                <%} elsif (SPL::CodeGen::Type::isTuple($atype)) {%>
                   <%$nested_tuple = 1;%>
                   // tuple type <%=$atype%>
-                  std::cout << "XXX fromPyDictToSPLTuple - tuple type: " << "<%=$atype%>" << std::endl;
                   PyObject *value = pyAttrValue;
                   PyObject *k,*v;
                   Py_ssize_t pos = 0;
@@ -192,8 +218,10 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
                       <%my @attrTypes = SPL::CodeGen::Type::getAttributeTypes ($atype);%>
                       <%my $i=0; for my $attrName (SPL::CodeGen::Type::getAttributeNames ($atype)) { $i++;%>
                         <%if (SPL::CodeGen::Type::isTuple($attrTypes[$i-1])) {%>
-                          // XXX nested tuple - TODO XXX support multi nested levels 
-                          <%print(convertNestedPythonDictionaryToSpl());%>
+                        if (pos == <%=$i%>) { // attribute=<%=$attrName%>
+                          // tuple type <%=$attrTypes[$i-1]%>
+                          <%print(convertNestedPythonDictionaryToSpl('otuple.get_'.$name.'().get_'.$attrName.'()', $attrTypes[$i-1], "                          "));%>
+                        }
                         <%} else {%>                        
                         if (pos == <%=$i%>)
                           streamsx::topology::pySplValueFromPyObject(otuple.get_<%=$name%>().get_<%=$attrName%>(), v);
@@ -213,7 +241,7 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
 %>
            }
         }
-   }
+    }
 <%
     if (defined $iport) {
     
