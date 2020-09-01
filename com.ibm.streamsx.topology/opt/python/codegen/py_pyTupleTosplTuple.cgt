@@ -63,6 +63,35 @@ void MY_OPERATOR::fromPyTupleToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupl
     print 'bool setAttr = false;';
   }
 
+  sub convertNestedPythonTupleToSpl {
+    my $otuple = $_[0];
+    my $atype = $_[1];
+    my $spaces = $_[2];
+    my $gencode;
+    $gencode = "\n";
+    $gencode = $gencode . $spaces . "{\n";
+    $gencode = $gencode . $spaces . "  PyObject *pyTuple = pyAttrValue;\n";
+    my @attrTypes = SPL::CodeGen::Type::getAttributeTypes ($atype);
+    my $i=0;
+    for my $attrName (SPL::CodeGen::Type::getAttributeNames ($atype)) {
+    $gencode = $gencode . $spaces . "  {\n";
+    $gencode = $gencode . $spaces . "    PyObject *pyAttrValue = PyTuple_GET_ITEM(pyTuple, $i);\n";
+    $gencode = $gencode . $spaces . "    if (!SplpyGeneral::isNone(pyAttrValue)) {\n";
+        if (SPL::CodeGen::Type::isTuple($attrTypes[$i])) {
+    $gencode = $gencode . $spaces . "      // tuple type $attrTypes[$i]\n";    
+    $gencode = $gencode . $spaces . "      " . convertNestedPythonTupleToSpl($otuple.'.get_'.$attrName.'()', $attrTypes[$i], '           ') . "\n";
+        }
+        else {                        
+    $gencode = $gencode . $spaces . "      streamsx::topology::pySplValueFromPyObject($otuple.get_$attrName(), pyAttrValue);\n";
+        }
+    $gencode = $gencode . $spaces . "    }\n";
+    $gencode = $gencode . $spaces . "  }\n";
+        $i++;
+    }
+    $gencode = $gencode . $spaces . "}\n";
+    return $gencode;
+}
+
   for (my $ai = 0; $ai < $oport->getNumberOfAttributes(); ++$ai) {
     
     my $attribute = $oport->getAttributeAt($ai);
@@ -83,13 +112,13 @@ void MY_OPERATOR::fromPyTupleToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupl
                  my $element_type = SPL::CodeGen::Type::getElementType($atype);  
                  if (SPL::CodeGen::Type::isTuple($element_type)) {%> 
                    <%$nested_tuple = 1;%>
-                // list of tuple <%=$atype%>
-                std::cout << "XXX fromPyTupleToSPLTuple - list of tuple: " << "<%=$atype%>" << std::endl;
+             // list of tuple <%=$atype%>
+             std::cout << "XXX fromPyTupleToSPLTuple - list of tuple: " << "<%=$atype%>" << std::endl;
                <%}%>
              <%} elsif (SPL::CodeGen::Type::isTuple($atype)) {%>
                 <%$nested_tuple = 1;%>
-			    // tuple type
-        	    std::cout << "XXX fromPyTupleToSPLTuple - tuple type: " << "<%=$atype%>" << std::endl;
+             // tuple type <%=$atype%>
+             <%print(convertNestedPythonTupleToSpl('otuple.get_'.$name.'()', $atype, "             "));%>
              <%}%>
              <%if ($nested_tuple == 0) {%>
                 streamsx::topology::pySplValueFromPyObject(otuple.get_<%=$name%>(), pyAttrValue);
@@ -99,8 +128,8 @@ void MY_OPERATOR::fromPyTupleToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupl
              print 'setAttr = true;';
     }
 %>
-      }
-   }
+         }
+    }
 <%
     if (defined $iport) {
     
