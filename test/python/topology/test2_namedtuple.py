@@ -70,7 +70,7 @@ class SourceDictOutWithNested(object):
         for num in itertools.count(1):
             if num == 4:
                 break
-            yield {"key": str(num), "spotted" : {"start_time": 0.2, "end_time": 0.4, "confidence": 0.8} }
+            yield {"key": str(num), "spotted" : {"start_time": 0.2, "end_time": 0.4, "confidence": 0.4} }
 
 
 class SourceTupleOutWithNested(object):
@@ -104,6 +104,7 @@ def simple_map(tpl):
 
 def simple_map_to_named_tuple(tpl) -> NamedTupleNestedTupleSchema:
     print("simple_map_to_named_tuple: "+str(tpl))
+    tpl['spotted']['confidence'] = tpl['spotted']['confidence'] + 0.4
     return tpl
 
 def simple_map_to_named_tuple_list(tpl) -> NamedTupleListOfTupleSchema:
@@ -115,16 +116,16 @@ def simple_map_to_named_tuple_person_schema(tpl) -> PersonSchema:
     return tpl
 
 
-expected_contents_nested_beacon_source = """{key="0",spotted={start_time=0.1,end_time=0.2,confidence=0.5}}
-{key="1",spotted={start_time=0.1,end_time=0.2,confidence=0.5}}
-{key="2",spotted={start_time=0.1,end_time=0.2,confidence=0.5}}
+expected_contents_nested_beacon_source = """{key="0",spotted={start_time=0.1,end_time=0.2,confidence=0.7}}
+{key="1",spotted={start_time=0.1,end_time=0.2,confidence=0.7}}
+{key="2",spotted={start_time=0.1,end_time=0.2,confidence=0.7}}
 Punctuation received: WindowMarker
 Punctuation received: FinalMarker
 """
 
-expected_contents_nested_py_source = """{key="1",spotted={start_time=0.1,end_time=0.2,confidence=0.5}}
-{key="2",spotted={start_time=0.1,end_time=0.2,confidence=0.5}}
-{key="3",spotted={start_time=0.1,end_time=0.2,confidence=0.5}}
+expected_contents_nested_py_source = """{key="1",spotted={start_time=0.1,end_time=0.2,confidence=0.9}}
+{key="2",spotted={start_time=0.1,end_time=0.2,confidence=0.9}}
+{key="3",spotted={start_time=0.1,end_time=0.2,confidence=0.9}}
 Punctuation received: FinalMarker
 """
 
@@ -141,12 +142,18 @@ Punctuation received: WindowMarker
 Punctuation received: FinalMarker
 """
 
+################################
+debug_named_tuple_output = True
+################################
+
 class TestNamedTupleSource(unittest.TestCase):
 
     def setUp(self):
         Tester.setup_standalone(self)
 
     def _test_spl_file(self, topo, s, test_name, expected_content, expected_tuple_count):
+        if debug_named_tuple_output:
+            s.print()
         op_params = {'file' : 'spl_file_'+test_name, 'format' : op.Expression.expression('txt'), 'writePunctuations' : True, 'flushOnPunctuation' : True}
         op.Sink("spl.adapter::FileSink", s, params = op_params)
 
@@ -155,7 +162,8 @@ class TestNamedTupleSource(unittest.TestCase):
         cfg = self.test_config.copy()
         jc = JobConfig(data_directory=os.getcwd())
         jc.add(cfg)
-        #cfg['topology.keepArtifacts'] = True
+        if debug_named_tuple_output:
+            cfg['topology.keepArtifacts'] = True
          
         tester = Tester(topo)
         tester.tuple_count(s, expected_tuple_count)
@@ -251,9 +259,10 @@ class TestNamedTupleSource(unittest.TestCase):
         tester.tuple_count(st, 3)
         tester.test(self.test_ctxtype, self.test_config)
 
-    def test_list_of_tuple_spl_py_object(self):
+    def test_spl_source_list_of_tuple_py_sink(self):
         # spl source -> python map (python object output) -> python sink
-        topo = Topology()
+        tc = 'test_spl_source_list_of_tuple_py_sink'
+        topo = Topology(tc)
         b = op.Source(topo, "spl.utility::Beacon",
             schema=NamedTupleListOfTupleSchema,
             params = {'period': 0.1, 'iterations':3})
@@ -263,7 +272,8 @@ class TestNamedTupleSource(unittest.TestCase):
         tester = Tester(topo)
         tester.tuple_count(s, 3)
         tester.contents(s, [{'spotted': [{'start_time': 0.1, 'end_time': 0.2, 'confidence': 0.5}]}, {'spotted': [{'start_time': 0.1, 'end_time': 0.2, 'confidence': 0.5}]}, {'spotted': [{'start_time': 0.1, 'end_time': 0.2, 'confidence': 0.5}]}])
-        #self.test_config['topology.keepArtifacts'] = True
+        if debug_named_tuple_output:
+            self.test_config['topology.keepArtifacts'] = True
         tester.test(self.test_ctxtype, self.test_config)
 
     # TODO: conversion list(tuple) to SPL 
@@ -276,24 +286,25 @@ class TestNamedTupleSource(unittest.TestCase):
         b.spotted = b.output('[{start_time=(float64)0.1, end_time=(float64)0.2 , confidence=(float64)0.5}]')
         bstream = b.stream
         s = bstream.map(simple_map_to_named_tuple_list, name='MapSPL2NamedTuple')
-        s.print()
         self._test_spl_file(topo, s, 'test_list_of_tuple_spl_py_namedtuple_spl', expected_contents_list1, 3)
 
-    def test_nested_tuple_spl_py_named_tuple_spl(self):
+    def test_spl_source_namedtuple_schema_nested_spl_sink(self):
         # spl source -> python map (NamedTupleNestedTupleSchema) -> spl sink
-        topo = Topology()
+        tc = 'test_spl_source_namedtuple_schema_nested_spl_sink'
+        topo = Topology(tc)
         b = op.Source(topo, "spl.utility::Beacon",
             schema=NamedTupleNestedTupleSchema,
             params = {'period': 0.1, 'iterations':3})
         b.key = b.output('(rstring)IterationCount()')
-        b.spotted = b.output('{start_time=(float64)0.1, end_time=(float64)0.2 , confidence=(float64)0.5}')
+        b.spotted = b.output('{start_time=(float64)0.1, end_time=(float64)0.2 , confidence=(float64)0.3}')
         bstream = b.stream
         s = bstream.map(simple_map_to_named_tuple, name='MapSPL2NamedTuple')
-        self._test_spl_file(topo, s, 'test_nested_tuple_spl_py_named_tuple_spl', expected_contents_nested_beacon_source, 3)
+        self._test_spl_file(topo, s, tc, expected_contents_nested_beacon_source, 3)
 
-    def test_nested_tuple_streamschema_spl_py_object(self):
+    def test_spl_source_streams_schema_nested_py_sink(self):
         # spl source -> python map (python object) -> python sink
-        topo = Topology()
+        tc = 'test_spl_source_streams_schema_nested_py_sink'
+        topo = Topology(tc)
         b = op.Source(topo, "spl.utility::Beacon",
             schema='tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>',
             params = {'period': 0.1, 'iterations':3})
@@ -304,12 +315,14 @@ class TestNamedTupleSource(unittest.TestCase):
         tester = Tester(topo)
         tester.tuple_count(s, 3)
         tester.contents(s, [{'key':'0','spotted': {'start_time': 0.1, 'end_time': 0.2, 'confidence': 0.5}}, {'key':'1','spotted': {'start_time': 0.1, 'end_time': 0.2, 'confidence': 0.5}}, {'key':'2','spotted': {'start_time': 0.1, 'end_time': 0.2, 'confidence': 0.5}}])
-        #self.test_config['topology.keepArtifacts'] = True
+        if debug_named_tuple_output:
+            self.test_config['topology.keepArtifacts'] = True
         tester.test(self.test_ctxtype, self.test_config)
 
-    def test_multi_nested_tuple_streamschema_spl_py_object(self):
+    def test_spl_source_multi_nested_tuple_py_sink(self):
         # spl source -> python map (python object) -> python sink
-        topo = Topology()
+        tc = 'test_spl_source_multi_nested_tuple_py_sink'
+        topo = Topology(tc)
         b = op.Source(topo, "spl.utility::Beacon",
             schema='tuple<rstring name, int32 age, tuple<rstring street, rstring city, tuple<rstring mail, rstring phone> contacts> address>',
             params = {'period': 0.1, 'iterations':2})
@@ -321,12 +334,14 @@ class TestNamedTupleSource(unittest.TestCase):
         tester = Tester(topo)
         tester.tuple_count(s, 2)
         tester.contents(s, [{'name': 'Bacon0', 'age': 20, 'address': {'street': 'Rue', 'city': 'Macon', 'contacts': {'mail': 'mymail@test.org', 'phone': '+09875'}}}, {'name': 'Bacon1', 'age': 21, 'address': {'street': 'Rue', 'city': 'Macon', 'contacts': {'mail': 'mymail@test.org', 'phone': '+09875'}}}])
-        #self.test_config['topology.keepArtifacts'] = True
+        if debug_named_tuple_output:
+            self.test_config['topology.keepArtifacts'] = True
         tester.test(self.test_ctxtype, self.test_config)
 
-    def test_multi_nested_tuple_spl_py_named_tuple_spl(self):
+    def test_spl_source_multi_nested_tuple_spl_sink(self):
         # spl source -> python map (PersonSchema) -> spl sink
-        topo = Topology()
+        tc = 'test_spl_source_multi_nested_tuple_spl_sink'
+        topo = Topology(tc)
         b = op.Source(topo, "spl.utility::Beacon",
             schema=PersonSchema,
             params = {'period': 0.1, 'iterations':2})
@@ -335,25 +350,29 @@ class TestNamedTupleSource(unittest.TestCase):
         b.address = b.output('{street="Rue", city="Macon", contacts={mail="mymail@test.org", phone="+09875", nested_tuple={flag=true, i64=123456789l}}}')
         bstream = b.stream
         s = bstream.map(simple_map_to_named_tuple_person_schema, name='MapSPL2NamedTuple')
-        self._test_spl_file(topo, s, 'test_multi_nested_tuple_spl_py_named_tuple_spl', expected_contents_nested_multi1, 2)
+        self._test_spl_file(topo, s, tc, expected_contents_nested_multi1, 2)
 
-
-    def test_py_source_dict_nested(self):
-        # python source -> python sink (NamedTupleNestedTupleSchema)
-        topo = Topology()
+    def test_py_source_dict_nested_py_sink(self):
+        # python source -> python map -> python sink (NamedTupleNestedTupleSchema)
+        tc = 'test_py_source_dict_nested_py_sink'
+        topo = Topology(tc)
         s = topo.source(SourceDictOutWithNested())
-        #s.print()
+        s = s.map(simple_map_to_named_tuple, name='MapDict2Dict')
+        if debug_named_tuple_output:
+            s.print()
         tester = Tester(topo)
         tester.tuple_count(s, 3)
         tester.contents(s, [{'key':'1','spotted': {'start_time': 0.2, 'end_time': 0.4, 'confidence': 0.8}}, {'key':'2','spotted': {'start_time': 0.2, 'end_time': 0.4, 'confidence': 0.8}}, {'key':'3','spotted': {'start_time': 0.2, 'end_time': 0.4, 'confidence': 0.8}}])
-        #self.test_config['topology.keepArtifacts'] = True
+        if debug_named_tuple_output:
+            self.test_config['topology.keepArtifacts'] = True
         tester.test(self.test_ctxtype, self.test_config)
 
-    def test_py_source_tuple_nested(self):
-        # python source -> spl sink (NamedTupleNestedTupleSchema)
-        topo = Topology()
+    def test_py_source_tuple_nested_spl_sink(self):
+        # python source -> python map -> spl sink (NamedTupleNestedTupleSchema)
+        tc = 'test_py_source_tuple_nested_spl_sink'
+        topo = Topology(tc)
         s = topo.source(SourceTupleOutWithNested())
-        #s.print()
-        self._test_spl_file(topo, s, 'test_py_source_tuple_nested', expected_contents_nested_py_source, 3)
+        s = s.map(simple_map_to_named_tuple, name='MapDict2SPL')
+        self._test_spl_file(topo, s, tc, expected_contents_nested_py_source, 3)
 
 
