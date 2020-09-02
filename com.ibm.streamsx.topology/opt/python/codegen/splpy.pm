@@ -380,13 +380,46 @@ sub convertAndAddToPythonTupleObject {
   my $i = $_[1];
   my $type = $_[2];
   my $name = $_[3];
+  my $spaces = $_[4];
 
-  # starts a C++ blockand sets value
-  my $get = _attr2Value($ituple, $type, $name);
+  # starts a C++ block and sets value
+  my $get;
+  my $nested_tuple = 0;
+  ########### SPL: list of tuple #########################
+  if (SPL::CodeGen::Type::isList($type)) {
+    my $element_type = SPL::CodeGen::Type::getElementType($type);  
+    if (SPL::CodeGen::Type::isTuple($element_type)) {
+      $nested_tuple = 1;
+    }
+  }
+  ########### SPL: tuple of tuple #########################
+  if (SPL::CodeGen::Type::isTuple($type)) {
+    $nested_tuple = 1;
+    $get = "". $spaces."{\n";
+    $get = $get . $spaces."  //SPL: tuple of tuple\n";
+    $get = $get . $spaces."  //$type $name\n";
+    $get = $get . $spaces."  PyObject * value = 0;\n";
+    $get = $get . $spaces."  {\n";
+    my $ac = 0;
+    for my $_attrName (SPL::CodeGen::Type::getAttributeNames ($type)) {  	
+      $ac++;
+    }
+    $get = $get . $spaces."    PyObject * pyTuple = PyTuple_New($ac);\n";
+    my @attrTypes = SPL::CodeGen::Type::getAttributeTypes ($type);
+    my @attrNames = SPL::CodeGen::Type::getAttributeNames ($type); 
+    for (my $attr_index = 0; $attr_index < $ac; ++$attr_index) {
+      $get = $get . convertAndAddToPythonTupleObject($ituple.'.get_'.$name.'()', $attr_index, $attrTypes[$attr_index], $attrNames[$attr_index], $spaces."    ");
+    }
+    $get = $get . $spaces."  }\n";
+    $get = $get . $spaces."  value = pyTuple;\n";
+  }
+  ###########################################################################
+  if ($nested_tuple == 0){    
+    $get = _attr2Value($ituple, $type, $name, $spaces);
+  }
+  my $settuple =  $spaces."  PyTuple_SET_ITEM(pyTuple, $i, value);\n";
 
-  my $settuple =  "PyTuple_SET_ITEM(pyTuple, $i, value);\n";
-
-  return $get . $settuple . "}\n" ;
+  return $get . $settuple . $spaces. "}\n" ;
 }
 
 ## Execute pip to install packages in the
