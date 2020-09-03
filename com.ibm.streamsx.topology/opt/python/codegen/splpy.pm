@@ -422,6 +422,40 @@ sub convertAndAddToPythonTupleObject {
   return $get . $settuple . $spaces. "}\n" ;
 }
 
+sub spl_cpp_type {
+  my $attr = $_[0]; # name of the tuple attribute
+  my $type = $_[1]; # e.g. SPL::list
+  my $output_dir = $_[2]; # $model->getContext()->getOutputDirectory()
+
+  my $cppType;
+  my $dir = $output_dir . "/src/type";
+  opendir(TYPEDIR, $dir);
+  @files = grep(/\.h$/,readdir(TYPEDIR));
+  closedir(TYPEDIR);
+
+  foreach $file (@files) {
+    # Read the file content, type definitions only.
+    my $filepath = $dir."/".$file;
+    open FILE, $filepath or die "The type header file can not be opened: ".$filepath;
+    my @content = grep { m/ typedef .*_type;/ } <FILE>;
+    chomp @content;
+    close FILE;
+
+    # typedef SPL::list<SPL::cppType > attr_type;
+    foreach (@content) {
+      if (m/^\s*typedef\s+(.+)\s+(\w+)_type;\s*$/) {
+        if ((index($1, $type) != -1) && (index($2, $attr) != -1)) {
+          $cppType = $1;
+          $cppType =~ s/^.+:://;
+          $cppType =~ s/\>//;
+          return "SPL::".$cppType;
+        }
+      }
+    }
+  }
+  return 'Unknown SPL cpp type';
+}
+
 ## Execute pip to install packages in the
 ## applications output directory under
 ## /etc/streamsx.topology/python
