@@ -62,7 +62,8 @@ void MY_OPERATOR::fromPyTupleToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupl
   if (defined $iport) {
     print 'bool setAttr = false;';
   }
-
+  my $spaces = '                  ';
+  # handle nested tuples
   sub convertNestedPythonTupleToSpl {
     my $otuple = $_[0];
     my $atype = $_[1];
@@ -79,7 +80,7 @@ void MY_OPERATOR::fromPyTupleToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupl
     $gencode = $gencode . $spaces . "    if (!SplpyGeneral::isNone(pyAttrValue)) {\n";
         if (SPL::CodeGen::Type::isTuple($attrTypes[$i])) {
     $gencode = $gencode . $spaces . "      // tuple type $attrTypes[$i]\n";    
-    $gencode = $gencode . $spaces . "      " . convertNestedPythonTupleToSpl($otuple.'.get_'.$attrName.'()', $attrTypes[$i], '           ') . "\n";
+    $gencode = $gencode . $spaces . "      " . convertNestedPythonTupleToSpl($otuple.'.get_'.$attrName.'()', $attrTypes[$i], $spaces.'    ') . "\n";
         }
         else {                        
     $gencode = $gencode . $spaces . "      streamsx::topology::pySplValueFromPyObject($otuple.get_$attrName(), pyAttrValue);\n";
@@ -112,13 +113,19 @@ void MY_OPERATOR::fromPyTupleToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupl
                  my $element_type = SPL::CodeGen::Type::getElementType($atype);  
                  if (SPL::CodeGen::Type::isTuple($element_type)) {%> 
                    <%$nested_tuple = 1;%>
-             // list of tuple <%=$atype%>
-             std::cout << "XXX fromPyTupleToSPLTuple - list of tuple: " << "<%=$atype%>" << std::endl;
+                   // list of tuple <%=$name%> <%=$element_type%>
+                   int list_size = (int)PyList_Size(pyAttrValue);
+                   for (int list_index = 0; list_index < list_size; ++list_index) {
+                       SPL::BeJwrMXYzNCguSSwqiS_1JzE11s0jNS4GwDA2S8_1PSMlNS85JTAQtOA4D se; // TODO XXX retrieve cpp type of tuple
+                       otuple.get_<%=$name%>().add(se); // add tuple to list
+                       PyObject* v = PyList_GET_ITEM(pyAttrValue, list_index);
+                       <%print(convertNestedPythonDictionaryToSpl('otuple.get_'.$name.'()[list_index]', $element_type, $spaces.'    '));%>
+                   }
                <%}%>
              <%} elsif (SPL::CodeGen::Type::isTuple($atype)) {%>
                 <%$nested_tuple = 1;%>
              // tuple type <%=$atype%>
-             <%print(convertNestedPythonTupleToSpl('otuple.get_'.$name.'()', $atype, "             "));%>
+             <%print(convertNestedPythonTupleToSpl('otuple.get_'.$name.'()', $atype, $spaces.'    '));%>
              <%}%>
              <%if ($nested_tuple == 0) {%>
                 streamsx::topology::pySplValueFromPyObject(otuple.get_<%=$name%>(), pyAttrValue);
@@ -170,7 +177,8 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
   if (defined $iport) {
     print 'bool setAttr = false;';
   }
-
+  my $spaces = '                  ';
+  # handle nested tuples
   sub convertNestedPythonDictionaryToSpl {
       my $otuple = $_[0];
       my $atype = $_[1];
@@ -191,7 +199,7 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
           if (SPL::CodeGen::Type::isTuple($attrTypes[$i-1])) {
       $gencode = $gencode . $spaces . "          if (pos == $i) { // attribute=$attrName\n";
       $gencode = $gencode . $spaces . "            // tuple type $attrTypes[$i-1]\n";    
-      $gencode = $gencode . $spaces . "            " . convertNestedPythonDictionaryToSpl($otuple.'.get_'.$attrName.'()', $attrTypes[$i-1], '                                      ') . "\n";
+      $gencode = $gencode . $spaces . "            " . convertNestedPythonDictionaryToSpl($otuple.'.get_'.$attrName.'()', $attrTypes[$i-1], $spaces.'    ') . "\n";
       $gencode = $gencode . $spaces . "          }\n";
           }
           else {                        
@@ -228,13 +236,13 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
                    my $element_type = SPL::CodeGen::Type::getElementType($atype);  
                    if (SPL::CodeGen::Type::isTuple($element_type)) {%>
                      <%$nested_tuple = 1;%>
-                  // list of tuple <%=$atype%>
+                  // list of tuple <%=$name%> <%=$element_type%>
                   int list_size = (int)PyList_Size(pyAttrValue);
-                  std::cout << "XXX fromPyDictToSPLTuple - PyList_Size: " << list_size << std::endl;
                   for (int list_index = 0; list_index < list_size; ++list_index) {
-                	  //PyObject* v = PyList_GET_ITEM(pyAttrValue, list_index);
-                      //std::cout << "XXX fromPyDictToSPLTuple - get list_index: " << std::endl;
-                      <%#print(convertNestedPythonDictionaryToSpl('otuple.get_'.$name.'()[list_index]', $element_type, "                          "));%>
+                      SPL::BeJwrMXYzNCguSSwqiS_1JzE11s0jNS4GwDA2S8_1PSMlNS85JTAQtOA4D se; // TODO XXX retrieve cpp type of tuple
+                      otuple.get_<%=$name%>().add(se); // add tuple to list
+                      PyObject* v = PyList_GET_ITEM(pyAttrValue, list_index);
+                      <%print(convertNestedPythonDictionaryToSpl('otuple.get_'.$name.'()[list_index]', $element_type, $spaces."    "));%>
                   }
                  <%}%>
                <%} elsif (SPL::CodeGen::Type::isTuple($atype)) {%>
@@ -251,7 +259,7 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
                         <%if (SPL::CodeGen::Type::isTuple($attrTypes[$i-1])) {%>
                         if (pos == <%=$i%>) { // attribute=<%=$attrName%>
                           // tuple type <%=$attrTypes[$i-1]%>
-                          <%print(convertNestedPythonDictionaryToSpl('otuple.get_'.$name.'().get_'.$attrName.'()', $attrTypes[$i-1], "                          "));%>
+                          <%print(convertNestedPythonDictionaryToSpl('otuple.get_'.$name.'().get_'.$attrName.'()', $attrTypes[$i-1], $spaces."    "));%>
                         }
                         <%} else {%>                        
                         if (pos == <%=$i%>)
