@@ -116,7 +116,7 @@ void MY_OPERATOR::fromPyTupleToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupl
                    // list of tuple <%=$name%> <%=$element_type%>
                    int list_size = (int)PyList_Size(pyAttrValue);
                    for (int list_index = 0; list_index < list_size; ++list_index) {
-                       SPL::BeJwrMXYzNCguSSwqiS_1JzE11s0jNS4GwDA2S8_1PSMlNS85JTAQtOA4D se; // TODO XXX retrieve cpp type of tuple
+                       <%=spl_cpp_type($name, 'SPL::list', $model->getContext()->getOutputDirectory())%> se; // retrieve cpp type of tuple from generated header files
                        otuple.get_<%=$name%>().add(se); // add tuple to list
                        PyObject* v = PyList_GET_ITEM(pyAttrValue, list_index);
                        <%print(convertNestedPythonDictionaryToSpl('otuple.get_'.$name.'()[list_index]', $element_type, $spaces.'    '));%>
@@ -239,7 +239,7 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
                   // list of tuple <%=$name%> <%=$element_type%>
                   int list_size = (int)PyList_Size(pyAttrValue);
                   for (int list_index = 0; list_index < list_size; ++list_index) {
-                      SPL::BeJwrMXYzNCguSSwqiS_1JzE11s0jNS4GwDA2S8_1PSMlNS85JTAQtOA4D se; // TODO XXX retrieve cpp type of tuple
+                      <%=spl_cpp_type($name, 'SPL::list', $model->getContext()->getOutputDirectory())%> se; // retrieve cpp type of tuple from generated header files
                       otuple.get_<%=$name%>().add(se); // add tuple to list
                       PyObject* v = PyList_GET_ITEM(pyAttrValue, list_index);
                       <%print(convertNestedPythonDictionaryToSpl('otuple.get_'.$name.'()[list_index]', $element_type, $spaces."    "));%>
