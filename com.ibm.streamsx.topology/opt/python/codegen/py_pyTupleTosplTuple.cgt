@@ -122,7 +122,14 @@ void MY_OPERATOR::fromPyTupleToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupl
                        <%print(convertNestedPythonDictionaryToSpl('otuple.get_'.$name.'()[list_index]', $element_type, $spaces.'    '));%>
                    }
                <%}%>
-             <%} elsif (SPL::CodeGen::Type::isTuple($atype)) {%>
+             <%}%> 
+             <%if (SPL::CodeGen::Type::isMap($atype)) {
+                 if (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getValueType($atype))) {
+                   $nested_tuple = 1;%>    
+             // map of tuple <%=$name%> <%=$atype%>
+               <%}%>
+             <%}%>
+             <%if (SPL::CodeGen::Type::isTuple($atype)) {%>
                 <%$nested_tuple = 1;%>
              // tuple type <%=$atype%>
              <%print(convertNestedPythonTupleToSpl('otuple.get_'.$name.'()', $atype, $spaces.'    '));%>
@@ -245,7 +252,14 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
                       <%print(convertNestedPythonDictionaryToSpl('otuple.get_'.$name.'()[list_index]', $element_type, $spaces."    "));%>
                   }
                  <%}%>
-               <%} elsif (SPL::CodeGen::Type::isTuple($atype)) {%>
+               <%}%> 
+               <%if (SPL::CodeGen::Type::isMap($atype)) {
+                   if (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getValueType($atype))) {
+                     $nested_tuple = 1;%>    
+                  // map of tuple <%=$name%> <%=$atype%>
+                 <%}%>
+               <%}%>
+               <%if (SPL::CodeGen::Type::isTuple($atype)) {%>
                   <%$nested_tuple = 1;%>
                   // tuple type <%=$atype%>
                   PyObject *value = pyAttrValue;

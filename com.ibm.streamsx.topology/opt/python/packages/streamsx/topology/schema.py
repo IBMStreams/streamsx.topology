@@ -783,6 +783,9 @@ def _from_named_tuple(nt):
         # special handling for nested tuple types
         if typeval.startswith('tuple') or typeval.startswith('list<tuple'): # __NESTED_TUPLE__
             nested = 1
+        if typeval.startswith('map<'):
+            if 'tuple<' in typeval:
+                nested = 1
         td += typeval
         td += ' '
         td += name

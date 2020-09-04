@@ -282,14 +282,38 @@ sub convertAndAddToPythonDictionaryObject {
   # starts a C++ block and sets value
   my $get;
   my $nested_tuple = 0;
+  ########### SPL: Map of tuple #########################
+  if (SPL::CodeGen::Type::isMap($type)) {  
+    if (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getValueType($type))) {
+      $nested_tuple = 1;
+      $get = "". $spaces."{\n";
+      $get = $get . $spaces."  // SPL Map with tuple as value type\n";
+      $get = $get . $spaces."  // key type: ".SPL::CodeGen::Type::getKeyType($type)."\n";    
+      $get = $get . $spaces."  // value type: ".SPL::CodeGen::Type::getValueType($type)."\n";
+      $get = $get . $spaces."  PyObject * value = 0;\n";
+      $get = $get . $spaces."  {\n";
+      $get = $get . $spaces."    // SPL Map Conversion to Python dict\n";
+      $get = $get . $spaces."    PyObject * pyDict1 = PyDict_New();\n";
+      $get = $get . $spaces."//    for (typename std::tr1::unordered_map<K,V>::const_iterator it = m.begin(); it != m.end(); it++) {\n";
+      $get = $get . $spaces."//      PyObject *k = pySplValueToPyObject(it->first);\n";
+      $get = $get . $spaces."//      PyObject *v =  0;\n";
+      $get = $get . $spaces."//      v = pyDict1;\n";
+      $get = $get . $spaces."//      PyDict_SetItem(pyDict1, k, v);\n";
+      $get = $get . $spaces."//      Py_DECREF(k);\n";
+      $get = $get . $spaces."//      Py_DECREF(v);\n";
+      $get = $get . $spaces."//    }\n";      
+      $get = $get . $spaces."    value = pyDict1;\n";
+      $get = $get . $spaces."  }\n";
+    }
+  }
   ########### SPL: list of tuple --> PyList of PyDict #########################
   if (SPL::CodeGen::Type::isList($type)) {
     my $element_type = SPL::CodeGen::Type::getElementType($type);  
     if (SPL::CodeGen::Type::isTuple($element_type)) {
       $nested_tuple = 1;
       $get = "". $spaces."{\n";
-      $get = $get . $spaces."  //SPL: list of tuple --> PyList of PyDict\n";
-      $get = $get . $spaces."  //$type $name\n";
+      $get = $get . $spaces."  // SPL: list of tuple --> PyList of PyDict\n";
+      $get = $get . $spaces."  // $type $name\n";
       $get = $get . $spaces."  PyObject * value = 0;\n";
       $get = $get . $spaces."  {\n";
       $get = $get . $spaces."    PyObject * pyList = PyList_New($ituple.get_$name().size());\n";
@@ -326,8 +350,8 @@ sub convertAndAddToPythonDictionaryObject {
   if (SPL::CodeGen::Type::isTuple($type)) {
     $nested_tuple = 1;
     $get = "". $spaces."{\n";
-    $get = $get . $spaces."  //SPL: tuple of tuple --> PyDict of PyDict\n";
-    $get = $get . $spaces."  //$type $name\n";
+    $get = $get . $spaces."  // SPL: tuple of tuple --> PyDict of PyDict\n";
+    $get = $get . $spaces."  // $type $name\n";
     $get = $get . $spaces."  PyObject * value = 0;\n";
     $get = $get . $spaces."  {\n";
     $get = $get . $spaces."    PyObject * pyDict1 = PyDict_New();\n";
@@ -396,8 +420,8 @@ sub convertAndAddToPythonTupleObject {
   if (SPL::CodeGen::Type::isTuple($type)) {
     $nested_tuple = 1;
     $get = "". $spaces."{\n";
-    $get = $get . $spaces."  //SPL: tuple of tuple\n";
-    $get = $get . $spaces."  //$type $name\n";
+    $get = $get . $spaces."  // SPL: tuple of tuple\n";
+    $get = $get . $spaces."  // $type $name\n";
     $get = $get . $spaces."  PyObject * value = 0;\n";
     $get = $get . $spaces."  {\n";
     my $ac = 0;

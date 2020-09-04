@@ -11,7 +11,7 @@ from streamsx.topology.tester import Tester
 import streamsx.spl.op as op
 import typing
 import decimal
-from py36_types import NamedTupleBytesSchema, NamedTupleNumbersSchema, NamedTupleListOfTupleSchema, NamedTupleNestedTupleSchema, PersonSchema, SpottedSchema
+from py36_types import NamedTupleBytesSchema, NamedTupleNumbersSchema, NamedTupleListOfTupleSchema, NamedTupleNestedTupleSchema, PersonSchema, SpottedSchema, NamedTupleMapWithTupleSchema
 
 """
 Test that NamedTuples schemas can be passed from and into Python functions as tuples.
@@ -90,6 +90,14 @@ class SourceTupleOutWithNested(object):
             yield output_event
 
 
+class SourceDictOutMapWithTuple(object):
+    def __call__(self) -> typing.Iterable[NamedTupleMapWithTupleSchema]:
+        for num in itertools.count(1):
+            if num == 4:
+                break
+            yield {"keywords_spotted": {str(num) : {"start_time": 0.2, "end_time": 0.4, "confidence": 0.4}}}
+
+
 class check_numbers_tuple():
   def __call__(self, t):
     #print(t) 
@@ -154,7 +162,7 @@ Punctuation received: FinalMarker
 """
 
 ################################
-debug_named_tuple_output = False
+debug_named_tuple_output = True
 ################################
 
 class TestNamedTupleSource(unittest.TestCase):
@@ -408,5 +416,40 @@ class TestNamedTupleSource(unittest.TestCase):
         s = topo.source(SourceTupleOutWithNested())
         s = s.map(map_dict_to_dict, name='MapDict2SPL')
         self._test_spl_file(topo, s, tc, expected_contents_nested_py_source, 3)
+
+
+    def test_spl_source_map_of_tuple_py_sink(self):
+        # spl source -> python map (python object output) -> python sink
+        tc = 'test_spl_source_map_of_tuple_py_sink'
+        topo = Topology(tc)
+        b = op.Source(topo, "spl.utility::Beacon",
+            schema=NamedTupleMapWithTupleSchema,
+            params = {'period': 0.1, 'iterations':3})
+        b.keywords_spotted = b.output('{(rstring) IterationCount(): {start_time=(float64)0.1, end_time=(float64)0.2 , confidence=(float64)0.5}}')
+        bstream = b.stream
+        s = bstream.map(simple_map, name='MapSPL2PY')
+        if debug_named_tuple_output:
+            s.print()
+        tester = Tester(topo)
+        tester.tuple_count(s, 3)
+        #tester.contents(s, TODO check content)
+        if debug_named_tuple_output:
+            self.test_config['topology.keepArtifacts'] = True
+        tester.test(self.test_ctxtype, self.test_config)
+
+
+    def test_py_source_map_of_tuple_py_sink(self):
+        # python source -> python map -> python sink (NamedTupleMapWithTupleSchema)
+        tc = 'test_py_source_map_of_tuple_py_sink'
+        topo = Topology(tc)
+        s = topo.source(SourceDictOutMapWithTuple())
+        if debug_named_tuple_output:
+            s.print()
+        tester = Tester(topo)
+        tester.tuple_count(s, 3)
+        #tester.contents(s, TODO check content)
+        if debug_named_tuple_output:
+            self.test_config['topology.keepArtifacts'] = True
+        tester.test(self.test_ctxtype, self.test_config)
 
 

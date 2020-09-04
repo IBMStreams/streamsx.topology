@@ -37,7 +37,10 @@ class SpottedSchema(typing.NamedTuple):
     end_time: float
     confidence: float
 
-class NamedTupleListWithCustomInMapTupleSchema(typing.NamedTuple):
+class NamedTupleMapWithTupleSchema(typing.NamedTuple):
+    keywords_spotted: typing.Mapping[str,SpottedSchema]
+
+class NamedTupleMapWithListTupleSchema(typing.NamedTuple):
     keywords_spotted: typing.Mapping[str,typing.List[SpottedSchema]]
 
 class NamedTupleListOfTupleSchema(typing.NamedTuple):
