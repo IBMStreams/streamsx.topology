@@ -12,6 +12,7 @@
   {
     SplpyGIL locktuple;
     PyObject * pyTuple = PyTuple_New(<%=$inputAttrs2Py%>);
+    // convertAndAddToPythonTupleObject
 <%
      for (my $i = 0; $i < $inputAttrs2Py; ++$i) {
          my $la = $iport->getAttributeAt($i);
