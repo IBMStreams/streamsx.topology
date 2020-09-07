@@ -6,6 +6,7 @@
 
 import typing
 import decimal
+from streamsx.spl.types import int64
 
 class NTS(typing.NamedTuple):
     x: int
@@ -69,4 +70,36 @@ class PersonSchema(typing.NamedTuple):
     age: int
     address: AddressSchema
 
+#tuple<int64 x_coord, int64 y_coord>
+class Point2DSchema(typing.NamedTuple):
+    x_coord: int
+    y_coord: int
+    
+#tuple<int64 x_coord, int64 y_coord, int64 z_coord>
+class Point3DSchema(typing.NamedTuple):
+    x_coord: int
+    y_coord: int
+    z_coord: int
+
+#tuple<tuple<int64 x_coord, int64 y_coord> center, int64 radius>
+class CircleSchema(typing.NamedTuple):
+    center: Point2DSchema
+    radius: float
+
+#tuple<tuple<int64 x_coord, int64 y_coord, int64 z_coord> center, int64 radius , int64 radius2>
+class DonutSchema(typing.NamedTuple):
+    center: Point3DSchema
+    radius: int
+    radius2: int
+    rings: bool
+    #rings: typing.List[CircleSchema]
+
+#tuple<tuple<tuple<int64 x_coord, int64 y_coord> center, radius int64> circle, 
+#      tuple<tuple<int64 x_coord, int64 y_coord, int64 z_coord> center, int64 radius , int64 radius2> torus>
+class TripleNestedTupleAmbiguousAttrName(typing.NamedTuple):
+    circle: CircleSchema    # contains 'center' as tuple attribute
+    torus: DonutSchema      # contains also 'center' as a different tuple type attribute, contains 'rings' attribute
+    rings: typing.List[CircleSchema]  # rings with nested (anonymous C++ type)
+    
+    
 

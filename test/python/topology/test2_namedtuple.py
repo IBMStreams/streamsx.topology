@@ -11,7 +11,7 @@ from streamsx.topology.tester import Tester
 import streamsx.spl.op as op
 import typing
 import decimal
-from py36_types import NamedTupleBytesSchema, NamedTupleNumbersSchema, NamedTupleListOfTupleSchema, NamedTupleNestedTupleSchema, PersonSchema, SpottedSchema, NamedTupleMapWithTupleSchema, NamedTupleMapWithListTupleSchema
+from py36_types import TripleNestedTupleAmbiguousAttrName, NamedTupleBytesSchema, NamedTupleNumbersSchema, NamedTupleListOfTupleSchema, NamedTupleNestedTupleSchema, PersonSchema, SpottedSchema, NamedTupleMapWithTupleSchema, NamedTupleMapWithListTupleSchema
 
 """
 Test that NamedTuples schemas can be passed from and into Python functions as tuples.
@@ -143,6 +143,20 @@ def simple_map_to_person_schema(tpl) -> PersonSchema:
     print("simple_map_to_person_schema: "+str(tpl))
     return tpl
 
+def map_to_TripleNestedTupleAmbiguousAttrName(tpl) -> TripleNestedTupleAmbiguousAttrName:
+    print('map_to_TripleNestedTupleAmbiguousAttrName: ' + str(tpl))
+    tpl['circle']['center']['x_coord'] = tpl['circle']['center']['x_coord'] * 10
+    tpl['circle']['center']['y_coord'] = tpl['circle']['center']['y_coord'] * 10
+    tpl['circle']['radius'] = tpl['circle']['radius'] * 10
+    tpl['torus']['center']['x_coord'] = tpl['torus']['center']['x_coord'] * 10
+    tpl['torus']['center']['y_coord'] = tpl['torus']['center']['y_coord'] * 10
+    tpl['torus']['center']['z_coord'] = tpl['torus']['center']['z_coord'] * 10
+    tpl['torus']['radius'] = tpl['torus']['radius'] * 10
+    tpl['torus']['radius2'] = tpl['torus']['radius2'] * 10
+    addedCircle = {'radius': 345, 'center': {'x_coord': 66, 'y_coord': 77}}
+    #tpl['rings'].append(addedCircle)
+    return tpl
+
 
 expected_contents_nested_beacon_source = """{key="0",spotted={start_time=0.1,end_time=0.2,confidence=0.7}}
 {key="1",spotted={start_time=0.1,end_time=0.2,confidence=0.7}}
@@ -169,6 +183,13 @@ expected_contents_nested_multi1 = """{name="Bacon0",age=20,address={street="Rue"
 Punctuation received: WindowMarker
 Punctuation received: FinalMarker
 """
+
+expected_contents_nested_multi_ambiguos1 = """{circle={center={x_coord=10,y_coord=20},radius=31.53},torus={center={x_coord=30,y_coord=40,z_coord=50},radius=640,radius2=10,rings=true},rings=[]}
+{circle={center={x_coord=10,y_coord=20},radius=31.53},torus={center={x_coord=30,y_coord=40,z_coord=50},radius=640,radius2=20,rings=true},rings=[]}
+Punctuation received: WindowMarker
+Punctuation received: FinalMarker
+"""
+
 
 ################################
 debug_named_tuple_output = True
@@ -402,6 +423,21 @@ class TestNamedTupleSource(unittest.TestCase):
         bstream = b.stream
         s = bstream.map(simple_map_to_person_schema, name='MapSPL2NamedTuple')
         self._test_spl_file(topo, s, tc, expected_contents_nested_multi1, 2)
+
+    def test_spl_source_multi_ambiguous_nested_tuple_spl_sink(self):
+        # spl source -> python map () -> spl sink
+        tc = 'test_spl_source_multi_ambiguous_nested_tuple_spl_sink'
+        topo = Topology(tc)
+        b = op.Source(topo, "spl.utility::Beacon",
+            schema=TripleNestedTupleAmbiguousAttrName,
+            params = {'period': 0.1, 'iterations':2})
+        b.circle = b.output('{center={x_coord=1l, y_coord=2l}, radius=3.153lf}')
+#        b.torus = b.output('{center={x_coord=3l, y_coord=4l, z_coord=5l}, radius=64l, radius2=1l+(int64)IterationCount(), rings=(list<tuple<tuple<int64 x_coord,int64 y_coord> center,float64 radius>>)[]}')
+        b.torus = b.output('{center={x_coord=3l, y_coord=4l, z_coord=5l}, radius=64l, radius2=1l+(int64)IterationCount(), rings=true}')
+        b.rings = b.output('(list<tuple<tuple<int64 x_coord,int64 y_coord> center,float64 radius>>)[]')
+        bstream = b.stream
+        s = bstream.map(map_to_TripleNestedTupleAmbiguousAttrName, name='MapSPL2NamedTuple')
+        self._test_spl_file(topo, s, tc, expected_contents_nested_multi_ambiguos1, 2)
 
     def test_py_source_dict_nested_py_sink(self):
         # python source -> python map -> python sink (NamedTupleNestedTupleSchema)
