@@ -27,16 +27,21 @@ class NamedTupleNumbersSchema(typing.NamedTuple):
     f64: float
     d128: decimal.Decimal
     c64: complex
+    si64: typing.Set[int]
     oi64: typing.Optional[int] = None
     of64: typing.Optional[float] = None
     od128: typing.Optional[decimal.Decimal] = None
     oc64: typing.Optional[complex] = None
     omi64li64: typing.Optional[typing.Mapping[int,typing.List[int]]] = None
 
+
 class SpottedSchema(typing.NamedTuple):
     start_time: float
     end_time: float
     confidence: float
+
+class NamedTupleSetOfListofTupleSchema(typing.NamedTuple):
+    slt: typing.Set[typing.List[SpottedSchema]]
 
 class NamedTupleMapWithTupleSchema(typing.NamedTuple):
     keywords_spotted: typing.Mapping[str,SpottedSchema]
