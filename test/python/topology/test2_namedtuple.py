@@ -11,7 +11,7 @@ from streamsx.topology.tester import Tester
 import streamsx.spl.op as op
 import typing
 import decimal
-from py36_types import TripleNestedTupleAmbiguousAttrName, NamedTupleBytesSchema, NamedTupleNumbersSchema, NamedTupleListOfTupleSchema, NamedTupleNestedTupleSchema, PersonSchema, SpottedSchema, NamedTupleMapWithTupleSchema, NamedTupleMapWithListTupleSchema, NamedTupleSetOfListofTupleSchema
+from py36_types import TripleNestedTupleAmbiguousAttrName, NamedTupleBytesSchema, NamedTupleNumbersSchema, NamedTupleNumbersSchema2, NamedTupleListOfTupleSchema, NamedTupleNestedTupleSchema, PersonSchema, SpottedSchema, NamedTupleMapWithTupleSchema, NamedTupleMapWithListTupleSchema, NamedTupleSetOfListofTupleSchema
 
 """
 Test that NamedTuples schemas can be passed from and into Python functions as tuples.
@@ -290,7 +290,7 @@ class TestNamedTupleSource(unittest.TestCase):
         # spl source -> python sink (NamedTupleNumbersSchema)
         topo = Topology()
         b = op.Source(topo, "spl.utility::Beacon",
-            schema=NamedTupleNumbersSchema,
+            schema=NamedTupleNumbersSchema2,
             params = {'period': 0.1, 'iterations':3})
         b.i64 = b.output('(int64) IterationCount()')
         b.oi64 = b.output('IterationCount() % 2ul == 0ul ?' +
