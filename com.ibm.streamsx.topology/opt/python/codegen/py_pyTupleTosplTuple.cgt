@@ -127,7 +127,18 @@ void MY_OPERATOR::fromPyTupleToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupl
                  if (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getValueType($atype))) {
                    $nested_tuple = 1;%>    
              // map of tuple <%=$name%> <%=$atype%>
-               <%}%>
+                   
+             // key type: <%=SPL::CodeGen::Type::getKeyType($atype)%>   
+             // value type: <%=SPL::CodeGen::Type::getValueType($atype)%>                  
+                   
+                   
+               <%} elsif (SPL::CodeGen::Type::isList(SPL::CodeGen::Type::getValueType($atype))) {
+                     my $element_type = SPL::CodeGen::Type::getElementType(SPL::CodeGen::Type::getValueType($atype));  
+                     if (SPL::CodeGen::Type::isTuple($element_type)) {
+                       $nested_tuple = 1;%>
+             // map of list of tuple <%=$name%> <%=$atype%>
+                   <%}%>
+               <%}%>                   
              <%}%>
              <%if (SPL::CodeGen::Type::isTuple($atype)) {%>
                 <%$nested_tuple = 1;%>
@@ -257,6 +268,12 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
                    if (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getValueType($atype))) {
                      $nested_tuple = 1;%>    
                   // map of tuple <%=$name%> <%=$atype%>
+                 <%} elsif (SPL::CodeGen::Type::isList(SPL::CodeGen::Type::getValueType($atype))) {
+                     my $element_type = SPL::CodeGen::Type::getElementType(SPL::CodeGen::Type::getValueType($atype));  
+                     if (SPL::CodeGen::Type::isTuple($element_type)) {
+                       $nested_tuple = 1;%>
+                  // map of list of tuple <%=$name%> <%=$atype%>
+                   <%}%>
                  <%}%>
                <%}%>
                <%if (SPL::CodeGen::Type::isTuple($atype)) {%>

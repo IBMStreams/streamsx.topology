@@ -11,7 +11,7 @@ from streamsx.topology.tester import Tester
 import streamsx.spl.op as op
 import typing
 import decimal
-from py36_types import NamedTupleBytesSchema, NamedTupleNumbersSchema, NamedTupleListOfTupleSchema, NamedTupleNestedTupleSchema, PersonSchema, SpottedSchema, NamedTupleMapWithTupleSchema
+from py36_types import NamedTupleBytesSchema, NamedTupleNumbersSchema, NamedTupleListOfTupleSchema, NamedTupleNestedTupleSchema, PersonSchema, SpottedSchema, NamedTupleMapWithTupleSchema, NamedTupleMapWithListTupleSchema
 
 """
 Test that NamedTuples schemas can be passed from and into Python functions as tuples.
@@ -96,6 +96,15 @@ class SourceDictOutMapWithTuple(object):
             if num == 4:
                 break
             yield {"keywords_spotted": {str(num) : {"start_time": 0.2, "end_time": 0.4, "confidence": 0.4}}}
+
+
+class SourceDictOutMapWithListOfTuple(object):
+    def __call__(self) -> typing.Iterable[NamedTupleMapWithListTupleSchema]:
+        for num in itertools.count(1):
+            if num == 4:
+                break
+            yield {"keywords_spotted": {str(num) : [{"start_time": 0.2, "end_time": 0.4, "confidence": 0.4},{"start_time": 0.3, "end_time": 0.6, "confidence": 0.8}]}}
+
 
 
 class check_numbers_tuple():
@@ -443,6 +452,21 @@ class TestNamedTupleSource(unittest.TestCase):
         tc = 'test_py_source_map_of_tuple_py_sink'
         topo = Topology(tc)
         s = topo.source(SourceDictOutMapWithTuple())
+        if debug_named_tuple_output:
+            s.print()
+        tester = Tester(topo)
+        tester.tuple_count(s, 3)
+        #tester.contents(s, TODO check content)
+        if debug_named_tuple_output:
+            self.test_config['topology.keepArtifacts'] = True
+        tester.test(self.test_ctxtype, self.test_config)
+
+
+    def test_py_source_map_with_list_of_tuple_py_sink(self):
+        # python source -> python map -> python sink (NamedTupleMapWithListTupleSchema)
+        tc = 'test_py_source_map_with_list_of_tuple_py_sink'
+        topo = Topology(tc)
+        s = topo.source(SourceDictOutMapWithListOfTuple())
         if debug_named_tuple_output:
             s.print()
         tester = Tester(topo)

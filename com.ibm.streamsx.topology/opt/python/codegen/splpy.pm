@@ -304,6 +304,21 @@ sub convertAndAddToPythonDictionaryObject {
       $get = $get . $spaces."//    }\n";      
       $get = $get . $spaces."    value = pyDict1;\n";
       $get = $get . $spaces."  }\n";
+    } elsif (SPL::CodeGen::Type::isList(SPL::CodeGen::Type::getValueType($type))) {
+      my $element_type = SPL::CodeGen::Type::getElementType(SPL::CodeGen::Type::getValueType($type));  
+      if (SPL::CodeGen::Type::isTuple($element_type)) {
+      	$nested_tuple = 1;
+      $get = "". $spaces."{\n";
+      $get = $get . $spaces."  // SPL Map with list of tuple as value type\n";
+      $get = $get . $spaces."  // key type: ".SPL::CodeGen::Type::getKeyType($type)."\n";    
+      $get = $get . $spaces."  // value type: ".SPL::CodeGen::Type::getValueType($type)."\n";
+      $get = $get . $spaces."  PyObject * value = 0;\n";
+      $get = $get . $spaces."  {\n";
+      $get = $get . $spaces."    // SPL Map Conversion to Python dict\n";
+      $get = $get . $spaces."    PyObject * pyDict1 = PyDict_New();\n";
+      $get = $get . $spaces."    value = pyDict1;\n";
+      $get = $get . $spaces."  }\n";
+      }
     }
   }
   ########### SPL: list of tuple --> PyList of PyDict #########################
