@@ -21,13 +21,23 @@ class NamedTupleBytesSchema(typing.NamedTuple):
     omsg: typing.Optional[bytes] = None
     oflag: typing.Optional[bool] = None
 
+class NamedTupleNumbersSchema2(typing.NamedTuple):
+    i64: int
+    f64: float
+    d128: decimal.Decimal
+    c64: complex
+    si64: typing.Set[int]
+    oi64: typing.Optional[int] = None
+    of64: typing.Optional[float] = None
+    od128: typing.Optional[decimal.Decimal] = None
+    oc64: typing.Optional[complex] = None
+    omi64li64: typing.Optional[typing.Mapping[int,typing.List[int]]] = None
 
 class NamedTupleNumbersSchema(typing.NamedTuple):
     i64: int
     f64: float
     d128: decimal.Decimal
     c64: complex
-    si64: typing.Set[int]
     oi64: typing.Optional[int] = None
     of64: typing.Optional[float] = None
     od128: typing.Optional[decimal.Decimal] = None
