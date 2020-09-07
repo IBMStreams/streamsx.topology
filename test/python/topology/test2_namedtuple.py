@@ -11,7 +11,7 @@ from streamsx.topology.tester import Tester
 import streamsx.spl.op as op
 import typing
 import decimal
-from py36_types import NamedTupleBytesSchema, NamedTupleNumbersSchema, NamedTupleListOfTupleSchema, NamedTupleNestedTupleSchema, PersonSchema, SpottedSchema, NamedTupleMapWithTupleSchema, NamedTupleMapWithListTupleSchema
+from py36_types import NamedTupleBytesSchema, NamedTupleNumbersSchema, NamedTupleListOfTupleSchema, NamedTupleNestedTupleSchema, PersonSchema, SpottedSchema, NamedTupleMapWithTupleSchema, NamedTupleMapWithListTupleSchema, NamedTupleSetOfListofTupleSchema
 
 """
 Test that NamedTuples schemas can be passed from and into Python functions as tuples.
@@ -280,12 +280,59 @@ class TestNamedTupleSource(unittest.TestCase):
            '(decimal128) 10.1245345 : (optional<decimal128>) null')
         b.omi64li64 = b.output('IterationCount() % 2ul == 0ul ?' +
            '{321l: [1l, 2l, 3l]} : (optional<map<int64, list<int64>>>) null')
+        b.si64 = b.output('{(int64) IterationCount(),(int64) IterationCount()+100l}')
         st = b.stream
         st.for_each(check_numbers_tuple())
+        if debug_named_tuple_output:
+            st.print()
 
         tester = Tester(topo)
         tester.tuple_count(st, 3)
+        if debug_named_tuple_output:
+            self.test_config['topology.keepArtifacts'] = True
         tester.test(self.test_ctxtype, self.test_config)
+
+
+    def test_unsupported_types_for_conversion_to_from_py(self):
+        tc = 'test_unsupported_types_for_conversion_to_from_py'
+        topo = Topology(tc)
+        b = op.Source(topo, "spl.utility::Beacon",
+            schema='tuple<set<list<int64>> sli64>',
+            params = {'period': 0.1, 'iterations':3})
+        b.sli64 = b.output('{[(int64) IterationCount()],[0l]}')
+        s = b.stream
+        print ('-A- EXPECT ERROR CDISP9164E for unsupported type: tuple<set<list<int64>>>')
+        tester = Tester(topo)
+        tester.tuple_count(s, 3) # causes test to fail: type is not supported for conversion to or from Python
+        res = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
+        assert(False == res) # expected result: test failed
+        print ('-A- unsupported type check: PASSED')
+
+        topo = Topology(tc)
+        b = op.Source(topo, "spl.utility::Beacon",
+            schema='tuple<set<tuple<rstring a, rstring b>> stuple>',
+            params = {'period': 0.1, 'iterations':3})
+        b.stuple = b.output('{{a="a", b="b"}}')
+        s = b.stream
+        print ('-B- EXPECT ERROR CDISP9164E for unsupported type: tuple<set<tuple<rstring a, rstring b>>>')
+        tester = Tester(topo)
+        tester.tuple_count(s, 3) # causes test to fail: type is not supported for conversion to or from Python
+        res = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
+        assert(False == res) # expected result: test failed
+        print ('-B- unsupported type check: PASSED')
+
+        topo = Topology(tc)
+        b = op.Source(topo, "spl.utility::Beacon",
+            schema=NamedTupleSetOfListofTupleSchema,
+            params = {'period': 0.1, 'iterations':3})
+        b.slt = b.output('{[{start_time=(float64)0.1, end_time=(float64)0.2, confidence=(float64)0.5}]}')
+        s = b.stream
+        print ('-C- EXPECT ERROR CDISP9164E for unsupported type: set<list<tuple<float64 start_time,float64 end_time,float64 confidence>>>')
+        tester = Tester(topo)
+        tester.tuple_count(s, 3) # causes test to fail: type is not supported for conversion to or from Python
+        res = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
+        assert(False == res) # expected result: test failed
+        print ('-C- unsupported type check: PASSED')
 
     def test_spl_source_list_of_tuple_named_tuple_py_sink(self):
         # spl source -> python map (python object output) -> python sink

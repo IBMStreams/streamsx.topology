@@ -430,6 +430,14 @@ class StreamSchema(object) :
     .. note::
         Type `optional<T>` requires IBM Streams 4.3 or later.
 
+    .. note::
+
+        Conversion to or from Python:
+
+        * Type `set<T>` is restricted to primitive types
+
+        * Type `map<K,V>` is restricted to primitive types for the key type K
+
     Python representation is how an attribute value in a structured schema is passed into a Python function. 
 
     Conversion from Python indicates how a value from Python is converted to an attribute value in a structured schema.
@@ -458,6 +466,8 @@ class StreamSchema(object) :
 
     Args:
         schema(str): Schema definition. Either a schema definition or the name of an SPL type.
+
+    .. versionadded:: 1.16 Support for nested tuples.
     """
     def __init__(self, schema):
         schema = schema.strip()
@@ -784,6 +794,9 @@ def _from_named_tuple(nt):
         if typeval.startswith('tuple') or typeval.startswith('list<tuple'): # __NESTED_TUPLE__
             nested = 1
         if typeval.startswith('map<'):
+            if 'tuple<' in typeval:
+                nested = 1
+        if typeval.startswith('set<'):
             if 'tuple<' in typeval:
                 nested = 1
         td += typeval
