@@ -37,7 +37,10 @@ class SpottedSchema(typing.NamedTuple):
     end_time: float
     confidence: float
 
-class NamedTupleListWithCustomInMapTupleSchema(typing.NamedTuple):
+class NamedTupleMapWithTupleSchema(typing.NamedTuple):
+    keywords_spotted: typing.Mapping[str,SpottedSchema]
+
+class NamedTupleMapWithListTupleSchema(typing.NamedTuple):
     keywords_spotted: typing.Mapping[str,typing.List[SpottedSchema]]
 
 class NamedTupleListOfTupleSchema(typing.NamedTuple):
@@ -46,4 +49,24 @@ class NamedTupleListOfTupleSchema(typing.NamedTuple):
 class NamedTupleNestedTupleSchema(typing.NamedTuple):
     key: str
     spotted: SpottedSchema
+
+class TestSchema(typing.NamedTuple):
+    flag: bool
+    i64: int
+
+class ContactsSchema(typing.NamedTuple):
+    mail: str
+    phone: str
+    nested_tuple: TestSchema
+
+class AddressSchema(typing.NamedTuple):
+    street: str
+    city: str
+    contacts: ContactsSchema
+
+class PersonSchema(typing.NamedTuple):
+    name: str
+    age: int
+    address: AddressSchema
+
 
