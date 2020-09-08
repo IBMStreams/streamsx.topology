@@ -101,13 +101,17 @@ class CircleSchema(typing.NamedTuple):
     center: Point2DSchema
     radius: float
 
+#tuple<float64 radius, boolean has_rings>
+class CircleRadiusSchema(typing.NamedTuple):
+    radius: float
+    has_rings: bool
+
 #tuple<tuple<int64 x_coord, int64 y_coord, int64 z_coord> center, int64 radius , int64 radius2>
 class DonutSchema(typing.NamedTuple):
     center: Point3DSchema
     radius: int
     radius2: int
-    rings: bool
-    #rings: typing.List[CircleSchema]
+    rings: typing.List[CircleRadiusSchema]
 
 #tuple<tuple<tuple<int64 x_coord, int64 y_coord> center, radius int64> circle, 
 #      tuple<tuple<int64 x_coord, int64 y_coord, int64 z_coord> center, int64 radius , int64 radius2> torus>

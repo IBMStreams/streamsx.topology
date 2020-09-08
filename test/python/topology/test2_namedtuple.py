@@ -153,8 +153,6 @@ def map_to_TripleNestedTupleAmbiguousAttrName(tpl) -> TripleNestedTupleAmbiguous
     tpl['torus']['center']['z_coord'] = tpl['torus']['center']['z_coord'] * 10
     tpl['torus']['radius'] = tpl['torus']['radius'] * 10
     tpl['torus']['radius2'] = tpl['torus']['radius2'] * 10
-    addedCircle = {'radius': 345, 'center': {'x_coord': 66, 'y_coord': 77}}
-    #tpl['rings'].append(addedCircle)
     return tpl
 
 
@@ -184,8 +182,8 @@ Punctuation received: WindowMarker
 Punctuation received: FinalMarker
 """
 
-expected_contents_nested_multi_ambiguos1 = """{circle={center={x_coord=10,y_coord=20},radius=31.53},torus={center={x_coord=30,y_coord=40,z_coord=50},radius=640,radius2=10,rings=true},rings=[]}
-{circle={center={x_coord=10,y_coord=20},radius=31.53},torus={center={x_coord=30,y_coord=40,z_coord=50},radius=640,radius2=20,rings=true},rings=[]}
+expected_contents_nested_multi_ambiguos1 = """{circle={center={x_coord=10,y_coord=20},radius=31.53},torus={center={x_coord=30,y_coord=40,z_coord=50},radius=640,radius2=10,rings=[]},rings=[]}
+{circle={center={x_coord=10,y_coord=20},radius=31.53},torus={center={x_coord=30,y_coord=40,z_coord=50},radius=640,radius2=20,rings=[]},rings=[]}
 Punctuation received: WindowMarker
 Punctuation received: FinalMarker
 """
@@ -355,7 +353,7 @@ class TestNamedTupleSource(unittest.TestCase):
         assert(False == res) # expected result: test failed
         print ('-C- unsupported type check: PASSED')
 
-    def test_spl_source_list_of_tuple_named_tuple_py_sink(self):
+    def _test_spl_source_list_of_tuple_named_tuple_py_sink(self):
         # spl source -> python map (python object output) -> python sink
         tc = 'test_spl_source_list_of_tuple_named_tuple_py_sink'
         topo = Topology(tc)
@@ -479,8 +477,7 @@ class TestNamedTupleSource(unittest.TestCase):
             schema=TripleNestedTupleAmbiguousAttrName,
             params = {'period': 0.1, 'iterations':2})
         b.circle = b.output('{center={x_coord=1l, y_coord=2l}, radius=3.153lf}')
-#        b.torus = b.output('{center={x_coord=3l, y_coord=4l, z_coord=5l}, radius=64l, radius2=1l+(int64)IterationCount(), rings=(list<tuple<tuple<int64 x_coord,int64 y_coord> center,float64 radius>>)[]}')
-        b.torus = b.output('{center={x_coord=3l, y_coord=4l, z_coord=5l}, radius=64l, radius2=1l+(int64)IterationCount(), rings=true}')
+        b.torus = b.output('{center={x_coord=3l, y_coord=4l, z_coord=5l}, radius=64l, radius2=1l+(int64)IterationCount(), rings=(list<tuple<float64 radius, boolean has_rings>>)[]}')
         b.rings = b.output('(list<tuple<tuple<int64 x_coord,int64 y_coord> center,float64 radius>>)[]')
         bstream = b.stream
         s = bstream.map(map_to_TripleNestedTupleAmbiguousAttrName, name='MapSPL2NamedTuple')

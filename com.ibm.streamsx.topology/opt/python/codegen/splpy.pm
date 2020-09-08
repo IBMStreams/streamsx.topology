@@ -461,11 +461,49 @@ sub convertAndAddToPythonTupleObject {
   return $get . $settuple . $spaces. "}\n" ;
 }
 
+sub is_type_in_file {
+  my $attr = $_[0]; # name of the tuple attribute
+  my $cpptype = $_[1]; # type to search for
+  my $spltype = $_[2]; # type to search for
+  my $type_dir = $_[3]; # ../src/type
+  my $type_file = $_[4];
+  
+  my $result = 0;
+  my $filepath = $type_dir."/".substr($type_file, 0, -2).".xml";
+  open my $xmlfile, $filepath or die "The type xml file can not be opened: ".$filepath; 
+  my $attrFound = 0;
+  my $cppTypeFound = 0;
+  my $splTypeFound = 0;
+  $spltype =~ s/</&lt;/g;
+  $spltype =~ s/>/&gt;/g;
+  while( my $line = <$xmlfile>)  {   
+    if ($attrFound == 0) {
+      if ($line =~ m/.*>$attr<.*/) {
+        $attrFound = 1;
+      }
+    }
+    if ($attrFound == 1) {
+      if ($line =~ m/.*lt;$cpptype&gt;.*/) {
+        $cppTypeFound = 1;
+      }
+    }
+    if ($cppTypeFound == 1) {
+      if ($line =~ m/.*$spltype.*/) {
+        close $xmlfile;
+        return 1;
+      }
+    }
+  }  
+  close $xmlfile;
+  return $result;
+}
 sub spl_cpp_type {
   my $attr = $_[0]; # name of the tuple attribute
   my $type = $_[1]; # e.g. SPL::list
-  my $output_dir = $_[2]; # $model->getContext()->getOutputDirectory()
+  my $spltype = $_[2]; # e.g. tuple<..>
+  my $output_dir = $_[3]; # $model->getContext()->getOutputDirectory()
 
+  my $resultType = "";
   my $cppType;
   my $dir = $output_dir . "/src/type";
   opendir(TYPEDIR, $dir);
@@ -487,12 +525,14 @@ sub spl_cpp_type {
           $cppType = $1;
           $cppType =~ s/^.+:://;
           $cppType =~ s/\>//;
-          return "SPL::".$cppType;
+          if (is_type_in_file($attr, "SPL::".$cppType, $spltype, $dir, $file)) {
+            $resultType = "SPL::".$cppType;
+          }
         }
       }
     }
   }
-  return 'Unknown SPL cpp type';
+  return $resultType;
 }
 
 ## Execute pip to install packages in the
