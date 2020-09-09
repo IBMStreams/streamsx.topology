@@ -1,6 +1,9 @@
 # Changes
 ==========
 
+## v1.15.10
+* [#2561](https://github.com/IBMStreams/streamsx.topology/issues/2561) Third-party lib updated to resolve security vulnerabilities (commons-compress: 1.19)
+
 ## v1.15.9
 * [#2522](https://github.com/IBMStreams/streamsx.topology/issues/2522) Build scripts prepared for publishing the release to Maven repository
 * [#2537](https://github.com/IBMStreams/streamsx.topology/issues/2537) TestTopology: Check OS version to skip tests in SPLOperatorsTest.java for RH6
