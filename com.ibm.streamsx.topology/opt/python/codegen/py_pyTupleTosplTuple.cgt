@@ -86,6 +86,9 @@ void MY_OPERATOR::fromPyTupleToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupl
         elsif ((SPL::CodeGen::Type::isMap($attrTypes[$i])) && (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getValueType($attrTypes[$i])))) {          
     $gencode = $gencode . $spaces . "      // map with tuple as value type: $attrName - $attrTypes[$i]\n"; 
         }
+        elsif ((SPL::CodeGen::Type::isMap($attrTypes[$i])) && (SPL::CodeGen::Type::isList(SPL::CodeGen::Type::getValueType($attrTypes[$i]))) && (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getElementType(SPL::CodeGen::Type::getValueType($attrTypes[$i]))))) {          
+    $gencode = $gencode . $spaces . "      // map with list of tuple as value type: $attrName - $attrTypes[$i]\n"; 
+        }
         elsif ((SPL::CodeGen::Type::isList($attrTypes[$i])) && (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getElementType($attrTypes[$i])))) {
           my $element_type = SPL::CodeGen::Type::getElementType($attrTypes[$i]);
     $gencode = $gencode . $spaces . "      // list of tuple: $attrName - $element_type\n";
@@ -348,6 +351,14 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
                                PyObject* v = PyList_GET_ITEM(pyAttrValue, list_index);
                                <%print(convertNestedPythonDictionaryToSpl('otuple.get_'.$name.'().get_'.$attrName.'()[list_index]', $element_type, $spaces."          "));%>
                            }
+                        }
+                        <%} elsif ((SPL::CodeGen::Type::isMap($attrTypes[$i-1])) && (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getValueType($attrTypes[$i-1])))) {%>
+                        if (pos == <%=$i%>) { // attribute=<%=$attrName%>
+                            // map with tuple as value type: $attrName - $attrTypes[$i]\n";
+                        }
+                        <%} elsif ((SPL::CodeGen::Type::isMap($attrTypes[$i-1])) && (SPL::CodeGen::Type::isList(SPL::CodeGen::Type::getValueType($attrTypes[$i-1]))) && (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getElementType(SPL::CodeGen::Type::getValueType($attrTypes[$i-1]))))) {%>
+                        if (pos == <%=$i%>) { // attribute=<%=$attrName%>
+                            // map with list of tuple as value type: $attrName - $attrTypes[$i]\n";
                         }
                         <%} else {%>                        
                         if (pos == <%=$i%>) { // attribute=<%=$attrName%>
