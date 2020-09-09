@@ -424,11 +424,36 @@ sub convertAndAddToPythonTupleObject {
   # starts a C++ block and sets value
   my $get;
   my $nested_tuple = 0;
+  ########### SPL: Map of tuple #########################
+  if (SPL::CodeGen::Type::isMap($type)) {  
+    if (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getValueType($type))) {
+      $nested_tuple = 1;
+      $get = "". $spaces."{\n";
+      $get = $get . $spaces."  // SPL: Map with tuple as value type\n";
+      $get = $get . $spaces."  // key type: ".SPL::CodeGen::Type::getKeyType($type)."\n";    
+      $get = $get . $spaces."  // value type: ".SPL::CodeGen::Type::getValueType($type)."\n";
+      $get = $get . $spaces."  PyObject * value = 0;\n";
+    } elsif (SPL::CodeGen::Type::isList(SPL::CodeGen::Type::getValueType($type))) {
+      my $element_type = SPL::CodeGen::Type::getElementType(SPL::CodeGen::Type::getValueType($type));  
+      if (SPL::CodeGen::Type::isTuple($element_type)) {
+      	$nested_tuple = 1;
+      $get = "". $spaces."{\n";
+      $get = $get . $spaces."  // SPL: Map with list of tuple as value type\n";
+      $get = $get . $spaces."  // key type: ".SPL::CodeGen::Type::getKeyType($type)."\n";    
+      $get = $get . $spaces."  // value type: ".SPL::CodeGen::Type::getValueType($type)."\n";
+      $get = $get . $spaces."  PyObject * value = 0;\n";
+      }
+    }
+  }  
   ########### SPL: list of tuple #########################
   if (SPL::CodeGen::Type::isList($type)) {
     my $element_type = SPL::CodeGen::Type::getElementType($type);  
     if (SPL::CodeGen::Type::isTuple($element_type)) {
       $nested_tuple = 1;
+      $get = "". $spaces."{\n";
+      $get = $get . $spaces."  // SPL: List of tuple\n";
+      $get = $get . $spaces."  // element type: ".$element_type."\n";
+      $get = $get . $spaces."  PyObject * value = 0;\n";
     }
   }
   ########### SPL: tuple of tuple #########################
