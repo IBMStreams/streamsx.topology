@@ -316,11 +316,39 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
                    if (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getValueType($atype))) {
                      $nested_tuple = 1;%>    
                   // map of tuple: <%=$name%> <%=$atype%>
+                  // SPL map from Python dictionary
+                  //PyObject *k,*v;
+                  //Py_ssize_t pos = 0;
+                  //while (PyDict_Next(value, &pos, &k, &v)) {
+                	  //<%=SPL::CodeGen::Type::getKeyType($atype)%> sk; // key type
+                      // Set the SPL key
+                      //pySplValueFromPyObject(sk, k);
+                      //SPL::map<K,V> & m;
+                      // map[] creates the value if it does not exist
+                      // value type <%=SPL::CodeGen::Type::getValueType($atype)%>
+                      //<%=spl_cpp_type($name, 'SPL::map', SPL::CodeGen::Type::getValueType($atype), $model->getContext()->getOutputDirectory())%> & sv; // = m[sk]; // value type             
+                      // Set the SPL value 
+                      //pySplValueFromPyObject(sv, v);
+                  //} 
                  <%} elsif (SPL::CodeGen::Type::isList(SPL::CodeGen::Type::getValueType($atype))) {
                      my $element_type = SPL::CodeGen::Type::getElementType(SPL::CodeGen::Type::getValueType($atype));  
                      if (SPL::CodeGen::Type::isTuple($element_type)) {
                        $nested_tuple = 1;%>
                   // map of list of tuple: <%=$name%> <%=$atype%>
+                  // SPL map from Python dictionary
+                  //PyObject *k,*v;
+                  //Py_ssize_t pos = 0;
+                  //while (PyDict_Next(value, &pos, &k, &v)) {
+                      //<%=SPL::CodeGen::Type::getKeyType($atype)%> sk; // key type
+                      // Set the SPL key
+                      //pySplValueFromPyObject(sk, k);
+                      //SPL::map<K,V> & m;
+                      // map[] creates the value if it does not exist
+                      // value type <%=SPL::CodeGen::Type::getValueType($atype)%>
+                      //<%=spl_cpp_type($name, 'SPL::map', SPL::CodeGen::Type::getValueType($atype), $model->getContext()->getOutputDirectory())%> & sv; // = m[sk]; // value type             
+                      // Set the SPL value 
+                      //pySplValueFromPyObject(sv, v);
+                  //}  
                    <%}%>
                  <%}%>
                <%}%>
