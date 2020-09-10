@@ -294,14 +294,14 @@ sub convertAndAddToPythonDictionaryObject {
       $get = $get . $spaces."  {\n";
       $get = $get . $spaces."    // SPL Map Conversion to Python dict\n";
       $get = $get . $spaces."    PyObject * pyDict1 = PyDict_New();\n";
-      $get = $get . $spaces."//    for (typename std::tr1::unordered_map<K,V>::const_iterator it = m.begin(); it != m.end(); it++) {\n";
-      $get = $get . $spaces."//      PyObject *k = pySplValueToPyObject(it->first);\n";
-      $get = $get . $spaces."//      PyObject *v =  0;\n";
-      $get = $get . $spaces."//      v = pyDict1;\n";
-      $get = $get . $spaces."//      PyDict_SetItem(pyDict1, k, v);\n";
-      $get = $get . $spaces."//      Py_DECREF(k);\n";
-      $get = $get . $spaces."//      Py_DECREF(v);\n";
-      $get = $get . $spaces."//    }\n";      
+      $get = $get . $spaces."    //for (typename std::tr1::unordered_map<K,V>::const_iterator it = m.begin(); it != m.end(); it++) {\n";
+      $get = $get . $spaces."    //  PyObject *k = pySplValueToPyObject(it->first);\n";
+      $get = $get . $spaces."    //  PyObject *v =  0;\n";
+      $get = $get . $spaces."    //  v = pyDict1;\n";
+      $get = $get . $spaces."    //  PyDict_SetItem(pyDict1, k, v);\n";
+      $get = $get . $spaces."    //  Py_DECREF(k);\n";
+      $get = $get . $spaces."    //  Py_DECREF(v);\n";
+      $get = $get . $spaces."    //}\n";      
       $get = $get . $spaces."    value = pyDict1;\n";
       $get = $get . $spaces."  }\n";
     } elsif (SPL::CodeGen::Type::isList(SPL::CodeGen::Type::getValueType($type))) {
@@ -486,6 +486,9 @@ sub convertAndAddToPythonTupleObject {
   return $get . $settuple . $spaces. "}\n" ;
 }
 
+# opens the xml file for the type header file passed as $type_file for reading
+# does string parsing line by line and checks if $attr and $cpptype and $spltype are present in this file
+# returns 1 if attribute, cpptype and spltype are found in xml file, otherwise 0
 sub is_type_in_file {
   my $attr = $_[0]; # name of the tuple attribute
   my $cpptype = $_[1]; # type to search for
@@ -508,7 +511,7 @@ sub is_type_in_file {
       }
     }
     if ($attrFound == 1) {
-      if ($line =~ m/.*lt;$cpptype&gt;.*/) {
+      if (($line =~ m/.*lt;$cpptype&gt;.*/) or ($line =~ m/.*, $cpptype&gt;.*/) or ($line =~ m/.*SPL:list&lt;$cpptype&gt;.*/)) {
         $cppTypeFound = 1;
       }
     }
@@ -523,33 +526,39 @@ sub is_type_in_file {
   return $result;
 }
 sub spl_cpp_type {
-  my $attr = $_[0]; # name of the tuple attribute
-  my $type = $_[1]; # e.g. SPL::list
-  my $spltype = $_[2]; # e.g. tuple<..>
+  my $attr = $_[0]; # name of the tuple attribute to search for (attribute of type SPL:list or SPL:map with tuple as element type or value type)
+  my $type = $_[1]; # spl type prefix to search for, e.g. SPL::list or SPL::map
+  my $spltype = $_[2]; # embedded/nested tuple type to search for as spl type: e.g. tuple<float64 start_time,float64 end_time,float64 confidence>, provide value type of spl.map or element type of spl.list
   my $output_dir = $_[3]; # $model->getContext()->getOutputDirectory()
 
   my $resultType = "";
   my $cppType;
   my $dir = $output_dir . "/src/type";
   opendir(TYPEDIR, $dir);
+  # we want to know the header files in which we search for type definitions
   @files = grep(/\.h$/,readdir(TYPEDIR));
   closedir(TYPEDIR);
 
   foreach $file (@files) {
-    # Read the file content, type definitions only.
+    # Read the file content of the header file, grep for type definitions only.
     my $filepath = $dir."/".$file;
     open FILE, $filepath or die "The type header file can not be opened: ".$filepath;
     my @content = grep { m/ typedef .*_type;/ } <FILE>;
     chomp @content;
     close FILE;
 
-    # typedef SPL::list<SPL::cppType > attr_type;
+    # type definition in header is like this: typedef SPL::list<SPL::cppType > spotted_type;
+    # parameters are and result variables:           |$type    |$resultType"  |$attr  |
+    #                                                 input     output         input
     foreach (@content) {
       if (m/^\s*typedef\s+(.+)\s+(\w+)_type;\s*$/) {
         if ((index($1, $type) != -1) && (index($2, $attr) != -1)) {
           $cppType = $1;
           $cppType =~ s/^.+:://;
           $cppType =~ s/\>//;
+          $cppType =~ s/ >//g;
+          # the cppType found in headers can exist multiple times, for example same attribute but different tuple types
+          # therefore we check the cpp type with the corresponding spltype in xml file that belongs to the header file in type directory
           if (is_type_in_file($attr, "SPL::".$cppType, $spltype, $dir, $file)) {
             $resultType = "SPL::".$cppType;
           }
