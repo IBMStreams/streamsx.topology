@@ -44,7 +44,7 @@ class NamedTupleNumbersSchema(typing.NamedTuple):
     oc64: typing.Optional[complex] = None
     omi64li64: typing.Optional[typing.Mapping[int,typing.List[int]]] = None
 
-
+#tuple<float64 start_time, float64 end_time, float64 confidence>
 class SpottedSchema(typing.NamedTuple):
     start_time: float
     end_time: float
@@ -53,6 +53,7 @@ class SpottedSchema(typing.NamedTuple):
 class NamedTupleSetOfListofTupleSchema(typing.NamedTuple):
     slt: typing.Set[typing.List[SpottedSchema]]
 
+#tuple<map<rstring, tuple<float64 start_time, float64 end_time, float64 confidence>> keywords_spotted>
 class NamedTupleMapWithTupleSchema(typing.NamedTuple):
     keywords_spotted: typing.Mapping[str,SpottedSchema]
 
@@ -119,6 +120,26 @@ class TripleNestedTupleAmbiguousAttrName(typing.NamedTuple):
     circle: CircleSchema    # contains 'center' as tuple attribute
     torus: DonutSchema      # contains also 'center' as a different tuple type attribute, contains 'rings' attribute
     rings: typing.List[CircleSchema]  # rings with nested (anonymous C++ type)
-    
-    
+
+#tuple<int64 int1, map<string, tuple<int64 x_coord, int64 y_coord>> map1>
+class TupleWithMapToTupleAttr1(typing.NamedTuple):
+    int1: int
+    map1: typing.Mapping[str,Point2DSchema]
+
+#tuple<int64 int2, map<string, tuple<int64 int1, map<rstring, tuple<int64 x_coord, int64 y_coord>> map1>> map2>
+# This schema contains map attributes at different nesting levels with different attribute names and different Value types
+class TupleWithMapToTupleWithMap(typing.NamedTuple):
+    int2: int
+    map2: typing.Mapping[str,TupleWithMapToTupleAttr1]
+
+#tuple<int64 int1, map<string, tuple<int64 int1, map<rstring, tuple<int64 x_coord, int64 y_coord>> map1>> map1>
+# This schema contains map attributes at different nesting levels with equal map attribute name (map1), but different Value types
+class TupleWithMapToTupleWithMapAmbigousMapNames(typing.NamedTuple):
+    int1: int
+    map1: typing.Mapping[str,TupleWithMapToTupleAttr1]
+
+#tuple<int64 int1, map<string, tuple<int64 x_coord, int64 y_coord, int64 z_coord>> map1>
+#class TupleWithMapToTupleAttr2(typing.NamedTuple):
+#    int1: int
+#    map1: typing.Mapping[str,Point3DSchema]
 

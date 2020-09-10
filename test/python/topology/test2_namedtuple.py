@@ -11,7 +11,16 @@ from streamsx.topology.tester import Tester
 import streamsx.spl.op as op
 import typing
 import decimal
-from py36_types import TripleNestedTupleAmbiguousAttrName, NamedTupleBytesSchema, NamedTupleNumbersSchema, NamedTupleNumbersSchema2, NamedTupleListOfTupleSchema, NamedTupleNestedTupleSchema, PersonSchema, SpottedSchema, NamedTupleMapWithTupleSchema, NamedTupleMapWithListTupleSchema, NamedTupleSetOfListofTupleSchema
+from builtins import int
+from py36_types import (TripleNestedTupleAmbiguousAttrName,
+                        NamedTupleBytesSchema, NamedTupleNumbersSchema, NamedTupleNumbersSchema2,
+                        NamedTupleListOfTupleSchema, NamedTupleNestedTupleSchema, 
+                        PersonSchema, SpottedSchema, 
+                        NamedTupleMapWithTupleSchema, 
+                        NamedTupleMapWithListTupleSchema, 
+                        NamedTupleSetOfListofTupleSchema,
+                        TupleWithMapToTupleWithMap,
+                        TupleWithMapToTupleWithMapAmbigousMapNames)
 
 """
 Test that NamedTuples schemas can be passed from and into Python functions as tuples.
@@ -97,7 +106,6 @@ class SourceDictOutMapWithTuple(object):
                 break
             yield {"keywords_spotted": {str(num) : {"start_time": 0.2, "end_time": 0.4, "confidence": 0.4}}}
 
-
 class SourceDictOutMapWithListOfTuple(object):
     def __call__(self) -> typing.Iterable[NamedTupleMapWithListTupleSchema]:
         for num in itertools.count(1):
@@ -105,6 +113,21 @@ class SourceDictOutMapWithListOfTuple(object):
                 break
             yield {"keywords_spotted": {str(num) : [{"start_time": 0.2, "end_time": 0.4, "confidence": 0.4},{"start_time": 0.3, "end_time": 0.6, "confidence": 0.8}]}}
 
+class SourceDictOutMapWithTupleDictAmbiguousMapAttrName(object):
+    def __call__(self) -> typing.Iterable[TupleWithMapToTupleWithMapAmbigousMapNames]:
+        for num in itertools.count(1):
+            if num == 4:
+                break
+            num10 = num * 10
+            num100 = num * 100
+            inner_map1 = {str(num100+1): {'x_coord': 0, 'y_coord': 1},
+                          str(num100+2): {'x_coord': 0, 'y_coord': 2}}
+            inner_map2 = {str(num100+3): {'x_coord': 0, 'y_coord': 10},
+                          str(num100+4): {'x_coord': 0, 'y_coord': 20}}
+            outer_map = {str(num10+1): {'int1': num10+1, 'map1': inner_map1}, 
+                         str(num10+2): {'int1': num10+2, 'map1': inner_map2}}
+            # dict with keys representing the most outer tuple attributes:
+            yield {'int1': num, 'map1': outer_map}
 
 
 class check_numbers_tuple():
@@ -155,6 +178,25 @@ def map_to_TripleNestedTupleAmbiguousAttrName(tpl) -> TripleNestedTupleAmbiguous
     tpl['torus']['radius2'] = tpl['torus']['radius2'] * 10
     return tpl
 
+def map_TupleWithMap_to_TupleWithMapToTupleWithMap(tpl) -> TupleWithMapToTupleWithMap:
+    """
+    map NamedTupleMapWithTupleSchema, which is map<str,SpottedSchema> keywords_spotted to TupleWithMapToTupleWithMap
+    
+    from (SPL): tuple<map<rstring, tuple<float64 start_time, float64 end_time, float64 confidence>> keywords_spotted>
+    to(SPL): tuple<int64 int2, map<string, tuple<int64 int1, map<rstring, tuple<int64 x_coord, int64 y_coord>> map1>> map2>
+    """
+    print('map_TupleWithMap_to_TupleWithMapToTupleWithMap: ' + str(tpl))
+    # we must be called with a dict containing one single key keywords_spotted
+    in_map_attr = tpl['keywords_spotted']
+    out_map2 = {}
+    for k, v in in_map_attr.items():
+        # k is str
+        start_time = str(v['start_time']*100)
+        end_time = int(v['end_time']*100)
+        map1 = {start_time: {'x_coord': 0, 'y_coord': 1}}
+        out_map2[k] = {'int1': end_time, 'map1': map1}
+    oTuple = {'int2': 42, 'map2': out_map2}
+    return oTuple
 
 expected_contents_nested_beacon_source = """{key="0",spotted={start_time=0.1,end_time=0.2,confidence=0.7}}
 {key="1",spotted={start_time=0.1,end_time=0.2,confidence=0.7}}
@@ -188,6 +230,29 @@ Punctuation received: WindowMarker
 Punctuation received: FinalMarker
 """
 
+expected_contents_nested_maps1_beacon = """{int2=42,map2={"0":{int1=20,map1={"10":{x_coord=0,y_coord=1}}}}}
+{int2=42,map2={"1":{int1=20,map1={"10":{x_coord=0,y_coord=1}}}}}
+{int2=42,map2={"2":{int1=20,map1={"10":{x_coord=0,y_coord=1}}}}}
+Punctuation received: WindowMarker
+Punctuation received: FinalMarker
+"""
+
+# must be similar to 'expected_contents_nested_maps1_beacon'
+expected_contents_nested_maps1_py_source = [
+    #                      + iterationcount
+    #                      |            + end_time * 100
+    #                      v            v             + start_time * 100
+    {'int2': 42, 'map2': {'0': {'int1': 20, 'map1': {'10': {'x_coord': 0, 'y_coord': 1}}}}},
+    {'int2': 42, 'map2': {'1': {'int1': 20, 'map1': {'10': {'x_coord': 0, 'y_coord': 1}}}}},
+    {'int2': 42, 'map2': {'2': {'int1': 20, 'map1': {'10': {'x_coord': 0, 'y_coord': 1}}}}},
+    ]
+
+expected_contents_nested_maps2_py_source = """{int1=1,map1={"11":{int1=11,map1={"101":{x_coord=0,y_coord=1},"102":{x_coord=0,y_coord=2}}},"12":{int1=12,map1={"103":{x_coord=0,y_coord=10},"104":{x_coord=0,y_coord=20}}}}}
+{int1=2,map1={"21":{int1=21,map1={"201":{x_coord=0,y_coord=1},"202":{x_coord=0,y_coord=2}}},"22":{int1=22,map1={"203":{x_coord=0,y_coord=10},"204":{x_coord=0,y_coord=20}}}}}
+{int1=3,map1={"31":{int1=31,map1={"301":{x_coord=0,y_coord=1},"302":{x_coord=0,y_coord=2}}},"32":{int1=32,map1={"303":{x_coord=0,y_coord=10},"304":{x_coord=0,y_coord=20}}}}}
+Punctuation received: WindowMarker
+Punctuation received: FinalMarker
+"""
 
 ################################
 debug_named_tuple_output = True
@@ -507,7 +572,7 @@ class TestNamedTupleSource(unittest.TestCase):
         self._test_spl_file(topo, s, tc, expected_contents_nested_py_source, 3)
 
 
-    def test_spl_source_map_of_tuple_py_sink(self):
+    def _test_spl_source_map_of_tuple_py_sink(self):
         # spl source -> python map (python object output) -> python sink
         tc = 'test_spl_source_map_of_tuple_py_sink'
         topo = Topology(tc)
@@ -521,13 +586,17 @@ class TestNamedTupleSource(unittest.TestCase):
             s.print()
         tester = Tester(topo)
         tester.tuple_count(s, 3)
-        #tester.contents(s, TODO check content)
+        tester.contents(s, [
+            {'keywords_spotted': {'0': {'start_time':0.1, 'end_time':0.2, 'confidence':0.5}}},
+            {'keywords_spotted': {'1': {'start_time':0.1, 'end_time':0.2, 'confidence':0.5}}},
+            {'keywords_spotted': {'2': {'start_time':0.1, 'end_time':0.2, 'confidence':0.5}}},
+            ])
         if debug_named_tuple_output:
             self.test_config['topology.keepArtifacts'] = True
         tester.test(self.test_ctxtype, self.test_config)
 
 
-    def test_py_source_map_of_tuple_py_sink(self):
+    def _test_py_source_map_of_tuple_py_sink(self):
         # python source -> python map -> python sink (NamedTupleMapWithTupleSchema)
         tc = 'test_py_source_map_of_tuple_py_sink'
         topo = Topology(tc)
@@ -536,13 +605,17 @@ class TestNamedTupleSource(unittest.TestCase):
             s.print()
         tester = Tester(topo)
         tester.tuple_count(s, 3)
-        #tester.contents(s, TODO check content)
+        tester.contents(s, [
+            {'keywords_spotted': {'1': {'start_time':0.2, 'end_time':0.4, 'confidence':0.4}}},
+            {'keywords_spotted': {'2': {'start_time':0.2, 'end_time':0.4, 'confidence':0.4}}},
+            {'keywords_spotted': {'3': {'start_time':0.2, 'end_time':0.4, 'confidence':0.4}}},
+            ])
         if debug_named_tuple_output:
             self.test_config['topology.keepArtifacts'] = True
         tester.test(self.test_ctxtype, self.test_config)
 
 
-    def test_py_source_map_with_list_of_tuple_py_sink(self):
+    def _test_py_source_map_with_list_of_tuple_py_sink(self):
         # python source -> python map -> python sink (NamedTupleMapWithListTupleSchema)
         tc = 'test_py_source_map_with_list_of_tuple_py_sink'
         topo = Topology(tc)
@@ -551,9 +624,73 @@ class TestNamedTupleSource(unittest.TestCase):
             s.print()
         tester = Tester(topo)
         tester.tuple_count(s, 3)
-        #tester.contents(s, TODO check content)
+        tester.contents(s, [
+            {'keywords_spotted': {'1': [{"start_time":0.2, "end_time":0.4, "confidence":0.4}, {"start_time":0.3, "end_time":0.6, "confidence":0.8}]}},
+            {'keywords_spotted': {'2': [{"start_time":0.2, "end_time":0.4, "confidence":0.4}, {"start_time":0.3, "end_time":0.6, "confidence":0.8}]}},
+            {'keywords_spotted': {'3': [{"start_time":0.2, "end_time":0.4, "confidence":0.4}, {"start_time":0.3, "end_time":0.6, "confidence":0.8}]}},
+            ])
         if debug_named_tuple_output:
             self.test_config['topology.keepArtifacts'] = True
         tester.test(self.test_ctxtype, self.test_config)
 
+    def _test_py_source_map_of_tuple_to_map_of_tpl_w_map_py_sink(self):
+        """
+        python source -> python map -> python sink
+        
+        from (SPL): tuple<map<rstring, tuple<float64 start_time, float64 end_time, float64 confidence>> keywords_spotted>
+        to(SPL): tuple<int64 int2, map<string, tuple<int64 int1, map<rstring, tuple<int64 x_coord, int64 y_coord>> map1>> map2>
+        """
+        tc = 'test_py_source_map_of_tuple_to_map_of_tpl_w_map_py_sink'
+        topo = Topology(tc)
+        s = topo.source(SourceDictOutMapWithTuple())
+        if debug_named_tuple_output:
+            s.print()
+        m = s.map(map_TupleWithMap_to_TupleWithMapToTupleWithMap, 'MapToNestedMaps')
+        if debug_named_tuple_output:
+            m.print()
+        tester = Tester(topo)
+        tester.tuple_count(m, 3)
+        
+        tester.contents(m, expected_contents_nested_maps1_py_source, ordered=True)
+        if debug_named_tuple_output:
+            self.test_config['topology.keepArtifacts'] = True
+        self.maxDiff = None
+        tester.test(self.test_ctxtype, self.test_config)
 
+    def _test_spl_source_map_of_tuple_to_map_of_tpl_w_map_spl_sink(self):
+        """
+        SPL source -> python map -> SPL sink
+        
+        from (SPL): tuple<map<rstring, tuple<float64 start_time, float64 end_time, float64 confidence>> keywords_spotted>
+        to(SPL): tuple<int64 int2, map<string, tuple<int64 int1, map<rstring, tuple<int64 x_coord, int64 y_coord>> map1>> map2>
+        """
+        tc = 'test_spl_source_map_of_tuple_to_map_of_tpl_w_map_spl_sink'
+        topo = Topology(tc)
+        b = op.Source(topo, "spl.utility::Beacon",
+            schema=NamedTupleMapWithTupleSchema,
+            params = {'period': 0.1, 'iterations':3})
+        b.keywords_spotted = b.output('{(rstring) IterationCount(): {start_time=(float64)0.1, end_time=(float64)0.2 , confidence=(float64)0.5}}')
+        bstream = b.stream
+        s = bstream.map(map_TupleWithMap_to_TupleWithMapToTupleWithMap, 'MapToNestedMaps')
+        if debug_named_tuple_output:
+            s.print()
+            self.test_config['topology.keepArtifacts'] = True
+        self.maxDiff = None
+        self._test_spl_file(topo, s, tc, expected_contents_nested_maps1_beacon, 3)
+
+    def _test_py_source_map_of_tpl_w_map_ambiguos_attr_name_spl_sink(self):
+        """
+        Python source -> SPL sink
+        
+        SPL schema: tuple<int64 int1, map<string, tuple<int64 int1, map<rstring, tuple<int64 x_coord, int64 y_coord>> map1>> map1>
+        different value types for a map attribute with same name. We need to test that the right C++ type for 
+        the map's value type is found, even when the attribute name is the same. 
+        """
+        tc = 'test_py_source_map_of_tpl_w_map_ambiguos_attr_name_spl_sink'
+        topo = Topology(tc)
+        s = topo.source(SourceDictOutMapWithTupleDictAmbiguousMapAttrName())
+        if debug_named_tuple_output:
+            s.print()
+            self.test_config['topology.keepArtifacts'] = True
+        self.maxDiff = None
+        self._test_spl_file(topo, s, tc, expected_contents_nested_maps2_py_source, 3)
