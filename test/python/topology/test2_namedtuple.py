@@ -596,7 +596,7 @@ class TestNamedTupleSource(unittest.TestCase):
         tester.test(self.test_ctxtype, self.test_config)
 
 
-    def _test_py_source_map_of_tuple_py_sink(self):
+    def test_py_source_map_of_tuple_py_sink(self):
         # python source -> python map -> python sink (NamedTupleMapWithTupleSchema)
         tc = 'test_py_source_map_of_tuple_py_sink'
         topo = Topology(tc)

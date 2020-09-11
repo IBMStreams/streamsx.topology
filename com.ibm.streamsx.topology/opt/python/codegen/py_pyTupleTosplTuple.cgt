@@ -320,19 +320,18 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
                      $nested_tuple = 1;%>    
                   // map of tuple: <%=$name%> <%=$atype%>
                   // SPL map from Python dictionary
-                  //PyObject *k,*v;
-                  //Py_ssize_t pos = 0;
-                  //while (PyDict_Next(value, &pos, &k, &v)) {
-                	  //<%=SPL::CodeGen::Type::getKeyType($atype)%> sk; // key type
+                  PyObject *value = pyAttrValue;
+                  PyObject *k,*v;
+                  Py_ssize_t pos = 0;
+                  while (PyDict_Next(value, &pos, &k, &v)) {
+                      <%=SPL::CodeGen::Type::getKeyType($atype)%> sk; // key type
                       // Set the SPL key
-                      //pySplValueFromPyObject(sk, k);
-                      //SPL::map<K,V> & m;
+                      pySplValueFromPyObject(sk, k);
                       // map[] creates the value if it does not exist
-                      // value type <%=SPL::CodeGen::Type::getValueType($atype)%>
-                      //<%=spl_cpp_type($name, 'SPL::map', SPL::CodeGen::Type::getValueType($atype), $model->getContext()->getOutputDirectory())%> & sv; // = m[sk]; // value type             
-                      // Set the SPL value 
-                      //pySplValueFromPyObject(sv, v);
-                  //} 
+                      <%=spl_cpp_type($name, 'SPL::map', SPL::CodeGen::Type::getValueType($atype), $model->getContext()->getOutputDirectory())%> & sv = otuple.get_<%=$name%>()[sk];
+                      // Set the SPL value for value type <%=SPL::CodeGen::Type::getValueType($atype)%>
+                      <%print(convertNestedPythonDictionaryToSpl('sv', SPL::CodeGen::Type::getValueType($atype), $spaces."    ", $model->getContext()->getOutputDirectory()));%>
+                  } 
                  <%} elsif (SPL::CodeGen::Type::isList(SPL::CodeGen::Type::getValueType($atype))) {
                      my $element_type = SPL::CodeGen::Type::getElementType(SPL::CodeGen::Type::getValueType($atype));  
                      if (SPL::CodeGen::Type::isTuple($element_type)) {
