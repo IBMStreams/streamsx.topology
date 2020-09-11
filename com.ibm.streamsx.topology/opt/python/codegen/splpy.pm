@@ -278,6 +278,7 @@ sub convertAndAddToPythonDictionaryObject {
   my $names = $_[4];
   my $dictname = $_[5];
   my $spaces = $_[6];
+  my $output_dir = $_[7];
   
   # starts a C++ block and sets value
   my $get;
@@ -294,14 +295,33 @@ sub convertAndAddToPythonDictionaryObject {
       $get = $get . $spaces."  {\n";
       $get = $get . $spaces."    // SPL Map Conversion to Python dict\n";
       $get = $get . $spaces."    PyObject * pyDict1 = PyDict_New();\n";
-      $get = $get . $spaces."    //for (typename std::tr1::unordered_map<K,V>::const_iterator it = m.begin(); it != m.end(); it++) {\n";
-      $get = $get . $spaces."    //  PyObject *k = pySplValueToPyObject(it->first);\n";
-      $get = $get . $spaces."    //  PyObject *v =  0;\n";
-      $get = $get . $spaces."    //  v = pyDict1;\n";
-      $get = $get . $spaces."    //  PyDict_SetItem(pyDict1, k, v);\n";
-      $get = $get . $spaces."    //  Py_DECREF(k);\n";
-      $get = $get . $spaces."    //  Py_DECREF(v);\n";
-      $get = $get . $spaces."    //}\n";      
+      $get = $get . $spaces."    for (typename std::tr1::unordered_map<".SPL::CodeGen::Type::getKeyType($type).",".spl_cpp_type($name, 'SPL::map', SPL::CodeGen::Type::getValueType($type), $output_dir).">::const_iterator it = $ituple.get_$name().begin(); it != $ituple.get_$name().end(); it++) {\n";
+      $get = $get . $spaces."      PyObject *k = pySplValueToPyObject(it->first);\n";
+      $get = $get . $spaces."      PyObject *value = 0;\n";      
+      $get = $get . $spaces."      {\n";
+      $get = $get . $spaces."        PyObject * pyDict1 = PyDict_New();\n";
+      my $ac = 0;
+      for my $_attrName (SPL::CodeGen::Type::getAttributeNames (SPL::CodeGen::Type::getValueType($type))) {  	
+        $ac++;
+      }
+      $get = $get . $spaces."        PyObject * pyNamesNestedTuple = PyTuple_New(".$ac.");\n";
+      my $j = 0;
+      for my $_attrName (SPL::CodeGen::Type::getAttributeNames (SPL::CodeGen::Type::getValueType($type))) {   
+        $get = $get . $spaces."        PyObject * pyName".$j." = pyUnicode_FromUTF8(\"".$_attrName."\");\n"; 
+        $get = $get . $spaces."        PyTuple_SET_ITEM(pyNamesNestedTuple, ".$j.", pyName".$j.");\n";
+        $j++;
+      }
+      my @attrTypes = SPL::CodeGen::Type::getAttributeTypes (SPL::CodeGen::Type::getValueType($type));
+      my @attrNames = SPL::CodeGen::Type::getAttributeNames (SPL::CodeGen::Type::getValueType($type)); 
+      for (my $attr_index = 0; $attr_index < $ac; ++$attr_index) {
+        $get = $get . convertAndAddToPythonDictionaryObject('it->second', $attr_index, $attrTypes[$attr_index], $attrNames[$attr_index], 'pyNamesNestedTuple', 'pyDict1', $spaces."        ", $output_dir);
+      }
+      $get = $get . $spaces."        value = pyDict1;\n";
+      $get = $get . $spaces."      }\n";
+      $get = $get . $spaces."      PyDict_SetItem(pyDict1, k, value);\n";
+      $get = $get . $spaces."      Py_DECREF(k);\n";
+      $get = $get . $spaces."      Py_DECREF(value);\n";
+      $get = $get . $spaces."    }\n";      
       $get = $get . $spaces."    value = pyDict1;\n";
       $get = $get . $spaces."  }\n";
     } elsif (SPL::CodeGen::Type::isList(SPL::CodeGen::Type::getValueType($type))) {
@@ -351,7 +371,7 @@ sub convertAndAddToPythonDictionaryObject {
       my @attrTypes = SPL::CodeGen::Type::getAttributeTypes ($element_type);
       my @attrNames = SPL::CodeGen::Type::getAttributeNames ($element_type); 
       for (my $attr_index = 0; $attr_index < $ac; ++$attr_index) {
-        $get = $get . convertAndAddToPythonDictionaryObject($ituple.'.get_'.$name.'()[list_index]', $attr_index, $attrTypes[$attr_index], $attrNames[$attr_index], 'pyNamesNestedTuple', 'pyDict1', $spaces."        ");
+        $get = $get . convertAndAddToPythonDictionaryObject($ituple.'.get_'.$name.'()[list_index]', $attr_index, $attrTypes[$attr_index], $attrNames[$attr_index], 'pyNamesNestedTuple', 'pyDict1', $spaces."        ", $output_dir);
       }    
       $get = $get . $spaces."        value = pyDict1;\n";
       $get = $get . $spaces."      }\n";
@@ -384,7 +404,7 @@ sub convertAndAddToPythonDictionaryObject {
       my @attrTypes = SPL::CodeGen::Type::getAttributeTypes ($type);
       my @attrNames = SPL::CodeGen::Type::getAttributeNames ($type); 
       for (my $attr_index = 0; $attr_index < $ac; ++$attr_index) {
-        $get = $get . convertAndAddToPythonDictionaryObject($ituple.'.get_'.$name.'()', $attr_index, $attrTypes[$attr_index], $attrNames[$attr_index], 'pyNamesNestedTuple', 'pyDict1', $spaces."    ");
+        $get = $get . convertAndAddToPythonDictionaryObject($ituple.'.get_'.$name.'()', $attr_index, $attrTypes[$attr_index], $attrNames[$attr_index], 'pyNamesNestedTuple', 'pyDict1', $spaces."    ", $output_dir);
       }
       $get = $get . $spaces."    value = pyDict1;\n";
       $get = $get . $spaces."  }\n";
@@ -420,6 +440,7 @@ sub convertAndAddToPythonTupleObject {
   my $type = $_[2];
   my $name = $_[3];
   my $spaces = $_[4];
+  my $output_dir = $_[5];
 
   # starts a C++ block and sets value
   my $get;
@@ -472,7 +493,7 @@ sub convertAndAddToPythonTupleObject {
     my @attrTypes = SPL::CodeGen::Type::getAttributeTypes ($type);
     my @attrNames = SPL::CodeGen::Type::getAttributeNames ($type); 
     for (my $attr_index = 0; $attr_index < $ac; ++$attr_index) {
-      $get = $get . convertAndAddToPythonTupleObject($ituple.'.get_'.$name.'()', $attr_index, $attrTypes[$attr_index], $attrNames[$attr_index], $spaces."    ");
+      $get = $get . convertAndAddToPythonTupleObject($ituple.'.get_'.$name.'()', $attr_index, $attrTypes[$attr_index], $attrNames[$attr_index], $spaces."    ", $output_dir);
     }
     $get = $get . $spaces."  }\n";
     $get = $get . $spaces."  value = pyTuple;\n";

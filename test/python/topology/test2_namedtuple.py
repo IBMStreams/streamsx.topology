@@ -572,7 +572,7 @@ class TestNamedTupleSource(unittest.TestCase):
         self._test_spl_file(topo, s, tc, expected_contents_nested_py_source, 3)
 
 
-    def _test_spl_source_map_of_tuple_py_sink(self):
+    def test_spl_source_map_of_tuple_py_sink(self):
         # spl source -> python map (python object output) -> python sink
         tc = 'test_spl_source_map_of_tuple_py_sink'
         topo = Topology(tc)
@@ -673,7 +673,6 @@ class TestNamedTupleSource(unittest.TestCase):
         bstream = b.stream
         s = bstream.map(map_TupleWithMap_to_TupleWithMapToTupleWithMap, 'MapToNestedMaps')
         if debug_named_tuple_output:
-            s.print()
             self.test_config['topology.keepArtifacts'] = True
         self.maxDiff = None
         self._test_spl_file(topo, s, tc, expected_contents_nested_maps1_beacon, 3)
@@ -690,7 +689,7 @@ class TestNamedTupleSource(unittest.TestCase):
         topo = Topology(tc)
         s = topo.source(SourceDictOutMapWithTupleDictAmbiguousMapAttrName())
         if debug_named_tuple_output:
-            s.print()
-            self.test_config['topology.keepArtifacts'] = True
+             self.test_config['topology.keepArtifacts'] = True
         self.maxDiff = None
         self._test_spl_file(topo, s, tc, expected_contents_nested_maps2_py_source, 3)
+
