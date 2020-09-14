@@ -453,8 +453,11 @@ class StreamSchema(object) :
     Attribute names must start with an ASCII letter or underscore, followed by ASCII letters, digits, or underscores.
 
     When a tuple on a structured stream is passed into a Python callable it
-    is converted to a ``dict``, ``tuple`` or named tuple object containing all attributes of the stream tuple.
+    is converted to a ``dict``, ``tuple`` or **named tuple** object containing all attributes of the stream tuple.
     See :py:meth:`style`, :py:meth:`as_dict` and :py:meth:`as_tuple` for details.
+
+    .. note::
+        When a tuple on a structured stream, that contains **nested tuples**, is passed into a Python callable it is **always** converted to a ``dict`` object containing all attributes of the stream tuple.
 
     When a Python object is submitted to a structured stream,
     for example as the return from the function invoked in a 
@@ -467,7 +470,7 @@ class StreamSchema(object) :
     Args:
         schema(str): Schema definition. Either a schema definition or the name of an SPL type.
 
-    .. versionadded:: 1.16 Support for nested tuples.
+    .. versionadded:: 1.16 Support for nested tuples (conversion to SPL from Python or conversion to Python from SPL)
     """
     def __init__(self, schema):
         schema = schema.strip()
