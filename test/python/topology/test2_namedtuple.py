@@ -643,7 +643,7 @@ class TestNamedTupleSource(unittest.TestCase):
         assert(False == res) # expected result: test failed
         print ('-nested container type- unsupported type check: PASSED')
 
-    def _test_spl_source_map_of_tuple_to_map_of_tpl_w_map_spl_sink(self):
+    def test_spl_source_map_of_tuple_to_map_of_tpl_w_map_spl_sink(self):
         """
         SPL source -> python map -> SPL sink
         
@@ -658,12 +658,12 @@ class TestNamedTupleSource(unittest.TestCase):
         b.keywords_spotted = b.output('{(rstring) IterationCount(): {start_time=(float64)0.1, end_time=(float64)0.2 , confidence=(float64)0.5}}')
         bstream = b.stream
         s = bstream.map(map_TupleWithMap_to_TupleWithMapToTupleWithMap, 'MapToNestedMaps')
-        if debug_named_tuple_output:
-            self.test_config['topology.keepArtifacts'] = True
-        self.maxDiff = None
-        self._test_spl_file(topo, s, tc, expected_contents_nested_maps1_beacon, 3)
+        tester = Tester(topo)
+        res = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
+        assert(False == res) # expected result: test failed
+        print ('-nested container type- unsupported type check: PASSED')
 
-    def _test_py_source_map_of_tpl_w_map_ambiguos_attr_name_spl_sink(self):
+    def test_py_source_map_of_tpl_w_map_ambiguos_attr_name_spl_sink(self):
         """
         Python source -> SPL sink
         
@@ -674,8 +674,8 @@ class TestNamedTupleSource(unittest.TestCase):
         tc = 'test_py_source_map_of_tpl_w_map_ambiguos_attr_name_spl_sink'
         topo = Topology(tc)
         s = topo.source(SourceDictOutMapWithTupleDictAmbiguousMapAttrName())
-        if debug_named_tuple_output:
-             self.test_config['topology.keepArtifacts'] = True
-        self.maxDiff = None
-        self._test_spl_file(topo, s, tc, expected_contents_nested_maps2_py_source, 3)
+        tester = Tester(topo)
+        res = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
+        assert(False == res) # expected result: test failed
+        print ('-nested container type- unsupported type check: PASSED')
 
