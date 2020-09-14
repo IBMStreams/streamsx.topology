@@ -287,6 +287,9 @@ sub convertAndAddToPythonDictionaryObject {
   if (SPL::CodeGen::Type::isMap($type)) {  
     if (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getValueType($type))) {
       $nested_tuple = 1;
+      if ($ituple eq 'it->second') {
+        SPL::CodeGen::errorln("SPL type: " . $type . " is not supported for conversion to Python.");
+      }
       $get = "". $spaces."{\n";
       $get = $get . $spaces."  // SPL Map with tuple as value type\n";
       $get = $get . $spaces."  // key type: ".SPL::CodeGen::Type::getKeyType($type)."\n";    
@@ -328,6 +331,7 @@ sub convertAndAddToPythonDictionaryObject {
       my $element_type = SPL::CodeGen::Type::getElementType(SPL::CodeGen::Type::getValueType($type));  
       if (SPL::CodeGen::Type::isTuple($element_type)) {
       	$nested_tuple = 1;
+      	SPL::CodeGen::errorln("SPL type: " . $type . " is not supported for conversion to Python.");
       $get = "". $spaces."{\n";
       $get = $get . $spaces."  // SPL Map with list of tuple as value type\n";
       $get = $get . $spaces."  // key type: ".SPL::CodeGen::Type::getKeyType($type)."\n";    

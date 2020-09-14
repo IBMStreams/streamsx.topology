@@ -375,7 +375,20 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
                         }
                         <%} elsif ((SPL::CodeGen::Type::isMap($attrTypes[$i-1])) && (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getValueType($attrTypes[$i-1])))) {%>
                         if (pos == <%=$i%>) { // attribute=<%=$attrName%>
-                            // map with tuple as value type: $attrName - $attrTypes[$i]\n";
+                            // map with tuple as value type: <%=$attrName%> - <%=$attrTypes[$i-1]%>\n";
+                            // SPL map from Python dictionary
+                            PyObject *value = pyAttrValue;
+                            PyObject *k,*v;
+                            Py_ssize_t pos = 0;
+                            while (PyDict_Next(value, &pos, &k, &v)) {
+                                <%=SPL::CodeGen::Type::getKeyType($attrTypes[$i-1])%> sk; // key type
+                                // Set the SPL key
+                                pySplValueFromPyObject(sk, k);
+                                // map[] creates the value if it does not exist
+                                <%=spl_cpp_type($name, 'SPL::map', SPL::CodeGen::Type::getValueType($attrTypes[$i-1]), $model->getContext()->getOutputDirectory())%> & sv = otuple.get_<%=$name%>().get_<%=$attrName%>()[sk];
+                                // Set the SPL value for value type
+                                <%print(convertNestedPythonDictionaryToSpl('sv', SPL::CodeGen::Type::getValueType($attrTypes[$i-1]), $spaces."    ", $model->getContext()->getOutputDirectory()));%>
+                            }
                         }
                         <%} elsif ((SPL::CodeGen::Type::isMap($attrTypes[$i-1])) && (SPL::CodeGen::Type::isList(SPL::CodeGen::Type::getValueType($attrTypes[$i-1]))) && (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getElementType(SPL::CodeGen::Type::getValueType($attrTypes[$i-1]))))) {%>
                         if (pos == <%=$i%>) { // attribute=<%=$attrName%>
