@@ -78,7 +78,7 @@ sub splToPythonConversionCheck{
       return;
     }
     if (SPL::CodeGen::Type::isTuple($type)) {
-      return; # XXX NESTED in progress
+      return; # __NESTED_TUPLE__
     }
     SPL::CodeGen::errorln("SPL type: " . $type . " is not supported for conversion to or from Python."); 
 }

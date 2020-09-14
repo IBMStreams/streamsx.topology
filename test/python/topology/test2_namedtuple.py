@@ -347,6 +347,8 @@ class TestNamedTupleSource(unittest.TestCase):
 
         tester = Tester(topo)
         tester.tuple_count(fst, 3)
+        if debug_named_tuple_output:
+            self.test_config['topology.keepArtifacts'] = True
         tester.test(self.test_ctxtype, self.test_config)
 
     def test_numbers_spl_py(self):
@@ -615,25 +617,17 @@ class TestNamedTupleSource(unittest.TestCase):
         tester.test(self.test_ctxtype, self.test_config)
 
 
-    def _test_py_source_map_with_list_of_tuple_py_sink(self):
+    def test_py_source_map_with_list_of_tuple_py_sink(self):
         # python source -> python map -> python sink (NamedTupleMapWithListTupleSchema)
         tc = 'test_py_source_map_with_list_of_tuple_py_sink'
         topo = Topology(tc)
         s = topo.source(SourceDictOutMapWithListOfTuple())
-        if debug_named_tuple_output:
-            s.print()
         tester = Tester(topo)
-        tester.tuple_count(s, 3)
-        tester.contents(s, [
-            {'keywords_spotted': {'1': [{"start_time":0.2, "end_time":0.4, "confidence":0.4}, {"start_time":0.3, "end_time":0.6, "confidence":0.8}]}},
-            {'keywords_spotted': {'2': [{"start_time":0.2, "end_time":0.4, "confidence":0.4}, {"start_time":0.3, "end_time":0.6, "confidence":0.8}]}},
-            {'keywords_spotted': {'3': [{"start_time":0.2, "end_time":0.4, "confidence":0.4}, {"start_time":0.3, "end_time":0.6, "confidence":0.8}]}},
-            ])
-        if debug_named_tuple_output:
-            self.test_config['topology.keepArtifacts'] = True
-        tester.test(self.test_ctxtype, self.test_config)
+        res = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
+        assert(False == res) # expected result: test failed
+        print ('-nested container type- unsupported type check: PASSED')
 
-    def _test_py_source_map_of_tuple_to_map_of_tpl_w_map_py_sink(self):
+    def test_py_source_map_of_tuple_to_map_of_tpl_w_map_py_sink(self):
         """
         python source -> python map -> python sink
         
@@ -643,19 +637,11 @@ class TestNamedTupleSource(unittest.TestCase):
         tc = 'test_py_source_map_of_tuple_to_map_of_tpl_w_map_py_sink'
         topo = Topology(tc)
         s = topo.source(SourceDictOutMapWithTuple())
-        if debug_named_tuple_output:
-            s.print()
         m = s.map(map_TupleWithMap_to_TupleWithMapToTupleWithMap, 'MapToNestedMaps')
-        if debug_named_tuple_output:
-            m.print()
         tester = Tester(topo)
-        tester.tuple_count(m, 3)
-        
-        tester.contents(m, expected_contents_nested_maps1_py_source, ordered=True)
-        if debug_named_tuple_output:
-            self.test_config['topology.keepArtifacts'] = True
-        self.maxDiff = None
-        tester.test(self.test_ctxtype, self.test_config)
+        res = tester.test(self.test_ctxtype, self.test_config, assert_on_fail=False)
+        assert(False == res) # expected result: test failed
+        print ('-nested container type- unsupported type check: PASSED')
 
     def _test_spl_source_map_of_tuple_to_map_of_tpl_w_map_spl_sink(self):
         """
