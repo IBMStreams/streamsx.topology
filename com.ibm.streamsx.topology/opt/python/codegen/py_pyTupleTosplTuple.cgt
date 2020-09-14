@@ -85,8 +85,7 @@ void MY_OPERATOR::fromPyTupleToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupl
     $gencode = $gencode . $spaces . "      " . convertNestedPythonTupleToSpl($otuple.'.get_'.$attrName.'()', $attrTypes[$i], $spaces.'      ', $output_dir) . "\n";
         }
         elsif ((SPL::CodeGen::Type::isMap($attrTypes[$i])) && (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getValueType($attrTypes[$i])))) {          
-    $gencode = $gencode . $spaces . "      // NOT SUPPORTED: map with tuple as value type: $attrName - $attrTypes[$i]\n";
-          SPL::CodeGen::errorln("SPL type: " . $attrTypes[$i] . " is not supported for conversion from Python.");
+    $gencode = $gencode . $spaces . "      // NOT IMPLEMENTED: map with tuple as value type: $attrName - $attrTypes[$i]\n";
         }
         elsif ((SPL::CodeGen::Type::isMap($attrTypes[$i])) && (SPL::CodeGen::Type::isList(SPL::CodeGen::Type::getValueType($attrTypes[$i]))) && (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getElementType(SPL::CodeGen::Type::getValueType($attrTypes[$i]))))) {          
     $gencode = $gencode . $spaces . "      // NOT SUPPORTED: map with list of tuple as value type: $attrName - $attrTypes[$i]\n";
@@ -146,9 +145,8 @@ void MY_OPERATOR::fromPyTupleToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupl
          <%}%> 
          <%if (SPL::CodeGen::Type::isMap($atype)) {
              if (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getValueType($atype))) {
-               $nested_tuple = 1;
-               SPL::CodeGen::errorln("SPL type: " . $atype . " is not supported for conversion from Python.");%>    
-             // NOT SUPPORTED: map with tuple as value type <%=$name%> - <%=$atype%>
+               $nested_tuple = 1;%>    
+             // NOT IMPLEMENTED: map with tuple as value type <%=$name%> - <%=$atype%>
            <%} elsif (SPL::CodeGen::Type::isList(SPL::CodeGen::Type::getValueType($atype))) {
                   my $element_type = SPL::CodeGen::Type::getElementType(SPL::CodeGen::Type::getValueType($atype));  
                   if (SPL::CodeGen::Type::isTuple($element_type)) {
@@ -248,6 +246,9 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
             my $valueType = SPL::CodeGen::Type::getValueType($attrTypes[$i-1]);
             if (SPL::CodeGen::Type::isTuple($valueType)) {
               $nested=1;
+              if ($otuple eq 'sv') {
+                SPL::CodeGen::errorln("SPL type: " . $atype . " is not supported for conversion from Python.");
+              }
       $gencode = $gencode . $spaces . "          if (pos == $i) { // attribute=$attrName\n";
       $gencode = $gencode . $spaces . "            // map with tuple as value type: $attrTypes[$i-1] - $valueType\n";
       $gencode = $gencode . $spaces . "          }\n";
