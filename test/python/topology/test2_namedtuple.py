@@ -754,6 +754,54 @@ Punctuation received: FinalMarker
         self._test_spl_file(topo, s, tc, expected, 3)
 
 
+    def test_spl_source_tuple_tuple_list_nested_tuple_py_sink(self):
+        tc = 'test_spl_source_tuple_tuple_list_nested_tuple_py_sink'
+        topo = Topology(tc)
+        b = op.Source(topo, "spl.utility::Beacon",
+            schema='tuple<rstring s2, tuple<rstring s1, tuple<int64 i64, list<tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>> spottedList> tupleWList> tupleWList2>',
+            params = {'period': 0.1, 'iterations':3})
+        b.s2 = b.output('(rstring)IterationCount()')
+        b.tupleWList2 = b.output('{s1=(rstring)IterationCount(), tupleWList={i64=(int64)IterationCount(),spottedList=[{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8}},{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}]}}')
+        bstream = b.stream
+        s = bstream.map(simple_map, name='MapSPL2PY')
+        if debug_named_tuple_output:
+            s.print()
+        tester = Tester(topo)
+        tester.tuple_count(s, 3)
+        tester.contents(s, [
+            {'s2':"0",'tupleWList2':{'s1':"0",'tupleWList':{'i64':0,'spottedList':[{'key':"k1",'spotted':{'start_time':0.1,'end_time':0.2,'confidence':0.8}},{'key':"k2",'spotted':{'start_time':0.2,'end_time':0.4,'confidence':1.6}}]}}},
+            {'s2':"1",'tupleWList2':{'s1':"1",'tupleWList':{'i64':1,'spottedList':[{'key':"k1",'spotted':{'start_time':0.1,'end_time':0.2,'confidence':0.8}},{'key':"k2",'spotted':{'start_time':0.2,'end_time':0.4,'confidence':1.6}}]}}},
+            {'s2':"2",'tupleWList2':{'s1':"2",'tupleWList':{'i64':2,'spottedList':[{'key':"k1",'spotted':{'start_time':0.1,'end_time':0.2,'confidence':0.8}},{'key':"k2",'spotted':{'start_time':0.2,'end_time':0.4,'confidence':1.6}}]}}}
+            ])
+        if debug_named_tuple_output:
+            self.test_config['topology.keepArtifacts'] = True
+        tester.test(self.test_ctxtype, self.test_config)
+
+
+    def test_spl_source_tuple_tuple_map_nested_tuple_py_sink(self):
+        tc = 'test_spl_source_tuple_tuple_map_nested_tuple_py_sink'
+        topo = Topology(tc)
+        b = op.Source(topo, "spl.utility::Beacon",
+            schema='tuple<rstring s2, tuple<rstring s1, tuple<int64 i64, map<rstring,tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>> spottedMap> tupleWMap> tupleWMap2>',
+            params = {'period': 0.1, 'iterations':3})
+        b.s2 = b.output('(rstring)IterationCount()')
+        b.tupleWMap2 = b.output('{s1=(rstring)IterationCount(), tupleWMap={i64=(int64)IterationCount(),spottedMap={"keyNo1":{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8}},"keyNo2":{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}}}}')
+        bstream = b.stream
+        s = bstream.map(simple_map, name='MapSPL2PY')
+        if debug_named_tuple_output:
+            s.print()
+        tester = Tester(topo)
+        tester.tuple_count(s, 3)
+        tester.contents(s, [
+            {'s2':"0",'tupleWMap2':{'s1':"0",'tupleWMap':{'i64':0,'spottedMap':{"keyNo1":{'key':"k1",'spotted':{'start_time':0.1,'end_time':0.2,'confidence':0.8}},"keyNo2":{'key':"k2",'spotted':{'start_time':0.2,'end_time':0.4,'confidence':1.6}}}}}},
+            {'s2':"1",'tupleWMap2':{'s1':"1",'tupleWMap':{'i64':1,'spottedMap':{"keyNo1":{'key':"k1",'spotted':{'start_time':0.1,'end_time':0.2,'confidence':0.8}},"keyNo2":{'key':"k2",'spotted':{'start_time':0.2,'end_time':0.4,'confidence':1.6}}}}}},
+            {'s2':"2",'tupleWMap2':{'s1':"2",'tupleWMap':{'i64':2,'spottedMap':{"keyNo1":{'key':"k1",'spotted':{'start_time':0.1,'end_time':0.2,'confidence':0.8}},"keyNo2":{'key':"k2",'spotted':{'start_time':0.2,'end_time':0.4,'confidence':1.6}}}}}}
+            ])
+        if debug_named_tuple_output:
+            self.test_config['topology.keepArtifacts'] = True
+        tester.test(self.test_ctxtype, self.test_config)
+
+
     def test_py_source_map_with_list_of_tuple_py_sink(self):
         # python source -> python map -> python sink (NamedTupleMapWithListTupleSchema)
         tc = 'test_py_source_map_with_list_of_tuple_py_sink'
