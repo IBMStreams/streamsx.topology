@@ -16,6 +16,10 @@ from py36_types import (TripleNestedTupleAmbiguousAttrName,
                         NamedTupleBytesSchema, NamedTupleNumbersSchema, NamedTupleNumbersSchema2,
                         NamedTupleListOfTupleSchema, NamedTupleNestedTupleSchema, 
                         PersonSchema, SpottedSchema, 
+                        NamedTupleNestedMap2Schema,
+                        NamedTupleNestedMap3Schema,
+                        NamedTupleNestedList2Schema,
+                        NamedTupleNestedList3Schema,
                         NamedTupleMapWithTupleSchema, 
                         NamedTupleMapWithListTupleSchema, 
                         NamedTupleSetOfListofTupleSchema,
@@ -105,6 +109,72 @@ class SourceDictOutMapWithTuple(object):
             if num == 4:
                 break
             yield {"keywords_spotted": {str(num) : {"start_time": 0.2, "end_time": 0.4, "confidence": 0.4}}}
+
+class SourceNestedTupleNestedMap(object):
+    def __call__(self) -> typing.Iterable[NamedTupleNestedMap3Schema]:
+        for num in itertools.count(1):
+            if num == 4:
+                break
+            #tuple<rstring s2, tuple<rstring s1, tuple<int64 i64, map<rstring,tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>> spottedMap> tupleWMap> tupleWMap2>
+            yield {'s2': str(num), 
+                   'tupleWMap2': {'s1': str(num),
+                                  'tupleWMap': {'i64': num, 
+                                                'spottedMap': {'KeyNo1': {'key': 'k1', 
+                                                                          'spotted': {'start_time': 0.1, 'end_time': 0.2, 'confidence': 0.8}},
+                                                               'KeyNo2': {'key': 'k2',
+                                                                          'spotted': {'start_time': 0.2, 'end_time': 0.4, 'confidence': 1.6}}
+                                                               }
+                                                }
+                                  }
+                   }
+            
+class SourceNestedTupleMap(object):
+    def __call__(self) -> typing.Iterable[NamedTupleNestedMap2Schema]:
+        for num in itertools.count(1):
+            if num == 4:
+                break
+            #tuple<rstring s1, tuple<int64 i64, map<rstring,tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>> spottedMap> tupleWMap>
+            yield {'s1': str(num),
+                   'tupleWMap': {'i64': num, 
+                                 'spottedMap': {'KeyNo1': {'key': 'k1', 
+                                                           'spotted': {'start_time': 0.1, 'end_time': 0.2, 'confidence': 0.8}},
+                                                'KeyNo2': {'key': 'k2',
+                                                           'spotted': {'start_time': 0.2, 'end_time': 0.4, 'confidence': 1.6}}
+                                               }
+                                }
+                   }
+
+class SourceNestedTupleNestedList(object):
+    def __call__(self) -> typing.Iterable[NamedTupleNestedList3Schema]:
+        for num in itertools.count(1):
+            if num == 4:
+                break
+            #tuple<rstring s2, tuple<rstring s1, tuple<int64 i64, list<tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>> spottedList> tupleWList> tupleWList2>
+            yield {'s2': str(num), 
+                   'tupleWList2': {'s1': str(num),
+                                  'tupleWList': {'i64': num, 
+                                                 'spottedList': [
+                                                     {'key': 'k1', 'spotted': {'start_time': 0.1, 'end_time': 0.2, 'confidence': 0.8}},
+                                                     {'key': 'k2', 'spotted': {'start_time': 0.2, 'end_time': 0.4, 'confidence': 1.6}},
+                                                     ]
+                                                 }
+                                   }
+                   }
+
+class SourceNestedTupleList(object):
+    def __call__(self) -> typing.Iterable[NamedTupleNestedList2Schema]:
+        for num in itertools.count(1):
+            if num == 4:
+                break
+            #tuple<rstring s1, tuple<int64 i64, list<tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>> spottedList> tupleWList>
+            yield {'s1': str(num),
+                   'tupleWList': {'i64': num, 
+                                  'spottedList': [
+                                      {'key': 'k1', 'spotted': {'start_time': 0.1, 'end_time': 0.2, 'confidence': 0.8}},
+                                      {'key': 'k2', 'spotted': {'start_time': 0.2, 'end_time': 0.4, 'confidence': 1.6}},
+                                      ]
+                                  }
+                   }
 
 class SourceDictOutMapWithListOfTuple(object):
     def __call__(self) -> typing.Iterable[NamedTupleMapWithListTupleSchema]:
@@ -615,6 +685,73 @@ class TestNamedTupleSource(unittest.TestCase):
         if debug_named_tuple_output:
             self.test_config['topology.keepArtifacts'] = True
         tester.test(self.test_ctxtype, self.test_config)
+
+
+    def _test_py_source_tuple_map_nested_tuple_spl_sink(self):
+        tc = 'test_py_source_tuple_map_nested_tuple_spl_sink'
+        topo = Topology(tc)
+        s = topo.source(SourceNestedTupleMap())
+        if debug_named_tuple_output:
+            s.print()
+        self.maxDiff = None
+        tester = Tester(topo)
+        expected = """{s1="1",tupleWMap={i64=1,spottedMap={'KeyNo1':{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},'KeyNo2':{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}}}
+{s1="2",tupleWMap={i64=2,spottedMap={'KeyNo1':{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},'KeyNo2':{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}}}
+{s1="3",tupleWMap={i64=3,spottedMap={'KeyNo1':{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},'KeyNo2':{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}}}
+Punctuation received: FinalMarker
+"""
+        self._test_spl_file(topo, s, tc, expected, 3)
+
+
+    def _test_py_source_tuple_tuple_map_nested_tuple_spl_sink(self):
+        tc = 'test_py_source_tuple_tuple_map_nested_tuple_spl_sink'
+        topo = Topology(tc)
+        s = topo.source(SourceNestedTupleNestedMap())
+        if debug_named_tuple_output:
+            s.print()
+        self.maxDiff = None
+        tester = Tester(topo)
+        expected = """{s2="1",tupleWMap2={s1="1",tupleWMap={i64=1,spottedMap={'KeyNo1':{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},'KeyNo2':{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}
+}}}}
+{s2="2",tupleWMap2={s1="2",tupleWMap={i64=2,spottedMap={'KeyNo1':{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},'KeyNo2':{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}
+}}}}
+{s2="3",tupleWMap2={s1="3",tupleWMap={i64=3,spottedMap={'KeyNo1':{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},'KeyNo2':{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}
+}}}}
+Punctuation received: FinalMarker
+"""
+        self._test_spl_file(topo, s, tc, expected, 3)
+
+
+    def _test_py_source_tuple_list_nested_tuple_spl_sink(self):
+        tc = 'test_py_source_tuple_list_nested_tuple_spl_sink'
+        topo = Topology(tc)
+        s = topo.source(SourceNestedTupleList())
+        if debug_named_tuple_output:
+            s.print()
+        self.maxDiff = None
+        tester = Tester(topo)
+        expected = """{s1="1",tupleWList={i64=1,spottedList=[{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}]}}
+{s1="2",tupleWList={i64=2,spottedList=[{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}]}
+{s1="3",tupleWList={i64=3,spottedList=[{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}]}
+Punctuation received: FinalMarker
+"""
+        self._test_spl_file(topo, s, tc, expected, 3)
+
+
+    def _test_py_source_tuple_tuple_list_nested_tuple_spl_sink(self):
+        tc = 'test_py_source_tuple_tuple_list_nested_tuple_spl_sink'
+        topo = Topology(tc)
+        s = topo.source(SourceNestedTupleNestedList())
+        if debug_named_tuple_output:
+            s.print()
+        self.maxDiff = None
+        tester = Tester(topo)
+        expected = """{s2="1",tupleWList2={s1="1",tupleWList={i64=1,spottedList=[{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}]}}
+{s2="2",tupleWList2={s1="2",tupleWList={i64=2,spottedList=[{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}]}}
+{s2="3",tupleWList2={s1="3",tupleWList={i64=3,spottedList=[{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}]}}
+Punctuation received: FinalMarker
+"""
+        self._test_spl_file(topo, s, tc, expected, 3)
 
 
     def test_py_source_map_with_list_of_tuple_py_sink(self):
