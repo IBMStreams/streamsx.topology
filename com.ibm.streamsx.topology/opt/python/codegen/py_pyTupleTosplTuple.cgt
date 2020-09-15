@@ -286,6 +286,14 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
               }
       $gencode = $gencode . $spaces . "          if (pos == $i) { // attribute=$attrName\n";
       $gencode = $gencode . $spaces . "            // list of tuple: $attrTypes[$i-1] - $elementType\n";
+      $gencode = $gencode . $spaces . "            PyObject *value = v;\n";
+      $gencode = $gencode . $spaces . "            int list_size = (int)PyList_Size(value);\n";
+      $gencode = $gencode . $spaces . "            for (int list_index = 0; list_index < list_size; ++list_index) {\n";
+      $gencode = $gencode . $spaces . "              ".spl_cpp_type($attrName, 'SPL::list', $elementType, $output_dir)." se; // retrieve cpp type of tuple from generated header files\n";
+      $gencode = $gencode . $spaces . "              $otuple.get_$attrName().add(se); // add tuple to list\n";
+      $gencode = $gencode . $spaces . "              PyObject* v = PyList_GET_ITEM(value, list_index);\n";
+      $gencode = $gencode . $spaces . "             ".convertNestedPythonDictionaryToSpl($otuple.'.get_'.$attrName.'()[list_index]', $elementType, $spaces.'              ', $output_dir)."\n";
+      $gencode = $gencode . $spaces . "            }\n";      
       $gencode = $gencode . $spaces . "          }\n";
             }
           }

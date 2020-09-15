@@ -738,7 +738,7 @@ Punctuation received: FinalMarker
         self._test_spl_file(topo, s, tc, expected, 3)
 
 
-    def _test_py_source_tuple_tuple_list_nested_tuple_spl_sink(self):
+    def test_py_source_tuple_tuple_list_nested_tuple_spl_sink(self):
         tc = 'test_py_source_tuple_tuple_list_nested_tuple_spl_sink'
         topo = Topology(tc)
         s = topo.source(SourceNestedTupleNestedList())
@@ -746,9 +746,9 @@ Punctuation received: FinalMarker
             s.print()
         self.maxDiff = None
         tester = Tester(topo)
-        expected = """{s2="1",tupleWList2={s1="1",tupleWList={i64=1,spottedList=[{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}]}}
-{s2="2",tupleWList2={s1="2",tupleWList={i64=2,spottedList=[{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}]}}
-{s2="3",tupleWList2={s1="3",tupleWList={i64=3,spottedList=[{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}]}}
+        expected = """{s2="1",tupleWList2={s1="1",tupleWList={i64=1,spottedList=[{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8}},{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}]}}}
+{s2="2",tupleWList2={s1="2",tupleWList={i64=2,spottedList=[{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8}},{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}]}}}
+{s2="3",tupleWList2={s1="3",tupleWList={i64=3,spottedList=[{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8}},{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}]}}}
 Punctuation received: FinalMarker
 """
         self._test_spl_file(topo, s, tc, expected, 3)
