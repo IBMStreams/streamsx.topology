@@ -252,7 +252,7 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
       $gencode = $gencode . $spaces . "          if (pos == $i) { // attribute=$attrName\n";
       $gencode = $gencode . $spaces . "            // map with tuple as value type: $attrTypes[$i-1] - $valueType\n";
       $gencode = $gencode . $spaces . "            // SPL map from Python dictionary\n";
-      $gencode = $gencode . $spaces . "            PyObject *value = pyAttrValue;\n";
+      $gencode = $gencode . $spaces . "            PyObject *value = v;\n";
       $gencode = $gencode . $spaces . "            PyObject *k,*v;\n";
       $gencode = $gencode . $spaces . "            Py_ssize_t pos = 0;\n";
       $gencode = $gencode . $spaces . "            while (PyDict_Next(value, &pos, &k, &v)) {\n";
@@ -402,7 +402,7 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
                         if (pos == <%=$i%>) { // attribute=<%=$attrName%>
                             // map with tuple as value type: <%=$attrName%> - <%=$attrTypes[$i-1]%>
                             // SPL map from Python dictionary
-                            PyObject *value = pyAttrValue;
+                            PyObject *value = v;
                             PyObject *k,*v;
                             Py_ssize_t pos = 0;
                             while (PyDict_Next(value, &pos, &k, &v)) {
