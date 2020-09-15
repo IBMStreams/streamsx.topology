@@ -93,7 +93,7 @@ class NamedTupleNestedMap2Schema(typing.NamedTuple):
     s1: str
     tupleWMap: NamedTupleMapOfNestedTupleSchema
 
-#tuple<rstring s2, tuple<rstring s1, tuple<int64 i64, map<rstring,tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>> spottedMap> tupleWMap> tupleWMap2>
+#tuple<rstring s2, tuple<rstring s1, tuple<int64 i64, map<rstring, tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>> spottedMap> tupleWMap> tupleWMap2>
 class NamedTupleNestedMap3Schema(typing.NamedTuple):
     s2: str
     tupleWMap2: NamedTupleNestedMap2Schema

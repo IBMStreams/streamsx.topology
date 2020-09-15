@@ -115,7 +115,7 @@ class SourceNestedTupleNestedMap(object):
         for num in itertools.count(1):
             if num == 4:
                 break
-            #tuple<rstring s2, tuple<rstring s1, tuple<int64 i64, map<rstring,tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>> spottedMap> tupleWMap> tupleWMap2>
+            #tuple<rstring s2, tuple<rstring s1, tuple<int64 i64, map<rstring, tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>> spottedMap> tupleWMap> tupleWMap2>
             yield {'s2': str(num), 
                    'tupleWMap2': {'s1': str(num),
                                   'tupleWMap': {'i64': num, 
@@ -133,7 +133,7 @@ class SourceNestedTupleMap(object):
         for num in itertools.count(1):
             if num == 4:
                 break
-            #tuple<rstring s1, tuple<int64 i64, map<rstring,tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>> spottedMap> tupleWMap>
+            #tuple<rstring s1, tuple<int64 i64, map<rstring, tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>> spottedMap> tupleWMap>
             yield {'s1': str(num),
                    'tupleWMap': {'i64': num, 
                                  'spottedMap': {'KeyNo1': {'key': 'k1', 
@@ -325,7 +325,7 @@ Punctuation received: FinalMarker
 """
 
 ################################
-debug_named_tuple_output = True
+debug_named_tuple_output = False
 ################################
 
 class TestNamedTupleSource(unittest.TestCase):
@@ -687,36 +687,29 @@ class TestNamedTupleSource(unittest.TestCase):
         tester.test(self.test_ctxtype, self.test_config)
 
 
-    def _test_py_source_tuple_map_nested_tuple_spl_sink(self):
+    def test_py_source_tuple_map_nested_tuple_spl_sink(self):
         tc = 'test_py_source_tuple_map_nested_tuple_spl_sink'
         topo = Topology(tc)
         s = topo.source(SourceNestedTupleMap())
-        if debug_named_tuple_output:
-            s.print()
         self.maxDiff = None
         tester = Tester(topo)
-        expected = """{s1="1",tupleWMap={i64=1,spottedMap={'KeyNo1':{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},'KeyNo2':{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}}}
-{s1="2",tupleWMap={i64=2,spottedMap={'KeyNo1':{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},'KeyNo2':{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}}}
-{s1="3",tupleWMap={i64=3,spottedMap={'KeyNo1':{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},'KeyNo2':{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}}}
+        expected = """{s1="1",tupleWMap={i64=1,spottedMap={"KeyNo1":{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8}},"KeyNo2":{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}}}}
+{s1="2",tupleWMap={i64=2,spottedMap={"KeyNo1":{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8}},"KeyNo2":{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}}}}
+{s1="3",tupleWMap={i64=3,spottedMap={"KeyNo1":{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8}},"KeyNo2":{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}}}}
 Punctuation received: FinalMarker
 """
         self._test_spl_file(topo, s, tc, expected, 3)
 
 
-    def _test_py_source_tuple_tuple_map_nested_tuple_spl_sink(self):
+    def test_py_source_tuple_tuple_map_nested_tuple_spl_sink(self):
         tc = 'test_py_source_tuple_tuple_map_nested_tuple_spl_sink'
         topo = Topology(tc)
         s = topo.source(SourceNestedTupleNestedMap())
-        if debug_named_tuple_output:
-            s.print()
         self.maxDiff = None
         tester = Tester(topo)
-        expected = """{s2="1",tupleWMap2={s1="1",tupleWMap={i64=1,spottedMap={'KeyNo1':{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},'KeyNo2':{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}
-}}}}
-{s2="2",tupleWMap2={s1="2",tupleWMap={i64=2,spottedMap={'KeyNo1':{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},'KeyNo2':{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}
-}}}}
-{s2="3",tupleWMap2={s1="3",tupleWMap={i64=3,spottedMap={'KeyNo1':{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8},'KeyNo2':{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}
-}}}}
+        expected = """{s2="1",tupleWMap2={s1="1",tupleWMap={i64=1,spottedMap={"KeyNo1":{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8}},"KeyNo2":{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}}}}}
+{s2="2",tupleWMap2={s1="2",tupleWMap={i64=2,spottedMap={"KeyNo1":{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8}},"KeyNo2":{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}}}}}
+{s2="3",tupleWMap2={s1="3",tupleWMap={i64=3,spottedMap={"KeyNo1":{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8}},"KeyNo2":{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}}}}}
 Punctuation received: FinalMarker
 """
         self._test_spl_file(topo, s, tc, expected, 3)
@@ -726,8 +719,6 @@ Punctuation received: FinalMarker
         tc = 'test_py_source_tuple_list_nested_tuple_spl_sink'
         topo = Topology(tc)
         s = topo.source(SourceNestedTupleList())
-        if debug_named_tuple_output:
-            s.print()
         self.maxDiff = None
         tester = Tester(topo)
         expected = """{s1="1",tupleWList={i64=1,spottedList=[{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8}},{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}]}}
@@ -742,8 +733,6 @@ Punctuation received: FinalMarker
         tc = 'test_py_source_tuple_tuple_list_nested_tuple_spl_sink'
         topo = Topology(tc)
         s = topo.source(SourceNestedTupleNestedList())
-        if debug_named_tuple_output:
-            s.print()
         self.maxDiff = None
         tester = Tester(topo)
         expected = """{s2="1",tupleWList2={s1="1",tupleWList={i64=1,spottedList=[{key="k1",spotted={start_time=0.1,end_time=0.2,confidence=0.8}},{key="k2",spotted={start_time=0.2,end_time=0.4,confidence=1.6}}]}}}
