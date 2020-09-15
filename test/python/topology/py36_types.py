@@ -63,9 +63,41 @@ class NamedTupleMapWithListTupleSchema(typing.NamedTuple):
 class NamedTupleListOfTupleSchema(typing.NamedTuple):
     spotted: typing.List[SpottedSchema]
 
+#tuple<rstring str, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>
 class NamedTupleNestedTupleSchema(typing.NamedTuple):
     key: str
     spotted: SpottedSchema
+    
+#tuple<int64 i64, list<tuple<rstring str, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>> spottedList>
+class NamedTupleListOfNestedTupleSchema(typing.NamedTuple):
+    i64: int
+    spottedList: typing.List[NamedTupleNestedTupleSchema]
+
+#tuple<rstring s1, tuple<int64 i64, list<tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>> spottedList> tupleWList>
+class NamedTupleNestedList2Schema(typing.NamedTuple):
+    s1: str
+    tupleWList: NamedTupleListOfNestedTupleSchema
+
+#tuple<rstring s2, tuple<rstring s1, tuple<int64 i64, list<tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>> spottedList> tupleWList> tupleWList2>
+class NamedTupleNestedList3Schema(typing.NamedTuple):
+    s2: str
+    tupleWList2: NamedTupleNestedList2Schema
+    
+#tuple<int64 i64, map<rstring, tuple<rstring str, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>> spotted>
+class NamedTupleMapOfNestedTupleSchema(typing.NamedTuple):
+    i64: int
+    spottedMap: typing.Mapping[str,NamedTupleNestedTupleSchema]
+
+#tuple<rstring s1, tuple<int64 i64, map<rstring, tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>> spottedMap> tupleWMap>
+class NamedTupleNestedMap2Schema(typing.NamedTuple):
+    s1: str
+    tupleWMap: NamedTupleMapOfNestedTupleSchema
+
+#tuple<rstring s2, tuple<rstring s1, tuple<int64 i64, map<rstring,tuple<rstring key, tuple<float64 start_time, float64 end_time, float64 confidence> spotted>> spottedMap> tupleWMap> tupleWMap2>
+class NamedTupleNestedMap3Schema(typing.NamedTuple):
+    s2: str
+    tupleWMap2: NamedTupleNestedMap2Schema
+
 
 class TestSchema(typing.NamedTuple):
     flag: bool
