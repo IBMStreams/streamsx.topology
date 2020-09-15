@@ -251,6 +251,19 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
               }
       $gencode = $gencode . $spaces . "          if (pos == $i) { // attribute=$attrName\n";
       $gencode = $gencode . $spaces . "            // map with tuple as value type: $attrTypes[$i-1] - $valueType\n";
+      $gencode = $gencode . $spaces . "            // SPL map from Python dictionary\n";
+      $gencode = $gencode . $spaces . "            PyObject *value = pyAttrValue;\n";
+      $gencode = $gencode . $spaces . "            PyObject *k,*v;\n";
+      $gencode = $gencode . $spaces . "            Py_ssize_t pos = 0;\n";
+      $gencode = $gencode . $spaces . "            while (PyDict_Next(value, &pos, &k, &v)) {\n";
+      $gencode = $gencode . $spaces . "              ".SPL::CodeGen::Type::getKeyType($attrTypes[$i-1])." sk; // key type\n";
+      $gencode = $gencode . $spaces . "              // Set the SPL key\n";
+      $gencode = $gencode . $spaces . "              pySplValueFromPyObject(sk, k);\n";
+      $gencode = $gencode . $spaces . "              // map[] creates the value if it does not exist\n";
+      $gencode = $gencode . $spaces . "             ".spl_cpp_type($attrName, 'SPL::map', SPL::CodeGen::Type::getValueType($attrTypes[$i-1]), $output_dir)." & sv = otuple.get_".$attrName."()[sk];\n";
+      $gencode = $gencode . $spaces . "              // Set the SPL value for value type\n";
+      $gencode = $gencode . $spaces . "             ".convertNestedPythonDictionaryToSpl('sv', SPL::CodeGen::Type::getValueType($attrTypes[$i-1]), $spaces.'           ', $output_dir)."\n";
+      $gencode = $gencode . $spaces . "            }\n";
       $gencode = $gencode . $spaces . "          }\n";
             }
             elsif (SPL::CodeGen::Type::isList($valueType)) {
@@ -268,6 +281,9 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
         	my $elementType = SPL::CodeGen::Type::getElementType($attrTypes[$i-1]);
             if (SPL::CodeGen::Type::isTuple($elementType)) {
               $nested=1;
+              if ($otuple eq 'sv') {
+                SPL::CodeGen::errorln("SPL type: " . $atype . " is not supported for conversion from Python.");
+              }
       $gencode = $gencode . $spaces . "          if (pos == $i) { // attribute=$attrName\n";
       $gencode = $gencode . $spaces . "            // list of tuple: $attrTypes[$i-1] - $elementType\n";
       $gencode = $gencode . $spaces . "          }\n";
