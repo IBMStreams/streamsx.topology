@@ -308,16 +308,7 @@ def _attribute_names(types):
 # suitable for use in creating a typing.NamedTuple
 def _attribute_pytypes(types):
     pytypes = []
-    for attr in types:
-        #if isinstance(attr[0], tuple):
-        #    str1 = str(attr[0])
-        #    if len(str1) > 2:
-        #        if str1.startswith('tuple', 2, len(str1)):
-        #            pytypes1 = []
-        #            pytypes1.append(_attribute_pytypes(attr[0][1]))
-        #            pytypes.append((attr[1], 'NestedSchema')) ## __NESTED_TUPLE__ TODO fill type correctly
-        #else:
-        #    pytypes.append((attr[1], _type_from_spl(attr[0])))   
+    for attr in types: 
         pytypes.append((attr[1], _type_from_spl(attr[0])))
     return pytypes
 
