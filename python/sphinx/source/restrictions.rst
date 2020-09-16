@@ -2,6 +2,7 @@
 Restrictions and known bugs
 ###########################
 
+* For Python development outside of a CP4D, for example with a Jupyter notebook outside of CP4D, you must use an Anaconda or Miniconda Python installation.
 * No support for nested parallel regions at sources, i.e. nested :py:func:`streamsx.topology.topology.Stream.set_parallel`, for example::
 
     topo = Topology()
@@ -10,22 +11,49 @@ Restrictions and known bugs
 
   In this example, `set_parallel(3)` is ignored.
 
-* No support for nested types container types when defining stream schemas, for example a map with a tuple as value type is supported, but not if this is part of another map as value type::
+* No schema support for container types (list, map, set, and the like) with non-primitive value or element types as value or element types for other containers, also when encapsulated in a named tuple::
 
-    #tuple<int64 x_coord, int64 y_coord>
-    class Point2DSchema(typing.NamedTuple):
-        x_coord: int
-        y_coord: int
+    class A_schema(typing.NamedTuple):
+        x: int
+        y: int
 
-    #tuple<int64 int1, map<string, tuple<int64 x_coord, int64 y_coord>> map1>
-    class TupleWithMapToTupleAttr1(typing.NamedTuple):
-        int1: int
-        map1: typing.Mapping[str,Point2DSchema] # supported
-    
-    #tuple<int64 int2, map<string, tuple<int64 int1, map<rstring, tuple<int64 x_coord, int64 y_coord>> map1>> map2>
-    class TupleWithMapToTupleWithMap(typing.NamedTuple):
-        int2: int
-        map2: typing.Mapping[str,TupleWithMapToTupleAttr1] # not supported
+    class B_schema(typing.NamedTuple):
+        a_list: typing.List[A_schema]     # supported, A_schema does not contain a container type at all
+
+    class C_schema(typing.NamedTuple):
+        c1: str
+        c2: B_schema                      # supported, a container type can be nested at any depth
+
+    class D_schema(typing.NamedTuple):
+        d1: str
+        d2: typing.Mapping[int, typing.List[int]       # supported
+        d3: typing.Mapping[int, typing.List[A_schema]  # not supported: a container with non-primitive element type is direct value type of a map
+
+    class E_schema(typing.NamedTuple):
+        e1: bool
+        e2: typing.Mapping[str, C_schema]   # not supported: C_schema.c2.a_list is a list with non-primitive element type
+
+* Schemas support only primitive types for the key type of a map::
+
+    class A_schema(typing.NamedTuple):
+        a1: int
+        a2: int
+
+    class B_schema(typing.NamedTuple):
+        b1: str
+        b2: typing.Mapping[str, A_schema]   # supported
+        b3: typing.Mapping[A_schema, str]   # not supported, A_schema not supported as key type
+
+* Schemas support only primitive types as element type of a set::
+
+    class A_schema(typing.NamedTuple):
+        a1: int
+        a2: int
+
+    class B_schema(typing.NamedTuple):
+        b1: int
+        b2: typing.Set[int]       # supported
+        b3: typing.Set[A_schema]  # not supported
 
 * Python Composites (derived from :py:class:`streamsx.topology.composite.Composite`) can have only one input port.
 * No support to process final marker (end of stream) in Python Callables like in SPL operators
