@@ -56,7 +56,7 @@ my $ipv = $iport->getCppTupleName();
 
      for (my $i = 0; $i < $iport->getNumberOfAttributes(); ++$i) {
          my $la = $iport->getAttributeAt($i);
-         print convertAndAddToPythonDictionaryObject($ipv, $i, $la->getSPLType(), $la->getName(), 'pyInNames_' . $ppn);
+         print convertAndAddToPythonDictionaryObject($ipv, $i, $la->getSPLType(), $la->getName(), 'pyInNames_' . $ppn, 'pyDict', "    ", $model->getContext()->getOutputDirectory());
      }
 %>
 // END-Processing passing SPL tuple as a Python dictionary

@@ -308,7 +308,7 @@ def _attribute_names(types):
 # suitable for use in creating a typing.NamedTuple
 def _attribute_pytypes(types):
     pytypes = []
-    for attr in types:
+    for attr in types: 
         pytypes.append((attr[1], _type_from_spl(attr[0])))
     return pytypes
 
@@ -415,11 +415,19 @@ class StreamSchema(object) :
     ``optional<T>``               Optional value of type `T`      Value of type `T`, or None                 Value of for type ``T``
     ``enum{id [,...]}``           Enumeration                     Not supported                              Not supported
     ``xml``                       XML value                       Not supported                              Not supported
-    ``tuple<type name [, ...]>``  Nested tuple                    Not supported                              Not supported
+    ``tuple<type name [, ...]>``  Nested tuple                    ```dict```                                 ```dict``
     ============================  ==============================  =========================================  =======================================
 
     .. note::
         Type `optional<T>` requires IBM Streams 4.3 or later.
+
+    .. note::
+
+        Conversion to or from Python:
+
+        * Type `set<T>` is restricted to primitive types
+
+        * Type `map<K,V>` is restricted to primitive types for the key type K
 
     Python representation is how an attribute value in a structured schema is passed into a Python function. 
 
@@ -436,8 +444,11 @@ class StreamSchema(object) :
     Attribute names must start with an ASCII letter or underscore, followed by ASCII letters, digits, or underscores.
 
     When a tuple on a structured stream is passed into a Python callable it
-    is converted to a ``dict``, ``tuple`` or named tuple object containing all attributes of the stream tuple.
+    is converted to a ``dict``, ``tuple`` or **named tuple** object containing all attributes of the stream tuple.
     See :py:meth:`style`, :py:meth:`as_dict` and :py:meth:`as_tuple` for details.
+
+    .. note::
+        When a tuple on a structured stream, that contains **nested tuples**, is passed into a Python callable it is **always** converted to a ``dict`` object containing all attributes of the stream tuple.
 
     When a Python object is submitted to a structured stream,
     for example as the return from the function invoked in a 
@@ -449,6 +460,8 @@ class StreamSchema(object) :
 
     Args:
         schema(str): Schema definition. Either a schema definition or the name of an SPL type.
+
+    .. versionadded:: 1.16 Support for nested tuples (conversion to SPL from Python or conversion to Python from SPL)
     """
     def __init__(self, schema):
         schema = schema.strip()
@@ -763,19 +776,48 @@ class CommonSchema(enum.Enum):
         return str(self.schema())
 
 def _from_named_tuple(nt):
-    spl_types = []
-    for name in nt._fields:
-        spl_types.append(_spl_from_type(nt._field_types[name]))
+    nested = 0
 
-    td = 'tuple<'
-    for i in range(len(nt._fields)):
+    i = 0
+    td = 'tuple<'    
+    for name in nt._fields:
         if i:
             td += ', '
-        td += spl_types[i]
+        typeval = _spl_from_type(nt._field_types[name])
+        # special handling for nested tuple types
+        if typeval.startswith('tuple') or typeval.startswith('list<tuple'): # __NESTED_TUPLE__
+            nested = 1
+        if typeval.startswith('map<'):
+            if 'tuple<' in typeval:
+                nested = 1
+        if typeval.startswith('set<'):
+            if 'tuple<' in typeval:
+                nested = 1
+        td += typeval
         td += ' '
-        td += nt._fields[i]
+        td += name
+        i = i + 1
     td += '>'
+    
+    # For nested tuple types use dict as prefered python object instead of named tuple (problems with named tuples classes)
+    if nested: # __NESTED_TUPLE__
+        return StreamSchema(td)
     return StreamSchema(td).as_tuple(named=nt.__name__)
+    
+    
+def _from_named_tuple_subclass(nt):
+    i = 0
+    td = ''
+    for name in nt._fields:
+        if i:
+            td += ', '
+        typeval = _spl_from_type(nt._field_types[name])
+        td += typeval
+        td += ' '
+        td += name
+        i = i + 1
+    return td
+ 
 
 def _spl_from_type(type_):
     _init_type_mappings()
@@ -801,13 +843,16 @@ def _spl_from_type(type_):
             et = type_.__args__[0] if type_.__args__[1] is type(None) else type_.__args__[1]
             if typing.Optional[et] == type_:
                 return 'optional<' + _spl_from_type(et) + '>'
-    raise ValueError("Unsupported type: " + str(type_))
+    if _is_namedtuple(type_):
+        # special handling for nested tuple
+        return 'tuple<' + _from_named_tuple_subclass(type_) + '>'
+    else:
+        raise ValueError("Unsupported type: " + str(type_))
 
 def _type_from_spl(type_):
     _init_type_mappings()
     if type_ in _SPLTYPE_TO_PY:
         return _SPLTYPE_TO_PY[type_]
-
     if isinstance(type_, tuple):
         if type_[0] == 'list':
             return typing.List[_type_from_spl(type_[1])]

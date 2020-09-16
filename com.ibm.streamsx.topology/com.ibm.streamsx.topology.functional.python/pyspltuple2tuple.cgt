@@ -10,18 +10,18 @@
 
   PyObject *value = 0;
   {
-  SplpyGIL locktuple;
-  PyObject * pyTuple = PyTuple_New(<%=$inputAttrs2Py%>);
+    SplpyGIL locktuple;
+    PyObject * pyTuple = PyTuple_New(<%=$inputAttrs2Py%>);
+    // convertAndAddToPythonTupleObject
 <%
      for (my $i = 0; $i < $inputAttrs2Py; ++$i) {
          my $la = $iport->getAttributeAt($i);
-         print convertAndAddToPythonTupleObject($iport->getCppTupleName(), $i, $la->getSPLType(), $la->getName());
+         print convertAndAddToPythonTupleObject($iport->getCppTupleName(), $i, $la->getSPLType(), $la->getName(), "    ", $model->getContext()->getOutputDirectory());
      }
 %>
 <% if ($pystyle_nt) { %>
     pyTuple = streamsx::topology::SplpyGeneral::pyCallObject(pyNamedtupleCls_, pyTuple);
-
 <% } %>
 
-  value = pyTuple;
+    value = pyTuple;
   }

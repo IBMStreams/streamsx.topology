@@ -62,6 +62,56 @@ void MY_OPERATOR::fromPyTupleToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupl
   if (defined $iport) {
     print 'bool setAttr = false;';
   }
+  my $spaces = '                  ';
+  # handle nested tuples __NESTED_TUPLE__
+  sub convertNestedPythonTupleToSpl {
+    my $otuple = $_[0];
+    my $atype = $_[1];
+    my $spaces = $_[2];
+    my $output_dir = $_[3]; # $model->getContext()->getOutputDirectory()
+    my $gencode;
+    $gencode = "\n";
+    $gencode = $gencode . $spaces . "{\n";
+    $gencode = $gencode . $spaces . "  PyObject *pyTuple = pyAttrValue;\n";
+    my @attrTypes = SPL::CodeGen::Type::getAttributeTypes ($atype);
+    my $i=0;
+    for my $attrName (SPL::CodeGen::Type::getAttributeNames ($atype)) {
+    $gencode = $gencode . $spaces . "  // $attrName - $attrTypes[$i]\n";
+    $gencode = $gencode . $spaces . "  {\n";
+    $gencode = $gencode . $spaces . "    PyObject *pyAttrValue = PyTuple_GET_ITEM(pyTuple, $i);\n";
+    $gencode = $gencode . $spaces . "    if (!SplpyGeneral::isNone(pyAttrValue)) {\n";
+        if (SPL::CodeGen::Type::isTuple($attrTypes[$i])) {
+    $gencode = $gencode . $spaces . "      // tuple type: $attrName - $attrTypes[$i]\n";    
+    $gencode = $gencode . $spaces . "      " . convertNestedPythonTupleToSpl($otuple.'.get_'.$attrName.'()', $attrTypes[$i], $spaces.'      ', $output_dir) . "\n";
+        }
+        elsif ((SPL::CodeGen::Type::isMap($attrTypes[$i])) && (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getValueType($attrTypes[$i])))) {          
+    $gencode = $gencode . $spaces . "      // NOT IMPLEMENTED: map with tuple as value type: $attrName - $attrTypes[$i]\n";
+        }
+        elsif ((SPL::CodeGen::Type::isMap($attrTypes[$i])) && (SPL::CodeGen::Type::isList(SPL::CodeGen::Type::getValueType($attrTypes[$i]))) && (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getElementType(SPL::CodeGen::Type::getValueType($attrTypes[$i]))))) {          
+    $gencode = $gencode . $spaces . "      // NOT SUPPORTED: map with list of tuple as value type: $attrName - $attrTypes[$i]\n";
+          SPL::CodeGen::errorln("SPL type: " . $attrTypes[$i] . " is not supported for conversion from Python.");
+        }
+        elsif ((SPL::CodeGen::Type::isList($attrTypes[$i])) && (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getElementType($attrTypes[$i])))) {
+          my $element_type = SPL::CodeGen::Type::getElementType($attrTypes[$i]);
+    $gencode = $gencode . $spaces . "      // list of tuple: $attrName - $element_type\n";
+    $gencode = $gencode . $spaces . "      int list_size = (int)PyList_Size(pyAttrValue);\n";
+    $gencode = $gencode . $spaces . "      for (int list_index = 0; list_index < list_size; ++list_index) {\n";
+    $gencode = $gencode . $spaces . "        " . spl_cpp_type($attrName, 'SPL::list', $element_type, $model->getContext()->getOutputDirectory()) . " se; // retrieve cpp type of tuple from generated header files\n";
+    $gencode = $gencode . $spaces . "        $otuple.get_$attrName().add(se); // add tuple to list\n";
+    $gencode = $gencode . $spaces . "        PyObject* v = PyList_GET_ITEM(pyAttrValue, list_index);\n";
+    $gencode = $gencode . $spaces . "        " . convertNestedPythonTupleToSpl($otuple.'.get_'.$attrName.'()[list_index]', SPL::CodeGen::Type::getElementType($attrTypes[$i]), $spaces.'        ', $output_dir) . "\n";
+    $gencode = $gencode . $spaces . "      }\n";    
+        }
+        else {                        
+    $gencode = $gencode . $spaces . "      streamsx::topology::pySplValueFromPyObject($otuple.get_$attrName(), pyAttrValue);\n";
+        }
+    $gencode = $gencode . $spaces . "    }\n";
+    $gencode = $gencode . $spaces . "  }\n";
+        $i++;
+    }
+    $gencode = $gencode . $spaces . "}\n";
+    return $gencode;
+}
 
   for (my $ai = 0; $ai < $oport->getNumberOfAttributes(); ++$ai) {
     
@@ -78,15 +128,49 @@ void MY_OPERATOR::fromPyTupleToSPLTuple(PyObject *pyTuple, <%=$oport->getCppTupl
          // Value from the Python function
          PyObject *pyAttrValue = PyTuple_GET_ITEM(pyTuple, <%=$ai%>);
          if (!SplpyGeneral::isNone(pyAttrValue)) {
-                  streamsx::topology::pySplValueFromPyObject(
-                               otuple.get_<%=$name%>(), pyAttrValue);
+         <%my $nested_tuple = 0;%>
+         <%if (SPL::CodeGen::Type::isList($atype)) {
+             my $element_type = SPL::CodeGen::Type::getElementType($atype);  
+             if (SPL::CodeGen::Type::isTuple($element_type)) {%> 
+             <%$nested_tuple = 1;%>
+             // list of tuple <%=$name%> - <%=$element_type%>
+             int list_size = (int)PyList_Size(pyAttrValue);
+             for (int list_index = 0; list_index < list_size; ++list_index) {
+                 <%=spl_cpp_type($name, 'SPL::list', $element_type, $model->getContext()->getOutputDirectory())%> se; // retrieve cpp type of tuple from generated header files
+                 otuple.get_<%=$name%>().add(se); // add tuple to list
+                 PyObject* v = PyList_GET_ITEM(pyAttrValue, list_index);
+                 <%print(convertNestedPythonTupleToSpl('otuple.get_'.$name.'()[list_index]', $element_type, $spaces.'', $model->getContext()->getOutputDirectory()));%>
+             }
+           <%}%>
+         <%}%> 
+         <%if (SPL::CodeGen::Type::isMap($atype)) {
+             if (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getValueType($atype))) {
+               $nested_tuple = 1;%>    
+             // NOT IMPLEMENTED: map with tuple as value type <%=$name%> - <%=$atype%>
+           <%} elsif (SPL::CodeGen::Type::isList(SPL::CodeGen::Type::getValueType($atype))) {
+                  my $element_type = SPL::CodeGen::Type::getElementType(SPL::CodeGen::Type::getValueType($atype));  
+                  if (SPL::CodeGen::Type::isTuple($element_type)) {
+                    $nested_tuple = 1;
+                    SPL::CodeGen::errorln("SPL type: " . $atype . " is not supported for conversion from Python.");%> 
+             // NOT SUPPORTED: map of list of tuple <%=$name%> <%=$atype%>                
+                <%}%>
+            <%}%>
+         <%}%>
+         <%if (SPL::CodeGen::Type::isTuple($atype)) {%>
+           <%$nested_tuple = 1;%>
+             // tuple type <%=$name%> - <%=$atype%>
+             <%print(convertNestedPythonTupleToSpl('otuple.get_'.$name.'()', $atype, $spaces.'', $model->getContext()->getOutputDirectory()));%>
+           <%}%>
+         <%if ($nested_tuple == 0) {%>
+             streamsx::topology::pySplValueFromPyObject(otuple.get_<%=$name%>(), pyAttrValue);
+         <%}%>
 <%
     if (defined $iport) {
              print 'setAttr = true;';
     }
 %>
-      }
-   }
+         }
+    }
 <%
     if (defined $iport) {
     
@@ -127,9 +211,107 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
   if (defined $iport) {
     print 'bool setAttr = false;';
   }
+  my $spaces = '                  ';
+  # handle nested tuples __NESTED_TUPLE__
+  sub convertNestedPythonDictionaryToSpl {
+      my $otuple = $_[0];
+      my $atype = $_[1];
+      my $spaces = $_[2];
+      my $output_dir = $_[3]; # $model->getContext()->getOutputDirectory()
+
+      my $gencode;
+      $gencode = "\n";
+      $gencode = $gencode . $spaces . "{\n";
+      $gencode = $gencode . $spaces . "  PyObject *value = v;\n";
+      $gencode = $gencode . $spaces . "  PyObject *k,*v;\n";
+      $gencode = $gencode . $spaces . "  Py_ssize_t pos = 0;\n";
+      $gencode = $gencode . $spaces . "  while (PyDict_Next(value, &pos, &k, &v)) {\n";
+      $gencode = $gencode . $spaces . "    if (v != NULL) {\n";
+      $gencode = $gencode . $spaces . "      if (!SplpyGeneral::isNone(v)) {\n";
+      my @attrTypes = SPL::CodeGen::Type::getAttributeTypes ($atype);
+      my $i=0;
+      my $nested=0;
+      for my $attrName (SPL::CodeGen::Type::getAttributeNames ($atype)) {
+    	  $i++;
+    	  $nested=0;
+      $gencode = $gencode . $spaces . "          // attribute: $attrName - type: $attrTypes[$i-1]\n";   	  
+          if (SPL::CodeGen::Type::isTuple($attrTypes[$i-1])) {
+        	$nested=1;
+      $gencode = $gencode . $spaces . "          if (pos == $i) { // attribute=$attrName\n";
+      $gencode = $gencode . $spaces . "            // tuple type: $attrTypes[$i-1]\n";    
+      $gencode = $gencode . $spaces . "            " . convertNestedPythonDictionaryToSpl($otuple.'.get_'.$attrName.'()', $attrTypes[$i-1], $spaces.'            ', $output_dir) . "\n";
+      $gencode = $gencode . $spaces . "          }\n";
+          }
+          if (SPL::CodeGen::Type::isMap($attrTypes[$i-1])) {
+            my $valueType = SPL::CodeGen::Type::getValueType($attrTypes[$i-1]);
+            if (SPL::CodeGen::Type::isTuple($valueType)) {
+              $nested=1;
+              if ($otuple eq 'sv') {
+                SPL::CodeGen::errorln("SPL type: " . $atype . " is not supported for conversion from Python.");
+              }
+      $gencode = $gencode . $spaces . "          if (pos == $i) { // attribute=$attrName\n";
+      $gencode = $gencode . $spaces . "            // map with tuple as value type: $attrTypes[$i-1] - $valueType\n";
+      $gencode = $gencode . $spaces . "            // SPL map from Python dictionary\n";
+      $gencode = $gencode . $spaces . "            PyObject *value = v;\n";
+      $gencode = $gencode . $spaces . "            PyObject *k,*v;\n";
+      $gencode = $gencode . $spaces . "            Py_ssize_t pos = 0;\n";
+      $gencode = $gencode . $spaces . "            while (PyDict_Next(value, &pos, &k, &v)) {\n";
+      $gencode = $gencode . $spaces . "              ".SPL::CodeGen::Type::getKeyType($attrTypes[$i-1])." sk; // key type\n";
+      $gencode = $gencode . $spaces . "              // Set the SPL key\n";
+      $gencode = $gencode . $spaces . "              pySplValueFromPyObject(sk, k);\n";
+      $gencode = $gencode . $spaces . "              // map[] creates the value if it does not exist\n";
+      $gencode = $gencode . $spaces . "              ".spl_cpp_type($attrName, 'SPL::map', SPL::CodeGen::Type::getValueType($attrTypes[$i-1]), $output_dir)." & sv = ".$otuple.".get_".$attrName."()[sk];\n";
+      $gencode = $gencode . $spaces . "              // Set the SPL value for value type\n";
+      $gencode = $gencode . $spaces . "             ".convertNestedPythonDictionaryToSpl('sv', SPL::CodeGen::Type::getValueType($attrTypes[$i-1]), $spaces.'              ', $output_dir)."\n";
+      $gencode = $gencode . $spaces . "            }\n";
+      $gencode = $gencode . $spaces . "          }\n";
+            }
+            elsif (SPL::CodeGen::Type::isList($valueType)) {
+              my $elementType = SPL::CodeGen::Type::getElementType($attrTypes[$i-1]);
+              if (SPL::CodeGen::Type::isTuple($elementType)) {
+                $nested=1;
+                SPL::CodeGen::errorln("SPL type: " . $atype . " is not supported for conversion from Python.");
+      $gencode = $gencode . $spaces . "          if (pos == $i) { // attribute=$attrName\n";
+      $gencode = $gencode . $spaces . "            // map with list of tuple as value type: $attrTypes[$i-1] - $valueType\n";           
+      $gencode = $gencode . $spaces . "          }\n";     
+              }
+            }
+          }
+          if (SPL::CodeGen::Type::isList($attrTypes[$i-1])) {
+        	my $elementType = SPL::CodeGen::Type::getElementType($attrTypes[$i-1]);
+            if (SPL::CodeGen::Type::isTuple($elementType)) {
+              $nested=1;
+              if ($otuple eq 'sv') {
+                SPL::CodeGen::errorln("SPL type: " . $atype . " is not supported for conversion from Python.");
+              }
+      $gencode = $gencode . $spaces . "          if (pos == $i) { // attribute=$attrName\n";
+      $gencode = $gencode . $spaces . "            // list of tuple: $attrTypes[$i-1] - $elementType\n";
+      $gencode = $gencode . $spaces . "            PyObject *value = v;\n";
+      $gencode = $gencode . $spaces . "            int list_size = (int)PyList_Size(value);\n";
+      $gencode = $gencode . $spaces . "            for (int list_index = 0; list_index < list_size; ++list_index) {\n";
+      $gencode = $gencode . $spaces . "              ".spl_cpp_type($attrName, 'SPL::list', $elementType, $output_dir)." se; // retrieve cpp type of tuple from generated header files\n";
+      $gencode = $gencode . $spaces . "              $otuple.get_$attrName().add(se); // add tuple to list\n";
+      $gencode = $gencode . $spaces . "              PyObject* v = PyList_GET_ITEM(value, list_index);\n";
+      $gencode = $gencode . $spaces . "             ".convertNestedPythonDictionaryToSpl($otuple.'.get_'.$attrName.'()[list_index]', $elementType, $spaces.'              ', $output_dir)."\n";
+      $gencode = $gencode . $spaces . "            }\n";      
+      $gencode = $gencode . $spaces . "          }\n";
+            }
+          }
+          if (0 == $nested) {                        
+      $gencode = $gencode . $spaces . "          if (pos == $i) { // attribute=$attrName\n";
+      $gencode = $gencode . $spaces . "            // $attrTypes[$i-1]\n";
+      $gencode = $gencode . $spaces . "            streamsx::topology::pySplValueFromPyObject($otuple.get_$attrName(), v);\n";
+      $gencode = $gencode . $spaces . "          }\n";
+          }
+      }
+      $gencode = $gencode . $spaces . "      }\n";
+      $gencode = $gencode . $spaces . "    }\n";
+      $gencode = $gencode . $spaces . "  }\n";
+      $gencode = $gencode . $spaces . "}\n";
+      return $gencode;
+  }
 
   for (my $ai = $oport->getNumberOfAttributes() - 1; $ai >= 0; --$ai) {
-    
     my $attribute = $oport->getAttributeAt($ai);
     my $name = $attribute->getName();
     my $atype = $attribute->getSPLType();
@@ -139,14 +321,120 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
              print 'setAttr = false;';
     }
 %>
+    // attribute name=<%=$name%> type=<%=$atype%>
     if (available > 0) {
          // Value from the Python function
          PyObject *pyAttrValue = PyDict_GetItem(pyDict, PyTuple_GET_ITEM(pyOutNames_<%=$oport->getIndex()%>, <%=$ai%>));
          if (pyAttrValue != NULL) {
              --available;
              if (!SplpyGeneral::isNone(pyAttrValue)) {
-                  streamsx::topology::pySplValueFromPyObject(
-                               otuple.get_<%=$name%>(), pyAttrValue);
+               <%my $nested_tuple = 0;%>
+               <%if (SPL::CodeGen::Type::isList($atype)) {
+                   my $element_type = SPL::CodeGen::Type::getElementType($atype);  
+                   if (SPL::CodeGen::Type::isTuple($element_type)) {%>
+                     <%$nested_tuple = 1;%>
+                  // list of tuple: <%=$name%> - <%=$element_type%>
+                  int list_size = (int)PyList_Size(pyAttrValue);
+                  for (int list_index = 0; list_index < list_size; ++list_index) {
+                      <%=spl_cpp_type($name, 'SPL::list', $element_type, $model->getContext()->getOutputDirectory())%> se; // retrieve cpp type of tuple from generated header files
+                      otuple.get_<%=$name%>().add(se); // add tuple to list
+                      PyObject* v = PyList_GET_ITEM(pyAttrValue, list_index);
+                      <%print(convertNestedPythonDictionaryToSpl('otuple.get_'.$name.'()[list_index]', $element_type, $spaces."          ", $model->getContext()->getOutputDirectory()));%>
+                  }
+                 <%}%>
+               <%}%> 
+               <%if (SPL::CodeGen::Type::isMap($atype)) {
+                   if (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getValueType($atype))) {
+                     $nested_tuple = 1;%>    
+                  // map of tuple: <%=$name%> <%=$atype%>
+                  // SPL map from Python dictionary
+                  PyObject *value = pyAttrValue;
+                  PyObject *k,*v;
+                  Py_ssize_t pos = 0;
+                  while (PyDict_Next(value, &pos, &k, &v)) {
+                      <%=SPL::CodeGen::Type::getKeyType($atype)%> sk; // key type
+                      // Set the SPL key
+                      pySplValueFromPyObject(sk, k);
+                      // map[] creates the value if it does not exist
+                      <%=spl_cpp_type($name, 'SPL::map', SPL::CodeGen::Type::getValueType($atype), $model->getContext()->getOutputDirectory())%> & sv = otuple.get_<%=$name%>()[sk];
+                      // Set the SPL value for value type <%=SPL::CodeGen::Type::getValueType($atype)%>
+                      <%print(convertNestedPythonDictionaryToSpl('sv', SPL::CodeGen::Type::getValueType($atype), $spaces."    ", $model->getContext()->getOutputDirectory()));%>
+                  }
+                 <%} elsif (SPL::CodeGen::Type::isList(SPL::CodeGen::Type::getValueType($atype))) {
+                     my $element_type = SPL::CodeGen::Type::getElementType(SPL::CodeGen::Type::getValueType($atype));
+                     if (SPL::CodeGen::Type::isTuple($element_type)) {
+                       $nested_tuple = 1;
+                       SPL::CodeGen::errorln("SPL type: " . $atype . " is not supported for conversion from Python.");%>
+                  // NOT SUPPORTED: map of list of tuple: <%=$name%> <%=$atype%>
+                   <%}%>
+                 <%}%>
+               <%}%>
+               <%if (SPL::CodeGen::Type::isTuple($atype)) {%>
+                  <%$nested_tuple = 1;%>
+                  // tuple type: <%=$name%> - <%=$atype%>
+                  PyObject *value = pyAttrValue;
+                  PyObject *k,*v;
+                  Py_ssize_t pos = 0;
+                  while (PyDict_Next(value, &pos, &k, &v)) {
+                    if (v != NULL) {
+                      if (!SplpyGeneral::isNone(v)) {
+                      <%my @attrTypes = SPL::CodeGen::Type::getAttributeTypes ($atype);%>
+                      <%my $i=0; for my $attrName (SPL::CodeGen::Type::getAttributeNames ($atype)) { $i++;%>
+                        <%if (SPL::CodeGen::Type::isTuple($attrTypes[$i-1])) {%>
+                        if (pos == <%=$i%>) { // attribute=<%=$attrName%>
+                          // tuple type: <%=$attrTypes[$i-1]%>
+                          <%print(convertNestedPythonDictionaryToSpl('otuple.get_'.$name.'().get_'.$attrName.'()', $attrTypes[$i-1], $spaces."        ", $model->getContext()->getOutputDirectory()));%>
+                        }
+                        <%} elsif ((SPL::CodeGen::Type::isList($attrTypes[$i-1])) && (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getElementType($attrTypes[$i-1])))) {%>
+                        if (pos == <%=$i%>) { // attribute=<%=$attrName%>  
+                           <%my $element_type = SPL::CodeGen::Type::getElementType($attrTypes[$i-1]);%>
+                           PyObject *value = v;
+                           // list of tuple: <%=$attrName%> - <%=$element_type%>
+                           int list_size = (int)PyList_Size(value);
+                           for (int list_index = 0; list_index < list_size; ++list_index) {
+                               <%=spl_cpp_type($attrName, 'SPL::list', $element_type, $model->getContext()->getOutputDirectory())%> se; // retrieve cpp type of tuple from generated header files
+                               otuple.get_<%=$name%>().get_<%=$attrName%>().add(se); // add tuple to list
+                               PyObject* v = PyList_GET_ITEM(value, list_index);
+                               <%print(convertNestedPythonDictionaryToSpl('otuple.get_'.$name.'().get_'.$attrName.'()[list_index]', $element_type, $spaces."          ", $model->getContext()->getOutputDirectory()));%>
+                           }
+                        }
+                        <%} elsif ((SPL::CodeGen::Type::isMap($attrTypes[$i-1])) && (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getValueType($attrTypes[$i-1])))) {%>
+                        if (pos == <%=$i%>) { // attribute=<%=$attrName%>
+                            // map with tuple as value type: <%=$attrName%> - <%=$attrTypes[$i-1]%>
+                            // SPL map from Python dictionary
+                            PyObject *value = v;
+                            PyObject *k,*v;
+                            Py_ssize_t pos = 0;
+                            while (PyDict_Next(value, &pos, &k, &v)) {
+                                <%=SPL::CodeGen::Type::getKeyType($attrTypes[$i-1])%> sk; // key type
+                                // Set the SPL key
+                                pySplValueFromPyObject(sk, k);
+                                // map[] creates the value if it does not exist <%=SPL::CodeGen::Type::getValueType($attrTypes[$i-1])%>
+                                <%=spl_cpp_type($attrName, 'SPL::map', SPL::CodeGen::Type::getValueType($attrTypes[$i-1]), $model->getContext()->getOutputDirectory())%> & sv = otuple.get_<%=$name%>().get_<%=$attrName%>()[sk];
+                                // Set the SPL value for value type
+                                <%print(convertNestedPythonDictionaryToSpl('sv', SPL::CodeGen::Type::getValueType($attrTypes[$i-1]), $spaces."              ", $model->getContext()->getOutputDirectory()));%>
+                            }
+                        }
+                        <%} elsif ((SPL::CodeGen::Type::isMap($attrTypes[$i-1])) && (SPL::CodeGen::Type::isList(SPL::CodeGen::Type::getValueType($attrTypes[$i-1]))) && (SPL::CodeGen::Type::isTuple(SPL::CodeGen::Type::getElementType(SPL::CodeGen::Type::getValueType($attrTypes[$i-1]))))) {%>
+                        if (pos == <%=$i%>) { // attribute=<%=$attrName%>
+                        	<%SPL::CodeGen::errorln("SPL type: " . $attrTypes[$i-1] . " is not supported for conversion from Python.");%>
+                            // NOT SUPPORTED: map with list of tuple as value type: $attrName - $attrTypes[$i]\n";
+                        }
+                        <%} else {%>                        
+                        if (pos == <%=$i%>) { // attribute=<%=$attrName%>
+                          // <%=$attrTypes[$i-1]%>
+                          streamsx::topology::pySplValueFromPyObject(otuple.get_<%=$name%>().get_<%=$attrName%>(), v);
+                        }
+                        <%}%>
+                      <%}%>
+                      }
+                    }
+                  }
+               <%}%>
+               <%if ($nested_tuple == 0) {%>
+                  // <%=$name%> - <%=$atype%>
+                  streamsx::topology::pySplValueFromPyObject(otuple.get_<%=$name%>(), pyAttrValue);
+               <%}%>
 <%
     if (defined $iport) {
              print 'setAttr = true;';
@@ -154,7 +442,7 @@ void MY_OPERATOR::fromPyDictToSPLTuple(PyObject *pyDict, <%=$oport->getCppTupleT
 %>
            }
         }
-   }
+    }
 <%
     if (defined $iport) {
     

@@ -68,7 +68,10 @@
 		     <arg value="test2_aggregate.TestAggregate"/>
 		     <arg value="test2_ec.TestEc"/>
 		     <arg value="test2_spl2python.TestSPL2Python"/>
+		     <arg value="test2_schema_tuple.TestSchemaTypingNamedTuple"/>
 		     <arg value="test2_punctor.TestPunctor"/>
+		     <arg value="test2_flat_map.TestFlatMap"/>
+		     <arg value="test2_namedtuple.TestNamedTupleSource"/>
 		     <arg value="-v"/>
 		   </exec>
 	   </target>
