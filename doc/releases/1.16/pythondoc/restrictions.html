@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Restrictions and known bugs &mdash; streamsx 1.16.0a documentation</title>
+  <title>Restrictions and known bugs &mdash; streamsx 1.16.0b documentation</title>
   
 
   
@@ -186,6 +186,7 @@
   <div class="section" id="restrictions-and-known-bugs">
 <h1>Restrictions and known bugs<a class="headerlink" href="#restrictions-and-known-bugs" title="Permalink to this headline">¶</a></h1>
 <ul>
+<li><p>For Python development outside of a CP4D, for example with a Jupyter notebook outside of CP4D, you must use an Anaconda or Miniconda Python installation.</p></li>
 <li><p>No support for nested parallel regions at sources, i.e. nested <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.set_parallel" title="streamsx.topology.topology.Stream.set_parallel"><code class="xref py py-func docutils literal notranslate"><span class="pre">streamsx.topology.topology.Stream.set_parallel()</span></code></a>, for example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">topo</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">()</span>
 <span class="n">s</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="n">S</span><span class="p">())</span>
@@ -194,21 +195,55 @@
 </div>
 <p>In this example, <cite>set_parallel(3)</cite> is ignored.</p>
 </li>
-<li><p>No support for nested types when defining stream schemas, for example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">NamedTupleNestedTupleSchema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
-    <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">spotted</span><span class="p">:</span> <span class="n">SpottedSchema</span>
+<li><p>No schema support for container types (list, map, set, and the like) with non-primitive value or element types as value or element types for other containers, also when encapsulated in a named tuple:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">A_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">y</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="k">class</span> <span class="nc">B_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">a_list</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">A_schema</span><span class="p">]</span>     <span class="c1"># supported, A_schema does not contain a container type at all</span>
+
+<span class="k">class</span> <span class="nc">C_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">c1</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">c2</span><span class="p">:</span> <span class="n">B_schema</span>                      <span class="c1"># supported, a container type can be nested at any depth</span>
+
+<span class="k">class</span> <span class="nc">D_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">d1</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">d2</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>       <span class="c1"># supported</span>
+    <span class="n">d3</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">A_schema</span><span class="p">]</span>  <span class="c1"># not supported: a container with non-primitive element type is direct value type of a map</span>
+
+<span class="k">class</span> <span class="nc">E_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">e1</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">e2</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">C_schema</span><span class="p">]</span>   <span class="c1"># not supported: C_schema.c2.a_list is a list with non-primitive element type</span>
 </pre></div>
 </div>
 </li>
-<li><p>No support of collections of <cite>NamedTuple</cite> as stream schema, for example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">NamedTupleListOfTupleSchema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
-    <span class="n">spotted</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">SpottedSchema</span><span class="p">]</span>
+<li><p>Schemas support only primitive types for the key type of a map:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">A_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">a1</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">a2</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="k">class</span> <span class="nc">B_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">b1</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">b2</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">A_schema</span><span class="p">]</span>   <span class="c1"># supported</span>
+    <span class="n">b3</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="n">A_schema</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>   <span class="c1"># not supported, A_schema not supported as key type</span>
+</pre></div>
+</div>
+</li>
+<li><p>Schemas support only primitive types as element type of a set:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">A_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">a1</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">a2</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="k">class</span> <span class="nc">B_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">b1</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">b2</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>       <span class="c1"># supported</span>
+    <span class="n">b3</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Set</span><span class="p">[</span><span class="n">A_schema</span><span class="p">]</span>  <span class="c1"># not supported</span>
 </pre></div>
 </div>
 </li>
 <li><p>Python Composites (derived from <a class="reference internal" href="streamsx.topology.composite.html#streamsx.topology.composite.Composite" title="streamsx.topology.composite.Composite"><code class="xref py py-class docutils literal notranslate"><span class="pre">streamsx.topology.composite.Composite</span></code></a>) can have only one input port.</p></li>
-<li><p>No support to process window markers or final marker (end of stream) in Python Callables like in SPL operators</p></li>
+<li><p>No support to process final marker (end of stream) in Python Callables like in SPL operators</p></li>
 <li><p>No hook for drain processing in consistent region for Python Callables</p></li>
 <li><p>Submission time parameters, which are defined in SPL composites of other toolkits, or created by using
 <cite>streamsx.spl.op.Expression</cite> in the topology, cannot be accessed at runtime with <cite>streamsx.ec.get_submission_time_value(name)</cite>.</p></li>

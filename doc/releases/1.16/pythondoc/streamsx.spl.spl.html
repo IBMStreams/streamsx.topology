@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.spl.spl &mdash; streamsx 1.16.0a documentation</title>
+  <title>streamsx.spl.spl &mdash; streamsx 1.16.0b documentation</title>
   
 
   
@@ -988,6 +988,10 @@ is called passing the contents of the tuple.</p>
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;window marker received&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Punctuation marks are in-band signals that are inserted between tuples in a stream. Window punctuations are inserted into a stream that are related to the semantics of the operator. One example is the <code class="xref py py-meth docutils literal notranslate"><span class="pre">aggregate()</span></code>, which inserts a window marker into the output stream after each aggregation.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1087,6 +1091,10 @@ decorator.</p></li>
 <dt id="streamsx.spl.spl.PrimitiveOperator.submit_punct">
 <code class="sig-name descname">submit_punct</code><span class="sig-paren">(</span><em class="sig-param">port_id</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.spl.PrimitiveOperator.submit_punct" title="Permalink to this definition">¶</a></dt>
 <dd><p>Submit a window punctuation marker to the output port.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Punctuation marks are in-band signals that are inserted between tuples in a stream. Window punctuations are inserted into a stream that are related to the semantics of the operator. One example is the <code class="xref py py-meth docutils literal notranslate"><span class="pre">aggregate()</span></code>, which inserts a window marker into the output stream after each aggregation.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>port_id</strong> – Identifier of the port specified in the
@@ -1202,6 +1210,10 @@ ready notification mechanism <a class="reference internal" href="#streamsx.spl.s
 </pre></div>
 </div>
 <p>Supports handling window punctuation markers in the primitive operator in <code class="docutils literal notranslate"><span class="pre">on_punct</span></code> method (new in version 1.16).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Punctuation marks are in-band signals that are inserted between tuples in a stream. Window punctuations are inserted into a stream that are related to the semantics of the operator. One example is the <code class="xref py py-meth docutils literal notranslate"><span class="pre">aggregate()</span></code>, which inserts a window marker into the output stream after each aggregation.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.topology &mdash; streamsx 1.16.0a documentation</title>
+  <title>streamsx.topology.topology &mdash; streamsx 1.16.0b documentation</title>
   
 
   
@@ -1450,6 +1450,11 @@ stream corresponding to the input tuple that caused the exception.</p>
 <p>The argument type hint on <cite>func</cite> is used (if present) to verify
 at topology declaration time that it is compatible with the
 type of tuples on this stream.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Punctuation marks are in-band signals that are inserted between tuples in a stream. If sources or stream transforms insert window markers at all, and when they insert them depends on the source or the semantic of the stream transformation. One example is the <a class="reference internal" href="#streamsx.topology.topology.Window.aggregate" title="streamsx.topology.topology.Window.aggregate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">aggregate()</span></code></a>, which inserts a window marker into the output stream after each aggregation.</p>
+<p>The <a class="reference internal" href="#streamsx.topology.topology.Stream.filter" title="streamsx.topology.topology.Stream.filter"><code class="xref py py-meth docutils literal notranslate"><span class="pre">filter()</span></code></a> punctuation mode is “preserving”. Incoming window punctuations are forwarded.</p>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -1493,6 +1498,11 @@ that caused the exception.</p>
 <span class="c1"># list_stream is a stream of list from dict as Python object, for example [{&#39;id&#39;: &#39;0&#39;, &#39;flag&#39;:True}]</span>
 <span class="n">sample_stream</span> <span class="o">=</span> <span class="n">list_stream</span><span class="o">.</span><span class="n">flat_map</span><span class="p">(</span><span class="n">flatten_dict</span><span class="p">)</span> <span class="c1"># sample_stream is a named tuple stream of SampleSchema</span>
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Punctuation marks are in-band signals that are inserted between tuples in a stream. If sources or stream transforms insert window markers at all, and when they insert them depends on the source or the semantic of the stream transformation. One example is the <a class="reference internal" href="#streamsx.topology.topology.Window.aggregate" title="streamsx.topology.topology.Window.aggregate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">aggregate()</span></code></a>, which inserts a window marker into the output stream after each aggregation.</p>
+<p>The <a class="reference internal" href="#streamsx.topology.topology.Stream.flat_map" title="streamsx.topology.topology.Stream.flat_map"><code class="xref py py-meth docutils literal notranslate"><span class="pre">flat_map()</span></code></a> punctuation mode is “preserving”. Incoming window punctuations are forwarded.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
@@ -1538,6 +1548,10 @@ input tuple that caused the exception.</p>
 <span class="o">...</span>
 <span class="n">s</span><span class="o">.</span><span class="n">for_each</span><span class="p">(</span><span class="n">FEClass</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;SinkHandlingPunctuations&#39;</span><span class="p">,</span> <span class="n">process_punct</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Punctuation marks are in-band signals that are inserted between tuples in a stream. If sources or stream transforms insert window markers at all, and when they insert them depends on the source or the semantic of the stream transformation. One example is the <a class="reference internal" href="#streamsx.topology.topology.Window.aggregate" title="streamsx.topology.topology.Window.aggregate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">aggregate()</span></code></a>, which inserts a window marker into the output stream after each aggregation.</p>
 </div>
 <p class="rubric">Composite transformation</p>
 <p>A composite transformation is an instance of <a class="reference internal" href="streamsx.topology.composite.html#streamsx.topology.composite.ForEach" title="streamsx.topology.composite.ForEach"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForEach</span></code></a>. Composites allow the application developer to use
@@ -1706,6 +1720,11 @@ modifies each <code class="docutils literal notranslate"><span class="pre">resul
 <li><p><a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.StreamSchema" title="streamsx.topology.schema.StreamSchema"><code class="xref py py-const docutils literal notranslate"><span class="pre">StreamSchema</span></code></a> - A structured stream. <cite>result</cite> must be a <cite>dict</cite> or (Python) <cite>tuple</cite>. When a <cite>dict</cite> is returned the outgoing stream tuple attributes are set by name, when a <cite>tuple</cite> is returned stream tuple attributes are set by position.</p></li>
 <li><p>string value - Equivalent to passing <code class="docutils literal notranslate"><span class="pre">StreamSchema(schema)</span></code></p></li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Punctuation marks are in-band signals that are inserted between tuples in a stream. If sources or stream transforms insert window markers at all, and when they insert them depends on the source or the semantic of the stream transformation. One example is the <a class="reference internal" href="#streamsx.topology.topology.Window.aggregate" title="streamsx.topology.topology.Window.aggregate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">aggregate()</span></code></a>, which inserts a window marker into the output stream after each aggregation.</p>
+<p>The <a class="reference internal" href="#streamsx.topology.topology.Stream.map" title="streamsx.topology.topology.Stream.map"><code class="xref py py-meth docutils literal notranslate"><span class="pre">map()</span></code></a> punctuation mode is “preserving”. Incoming window punctuations are forwarded.</p>
+</div>
 <p class="rubric">Composite transformation</p>
 <p>A composite transformation is an instance of <a class="reference internal" href="streamsx.topology.composite.html#streamsx.topology.composite.Map" title="streamsx.topology.composite.Map"><code class="xref py py-class docutils literal notranslate"><span class="pre">Map</span></code></a>. Composites allow the application developer to use
 the standard functional style of the topology api while allowing
@@ -1900,6 +1919,15 @@ the tuple channel routing.</p></li>
 <dd><p>Prints each tuple to stdout flushing after each tuple.</p>
 <p>If <cite>tag</cite> is not <cite>None</cite> then each tuple has “tag: ” prepended
 to it before printing.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Punctuation marks are in-band signals that are inserted between tuples in a stream. If sources or stream transforms insert window markers at all, and when they insert them depends on the source or the semantic of the stream transformation. One example is the <a class="reference internal" href="#streamsx.topology.topology.Window.aggregate" title="streamsx.topology.topology.Window.aggregate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">aggregate()</span></code></a>, which inserts a window marker into the output stream after each aggregation.</p>
+<p>There are two kinds of punctuation markers, which are written to stdout when <cite>write_punctuations</cite> is set to <cite>True</cite>:</p>
+<ul class="simple">
+<li><p>Window punctuation: indicates breaks in the data, which can be used by the transformation logic</p></li>
+<li><p>Final punctuation: indicates the end of a stream</p></li>
+</ul>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1979,6 +2007,11 @@ and
 <dd><p>Adds window punctuation to this stream using the supplied callable <cite>func</cite> as condition that determines when a window punctuation is to be generated.</p>
 <p>For each stream tuple <cite>t</cite> on the stream <code class="docutils literal notranslate"><span class="pre">func(t)</span></code> is called, if the return evaluates to <code class="docutils literal notranslate"><span class="pre">True</span></code> the
 window punctuation will be generated and the tuple is forwarded, otherwise the tuple is just forwarded.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Punctuation marks are in-band signals that are inserted between tuples in a stream. If sources or stream transforms insert window markers at all, and when they insert them depends on the source or the semantic of the stream transformation. One example is the <a class="reference internal" href="#streamsx.topology.topology.Window.aggregate" title="streamsx.topology.topology.Window.aggregate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">aggregate()</span></code></a>, which inserts a window marker into the output stream after each aggregation.</p>
+<p>The <a class="reference internal" href="#streamsx.topology.topology.Stream.punctor" title="streamsx.topology.topology.Stream.punctor"><code class="xref py py-meth docutils literal notranslate"><span class="pre">punctor()</span></code></a> punctuation mode is “generating” and inserts punctuation into the output stream according to custom logic. Incoming window punctuation is not forwarded.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -2253,6 +2286,11 @@ stream corresponding to the input tuple that caused the exception.</p>
 <p>The argument type hint on <cite>func</cite> is used (if present) to verify
 at topology declaration time that it is compatible with the
 type of tuples on this stream.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Punctuation marks are in-band signals that are inserted between tuples in a stream. If sources or stream transforms insert window markers at all, and when they insert them depends on the source or the semantic of the stream transformation. One example is the <a class="reference internal" href="#streamsx.topology.topology.Window.aggregate" title="streamsx.topology.topology.Window.aggregate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">aggregate()</span></code></a>, which inserts a window marker into the output stream after each aggregation.</p>
+<p>The <a class="reference internal" href="#streamsx.topology.topology.Stream.split" title="streamsx.topology.topology.Stream.split"><code class="xref py py-meth docutils literal notranslate"><span class="pre">split()</span></code></a> punctuation mode is “preserving”. Incoming window punctuations are forwarded to each output stream.</p>
+</div>
 <p class="rubric">Examples</p>
 <p>Example of splitting a stream based upon message severity, dropping
 any messages with unknown severity, and then performing different
@@ -2611,6 +2649,11 @@ window is not empty. Thus <code class="docutils literal notranslate"><span class
 for a window sized using a count. For example a stream with 105
 tuples and a batch size of 25 tuples will perform four aggregations
 with 25 tuples each and a final aggregation of 5 tuples.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Punctuation marks are in-band signals that are inserted between tuples in a stream. If sources or stream transforms insert window markers at all, and when they insert them depends on the source or the semantic of the stream transformation.</p>
+<p>The <a class="reference internal" href="#streamsx.topology.topology.Window.aggregate" title="streamsx.topology.topology.Window.aggregate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">aggregate()</span></code></a> inserts a window marker into the output stream after each aggregation.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
