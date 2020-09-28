@@ -7,7 +7,7 @@
     <groupId>com.ibm.streams</groupId>
     <artifactId>streamsx.topology</artifactId>
     <packaging>jar</packaging>
-    <version>1.16-beta-0</version>
+    <version>1.16</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Java API to allow creation of streaming applications for IBM Streams</description>
