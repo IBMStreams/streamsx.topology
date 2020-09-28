@@ -34,17 +34,37 @@ Python 3.6::
     
 Python 3::
 
-    SensorReading = typing.NamedTuple('SensorReading',
-        [('sensor_id', int), ('ts', int), ('reading', float)]
-
-    sensors = raw_readings.map(parse_sensor, schema=SensorReading)
-
-Python 3::
-
     sensors = raw_readings.map(parse_sensor,
         schema='tuple<int64 sensor_id, int64 ts, float64 reading>')
 
 The supported types are defined by IBM Streams and are listed in :py:class:`~StreamSchema`.
+
+*************************
+Nested structured schemas
+*************************
+
+A structured schema can contain nested structures that are defined separately.
+
+Python 3.6::
+
+    class Sensor(typing.NamedTuple):
+        manufacturer: str
+        sensor_id: int
+
+    class SensorReading(typing.NamedTuple):
+        sensor: Sensor
+        ts: int
+        reading: float
+
+    sensors = raw_readings.map(parse_sensor, schema=SensorReading)
+    
+Python 3::
+
+    sensors = raw_readings.map(parse_sensor,
+        schema='tuple<tuple<rstring manufacturer, int64 sensor_id> sensor, int64 ts, float64 reading>')
+
+Both schema definitions are equivalent.
+
 
 Structured schemas provide type-safety and efficient network serialization when compared to passing a ``dict`` using :py:const:`~CommonSchema.Python` streams. 
 
@@ -365,9 +385,10 @@ class StreamSchema(object) :
             Tuples on a stream with a schema defined by a
             ``typing.NamedTuple`` instance are passed into callables
             as instance of a named tuple with the the correct field
-            names and types. This is not guaranteed to be the same class
+            names and types unless the named tuple contains nested
+            named tuples at any nesting depth. When passed as named tuple,
+            there is no guarantee to be the same class
             instance as the one used to declare the schema.
-            
 
     Tuple string:
 
@@ -415,7 +436,7 @@ class StreamSchema(object) :
     ``optional<T>``               Optional value of type `T`      Value of type `T`, or None                 Value of for type ``T``
     ``enum{id [,...]}``           Enumeration                     Not supported                              Not supported
     ``xml``                       XML value                       Not supported                              Not supported
-    ``tuple<type name [, ...]>``  Nested tuple                    ```dict```                                 ```dict``
+    ``tuple<type name [, ...]>``  Nested tuple                    ``dict``                                   ``dict``
     ============================  ==============================  =========================================  =======================================
 
     .. note::
