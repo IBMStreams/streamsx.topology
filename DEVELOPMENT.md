@@ -209,11 +209,12 @@ For a pull request:
     * At that point a branch is created vX_Y based off develop (e.g. v1_15)
     * Bug fix releases of older releases are from the vX_Y branch
     
-3. Change these three files to have the **equivalent** correct version:
+3. Change these four files to have the **equivalent** correct version:
 
-    * `release-pom.xml` - replace version for Maven Central 1.16-alpha-0
+    * `release-pom.xml` - replace version for Maven Central 1.16-alpha-0, for example 1.16.1
     * `com.ibm.streamsx.topology/info.xml` - Uses SPL convention, e.g. for alpha 1.16.0.alpha, 1.16.0.beta, 1.16.8
     * `com.ibm.streamsx.topology/opt/python/packages/streamsx/_streams/_version.py` - Use Python PEP396 convention, 1.16.0a, 1.16.0b, 1.16.8 - Note the third value is always bumped for a release within the same X.Y sequence.
+    * `com.ibm.streamsx.topology/CHANGELOG.md` - replace *latest/develop* by the correct released version
     * Once a GA (non-alpha, non-beta) release is made in an X.Y.Z series then all future releases X.Y.W (W>Z) are GA
     
 3a. If creating an new X.Y+1 sequence (e.g. 1.17 replacing 1.16) then:
