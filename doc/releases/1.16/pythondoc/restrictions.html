@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Restrictions and known bugs &mdash; streamsx 1.16.0b documentation</title>
+  <title>Restrictions and known bugs &mdash; streamsx 1.16.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -195,6 +195,7 @@
 </div>
 <p>In this example, <cite>set_parallel(3)</cite> is ignored.</p>
 </li>
+<li><p>When tuples are nested within other tuples in a stream schema, the call style of instances of <cite>StreamSchema</cite> for a callable is always dict, whatever value the <cite>style</cite> property has. When the return value of a callable represents also a structured schema with nested tuples, the return type must also be a <cite>dict</cite>. Otherwise the behaviour is not defined.</p></li>
 <li><p>No schema support for container types (list, map, set, and the like) with non-primitive value or element types as value or element types for other containers, also when encapsulated in a named tuple:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">A_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
     <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>

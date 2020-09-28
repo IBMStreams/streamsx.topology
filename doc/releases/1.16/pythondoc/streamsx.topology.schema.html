@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>streamsx.topology.schema &mdash; streamsx 1.16.0b documentation</title>
+  <title>streamsx.topology.schema &mdash; streamsx 1.16.0 documentation</title>
   
 
   
@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -91,6 +91,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">streamsx.topology.schema</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#structured-schemas">Structured schemas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nested-structured-schemas">Nested structured schemas</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#defining-a-stream-s-schema">Defining a stream’s schema</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-contents">Module contents</a></li>
 </ul>
@@ -219,18 +220,34 @@
 </pre></div>
 </div>
 <p>Python 3:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SensorReading</span> <span class="o">=</span> <span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">(</span><span class="s1">&#39;SensorReading&#39;</span><span class="p">,</span>
-    <span class="p">[(</span><span class="s1">&#39;sensor_id&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;ts&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;reading&#39;</span><span class="p">,</span> <span class="nb">float</span><span class="p">)]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sensors</span> <span class="o">=</span> <span class="n">raw_readings</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">parse_sensor</span><span class="p">,</span>
+    <span class="n">schema</span><span class="o">=</span><span class="s1">&#39;tuple&lt;int64 sensor_id, int64 ts, float64 reading&gt;&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The supported types are defined by IBM Streams and are listed in <a class="reference internal" href="#streamsx.topology.schema.StreamSchema" title="streamsx.topology.schema.StreamSchema"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamSchema</span></code></a>.</p>
+</div>
+<div class="section" id="nested-structured-schemas">
+<h2>Nested structured schemas<a class="headerlink" href="#nested-structured-schemas" title="Permalink to this headline">¶</a></h2>
+<p>A structured schema can contain nested structures that are defined separately.</p>
+<p>Python 3.6:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Sensor</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">manufacturer</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">sensor_id</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="k">class</span> <span class="nc">SensorReading</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">sensor</span><span class="p">:</span> <span class="n">Sensor</span>
+    <span class="n">ts</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">reading</span><span class="p">:</span> <span class="nb">float</span>
 
 <span class="n">sensors</span> <span class="o">=</span> <span class="n">raw_readings</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">parse_sensor</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">SensorReading</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Python 3:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sensors</span> <span class="o">=</span> <span class="n">raw_readings</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">parse_sensor</span><span class="p">,</span>
-    <span class="n">schema</span><span class="o">=</span><span class="s1">&#39;tuple&lt;int64 sensor_id, int64 ts, float64 reading&gt;&#39;</span><span class="p">)</span>
+    <span class="n">schema</span><span class="o">=</span><span class="s1">&#39;tuple&lt;tuple&lt;rstring manufacturer, int64 sensor_id&gt; sensor, int64 ts, float64 reading&gt;&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The supported types are defined by IBM Streams and are listed in <a class="reference internal" href="#streamsx.topology.schema.StreamSchema" title="streamsx.topology.schema.StreamSchema"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamSchema</span></code></a>.</p>
+<p>Both schema definitions are equivalent.</p>
 <p>Structured schemas provide type-safety and efficient network serialization when compared to passing a <code class="docutils literal notranslate"><span class="pre">dict</span></code> using <a class="reference internal" href="#streamsx.topology.schema.CommonSchema.Python" title="streamsx.topology.schema.CommonSchema.Python"><code class="xref py py-const docutils literal notranslate"><span class="pre">Python</span></code></a> streams.</p>
 <p>Streams with structured schemas can be interchanged with any IBM Streams application using <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.publish" title="streamsx.topology.topology.Stream.publish"><code class="xref py py-meth docutils literal notranslate"><span class="pre">publish()</span></code></a> and <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology.subscribe" title="streamsx.topology.topology.Topology.subscribe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">subscribe()</span></code></a> maintaining type safety.</p>
 </div>
@@ -378,7 +395,9 @@ structured schema attribute names and types.</p>
 <p>Tuples on a stream with a schema defined by a
 <code class="docutils literal notranslate"><span class="pre">typing.NamedTuple</span></code> instance are passed into callables
 as instance of a named tuple with the the correct field
-names and types. This is not guaranteed to be the same class
+names and types unless the named tuple contains nested
+named tuples at any nesting depth. When passed as named tuple,
+there is no guarantee to be the same class
 instance as the one used to declare the schema.</p>
 </div>
 </div></blockquote>
@@ -596,8 +615,8 @@ to define a structured schema, where <cite>type</cite> is an IBM Streams type.</
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tuple&lt;type</span> <span class="pre">name</span> <span class="pre">[,</span> <span class="pre">...]&gt;</span></code></p></td>
 <td><p>Nested tuple</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">`dict`</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">`dict</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code></p></td>
 </tr>
 </tbody>
 </table>

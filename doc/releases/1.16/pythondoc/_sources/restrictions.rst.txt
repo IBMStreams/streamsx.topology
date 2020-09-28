@@ -11,6 +11,8 @@ Restrictions and known bugs
 
   In this example, `set_parallel(3)` is ignored.
 
+* When tuples are nested within other tuples in a stream schema, the call style of instances of `StreamSchema` for a callable is always dict, whatever value the `style` property has. When the return value of a callable represents also a structured schema with nested tuples, the return type must also be a `dict`. Otherwise the behaviour is not defined.
+
 * No schema support for container types (list, map, set, and the like) with non-primitive value or element types as value or element types for other containers, also when encapsulated in a named tuple::
 
     class A_schema(typing.NamedTuple):
