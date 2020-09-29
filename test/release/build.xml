@@ -3,6 +3,7 @@
     >
     <description>
         Build a release and test against it (DISTRIBUTED, local STREAMS required).
+        Target mvntest: Downloads the topology jar from Maven central and builds a Java topology (BUNDLE, local STREAMS required).
     </description>
 
   <property environment="env"/>
@@ -11,6 +12,9 @@
 
   <property name="streamsx.topology"
        location="${basedir}/../.."/>
+
+  <property name="java_topo_mvn"
+       location="${basedir}/java_topo_mvn"/>
 
   <property name="rel.dir"
        location="${streamsx.topology}/release-streamsx.topology"/>
@@ -44,6 +48,18 @@
         <arg value="-xzf"/>
         <arg value="${bundle.file}"/>
      </exec>
+  </target>
+
+  <target name="clean">
+    <exec executable="make" failonerror="false" dir="${java_topo_mvn}">
+      <arg value="clean"/>
+    </exec>
+  </target>
+
+  <target name="mvntest">
+    <exec executable="make" failonerror="true" dir="${java_topo_mvn}">
+      <arg value="all"/>
+    </exec>
   </target>
 
 </project>
