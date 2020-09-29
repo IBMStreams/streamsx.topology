@@ -1424,6 +1424,8 @@ test/spl/testtk/testjava/MyPipe/MyPipe.xml
 test/spl/testtk/testjava/NoOpJavaPrimitive/NoOpJavaPrimitive.xml
 test/test.out
 test/java/classes
+test/release/java_topo_mvn/extlib
+test/release/java_topo_mvn/classes
 
 # Ignore IntelliJ files.
 .idea/

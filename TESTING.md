@@ -168,6 +168,16 @@ cd test/release
 ant
 ```
 
+### Perform Java Topology quick test with release from Maven Central
+
+To perform a quick test (download topology.jar from Maven and build bundle from Java Topology app), run the following and set the `TOPOLOGY_VERSION` to the version to be downloaded from Maven central:
+
+```
+export TOPOLOGY_VERSION=<tested version, for example 1.16.3>
+cd test/release
+ant mvntest
+```
+
 ## Full test set for a release
 
 Full set of tests assumes setup is correct for running distributed and Streaming Analytics

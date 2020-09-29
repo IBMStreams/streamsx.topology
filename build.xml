@@ -27,6 +27,7 @@
     <ant dir="toolkit" target="clean"/>
     <ant dir="test/java" target="clean"/>
     <ant dir="test/python/rest/toolkits" target="clean"/>
+    <ant dir="test/release" target="clean"/>
     <delete dir="${tk.doc}/javadoc"/>
     <delete dir="${tk.doc}/spldoc"/>
     <delete dir="${tk.doc}/scaladoc"/>
