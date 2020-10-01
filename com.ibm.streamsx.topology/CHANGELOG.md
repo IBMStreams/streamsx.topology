@@ -1,6 +1,9 @@
 # Changes
 ==========
 
+## latest
+* [#2587](https://github.com/IBMStreams/streamsx.topology/issues/2587) Fix conda detection in Python 3.7
+
 ## v1.16.0
 * [#1679](https://github.com/IBMStreams/streamsx.topology/issues/1679) Nested tuple: Support tuple as attribute type
 * [#2551](https://github.com/IBMStreams/streamsx.topology/issues/2551) Adapt streamsx for REST API changes
