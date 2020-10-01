@@ -495,7 +495,7 @@ class Topology(object):
         self.exclude_packages = set() 
         self._pip_packages = list() 
         self._files = dict()
-        if "Anaconda" in sys.version or 'PROJECT_ID' in os.environ or 'DSX_PROJECT_ID' in os.environ:
+        if "Anaconda" in sys.version or 'PROJECT_ID' in os.environ or 'DSX_PROJECT_ID' in os.environ or os.path.exists(os.path.join(sys.prefix, 'conda-meta')):
             import streamsx.topology.condapkgs
             self.exclude_packages.update(streamsx.topology.condapkgs._CONDA_PACKAGES)
         import streamsx.topology._deppkgs
