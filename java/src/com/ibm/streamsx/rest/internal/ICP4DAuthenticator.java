@@ -21,6 +21,7 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.topology.internal.context.streamsrest.StreamsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
@@ -43,7 +44,7 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
 
         URL serviceTokenUrl = new URL("https", icpdUrl.getHost(), icpdUrl.getPort(),
                 "/zen-data/v2/serviceInstance/token");
-
+System.out.println(detailsUrl);
         return new ICP4DAuthenticator(icpdUrl, authorizeUrl, detailsUrl, serviceTokenUrl, instanceName, user, password);
     }
 
@@ -134,7 +135,6 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
 
         JsonObject pd = new JsonObject();
         pd.addProperty("serviceInstanceId", serviceId);
-
         post = Request.Post(serviceTokenUrl.toExternalForm())         
                 .addHeader("Authorization", icpdAuth)
                 .bodyString(pd.toString(), ContentType.APPLICATION_JSON);
@@ -155,6 +155,12 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         final String externalBuildEndpoint = jstring(sci, "externalBuildEndpoint");
         URL buildUrl = urlFromEndPoint(externalBuildEndpoint);
         
+        final String externalRestResourceEndpoint = jstring(sci, "externalRestResourceEndpoint");
+        if (externalRestResourceEndpoint != null) {
+            URL restResourceUrl = urlFromEndPoint(externalRestResourceEndpoint);
+            connInfo.addProperty (StreamsKeys.STREAMS_REST_RESOURCES_ENDPOINT, restResourceUrl.toExternalForm());
+        }
+
         final String externalRestEndpoint = jstring(sci, "externalRestEndpoint");
         URL streamsUrl = urlFromEndPoint(externalRestEndpoint);
 
@@ -175,7 +181,6 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         cfg.addProperty("cluster_ip", icpdUrl.getHost());
         cfg.addProperty("cluster_port", icpdUrl.getPort());
         cfg.addProperty("service_id", serviceId);
-
         this.cfg = cfg;
         return cfg;
     }
