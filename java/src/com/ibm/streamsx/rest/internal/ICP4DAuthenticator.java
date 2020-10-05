@@ -44,7 +44,6 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
 
         URL serviceTokenUrl = new URL("https", icpdUrl.getHost(), icpdUrl.getPort(),
                 "/zen-data/v2/serviceInstance/token");
-System.out.println(detailsUrl);
         return new ICP4DAuthenticator(icpdUrl, authorizeUrl, detailsUrl, serviceTokenUrl, instanceName, user, password);
     }
 
