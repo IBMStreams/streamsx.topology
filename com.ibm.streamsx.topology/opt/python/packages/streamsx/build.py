@@ -330,7 +330,6 @@ class BuildService(streamsx.rest._AbstractStreamsConnection):
         service_name = service['service_name']
         auth = streamsx.rest_primitives._ICPDAuthHandler(service_name, service['service_token'])
         resource_url = BuildService._root_from_endpoint(service['connection_info'].get('serviceBuildEndpoint'))
-        print("## BuildService: resource_url = " + resource_url)
         buildpools_url = service['connection_info'].get('serviceBuildPoolsEndpoint', None)
         sc = BuildService(resource_url=resource_url, buildpools_url=buildpools_url, auth=auth)
         if streamsx.topology.context.ConfigParams.SSL_VERIFY in config:

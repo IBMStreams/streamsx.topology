@@ -27,7 +27,7 @@ import com.ibm.streamsx.topology.internal.streams.Util;
  * Context that submits the SPL to the Stream build service
  * for a remote build into Streams Docker image for EDGE.
  * 
- * Delegates to BuildServiceEdgeContext.
+ * Delegates to EdgeImageContext.
  * 
  */
 public final class RemoteEdgeContext extends RemoteContextForwarderStreamsContext<BuildService> {

@@ -45,7 +45,7 @@ public class StreamsConnection {
      *            variable {@code STREAMS_PASSWORD} if set.
      * @param url
      *            String representing the root url to the REST API.
-     *            If {@code null} password defaults to value of the environment
+     *            If {@code null} url defaults to value of the environment
      *            variable {@code STREAMS_REST_URL} if set.
      *
      * @return a connection to IBM Streams

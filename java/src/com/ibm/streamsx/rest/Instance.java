@@ -10,17 +10,14 @@ import static java.util.Objects.requireNonNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
-import com.ibm.streamsx.rest.internal.RestUtils;
 import com.ibm.streamsx.rest.internal.StandaloneAuthenticator;
 import com.ibm.streamsx.topology.internal.context.streamsrest.StreamsKeys;
 import com.ibm.streamsx.topology.internal.streams.Util;
@@ -37,6 +34,8 @@ public class Instance extends Element {
     @Expose
     private ActiveVersion activeVersion;
     @Expose
+    private String productVersion;
+    @Expose
     private String activeViews;
     @Expose
     private String configuredViews;
@@ -44,7 +43,8 @@ public class Instance extends Element {
     private long creationTime;
     @Expose
     private String creationUser;
-    @Expose String domain;
+    @Expose
+    String domain;
     @Expose
     private String exportedStreams;
     @Expose
@@ -229,9 +229,16 @@ public class Instance extends Element {
         deploy.add(StreamsKeys.SERVICE_DEFINITION, authenticator.config(verify));
 
         URL instanceUrl  = new URL(getStreamsInstanceURL(deploy));
-
-        URL restUrl = new URL(instanceUrl.getProtocol(), instanceUrl.getHost(), instanceUrl.getPort(),
-                STREAMS_REST_RESOURCES);
+        URL restUrl;
+        final String restResourcesUrl = StreamsKeys.getStreamsRestResourcesUrl(deploy);
+        if (restResourcesUrl != null) {
+            // here we end in CPD >= 3.0
+            restUrl = new URL(restResourcesUrl);
+        } else {
+            // legacy way
+            restUrl = new URL(instanceUrl.getProtocol(), instanceUrl.getHost(), instanceUrl.getPort(),
+                    STREAMS_REST_RESOURCES);
+        }
 
         return StreamsConnection.ofAuthenticator(restUrl.toExternalForm(), authenticator);
     }
@@ -309,10 +316,40 @@ public class Instance extends Element {
      * Gets information about the IBM Streams Installation that was used to
      * start this instance
      * 
-     * @return {@link ActiveVersion}
+     * @return {@link ActiveVersion}. Please note that Streams version >= 5.x does not have this element.
      */
     public ActiveVersion getActiveVersion() {
         return activeVersion;
+    }
+
+    /** Gets the product version, please note that this is null for Streams version < 5.2 */
+    public String getProductVersion() {
+        return productVersion;
+    }
+
+    /**
+     * Tests if the instance has a minimum major.minor product version.
+     * @param major The minimum major version
+     * @param minor the minimum minor version
+     * @return true if the product version is at least the major and minor version.
+     *         When the version cannot be found in the REST object, <tt>false</tt> is returned.
+     */
+    public boolean isProductVersionAtLeast(int major, int minor) {
+        String pv = productVersion;
+        if (pv == null) {
+            // test activeVersion
+            if (activeVersion != null) {
+                pv = activeVersion.getProductVersion();
+            }
+        }
+        if (pv == null) {
+            // No productVersion or activeVersion found in instance REST object
+            return false;
+        }
+        String[] tokens = pv.split("\\.");
+        final int prodMajor = Integer.parseInt(tokens[0]);
+        final int prodMinor = Integer.parseInt(tokens[1]);
+        return prodMajor > major || (prodMajor == major && prodMinor >= minor);
     }
 
     /**
