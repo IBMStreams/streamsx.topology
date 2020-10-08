@@ -628,6 +628,9 @@ class _DistributedSubmitterCP4DIntegratedProject(_DistributedSubmitter):
     """
     def __init__(self, config, graph, svc_info):
         super(_DistributedSubmitterCP4DIntegratedProject, self).__init__(config, graph, None, None)
+        streams_instance = streamsx.rest_primitives.Instance.of_service(svc_info)
+        if hasattr(streams_instance, 'productVersion'):
+            svc_info['productVersion'] = streams_instance.productVersion
         self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
         self._config()[ConfigParams.FORCE_REMOTE_BUILD] = True
         streamsx.rest_primitives.Instance._clear_service_info(self._config())
@@ -657,6 +660,8 @@ class _DistributedSubmitterCP4DIntegrated(_DistributedSubmitter):
             raise ValueError("Incorrect configuration for Cloud Pak for Data integrated configuration")
         self._streams_connection = self._inst.rest_client._sc
         svc_info = self._streams_connection.session.auth._cfg
+        if hasattr(self._inst, 'productVersion'):
+            svc_info['productVersion'] = self._inst.productVersion
         self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
         self._config()[ConfigParams.FORCE_REMOTE_BUILD] = True
 
