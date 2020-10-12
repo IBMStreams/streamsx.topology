@@ -142,7 +142,7 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         String serviceToken = jstring(resp, "AccessToken");
 
         serviceAuth = RestUtils.createBearerAuth(serviceToken);
-        expire = System.currentTimeMillis() + 19 * 60;
+        expire = System.currentTimeMillis() + 19 * 60_000;
 
         JsonObject connInfo = new JsonObject();
 
