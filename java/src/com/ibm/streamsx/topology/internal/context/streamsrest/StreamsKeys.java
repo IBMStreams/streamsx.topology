@@ -19,6 +19,7 @@ public interface StreamsKeys {
     String BUILD_SERVICE_ENDPOINT = "serviceBuildEndpoint";
     String BUILD_PATH = "/streams/rest/builds";
     String BEARER_TOKEN = "service_token";
+    String PRODUCT_VERSION = "productVersion";
     // serviceRestEndpoint points directly to the instance URL
     String STREAMS_REST_ENDPOINT = "serviceRestEndpoint";
     String STREAMS_REST_RESOURCES_ENDPOINT = "serviceRestResourceEndpoint";
@@ -69,5 +70,15 @@ public interface StreamsKeys {
         JsonObject service = deploy.get(SERVICE_DEFINITION).getAsJsonObject();
 
         return GsonUtilities.jstring(service, BEARER_TOKEN);
+    }
+    
+    /**
+     * Returns the productVersion from the topology.service.definition object
+     * @param deploy the deploy JSON object
+     * @return the product version, for example 5.3.1.0 or <tt>null</tt> when not present.
+     */
+    static String getProductVersion(JsonObject deploy) {
+        JsonObject service = deploy.get(SERVICE_DEFINITION).getAsJsonObject();
+        return GsonUtilities.jstring(service, PRODUCT_VERSION);
     }
 }
