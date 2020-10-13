@@ -471,6 +471,7 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
         try:
             service_id = sro['ID']
             service_type = sro['ServiceInstanceType']
+            service_namespace = sro['ServiceInstanceNamespace']
             sca = sro['CreateArguments']
         except KeyError as ke:
             logger.critical('Mandatory JSON object missing in REST service response: requestObj/' + ke.args[0])
@@ -552,11 +553,14 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
             'type': 'streams',
             'connection_info': {
                 'serviceBuildEndpoint': build_url,
-                'serviceRestEndpoint': streams_url},
+                'serviceRestEndpoint': streams_url
+            },
             'serviceTokenEndpoint': service_token_url,
+            'user_token': token,
             'service_token': service_token,
             'service_token_expire': int(self._auth_expiry_time * 1000.0),
             'service_name': service_name,
+            'service_namespace': service_namespace,
             'cluster_ip': cluster_ip,
             'cluster_port': cluster_port,
             'service_id': service_id,
@@ -1865,6 +1869,10 @@ class Instance(_ResourceElement):
 
     @staticmethod
     def _find_service_def(config):
+        """
+        Returns a service definition dict with connection_info, type, service_name, service_id, service_namespace,
+        refreshed service_token, service_token_expire, and user_token
+        """
         if Instance._is_service_def(config):
             service = config
         else:
@@ -1874,7 +1882,11 @@ class Instance(_ResourceElement):
             svc_info = {}
             svc_info['connection_info'] = service['connection_info']
             svc_info['type'] = service['type']
-            svc_name = service['connection_info']['serviceRestEndpoint'].split('/')[-1]
+            svcRestEndpoint = service['connection_info']['serviceRestEndpoint']
+            if svcRestEndpoint.endswith('/'):
+                svc_name = svcRestEndpoint.split('/')[-2]
+            else:
+                svc_name = svcRestEndpoint.split('/')[-1]
             svc_info['service_name'] = svc_name
             try:
                 # Get a new token as we don't know how much
@@ -1883,6 +1895,12 @@ class Instance(_ResourceElement):
                 from icpd_core import icpd_util
                 svc_info['service_token'] = icpd_util.get_instance_token(name=svc_name)
                 svc_info['service_token_expire'] = int((time.time() + 19 * 60)*1000)
+
+                # add service_id and service_namespace
+                con = icpd_util.get_connection(name=svc_name, conn_class='svc')
+                if con:
+                    svc_info['service_id'] = con['service_instance_id']
+                    svc_info['service_namespace'] = con['service_instance_namespace']
             except:
                 svc_info['service_token'] = service['service_token']
                 svc_info['service_token_expire'] = int((time.time() + 5 * 60)*1000)
