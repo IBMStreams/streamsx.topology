@@ -274,7 +274,11 @@ class BuildService(streamsx.rest._AbstractStreamsConnection):
             svc_info = {}
             svc_info['connection_info'] = service['connection_info']
             svc_info['type'] = service['type']
-            svc_name = service['connection_info']['serviceRestEndpoint'].split('/')[-1]
+            svcRestEndpoint = service['connection_info']['serviceRestEndpoint']
+            if svcRestEndpoint.endswith('/'):
+                svc_name = svcRestEndpoint.split('/')[-2]
+            else:
+                svc_name = svcRestEndpoint.split('/')[-1]
             svc_info['service_name'] = svc_name
             try:
                 # Get a new token as we don't know how much
@@ -283,6 +287,11 @@ class BuildService(streamsx.rest._AbstractStreamsConnection):
                 from icpd_core import icpd_util
                 svc_info['service_token'] = icpd_util.get_instance_token(name=svc_name)
                 svc_info['service_token_expire'] = int((time.time() + 19 * 60)*1000)
+                # add service_id and service_namespace
+                con = icpd_util.get_connection(name=svc_name, conn_class='svc')
+                if con:
+                    svc_info['service_id'] = con['service_instance_id']
+                    svc_info['service_namespace'] = con['service_instance_namespace']
             except:
                 svc_info['service_token'] = service['service_token']
                 svc_info['service_token_expire'] = int((time.time() + 5 * 60)*1000)
