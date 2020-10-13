@@ -631,6 +631,10 @@ class _DistributedSubmitterCP4DIntegratedProject(_DistributedSubmitter):
         streams_instance = streamsx.rest_primitives.Instance.of_service(svc_info)
         if hasattr(streams_instance, 'productVersion'):
             svc_info['productVersion'] = streams_instance.productVersion
+        # when we use the CP4D- REST-API from inside the CPD (Notebook) we go over this URL: https://internal-nginx-svc:12443
+        svc_info['cluster_ip'] = 'internal-nginx-svc'
+        svc_info['cluster_port'] = 12443
+
         self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
         self._config()[ConfigParams.FORCE_REMOTE_BUILD] = True
         streamsx.rest_primitives.Instance._clear_service_info(self._config())
