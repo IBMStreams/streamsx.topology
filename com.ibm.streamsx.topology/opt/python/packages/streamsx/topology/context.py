@@ -628,6 +628,14 @@ class _DistributedSubmitterCP4DIntegratedProject(_DistributedSubmitter):
     """
     def __init__(self, config, graph, svc_info):
         super(_DistributedSubmitterCP4DIntegratedProject, self).__init__(config, graph, None, None)
+        # use the config here rather than svc_info as the config contains SSL_VERIFY
+        streams_instance = streamsx.rest_primitives.Instance.of_service(config)
+        if hasattr(streams_instance, 'productVersion'):
+            svc_info['productVersion'] = streams_instance.productVersion
+        # when we use the CP4D- REST-API from inside the CP4D (Notebook) we go over this URL: https://internal-nginx-svc:12443
+        svc_info['cluster_ip'] = 'internal-nginx-svc'
+        svc_info['cluster_port'] = 12443
+
         self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
         self._config()[ConfigParams.FORCE_REMOTE_BUILD] = True
         streamsx.rest_primitives.Instance._clear_service_info(self._config())
@@ -657,6 +665,8 @@ class _DistributedSubmitterCP4DIntegrated(_DistributedSubmitter):
             raise ValueError("Incorrect configuration for Cloud Pak for Data integrated configuration")
         self._streams_connection = self._inst.rest_client._sc
         svc_info = self._streams_connection.session.auth._cfg
+        if hasattr(self._inst, 'productVersion'):
+            svc_info['productVersion'] = self._inst.productVersion
         self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
         self._config()[ConfigParams.FORCE_REMOTE_BUILD] = True
 
@@ -1202,6 +1212,10 @@ class ConfigParams(object):
 
     .. seealso:: :ref:`sas-service-name`
     """
+    SPACE_NAME = 'topology.spaceName'
+    """
+    Key for a deployment space on a CloudPak for Data, when submitted to :py:const:`DISTRIBUTED`
+    """
     FORCE_REMOTE_BUILD = 'topology.forceRemoteBuild'
     """Force a remote build of the application.
 
@@ -1297,6 +1311,7 @@ class JobConfig(object):
         data_directory(str): Specifies the location of the optional data directory. The data directory is a path
             within the cluster that is running the Streams instance.
         tracing: Specify the application trace level. See :py:attr:`tracing`
+        space_name(str): Specifies the name of a deployment space on a CloudPak for Data system, which the job is associated with
 
     Example::
 
@@ -1308,12 +1323,13 @@ class JobConfig(object):
 
     .. seealso:: `Job configuration overlays reference <https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.ref.doc/doc/submitjobparameters.html>`_
     """
-    def __init__(self, job_name=None, job_group=None, preload=False, data_directory=None, tracing=None):
+    def __init__(self, job_name=None, job_group=None, preload=False, data_directory=None, tracing=None, space_name=None):
         self.job_name = job_name
         self.job_group = job_group
         self.preload = preload
         self.data_directory = data_directory
         self.tracing = tracing
+        self._space_name = space_name
         self._pe_count = None
         self._raw_overlay = None
         self._submission_parameters = dict()
@@ -1367,7 +1383,18 @@ class JobConfig(object):
                  if jco:
                      jc.raw_overlay = jco
         return jc
-                    
+
+    @property
+    def space_name(self):
+        """
+        The deployment space of a Cloud Pak for Data that the job will be associated with.
+        """
+        return self._space_name
+    
+    @space_name.setter
+    def space_name(self, space_name):
+        self._space_name = space_name
+        
     @property
     def tracing(self):
         """
@@ -1522,6 +1549,8 @@ class JobConfig(object):
             dict: config.
         """
         config[ConfigParams.JOB_CONFIG] = self
+        if self.space_name:
+            config[ConfigParams.SPACE_NAME] = self.space_name
         return config
 
     def as_overlays(self):

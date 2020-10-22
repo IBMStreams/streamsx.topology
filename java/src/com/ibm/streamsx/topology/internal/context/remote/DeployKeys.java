@@ -36,6 +36,10 @@ public interface DeployKeys {
     String DEPLOY = "deploy";
     
     /**
+     * Key for the job name in the JCO
+     */
+    String JOB_NAME = "jobName";
+    /**
      * Key for context type in deploy information
      */
     String CONTEXT_TYPE = "contextType";

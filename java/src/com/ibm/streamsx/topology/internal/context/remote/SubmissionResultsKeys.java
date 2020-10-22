@@ -30,6 +30,11 @@ public interface SubmissionResultsKeys {
      * The file path of the compiled application bundle.
      */
     String BUNDLE_PATH = "bundlePath";
+
+    /**
+     * The URL of the compiled application bundle.
+     */
+    String BUNDLE_URL = "bundleUrl";
     
     /**
      * The job id of the submitted job.
