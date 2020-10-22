@@ -27,6 +27,8 @@ public class Util {
     public static final String STREAMS_BUILD_URL = "STREAMS_BUILD_URL";
     public static final String STREAMS_REST_URL = "STREAMS_REST_URL";
     public static final String ICP4D_DEPLOYMENT_URL = "CP4D_URL";
+    public static final String PROJECT_ID = "PROJECT_ID";
+    public static final String PROJECT_NAME = "PROJECT_NAME";
     private static String streamsInstall;
     
     /**

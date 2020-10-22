@@ -12,6 +12,7 @@ import com.ibm.streamsx.rest.internal.RestUtils;
 
 /**
  * Connection to IBM Streams instance
+ * @deprecated Replace with {@link com.ibm.streamsx.rest.internal.AbstractConnection}.
  */
 abstract class AbstractConnection {
 

@@ -40,6 +40,7 @@ import org.apache.http.util.EntityUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.rest.RESTException;
 
 public interface RestUtils {
     
@@ -180,7 +181,58 @@ public interface RestUtils {
     static JsonObject getGsonResponse(Executor executor, String auth, URL url) throws IOException {
         return getGsonResponse(executor, auth, url.toExternalForm());
     }
-    
+
+
+    /**
+     * Gets a response to an HTTP GET call as a string
+     * 
+     * @param executor HTTP client executor to use for call
+     * @param auth Authentication header contents, or null
+     * @param inputString REST call to make, i.e. the URI
+     * @return response from the inputString
+     * @throws IOException
+     * 
+     * TODO: unify error handling between this and gsonFromResponse(), and
+     * convert callers that want JSON to getGsonResponse()
+     */
+    static String getResponseString(Executor executor,
+            String auth, String inputString) throws IOException {
+        TRACE.fine("HTTP GET: " + inputString);
+        String sReturn = "";
+        Request request = Request
+                .Get(inputString)
+                .addHeader("accept", ContentType.APPLICATION_JSON.getMimeType())
+                .useExpectContinue();
+        if (null != auth) {
+            request = request.addHeader(AUTH.WWW_AUTH_RESP, auth);
+        }
+
+        Response response = executor.execute(request);
+        HttpResponse hResponse = response.returnResponse();
+        int rcResponse = hResponse.getStatusLine().getStatusCode();
+
+        if (HttpStatus.SC_OK == rcResponse) {
+            sReturn = EntityUtils.toString(hResponse.getEntity());
+        } else if (HttpStatus.SC_NOT_FOUND == rcResponse) {
+            // with a 404 message, we are likely to have a message from Streams
+            // but if not, provide a better message
+            sReturn = EntityUtils.toString(hResponse.getEntity());
+            if (sReturn != null && !sReturn.isEmpty()) {
+                throw RESTException.create(rcResponse, sReturn + " for url " + inputString);
+            } else {
+                String httpError = "HttpStatus is " + rcResponse + " for url " + inputString;
+                throw new RESTException(rcResponse, httpError);
+            }
+        } else {
+            // all other errors...
+            String httpError = "HttpStatus is " + rcResponse + " for url " + inputString;
+            throw new RESTException(rcResponse, httpError);
+        }
+        TRACE.finest(rcResponse + ": " + sReturn);
+        return sReturn;
+    }
+
+
     /**
      * Gets a JSON response to an HTTP request call
      */
@@ -194,7 +246,7 @@ public interface RestUtils {
     static JsonObject gsonFromResponse(HttpResponse response) throws IOException {
         HttpEntity entity = response.getEntity();
         int statusCode = response.getStatusLine().getStatusCode();
-        if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED) {
+        if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED && statusCode != HttpStatus.SC_ACCEPTED) {
             final String errorInfo;
             if (entity != null)
                 errorInfo = " -- " + EntityUtils.toString(entity);

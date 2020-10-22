@@ -34,6 +34,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.RESTException;
 import com.ibm.streamsx.rest.internal.InputStreamConsumer;
+import com.ibm.streamsx.rest.internal.RestUtils;
 
 class StreamsRestUtils {
 
@@ -116,12 +117,13 @@ class StreamsRestUtils {
     }
 
     /**
-     * Gets a response to an HTTP call as a string
+     * Gets a response to an HTTP call as a string.
+     * This method delegates to {@link com.ibm.streamsx.rest.internal.RestUtils#getResponseString(Executor, String, String)
      * 
      * @param executor HTTP client executor to use for call
      * @param auth Authentication header contents, or null
      * @param inputString REST call to make
-     * @return response from the inputString
+     * @return response from the inputString, i.e. the URI
      * @throws IOException
      * 
      * TODO: unify error handling between this and gsonFromResponse(), and
@@ -129,39 +131,7 @@ class StreamsRestUtils {
      */
     static String getResponseString(Executor executor,
             String auth, String inputString) throws IOException {
-        TRACE.fine("HTTP GET: " + inputString);
-        String sReturn = "";
-        Request request = Request
-                .Get(inputString)
-                .addHeader("accept", ContentType.APPLICATION_JSON.getMimeType())
-                .useExpectContinue();
-        if (null != auth) {
-            request = request.addHeader(AUTH.WWW_AUTH_RESP, auth);
-        }
-
-        Response response = executor.execute(request);
-        HttpResponse hResponse = response.returnResponse();
-        int rcResponse = hResponse.getStatusLine().getStatusCode();
-
-        if (HttpStatus.SC_OK == rcResponse) {
-            sReturn = EntityUtils.toString(hResponse.getEntity());
-        } else if (HttpStatus.SC_NOT_FOUND == rcResponse) {
-            // with a 404 message, we are likely to have a message from Streams
-            // but if not, provide a better message
-            sReturn = EntityUtils.toString(hResponse.getEntity());
-            if (sReturn != null && !sReturn.isEmpty()) {
-                throw RESTException.create(rcResponse, sReturn + " for url " + inputString);
-            } else {
-                String httpError = "HttpStatus is " + rcResponse + " for url " + inputString;
-                throw new RESTException(rcResponse, httpError);
-            }
-        } else {
-            // all other errors...
-            String httpError = "HttpStatus is " + rcResponse + " for url " + inputString;
-            throw new RESTException(rcResponse, httpError);
-        }
-        TRACE.finest(rcResponse + ": " + sReturn);
-        return sReturn;
+        return RestUtils.getResponseString(executor, auth, inputString);
     }
 
     /**
