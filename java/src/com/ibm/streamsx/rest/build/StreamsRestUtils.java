@@ -122,8 +122,8 @@ class StreamsRestUtils {
      * 
      * @param executor HTTP client executor to use for call
      * @param auth Authentication header contents, or null
-     * @param inputString REST call to make
-     * @return response from the inputString, i.e. the URI
+     * @param inputString REST call to make, i.e. the REST URL
+     * @return response from the inputString
      * @throws IOException
      * 
      * TODO: unify error handling between this and gsonFromResponse(), and
