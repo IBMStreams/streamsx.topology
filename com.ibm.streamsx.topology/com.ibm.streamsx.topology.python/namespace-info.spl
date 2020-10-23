@@ -50,7 +50,7 @@ content of the stream. Tuples on a stream are Python objects or structured SPL t
 # Prerequisites
 
 * IBM Streams Version 4.2 (or later).
-* Python 2.7, 3.5 or 3.6
+* Python 3.5, 3.6, or 3.7
   * Either install Anaconda or Miniconda - this are the easiest options. When running distributed the Streams instance application environment variable `PYTHONHOME` must be set to the install location.
   * or install CPython. This is more involved and usually requires building Python from source code.
   * Python 3.5 is required when using the Streaming Analytics service on IBM Cloud.
@@ -59,7 +59,7 @@ content of the stream. Tuples on a stream are Python objects or structured SPL t
 
 Example code that builds and then submits a Hello World topology.
 
-    import mymodule;
+    import mymodule
     from streamsx.topology.topology import *
     import streamsx.topology.context
 
@@ -111,7 +111,7 @@ Example code that builds and then submits a simple topology.
 
     from streamsx.topology.topology import Topology
     import streamsx.topology.context
-    import transform_sample_functions;
+    import transform_sample_functions
 
     topo = Topology("transform_sample")
     source = topo.source(transform_sample_functions.int_strings_transform)
