@@ -201,7 +201,7 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
             if (null == buildName) {
                 buildName = "build";
             }
-            buildName = getSPLCompatibleName(buildName) + "_" + randomHex(16);
+            buildName = getSPLCompatibleName(buildName) + "_" + RestUtils.randomHex(16);
             buildName = URLEncoder.encode(buildName, StandardCharsets.UTF_8.name());
             
             String originator = null;
@@ -328,16 +328,6 @@ abstract class AbstractStreamingAnalyticsService implements StreamingAnalyticsSe
         return sb.toString();
     }
 
-    private static final String HEXES = "0123456789ABCDEF";
-    private static final int HEXES_L = HEXES.length();
-
-    static String randomHex(final int length) {
-        char[] name = new char[length];
-        for (int i = 0; i < length; i++) {
-            name[i] = HEXES.charAt(ThreadLocalRandom.current().nextInt(HEXES_L));
-        }
-        return new String(name);
-    }
 
     public Instance getInstance() throws IOException {
         return streamsConnection().getInstance();

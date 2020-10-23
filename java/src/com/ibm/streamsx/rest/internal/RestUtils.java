@@ -16,6 +16,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
@@ -54,6 +55,22 @@ public interface RestUtils {
     String AUTH_BASIC = "Basic ";
     
     int CONNECT_TIMEOUT_MILLISECONDS = 30000;
+
+    static final String HEXES = "0123456789ABCDEF";
+    static final int HEXES_L = HEXES.length();
+
+    /**
+     * Create a random string of hexadecimal digits of specified length
+     * @param length length of the generated String
+     * @return hex string, in which the A-F digits are uppercase
+     */
+    static String randomHex(final int length) {
+        char[] name = new char[length];
+        for (int i = 0; i < length; i++) {
+            name[i] = HEXES.charAt(ThreadLocalRandom.current().nextInt(HEXES_L));
+        }
+        return new String(name);
+    }
 
     /**
      * Create an encoded Basic auth header for the given credentials.
