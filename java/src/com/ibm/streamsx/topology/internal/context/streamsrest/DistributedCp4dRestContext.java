@@ -26,6 +26,7 @@ import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.internal.context.remote.DeployKeys;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
+import com.ibm.streamsx.topology.internal.messages.Messages;
 import com.ibm.streamsx.topology.internal.streams.Util;
 //import com.ibm.streamsx.topology.internal.messages.Messages;
 
@@ -151,11 +152,8 @@ public class DistributedCp4dRestContext extends BuildServiceContext {
             try {
                 spaceId = doCreateSpace? icp4dRestService.getOrCreateSpace(spaceName).getId(): icp4dRestService.getSpaceIdForName(spaceName);
                 if (spaceId == null) {
-                    // TODO: add CDIST0nnnE msg to ./runtime/src/com/ibm/streamsx/topology/internal/messages/messages.properties
-                    // Messages is com.ibm.streamsx.topology.internal.messages.Messages
-                    //  final String msg = Messages.getString("TODO", spaceName);
+                    final String msg = Messages.getString("DEPLOYMENT_SPACE_NOT_EXISTS", spaceName);
                     // Here we end only, when the REST call succeeded, and the query didn't find the space
-                    final String msg = "Deployment space " + spaceName + " does not exist.";
                     throw new IllegalStateException (msg);
                 }
             } catch (IOException e) {
