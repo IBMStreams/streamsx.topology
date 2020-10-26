@@ -95,10 +95,19 @@ public class ICP4DServiceImpl extends AbstractConnection implements ICP4DService
     }
 
     /**
+     * @throws IOException
+     */
+    @Override
+    public void test() throws IOException {
+        final String randomSpaceName = RestUtils.randomHex(20);
+        getSpaceForName (randomSpaceName);
+    }
+
+    /**
      * Gets the deployment space given by its name.
      * @param spaceName the space name
      * @return the first space instance with matching name or null if the space name doesn't exist.
-     * @throws IOException 
+     * @throws IOException the REST request failed
      */
     private DeploymentSpace getSpaceForName (String spaceName) throws IOException {
         final String queryUrl = this.spacesRestUrl + "?name=" + URLEncoder.encode (spaceName, StandardCharsets.UTF_8.name());

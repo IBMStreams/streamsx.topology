@@ -45,6 +45,12 @@ public interface ICP4DService {
     boolean isExternalClient();
 
     /**
+     * Performs a GET request on the Spaces API to verify it is working
+     * @throws IOException test failed
+     */
+    void test() throws IOException;
+
+    /**
      * Gets the spaceId for a deployment space given by its name.
      * @param spaceName the space name
      * @return the space ID or null if the space name doesn't exist.

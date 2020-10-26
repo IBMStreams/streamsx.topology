@@ -370,9 +370,9 @@ class _StreamsRestClient(object):
 
 class _BearerAuthHandler(requests.auth.AuthBase):
     def __init__(self):
-        # Represents the epoch time in milliseconds at which
+        # Represents the epoch time in seconds at which
         # the token is no longer valid
-        # Starts at -1 such that the first invocation of a REST request
+        # Starts at 0 such that the first invocation of a REST request
         # Retrieves a token
         self._auth_expiry_time = 0
 

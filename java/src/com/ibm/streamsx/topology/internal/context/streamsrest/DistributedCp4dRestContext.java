@@ -100,23 +100,23 @@ public class DistributedCp4dRestContext extends BuildServiceContext {
     @Override
     protected void preSubmit (JsonObject submission) {
         super.preSubmit (submission);
-        this.graph = GsonUtilities.jobject (submission, SUBMISSION_GRAPH);
-        if (this.graph == null) {
+        graph = GsonUtilities.jobject (submission, SUBMISSION_GRAPH);
+        if (graph == null) {
             throw new IllegalStateException (SUBMISSION_GRAPH + " not found in submission");
         }
-        this.deploy = GsonUtilities.jobject (submission, SUBMISSION_DEPLOY);
-        if (this.deploy == null) {
+        deploy = GsonUtilities.jobject (submission, SUBMISSION_DEPLOY);
+        if (deploy == null) {
             throw new IllegalStateException (SUBMISSION_DEPLOY + " not found in submission");
         }
         JsonObject service = GsonUtilities.jobject (deploy, StreamsKeys.SERVICE_DEFINITION);
         final boolean verify = sslVerify (deploy);
-        this.icp4dRestService = ICP4DService.of (service, verify);
+        icp4dRestService = ICP4DService.of (service, verify);
 
         String spaceName = GsonUtilities.jstring (deploy, StreamsKeys.SPACE_NAME);
         associateWithProject = false;
         if (!icp4dRestService.isExternalClient() && spaceName == null) {
             // get "PROJECT_ID" environment variable, something like "ebb4c6be-2c2c-4e8a-8973-f470130451c8"
-            // throws IllegalStateException when not set
+            // throws IllegalStateException when the environment variable is not set
             projectId = Util.getenv(Util.PROJECT_ID);
             try {
                 projectName = Util.getenv(Util.PROJECT_NAME);
@@ -149,12 +149,13 @@ public class DistributedCp4dRestContext extends BuildServiceContext {
             }
 
             try {
-                this.spaceId = doCreateSpace? icp4dRestService.getOrCreateSpace(spaceName).getId(): icp4dRestService.getSpaceIdForName(spaceName);
-                if (this.spaceId == null) {
+                spaceId = doCreateSpace? icp4dRestService.getOrCreateSpace(spaceName).getId(): icp4dRestService.getSpaceIdForName(spaceName);
+                if (spaceId == null) {
                     // TODO: add CDIST0nnnE msg to ./runtime/src/com/ibm/streamsx/topology/internal/messages/messages.properties
                     // Messages is com.ibm.streamsx.topology.internal.messages.Messages
                     //  final String msg = Messages.getString("TODO", spaceName);
-                    final String msg = "Deployment space does not exist: " + spaceName;
+                    // Here we end only, when the REST call succeeded, and the query didn't find the space
+                    final String msg = "Deployment space " + spaceName + " does not exist.";
                     throw new IllegalStateException (msg);
                 }
             } catch (IOException e) {
@@ -162,18 +163,18 @@ public class DistributedCp4dRestContext extends BuildServiceContext {
             }
         }
         // create a job (description) name
-        this.jobName = getJobNameFromJco (deploy);
-        if (this.jobName == null) {
-            final String topologyNamespace = GsonUtilities.jstring (this.graph, "namespace");
-            final String topologyName = GsonUtilities.jstring (this.graph, "name");
-            if (this.associateWithProject && topologyNamespace != null && topologyNamespace.equals (this.projectName)) {
+        jobName = getJobNameFromJco (deploy);
+        if (jobName == null) {
+            final String topologyNamespace = GsonUtilities.jstring (graph, "namespace");
+            final String topologyName = GsonUtilities.jstring (graph, "name");
+            if (associateWithProject && topologyNamespace != null && topologyNamespace.equals (projectName)) {
                 // omit namespace in job description
-                this.jobName = topologyName;
+                jobName = topologyName;
             }
             else {
-                // using :: as separator looks better, but creates a job description that cannot be edited in the CP4D GUI.
+                // using :: as separator looks like in Streams console, but creates a job description that cannot be edited in the CP4D GUI.
                 // Obviously the validation is inconsistent
-                this.jobName = topologyNamespace + "_" + topologyName;
+                jobName = topologyNamespace + "-" + topologyName;
             }
         }
         System.out.println("--> jobName: " + jobName);
@@ -195,7 +196,7 @@ public class DistributedCp4dRestContext extends BuildServiceContext {
                 projectId = null;
             }
 
-            JobDescription jobDescription = icp4dRestService.getOrCreateJobDescription (this.jobName, this.spaceId, this.projectId);
+            JobDescription jobDescription = icp4dRestService.getOrCreateJobDescription (jobName, spaceId, projectId);
             //            System.out.println ("job description = " + jobDescription);
 
             JsonArray artifacts = GsonUtilities.array(GsonUtilities.object (result, "build"), "artifacts");

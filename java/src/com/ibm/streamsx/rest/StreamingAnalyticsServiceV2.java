@@ -253,7 +253,7 @@ class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
             if (null == buildName) {
                 buildName = "build";
             }
-            buildName = getSPLCompatibleName(buildName) + "_" + randomHex(16);
+            buildName = getSPLCompatibleName(buildName) + "_" + RestUtils.randomHex(16);
             buildName = URLEncoder.encode(buildName, StandardCharsets.UTF_8.name());
             
             String originator = null;
