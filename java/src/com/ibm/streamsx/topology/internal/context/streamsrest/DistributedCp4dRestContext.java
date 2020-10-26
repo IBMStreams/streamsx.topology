@@ -175,9 +175,11 @@ public class DistributedCp4dRestContext extends BuildServiceContext {
                 jobName = topologyNamespace + "-" + topologyName;
             }
         }
-        System.out.println("--> jobName: " + jobName);
-        System.out.println("--> spaceId: " + spaceId);
-        System.out.println("--> projectId: " + projectId);
+        if (associateWithProject) {
+            spaceId = null;
+        } else {
+            projectId = null;
+        }
     }
 
 
@@ -186,25 +188,14 @@ public class DistributedCp4dRestContext extends BuildServiceContext {
         // here we submit the Job with the SAB in the artifacts URL
         try {
             report ("Submitting job");
-            if (associateWithProject) {
-                System.out.println("... associating job with project_id: " + projectId);
-                spaceId = null;
-            } else {
-                System.out.println("... associating job with space_id: " + spaceId);
-                projectId = null;
-            }
-
-            JobDescription jobDescription = icp4dRestService.getOrCreateJobDescription (jobName, spaceId, projectId);
-            //            System.out.println ("job description = " + jobDescription);
 
             JsonArray artifacts = GsonUtilities.array(GsonUtilities.object (result, "build"), "artifacts");
             // there should always be only one artifact
             JsonObject artifact0 = (JsonObject)artifacts.get(0);
             String sabUrl = artifact0.get("sabUrl").getAsString();
-            System.out.println ("--> SAB-URL: " + sabUrl);
 
+            JobDescription jobDescription = icp4dRestService.getOrCreateJobDescription (jobName, spaceId, projectId);
             JobRunConfiguration run = icp4dRestService.createJobRun (jobDescription, sabUrl, deploy.getAsJsonArray ("jobConfigOverlays"));
-            //            System.out.println ("JobRunConfiguration = " + run);
             String jobId = run.getJobId();
             report ("Job id:" + jobId);
 
