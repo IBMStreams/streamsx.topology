@@ -47,10 +47,6 @@ public class ICP4DServiceImpl extends AbstractConnection implements ICP4DService
             this.apiBaseUrl = (new URL("https", clusterIp, clusterPort, "")).toExternalForm();
             this.jobsRestUrl = (new URL("https", clusterIp, clusterPort, "/v2/jobs")).toExternalForm();
             this.spacesRestUrl = (new URL("https", clusterIp, clusterPort, "/v2/spaces")).toExternalForm();
-//            System.out.println("this.apiBaseUrl = " + this.apiBaseUrl);
-//            System.out.println("this.jobsRestUrl = " + this.jobsRestUrl);
-//            System.out.println("this.spacesRestUrl = " + this.spacesRestUrl);
-//            System.out.println("Auth = " + this.authenticator.apply(executor));
         } catch (MalformedURLException e) {
             throw new IllegalStateException(e);
         }
@@ -112,11 +108,9 @@ public class ICP4DServiceImpl extends AbstractConnection implements ICP4DService
     private DeploymentSpace getSpaceForName (String spaceName) throws IOException {
         final String queryUrl = this.spacesRestUrl + "?name=" + URLEncoder.encode (spaceName, StandardCharsets.UTF_8.name());
         List<DeploymentSpace> spaces = DeploymentSpace.createSpaceList (this, queryUrl);
-        //        System.out.println("--> space list size = " + spaces.size());
         for (DeploymentSpace space: spaces) {
             // return the first match
             if (spaceName.equals(space.getName())) {
-                //                System.out.println(space);
                 return space;
             }
         }
@@ -160,11 +154,8 @@ public class ICP4DServiceImpl extends AbstractConnection implements ICP4DService
                 .addHeader ("Authorization", getAuthorization())
                 .bodyString (bodyStr, ContentType.APPLICATION_JSON);
 
-//        System.out.println("... createSpace body = " + body);
         JsonObject response = RestUtils.requestGsonResponse (getExecutor(), post);
-//        System.out.println("... createSpace POST response = " + response);
         DeploymentSpace space = DeploymentSpace.create (this, response);
-//        System.out.println("... createSpace returned space = " + space);
         return space;
     }
 
@@ -243,7 +234,6 @@ public class ICP4DServiceImpl extends AbstractConnection implements ICP4DService
     public JobRunConfiguration createJobRun (JobDescription jobDescrition, String sabUrl, JsonArray jobConfigOverlaysArray) throws IOException {
         // POST /v2/jobs/{job_id}/runs
         final String restUrl = getJobsRestUrl() + "/" + jobDescrition.getAssetId() + "/runs?" + jobDescrition.createAssociatedWithQueryParam();
-//        System.out.println ("createJobRun: restUrl = " + restUrl);
         /*
          {
            "job_run": {
@@ -284,9 +274,7 @@ public class ICP4DServiceImpl extends AbstractConnection implements ICP4DService
                 .addHeader ("Authorization", getAuthorization())
                 .bodyString (bodyStr, ContentType.APPLICATION_JSON);
 
-//        System.out.println("... createJobRun body = " + body);
         JsonObject response = RestUtils.requestGsonResponse (getExecutor(), post);
-//        System.out.println("... createJobRun POST response = " + response);
         if (!response.has("entity")) {
             throw new IllegalStateException ("no \"entity\" member in response of create JobRun");
         }
@@ -299,7 +287,6 @@ public class ICP4DServiceImpl extends AbstractConnection implements ICP4DService
             throw new IllegalStateException ("no \"entity\"->\"job_run\"->\"configuration\" member in response of create JobRun");
         }
         JsonObject jobConfiguration = jobRun.get("configuration").getAsJsonObject();
-//        System.out.println("... createJobRun jobConfiguration = " + jobConfiguration);
         return JobRunConfiguration.create (this, jobConfiguration);
         
 //      response body
@@ -437,7 +424,6 @@ public class ICP4DServiceImpl extends AbstractConnection implements ICP4DService
                 .addHeader ("Authorization", getAuthorization())
                 .bodyString (bodyStr, ContentType.APPLICATION_JSON);
 
-//        System.out.println("... createJob body = " + body);
         JsonObject response = RestUtils.requestGsonResponse (getExecutor(), post);
         /*
             Response
@@ -510,12 +496,10 @@ public class ICP4DServiceImpl extends AbstractConnection implements ICP4DService
               "asset_id": "bc2cd8fa-2b3a-4cfe-b30a-f4eb0f34b3ea"
             }
          */
-//        System.out.println("... createJob POST response = " + response);
         JobDescription createdJob = JobDescription.create (this, response);
         // these fields are not included in the response; set them manually:
         createdJob.getMetaData().setProject_id (projectId);
         createdJob.getMetaData().setSpace_id (spaceId);
-//        System.out.println("... createJob returned job = " + createdJob);
         return createdJob;
     }
 

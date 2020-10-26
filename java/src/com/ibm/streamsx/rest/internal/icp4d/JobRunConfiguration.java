@@ -132,5 +132,4 @@ public class JobRunConfiguration extends Element {
     public String getStreamsInstance() {
         return streamsInstance;
     }
-
 }
