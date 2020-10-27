@@ -2,6 +2,7 @@
 ==========
 
 ## latest
+* [#2598](https://github.com/IBMStreams/streamsx.topology/issues/2598) Third-party libraries updated to resolve potential security vulnerabilities (httpclient 4.5.13)
 * [#2596](https://github.com/IBMStreams/streamsx.topology/issues/2596) Fix broken JSON4J link in Java documentation
 * [#2587](https://github.com/IBMStreams/streamsx.topology/issues/2587) Fix conda detection in Python 3.7
 

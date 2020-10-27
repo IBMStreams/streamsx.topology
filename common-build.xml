@@ -47,7 +47,7 @@
     <pathelement location="${streams.install}/ext/lib/JSON4J.jar" />
   </path>
   <path id="httpclient.classpath">
-        <fileset dir="${tk.opt}/client/httpcomponents-client-4.5.9/lib">
+        <fileset dir="${tk.opt}/client/httpcomponents-client-4.5.13/lib">
            <include name="*.jar" />
         </fileset>
   </path>
