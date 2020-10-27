@@ -162,7 +162,7 @@
  *  <a target="_blank" href="http://www-01.ibm.com/support/knowledgecenter/SSCRJU_4.0.0/com.ibm.streams.spl-java-operators.doc/samples/overview-summary.html">IBM Streams Java Operator samples</a> - {@code $STREAMS_INSTALL/lib/com.ibm.streams.operator.samples.jar}</LI>
  *  <LI><a target="_blank" href="http://commons.apache.org/proper/commons-math/javadocs/api-2.2/index.html">Apache Commons Math 2.2</a> - {@code $STREAMS_INSTALL/ext/lib/commons-math-2.1.jar}</LI>
  *  <LI><a target="_blank" href="https://logging.apache.org/log4j/1.2/apidocs/">Apache Log4j 1.2.17</a> - {@code $STREAMS_INSTALL/ext/lib/log4j-1.2.17.jar}</LI>
- *  <LI><a target="_blank" href="http://www-01.ibm.com/support/knowledgecenter/api/content/SS7K4U_8.5.5/com.ibm.websphere.javadoc.liberty.doc/com.ibm.websphere.appserver.api.json_1.0-javadoc/index.html">JSON4J</a> - {@code $STREAMS_INSTALL/ext/lib/JSON4J.jar}</LI>
+ *  <LI><a target="_blank" href="https://www.ibm.com/support/knowledgecenter/SSAW57_8.5.5/com.ibm.websphere.web2mobile.json.help/javadoc/index.html">JSON4J</a> - {@code $STREAMS_INSTALL/ext/lib/JSON4J.jar}</LI>
  *  </UL>
  */
 package com.ibm.streamsx.topology;

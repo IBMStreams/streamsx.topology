@@ -290,7 +290,7 @@ of the toolkit, thus increasing the distribution size of the toolkit.
 # Packages installed by pip at SPL compile time
 
 Python packages can be explictly requested to be installed during the SPL
-compilation using `pip3 install --user` (`pip` is used for Python 2.7).
+compilation using `pip3 install --user`.
 The packages are installed locally into
 the compliation's output directory, thus becoming part of the
 Streams application bundle (`sab`). The packages will be installed
@@ -1091,6 +1091,10 @@ When running standalone `PYTHONHOME` must be set in the user's environment.
 The application will use `PYTHONHOME` to locate the Python shared library
 as follows:
 
+*Python 3.7*
+* `$PYTHONHOME/lib/libpython3.7.so`
+* `$PYTHONHOME/lib64/libpython3.7.so` if the path above does not exist.
+* 
 *Python 3.6*
 * `$PYTHONHOME/lib/libpython3.6m.so`
 * `$PYTHONHOME/lib64/libpython3.6m.so` if the path above does not exist.
@@ -1098,10 +1102,6 @@ as follows:
 *Python 3.5*
 * `$PYTHONHOME/lib/libpython3.5m.so`
 * `$PYTHONHOME/lib64/libpython3.5m.so` if the path above does not exist.
-
-*Python 2.7*
-* `$PYTHONHOME/lib/libpython2.7.so`
-* `$PYTHONHOME/lib64/libpython2.7.so` if the path above does not exist.
   
 */
 
