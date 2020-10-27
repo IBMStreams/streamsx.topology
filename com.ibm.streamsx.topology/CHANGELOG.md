@@ -2,6 +2,7 @@
 ==========
 
 ## latest
+* [#2596](https://github.com/IBMStreams/streamsx.topology/issues/2596) Fix broken JSON4J link in Java documentation
 * [#2587](https://github.com/IBMStreams/streamsx.topology/issues/2587) Fix conda detection in Python 3.7
 
 ## v1.16.0
