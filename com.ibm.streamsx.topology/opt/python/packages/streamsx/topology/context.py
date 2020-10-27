@@ -27,6 +27,8 @@ import warnings
 import streamsx.rest
 import streamsx.rest_primitives
 import streamsx._streams._version
+import urllib.parse as up
+
 __version__ = streamsx._streams._version.__version__
 
 logger = logging.getLogger(__name__)
@@ -632,9 +634,26 @@ class _DistributedSubmitterCP4DIntegratedProject(_DistributedSubmitter):
         streams_instance = streamsx.rest_primitives.Instance.of_service(config)
         if hasattr(streams_instance, 'productVersion'):
             svc_info['productVersion'] = streams_instance.productVersion
-        # when we use the CP4D- REST-API from inside the CP4D (Notebook) we go over this URL: https://internal-nginx-svc:12443
+        # when we use the REST-API of the CP4D from inside the CP4D (Notebook in a project)
+        # we go over this URL: https://internal-nginx-svc:12443
         svc_info['cluster_ip'] = 'internal-nginx-svc'
         svc_info['cluster_port'] = 12443
+
+        # user-provided cp4d URL to override the hard-coded from above
+        if ConfigParams.CP4D_URL in config:
+            userUrl = config[ConfigParams.CP4D_URL]
+            if userUrl:
+                es = up.urlparse(userUrl)
+                if ':' in es.netloc:
+                    cluster_ip = es.netloc.split(':')[0]
+                    cluster_port = es.netloc.split(':')[1]
+                else:
+                    cluster_ip = es.netloc
+                    cluster_port = 443
+                svc_info['cluster_ip_orig'] = svc_info['cluster_ip']
+                svc_info['cluster_port_orig'] = svc_info['cluster_port']
+                svc_info['cluster_ip'] = cluster_ip
+                svc_info['cluster_port'] = cluster_port
 
         self._config()[ConfigParams.SERVICE_DEFINITION] = svc_info
         self._config()[ConfigParams.FORCE_REMOTE_BUILD] = True
@@ -1214,7 +1233,11 @@ class ConfigParams(object):
     """
     SPACE_NAME = 'topology.spaceName'
     """
-    Key for a deployment space on a CloudPak for Data, when submitted to :py:const:`DISTRIBUTED`
+    Key for a deployment space on a Cloud Pak for Data, when submitted to :py:const:`DISTRIBUTED`
+    """
+    CP4D_URL = 'topology.cp4d_url'
+    """
+    Key for specifying the URL of the Cloud Pak for Data, when submitted to :py:const:`DISTRIBUTED` from within a CP4D project
     """
     FORCE_REMOTE_BUILD = 'topology.forceRemoteBuild'
     """Force a remote build of the application.
