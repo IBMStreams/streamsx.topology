@@ -2,6 +2,17 @@
 Restrictions and known bugs
 ###########################
 
+* A job that is submitted with `streamsx-streamtool` to a Cloud Pak for Data with version above 3.0 is only visible in the Streams Console.
+* Job submission from a Python notebook within a CP4D project on Cloud Pak for Data with version above 3.0 may fail with exception message
+
+  `CDIST3419E: Submission failed. Please provide the CP4D URL in your submission configuration.`
+
+  In this case, specify the CP4D URL, for example from your browser's address bar, in the submission configuration, for example::
+
+    cfg = ...
+    cfg[ConfigParams.CP4D_URL] = 'https://cp4d-cluster.com'
+    submission_result = submit(ContextTypes.DISTRIBUTED, topology, cfg)
+
 * For Python development outside of a CP4D, for example with a Jupyter notebook outside of CP4D, you must use an Anaconda or Miniconda Python installation.
 * No support for nested parallel regions at sources, i.e. nested :py:func:`streamsx.topology.topology.Stream.set_parallel`, for example::
 

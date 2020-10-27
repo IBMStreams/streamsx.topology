@@ -1234,10 +1234,14 @@ class ConfigParams(object):
     SPACE_NAME = 'topology.spaceName'
     """
     Key for a deployment space on a Cloud Pak for Data, when submitted to :py:const:`DISTRIBUTED`
+    
+    .. versionadded:: 1.17
     """
     CP4D_URL = 'topology.cp4d_url'
     """
     Key for specifying the URL of the Cloud Pak for Data, when submitted to :py:const:`DISTRIBUTED` from within a CP4D project
+    
+    .. versionadded:: 1.17
     """
     FORCE_REMOTE_BUILD = 'topology.forceRemoteBuild'
     """Force a remote build of the application.
