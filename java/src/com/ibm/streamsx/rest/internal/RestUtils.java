@@ -16,6 +16,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
@@ -40,6 +41,7 @@ import org.apache.http.util.EntityUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.rest.RESTException;
 
 public interface RestUtils {
     
@@ -53,6 +55,22 @@ public interface RestUtils {
     String AUTH_BASIC = "Basic ";
     
     int CONNECT_TIMEOUT_MILLISECONDS = 30000;
+
+    static final String HEXES = "0123456789ABCDEF";
+    static final int HEXES_L = HEXES.length();
+
+    /**
+     * Create a random string of hexadecimal digits of specified length
+     * @param length length of the generated String
+     * @return hex string, in which the A-F digits are uppercase
+     */
+    static String randomHex(final int length) {
+        char[] name = new char[length];
+        for (int i = 0; i < length; i++) {
+            name[i] = HEXES.charAt(ThreadLocalRandom.current().nextInt(HEXES_L));
+        }
+        return new String(name);
+    }
 
     /**
      * Create an encoded Basic auth header for the given credentials.
@@ -180,7 +198,58 @@ public interface RestUtils {
     static JsonObject getGsonResponse(Executor executor, String auth, URL url) throws IOException {
         return getGsonResponse(executor, auth, url.toExternalForm());
     }
-    
+
+
+    /**
+     * Gets a response to an HTTP GET call as a string
+     * 
+     * @param executor HTTP client executor to use for call
+     * @param auth Authentication header contents, or null
+     * @param inputString REST call to make, i.e. the URI
+     * @return response from the inputString
+     * @throws IOException
+     * 
+     * TODO: unify error handling between this and gsonFromResponse(), and
+     * convert callers that want JSON to getGsonResponse()
+     */
+    static String getResponseString(Executor executor,
+            String auth, String inputString) throws IOException {
+        TRACE.fine("HTTP GET: " + inputString);
+        String sReturn = "";
+        Request request = Request
+                .Get(inputString)
+                .addHeader("accept", ContentType.APPLICATION_JSON.getMimeType())
+                .useExpectContinue();
+        if (null != auth) {
+            request = request.addHeader(AUTH.WWW_AUTH_RESP, auth);
+        }
+
+        Response response = executor.execute(request);
+        HttpResponse hResponse = response.returnResponse();
+        int rcResponse = hResponse.getStatusLine().getStatusCode();
+
+        if (HttpStatus.SC_OK == rcResponse) {
+            sReturn = EntityUtils.toString(hResponse.getEntity());
+        } else if (HttpStatus.SC_NOT_FOUND == rcResponse) {
+            // with a 404 message, we are likely to have a message from Streams
+            // but if not, provide a better message
+            sReturn = EntityUtils.toString(hResponse.getEntity());
+            if (sReturn != null && !sReturn.isEmpty()) {
+                throw RESTException.create(rcResponse, sReturn + " for url " + inputString);
+            } else {
+                String httpError = "HttpStatus is " + rcResponse + " for url " + inputString;
+                throw new RESTException(rcResponse, httpError);
+            }
+        } else {
+            // all other errors...
+            String httpError = "HttpStatus is " + rcResponse + " for url " + inputString;
+            throw new RESTException(rcResponse, httpError);
+        }
+        TRACE.finest(rcResponse + ": " + sReturn);
+        return sReturn;
+    }
+
+
     /**
      * Gets a JSON response to an HTTP request call
      */
@@ -194,7 +263,7 @@ public interface RestUtils {
     static JsonObject gsonFromResponse(HttpResponse response) throws IOException {
         HttpEntity entity = response.getEntity();
         int statusCode = response.getStatusLine().getStatusCode();
-        if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED) {
+        if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED && statusCode != HttpStatus.SC_ACCEPTED) {
             final String errorInfo;
             if (entity != null)
                 errorInfo = " -- " + EntityUtils.toString(entity);

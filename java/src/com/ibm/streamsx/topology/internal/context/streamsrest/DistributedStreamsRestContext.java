@@ -114,10 +114,9 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
             report("Submitting job");
             Result<Job, JsonObject> submissionResult = bundle.submitJob(jco);
 
-            for (Entry<String, JsonElement> entry : submissionResult
-                    .getRawResult().entrySet())
+            for (Entry<String, JsonElement> entry : submissionResult.getRawResult().entrySet()) {
                 result.add(entry.getKey(), entry.getValue());
-            
+            }
             report("Job id:" + submissionResult.getId());
         } finally {
             if (!jboolean(deploy, KEEP_ARTIFACTS)) {

@@ -11,13 +11,13 @@ import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.jboolean;
 import static com.ibm.streamsx.topology.internal.gson.GsonUtilities.object;
 
 import java.io.File;
-import java.util.concurrent.ThreadLocalRandom;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.ibm.streamsx.rest.build.Artifact;
 import com.ibm.streamsx.rest.build.Build;
 import com.ibm.streamsx.rest.build.BuildService;
+import com.ibm.streamsx.rest.internal.RestUtils;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.internal.context.remote.BuildRemoteContext;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
@@ -93,7 +93,7 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
             context.allowInsecureHosts();
 
         setBuildName(buildName);
-        buildName = getBuildName() + "_" + randomHex(16);
+        buildName = getBuildName() + "_" + RestUtils.randomHex(16);
 
         report("Building bundle");
         this.build = context.createBuild(buildName, buildConfig);
@@ -201,16 +201,4 @@ public class BuildServiceContext extends BuildRemoteContext<BuildService> {
     
     protected void postBuildAction(JsonObject deploy, JsonObject jco, JsonObject result) throws Exception {
     }
-
-    private static final String HEXES = "0123456789ABCDEF";
-    private static final int HEXES_L = HEXES.length();
-
-    protected static String randomHex(final int length) {
-        char[] name = new char[length];
-        for (int i = 0; i < length; i++) {
-            name[i] = HEXES.charAt(ThreadLocalRandom.current().nextInt(HEXES_L));
-        }
-        return new String(name);
-    }
-
 }

@@ -4,7 +4,7 @@
 from __future__ import print_function
 from streamsx.topology.topology import Topology
 import streamsx.topology.context
-import transform_sample_functions;
+import transform_sample_functions
 
 def main():
     """

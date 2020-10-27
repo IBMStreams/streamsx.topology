@@ -27,6 +27,8 @@ public class Util {
     public static final String STREAMS_BUILD_URL = "STREAMS_BUILD_URL";
     public static final String STREAMS_REST_URL = "STREAMS_REST_URL";
     public static final String ICP4D_DEPLOYMENT_URL = "CP4D_URL";
+    public static final String PROJECT_ID = "PROJECT_ID";
+    public static final String PROJECT_NAME = "PROJECT_NAME";
     private static String streamsInstall;
     
     /**
@@ -201,7 +203,22 @@ public class Util {
         int pm = vers[2];
         return pm >= m;
     }
-    
+
+    /**
+     * tests a version string (4.5.6....) for minimum major and minor versions (4.5)
+     * @param versionString the version string, for example '4.5.6.0'
+     * @param major the minimum major version, which would be 4 here
+     * @param minor the minimum minor version, which would be 5 here 
+     * @return true if the product version is at least the major and minor version.
+     *         When the version cannot be found in the REST object, <tt>false</tt> is returned.
+     */
+    public static boolean versionAtLeast(final String versionString, int major, int minor) {
+        String[] tokens = versionString.split("\\.");
+        final int prodMajor = Integer.parseInt(tokens[0]);
+        final int prodMinor = Integer.parseInt(tokens[1]);
+        return prodMajor > major || (prodMajor == major && prodMinor >= minor);
+    }
+
     private static int[] productVersions() {
         String vers = productVersion();
 

@@ -346,10 +346,7 @@ public class Instance extends Element {
             // No productVersion or activeVersion found in instance REST object
             return false;
         }
-        String[] tokens = pv.split("\\.");
-        final int prodMajor = Integer.parseInt(tokens[0]);
-        final int prodMinor = Integer.parseInt(tokens[1]);
-        return prodMajor > major || (prodMajor == major && prodMinor >= minor);
+        return Util.versionAtLeast(pv, major, minor);
     }
 
     /**
