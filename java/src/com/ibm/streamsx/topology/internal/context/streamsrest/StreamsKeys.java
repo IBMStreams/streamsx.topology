@@ -20,6 +20,8 @@ public interface StreamsKeys {
     String CONNECTION_INFO = "connection_info";
     String CLUSTER_IP = "cluster_ip";
     String CLUSTER_PORT = "cluster_port";
+    String CLUSTER_IP_ORIG = "cluster_ip_orig";
+    String CLUSTER_PORT_ORIG = "cluster_port_orig";
     String EXTERNAL_CLIENT = "externalClient";
     String BUILD_SERVICE_ENDPOINT = "serviceBuildEndpoint";
     String BUILD_PATH = "/streams/rest/builds";

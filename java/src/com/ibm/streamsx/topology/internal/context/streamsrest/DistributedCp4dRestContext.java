@@ -113,6 +113,17 @@ public class DistributedCp4dRestContext extends BuildServiceContext {
         final boolean verify = sslVerify (deploy);
         icp4dRestService = ICP4DService.of (service, verify);
 
+        if (!icp4dRestService.isExternalClient()) {
+            // test the connection as the URL for REST may be quite hard coded or user provided
+            try {
+                icp4dRestService.test();
+            } catch (IOException e) {
+                System.err.println (e.getLocalizedMessage());
+                final boolean userProvidedCp4dUrl = StreamsKeys.getFromServiceDefinition (deploy, StreamsKeys.CLUSTER_IP_ORIG) != null;
+                final String msgKey = userProvidedCp4dUrl? "SUBMISSION_FAILED_WRONG_CP4D_URL": "SUBMISSION_FAILED_CP4D_URL_REQUIRED";
+                throw new IllegalStateException (Messages.getString(msgKey));
+            }
+        }
         String spaceName = GsonUtilities.jstring (deploy, StreamsKeys.SPACE_NAME);
         associateWithProject = false;
         if (!icp4dRestService.isExternalClient() && spaceName == null) {
