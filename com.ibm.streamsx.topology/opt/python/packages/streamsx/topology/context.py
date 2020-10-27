@@ -651,7 +651,7 @@ class _DistributedSubmitterCP4DIntegratedProject(_DistributedSubmitter):
                     cluster_ip = es.netloc
                     cluster_port = 443
                 svc_info['cluster_ip_orig'] = svc_info['cluster_ip']
-                svc_info['cluster_port_orig'] = svc_info['cluster_port'] = 12443
+                svc_info['cluster_port_orig'] = svc_info['cluster_port']
                 svc_info['cluster_ip'] = cluster_ip
                 svc_info['cluster_port'] = cluster_port
 
