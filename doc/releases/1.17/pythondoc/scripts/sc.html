@@ -1,0 +1,384 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx-sc &mdash; streamsx 1.17.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="streamsx-service" href="service.html" />
+    <link rel="prev" title="streamsx-runner" href="runner.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.17
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.html">streamsx.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.topology.html">streamsx.topology.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.context.html">streamsx.topology.context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.schema.html">streamsx.topology.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.state.html">streamsx.topology.state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.composite.html">streamsx.topology.composite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.tester.html">streamsx.topology.tester</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.tester_runtime.html">streamsx.topology.tester_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.ec.html">streamsx.ec</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.spl.op.html">streamsx.spl.op</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.spl.types.html">streamsx.spl.types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.spl.toolkit.html">streamsx.spl.toolkit</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.spl.spl.html">streamsx.spl.spl</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.build.html">streamsx.build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.rest.html">streamsx.rest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.rest_primitives.html">streamsx.rest_primitives</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="extract.html">spl-python-extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="info.html">streamsx-info</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runner.html">streamsx-runner</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">streamsx-sc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cloud-pak-for-data-configuration">Cloud Pak for Data configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#integrated-configuration">Integrated configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#standalone-configuration">Standalone configuration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#toolkits">Toolkits</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="service.html">streamsx-service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamtool.html">streamsx-streamtool</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pysetup.html">IBM Streams Python setup</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../restrictions.html">Restrictions and known bugs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">streamsx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>streamsx-sc</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/scripts/sc.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="streamsx-sc">
+<h1>streamsx-sc<a class="headerlink" href="#streamsx-sc" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>SPL compiler for IBM Streams running on IBM Cloud Pak for Data.</p>
+<p><code class="docutils literal notranslate"><span class="pre">streamsx-sc</span></code> replicates a sub-set of Streams 4.3 <code class="docutils literal notranslate"><span class="pre">sc</span></code> options.</p>
+<p><code class="docutils literal notranslate"><span class="pre">streamsx-sc</span></code> is supported for Streams 5.x (Cloud Pak for Data).
+A local install of Streams is <strong>not</strong> required,
+simply the installation of the <cite>streamsx</cite> package. All functionality
+is implemented through the Cloud Pak for Data and Streams build service REST apis.</p>
+<div class="section" id="cloud-pak-for-data-configuration">
+<h3>Cloud Pak for Data configuration<a class="headerlink" href="#cloud-pak-for-data-configuration" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="integrated-configuration">
+<h4>Integrated configuration<a class="headerlink" href="#integrated-configuration" title="Permalink to this headline">¶</a></h4>
+<p>The Streams instance (and its build service) and authentication are defined through environment variables:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>CP4D_URL</strong> - Cloud Pak for Data deployment URL, e.g. <cite>https://cp4d_server:31843</cite>.</p></li>
+<li><p><strong>STREAMS_INSTANCE_ID</strong> - Streams service instance name.</p></li>
+<li><p><strong>STREAMS_USERNAME</strong> - (optional) User name to submit the job as, defaulting to the current operating system user name.</p></li>
+<li><p><strong>STREAMS_PASSWORD</strong> - Password for authentication.</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="standalone-configuration">
+<h4>Standalone configuration<a class="headerlink" href="#standalone-configuration" title="Permalink to this headline">¶</a></h4>
+<p>The Streams build service and authentication are defined through environment variables:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>STREAMS_BUILD_URL</strong> - Streams build service URL, e.g. when the service is exposed as node port: <cite>https://&lt;NODE-IP&gt;:&lt;NODE-PORT&gt;</cite></p></li>
+<li><p><strong>STREAMS_USERNAME</strong> - (optional) User name to submit the job as, defaulting to the current operating system user name.</p></li>
+<li><p><strong>STREAMS_PASSWORD</strong> - Password for authentication.</p></li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>streamsx-sc [-h] --main-composite name [--spl-path SPL_PATH]
+        [--optimized-code-generation] [--no-optimized-code-generation]
+        [--prefer-facade-tuples] [--ld-flags LD_FLAGS]
+        [--cxx-flags CXX_FLAGS] [--c++std C++STD]
+        [--data-directory DATA_DIRECTORY]
+        [--output-directory OUTPUT_DIRECTORY] [--disable-ssl-verify]
+        [--static-link] [--standalone-application]
+        [--set-relax-fusion-relocatability-restartability]
+        [--checkpoint-directory path] [--profiling-sampling rate]
+        [compile-time-args [compile-time-args ...]]
+</pre></div>
+</div>
+<p>Options and arguments</p>
+<blockquote>
+<div><dl class="simple">
+<dt>compile-time-args:</dt><dd><p>Pass named arguments each in the format <cite>name=value</cite> to the compiler.
+The name cannot contain the character <code class="docutils literal notranslate"><span class="pre">=</span></code> but otherwise is a free
+form string. It matches the name parameter that is specified in calls
+that are made to the compile-time argument access functions from
+within SPL code. The value can be any string. See <a class="reference external" href="https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.3.0/com.ibm.streams.dev.doc/doc/compileargs.html">Compile-time arguments</a> .</p>
+</dd>
+<dt>-M,–main-composite:</dt><dd><p>SPL Main composite</p>
+</dd>
+<dt>-t,–spl-path:</dt><dd><p>Set the toolkit lookup paths. Separate multiple paths
+with <code class="docutils literal notranslate"><span class="pre">:</span></code>. Each path is a toolkit directory or a directory
+of toolkit directories.
+This path overrides the <code class="docutils literal notranslate"><span class="pre">STREAMS_SPLPATH</span></code> environment
+variable.</p>
+</dd>
+<dt>-a,–optimized-code-generation:</dt><dd><p>Generate optimized code with less runtime error
+checking</p>
+</dd>
+<dt>—no-optimized-code-generation:</dt><dd><p>Generate non-optimized code with more runtime error
+checking. Do not use with the –optimized-code-
+generation option.</p>
+</dd>
+<dt>-k,–prefer-facade-tuples:</dt><dd><p>Generate the facade tuples when it is possible.</p>
+</dd>
+<dt>-w,–ld-flags:</dt><dd><p>Pass the specified flags to ld while linking occurs.</p>
+</dd>
+<dt>-x,–cxx-flags:</dt><dd><p>Pass the specified flags to the C++ compiler during
+the build.</p>
+</dd>
+<dt>–c++std:</dt><dd><p>Specify the language level for the underlying C++
+compiles.</p>
+</dd>
+<dt>–data-directory:</dt><dd><p>Specifies the location of the data directory to use.</p>
+</dd>
+<dt>–output-directory:</dt><dd><p>Specifies a directory where the application artifacts
+are placed.</p>
+</dd>
+<dt>–disable-ssl-verify:</dt><dd><p>Disable SSL verification against the build service</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl>
+<dt>Deprecated arguments</dt><dd><p>Arguments supported by <cite>sc</cite> but deprecated. They have no affect on compilation.</p>
+<p>-s,–static-link</p>
+<p>-T,–standalone-application</p>
+<p>-O,–set-relax-fusion-relocatability-restartability</p>
+<p>-K,–checkpoint-directory</p>
+<p>-S,–profiling-sampling</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="toolkits">
+<h2>Toolkits<a class="headerlink" href="#toolkits" title="Permalink to this headline">¶</a></h2>
+<p>The application toolkit is defined as the working directory of <cite>streamsx-sc</cite>.</p>
+<p>Local toolkits are found through the toolkit path set by <cite>–spl-path</cite> or environment variable <code class="docutils literal notranslate"><span class="pre">STREAMS_SPLPATH</span></code>. Local toolkits are included in the build code archive sent to the build service if:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>the toolkit is defined as a dependent of the application toolkit including recursive dependencies of required local toolkits.</p></li>
+<li><p>and a toolkit of a higher version within the required dependency range does not exist locally or remotely on the build service.</p></li>
+</ul>
+</div></blockquote>
+<p>The toolkit path for the compilation on the build service includes:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>the application toolkit</p></li>
+<li><p>local tookits included in the build code archive</p></li>
+<li><p>all toolkits uploaded on the Streams build service</p></li>
+<li><p>all product toolkits on the Streams build service</p></li>
+</ul>
+</div></blockquote>
+<p>The application toolkit and local toolkits included in the build archive are processed prior to the actual compilation by:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>having any Python SPL primitive operators extracted using <code class="docutils literal notranslate"><span class="pre">spl-python-extract</span></code></p></li>
+<li><p>indexed using <code class="docutils literal notranslate"><span class="pre">spl-make-toolkit</span></code></p></li>
+</ul>
+</div></blockquote>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.13.</span></p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="service.html" class="btn btn-neutral float-right" title="streamsx-service" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="runner.html" class="btn btn-neutral float-left" title="streamsx-runner" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2020 IBM Corp.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
