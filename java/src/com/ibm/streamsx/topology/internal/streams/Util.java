@@ -88,6 +88,19 @@ public class Util {
     }
     
     /**
+     * Checks if the environment variable value is present
+     * @param name environment variable name
+     * @return true if set otherwise false
+     */
+    public static boolean hasenv(String name) {
+        String s = System.getenv(name);
+        if (s==null) {
+            return false;
+        }
+        return true;
+    }    
+    
+    /**
      * Check if things are in place to successfully invoke streamtool
      * @throws IllegalStateException if preconditions not met
      */
