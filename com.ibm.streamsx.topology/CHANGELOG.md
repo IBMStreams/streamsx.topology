@@ -1,6 +1,9 @@
 # Changes
 ==========
 
+## v1.17.1
+* [#2605](https://github.com/IBMStreams/streamsx.topology/issues/2605) Resolve submission issue when PROJECT_ID is missing inside CP4D cluster
+
 ## v1.17.0
 * [#2598](https://github.com/IBMStreams/streamsx.topology/issues/2598) Third-party libraries updated to resolve potential security vulnerabilities (httpclient 4.5.13)
 * [#2596](https://github.com/IBMStreams/streamsx.topology/issues/2596) Fix broken JSON4J link in Java documentation
