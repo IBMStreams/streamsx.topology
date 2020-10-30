@@ -126,9 +126,8 @@ public class DistributedCp4dRestContext extends BuildServiceContext {
         }
         String spaceName = GsonUtilities.jstring (deploy, StreamsKeys.SPACE_NAME);
         associateWithProject = false;
-        if (!icp4dRestService.isExternalClient() && spaceName == null) {
+        if (!icp4dRestService.isExternalClient() && spaceName == null && Util.hasenv(Util.PROJECT_ID)) {
             // get "PROJECT_ID" environment variable, something like "ebb4c6be-2c2c-4e8a-8973-f470130451c8"
-            // throws IllegalStateException when the environment variable is not set
             projectId = Util.getenv(Util.PROJECT_ID);
             try {
                 projectName = Util.getenv(Util.PROJECT_NAME);
