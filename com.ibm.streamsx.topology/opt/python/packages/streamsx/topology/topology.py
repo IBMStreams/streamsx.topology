@@ -1485,8 +1485,8 @@ class Stream(_placement._Placement, object):
 
             msgs = topo.source(ReadMessages())
             SEVS = {'H':0, 'M':1, 'L':2}
-            severities = msg.split(3, lambda SEVS.get(msg.get('SEV'), -1),
-                names=['high','medium','low'], name='SeveritySplit')
+            severities = msgs.split(3, lambda t:SEVS.get(t.sev),
+               names=['high','medium','low'], name='SeveritySplit')
 
             high_severity = severities.high
             high_severity.for_each(SendAlert())
