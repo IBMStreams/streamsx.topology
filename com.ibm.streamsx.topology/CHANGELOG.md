@@ -1,6 +1,9 @@
 # Changes
 ==========
 
+## develop branch latest
+* [#2607](https://github.com/IBMStreams/streamsx.topology/issues/2607) Documentation updates in Python API to resolve wrong or missing descriptions
+
 ## v1.17.1
 * [#2605](https://github.com/IBMStreams/streamsx.topology/issues/2605) Resolve submission issue when PROJECT_ID is missing inside CP4D cluster
 
