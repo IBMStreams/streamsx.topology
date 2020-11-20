@@ -1314,8 +1314,8 @@ class Stream(_placement._Placement, object):
         
         Args:
             func: Punctor callable that takes a single parameter for the stream tuple.
-            before(bool): If the value is `True`, the punctuation is generated before the output tuple; otherwise it is generated after the output tuple.
-            replace(bool): If the value is `True`, then in case ``func(t)`` returns ``True`` the window punctuation will be generated and the tuple is discarded (not forwarded). The parameter ``before`` is not ignored in this case.
+            before(bool): If the value is `True`, the punctuation is generated before the output tuple; otherwise it is generated after the output tuple. If the parameter ``replace`` is set to ``True`` then the parameter ``before`` is ignored.
+            replace(bool): If the value is `True`, then in case ``func(t)`` returns ``True`` the window punctuation will be generated and the tuple is discarded (not forwarded). The parameter ``before`` is ignored in this case.
             name(str): Name of the stream, defaults to a generated name.
 
         If invoking ``func`` for a stream tuple raises an exception
@@ -1485,8 +1485,8 @@ class Stream(_placement._Placement, object):
 
             msgs = topo.source(ReadMessages())
             SEVS = {'H':0, 'M':1, 'L':2}
-            severities = msg.split(3, lambda SEVS.get(msg.get('SEV'), -1),
-                names=['high','medium','low'], name='SeveritySplit')
+            severities = msgs.split(3, lambda t:SEVS.get(t.sev),
+               names=['high','medium','low'], name='SeveritySplit')
 
             high_severity = severities.high
             high_severity.for_each(SendAlert())
@@ -2242,11 +2242,11 @@ class Stream(_placement._Placement, object):
             w = s.batch('punct')
 
         Args:
-            size(int|datetime.timedelta|submission parameter created by :py:meth:`Topology.create_submission_parameter`): The size of each batch, either an `int` to define the
+            size(int|datetime.timedelta|submission parameter created by :py:meth:`Topology.create_submission_parameter`|'punct'): The size of each batch, either an `int` to define the
                 number of tuples or `datetime.timedelta` to define the
                 duration of the batch or
                 submission parameter created by :py:meth:`Topology.create_submission_parameter`
-                to define the number of tuples.
+                to define the number of tuples or string 'punct' to create a punctuation-based window.
 
         Returns:
             Window: Window allowing batch processing on this stream.
@@ -2274,7 +2274,7 @@ class Stream(_placement._Placement, object):
         against this stream using a submission parameter created by
         :py:meth:`Topology.create_submission_parameter`.
 
-        The number of tuples in the batch is defined by `size` in seconds.
+        The size of the window is defined by the parameter `size` in seconds.
  
         Args:
             size(submission parameter created by :py:meth:`Topology.create_submission_parameter`): The size of the window in seconds.
@@ -2733,8 +2733,8 @@ class Window(object):
 
     A `Window` enables transforms against collection (or window)
     of tuples on a stream rather than per-tuple transforms.
-    Windows are created against a stream using :py:meth:`Stream.batch`
-    or :py:meth:`Stream.last`.
+    Windows are created against a stream using :py:meth:`Stream.batch`, :py:meth:`Stream.batchSeconds`
+    or :py:meth:`Stream.last`, :py:meth:`Stream.lastSeconds`.
 
     Supported transforms are:
 

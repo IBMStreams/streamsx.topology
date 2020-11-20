@@ -38,9 +38,9 @@ Stateful callables
 Use of a class instance allows a transformation (for example :py:meth:`~streamsx.topology.topology.Stream.map`) to be stateful by maintaining state in instance
 attributes across invocations.
 
-When the callable is in a consistent region or checkpointing then it is serialized using `dill`. The default serialization may be modified by using the standard Python pickle mechanism of ``__getstate__`` and ``__setstate__``.  This is required if the state includes objects that cannot be serialized, for example file descriptors. For details see See https://docs.python.org/3.5/library/pickle.html#handling-stateful-objects .
+When the callable is in a consistent region or checkpointing it is serialized using `dill`. The default serialization may be modified by using the standard Python pickle mechanism of ``__getstate__`` and ``__setstate__``.  This is required if the state includes objects that cannot be serialized, for example file descriptors. For details see See https://docs.python.org/3.5/library/pickle.html#handling-stateful-objects .
 
-If the callable as ``__enter__`` and ``__exit__`` context manager methods then ``__enter__`` is called after the object has been deserialized by `dill`. Thus ``__enter__`` is used to recreate runtime objects that cannot be serialized such as open files or sockets.
+If the callable has ``__enter__`` and ``__exit__`` context manager methods then ``__enter__`` is called after the object has been deserialized by `dill`. Thus ``__enter__`` is used to recreate runtime objects that cannot be serialized such as open files or sockets.
 
 """
 
@@ -98,7 +98,7 @@ class ConsistentRegionConfig(object):
 
     Example::
 
-        # set source to be a the start of an operator driven consistent region
+        # set source to be the start of an operator driven consistent region
         # with a drain timeout of five seconds and a reset timeout of twenty seconds.
         source.set_consistent(ConsistentRegionConfig.operatorDriven(drain_timeout=5, reset_timeout=20))
 
