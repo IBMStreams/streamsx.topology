@@ -722,6 +722,38 @@ class Topology(object):
         oport = op.addOutputPort(schema=schema, name=_name)
         return Stream(self, oport)._make_placeable()._add_hints(hints)
 
+    def endpoint_source(self, schema, buffer_size=None, description=None, name=None):
+        """
+        Declare a source stream that introduces tuples into the application and creates a service endpoint to accept data from the job service.
+
+        With this source the Streams job is enabled as a Cloud Pak for Data service and retrieves job data using REST API.
+
+        Invokes spl.event::EndpointSource XXX
+
+        .. versionadded:: 2.0
+        """
+        _name = self.graph._requested_name(name, action="endpoint_source")
+        params = {}
+        if buffer_size:
+           params['bufferSize'] = buffer_size
+
+        op = self.graph.addOperator("spl.endpoint::EndpointSource", name=_name, params=params)
+        op._layout(kind='EndpointSource', name=op.runtime_id, orig_name=name)
+        # TODO generate annotation, use parameter description
+        annotation = {'type':'endpoint', 'properties':{'port':'GENERATE', 'summary':'XXX_summary', 'description':'XXX_description', 'tags':'XXX_TAGS', 'attributeDescriptions':'GENERATE'}}
+        op._annotation(annotation)
+
+        #import streamsx.spl.toolkit as spltk
+        #spltk.add_toolkit_dependency(self.graph.topology, 'spl', '1.6.0') # TODO what is the required version?
+
+        if isinstance(schema, list):
+            # create output port per list item
+            # return list of output streams
+            return None
+        else:
+            oport = op.addOutputPort(schema=schema, name=_name)
+            return Stream(self, oport)._make_placeable()
+
     def subscribe(self, topic, schema=streamsx.topology.schema.CommonSchema.Python, name=None, connect=None, buffer_capacity=None, buffer_full_policy=None):
         """
         Subscribe to a topic published by other Streams applications.
