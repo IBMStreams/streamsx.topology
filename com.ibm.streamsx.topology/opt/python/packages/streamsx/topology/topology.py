@@ -722,7 +722,7 @@ class Topology(object):
         oport = op.addOutputPort(schema=schema, name=_name)
         return Stream(self, oport)._make_placeable()._add_hints(hints)
 
-    def endpoint_source(self, schema, buffer_size=None, description=None, name=None):
+    def endpoint_source(self, schema, buffer_size=None, documentation=None, name=None):
         """
         Declare a source stream that introduces tuples into the application and creates a service endpoint to accept data from the job service.
 
@@ -739,9 +739,41 @@ class Topology(object):
 
         op = self.graph.addOperator("spl.endpoint::EndpointSource", name=_name, params=params)
         op._layout(kind='EndpointSource', name=op.runtime_id, orig_name=name)
-        # TODO generate annotation, use parameter description
-        annotation = {'type':'endpoint', 'properties':{'port':'GENERATE', 'summary':'XXX_summary', 'description':'XXX_description', 'tags':'XXX_TAGS', 'attributeDescriptions':'GENERATE'}}
-        op._annotation(annotation)
+
+        # add operator annoation with documentation when parameter is dict, use defaults for non-existing fields
+        if documentation is not None:
+           if isinstance(documentation, dict):
+              doc_summary = documentation.get('summary','Data feed')
+              if not isinstance(doc_summary, str):
+                 raise TypeError("Property 'summary' is expected of type string.")
+              doc_description = documentation.get('description','Inject data into streaming application '+ self.graph.name)
+              if not isinstance(doc_description, str):
+                 raise TypeError("Property 'description' is expected of type string.")
+              doc_tags = documentation.get('tags',['Input','Streams'])
+              if isinstance(doc_tags, list):
+                 for t in doc_tags:
+                    if not isinstance(t, str):
+                       raise TypeError("Property 'tags' is expected of type array of string.")
+              else:
+                 raise TypeError("Property 'tags' is expected of type array of string.")
+              if 'attributeDescriptions' in documentation:
+                 doc_attr = documentation['attributeDescriptions']
+              else:
+                 from streamsx.topology.schema import _SchemaParser
+                 p = _SchemaParser(schema)
+                 p._parse()
+                 i = 0
+                 doc_attr = {}
+                 while i < len(p._type):
+                    descr = {p._type[i][1] : {'description' : p._type[i][0]}}
+                    doc_attr.update(descr)
+                    i += 1
+              annotation = {'type':'endpoint', 'properties':{'port':op.runtime_id, 'summary':doc_summary, 'description':doc_description, 'tags':doc_tags, 'attributeDescriptions':doc_attr}}
+              print(annotation)
+              op._annotation(annotation)
+           else:
+              raise TypeError('Parameter documentation is expected of type dict.')
+
 
         #import streamsx.spl.toolkit as spltk
         #spltk.add_toolkit_dependency(self.graph.topology, 'spl', '1.6.0') # TODO what is the required version?
