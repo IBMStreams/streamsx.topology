@@ -8,6 +8,7 @@ Streams Job as a Cloud Pak for Data Service.
 import streamsx.spl.op
 import streamsx.spl.types
 import streamsx.topology.composite
+import streamsx.spl.toolkit as spl_tk
 
 class EndpointSource(streamsx.topology.composite.Source):
     """Declare a source stream that introduces tuples into the application and creates a service endpoint to accept data from the job service.
@@ -35,6 +36,8 @@ class EndpointSource(streamsx.topology.composite.Source):
         self.documentation = documentation
 
     def populate(self, topology, name, **options):
+        #spl_tk.add_toolkit_dependency(topology, 'spl', '1.6.0') # TODO what is the required version?
+
         _op = _EndpointSource(topology, self.schema, self.buffer_size, name = name)
         if self.documentation is not None:
            _op._add_annotation(self.documentation, self.schema)
