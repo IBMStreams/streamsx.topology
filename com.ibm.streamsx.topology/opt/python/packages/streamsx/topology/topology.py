@@ -740,7 +740,7 @@ class Topology(object):
         op = self.graph.addOperator("spl.endpoint::EndpointSource", name=_name, params=params)
         op._layout(kind='EndpointSource', name=op.runtime_id, orig_name=name)
 
-        # add operator annoation with documentation when parameter is dict, use defaults for non-existing fields
+        # add operator annotation with documentation when parameter is dict, use defaults for non-existing fields
         if documentation is not None:
            if isinstance(documentation, dict):
               doc_summary = documentation.get('summary','Data feed')
@@ -768,6 +768,12 @@ class Topology(object):
                     descr = {p._type[i][1] : {'description' : p._type[i][0]}}
                     doc_attr.update(descr)
                     i += 1
+              if isinstance(doc_attr, dict):
+                 values = doc_attr.values()
+                 if 'description' not in str(values):
+                    raise ValueError("Property 'attributeDescriptions' is expected of values containing key 'description'.")
+              else:
+                 raise TypeError("Property 'attributeDescriptions' is expected of type dict.")
               annotation = {'type':'endpoint', 'properties':{'port':op.runtime_id, 'summary':doc_summary, 'description':doc_description, 'tags':doc_tags, 'attributeDescriptions':doc_attr}}
               print(annotation)
               op._annotation(annotation)
