@@ -164,36 +164,36 @@ class OperatorGenerator {
         	if (!first) {
                 sb.append(',');
         	}
-            sb.append("tags=[\"");
+            sb.append("tags=\"[\\\"");
             JsonArray tags = properties.get("tags").getAsJsonArray();
             for (int j = 0; j < tags.size(); j++) {
                 if (j != 0)
-                    sb.append("\", \"");
+                    sb.append("\\\", \\\"");
                 sb.append(tags.get(j).getAsString());
             }
-            sb.append("\"]");
+            sb.append("\\\"]\"");
             first = false;
     	}
     	if (properties.has("attributeDescriptions")) {
     	    if (!first) {
                 sb.append(',');
     	    }
-            sb.append("attributeDescriptions={");
+            sb.append("attributeDescriptions=\"{");
             JsonObject attrDesc = properties.get("attributeDescriptions").getAsJsonObject();
             boolean firstAttr = true;
             for (Entry<String, JsonElement> property : attrDesc.entrySet()) {
                 if (!firstAttr)
                     sb.append(',');
-                sb.append("\"");
+                sb.append("\\\"");
             	sb.append(property.getKey());
-            	sb.append("\":{");
+            	sb.append("\\\":{");
             	JsonObject desc = (JsonObject) property.getValue();
-            	sb.append("\"description\":\"");
+            	sb.append("\\\"description\\\":\\\"");
                 sb.append(GsonUtilities.jstring(desc, "description"));
-                sb.append("\"}");
+                sb.append("\\\"}");
                 firstAttr = false;
             }
-            sb.append("}");
+            sb.append("}\"");
             first = false;
     	}
     }    
