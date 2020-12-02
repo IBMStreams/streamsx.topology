@@ -36,7 +36,7 @@ class EndpointSource(streamsx.topology.composite.Source):
         self.documentation = documentation
 
     def populate(self, topology, name, **options):
-        #spl_tk.add_toolkit_dependency(topology, 'spl', '1.6.0') # TODO what is the required version?
+        spl_tk.add_toolkit_dependency(topology, 'spl', '1.5.0') # required minimum Streams SPL toolkit version
 
         _op = _EndpointSource(topology, self.schema, self.buffer_size, name = name)
         if self.documentation is not None:
