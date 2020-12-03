@@ -143,6 +143,12 @@ class SPLGraph(object):
         self._colocate_tag_mapping = {}
         self._id_gen = 0
         self._main_composite = None
+        self._service_annotation = None
+
+    def _set_service_annotation(self, value):
+        if self._service_annotation is None: # set once only
+           if value is not None:
+              self.graph._service_annotation = value
 
     def _unique_id(self, prefix):
         """
@@ -235,7 +241,7 @@ class SPLGraph(object):
         _graph["name"] = self.name
         _graph["namespace"] = self.namespace
         self._add_project_info(_graph)
-        #self._add_service_info_object(_graph) # XXX
+        self._add_service_info_object(_graph, self._service_annotation)
         _graph["public"] = True
         _graph["config"] = {}
         self._determine_model(_graph["config"])
@@ -287,11 +293,11 @@ class SPLGraph(object):
                 _graph['annotations'] = []
             _graph['annotations'].append(annotation)
 
-    def _add_service_info_object(self, _graph):
-        annotation = {'type':'service', 'properties':{'title':'XXX'}}
-        if not 'annotations' in _graph:
-            _graph['annotations'] = []
-        _graph['annotations'].append(annotation)
+    def _add_service_info_object(self, _graph, annotation):
+        if annotation is not None:
+           if not 'annotations' in _graph:
+              _graph['annotations'] = []
+           _graph['annotations'].append(annotation)
 
     def _add_packages(self, includes):
         for package_path in self.resolver.packages:
