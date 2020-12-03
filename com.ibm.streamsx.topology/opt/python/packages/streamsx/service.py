@@ -119,6 +119,13 @@ def _get_service_annotation(documentation):
                raise TypeError("Property 'description' is expected of type string.")
             props['description'] = doc_description
 
+         # version
+         doc_version = documentation.get('version', None)
+         if doc_version is not None:
+            if not isinstance(doc_version, str):
+               raise TypeError("Property 'version' is expected of type string.")
+            props['version'] = doc_version
+
          # externalDocsUrl
          doc_externalDocsUrl = documentation.get('externalDocsUrl', None)
          if doc_externalDocsUrl is not None:
