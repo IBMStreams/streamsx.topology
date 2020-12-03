@@ -2,7 +2,24 @@
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2020
 """
-Streams Job as a Cloud Pak for Data Service.
+Streams Jobs as a Cloud Pak for Data Service
+
+********
+Overview
+********
+
+A `streams-application` service can be used to insert data into and retrieve data from a Streams job.
+When adding one or more callables using :py:class:`~streamsx.service.EndpointSource` or :py:class:`~streamsx.service.EndpointSink` to your topology application and submitting the application to run as a job, a `streams-application` service is created.
+
+Exchanging data with the job is done by using a REST API.
+
+The `streams-application` service instances are included in the **Services > Instances** page of the Cloud Pak for Data web client.
+Selecting a service entry in the list opens the REST API documentation for the service.
+
+.. seealso::
+    `Streams Jobs as a Service <https://ibm.biz/streams-job-service>`_
+        Resources for Streams developers in the IBM Community.
+
 """
 
 import streamsx.spl.op
@@ -13,7 +30,7 @@ from streamsx.topology.schema import CommonSchema
 
 
 class EndpointSource(streamsx.topology.composite.Source):
-    """Declare a source stream that introduces tuples into the application and creates a service endpoint to accept data from the job service.
+    """Creates a service endpoint that produces a stream of data received via REST.
 
     With this source the Streams job is enabled as a Cloud Pak for Data service and retrieves job data using REST API.
 
@@ -58,7 +75,7 @@ class EndpointSource(streamsx.topology.composite.Source):
 
 
 class EndpointSink(streamsx.topology.composite.ForEach):
-    """Sends job data using REST API and creates a service endpoint to accept data from the job service.
+    """Creates a service endpoint to consume data from that stream via REST.
 
     With this sink the Streams job is enabled as a Cloud Pak for Data service and emits job data using REST API.
 
