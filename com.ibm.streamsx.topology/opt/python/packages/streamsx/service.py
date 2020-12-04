@@ -34,7 +34,7 @@ class EndpointSource(streamsx.topology.composite.Source):
 
     With this source the Streams job is enabled as a Cloud Pak for Data service and retrieves job data using REST API.
 
-    .. versionadded:: 2.0
+    .. versionadded:: 1.18
 
     Attributes
     ----------
@@ -79,7 +79,7 @@ class EndpointSink(streamsx.topology.composite.ForEach):
 
     With this sink the Streams job is enabled as a Cloud Pak for Data service and emits job data using REST API.
 
-    .. versionadded:: 2.0
+    .. versionadded:: 1.18
 
     Attributes
     ----------
@@ -126,39 +126,54 @@ def _get_service_annotation(documentation):
          doc_title = documentation.get('title', None)
          if doc_title is not None:
             if not isinstance(doc_title, str):
-               raise TypeError("Property 'title' is expected of type string.")
+               raise TypeError("service_documentation: Property 'title' is expected of type string.")
             props['title'] = doc_title
 
          # description
          doc_description = documentation.get('description', None)
          if doc_description is not None:
             if not isinstance(doc_description, str):
-               raise TypeError("Property 'description' is expected of type string.")
+               raise TypeError("service_documentation: Property 'description' is expected of type string.")
             props['description'] = doc_description
 
          # version
          doc_version = documentation.get('version', None)
          if doc_version is not None:
             if not isinstance(doc_version, str):
-               raise TypeError("Property 'version' is expected of type string.")
+               raise TypeError("service_documentation: Property 'version' is expected of type string.")
             props['version'] = doc_version
 
          # externalDocsUrl
          doc_externalDocsUrl = documentation.get('externalDocsUrl', None)
          if doc_externalDocsUrl is not None:
             if not isinstance(doc_externalDocsUrl, str):
-               raise TypeError("Property 'externalDocsUrl' is expected of type string.")
+               raise TypeError("service_documentation: Property 'externalDocsUrl' is expected of type string.")
             props['externalDocsUrl'] = doc_externalDocsUrl
 
          # externalDocsDescription
          doc_externalDocsDescription = documentation.get('externalDocsDescription', None)
          if doc_externalDocsDescription is not None:
             if not isinstance(doc_externalDocsDescription, str):
-               raise TypeError("Property 'externalDocsDescription' is expected of type string.")
+               raise TypeError("service_documentation: Property 'externalDocsDescription' is expected of type string.")
             props['externalDocsDescription'] = doc_externalDocsDescription
-   
+
+         # tags
+         doc_tags = documentation.get('tags', None)
+         if doc_tags is not None:
+            if not isinstance(doc_tags, dict):
+               raise TypeError("service_documentation: Property 'tags' is expected of type dict.")
+            else:
+               values = doc_tags.values()
+               if 'description' not in str(values):
+                  raise ValueError("endpoint_documentation: Property 'tags' is expected of values containing key 'description'.")
+               # convert to string that is expected in Java code generator to generate the annotation
+               tags_str = str(doc_tags).replace("'",'\\\"')
+               props['tags'] = tags_str
+
          # create service annotation dict
-         annotation = {'type':'service', 'properties': props}   
+         annotation = {'type':'service', 'properties': props}
+      else:
+         raise TypeError("service_documentation: Parameter 'service_documentation' is expected of type dict.")
    return annotation
 
 
@@ -173,14 +188,14 @@ def _get_annotation(documentation, port, default_summary, default_description):
          doc_summary = documentation.get('summary', default_summary)
          if doc_summary is not None:
             if not isinstance(doc_summary, str):
-               raise TypeError("Property 'summary' is expected of type string.")
+               raise TypeError("endpoint_documentation: Property 'summary' is expected of type string.")
             props['summary'] = doc_summary
 
          # description
          doc_description = documentation.get('description', default_description)
          if doc_description is not None:
             if not isinstance(doc_description, str):
-               raise TypeError("Property 'description' is expected of type string.")
+               raise TypeError("endpoint_documentation: Property 'description' is expected of type string.")
             props['description'] = doc_description
 
          # tags
@@ -189,9 +204,9 @@ def _get_annotation(documentation, port, default_summary, default_description):
             if isinstance(doc_tags, list):
                for t in doc_tags:
                   if not isinstance(t, str):
-                     raise TypeError("Property 'tags' is expected of type array of string.")
+                     raise TypeError("endpoint_documentation: Property 'tags' is expected of type array of string.")
             else:
-               raise TypeError("Property 'tags' is expected of type array of string.")
+               raise TypeError("endpoint_documentation: Property 'tags' is expected of type array of string.")
             props['tags'] = doc_tags
 
          # attributeDescriptions
@@ -201,15 +216,15 @@ def _get_annotation(documentation, port, default_summary, default_description):
             if isinstance(doc_attr, dict):
                values = doc_attr.values()
                if 'description' not in str(values):
-                  raise ValueError("Property 'attributeDescriptions' is expected of values containing key 'description'.")
+                  raise ValueError("endpoint_documentation: Property 'attributeDescriptions' is expected of values containing key 'description'.")
             else:
-               raise TypeError("Property 'attributeDescriptions' is expected of type dict.")
+               raise TypeError("endpoint_documentation: Property 'attributeDescriptions' is expected of type dict.")
             props['attributeDescriptions'] = doc_attr
 
          # create endpoint annotation dict
          annotation = {'type':'endpoint', 'properties': props}   
       else:
-         raise TypeError('Parameter documentation is expected of type dict.')
+         raise TypeError("endpoint_documentation: Parameter 'endpoint_documentation' is expected of type dict.")
    return annotation
 
 
