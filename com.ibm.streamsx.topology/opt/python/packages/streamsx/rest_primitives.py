@@ -51,7 +51,7 @@ logger = logging.getLogger('streamsx.rest')
 _REST_CONNECT_TIMEOUT = 30.0     # timeout in seconds for creating a connection (including TLS)
 # to specify no timeout, use 'None' as value
 _TIMEOUTS = {
-    'GET': (_REST_CONNECT_TIMEOUT, 90.0),      # various resources, also large resorces like logs 
+    'GET': (_REST_CONNECT_TIMEOUT, 90.0),      # various resources, also large resources like logs 
     'POST': (_REST_CONNECT_TIMEOUT, 120.0),    # authentication, upload bundle, submit bundle, mk app config
     'PUT': (_REST_CONNECT_TIMEOUT, 120.0),     # start/stop instance SASv1
     'PATCH': (_REST_CONNECT_TIMEOUT, 120.0),   # start/stop instance SASv2, update app config, update operators
@@ -385,7 +385,7 @@ class _BearerAuthHandler(requests.auth.AuthBase):
         self._bt = 'Bearer ' + token
 
     def __call__(self, r):
-        # Convert cur time to milliseconds
+        # cur_time in seconds since Epoch
         cur_time = time.time()
         if cur_time >= self._auth_expiry_time:
             last = self._auth_expiry_time
@@ -400,21 +400,13 @@ class _ICPDAuthHandler(_BearerAuthHandler):
     def __init__(self, service_name, token):
         super(_ICPDAuthHandler, self).__init__()
         self._service_name = service_name
-        if token:
-            try:
-                self._refresh_auth()
-            except:
-                self.token = token
-                self._auth_expiry_time = time.time() + 19*60
-            logger.debug("ICP4D:Token expiry:" + time.ctime(self._auth_expiry_time))
+        self.token = token
+        # user tokens practically do not expire; set expiry time to 10 years from now
+        self._auth_expiry_time = time.time() + 10 * 365 * 86400
 
     def _refresh_auth(self):
-        logger.debug("ICP4D:Token refresh:")
-        # import must be here since this code is specific for ICP4D
-        from icpd_core import icpd_util
-        self.token = icpd_util.get_instance_token(name=self._service_name)
-        self._auth_expiry_time = time.time() + 19*60
-        logger.debug("ICP4D:Token refreshed:expiry:" + time.ctime(self._auth_expiry_time))
+        # the token has a life time of ~ 10 years. We do not refresh
+        pass
 
 class _ICPDExternalAuthHandler(_BearerAuthHandler):
     def __init__(self, endpoint, username, password, verify, service_name):
@@ -453,7 +445,10 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
         r = requests.post(auth_url, json=pd, verify=self._verify, timeout=_TIMEOUTS['POST'])
         _handle_http_errors(r)
         token = r.json()['token']
-
+        self.token = token
+        # these tokens have ~ 12 hours lifetime, with 11 hours from now as expiry time we are comfortable
+        self._auth_expiry_time = time.time() + 11 * 60 * 60
+        
         details_url = up.urlunsplit(
             ('https', cluster_ip + ':' + str(cluster_port), 'zen-data/v2/serviceInstance/details', 'displayName=' + self._service_name, None))
         r = requests.get(details_url,
@@ -495,17 +490,6 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
         except KeyError as ke:
             logger.error('Mandatory JSON object missing in REST service response: requestObj/CreateArguments/metadata/instance/' + ke.args[0])
             raise RequestException('mandatory JSON object missing in REST service response: requestObj/CreateArguments/metadata/instance/' + ke.args[0])
-
-        service_token_url = up.urlunsplit(
-            ('https', cluster_ip + ':' + str(cluster_port), 'zen-data/v2/serviceInstance/token', None, None))
-        pd = {"serviceInstanceId": str(service_id)}
-        r = requests.post(service_token_url, json=pd,
-                          headers={"Authorization": "Bearer " + token}, verify=self._verify,
-                          timeout=_TIMEOUTS['POST'])
-
-        service_token = r.json()['AccessToken']
-        self.token = service_token
-        self._auth_expiry_time = time.time() + 19 * 60
 
         # already observed a 'None' connection_info, avoid KeyError later on
         if not connection_info:
@@ -555,9 +539,8 @@ class _ICPDExternalAuthHandler(_BearerAuthHandler):
                 'serviceBuildEndpoint': build_url,
                 'serviceRestEndpoint': streams_url
             },
-            'serviceTokenEndpoint': service_token_url,
             'user_token': token,
-            'service_token': service_token,
+            'service_token': token,
             'service_token_expire': int(self._auth_expiry_time * 1000.0),
             'service_name': service_name,
             'service_namespace': service_namespace,
@@ -1888,24 +1871,30 @@ class Instance(_ResourceElement):
             else:
                 svc_name = svcRestEndpoint.split('/')[-1]
             svc_info['service_name'] = svc_name
+            if 'user_token' in service:
+                svc_info['user_token'] = service['user_token']
+                svc_info['service_token'] = service['user_token']
+            else:
+                # try to get token from environmnet variable USER_ACCESS_TOKEN
+                import os
+                if 'USER_ACCESS_TOKEN' in os.environ:
+                    tok = os.environ['USER_ACCESS_TOKEN']
+                    svc_info['user_token'] = tok
+                    svc_info['service_token'] = tok
+                else:
+                    raise ValueError('cannot find the user token in environment nor in service details')
+            # the user token expires in ~ 11000 years; now + 10 years are sufficient. 
+            svc_info['service_token_expire'] = int((time.time() + 10 * 365 * 86400)*1000)
             try:
-                # Get a new token as we don't know how much
-                # time has passed since the cell containing
-                # get_service_instance_details was run
-                from icpd_core import icpd_util
-                svc_info['service_token'] = icpd_util.get_instance_token(name=svc_name)
-                svc_info['service_token_expire'] = int((time.time() + 19 * 60)*1000)
-
                 # add service_id and service_namespace
+                from icpd_core import icpd_util
                 con = icpd_util.get_connection(name=svc_name, conn_class='svc')
                 if con:
                     svc_info['service_id'] = con['service_instance_id']
                     svc_info['service_namespace'] = con['service_instance_namespace']
             except:
-                svc_info['service_token'] = service['service_token']
-                svc_info['service_token_expire'] = int((time.time() + 5 * 60)*1000)
-            if 'user_token' in service:
-                svc_info['user_token'] = service['user_token']
+                pass
+            
             return svc_info
         return None
 

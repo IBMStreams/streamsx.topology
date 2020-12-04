@@ -93,7 +93,7 @@ public interface BuildService {
         if (name == null) {
             authenticator = StandaloneAuthenticator.of(serviceDefinition);
         } else {
-            authenticator = ICP4DAuthenticator.of(serviceDefinition);
+            authenticator = ICP4DAuthenticator.of(serviceDefinition, verify);
         }
 
         return StreamsBuildService.of(authenticator, serviceDefinition, verify);
