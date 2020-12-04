@@ -1,4 +1,5 @@
 /*
+
 # Licensed Materials - Property of IBM
 # Copyright IBM Corp. 2017
  */
@@ -19,7 +20,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.auth.AUTH;
