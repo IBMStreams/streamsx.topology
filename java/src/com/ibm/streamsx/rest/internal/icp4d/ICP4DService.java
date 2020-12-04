@@ -1,9 +1,13 @@
 package com.ibm.streamsx.rest.internal.icp4d;
 
 import java.io.IOException;
+import java.util.function.Function;
+
+import org.apache.http.client.fluent.Executor;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.ibm.streamsx.rest.internal.ICP4DAuthenticator;
 
 /**
  * Represents the REST service of the ICP4D platform.
@@ -22,8 +26,12 @@ public interface ICP4DService {
      */
     static ICP4DService of (JsonObject service, final boolean verify) {
         //        JsonObject service = GsonUtilities.jobject (deploy, StreamsKeys.SERVICE_DEFINITION);
-        final ICP4DUserAuthenticator authenticator = ICP4DUserAuthenticator.of (service, verify);
-        return new ICP4DServiceImpl (service, verify, authenticator);
+        try {
+            final Function<Executor, String> authenticator = ICP4DAuthenticator.of (service, verify);
+            return new ICP4DServiceImpl (service, verify, authenticator);
+        } catch (Exception e) {
+            throw new IllegalStateException (e.getMessage(), e);
+        }
     }
 
     /**

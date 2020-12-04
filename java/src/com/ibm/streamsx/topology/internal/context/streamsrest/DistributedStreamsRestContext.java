@@ -83,14 +83,15 @@ public class DistributedStreamsRestContext extends BuildServiceContext {
 
             JsonObject serviceDefinition = object(deploy, StreamsKeys.SERVICE_DEFINITION);
             String name = jstring(serviceDefinition, "service_name");
+            final boolean verify = sslVerify(deploy);
             Function<Executor, String> authenticator = (name == null
                     || name.isEmpty())
                             ? StandaloneAuthenticator.of(serviceDefinition)
-                            : ICP4DAuthenticator.of(serviceDefinition);
+                            : ICP4DAuthenticator.of(serviceDefinition, verify);
             StreamsConnection conn = StreamsConnection
                     .ofAuthenticator(restUrl.toExternalForm(), authenticator);
 
-            if (!sslVerify(deploy))
+            if (!verify)
                 conn.allowInsecureHosts(true);
 
             // Create the instance directly from the URL

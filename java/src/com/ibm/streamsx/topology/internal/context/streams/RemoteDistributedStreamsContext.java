@@ -8,6 +8,9 @@ import static com.ibm.streamsx.topology.internal.context.remote.DeployKeys.deplo
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.function.Function;
+
+import org.apache.http.client.fluent.Executor;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -19,7 +22,6 @@ import com.ibm.streamsx.rest.internal.StandaloneAuthenticator;
 import com.ibm.streamsx.topology.context.ContextProperties;
 import com.ibm.streamsx.topology.context.StreamsContext;
 import com.ibm.streamsx.topology.internal.context.RemoteContextForwarderStreamsContext;
-import com.ibm.streamsx.topology.internal.context.JSONStreamsContext.AppEntity;
 import com.ibm.streamsx.topology.internal.context.streamsrest.DistributedStreamsRestContext;
 import com.ibm.streamsx.topology.internal.context.streamsrest.StreamsKeys;
 import com.ibm.streamsx.topology.internal.streams.Util;
@@ -78,7 +80,7 @@ public final class RemoteDistributedStreamsContext extends RemoteContextForwarde
             StreamsConnection sc = cfgInstance.getStreamsConnection();
             boolean verify = cfgInstance.getStreamsConnection().isVerify();
             JsonObject deploy = deploy(entity.submission);
-            Object authenticatorO = sc.getAuthenticator();
+            Function<Executor, String> authenticatorO = sc.getAuthenticator();
             deploy.addProperty(ContextProperties.SSL_VERIFY, verify);
             JsonObject service;
             if (authenticatorO instanceof ICP4DAuthenticator) {
