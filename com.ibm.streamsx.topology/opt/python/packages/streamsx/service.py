@@ -34,6 +34,38 @@ class EndpointSource(streamsx.topology.composite.Source):
 
     With this source the Streams job is enabled as a Cloud Pak for Data service and retrieves job data using REST API.
 
+    Use this class as callable in :py:meth:`~streamsx.topology.topology.Topology.source` and create a stream::
+
+       from streamsx.service import EndpointSource
+       topo.source(EndpointSource())
+
+    Example endpoint that receives data in JSON format::
+
+       from streamsx.service import EndpointSource
+       s = topo.source(EndpointSource(schema=CommonSchema.Json), name='cpd_endpoint_src_json')
+
+    Example with structured Stream schema, service and endpoint documentation::
+
+       from streamsx.topology.topology import Topology
+       from streamsx.service import EndpointSource
+    
+       topo = Topology('endpoint_source_sample')
+       service_documentation={
+          'title': 'streamsx-sample-endpoint-source',
+          'description': 'Streams job as service receives data',
+          'version': '1.0.0'
+       }
+       endpoint_documentation = {
+          'summary': 'Sample endpoint source',
+          'description': 'CPD job endpoint injects some data'
+       }
+       schema = 'tuple<rstring id, int64 number>'
+       s = topo.source(EndpointSource(
+          schema=schema,
+          buffer_size=200000,
+          service_documentation=service_documentation,
+          endpoint_documentation=endpoint_documentation), name='cpd_endpoint_src')
+
     .. versionadded:: 1.18
 
     Attributes
@@ -44,8 +76,26 @@ class EndpointSource(streamsx.topology.composite.Source):
         Size of the buffer
     service_documentation: dict
         Content to describe the service. This is set once per application only.
+        Apply a ``dict`` containing one or more of the keys: 'title, 'version', 'description', 'externalDocsUrl', 'externalDocsDescription', 'tags'::
+
+           d = {
+              'title': <string value>,
+              'version': <string value>,
+              'description': <string value>,
+              'externalDocsUrl': <string value>,
+              'externalDocsDescription': <string value>,
+              'tags': {<key> {'description': <string value>, 'externalDocs': {'url': <string value>, 'description': <string value>}}, ...}
+           }
     endpoint_documentation : dict
         Additional content to be included for an API endpoint to describe the endpoint source.
+        Apply a ``dict`` containing one or more of the keys: 'summary, 'tags', 'description', 'attributeDescriptions'::
+
+           d = {
+              'summary': <string value>,
+              'tags': <array of strings>,
+              'description': <string value>,
+              'attributeDescriptions': {<key> {'description': <string value>}, ...}
+           }
 
     Returns:
         Stream.
@@ -79,6 +129,78 @@ class EndpointSink(streamsx.topology.composite.ForEach):
 
     With this sink the Streams job is enabled as a Cloud Pak for Data service and emits job data using REST API.
 
+    Use this class as callable in :py:meth:`~streamsx.topology.topology.Stream.for_each` and terminate a stream::
+
+       from streamsx.service import EndpointSink
+       stream.for_each(EndpointSink())
+
+    Simple example without service or endpoint documentation::
+    
+       from streamsx.topology.topology import Topology
+       from streamsx.topology.context import submit, ContextTypes, ConfigParams, JobConfig
+       from streamsx.service import EndpointSink
+       from typing import Iterable, NamedTuple
+       import itertools, random
+
+       class SampleSourceSchema(NamedTuple):
+           id: str
+           num: int
+
+       # Callable of the Source
+       class SampleSource(object):
+           def __call__(self) -> Iterable[SampleSourceSchema]: 
+               for num in itertools.count(1):
+                   output_event = SampleSourceSchema(
+                       id = str(num),
+                       num = random.randint(0,num)
+                   )
+                   yield output_event
+            
+       topo = Topology('endpoint_sink_sample')
+
+       stream1 = topo.source(SampleSource())
+       stream1.for_each(EndpointSink(buffer_size=50000))
+
+    Example with service and endpoint documentation::
+    
+       service_documentation={
+          'title': 'streamsx-sample-endpoint-sink',
+          'description': 'NUMBER GENERATOR',
+          'version': '1.0.0',
+          'externalDocsUrl': 'https://mycompany.com/numgen/doc',
+          'externalDocsDescription': 'Number generator documentation'
+       }
+       tags = dict()
+       tag1 = {
+          'Output': {
+             'description': 'Output tag description',
+             'externalDocs': {
+                'url': 'https://mycompany.com/numgen/input/doc',
+                'description': 'Output tag external doc description'
+             }
+          }
+       }
+       tags.update(tag1)
+       service_documentation['tags'] = tags
+
+       endpoint_documentation = dict()
+       endpoint_documentation['summary'] = 'Sample endpoint sink'
+       endpoint_documentation['tags'] = ['Output']
+       endpoint_documentation['description'] = 'Streams job emits some data with random numbers'
+
+       doc_attr = dict()
+       descr = {'id': {'description': 'IDENTIFIER (incremented by one per tuple)'}}
+       doc_attr.update(descr)
+       descr = {'num': {'description': 'RANDOM NUMBER'}}
+       doc_attr.update(descr)
+       endpoint_documentation['attributeDescriptions'] = doc_attr
+
+       stream1 = topo.source(SampleSource())
+       stream1.for_each(EndpointSink(
+          buffer_size=50000,
+          service_documentation=service_documentation,
+          endpoint_documentation=endpoint_documentation), name='cpd_endpoint_sink')
+
     .. versionadded:: 1.18
 
     Attributes
@@ -87,8 +209,26 @@ class EndpointSink(streamsx.topology.composite.ForEach):
         Size of the buffer
     service_documentation: dict
         Content to describe the service. This is set once per application only.
+        Apply a ``dict`` containing one or more of the keys: 'title, 'version', 'description', 'externalDocsUrl', 'externalDocsDescription', 'tags'::
+
+           d = {
+              'title': <string value>,
+              'version': <string value>,
+              'description': <string value>,
+              'externalDocsUrl': <string value>,
+              'externalDocsDescription': <string value>,
+              'tags': {<key> {'description': <string value>, 'externalDocs': {'url': <string value>, 'description': <string value>}}, ...}
+           }
     endpoint_documentation : dict
         Additional content to be included for an API endpoint to describe the endpoint sink.
+        Apply a ``dict`` containing one or more of the keys: 'summary, 'tags', 'description', 'attributeDescriptions'::
+
+           d = {
+              'summary': <string value>,
+              'tags': <array of strings>,
+              'description': <string value>,
+              'attributeDescriptions': {<key> {'description': <string value>}, ...}
+           }
 
     Returns:
         :py:class:`topology_ref:streamsx.topology.topology.Sink`: Stream termination.
