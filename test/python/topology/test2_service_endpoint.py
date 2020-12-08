@@ -62,6 +62,12 @@ class TestEndpoint(unittest.TestCase):
         documentation['summary'] = 'Test endpoint source'
         documentation['tags'] = ['Input', 'STREAMS']
         documentation['description'] = 'CPD job endpoint injects some data'
+        doc_attr = dict()
+        descr = {'x': {'description': 'IDENTIFIER'}}
+        doc_attr.update(descr)
+        descr = {'n': {'description': 'NUMBER'}}
+        doc_attr.update(descr)
+        documentation['attributeDescriptions'] = doc_attr
 
         schema = 'tuple<rstring x, int64 n>'
         s = topo.source(EndpointSource(schema=schema, buffer_size=20000, service_documentation=service_documentation, endpoint_documentation=documentation), name='cpd_endpoint_src')
