@@ -34,7 +34,7 @@ class EndpointSource(streamsx.topology.composite.Source):
 
     With this source the Streams job is enabled as a Cloud Pak for Data service and retrieves job data using REST API.
 
-    Use this class as callable in :py:meth:`~streamsx.topology.topology.Topology.source` and create a stream::
+    Use an instance of this class in :py:meth:`~streamsx.topology.topology.Topology.source` and create a stream::
 
        from streamsx.service import EndpointSource
        topo.source(EndpointSource())
@@ -129,7 +129,7 @@ class EndpointSink(streamsx.topology.composite.ForEach):
 
     With this sink the Streams job is enabled as a Cloud Pak for Data service and emits job data using REST API.
 
-    Use this class as callable in :py:meth:`~streamsx.topology.topology.Stream.for_each` and terminate a stream::
+    Use an instance of this class in :py:meth:`~streamsx.topology.topology.Stream.for_each` and terminate a stream::
 
        from streamsx.service import EndpointSink
        stream.for_each(EndpointSink())
