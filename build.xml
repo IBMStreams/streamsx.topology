@@ -208,7 +208,7 @@
   <target name="test.quick">
     <ant dir="test/java" inheritAll="true">
        <target name="unittest.standalone"/>
-       <target name="junit.report"/>
+       <!--target name="junit.report"/-->
     </ant>
   </target>
   <target name="test.report" >
