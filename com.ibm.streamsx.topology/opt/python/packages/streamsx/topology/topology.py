@@ -533,6 +533,9 @@ class Topology(object):
     def __getitem__(self, name):
         return self._streams[name]
 
+    def _set_service_annotation(self, value):
+        self.graph._set_service_annotation(value)
+
     @property
     def streams(self):
         """

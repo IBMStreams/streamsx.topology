@@ -351,12 +351,10 @@ public class ZippedToolkitRemoteContext extends ToolkitRemoteContext {
      */
     private static class ToolkitCopy extends FullCopy {
         
-        private final JsonObject submission;
         private final Set<Path> excludes;
 
         ToolkitCopy(ZipArchiveOutputStream zos, String rootEntryName, Path start, JsonObject submission) {
             super(zos, rootEntryName, start);
-            this.submission = submission;
             excludes = TK_PATH_EXCLUDES;
         }
         
