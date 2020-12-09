@@ -32,9 +32,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.ibm.streamsx.rest.internal.RestUtils;
-import com.ibm.streamsx.topology.internal.context.remote.BuildConfigKeys;
 import com.ibm.streamsx.topology.internal.context.remote.SubmissionResultsKeys;
-import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 
 class StreamingAnalyticsServiceV2 extends AbstractStreamingAnalyticsService {
 

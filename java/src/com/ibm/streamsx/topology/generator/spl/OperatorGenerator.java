@@ -107,30 +107,154 @@ class OperatorGenerator {
             sb.append(jstring(annotation, OpProperties.ANNOTATION_TYPE));
             sb.append('(');
             JsonObject properties = GsonUtilities.object(annotation, OpProperties.ANNOTATION_PROPERTIES);
-            boolean first = true;
-            for (Entry<String, JsonElement> property : properties.entrySet()) {
-                if (!first)
-                    sb.append(',');
-                sb.append(property.getKey());
-                sb.append('=');
-                if (property.getValue().isJsonPrimitive()) {
-                    JsonPrimitive value = property.getValue().getAsJsonPrimitive();
-                    if (value.isString())
-                        sb.append(SPLGenerator.stringLiteral(value.getAsString()));
-                    else
-                        sb.append(value.getAsString());
-                } else {
-                    SPLGenerator.value(sb, property.getValue().getAsJsonObject());
-                }
-                if (first)
-                    first = false;
-
+            if (jstring(annotation, OpProperties.ANNOTATION_TYPE).equals("endpoint")) {
+            	appendEndpointAnnotation(sb, properties);
             }
-            
+            else if (jstring(annotation, OpProperties.ANNOTATION_TYPE).equals("service")) {
+            	appendServiceAnnotation(sb, properties);
+            }
+            else {
+                boolean first = true;
+                for (Entry<String, JsonElement> property : properties.entrySet()) {
+                    if (!first)
+                        sb.append(',');
+                    sb.append(property.getKey());
+                    sb.append('=');
+                    if (property.getValue().isJsonPrimitive()) {
+                        JsonPrimitive value = property.getValue().getAsJsonPrimitive();
+                        if (value.isString())
+                            sb.append(SPLGenerator.stringLiteral(value.getAsString()));
+                        else
+                            sb.append(value.getAsString());
+                    } else {
+                        SPLGenerator.value(sb, property.getValue().getAsJsonObject());
+                    }
+                    if (first)
+                        first = false;
+                }
+            }
             sb.append(')');
             sb.append('\n');
         }
     }
+
+    private static void appendServiceAnnotation(StringBuilder sb, JsonObject properties) {
+    	boolean first = true;
+    	if (properties.has("title")) {
+            sb.append("title=\"");
+            sb.append(GsonUtilities.jstring(properties, "title"));
+            sb.append("\"");
+            first = false;
+    	}
+    	if (properties.has("description")) {
+            if (!first) {
+                sb.append(',');
+            }
+            sb.append("description=\"");
+            sb.append(GsonUtilities.jstring(properties, "description"));
+            sb.append("\"");
+            first = false;
+    	}
+    	if (properties.has("externalDocsUrl")) {
+            if (!first) {
+                sb.append(',');
+            }
+            sb.append("externalDocsUrl=\"");
+            sb.append(GsonUtilities.jstring(properties, "externalDocsUrl"));
+            sb.append("\"");
+            first = false;
+    	}
+    	if (properties.has("externalDocsDescription")) {
+            if (!first) {
+                sb.append(',');
+            }
+            sb.append("externalDocsDescription=\"");
+            sb.append(GsonUtilities.jstring(properties, "externalDocsDescription"));
+            sb.append("\"");
+            first = false;
+    	}
+    	if (properties.has("version")) {
+            if (!first) {
+                sb.append(',');
+            }
+            sb.append("version=\"");
+            sb.append(GsonUtilities.jstring(properties, "version"));
+            sb.append("\"");
+            first = false;
+    	}
+    	if (properties.has("tags")) {
+            if (!first) {
+                sb.append(',');
+            }
+            sb.append("tags=\"");
+            sb.append(GsonUtilities.jstring(properties, "tags"));
+            sb.append("\"");
+            first = false;
+    	}
+    }    
+
+    private static void appendEndpointAnnotation(StringBuilder sb, JsonObject properties) {
+    	boolean first = true;
+    	if (properties.has("port")) {           
+            sb.append("port=");
+            sb.append(getSPLCompatibleName(GsonUtilities.jstring(properties, "port")));
+            first = false;
+    	}
+    	if (properties.has("summary")) {
+            if (!first) {
+                sb.append(',');
+            }
+            sb.append("summary=\"");
+            sb.append(GsonUtilities.jstring(properties, "summary"));
+            sb.append("\"");
+            first = false;
+    	}
+    	if (properties.has("description")) {
+            if (!first) {
+                sb.append(',');
+            }
+            sb.append("description=\"");
+            sb.append(GsonUtilities.jstring(properties, "description"));
+            sb.append("\"");
+            first = false;
+    	}
+    	if (properties.has("tags")) {
+            if (!first) {
+                sb.append(',');
+            }
+            sb.append("tags=\"[\\\"");
+            JsonArray tags = properties.get("tags").getAsJsonArray();
+            for (int j = 0; j < tags.size(); j++) {
+                if (j != 0)
+                    sb.append("\\\", \\\"");
+                sb.append(tags.get(j).getAsString());
+            }
+            sb.append("\\\"]\"");
+            first = false;
+    	}
+    	if (properties.has("attributeDescriptions")) {
+            if (!first) {
+                sb.append(',');
+            }
+            sb.append("attributeDescriptions=\"{");
+            JsonObject attrDesc = properties.get("attributeDescriptions").getAsJsonObject();
+            boolean firstAttr = true;
+            for (Entry<String, JsonElement> property : attrDesc.entrySet()) {
+                if (!firstAttr)
+                    sb.append(',');
+                sb.append("\\\"");
+            	sb.append(property.getKey());
+            	sb.append("\\\":{");
+            	JsonObject desc = (JsonObject) property.getValue();
+            	sb.append("\\\"description\\\":\\\"");
+                sb.append(GsonUtilities.jstring(desc, "description"));
+                sb.append("\\\"}");
+                firstAttr = false;
+            }
+            sb.append("}\"");
+            first = false;
+    	}
+    }    
 
     private static void noteAnnotations(JsonObject op, StringBuilder sb) throws IOException {
 

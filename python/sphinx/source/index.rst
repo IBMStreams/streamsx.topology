@@ -36,6 +36,7 @@ See :py:mod:`~streamsx.topology`
    streamsx.topology.tester
    streamsx.topology.tester_runtime
    streamsx.ec
+   streamsx.service
    streamsx.spl.op
    streamsx.spl.types
    streamsx.spl.toolkit

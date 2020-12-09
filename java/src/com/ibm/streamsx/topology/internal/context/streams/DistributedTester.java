@@ -9,7 +9,6 @@ import java.math.BigInteger;
 import java.util.concurrent.Future;
 
 import com.ibm.streamsx.topology.Topology;
-import com.ibm.streamsx.topology.internal.context.JSONStreamsContext.AppEntity;
 import com.ibm.streamsx.topology.internal.tester.ConditionTesterImpl;
 import com.ibm.streamsx.topology.internal.tester.TesterRuntime;
 

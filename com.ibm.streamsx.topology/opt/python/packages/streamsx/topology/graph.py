@@ -143,6 +143,12 @@ class SPLGraph(object):
         self._colocate_tag_mapping = {}
         self._id_gen = 0
         self._main_composite = None
+        self._service_annotation = None
+
+    def _set_service_annotation(self, value):
+        if self._service_annotation is None: # set once only
+           if value is not None:
+              self.graph._service_annotation = value
 
     def _unique_id(self, prefix):
         """
@@ -235,6 +241,7 @@ class SPLGraph(object):
         _graph["name"] = self.name
         _graph["namespace"] = self.namespace
         self._add_project_info(_graph)
+        self._add_service_info_object(_graph, self._service_annotation)
         _graph["public"] = True
         _graph["config"] = {}
         self._determine_model(_graph["config"])
@@ -285,6 +292,12 @@ class SPLGraph(object):
             if not 'annotations' in _graph:
                 _graph['annotations'] = []
             _graph['annotations'].append(annotation)
+
+    def _add_service_info_object(self, _graph, annotation):
+        if annotation is not None:
+           if not 'annotations' in _graph:
+              _graph['annotations'] = []
+           _graph['annotations'].append(annotation)
 
     def _add_packages(self, includes):
         for package_path in self.resolver.packages:
@@ -363,6 +376,7 @@ class _SPLInvocation(object):
         self.inputPorts = []
         self.outputPorts = []
         self._layout_hints = {}
+        self._annotations = None
         self._addOperatorFunction(self.function, stateful, nargs)
 
         self.runtime_id = self._get_runtime_id(self.kind, self.name)
@@ -470,6 +484,9 @@ class _SPLInvocation(object):
                 _value["value"] = param
                 _params[name] = _value
         _op["parameters"] = _params
+
+        if self._annotations is not None:
+            _op['annotations'] = self._annotations
 
         if self.sl is not None:
            _op['sourcelocation'] = self.sl.spl_json()
@@ -588,6 +605,11 @@ class _SPLInvocation(object):
 
     def consistent(self, consistent_config):
         self._consistent = consistent_config
+
+    def _annotation(self, annotation):
+        if self._annotations is None:
+           self._annotations = []
+        self._annotations.append(annotation)
 
     def _layout(self, kind=None, hidden=None, name=None, orig_name=None):
         if kind:

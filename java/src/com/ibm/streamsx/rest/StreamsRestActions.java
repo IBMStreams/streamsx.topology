@@ -7,7 +7,6 @@ import java.io.IOException;
 
 import org.apache.http.auth.AUTH;
 import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
@@ -57,7 +56,7 @@ class StreamsRestActions {
 	
     static boolean cancelJob(Instance instance, String jobId) throws IOException {
     	Request deleteJob = Request.Delete(instance.self() + "/jobs/" + jobId);
-    	Response response = instance.connection().executor.execute(deleteJob);
+    	/*Response response =*/ instance.connection().executor.execute(deleteJob);
     	
     	// TODO - error handling
     	return true;
