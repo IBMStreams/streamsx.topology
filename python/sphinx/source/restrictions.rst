@@ -3,6 +3,17 @@ Restrictions and known bugs
 ###########################
 
 * *streamsx* versions 2.0 and higher are incompatible with Cloud Pak for Data equal or less than version 3.5.0.0
+* For use of *streamsx* 2.0, the `com.ibm.streamsx.iot` toolkit must be updated to minimum version 1.3.0 on the build service or a local Streams installation. Otherwise dependency errors will occur when the application is compiled.
+
+  To update the IoT toolkit on the CP4D buildservice to version 1.3.0, follow these steps:
+
+  - download the `toolkit version 1.3.0 tarball <https://github.com/IBMStreams/streamsx.iot/releases/download/v1.3.0/streamsx.iot.toolkits-1.3.0-20201208-1147.tgz>`_
+    from the `toolkits release page <https://github.com/IBMStreams/streamsx.iot/releases/>`_ on GitHub.
+  - ``cd`` to your download location
+  - unpack the downloaded tarball: ``tar -zxf streamsx.iot.toolkits-1.3.0-20201208-1147.tgz``
+  - upload the toolkit: ``streamsx-streamtool [--disable-ssl-verify] uploadtoolkit --path com.ibm.streamsx.iot``
+  - you can verify that the new version is present, with ``streamsx-streamtool [--disable-ssl-verify] lstoolkit --name com.ibm.streamsx.iot``. The old and the new version should be listed.
+
 * A job that is submitted with `streamsx-streamtool` to a Cloud Pak for Data with version above 3.0 is only visible in the Streams Console.
 * Job submission from a Python notebook within a CP4D project on Cloud Pak for Data with version above 3.0 may fail with exception message
 
