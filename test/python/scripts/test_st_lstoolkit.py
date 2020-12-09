@@ -52,7 +52,7 @@ class Testlstoolkit(unittest.TestCase):
         return rc, stdout, msg
 
     def _check_header(self, out):
-        expected = ["Name", "Version", "RequiredProductVersion"]
+        expected = ["Name", "Version", "RequiredProductVersion", "Toolkit-ID"]
         headers = out[0].split()
         self.assertEqual(expected, headers)
 

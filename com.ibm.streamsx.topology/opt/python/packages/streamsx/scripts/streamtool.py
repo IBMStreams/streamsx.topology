@@ -639,7 +639,7 @@ def _lstoolkit(instance, cmd_args, rc):
 
     tk_to_list.sort(key=lambda tk : (tk.name, tk.version))
 
-    headers = ["Name", "Version", 'RequiredProductVersion']
+    headers = ["Name", "Version", 'RequiredProductVersion', 'Toolkit-ID']
 
     # pre process the data so output is formatted nicely
     h_length = [len(x) for x in headers] # header_length
@@ -647,14 +647,15 @@ def _lstoolkit(instance, cmd_args, rc):
         h_length[0] = max(len(tk.name), h_length[0])
         h_length[1] = max(len(tk.version), h_length[1])
         h_length[2] = max(len(tk.requiredProductVersion), h_length[2])
+        h_length[3] = max(len(tk.id), h_length[3])
 
-    fmt = '{:<{name_w}}  {:<{ver_w}}  {:<{pv_w}}'
+    fmt = '{:<{name_w}}  {:<{ver_w}}  {:<{pv_w}}  {:<{id_w}}'
 
-    print(fmt.format(headers[0], headers[1], headers[2],
-        name_w=h_length[0], ver_w=h_length[1], pv_w=h_length[2]))
+    print(fmt.format(headers[0], headers[1], headers[2], headers[3],
+        name_w=h_length[0], ver_w=h_length[1], pv_w=h_length[2], id_w=h_length[3]))
     for tk in tk_to_list:
-         print(fmt.format(tk.name, tk.version, tk.requiredProductVersion,
-             name_w=h_length[0], ver_w=h_length[1], pv_w=h_length[2]))
+         print(fmt.format(tk.name, tk.version, tk.requiredProductVersion, tk.id,
+             name_w=h_length[0], ver_w=h_length[1], pv_w=h_length[2], id_w=h_length[3]))
 
     return (rc, return_message)
 

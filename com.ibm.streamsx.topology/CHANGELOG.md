@@ -2,6 +2,7 @@
 ==========
 
 ## develop branch latest
+* [#2627](https://github.com/IBMStreams/streamsx.topology/issues/2627) `streamsx-streamtool lstoolkits` should show the toolkit-ID
 * [#2609](https://github.com/IBMStreams/streamsx.topology/issues/2609) CPD3.5: "invalid platform token" error
 
 ## v1.18.0
