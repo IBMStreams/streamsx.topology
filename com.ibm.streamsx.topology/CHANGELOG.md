@@ -1,6 +1,9 @@
 # Changes
 ==========
 
+## develop branch latest
+* [#2609](https://github.com/IBMStreams/streamsx.topology/issues/2609) CPD3.5: "invalid platform token" error
+
 ## v1.18.0
 * [#2610](https://github.com/IBMStreams/streamsx.topology/issues/2610) Support Streams job as CP4D service: New classes EndpointSink, EndpointSource in streamsx.service
 * [#2607](https://github.com/IBMStreams/streamsx.topology/issues/2607) Documentation updates in Python API to resolve wrong or missing descriptions

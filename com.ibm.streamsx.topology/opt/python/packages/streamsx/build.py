@@ -265,6 +265,10 @@ class BuildService(streamsx.rest._AbstractStreamsConnection):
 
     @staticmethod
     def _find_service_def(config):
+        """
+        Returns a service definition dict with connection_info, type, service_name, service_id, service_namespace,
+        refreshed service_token, service_token_expire, and user_token
+        """
         if BuildService._is_service_def(config):
             service = config
         else:
@@ -280,23 +284,30 @@ class BuildService(streamsx.rest._AbstractStreamsConnection):
             else:
                 svc_name = svcRestEndpoint.split('/')[-1]
             svc_info['service_name'] = svc_name
+            if 'user_token' in service:
+                svc_info['user_token'] = service['user_token']
+                svc_info['service_token'] = service['user_token']
+            else:
+                # try to get token from environmnet variable USER_ACCESS_TOKEN
+                import os
+                if 'USER_ACCESS_TOKEN' in os.environ:
+                    tok = os.environ['USER_ACCESS_TOKEN']
+                    svc_info['user_token'] = tok
+                    svc_info['service_token'] = tok
+                else:
+                    raise ValueError('cannot find the user token in environment nor in service details')
+            # the user token expires in ~ 11000 years; now + 10 years are sufficient. 
+            svc_info['service_token_expire'] = int((time.time() + 10 * 365 * 86400)*1000)
             try:
-                # Get a new token as we don't know how much
-                # time has passed since the cell containing
-                # get_service_instance_details was run
-                from icpd_core import icpd_util
-                svc_info['service_token'] = icpd_util.get_instance_token(name=svc_name)
-                svc_info['service_token_expire'] = int((time.time() + 19 * 60)*1000)
                 # add service_id and service_namespace
+                from icpd_core import icpd_util
                 con = icpd_util.get_connection(name=svc_name, conn_class='svc')
                 if con:
                     svc_info['service_id'] = con['service_instance_id']
                     svc_info['service_namespace'] = con['service_instance_namespace']
             except:
-                svc_info['service_token'] = service['service_token']
-                svc_info['service_token_expire'] = int((time.time() + 5 * 60)*1000)
-            if 'user_token' in service:
-                svc_info['user_token'] = service['user_token']
+                pass
+            
             return svc_info
         return None
 

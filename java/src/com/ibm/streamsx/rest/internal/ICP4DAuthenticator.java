@@ -15,6 +15,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
+import java.util.logging.Logger;
 
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
@@ -25,7 +26,14 @@ import com.ibm.streamsx.topology.internal.context.streamsrest.StreamsKeys;
 import com.ibm.streamsx.topology.internal.gson.GsonUtilities;
 import com.ibm.streamsx.topology.internal.streams.Util;
 
+/**
+ * Authenticator for access of CP4D. This authenticator can be used for access from external via {@link #of(String, String, String, String)}
+ * or from internal when created with {@link #of(JsonObject)}.
+ */
 public class ICP4DAuthenticator implements Function<Executor,String> {
+    
+    private static final Logger TRACE = Logger.getLogger(ICP4DAuthenticator.class.getName());
+    private static final long MS = 1000;
 
     public static ICP4DAuthenticator of(String urlS, String instanceName, String user, String password) throws MalformedURLException, UnsupportedEncodingException {
 
@@ -41,33 +49,54 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
 
         URL detailsUrl = new URL("https", icpdUrl.getHost(), icpdUrl.getPort(),
                 "/zen-data/v2/serviceInstance/details?displayName=" + URLEncoder.encode(instanceName, StandardCharsets.UTF_8.name()));
-
-        URL serviceTokenUrl = new URL("https", icpdUrl.getHost(), icpdUrl.getPort(),
-                "/zen-data/v2/serviceInstance/token");
-        return new ICP4DAuthenticator(icpdUrl, authorizeUrl, detailsUrl, serviceTokenUrl, instanceName, user, password);
+        return new ICP4DAuthenticator(icpdUrl, authorizeUrl, detailsUrl, instanceName, user, password);
     }
 
+
+    public static ICP4DAuthenticator of(JsonObject service, boolean verify) throws MalformedURLException, UnsupportedEncodingException {
+
+        String serviceName = jstring(service, "service_name");
+        final ICP4DAuthenticator auth;
+        if (jboolean(service, "externalClient")) {
+            // Set externally
+            String cpd_host = jstring(service, "cluster_ip");
+            int cpd_port = GsonUtilities.jint(service, "cluster_port");
+            URL cpd_url = new URL("https", cpd_host, cpd_port, "");
+            auth = ICP4DAuthenticator.of(cpd_url.toExternalForm(), serviceName, (String) null, (String) null);
+        } else {
+            auth = new ICP4DAuthenticator(null, null, null, serviceName, null, null);
+        }
+
+        // when created from a JSON object (from the Python world) we assume, that the service token has been set up to the
+        // correct token. We do not use the user_token here. 
+        String serviceToken = jstring(service, "service_token");
+
+        if (serviceToken != null) {
+            auth.serviceAuth = RestUtils.createBearerAuth(serviceToken);
+            auth.expire = service.get("service_token_expire").getAsLong();
+        }
+        auth.cfg = service;
+        auth.verify = verify;
+        return auth;
+    }
 
 
     private final URL icpdUrl;
     private final URL authorizeUrl;
     private final URL detailsUrl;
-    private final URL serviceTokenUrl;
     private final String instanceName;
     private final String user;
     private final String password;
 
     private String serviceAuth;
-    private long expire;
-
+    private long expire = 0;
+    private boolean verify = false;
     private JsonObject cfg;
 
-    ICP4DAuthenticator(URL icpdUrl, URL authorizeUrl, URL detailsUrl, URL serviceTokenUrl,
-            String instanceName, String user, String password) {
+    private ICP4DAuthenticator(URL icpdUrl, URL authorizeUrl, URL detailsUrl, String instanceName, String user, String password) {
         this.icpdUrl = icpdUrl;
         this.authorizeUrl = authorizeUrl;
         this.detailsUrl = detailsUrl;
-        this.serviceTokenUrl = serviceTokenUrl;
         this.instanceName = instanceName;
         this.user = user;
         this.password = password;
@@ -89,21 +118,27 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
     }
 
     public JsonObject config(boolean verify) throws IOException {
-        if (cfg != null)
+        return config (verify, /*forceRecreate = */ false);
+    }
+    
+    public JsonObject config (boolean verify, boolean forceRecreate) throws IOException {
+        if (cfg != null && !forceRecreate)
             return cfg;
 
+        this.verify = verify;
         Executor executor = RestUtils.createExecutor(!verify);
 
         JsonObject namepwd = new JsonObject();
         String[] userPwd = Util.getDefaultUserPassword(user, password);
         namepwd.addProperty("username", userPwd[0]);
         namepwd.addProperty("password", userPwd[1]);
-        Request post = Request.Post(authorizeUrl.toExternalForm())         
+        Request post = Request.Post(authorizeUrl.toExternalForm())
                 .bodyString(namepwd.toString(), ContentType.APPLICATION_JSON);
 
         JsonObject resp = RestUtils.requestGsonResponse(executor, post);
         String icp4dToken = GsonUtilities.jstring(resp, "token");
-
+        // these tokens have ~ 12 hours lifetime, with 11 hours from now as expected expiry time we are comfortable
+        expire = System.currentTimeMillis() + 11l * 3600l * MS;
         String icpdAuth = RestUtils.createBearerAuth(icp4dToken);
 
         String serviceId = null;
@@ -115,9 +150,7 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
 
             JsonObject sro = object(resp, "requestObj");
             serviceId = jstring(sro, "ID");
-
             sca = object(sro, "CreateArguments");
-
             sci = object(sca, "connection-info");
             if (sci != null && !sci.entrySet().isEmpty())
                 break;
@@ -127,22 +160,11 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
             } catch (InterruptedException e) {
                 break;
             }
-
         }
         if (sci == null)
             throw new IllegalStateException("Unable to retrieve connection details for Streams instance: " + instanceName);
 
-        JsonObject pd = new JsonObject();
-        pd.addProperty("serviceInstanceId", serviceId);
-        post = Request.Post(serviceTokenUrl.toExternalForm())         
-                .addHeader("Authorization", icpdAuth)
-                .bodyString(pd.toString(), ContentType.APPLICATION_JSON);
-
-        resp = RestUtils.requestGsonResponse(executor, post);
-        String serviceToken = jstring(resp, "AccessToken");
-
-        serviceAuth = RestUtils.createBearerAuth(serviceToken);
-        expire = System.currentTimeMillis() + 19 * 60_000;
+        this.serviceAuth = RestUtils.createBearerAuth (icp4dToken);
 
         JsonObject connInfo = new JsonObject();
 
@@ -153,7 +175,7 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         }
         final String externalBuildEndpoint = jstring(sci, "externalBuildEndpoint");
         URL buildUrl = urlFromEndPoint(externalBuildEndpoint);
-        
+
         final String externalRestResourceEndpoint = jstring(sci, "externalRestResourceEndpoint");
         if (externalRestResourceEndpoint != null) {
             URL restResourceUrl = urlFromEndPoint(externalRestResourceEndpoint);
@@ -174,8 +196,9 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         cfg.addProperty("type", "streams");
         cfg.addProperty("externalClient", true);
         cfg.add("connection_info", connInfo);
-        cfg.addProperty("service_token", serviceToken);
+        cfg.addProperty("service_token", icp4dToken);
         cfg.addProperty("service_token_expire", expire);
+        cfg.addProperty("user_token", icp4dToken);
         cfg.addProperty("service_name", serviceName);
         cfg.addProperty("cluster_ip", icpdUrl.getHost());
         cfg.addProperty("cluster_port", icpdUrl.getPort());
@@ -184,32 +207,17 @@ public class ICP4DAuthenticator implements Function<Executor,String> {
         return cfg;
     }
 
-    public static ICP4DAuthenticator of(JsonObject service) throws MalformedURLException, UnsupportedEncodingException {
-
-        String serviceName = jstring(service, "service_name");
-        final ICP4DAuthenticator auth;
-        if (jboolean(service, "externalClient")) {
-            // Set externally
-            String cpd_host = jstring(service, "cluster_ip");
-            int cpd_port = GsonUtilities.jint(service, "cluster_port");
-            URL cpd_url = new URL("https", cpd_host, cpd_port, "");
-            auth = ICP4DAuthenticator.of(cpd_url.toExternalForm(), serviceName, (String) null, (String) null);
-        } else {
-            auth = new ICP4DAuthenticator(null, null, null, null, serviceName, null, null);
-        }
-
-        String serviceToken = jstring(service, "service_token");
-
-        if (serviceToken != null) {
-            auth.serviceAuth = RestUtils.createBearerAuth(serviceToken);
-            auth.expire = service.get("service_token_expire").getAsLong();
-        }
-        auth.cfg = service;
-        return auth;
-    }
-
     @Override
-    public String apply(Executor executor) {   
+    public String apply(Executor executor) {
+        long now = System.currentTimeMillis();
+        // refresh config; for refresh we need usename and password
+        if (now > this.expire && this.user != null && this.password != null) {
+            try {
+                /*this.cfg =*/ config (this.verify, /*forceRecreate = */ true);
+            } catch (IOException e) {
+                TRACE.warning("failed to refresh config: " + e.getMessage());
+            }
+        }
         return serviceAuth;
     }  
 }

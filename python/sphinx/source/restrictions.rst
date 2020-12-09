@@ -2,6 +2,7 @@
 Restrictions and known bugs
 ###########################
 
+* *streamsx* versions 2.0 and higher are incompatible with Cloud Pak for Data equal or less than version 3.5.0.0
 * A job that is submitted with `streamsx-streamtool` to a Cloud Pak for Data with version above 3.0 is only visible in the Streams Console.
 * Job submission from a Python notebook within a CP4D project on Cloud Pak for Data with version above 3.0 may fail with exception message
 
