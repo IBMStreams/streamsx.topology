@@ -1,0 +1,1242 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx.spl.op &mdash; streamsx 1.18.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="streamsx.spl.types" href="streamsx.spl.types.html" />
+    <link rel="prev" title="streamsx.service" href="streamsx.service.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.18
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.html">streamsx.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.topology.html">streamsx.topology.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.context.html">streamsx.topology.context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.schema.html">streamsx.topology.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.state.html">streamsx.topology.state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.composite.html">streamsx.topology.composite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester.html">streamsx.topology.tester</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester_runtime.html">streamsx.topology.tester_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.ec.html">streamsx.ec</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.service.html">streamsx.service</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">streamsx.spl.op</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#invoking-spl-operators">Invoking SPL Operators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#values-for-operator-clauses">Values for operator clauses</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#param-clause">Param clause</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#output-clause">Output clause</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.types.html">streamsx.spl.types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.toolkit.html">streamsx.spl.toolkit</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.spl.html">streamsx.spl.spl</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.build.html">streamsx.build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest.html">streamsx.rest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest_primitives.html">streamsx.rest_primitives</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="scripts/extract.html">spl-python-extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/info.html">streamsx-info</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/runner.html">streamsx-runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/sc.html">streamsx-sc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/service.html">streamsx-service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/streamtool.html">streamsx-streamtool</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysetup.html">IBM Streams Python setup</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">Restrictions and known bugs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">streamsx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>streamsx.spl.op</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/streamsx.spl.op.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-streamsx.spl.op">
+<span id="streamsx-spl-op"></span><h1>streamsx.spl.op<a class="headerlink" href="#module-streamsx.spl.op" title="Permalink to this headline">¶</a></h1>
+<p>Integration of SPL operators.</p>
+<div class="section" id="invoking-spl-operators">
+<h2>Invoking SPL Operators<a class="headerlink" href="#invoking-spl-operators" title="Permalink to this headline">¶</a></h2>
+<p>IBM Streams supports <em>Stream Processing Language</em> (SPL),
+a domain specific language for streaming analytics.
+SPL creates an application by building a graph of operator
+invocations. These operators are declared in an SPL toolkit.</p>
+<p>SPL streams have a structured schema, such as
+<code class="docutils literal notranslate"><span class="pre">tuple&lt;rstring</span> <span class="pre">id,</span> <span class="pre">timestamp</span> <span class="pre">ts,</span> <span class="pre">float64</span> <span class="pre">value&gt;</span></code> for
+a sensor reading with a sensor identifier, timestamp and value.
+A schema is defined using <a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.StreamSchema" title="streamsx.topology.schema.StreamSchema"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamSchema</span></code></a>.</p>
+<p>A Python topology application can take advantage of SPL operators
+by using streams with structured schemas. A stream of Python objects
+can be converted to a structured stream using
+<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.map" title="streamsx.topology.topology.Stream.map"><code class="xref py py-meth docutils literal notranslate"><span class="pre">map()</span></code></a>
+with the <cite>schema</cite> parameter set:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># s is stream of Python objects representing a sensor</span>
+<span class="n">s</span> <span class="o">=</span> <span class="o">...</span>
+
+<span class="c1"># map s to a structured stream using a lambda function</span>
+<span class="c1"># for each sensor reading r a Python tuple is created</span>
+<span class="c1"># with the required values matching the order of the</span>
+<span class="c1"># structured schema.</span>
+<span class="n">s2</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">r</span> <span class="p">:</span> <span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">sensor_id</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">reading_time</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">reading</span><span class="p">),</span>
+     <span class="n">schema</span><span class="o">=</span><span class="s1">&#39;tuple&lt;rstring id, timestamp ts, float64 value&gt;&#39;</span>
+</pre></div>
+</div>
+<p>An SPL operator is invoked in an application by creating an
+instance of:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#streamsx.spl.op.Invoke" title="streamsx.spl.op.Invoke"><code class="xref py py-class docutils literal notranslate"><span class="pre">Invoke</span></code></a> - Invocation of an arbitrary SPL operator.</p></li>
+<li><p><a class="reference internal" href="#streamsx.spl.op.Source" title="streamsx.spl.op.Source"><code class="xref py py-class docutils literal notranslate"><span class="pre">Source</span></code></a> - Invocation of an SPL source operator with one input port.</p></li>
+<li><p><a class="reference internal" href="#streamsx.spl.op.Map" title="streamsx.spl.op.Map"><code class="xref py py-class docutils literal notranslate"><span class="pre">Map</span></code></a> - Invocation of an SPL map operator with one input port and one output port.</p></li>
+<li><p><a class="reference internal" href="#streamsx.spl.op.Sink" title="streamsx.spl.op.Sink"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sink</span></code></a> - Invocation of an SPL sink operator with one output port.</p></li>
+</ul>
+</div></blockquote>
+<p>In SPL, operator invocation supports a number of clauses that are
+supported in Python.</p>
+<div class="section" id="values-for-operator-clauses">
+<span id="id1"></span><h3>Values for operator clauses<a class="headerlink" href="#values-for-operator-clauses" title="Permalink to this headline">¶</a></h3>
+<p>When an operator clause requires a value, the value may be passed as
+a constant,
+an input attribute (passed using the <cite>attribute</cite> method of the invocation),
+or an arbitrary SPL expression (passed as a string or an <a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression"><code class="xref py py-class docutils literal notranslate"><span class="pre">Expression</span></code></a>).
+Because a string is interpreted as an SPL expression, a string constant
+should be passed by enclosing the quoted string in outer quotes (for example, ‘“a string constant”’).</p>
+<p>SPL is strictly typed so when passing a constant as a value the
+value may need to be strongly typed.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">bool</span></code>, <code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code> and <code class="docutils literal notranslate"><span class="pre">str</span></code> values map automatically to SPL <cite>boolean</cite>, <cite>int32</cite>, <cite>float64</cite> and <cite>rstring</cite> respectively.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Enum</span></code> values map to an operator custom literal using the symbolic name of the value. For custom literals only the symbolic name needs to match a value expected by the operator, the class name and other values are arbitrary.</p></li>
+<li><p>The module <a class="reference internal" href="streamsx.spl.types.html#module-streamsx.spl.types" title="streamsx.spl.types"><code class="xref py py-mod docutils literal notranslate"><span class="pre">streamsx.spl.types</span></code></a> provides functions to create typed SPL expressions from values.</p></li>
+</ul>
+</div></blockquote>
+<p>An optional type may be set to SPL <cite>null</cite> by passing either Python <cite>None</cite> or
+the value returned from <a class="reference internal" href="streamsx.spl.types.html#streamsx.spl.types.null" title="streamsx.spl.types.null"><code class="xref py py-func docutils literal notranslate"><span class="pre">null()</span></code></a>.</p>
+</div>
+<div class="section" id="param-clause">
+<h3>Param clause<a class="headerlink" href="#param-clause" title="Permalink to this headline">¶</a></h3>
+<p>Operator parameterization is through operator parameters that configure
+and modify the operator for the specific application.</p>
+<p>Parameters are passed as a <cite>dict</cite> containing the parameter names and their values (see <a class="reference internal" href="#values-for-operator-clauses"><span class="std std-ref">Values for operator clauses</span></a>).</p>
+<p><em>Examples</em></p>
+<p>To invoke a <cite>Beacon</cite> operator from the SPL standard toolkit producing 100 tuples at the rate of two per second:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">schema</span> <span class="o">=</span> <span class="n">StreamSchema</span><span class="p">(</span><span class="s1">&#39;tuple&lt;uint64 seq&gt;&#39;</span><span class="p">)</span>
+<span class="n">beacon</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">Source</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="s1">&#39;spl.utility::Beacon&#39;</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;iterations&#39;</span><span class="p">:</span><span class="mi">100</span><span class="p">,</span> <span class="s1">&#39;period&#39;</span><span class="p">:</span><span class="mf">0.5</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>To use an <code class="docutils literal notranslate"><span class="pre">IntEnum</span></code> to pass a custom literal to the <code class="docutils literal notranslate"><span class="pre">Parse</span></code> operator:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">IntEnum</span>
+
+<span class="k">class</span> <span class="nc">DataFormats</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+    <span class="n">csv</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">txt</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="o">...</span>
+
+<span class="n">params</span><span class="p">[</span><span class="s1">&#39;format&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">DataFormats</span><span class="o">.</span><span class="n">csv</span>
+</pre></div>
+</div>
+<p>To create a <cite>count</cite> parameter of type <cite>uint64</cite> for the SPL <cite>DeDuplicate</cite> operator:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">streamsx</span><span class="o">.</span><span class="n">spl</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">uint64</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>After the instance representing the operator
+invocation has been created, additional parameters may be added through
+the <cite>params</cite> attribute. If the value is an expression that is only valid
+in the context of the operator invocation then the parameter must be added
+after the operator invocation has been created.</p>
+<p>For example, the <cite>Filter</cite> operator uses an expression that is usually dependent on the context, filtering tuples based upon their attribute values:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fs</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">Map</span><span class="p">(</span><span class="s1">&#39;spl.relational::Filter&#39;</span><span class="p">,</span> <span class="n">beacon</span><span class="p">)</span>
+<span class="n">fs</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;filter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">expression</span><span class="p">(</span><span class="s1">&#39;seq </span><span class="si">% 2u</span><span class="s1">l == 0ul&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="output-clause">
+<h3>Output clause<a class="headerlink" href="#output-clause" title="Permalink to this headline">¶</a></h3>
+<p>The operator output clause defines the values of attributes on outgoing
+tuples on the operator invocation’s output ports.</p>
+<p>When a tuple is submitted by an operator invocation each of its attributes is
+set in one of three ways:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>By the operator based upon its state and input tuples. For example, a US ZIP code operator might set the <cite>zipcode</cite> attribute based upon its lookup of the ZIP code from the address details in the input tuple.</p></li>
+<li><p>By the operator implicitly setting output attributes from matching input attributes when those attributes have not been explicitly set elsewhere. Many streaming operators implicitly set output attributes to allow attributes to flow through the operator without any explicit coding. This only occurs when an output attribute is not explicitly set by the operator, or the output clause, and the input tuple has an attribute that matches the output attribute (same name and type, or same name and same type as the underlying type of an output attribute with an optional type). For example, in the US ZIP code operator, if the output tuple included attributes of <code class="docutils literal notranslate"><span class="pre">rstring</span> <span class="pre">city,</span> <span class="pre">rstring</span> <span class="pre">state</span></code> that matched input attributes, then they would be implicitly copied from the input tuple to the output tuple.</p></li>
+<li><p>By an output clause in the operator invocation. In this case the application invoking the operator is explicitly setting attributes using SPL expressions. An operator may provide output functions that return values based upon the operator’s state and input tuples. For example, the US ZIP code operator might provide a <code class="docutils literal notranslate"><span class="pre">ZIPCode()</span></code> output function rather than explicitly setting an output attribute. Then the application is free to use any attribute name to represent the ZIP code in its output tuple.</p></li>
+</ul>
+</div></blockquote>
+<p>In Python an output tuple attribute is set by creating an attribute in the operator invocation instance that is set to a return from the <cite>output</cite> method.
+The attribute value passed to the <cite>output</cite> method is passed as described in
+<a class="reference internal" href="#values-for-operator-clauses"><span class="std std-ref">Values for operator clauses</span></a>.</p>
+<p>For example, invoking an SPL <cite>Beacon</cite> operator using an output function to set the sequence number of a tuple and an SPL expression to set the timestamp:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">schema</span> <span class="o">=</span> <span class="n">StreamSchema</span><span class="p">(</span><span class="s1">&#39;tuple&lt;uint64 seq, timestamp ts&gt;&#39;</span><span class="p">)</span>
+<span class="n">beacon</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">Source</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="s1">&#39;spl.utility::Beacon&#39;</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;period&#39;</span><span class="p">:</span><span class="mf">0.1</span><span class="p">})</span>
+
+<span class="c1"># Set the seq attribute using an output function provided by Beacon</span>
+<span class="n">beacon</span><span class="o">.</span><span class="n">seq</span> <span class="o">=</span> <span class="n">beacon</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s1">&#39;IterationCount()&#39;</span><span class="p">)</span>
+
+<span class="c1"># Set the ts attribute using an SPL function that returns the current time</span>
+<span class="n">beacon</span><span class="o">.</span><span class="n">ts</span> <span class="o">=</span> <span class="n">beacon</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s1">&#39;getTimestamp()&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference external" href="https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.0/com.ibm.streams.ref.doc/doc/spl-container.html">Streams Processing Language (SPL) Reference</a></dt><dd><p>Reference documentation.</p>
+</dd>
+<dt><a class="reference external" href="https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.0/com.ibm.streams.dev.doc/doc/dev-container.html">Developing Streams applications</a></dt><dd><p>Developing Streams applications.</p>
+</dd>
+<dt><a class="reference external" href="https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.0/com.ibm.streams.ref.doc/doc/operatorinvocations.html">Operator invocations</a></dt><dd><p>Operator invocations from the SPL reference documentation.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="section" id="module-contents">
+<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Functions</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.spl.op.main_composite" title="streamsx.spl.op.main_composite"><code class="xref py py-obj docutils literal notranslate"><span class="pre">main_composite</span></code></a></p></td>
+<td><p>Wrap a main composite invocation as a <cite>Topology</cite>.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Expression</span></code></a></p></td>
+<td><p>An SPL expression.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#streamsx.spl.op.Invoke" title="streamsx.spl.op.Invoke"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Invoke</span></code></a></p></td>
+<td><p>Declaration of an invocation of an SPL operator in a Topology.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.spl.op.Map" title="streamsx.spl.op.Map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Map</span></code></a></p></td>
+<td><p>Declaration of an invocation of an SPL <em>map</em> operator.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#streamsx.spl.op.Sink" title="streamsx.spl.op.Sink"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sink</span></code></a></p></td>
+<td><p>Declaration of an invocation of an SPL sink operator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.spl.op.Source" title="streamsx.spl.op.Source"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Source</span></code></a></p></td>
+<td><p>Declaration of an invocation of an SPL <em>source</em> operator.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="streamsx.spl.op.Invoke">
+<em class="property">class </em><code class="sig-prename descclassname">streamsx.spl.op.</code><code class="sig-name descname">Invoke</code><span class="sig-paren">(</span><em class="sig-param">topology</em>, <em class="sig-param">kind</em>, <em class="sig-param">inputs=None</em>, <em class="sig-param">schemas=None</em>, <em class="sig-param">params=None</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Invoke" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">streamsx._streams._placement._Placement</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">streamsx.topology.exop.ExtensionOperator</span></code></p>
+<p>Declaration of an invocation of an SPL operator in a Topology.</p>
+<p>An SPL operator has an arbitrary of input ports and
+an arbitrary number of output ports. The kind of the
+operator places constraints on how many input and output
+ports it supports, and potentially the schemas for those
+ports. For example, <code class="docutils literal notranslate"><span class="pre">spl.relational::Filter</span></code> has
+a single input port and one or two output ports,
+in addition the schemas of the ports must be identical.</p>
+<p>When the operator has output ports an instance of
+<code class="docutils literal notranslate"><span class="pre">SPLOperator</span></code> has an <code class="docutils literal notranslate"><span class="pre">outputs</span></code> attributes which
+is a list of <code class="docutils literal notranslate"><span class="pre">Stream</span></code> instances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>topology</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology" title="streamsx.topology.topology.Topology"><em>Topology</em></a>) – Topology that will invoke the operator.</p></li>
+<li><p><strong>kind</strong> (<em>str</em>) – SPL operator kind, e.g. <code class="docutils literal notranslate"><span class="pre">spl.utility::Beacon</span></code>.</p></li>
+<li><p><strong>inputs</strong> – Streams to connect to the operator. If not set or set to
+<cite>None</cite> or an empty collection then the operator has no
+input ports. Otherwise a list or tuple of <code class="docutils literal notranslate"><span class="pre">Stream</span></code> instances
+where the number of items is the number of input ports.</p></li>
+<li><p><strong>schemas</strong> – Schemas of the output ports. If not set or set to
+<cite>None</cite> or an empty collection then the operator has no
+outut ports. Otherwise a list or tuple of schemas
+where the number of items is the number of output ports.</p></li>
+<li><p><strong>params</strong> – Operator parameters.</p></li>
+<li><p><strong>name</strong> – Name of the operator. When <cite>None</cite> defaults to a name
+derived from the operator kind.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="streamsx.spl.op.Invoke.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">stream</em>, <em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Invoke.attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Expression for an input attribute.</p>
+<p>An input attribute is an attribute on one of the input
+ports of the operator invocation. <cite>stream</cite> must have been
+used to declare this invocation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stream</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><em>Stream</em></a>) – Stream the attribute is from.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Name of the attribute.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Expression representing the input attribute.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression">Expression</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Invoke.category">
+<em class="property">property </em><code class="sig-name descname">category</code><a class="headerlink" href="#streamsx.spl.op.Invoke.category" title="Permalink to this definition">¶</a></dt>
+<dd><p>Category for this processing logic.</p>
+<p>An arbitrary application label allowing grouping of application
+elements by category.</p>
+<p>Assign categories based on common function.
+For example, <cite>database</cite> is a common category that you can
+use to group all database sinks in an application.</p>
+<p>A category is not required and defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> meaning
+no assigned category.</p>
+<p>Streams console supports visualization based upon categories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>TypeError</strong> – No directly associated processing logic.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A category has no affect on the execution of the application.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.9.</span></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Invoke.colocate">
+<code class="sig-name descname">colocate</code><span class="sig-paren">(</span><em class="sig-param">others</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Invoke.colocate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Colocate this processing logic with others.</p>
+<p>Colocating processing logic requires execution in
+the same Streams processing element (operating system process).</p>
+<p>When a job is submitted Streams may colocate (fuse) processing
+logic into the same processing element based upon flow analysis
+and current resource usage. This call instructs that this logic
+and <cite>others</cite> must be executed in the same processing element.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>others</strong> – Processing logic such as a
+<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></a>
+or <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Sink" title="streamsx.topology.topology.Sink"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sink</span></code></a>.
+A single value can be passed or an iterable, such
+as a list of streams.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>This logic.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Invoke.expression">
+<code class="sig-name descname">expression</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Invoke.expression" title="Permalink to this definition">¶</a></dt>
+<dd><p>SPL expression.</p>
+<p>An arbitrary expression that is valid in the context of this operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>str</em>) – Arbitrary SPL expression.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Expression that is valid in the context of this operator.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression">Expression</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Invoke.output">
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param">stream</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Invoke.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>SPL output port assignment expression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stream</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><em>Stream</em></a>) – Output stream the assignment is for.</p></li>
+<li><p><strong>value</strong> (<em>str</em>) – SPL expression used for an output assignment. This can be a string, a constant, or an <a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression"><code class="xref py py-class docutils literal notranslate"><span class="pre">Expression</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Output assignment expression that is valid as a the context of this operator.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression">Expression</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Invoke.params">
+<em class="property">property </em><code class="sig-name descname">params</code><a class="headerlink" href="#streamsx.spl.op.Invoke.params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parameters for the operator invocation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Invoke.resource_tags">
+<em class="property">property </em><code class="sig-name descname">resource_tags</code><a class="headerlink" href="#streamsx.spl.op.Invoke.resource_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resource tags for this processing logic.</p>
+<p>Tags are a mechanism for differentiating and identifying resources that have different physical characteristics or logical uses. For example a resource (host) that has external connectivity for public data sources may be tagged <cite>ingest</cite>.</p>
+<p>Processing logic can be associated with one or more tags to require
+running on suitably tagged resources. For example
+adding tags <cite>ingest</cite> and <cite>db</cite> requires that the processing element
+containing the callable that created the stream runs on a host
+tagged with both <cite>ingest</cite> and <cite>db</cite>.</p>
+<p>A <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></a> that was not created directly with a Python callable
+cannot have tags associated with it. For example a stream that
+is a <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.union" title="streamsx.topology.topology.Stream.union"><code class="xref py py-meth docutils literal notranslate"><span class="pre">union()</span></code></a> of multiple streams cannot be tagged.
+In this case this method returns an empty <cite>frozenset</cite> which
+cannot be modified.</p>
+<p>See <a class="reference external" href="https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.admin.doc/doc/tags.html">https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.admin.doc/doc/tags.html</a> for more details of tags within IBM Streams.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Set of resource tags, initially empty.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>set</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If no resources exist with the required tags then job submission will fail.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.7.</span></p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.9: </span>Support for <a class="reference internal" href="#streamsx.spl.op.Sink" title="streamsx.spl.op.Sink"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sink</span></code></a> and <a class="reference internal" href="#streamsx.spl.op.Invoke" title="streamsx.spl.op.Invoke"><code class="xref py py-class docutils literal notranslate"><span class="pre">Invoke</span></code></a>.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.spl.op.Source">
+<em class="property">class </em><code class="sig-prename descclassname">streamsx.spl.op.</code><code class="sig-name descname">Source</code><span class="sig-paren">(</span><em class="sig-param">topology</em>, <em class="sig-param">kind</em>, <em class="sig-param">schema</em>, <em class="sig-param">params=None</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#streamsx.spl.op.Invoke" title="streamsx.spl.op.Invoke"><code class="xref py py-class docutils literal notranslate"><span class="pre">streamsx.spl.op.Invoke</span></code></a></p>
+<p>Declaration of an invocation of an SPL <em>source</em> operator.</p>
+<p>Source operators typically bring external data into
+a Streams application as a stream. A source operator has
+no input ports and a single output port.</p>
+<p>An instance of Source has an attribute <code class="docutils literal notranslate"><span class="pre">stream</span></code> that is
+<code class="docutils literal notranslate"><span class="pre">Stream</span></code> produced by the operator.</p>
+<p>This is a utility class that allows simple invocation
+of the common case of a operator with a single output port.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>topology</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology" title="streamsx.topology.topology.Topology"><em>Topology</em></a>) – Topology that will invoke the operator.</p></li>
+<li><p><strong>kind</strong> (<em>str</em>) – SPL operator kind, e.g. <code class="docutils literal notranslate"><span class="pre">spl.utility::Beacon</span></code>.</p></li>
+<li><p><strong>schema</strong> – Schema of the output port.</p></li>
+<li><p><strong>params</strong> – Operator parameters.</p></li>
+<li><p><strong>name</strong> – Name of the operator. When <cite>None</cite> defaults to a generated name.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="streamsx.spl.op.Source.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">stream</em>, <em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Source.attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Expression for an input attribute.</p>
+<p>An input attribute is an attribute on one of the input
+ports of the operator invocation. <cite>stream</cite> must have been
+used to declare this invocation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stream</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><em>Stream</em></a>) – Stream the attribute is from.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Name of the attribute.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Expression representing the input attribute.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression">Expression</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Source.category">
+<em class="property">property </em><code class="sig-name descname">category</code><a class="headerlink" href="#streamsx.spl.op.Source.category" title="Permalink to this definition">¶</a></dt>
+<dd><p>Category for this processing logic.</p>
+<p>An arbitrary application label allowing grouping of application
+elements by category.</p>
+<p>Assign categories based on common function.
+For example, <cite>database</cite> is a common category that you can
+use to group all database sinks in an application.</p>
+<p>A category is not required and defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> meaning
+no assigned category.</p>
+<p>Streams console supports visualization based upon categories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>TypeError</strong> – No directly associated processing logic.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A category has no affect on the execution of the application.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.9.</span></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Source.colocate">
+<code class="sig-name descname">colocate</code><span class="sig-paren">(</span><em class="sig-param">others</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Source.colocate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Colocate this processing logic with others.</p>
+<p>Colocating processing logic requires execution in
+the same Streams processing element (operating system process).</p>
+<p>When a job is submitted Streams may colocate (fuse) processing
+logic into the same processing element based upon flow analysis
+and current resource usage. This call instructs that this logic
+and <cite>others</cite> must be executed in the same processing element.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>others</strong> – Processing logic such as a
+<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></a>
+or <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Sink" title="streamsx.topology.topology.Sink"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sink</span></code></a>.
+A single value can be passed or an iterable, such
+as a list of streams.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>This logic.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Source.expression">
+<code class="sig-name descname">expression</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Source.expression" title="Permalink to this definition">¶</a></dt>
+<dd><p>SPL expression.</p>
+<p>An arbitrary expression that is valid in the context of this operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>str</em>) – Arbitrary SPL expression.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Expression that is valid in the context of this operator.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression">Expression</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Source.output">
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Source.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>SPL output port assignment expression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>str</em>) – SPL expression used for an output assignment. This can be a string, a constant, or an <a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression"><code class="xref py py-class docutils literal notranslate"><span class="pre">Expression</span></code></a>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Output assignment expression that is valid as a the context of this operator.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression">Expression</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Source.params">
+<em class="property">property </em><code class="sig-name descname">params</code><a class="headerlink" href="#streamsx.spl.op.Source.params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parameters for the operator invocation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Source.resource_tags">
+<em class="property">property </em><code class="sig-name descname">resource_tags</code><a class="headerlink" href="#streamsx.spl.op.Source.resource_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resource tags for this processing logic.</p>
+<p>Tags are a mechanism for differentiating and identifying resources that have different physical characteristics or logical uses. For example a resource (host) that has external connectivity for public data sources may be tagged <cite>ingest</cite>.</p>
+<p>Processing logic can be associated with one or more tags to require
+running on suitably tagged resources. For example
+adding tags <cite>ingest</cite> and <cite>db</cite> requires that the processing element
+containing the callable that created the stream runs on a host
+tagged with both <cite>ingest</cite> and <cite>db</cite>.</p>
+<p>A <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></a> that was not created directly with a Python callable
+cannot have tags associated with it. For example a stream that
+is a <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.union" title="streamsx.topology.topology.Stream.union"><code class="xref py py-meth docutils literal notranslate"><span class="pre">union()</span></code></a> of multiple streams cannot be tagged.
+In this case this method returns an empty <cite>frozenset</cite> which
+cannot be modified.</p>
+<p>See <a class="reference external" href="https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.admin.doc/doc/tags.html">https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.admin.doc/doc/tags.html</a> for more details of tags within IBM Streams.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Set of resource tags, initially empty.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>set</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If no resources exist with the required tags then job submission will fail.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.7.</span></p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.9: </span>Support for <a class="reference internal" href="#streamsx.spl.op.Sink" title="streamsx.spl.op.Sink"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sink</span></code></a> and <a class="reference internal" href="#streamsx.spl.op.Invoke" title="streamsx.spl.op.Invoke"><code class="xref py py-class docutils literal notranslate"><span class="pre">Invoke</span></code></a>.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Source.stream">
+<em class="property">property </em><code class="sig-name descname">stream</code><a class="headerlink" href="#streamsx.spl.op.Source.stream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stream produced by the operator invocation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Stream produced by the operator invocation.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.spl.op.Map">
+<em class="property">class </em><code class="sig-prename descclassname">streamsx.spl.op.</code><code class="sig-name descname">Map</code><span class="sig-paren">(</span><em class="sig-param">kind</em>, <em class="sig-param">stream</em>, <em class="sig-param">schema=None</em>, <em class="sig-param">params=None</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#streamsx.spl.op.Invoke" title="streamsx.spl.op.Invoke"><code class="xref py py-class docutils literal notranslate"><span class="pre">streamsx.spl.op.Invoke</span></code></a></p>
+<p>Declaration of an invocation of an SPL <em>map</em> operator.</p>
+<p><em>Map</em> operators have a single input port and single
+output port.</p>
+<p>An instance of Map has an attribute <code class="docutils literal notranslate"><span class="pre">stream</span></code> that is
+<code class="docutils literal notranslate"><span class="pre">Stream</span></code> produced by the operator.</p>
+<p>This is a utility class that allows simple invocation
+of the common case of a operator with a single input stream
+and single output stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kind</strong> (<em>str</em>) – SPL operator kind, e.g. <code class="docutils literal notranslate"><span class="pre">spl.relational::Filter</span></code>.</p></li>
+<li><p><strong>stream</strong> – Stream to connect to the operator.</p></li>
+<li><p><strong>schema</strong> – Schema of the output stream. If set to <cite>None</cite> then the output schema is the same as the schema of <cite>stream</cite>.</p></li>
+<li><p><strong>params</strong> – Operator parameters.</p></li>
+<li><p><strong>name</strong> – Name of the operator. When <cite>None</cite> defaults to a generated name.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="streamsx.spl.op.Map.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Map.attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Expression for an input attribute.</p>
+<p>An input attribute is an attribute on the input
+port of the operator invocation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – Name of the attribute.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Expression representing the input attribute.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression">Expression</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Map.category">
+<em class="property">property </em><code class="sig-name descname">category</code><a class="headerlink" href="#streamsx.spl.op.Map.category" title="Permalink to this definition">¶</a></dt>
+<dd><p>Category for this processing logic.</p>
+<p>An arbitrary application label allowing grouping of application
+elements by category.</p>
+<p>Assign categories based on common function.
+For example, <cite>database</cite> is a common category that you can
+use to group all database sinks in an application.</p>
+<p>A category is not required and defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> meaning
+no assigned category.</p>
+<p>Streams console supports visualization based upon categories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>TypeError</strong> – No directly associated processing logic.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A category has no affect on the execution of the application.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.9.</span></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Map.colocate">
+<code class="sig-name descname">colocate</code><span class="sig-paren">(</span><em class="sig-param">others</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Map.colocate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Colocate this processing logic with others.</p>
+<p>Colocating processing logic requires execution in
+the same Streams processing element (operating system process).</p>
+<p>When a job is submitted Streams may colocate (fuse) processing
+logic into the same processing element based upon flow analysis
+and current resource usage. This call instructs that this logic
+and <cite>others</cite> must be executed in the same processing element.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>others</strong> – Processing logic such as a
+<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></a>
+or <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Sink" title="streamsx.topology.topology.Sink"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sink</span></code></a>.
+A single value can be passed or an iterable, such
+as a list of streams.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>This logic.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Map.expression">
+<code class="sig-name descname">expression</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Map.expression" title="Permalink to this definition">¶</a></dt>
+<dd><p>SPL expression.</p>
+<p>An arbitrary expression that is valid in the context of this operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>str</em>) – Arbitrary SPL expression.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Expression that is valid in the context of this operator.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression">Expression</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Map.output">
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Map.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>SPL output port assignment expression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>str</em>) – SPL expression used for an output assignment. This can be a string, a constant, or an <a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression"><code class="xref py py-class docutils literal notranslate"><span class="pre">Expression</span></code></a>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Output assignment expression that is valid as a the context of this operator.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression">Expression</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Map.params">
+<em class="property">property </em><code class="sig-name descname">params</code><a class="headerlink" href="#streamsx.spl.op.Map.params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parameters for the operator invocation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Map.resource_tags">
+<em class="property">property </em><code class="sig-name descname">resource_tags</code><a class="headerlink" href="#streamsx.spl.op.Map.resource_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resource tags for this processing logic.</p>
+<p>Tags are a mechanism for differentiating and identifying resources that have different physical characteristics or logical uses. For example a resource (host) that has external connectivity for public data sources may be tagged <cite>ingest</cite>.</p>
+<p>Processing logic can be associated with one or more tags to require
+running on suitably tagged resources. For example
+adding tags <cite>ingest</cite> and <cite>db</cite> requires that the processing element
+containing the callable that created the stream runs on a host
+tagged with both <cite>ingest</cite> and <cite>db</cite>.</p>
+<p>A <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></a> that was not created directly with a Python callable
+cannot have tags associated with it. For example a stream that
+is a <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.union" title="streamsx.topology.topology.Stream.union"><code class="xref py py-meth docutils literal notranslate"><span class="pre">union()</span></code></a> of multiple streams cannot be tagged.
+In this case this method returns an empty <cite>frozenset</cite> which
+cannot be modified.</p>
+<p>See <a class="reference external" href="https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.admin.doc/doc/tags.html">https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.admin.doc/doc/tags.html</a> for more details of tags within IBM Streams.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Set of resource tags, initially empty.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>set</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If no resources exist with the required tags then job submission will fail.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.7.</span></p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.9: </span>Support for <a class="reference internal" href="#streamsx.spl.op.Sink" title="streamsx.spl.op.Sink"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sink</span></code></a> and <a class="reference internal" href="#streamsx.spl.op.Invoke" title="streamsx.spl.op.Invoke"><code class="xref py py-class docutils literal notranslate"><span class="pre">Invoke</span></code></a>.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Map.stream">
+<em class="property">property </em><code class="sig-name descname">stream</code><a class="headerlink" href="#streamsx.spl.op.Map.stream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stream produced by the operator invocation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Stream produced by the operator invocation.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.spl.op.Sink">
+<em class="property">class </em><code class="sig-prename descclassname">streamsx.spl.op.</code><code class="sig-name descname">Sink</code><span class="sig-paren">(</span><em class="sig-param">kind</em>, <em class="sig-param">stream</em>, <em class="sig-param">params=None</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Sink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#streamsx.spl.op.Invoke" title="streamsx.spl.op.Invoke"><code class="xref py py-class docutils literal notranslate"><span class="pre">streamsx.spl.op.Invoke</span></code></a></p>
+<p>Declaration of an invocation of an SPL sink operator.</p>
+<p>Source operators typically send data on a stream to an
+external system. A sink operator has a single input port
+and no output ports.</p>
+<p>This is a utility class that allows simple invocation
+of the common case of a operator with a single input port.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kind</strong> (<em>str</em>) – SPL operator kind, e.g. <code class="docutils literal notranslate"><span class="pre">spl.adapter::FileSink</span></code>.</p></li>
+<li><p><strong>input</strong> – Stream to connect to the operator.</p></li>
+<li><p><strong>params</strong> – Operator parameters.</p></li>
+<li><p><strong>name</strong> – Name of the operator. When <cite>None</cite> defaults to a generated name.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="streamsx.spl.op.Sink.attribute">
+<code class="sig-name descname">attribute</code><span class="sig-paren">(</span><em class="sig-param">stream</em>, <em class="sig-param">name</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Sink.attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Expression for an input attribute.</p>
+<p>An input attribute is an attribute on one of the input
+ports of the operator invocation. <cite>stream</cite> must have been
+used to declare this invocation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stream</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><em>Stream</em></a>) – Stream the attribute is from.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Name of the attribute.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Expression representing the input attribute.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression">Expression</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Sink.category">
+<em class="property">property </em><code class="sig-name descname">category</code><a class="headerlink" href="#streamsx.spl.op.Sink.category" title="Permalink to this definition">¶</a></dt>
+<dd><p>Category for this processing logic.</p>
+<p>An arbitrary application label allowing grouping of application
+elements by category.</p>
+<p>Assign categories based on common function.
+For example, <cite>database</cite> is a common category that you can
+use to group all database sinks in an application.</p>
+<p>A category is not required and defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code> meaning
+no assigned category.</p>
+<p>Streams console supports visualization based upon categories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>TypeError</strong> – No directly associated processing logic.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A category has no affect on the execution of the application.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.9.</span></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Sink.colocate">
+<code class="sig-name descname">colocate</code><span class="sig-paren">(</span><em class="sig-param">others</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Sink.colocate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Colocate this processing logic with others.</p>
+<p>Colocating processing logic requires execution in
+the same Streams processing element (operating system process).</p>
+<p>When a job is submitted Streams may colocate (fuse) processing
+logic into the same processing element based upon flow analysis
+and current resource usage. This call instructs that this logic
+and <cite>others</cite> must be executed in the same processing element.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>others</strong> – Processing logic such as a
+<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></a>
+or <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Sink" title="streamsx.topology.topology.Sink"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sink</span></code></a>.
+A single value can be passed or an iterable, such
+as a list of streams.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>This logic.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Sink.expression">
+<code class="sig-name descname">expression</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Sink.expression" title="Permalink to this definition">¶</a></dt>
+<dd><p>SPL expression.</p>
+<p>An arbitrary expression that is valid in the context of this operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>str</em>) – Arbitrary SPL expression.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Expression that is valid in the context of this operator.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression">Expression</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Sink.output">
+<code class="sig-name descname">output</code><span class="sig-paren">(</span><em class="sig-param">stream</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Sink.output" title="Permalink to this definition">¶</a></dt>
+<dd><p>SPL output port assignment expression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stream</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><em>Stream</em></a>) – Output stream the assignment is for.</p></li>
+<li><p><strong>value</strong> (<em>str</em>) – SPL expression used for an output assignment. This can be a string, a constant, or an <a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression"><code class="xref py py-class docutils literal notranslate"><span class="pre">Expression</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Output assignment expression that is valid as a the context of this operator.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression">Expression</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Sink.params">
+<em class="property">property </em><code class="sig-name descname">params</code><a class="headerlink" href="#streamsx.spl.op.Sink.params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parameters for the operator invocation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.spl.op.Sink.resource_tags">
+<em class="property">property </em><code class="sig-name descname">resource_tags</code><a class="headerlink" href="#streamsx.spl.op.Sink.resource_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resource tags for this processing logic.</p>
+<p>Tags are a mechanism for differentiating and identifying resources that have different physical characteristics or logical uses. For example a resource (host) that has external connectivity for public data sources may be tagged <cite>ingest</cite>.</p>
+<p>Processing logic can be associated with one or more tags to require
+running on suitably tagged resources. For example
+adding tags <cite>ingest</cite> and <cite>db</cite> requires that the processing element
+containing the callable that created the stream runs on a host
+tagged with both <cite>ingest</cite> and <cite>db</cite>.</p>
+<p>A <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream"><code class="xref py py-class docutils literal notranslate"><span class="pre">Stream</span></code></a> that was not created directly with a Python callable
+cannot have tags associated with it. For example a stream that
+is a <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.union" title="streamsx.topology.topology.Stream.union"><code class="xref py py-meth docutils literal notranslate"><span class="pre">union()</span></code></a> of multiple streams cannot be tagged.
+In this case this method returns an empty <cite>frozenset</cite> which
+cannot be modified.</p>
+<p>See <a class="reference external" href="https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.admin.doc/doc/tags.html">https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.2.1/com.ibm.streams.admin.doc/doc/tags.html</a> for more details of tags within IBM Streams.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Set of resource tags, initially empty.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>set</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If no resources exist with the required tags then job submission will fail.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.7.</span></p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.9: </span>Support for <a class="reference internal" href="#streamsx.spl.op.Sink" title="streamsx.spl.op.Sink"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sink</span></code></a> and <a class="reference internal" href="#streamsx.spl.op.Invoke" title="streamsx.spl.op.Invoke"><code class="xref py py-class docutils literal notranslate"><span class="pre">Invoke</span></code></a>.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.spl.op.Expression">
+<em class="property">class </em><code class="sig-prename descclassname">streamsx.spl.op.</code><code class="sig-name descname">Expression</code><span class="sig-paren">(</span><em class="sig-param">_type</em>, <em class="sig-param">_value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Expression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>An SPL expression.</p>
+<dl class="method">
+<dt id="streamsx.spl.op.Expression.expression">
+<em class="property">static </em><code class="sig-name descname">expression</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.Expression.expression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an SPL expression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> – Expression as a string or another <cite>Expression</cite>. If value is an instance of <cite>Expression</cite> then a new instance is returned containing the same type and value.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>SPL expression from <cite>value</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#streamsx.spl.op.Expression" title="streamsx.spl.op.Expression">Expression</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.spl.op.main_composite">
+<code class="sig-prename descclassname">streamsx.spl.op.</code><code class="sig-name descname">main_composite</code><span class="sig-paren">(</span><em class="sig-param">kind</em>, <em class="sig-param">toolkits=None</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.op.main_composite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap a main composite invocation as a <cite>Topology</cite>.</p>
+<p>Provides a bridge between an SPL application (main composite)
+and a <cite>Topology</cite>. Create a <cite>Topology</cite> that contains just
+the invocation of the main composite defined by <cite>kind</cite>.</p>
+<p>The returned <cite>Topology</cite> may be used like any other topology
+instance including job configuration, tester or even addition
+of SPL operator invocations or functional transformations.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Since a main composite by definition has no input
+or output ports any functionality added to the topology cannot
+interact directly with its invocation.</p>
+</div>
+<p>When <cite>name</cite> is <code class="docutils literal notranslate"><span class="pre">None</span></code> and no additions or tests are made to the topology
+then SPL compilation uses <cite>kind</cite> directly. Otherwise the main
+composite invocation is invoked within a generated main composite.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>kind</strong> (<em>str</em>) – Kind of the main composite operator invocation. Must be a namespace qualified name.</p></li>
+<li><p><strong>toolkits</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – Optional list of toolkits the main composite depends on.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Invocation name for the main composite.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>tuple containing:</p>
+<ul class="simple">
+<li><p><strong>Topology</strong>: Topology with main composite invocation.</p></li>
+<li><p><strong>Invoke</strong>: Invocation of the main composite</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="streamsx.spl.types.html" class="btn btn-neutral float-right" title="streamsx.spl.types" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="streamsx.service.html" class="btn btn-neutral float-left" title="streamsx.service" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2020 IBM Corp.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

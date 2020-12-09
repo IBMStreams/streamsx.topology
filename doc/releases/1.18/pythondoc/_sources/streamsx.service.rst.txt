@@ -1,0 +1,28 @@
+streamsx.service
+================
+
+.. automodule:: streamsx.service
+   
+   ***************
+   Module contents
+   ***************
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :nosignatures:
+   
+      EndpointSink
+      EndpointSource
+   
+   
+
+   
+   
+   

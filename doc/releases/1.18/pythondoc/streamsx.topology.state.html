@@ -1,0 +1,430 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx.topology.state &mdash; streamsx 1.18.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="streamsx.topology.composite" href="streamsx.topology.composite.html" />
+    <link rel="prev" title="streamsx.topology.schema" href="streamsx.topology.schema.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.18
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.html">streamsx.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.topology.html">streamsx.topology.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.context.html">streamsx.topology.context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.schema.html">streamsx.topology.schema</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">streamsx.topology.state</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#stateful-callables">Stateful callables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.composite.html">streamsx.topology.composite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester.html">streamsx.topology.tester</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester_runtime.html">streamsx.topology.tester_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.ec.html">streamsx.ec</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.service.html">streamsx.service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.op.html">streamsx.spl.op</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.types.html">streamsx.spl.types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.toolkit.html">streamsx.spl.toolkit</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.spl.html">streamsx.spl.spl</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.build.html">streamsx.build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest.html">streamsx.rest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest_primitives.html">streamsx.rest_primitives</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="scripts/extract.html">spl-python-extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/info.html">streamsx-info</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/runner.html">streamsx-runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/sc.html">streamsx-sc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/service.html">streamsx-service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/streamtool.html">streamsx-streamtool</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysetup.html">IBM Streams Python setup</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">Restrictions and known bugs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">streamsx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>streamsx.topology.state</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/streamsx.topology.state.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-streamsx.topology.state">
+<span id="streamsx-topology-state"></span><h1>streamsx.topology.state<a class="headerlink" href="#module-streamsx.topology.state" title="Permalink to this headline">¶</a></h1>
+<p>Application state.</p>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Stateful applications are ones that include callables that are classes and
+thus can maintain state as instance variables.</p>
+<p>By default any state is reset to its initial state after a
+processing element (PE) restart. A restart may occur due to:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>a failure in the PE or its resource,</p></li>
+<li><p>a explicit PE restart request,</p></li>
+<li><p>or a parallel region width change (IBM Streams 4.3 or later)</p></li>
+</ul>
+</div></blockquote>
+<p>The application or a portion of it may be configured to maintain
+state after a PE restart by one of two mechanisms.</p>
+<blockquote>
+<div><ul>
+<li><p>Consistent region. A consistent region is a subgraph where the states of callables become consistent by processing all the tuples within defined points on a stream. After a PE restart all callables in the region are reset to the last consistent point, so that the state of all callables represents the processing of the same input tuples to the region.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.set_consistent" title="streamsx.topology.topology.Stream.set_consistent"><code class="xref py py-meth docutils literal notranslate"><span class="pre">streamsx.topology.topology.Stream.set_consistent()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#streamsx.topology.state.ConsistentRegionConfig" title="streamsx.topology.state.ConsistentRegionConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConsistentRegionConfig</span></code></a></p></li>
+<li><p><a class="reference external" href="https://www.ibm.com/support/knowledgecenter/en/SSCRJU_4.3.0/com.ibm.streams.dev.doc/doc/consistentregions.html">Consistent region overview</a></p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Checkpointing, each stateful callable is checkpointed periodically and after a PE restart its callables are reset to their most recent checkpointed state.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology.checkpoint_period" title="streamsx.topology.topology.Topology.checkpoint_period"><code class="xref py py-attr docutils literal notranslate"><span class="pre">streamsx.topology.topology.Topology.checkpoint_period</span></code></a></p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="stateful-callables">
+<h2>Stateful callables<a class="headerlink" href="#stateful-callables" title="Permalink to this headline">¶</a></h2>
+<p>Use of a class instance allows a transformation (for example <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.map" title="streamsx.topology.topology.Stream.map"><code class="xref py py-meth docutils literal notranslate"><span class="pre">map()</span></code></a>) to be stateful by maintaining state in instance
+attributes across invocations.</p>
+<p>When the callable is in a consistent region or checkpointing it is serialized using <cite>dill</cite>. The default serialization may be modified by using the standard Python pickle mechanism of <code class="docutils literal notranslate"><span class="pre">__getstate__</span></code> and <code class="docutils literal notranslate"><span class="pre">__setstate__</span></code>.  This is required if the state includes objects that cannot be serialized, for example file descriptors. For details see See <a class="reference external" href="https://docs.python.org/3.5/library/pickle.html#handling-stateful-objects">https://docs.python.org/3.5/library/pickle.html#handling-stateful-objects</a> .</p>
+<p>If the callable has <code class="docutils literal notranslate"><span class="pre">__enter__</span></code> and <code class="docutils literal notranslate"><span class="pre">__exit__</span></code> context manager methods then <code class="docutils literal notranslate"><span class="pre">__enter__</span></code> is called after the object has been deserialized by <cite>dill</cite>. Thus <code class="docutils literal notranslate"><span class="pre">__enter__</span></code> is used to recreate runtime objects that cannot be serialized such as open files or sockets.</p>
+</div>
+<div class="section" id="module-contents">
+<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Classes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.topology.state.ConsistentRegionConfig" title="streamsx.topology.state.ConsistentRegionConfig"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConsistentRegionConfig</span></code></a></p></td>
+<td><p>A <a class="reference internal" href="#streamsx.topology.state.ConsistentRegionConfig" title="streamsx.topology.state.ConsistentRegionConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConsistentRegionConfig</span></code></a> configures a consistent region.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="streamsx.topology.state.ConsistentRegionConfig">
+<em class="property">class </em><code class="sig-prename descclassname">streamsx.topology.state.</code><code class="sig-name descname">ConsistentRegionConfig</code><span class="sig-paren">(</span><em class="sig-param">trigger=None</em>, <em class="sig-param">period=None</em>, <em class="sig-param">drain_timeout=180</em>, <em class="sig-param">reset_timeout=180</em>, <em class="sig-param">max_consecutive_attempts=5</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.state.ConsistentRegionConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A <a class="reference internal" href="#streamsx.topology.state.ConsistentRegionConfig" title="streamsx.topology.state.ConsistentRegionConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConsistentRegionConfig</span></code></a> configures a consistent region.</p>
+<p>The recommended way to create a <a class="reference internal" href="#streamsx.topology.state.ConsistentRegionConfig" title="streamsx.topology.state.ConsistentRegionConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConsistentRegionConfig</span></code></a> is
+to call either <a class="reference internal" href="#streamsx.topology.state.ConsistentRegionConfig.operator_driven" title="streamsx.topology.state.ConsistentRegionConfig.operator_driven"><code class="xref py py-meth docutils literal notranslate"><span class="pre">operator_driven()</span></code></a> or <a class="reference internal" href="#streamsx.topology.state.ConsistentRegionConfig.periodic" title="streamsx.topology.state.ConsistentRegionConfig.periodic"><code class="xref py py-meth docutils literal notranslate"><span class="pre">periodic()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>trigger</strong> (<a class="reference internal" href="#streamsx.topology.state.ConsistentRegionConfig.Trigger" title="streamsx.topology.state.ConsistentRegionConfig.Trigger"><em>ConsistentRegionConfig.Trigger</em></a>) – Determines how the
+drain/checkpoint cycle of the consistent region is triggered.</p></li>
+<li><p><strong>period</strong> – The trigger period.  If the trigger is <a class="reference internal" href="#streamsx.topology.state.ConsistentRegionConfig.Trigger.PERIODIC" title="streamsx.topology.state.ConsistentRegionConfig.Trigger.PERIODIC"><code class="xref py py-const docutils literal notranslate"><span class="pre">PERIODIC</span></code></a>, this must
+be specified, otherwise it may not be specfied.  This may be
+either a <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.timedelta</span></code> value or the number of
+seconds as a <cite>float</cite>.</p></li>
+<li><p><strong>drain_timeout</strong> – Indicates the maximum time in seconds that the drain
+and checkpoint of the region is allotted to finish processing.
+If the process takes longer than the specified time, a failure
+is reported and the region is reset to the point of the
+previously successfully established consistent state. The value
+must be specified as either a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.timedelta</span></code> value or the number of seconds
+as a <cite>float</cite>.  If not specified, the default value is 180
+seconds.</p></li>
+<li><p><strong>reset_timeout</strong> – Indicates the maximum time in seconds that the reset
+of the region is allotted to finish processing. If the process
+takes longer than the specified time, a failure is reported and
+another reset of the region is attempted.  The value must be
+specified  as either a <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.timedelta</span></code> value or
+the number of seconds as a <cite>float</cite>.  If not specified, the
+default value is 180 seconds.</p></li>
+<li><p><strong>max_consecutive_attempts</strong> (<em>int</em>) – Indicates the maximum number of
+consecutive attempts to reset a consistent region. After a
+failure, if the maximum number of attempts is reached, the
+region stops processing new tuples. After the maximum number
+of consecutive attempts is reached, a region can be reset only
+with manual intervention or with a program with a call to a
+method in the consistent region controller.  This must be an
+integer value between 1 and 2147483647, inclusive.  If not
+specified, the default value is 5.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># set source to be the start of an operator driven consistent region</span>
+<span class="c1"># with a drain timeout of five seconds and a reset timeout of twenty seconds.</span>
+<span class="n">source</span><span class="o">.</span><span class="n">set_consistent</span><span class="p">(</span><span class="n">ConsistentRegionConfig</span><span class="o">.</span><span class="n">operatorDriven</span><span class="p">(</span><span class="n">drain_timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">reset_timeout</span><span class="o">=</span><span class="mi">20</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.set_consistent" title="streamsx.topology.topology.Stream.set_consistent"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_consistent()</span></code></a></p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.11.</span></p>
+</div>
+<dl class="class">
+<dt id="streamsx.topology.state.ConsistentRegionConfig.Trigger">
+<em class="property">class </em><code class="sig-name descname">Trigger</code><a class="headerlink" href="#streamsx.topology.state.ConsistentRegionConfig.Trigger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Defines how the drain-checkpoint cycle of a consistent region is triggered.
+.. versionadded:: 1.11</p>
+<dl class="attribute">
+<dt id="streamsx.topology.state.ConsistentRegionConfig.Trigger.OPERATOR_DRIVEN">
+<code class="sig-name descname">OPERATOR_DRIVEN</code><em class="property"> = 1</em><a class="headerlink" href="#streamsx.topology.state.ConsistentRegionConfig.Trigger.OPERATOR_DRIVEN" title="Permalink to this definition">¶</a></dt>
+<dd><p>Region is triggered by the start operator.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.topology.state.ConsistentRegionConfig.Trigger.PERIODIC">
+<code class="sig-name descname">PERIODIC</code><em class="property"> = 2</em><a class="headerlink" href="#streamsx.topology.state.ConsistentRegionConfig.Trigger.PERIODIC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Region is triggered periodically.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.state.ConsistentRegionConfig.operator_driven">
+<em class="property">static </em><code class="sig-name descname">operator_driven</code><span class="sig-paren">(</span><em class="sig-param">drain_timeout=180</em>, <em class="sig-param">reset_timeout=180</em>, <em class="sig-param">max_consecutive_attempts=5</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.state.ConsistentRegionConfig.operator_driven" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define an operator-driven consistent region configuration.
+The source operator triggers drain and checkpoint cycles for the region.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>drain_timeout</strong> – The drain timeout, as either a <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.timedelta</span></code> value or the number of seconds as a <cite>float</cite>.  If not specified, the default value is 180 seconds.</p></li>
+<li><p><strong>reset_timeout</strong> – The reset timeout, as either a <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.timedelta</span></code> value or the number of seconds as a <cite>float</cite>.  If not specified, the default value is 180 seconds.</p></li>
+<li><p><strong>max_consecutive_attempts</strong> (<em>int</em>) – The maximum number of consecutive attempts to reset the region.  This must be an integer value between 1 and 2147483647, inclusive.  If not specified, the default value is 5.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the configuration.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#streamsx.topology.state.ConsistentRegionConfig" title="streamsx.topology.state.ConsistentRegionConfig">ConsistentRegionConfig</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.topology.state.ConsistentRegionConfig.periodic">
+<em class="property">static </em><code class="sig-name descname">periodic</code><span class="sig-paren">(</span><em class="sig-param">period</em>, <em class="sig-param">drain_timeout=180</em>, <em class="sig-param">reset_timeout=180</em>, <em class="sig-param">max_consecutive_attempts=5</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.topology.state.ConsistentRegionConfig.periodic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a periodic consistent region configuration.
+The IBM Streams runtime will trigger a drain and checkpoint
+the region periodically at the time interval specified by <cite>period</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>period</strong> – The trigger period.  This may be either a <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.timedelta</span></code> value or the number of seconds as a <cite>float</cite>.</p></li>
+<li><p><strong>drain_timeout</strong> – The drain timeout, as either a <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.timedelta</span></code> value or the number of seconds as a <cite>float</cite>.  If not specified, the default value is 180 seconds.</p></li>
+<li><p><strong>reset_timeout</strong> – The reset timeout, as either a <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.timedelta</span></code> value or the number of seconds as a <cite>float</cite>.  If not specified, the default value is 180 seconds.</p></li>
+<li><p><strong>max_consecutive_attempts</strong> (<em>int</em>) – The maximum number of consecutive attempts to reset the region.  This must be an integer value between 1 and 2147483647, inclusive.  If not specified, the default value is 5.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the configuration.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#streamsx.topology.state.ConsistentRegionConfig" title="streamsx.topology.state.ConsistentRegionConfig">ConsistentRegionConfig</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="streamsx.topology.composite.html" class="btn btn-neutral float-right" title="streamsx.topology.composite" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="streamsx.topology.schema.html" class="btn btn-neutral float-left" title="streamsx.topology.schema" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2020 IBM Corp.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
