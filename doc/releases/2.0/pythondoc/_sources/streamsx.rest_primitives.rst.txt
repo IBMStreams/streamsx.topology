@@ -1,0 +1,55 @@
+streamsx.rest\_primitives
+=========================
+
+.. automodule:: streamsx.rest_primitives
+   
+   ***************
+   Module contents
+   ***************
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :nosignatures:
+   
+      ActiveService
+      ActiveVersion
+      ApplicationBundle
+      ApplicationConfiguration
+      BaseImage
+      Domain
+      ExportedStream
+      Host
+      ImportedStream
+      Installation
+      Instance
+      Job
+      JobGroup
+      Metric
+      Operator
+      OperatorConnection
+      OperatorInputPort
+      OperatorOutputPort
+      PE
+      PEConnection
+      PublishedTopic
+      Resource
+      ResourceAllocation
+      ResourceTag
+      RestResource
+      StreamingAnalyticsService
+      Toolkit
+      View
+      ViewItem
+   
+   
+
+   
+   
+   

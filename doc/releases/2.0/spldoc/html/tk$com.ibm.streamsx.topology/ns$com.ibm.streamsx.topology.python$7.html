@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="Dependent Python packages"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_page"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>Dependent Python packages</title>
+</head>
+<body id="spldoc_page">
+
+
+<h1 class="title topictitle1">Dependent Python packages</h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 2.0.0</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$4.html">Creating SPL Operators from Python code</a> &gt; Dependent Python packages</p>
+
+</div>
+
+
+<div class="section">
+<p class="p">The decorated Python classes and functions used for SPL operators can depend on additional Python packages or modules.
+</p>
+
+<p class="p">Dependent Python packages can either be stored in the toolkit or installed using <tt class="ph tt">pip</tt> during SPL compilation.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Packages &amp; modules stored in the SPL toolkit
+</h2>
+
+<div class="p">These directories in a toolkit are automatically added to the Python search path during execution of an operator.
+<ul class="ul">
+<li class="li"> <tt class="ph tt">opt/python/streams</tt> - Contains modules that define Python callables that will be created as SPL operators</li>
+
+<li class="li"> <tt class="ph tt">opt/python/packages</tt> - Root directory for Python <a class="xref" href="https://docs.python.org/3.4/tutorial/modules.html#packages">packages</a> hierarchy.</li>
+
+<li class="li"> <tt class="ph tt">opt/python/modules</tt> - Arbitrary <a class="xref" href="https://docs.python.org/3.4/tutorial/modules.html#modules">modules</a>, not defined as a packages.</li>
+
+</ul>
+
+</div>
+
+<p class="p">By default all of these directories are included in the Streams application bundle (<tt class="ph tt">sab</tt>) for a compiled application.
+</p>
+
+<p class="p">Thus any packages or modules stored in those directories are part of the toolkit, thus increasing the distribution size of the toolkit.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Packages installed by pip at SPL compile time
+</h2>
+
+<p class="p">Python packages can be explictly requested to be installed during the SPL compilation using <tt class="ph tt">pip3 install --user</tt>. The packages are installed locally into the compliation's output directory, thus becoming part of the Streams application bundle (<tt class="ph tt">sab</tt>). The packages will be installed from <a class="xref" href="https://pypi.python.org/pypi">PyPi</a>.
+</p>
+
+<p class="p">During SPL compilation (<tt class="ph tt">sc</tt>) <tt class="ph tt">pip</tt> must be in the user's PATH.
+</p>
+
+<p class="p">Any required packages and their dependencies are added to the <tt class="ph tt">sab</tt> if they are not globally installed. Thus there is an assumption that the compile machines and runtime machines have an identical set of globally installed packages. This is guaranteed for the Streaming Analytics service on IBM Cloud.
+</p>
+
+<p class="p">For example is there was a dependency on <tt class="ph tt">numpy</tt> and <tt class="ph tt">geocoder</tt> and <tt class="ph tt">numpy</tt> was globally installed then only <tt class="ph tt">geocoder</tt> would be installed into the compliation's output directory (in addition to any dependencies <tt class="ph tt">geocoder</tt> has that were not globally installed).
+</p>
+
+<p class="p">Packages are explictly requested for the whole toolkit or a specific module.
+</p>
+
+<p class="p">Any packages the modules (under <tt class="ph tt">opt/python/streams</tt>) depend on when being loaded, must be accessible at operator extraction time.  For example, if the module <tt class="ph tt">opt/python/streams/geo_ops.py</tt> directly imports <tt class="ph tt">geocoder</tt> for use in its decorated functions or classes then since <tt class="ph tt">geo_ops.py</tt> is loaded to determine the SPL primitive operators, <tt class="ph tt">geocoder</tt> must be accessible to the Python environment running the extraction script.
+</p>
+
+<p class="p"><strong class="ph b">Tookit wide requirements</strong>
+</p>
+
+<p class="p">If the file <tt class="ph tt">opt/python/streams/requirements.txt</tt> exists in the toolkit then it is taken as a pip requirements file. During SPL compilation it will be passed to <tt class="ph tt">pip</tt> using the <tt class="ph tt">-requirement</tt> flag for installation of the required packages into the output directory.
+</p>
+
+<p class="p">See: <a class="xref" href="https://pip.pypa.io/en/stable/user_guide/#requirements-files">https://pip.pypa.io/en/stable/user_guide/#requirements-files</a>
+</p>
+
+<p class="p">When a toolkit with a <tt class="ph tt">requirements.txt</tt> is built using the build service then its required packages are installed remotely and made available to the extraction script.
+</p>
+
+<p class="p"><strong class="ph b">Module specific requirements</strong>
+</p>
+
+<p class="p">A module containing SPL primitive operator decorated clases and functions can specify a list of packages (or more precisely <a class="xref" href="https://pip.pypa.io/en/stable/reference/pip_install/#requirement-specifiers">requirement specifiers</a>) using the function <tt class="ph tt">spl_pip_packages</tt>.
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+# Packages geocoder and python-goehash will be installed
+# into the sab for the application invoking any operator
+# in this module unless they are globally installed at
+# SPL (sc) compile time.
+def spl_pip_packages():
+    return ['geocoder', 'python-geohash']
+</pre>
+
+
+</div>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

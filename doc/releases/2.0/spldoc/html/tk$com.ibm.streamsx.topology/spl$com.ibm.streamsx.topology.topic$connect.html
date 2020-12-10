@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="SPL File connect.spl"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_compilationunit"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>SPL File connect.spl</title>
+</head>
+<body id="spldoc_compilationunit">
+
+
+<h1 class="title topictitle1">SPL File <tt class="ph tt">connect.spl</tt></h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 2.0.0</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.topic.html">com.ibm.streamsx.topology.topic</a> &gt; connect.spl</p>
+
+</div>
+
+<div class="section">
+
+<p class="p">Connection modes for <tt class="ph tt">Subscribe</tt> operator.
+</p>
+
+<p class="p"><strong class="ph b">Connection mode</strong>
+</p>
+
+<p class="p">The connection mode describes how a subscriber is connected to all matching publishers. The supported modes are:
+</p>
+
+<div class="p">
+<ul class="ul">
+<li class="li"> <a class="xref" href="spl$com.ibm.streamsx.topology.topic$connect.html#spldoc_compilationunit__composite_operator__Direct">Direct</a> - When <tt class="ph tt">Direct</tt> is used a subscriber is directly connected to publishers, thus the performance of the  flow can affect the publishers. For example if the downstream processing of a <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Subscribe">Subscribe</a> cannot keep up with the tuples from all the connected publishers then congestion will occur. This congestion will cause slowdown in the publishers as they block trying to submit tuples to the subscriber. </li>
+
+<li class="li"> <a class="xref" href="spl$com.ibm.streamsx.topology.topic$connect.html#spldoc_compilationunit__composite_operator__Buffered">Buffered</a> - When <tt class="ph tt">Buffered</tt> is used a single buffer queue between a subscriber and all connected publishers. This can allow spikes in data rates from the producers to be absorbed by the subscriber. The buffer is maintained by the <tt class="ph tt">Subscribe</tt> operator.</li>
+
+</ul>
+
+</div>
+
+<p class="p"><em class="ph i">Note: The</em> <tt class="ph tt">connect</tt> <em class="ph i">parameter is of SPL type operator, accepting an operator kind. It may specifed as the fully qualified name (</em> <tt class="ph tt">com.ibm.streamsx.topology.topic::Buffered</tt> <em class="ph i">) or the simple name</em> <tt class="ph tt">Buffered</tt> <em class="ph i">following a <tt class="ph tt">use</tt> statement.</em>
+</p>
+
+<p class="p">The <tt class="ph tt">Buffered</tt> mode may be additionally configured by the <tt class="ph tt">bufferFullPolicy</tt> and <tt class="ph tt">bufferCapacity</tt> parameters.
+</p>
+
+<div class="p">
+<ul class="ul">
+<li class="li"> <tt class="ph tt">bufferFullCapacity</tt> - Action to take when a published tuple arrives and the buffer is full.
+<ul class="ul">
+<li class="li"> <tt class="ph tt">Sys.Wait</tt> - Tuple waits for the space to be available before being inserted into the buffer. When the buffer is full publishers are blocked until space becomes available. This is the default.</li>
+
+<li class="li"> <tt class="ph tt">Sys.DropFirst</tt> - The oldest (first) tuple in the buffer is dropped and the newly arrived tuple is inserted.</li>
+
+<li class="li"> <tt class="ph tt">Sys.DropLast</tt> - Newly arrived tuple (most recent) is dropped.</li>
+
+</ul>
+</li>
+
+<li class="li"> <tt class="ph tt">bufferCapacity</tt> - The capacity of the buffer in number of tuples, default to 1,000.</li>
+
+</ul>
+
+</div>
+
+<div class="p">A common pattern is production critical ingest &amp; prepare microservices that publish streams to two types of subscribers:
+<ul class="ul">
+<li class="li"> production critical analytics microservices</li>
+
+<li class="li"> exploratory analytics microservices which may be transient and potentially heavyweight.</li>
+
+</ul>
+
+</div>
+
+<p class="p">In order for the exportatory microservices to not impact the production critical publishers they are configured to to use connection mode <a class="xref" href="spl$com.ibm.streamsx.topology.topic$connect.html#spldoc_compilationunit__composite_operator__Buffered">Buffered</a> with a drop policy of either <tt class="ph tt">Sys.DropFirst</tt> or <tt class="ph tt">Sys.DropLast</tt>.
+</p>
+
+<p class="p">For example a subscriber that is buffered from any publisher and drops oldest tuples when the buffer is full:
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+use com.ibm.streamsx.topology::Json;
+use com.ibm.streamsx.topology.topic::Buffered;
+use com.ibm.streamsx.topology.topic::Subscribe;
+
+public composite LocationAnalyticsService {
+graph
+
+  stream&lt;Json&gt; Locations = Subscribe() {
+    param
+      topic: 'vehicles/+/locations';
+      streamType: Json;
+      connect: Buffered;
+      bufferFullPolicy: Sys.DropFirst;
+  }
+
+  // processing of Locations omitted
+}
+</pre>
+
+
+</div>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle splhead-1">Content</h2>
+  
+  <dl class="dl">
+    <dt class="dt dlterm"/>
+<dd class="dd"/>
+
+    
+      <dt class="dt dlterm splhead-2">Operators</dt>
+
+      <dd class="dd">
+<ul class="sl simple">
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology.topic$connect.html#spldoc_compilationunit__composite_operator__Buffered">Buffered</a></strong>: Connect subscriber to publisher using a buffer.
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.topology.topic$connect.html#spldoc_compilationunit__composite_operator__Direct">Direct</a></strong>: Directly connect subscriber to publisher.
+</li>
+
+</ul>
+
+      </dd>
+
+    
+  </dl>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle splhead-1">Composites</h2>
+  
+</div>
+
+<div class="section" id="spldoc_compilationunit__composite_operator__Direct"><h2 class="title sectiontitle splpart">composite Direct(output Out; input In)</h2>
+  
+</div>
+
+<div class="section">
+
+<p class="p">Directly connect subscriber to publisher.
+</p>
+
+<p class="p">Used as a value for <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Subscribe">Subscribe</a> <tt class="ph tt">connect</tt> parameter.
+</p>
+
+<p class="p"><strong class="ph b">Warning:</strong> <em class="ph i">This operator is only intended for use with</em> <tt class="ph tt">Subscribe</tt> <em class="ph i">through its</em> <tt class="ph tt">connect</tt> <em class="ph i">parameter. Parameters are subject to change in order support evolution of</em> <tt class="ph tt">Subscribe</tt>. 
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Parameters</h2>
+
+<ul class="sl simple">
+<li class="sli"><strong class="ph b">setup</strong>
+</li>
+
+<li class="sli"><strong class="ph b">setup2</strong>
+</li>
+
+<li class="sli"><strong class="ph b">bufferFullPolicy</strong>
+</li>
+
+<li class="sli"><strong class="ph b">bufferCapacity</strong>
+</li>
+
+</ul>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Input Ports</h2>
+
+<ul class="sl simple">
+<li class="sli"><strong class="ph b">In</strong>
+</li>
+
+</ul>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Output Ports</h2>
+
+<ul class="sl simple">
+<li class="sli"><strong class="ph b">Out</strong>
+</li>
+
+</ul>
+
+</div>
+
+<div class="section" id="spldoc_compilationunit__composite_operator__Buffered"><h2 class="title sectiontitle splpart">composite Buffered(output Out; input In)</h2>
+  
+</div>
+
+<div class="section">
+
+<p class="p">Connect subscriber to publisher using a buffer.
+</p>
+
+<p class="p">Used as a value for <a class="xref" href="spl$com.ibm.streamsx.topology.topic$topics.html#spldoc_compilationunit__composite_operator__Subscribe">Subscribe</a> <tt class="ph tt">connect</tt> parameter.
+</p>
+
+<p class="p"><strong class="ph b">Warning:</strong> <em class="ph i">This operator is only intended for use with</em> <tt class="ph tt">Subscribe</tt> <em class="ph i">through its</em> <tt class="ph tt">connect</tt> <em class="ph i">parameter. Parameters are subject to change in order support evolution of</em> <tt class="ph tt">Subscribe</tt>. 
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Parameters</h2>
+
+<ul class="sl simple">
+<li class="sli"><strong class="ph b">setup</strong>
+</li>
+
+<li class="sli"><strong class="ph b">setup2</strong>
+</li>
+
+<li class="sli"><strong class="ph b">bufferFullPolicy</strong>
+</li>
+
+<li class="sli"><strong class="ph b">bufferCapacity</strong>
+</li>
+
+</ul>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Input Ports</h2>
+
+<ul class="sl simple">
+<li class="sli"><strong class="ph b">In</strong>
+</li>
+
+</ul>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Output Ports</h2>
+
+<ul class="sl simple">
+<li class="sli"><strong class="ph b">Out</strong>
+</li>
+
+</ul>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

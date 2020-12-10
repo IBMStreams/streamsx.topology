@@ -1,0 +1,739 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx-streamtool &mdash; streamsx 2.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="IBM Streaming Analytics service" href="../service.html" />
+    <link rel="prev" title="streamsx-service" href="service.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.html">streamsx.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.topology.html">streamsx.topology.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.context.html">streamsx.topology.context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.schema.html">streamsx.topology.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.state.html">streamsx.topology.state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.composite.html">streamsx.topology.composite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.tester.html">streamsx.topology.tester</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.topology.tester_runtime.html">streamsx.topology.tester_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.ec.html">streamsx.ec</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.service.html">streamsx.service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.spl.op.html">streamsx.spl.op</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.spl.types.html">streamsx.spl.types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.spl.toolkit.html">streamsx.spl.toolkit</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.spl.spl.html">streamsx.spl.spl</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.build.html">streamsx.build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.rest.html">streamsx.rest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../streamsx.rest_primitives.html">streamsx.rest_primitives</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="extract.html">spl-python-extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="info.html">streamsx-info</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runner.html">streamsx-runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sc.html">streamsx-sc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="service.html">streamsx-service</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">streamsx-streamtool</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cloud-pak-for-data-configuration">Cloud Pak for Data configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#integrated-configuration">Integrated configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#standalone-configuration">Standalone configuration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#submitjob">submitjob</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#canceljob">canceljob</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lsjobs">lsjobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lsappconfig">lsappconfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mkappconfig">mkappconfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rmappconfig">rmappconfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#chappconfig">chappconfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getappconfig">getappconfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lstoolkit">lstoolkit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rmtoolkit">rmtoolkit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#uploadtoolkit">uploadtoolkit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#updateoperators">updateoperators</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pysetup.html">IBM Streams Python setup</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../restrictions.html">Restrictions and known bugs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">streamsx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>streamsx-streamtool</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/scripts/streamtool.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="streamsx-streamtool">
+<h1>streamsx-streamtool<a class="headerlink" href="#streamsx-streamtool" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Command line interface for IBM Streams running on IBM Cloud Pak for Data.</p>
+<p><code class="docutils literal notranslate"><span class="pre">streamsx-streamtool</span></code> replicates a sub-set of Streams <code class="docutils literal notranslate"><span class="pre">streamtool</span></code>
+commands focusing on supporting DevOps for streaming applications.</p>
+<p><code class="docutils literal notranslate"><span class="pre">streamsx-streamtool</span></code> is supported for Streams Cloud Pak for Data (5.x) instances
+A local install of Streams is <strong>not</strong> required,
+simply the installation of the <cite>streamsx</cite> package. All functionality
+is implemented through Cloud Pak for Data and Streams REST apis.</p>
+<div class="section" id="cloud-pak-for-data-configuration">
+<h3>Cloud Pak for Data configuration<a class="headerlink" href="#cloud-pak-for-data-configuration" title="Permalink to this headline">¶</a></h3>
+<p>The Streams instance and authentication are defined through environment variables, the details depend on if the Streams instance is running in integrated or standalone configuration.</p>
+<div class="section" id="integrated-configuration">
+<h4>Integrated configuration<a class="headerlink" href="#integrated-configuration" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>CP4D_URL</strong> - Cloud Pak for Data deployment URL, e.g. <cite>https://cp4d_server:31843</cite>.</p></li>
+<li><p><strong>STREAMS_INSTANCE_ID</strong> - Streams service instance name.</p></li>
+<li><p><strong>STREAMS_USERNAME</strong> - (optional) User name to submit the job as, defaulting to the current operating system user name. Overridden by the <code class="docutils literal notranslate"><span class="pre">--User</span></code> option.</p></li>
+<li><p><strong>STREAMS_PASSWORD</strong> - Password for authentication.</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="standalone-configuration">
+<h4>Standalone configuration<a class="headerlink" href="#standalone-configuration" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>STREAMS_REST_URL</strong> - Streams SWS service (REST API) URL, e.g. when the service is exposed as node port: <cite>https://&lt;NODE-IP&gt;:&lt;NODE-PORT&gt;</cite></p></li>
+<li><p><strong>STREAMS_BUILD_URL</strong> - Streams build service (REST API) URL, e.g. when the service is exposed as node port: <cite>https://&lt;NODE-IP&gt;:&lt;NODE-PORT&gt;</cite>. Required for <cite>lstoolkit</cite> and <cite>rmtoolkit</cite>.</p></li>
+<li><p><strong>STREAMS_USERNAME</strong> - (optional) User name to submit the job as, defaulting to the current operating system user name.</p></li>
+<li><p><strong>STREAMS_PASSWORD</strong> - Password for authentication.</p></li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>streamsx-streamtool submitjob [-h] [--jobConfig file-name]
+        [--jobname job-name] [--jobgroup jobgroup-name]
+        [--outfile file-name] [--P parameter-name]
+        [--User user]
+        sab-pathname
+
+streamsx-streamtool canceljob [-h] [--force] [--collectlogs]
+        [--jobs job-id | --jobnames job-names | --file file-name]
+        [--User user]
+        [jobid [jobid ...]]
+
+streamsx-streamtool lsjobs [-h] [--jobs job-id] [--users user]
+        [--jobnames job-names] [--fmt format-spec]
+        [--xheaders] [--long] [--showtimestamp]
+        [--User user]
+
+streamsx-streamtool lsappconfig [-h] [--fmt format-spec] [--User user]
+
+streamsx-streamtool mkappconfig [-h] [--property name=value]
+        [--propfile property-file]
+        [--description description] [--User user]
+        config-name
+
+streamsx-streamtool rmappconfig [-h] [--noprompt] [--User user] config-name
+
+streamsx-streamtool chappconfig [-h] [--property name=value]
+        [--description description] [--User user]
+        config-name
+
+streamsx-streamtool getappconfig [-h] [--User user] config-name
+
+streamsx-streamtool lstoolkit [-h]
+        (--all | --id toolkit-id | --name toolkit-name | --regex toolkit-regex)
+        [--User user]
+
+streamsx-streamtool rmtoolkit [-h]
+        (--toolkitid toolkit-id | --toolkitname toolkit-name | --toolkitregex toolkit-regex)
+        [--User user]
+
+streamsx-streamtool uploadtoolkit [-h] --path toolkit-path [--User user]
+
+streamsx-streamtool updateoperators [-h] [--jobname job-name]
+        [--jobConfig file-name]
+        [--parallelRegionWidth parallelRegionName=width]
+        [--force] [--User user]
+        [jobid]
+</pre></div>
+</div>
+</div>
+<div class="section" id="submitjob">
+<h2>submitjob<a class="headerlink" href="#submitjob" title="Permalink to this headline">¶</a></h2>
+<p>The streamtool submitjob command previews or submits one job.</p>
+<p>Description:</p>
+<p>A submitted job runs an application that is defined by an application bundle.
+Application bundles are created by the Stream Processing Language (SPL)
+compiler. A job consists of one or more processing elements (PEs). The PEs are
+placed on one or more of the application resources for the instance. The
+submission fails if the PE placement constraints can’t be met.</p>
+<p>Jobs remain in the system until they are canceled or the instance is stopped.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>streamsx-streamtool submitjob [-h] [--jobConfig file-name]
+        [--jobname job-name] [--jobgroup jobgroup-name]
+        [--outfile file-name] [--P parameter-name]
+        [--User user]
+        sab-pathname
+</pre></div>
+</div>
+<p>Options and arguments</p>
+<blockquote>
+<div><dl class="simple">
+<dt>sab-pathname</dt><dd><p>Specifies the path name for the application bundle file. If you do
+not specify an absolute path, the command seeks the file in the
+directory where you ran the command. Alternatively, you can specify
+the path name for the application description language (ADL) file if
+the application bundle file exists in the same directory.</p>
+</dd>
+<dt>-g,–jobConfig:</dt><dd><p>Specifies the name of an external file that defines a job
+configuration overlay. You can use a job configuration overlay to set
+the job configuration when the job is submitted or to change the
+configuration of a running job.</p>
+</dd>
+<dt>-P,–P:</dt><dd><p>Specifies a submission-time parameter and value for the job. You can
+specify this option multiple times in the command.</p>
+</dd>
+<dt>-J,–jobgroup:</dt><dd><p>Specifies the job group. If you do not specify this option, the
+command uses the following job group: default.</p>
+</dd>
+<dt>—jobname:</dt><dd><p>Specifies the name of the job.</p>
+</dd>
+<dt>—outfile:</dt><dd><p>Specifies the path and file name of the output file in which the
+command writes the list of submitted job IDs. The path can be an
+absolute or relative path. If you do not specify a path, the file is
+created in the directory where you run the command.</p>
+</dd>
+<dt>-U,–User:</dt><dd><p>Specifies an IBM Streams user ID that has authority to run the
+command.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="canceljob">
+<h2>canceljob<a class="headerlink" href="#canceljob" title="Permalink to this headline">¶</a></h2>
+<p>The streamtool canceljob command cancels one or more jobs.</p>
+<p>This command stops the processing elements (PEs) for the job and removes
+knowledge of the jobs and their PEs from the instance. The log files for the
+processing elements are scheduled for removal.</p>
+<p>If you specify to collect the PE logs before they are removed, the operation
+can time out waiting for the termination of PEs. If such a timeout occurs, the
+operation fails and the jobs or PEs are still in the system. The canceljob
+command can be run again later to cancel them.</p>
+<p>You can use the –force option to ignore a PE termination timeout and force the
+job to cancel.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>streamsx-streamtool canceljob [-h] [--force] [--collectlogs]
+        [--jobs job-id | --jobnames job-names | --file file-name]
+        [--User user]
+        [jobid [jobid ...]]
+</pre></div>
+</div>
+<p>Options and arguments</p>
+<blockquote>
+<div><dl class="simple">
+<dt>jobid</dt><dd><p>Specifies a list of job IDs.</p>
+</dd>
+<dt>-f,–file:</dt><dd><p>Specifies the file that contains a list of job IDs, one per line.</p>
+</dd>
+<dt>-j,–jobs:</dt><dd><p>Specifies a list of job IDs, which are delimited by commas.</p>
+</dd>
+<dt>—jobnames:</dt><dd><p>Specifies a list of job names, which are delimited by commas.</p>
+</dd>
+<dt>—collectlogs:</dt><dd><p>Specifies to collect the log and trace files for each processing
+element that is associated with the job.</p>
+</dd>
+<dt>—force:</dt><dd><p>Specifies to quickly cancel a job and remove the job from the Streams
+data table.</p>
+</dd>
+<dt>-U,–User:</dt><dd><p>Specifies an IBM Streams user ID that has authority to run the
+command.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="lsjobs">
+<h2>lsjobs<a class="headerlink" href="#lsjobs" title="Permalink to this headline">¶</a></h2>
+<p>The streamtool lsjobs command lists the jobs in the instance.</p>
+<p>The streamtool lsjobs command provides a health summary for each job. The
+health summary is an aggregation of the PE health summaries for the job. If all
+of the PEs for a job are reported as healthy, the job is reported as healthy.
+Otherwise, the job is reported as not healthy. Use the streamtool lspes command
+to determine the health of PEs.</p>
+<p>The command also reports the status of each job. For more information about job
+states, see the IBM Streams product documentation.</p>
+<p>The date and time that the job was submitted are presented in local time with
+the iso8601 format: yyyy-mm-ddThh:mm:ss+/-hhmm, where the final hhmm values are
+the local offset from UTC. For example: 2010-03-16T13:41:53-0500.</p>
+<p>When job selection options are specified, selected jobs must meet all of the
+selection criteria.
+After a cancel request for a job is processed, this command no longer reports
+the job or its processing elements (PEs).</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>streamsx-streamtool lsjobs [-h] [--jobs job-id] [--users user]
+        [--jobnames job-names] [--fmt format-spec]
+        [--xheaders] [--long] [--showtimestamp]
+        [--User user]
+</pre></div>
+</div>
+<p>Options and arguments</p>
+<blockquote>
+<div><dl>
+<dt>-j,–jobs:</dt><dd><p>Specifies a list of job IDs, which are delimited by commas.</p>
+</dd>
+<dt>—jobnames:</dt><dd><p>Specifies a list of job names, which are delimited by commas.</p>
+</dd>
+<dt>-u,–users:</dt><dd><p>Specifies to select from this list of user IDs, which are delimited
+by commas.</p>
+</dd>
+<dt>—xheaders:</dt><dd><p>Specifies to exclude headings from the report.</p>
+</dd>
+<dt>-l,–long:</dt><dd><p>Reports launch count, full host names, and all of the operator
+instance names for the PEs.</p>
+</dd>
+<dt>—fmt:</dt><dd><p>Specifies the presentation format. The command supports the following
+values:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>%Mf: Multiline record format. One line per field.</p></li>
+<li><p>%Nf: Name prefixed field table format. One line per job.</p></li>
+<li><p>%Tf: Standard table format, which is the default. One line per job.</p></li>
+</ul>
+</div></blockquote>
+</dd>
+<dt>—showtimestamp:</dt><dd><p>Specifies to show a time stamp in the output to indicate when the
+command was run.</p>
+</dd>
+<dt>-U,–User:</dt><dd><p>Specifies an IBM Streams user ID that has authority to run the
+command.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="lsappconfig">
+<h2>lsappconfig<a class="headerlink" href="#lsappconfig" title="Permalink to this headline">¶</a></h2>
+<p>The streamtool lsappconfig command lists the available configurations that
+enable connections to an external application.</p>
+<p>Retrieve a list of configurations for making a connection to an external
+application.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>streamsx-streamtool lsappconfig [-h] [--fmt format-spec] [--User user]
+</pre></div>
+</div>
+<p>Options and arguments</p>
+<blockquote>
+<div><dl>
+<dt>—fmt:</dt><dd><p>Specifies the presentation format. The command supports the following
+values:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>%Mf: Multiline record format. One line per field.</p></li>
+<li><p>%Nf: Name prefixed field table format. One line per cfgname.</p></li>
+<li><p>%Tf: Standard table format, which is the default. One line per cfgname.</p></li>
+</ul>
+</div></blockquote>
+</dd>
+<dt>-U,–User:</dt><dd><p>Specifies an IBM Streams user ID that has authority to run the
+command.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="mkappconfig">
+<h2>mkappconfig<a class="headerlink" href="#mkappconfig" title="Permalink to this headline">¶</a></h2>
+<p>The streamtool mkappconfig command creates a configuration that enables
+connection to an external application.</p>
+<p>Operators can retrieve the configuration information to make a connection to an
+external application, such as an Internet Of Things application. The properties
+include items that the application needs at runtime, like connection
+information and credentials.</p>
+<p>Use this command to register properties or a properties file. Create the
+property file using a name=value syntax.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>streamsx-streamtool mkappconfig [-h] [--property name=value]
+        [--propfile property-file]
+        [--description description] [--User user]
+        config-name
+</pre></div>
+</div>
+<p>Options and arguments</p>
+<blockquote>
+<div><dl class="simple">
+<dt>config-name:</dt><dd><p>Name of the app config</p>
+</dd>
+<dt>—description:</dt><dd><p>Specifies a description for the application configuration. The
+description can be 1024 characters in length. If the description
+contains blank characters, it must be enclosed in single or double
+quotation marks. Quotation marks within the description must be
+preceded by a backslash ().</p>
+</dd>
+<dt>—property:</dt><dd><p>Specifies a property name and value pair to add to or change in the
+configuration. This option can be specified multiple times and has an
+additive effect.</p>
+</dd>
+<dt>—propfile:</dt><dd><p>Specifies the path to a file that contains a list of application
+configuration properties for connecting to an external application.
+The properties are listed as name=value pairs, each on a separate
+line. Use this option as a way to include multiple configuration
+properties when you create an application configuration. Options that
+you specify at the command line override values that are specified in
+this property file.</p>
+</dd>
+<dt>-U,–User:</dt><dd><p>Specifies an IBM Streams user ID that has authority to run the
+command.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="rmappconfig">
+<h2>rmappconfig<a class="headerlink" href="#rmappconfig" title="Permalink to this headline">¶</a></h2>
+<p>The streamtool rmappconfig command removes a configuration that enables
+connection to an external application.</p>
+<p>This command removes a configuration that is used for making a connection to an
+external application.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>streamsx-streamtool rmappconfig [-h] [--noprompt] [--User user] config-name
+</pre></div>
+</div>
+<p>Options and arguments</p>
+<blockquote>
+<div><dl class="simple">
+<dt>config-name:</dt><dd><p>Name of the app config</p>
+</dd>
+<dt>—noprompt:</dt><dd><p>Specifies to suppress confirmation prompts.</p>
+</dd>
+<dt>-U,–User:</dt><dd><p>Specifies an IBM Streams user ID that has authority to run the
+command.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="chappconfig">
+<h2>chappconfig<a class="headerlink" href="#chappconfig" title="Permalink to this headline">¶</a></h2>
+<p>The streamtool chappconfig command updates a configuration that enables
+connection to an external application.</p>
+<p>Use this command to change the configuration properties that are used to make a
+connection to an external application, such as an Internet Of Things
+application. You can change the values of properties or add new properties.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>streamsx-streamtool chappconfig [-h] [--property name=value]
+        [--description description] [--User user]
+        config-name
+</pre></div>
+</div>
+<p>Options and arguments</p>
+<blockquote>
+<div><dl class="simple">
+<dt>config-name:</dt><dd><p>Name of the app config</p>
+</dd>
+<dt>—description:</dt><dd><p>Specifies a description for the application configuration. The
+description can be 1024 characters in length. If the description
+contains blank characters, it must be enclosed in single or double
+quotation marks. Quotation marks within the description must be
+preceded by a backslash ().</p>
+</dd>
+<dt>—property:</dt><dd><p>Specifies a property name and value pair to add to or change in the
+configuration. This option can be specified multiple times and has an
+additive effect.</p>
+</dd>
+<dt>-U,–User:</dt><dd><p>Specifies an IBM Streams user ID that has authority to run the
+command.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="getappconfig">
+<h2>getappconfig<a class="headerlink" href="#getappconfig" title="Permalink to this headline">¶</a></h2>
+<p>The streamtool getappconfig command displays the properties of a configuration
+that enables connection to an external application.</p>
+<p>This command retrieves the properties and values of a specific configuration
+for connecting to an external application.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>streamsx-streamtool getappconfig [-h] [--User user] config-name
+</pre></div>
+</div>
+<p>Options and arguments</p>
+<blockquote>
+<div><dl class="simple">
+<dt>config-name:</dt><dd><p>Name of the app config</p>
+</dd>
+<dt>-U,–User:</dt><dd><p>Specifies an IBM Streams user ID that has authority to run the
+command.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="lstoolkit">
+<h2>lstoolkit<a class="headerlink" href="#lstoolkit" title="Permalink to this headline">¶</a></h2>
+<p>List toolkits from a build service.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>streamsx-streamtool lstoolkit [-h]
+        (--all | --id toolkit-id | --name toolkit-name | --regex toolkit-regex)
+        [--User user]
+</pre></div>
+</div>
+<p>Options and arguments</p>
+<blockquote>
+<div><dl class="simple">
+<dt>-a,–all:</dt><dd><p>List all toolkits</p>
+</dd>
+<dt>-i,–id:</dt><dd><p>List a specific toolkit given its toolkit id</p>
+</dd>
+<dt>-n,–name:</dt><dd><p>List all toolkits with this name</p>
+</dd>
+<dt>-r,–regex:</dt><dd><p>List all toolkits where the name matches the given regex pattern</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="rmtoolkit">
+<h2>rmtoolkit<a class="headerlink" href="#rmtoolkit" title="Permalink to this headline">¶</a></h2>
+<p>Remove toolkits from a build service.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>streamsx-streamtool rmtoolkit [-h]
+        (--id toolkit-id | --name toolkit-name | --regex toolkit-regex)
+        [--User user]
+</pre></div>
+</div>
+<p>Options and arguments</p>
+<blockquote>
+<div><dl class="simple">
+<dt>-i,–id:</dt><dd><p>Specifies the id of the toolkit to delete</p>
+</dd>
+<dt>-n,–name:</dt><dd><p>Remove all toolkits with this name</p>
+</dd>
+<dt>-r,–regex:</dt><dd><p>Remove all toolkits where the name matches the given regex pattern</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="uploadtoolkit">
+<h2>uploadtoolkit<a class="headerlink" href="#uploadtoolkit" title="Permalink to this headline">¶</a></h2>
+<p>Upload a toolkit to a build service.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>streamsx-streamtool uploadtoolkit [-h] --path toolkit-path [--User user]
+</pre></div>
+</div>
+<p>Options and arguments</p>
+<blockquote>
+<div><dl class="simple">
+<dt>-p,–path:</dt><dd><p>Specifies the path of the indexed toolkit to upload</p>
+</dd>
+</dl>
+</div></blockquote>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.13.</span></p>
+</div>
+</div>
+<div class="section" id="updateoperators">
+<h2>updateoperators<a class="headerlink" href="#updateoperators" title="Permalink to this headline">¶</a></h2>
+<p>Adjust a job configuration while the job is running in order to improve the job performance</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>streamsx-streamtool updateoperators [-h] [--jobname job-name]
+        [--jobConfig file-name]
+        [--parallelRegionWidth parallelRegionName=width]
+        [--force] [--User user]
+        [jobid]
+</pre></div>
+</div>
+<p>Options and arguments</p>
+<blockquote>
+<div><dl class="simple">
+<dt>jobid:</dt><dd><p>Specifies a job ID</p>
+</dd>
+<dt>—jobname:</dt><dd><p>Specifies the name of the job</p>
+</dd>
+<dt>-g,–jobConfig:</dt><dd><p>Specifies the name of an external file that defines a job
+configuration overlay. You can use a job configuration overlay to set
+the job configuration when the job is submitted or to change the
+configuration of a running job.</p>
+</dd>
+<dt>—parallelRegionWidth:</dt><dd><p>Specifies a parallel region name and its width.</p>
+</dd>
+<dt>—force:</dt><dd><p>Specifies whether to automatically stop the PEs that need to be
+stopped.</p>
+</dd>
+<dt>-U,–User:</dt><dd><p>Specifies an IBM Streams user ID that has authority to run the
+command.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../service.html" class="btn btn-neutral float-right" title="IBM Streaming Analytics service" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="service.html" class="btn btn-neutral float-left" title="streamsx-service" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2020 IBM Corp.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
