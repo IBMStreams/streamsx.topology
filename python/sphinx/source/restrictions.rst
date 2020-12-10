@@ -2,10 +2,19 @@
 Restrictions and known bugs
 ###########################
 
-* *streamsx* versions 2.0 and higher are incompatible with Cloud Pak for Data equal or less than version 3.5.0.0
-* For use of *streamsx* 2.0, the `com.ibm.streamsx.iot` toolkit must be updated to minimum version 1.3.0 on the build service or a local Streams installation. Otherwise dependency errors will occur when the application is compiled.
+* *streamsx* versions 2.0 and higher are incompatible with Cloud Pak for Data less than version 3.5.0.0
+* For use of *streamsx* 2.0, the `com.ibm.streamsx.iot` toolkit must be updated to minimum version 1.3.0 on the build service or a local Streams installation. Otherwise dependency errors will occur when the application is compiled::
 
-  To update the IoT toolkit on the CP4D buildservice to version 1.3.0, follow these steps:
+    /opt/ibm/streams/bin/sc -M `cat main_composite.txt` ...
+    CDISP0384E ERROR: The <application> toolkit requires version 2.0.0 of the com.ibm.streamsx.topology toolkit, but version 1.17.0 of the required toolkit is currently installed.
+    CDISP0884W WARNING: Errors occurred while the toolkits were loading.
+
+    CDISP0092E ERROR: Because of previous compilation errors, the compile process cannot continue.
+    make: *** [all] Error 1
+    Exception in thread "main" java.lang.IllegalStateException: Error submitting archive for build: <build-ID>
+
+  When this error occurs, the IOT-Toolkit must be updated or added to the toolkit path (for example environment variable STREAMS_SPLPATH). To update the IoT toolkit on the
+  CP4D buildservice to version 1.3.0, follow these steps:
 
   - download the `toolkit version 1.3.0 tarball <https://github.com/IBMStreams/streamsx.iot/releases/download/v1.3.0/streamsx.iot.toolkits-1.3.0-20201208-1147.tgz>`_
     from the `toolkits release page <https://github.com/IBMStreams/streamsx.iot/releases/>`_ on GitHub.
