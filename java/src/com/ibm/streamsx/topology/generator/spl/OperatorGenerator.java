@@ -113,6 +113,9 @@ class OperatorGenerator {
             else if (jstring(annotation, OpProperties.ANNOTATION_TYPE).equals("service")) {
             	appendServiceAnnotation(sb, properties);
             }
+            else if (jstring(annotation, OpProperties.ANNOTATION_TYPE).equals("eventTime")) {
+            	appendEventTimeAnnotation(sb, properties);
+            }
             else {
                 boolean first = true;
                 for (Entry<String, JsonElement> property : properties.entrySet()) {
@@ -254,8 +257,59 @@ class OperatorGenerator {
             sb.append("}\"");
             first = false;
     	}
-    }    
+    }
 
+    private static void appendEventTimeAnnotation(StringBuilder sb, JsonObject properties) {
+    	boolean first = true;
+    	if (properties.has("eventTimeAttribute")) {  
+            sb.append("eventTimeAttribute=");
+            sb.append(getSPLCompatibleName(GsonUtilities.jstring(properties, "eventTimeAttribute")));
+            first = false;
+    	}
+    	if (properties.has("lag")) {
+            if (!first) {
+                sb.append(',');
+            }
+            sb.append("lag=");
+            JsonElement lag = properties.get("lag");
+            if (lag.isJsonPrimitive()) {
+            	sb.append(GsonUtilities.jstring(properties, "lag"));
+            } else {
+            	JsonObject lagObj = lag.getAsJsonObject();
+                if (lagObj.has("type") && TYPE_SUBMISSION_PARAMETER.equals(lagObj.getAsJsonObject().get("type").getAsString())) {
+                	String name = jstring(jobject(lagObj, "value"), "name");
+                	sb.append("$__spl_stv_").append(name);
+                }
+            }
+            first = false;
+    	}
+    	if (properties.has("minimumGap")) {
+            if (!first) {
+                sb.append(',');
+            }
+            sb.append("minimumGap=");
+            JsonElement mg = properties.get("minimumGap");
+            if (mg.isJsonPrimitive()) {
+            	sb.append(GsonUtilities.jstring(properties, "minimumGap"));
+            } else {
+            	JsonObject mgObj = mg.getAsJsonObject();
+                if (mgObj.has("type") && TYPE_SUBMISSION_PARAMETER.equals(mgObj.getAsJsonObject().get("type").getAsString())) {
+                	String name = jstring(jobject(mgObj, "value"), "name");
+                	sb.append("$__spl_stv_").append(name);
+                }
+            }
+            first = false;
+    	}
+    	if (properties.has("resolution")) {
+            if (!first) {
+                sb.append(',');
+            }
+            sb.append("resolution=");
+            sb.append(GsonUtilities.jstring(properties, "resolution"));
+            first = false;
+    	}
+    }
+    
     private static void noteAnnotations(JsonObject op, StringBuilder sb) throws IOException {
 
         layoutNote(op, sb);

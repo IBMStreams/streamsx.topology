@@ -2096,6 +2096,57 @@ class Stream(_placement._Placement, object):
         self.oport.operator.consistent(consistent_config)
         return self._make_placeable()
 
+    def set_event_time(self, name, lag=None, minimum_gap=None, resolution=None):
+        """ Emit a stream with event-time values and watermarks. 
+
+        Defines the stream attribute with the parameter `name` that is used as event-time attribute in the event-time graph.
+        An event-time graph starts with this stream and inserts watermarks into the stream from time to time.
+
+        * Event-time connectivity extends only downstream.
+        * The event-time graph ends at a sink or at an operator which does not output the event-time attribute.
+
+        Args:
+            name(str): Name of the event-time attribute.
+            lag(float|submission parameter created by :py:meth:`Topology.create_submission_parameter`): Defines the duration in seconds between the maximum event-time of submitted tuples and the value of the watermark to submit. If it is not specified, the default value is 0.0.
+            minimum_gap(float|submission parameter created by :py:meth:`Topology.create_submission_parameter`): Defines the minimum event-time duration in seconds between subsequent watermarks. If it is not specified, the default value is 0.1 (100 milliseconds).
+            resolution(str): Specifies the resolution of the event-time attribute in: Milliseconds, Microseconds, Nanoseconds. If the event-time attribute is of type SPL timestamp, the default resolution value is nanoseconds. If the event-time attribute is of type int, the default resolution value is milliseconds.
+
+        Returns:
+            Stream: Returns this stream.
+
+        .. versionadded:: 2.1
+        """
+        if name is None:
+           raise ValueError("Attribute name must not be None.")
+        
+        props = {'eventTimeAttribute':name}
+        if lag is not None:
+           if isinstance(lag, streamsx.topology.runtime._SubmissionParam):
+              props['lag'] = lag.spl_json()
+           else:
+              if isinstance(lag, float):
+                 props['lag'] = lag
+              else:
+                 raise TypeError("Float type expected for parameter: lag")
+        if minimum_gap is not None:
+           if isinstance(minimum_gap, streamsx.topology.runtime._SubmissionParam):
+              props['minimumGap'] = minimum_gap.spl_json()
+           else:
+              if isinstance(minimum_gap, float):
+                 props['minimumGap'] = minimum_gap
+              else:
+                 raise TypeError("Float type expected for parameter: minimum_gap")
+        if resolution is not None:
+           if isinstance(resolution, str):
+              props['resolution'] = resolution
+           else:
+              raise TypeError("String type expected for parameter: resolution")
+
+        # create eventtime annotation dict
+        annotation = {'type':'eventTime', 'properties': props}
+        self.oport.operator._annotation(annotation)
+        return self._make_placeable()
+
     def last(self, size=1):
         """ Declares a slding window containing most recent tuples
         on this stream.
