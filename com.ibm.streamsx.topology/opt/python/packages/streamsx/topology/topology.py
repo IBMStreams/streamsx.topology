@@ -2355,6 +2355,48 @@ class Stream(_placement._Placement, object):
             raise ValueError(size)
         return win
 
+
+    def time_interval(self, interval_duration, creation_period=None, discard_age=None, interval_offset=None):
+        """ Declares a *time-interval* window and specifies that the window-kind tuples are placed into panes which correspond to equal intervals in the event-time domain.
+
+        A *time-interval* window collects tuples into fixed-duration intervals defined over event time.
+        *Time-interval* windows collect tuples into window panes specified by event-time intervals.
+        A pane includes tuples with an event time greater or equal to the start time of the pane and lower than the end time.
+ 
+        Args:
+            interval_duration(float): Specifies the required duration between the lower and upper interval endpoints. It must be greater than zero (0.0). The parameter value represents seconds.
+            creation_period(float): Specifies the duration between adjacent intervals. The default value is equal to interval_duration. It must be greater than zero (0.0). The parameter value represents seconds.
+            discard_age(float): Defines the duration between the point in time when a window pane becomes complete and the point in time when the window does not accept late tuples any longer. It must be greater or equal to zero (0.0). The default value is zero (0.0). The parameter value represents seconds.
+            interval_offset(float): Defines a point-in-time value which coincides with an interval start time. Panes partition the event time domain into intervals of the form: ``[N * creation_period + interval_offset, N * creation_period + interval_duration + interval_offset)`` where 0.0 is the Unix Epoch: 1970-01-01T00:00:00Z UTC. The parameter value represents seconds.
+
+        Examples::
+
+            w = s.time_interval(interval_duration=60.0, creation_period=1.0)
+
+        Returns:
+            Window: Event-time window on this stream.
+        """
+        win = Window(self, 'TIME_INTERVAL')
+        if interval_duration is None:
+           raise ValueError("Parameter interval_duration must be greater than zero (0.0)")
+        else:
+           if not isinstance(interval_duration, float):
+              raise TypeError("Parameter interval_duration must be float")
+        if creation_period is not None:
+           if not isinstance(creation_period, float):
+              raise TypeError("Parameter creation_period must be float")
+        if discard_age is not None:
+           if not isinstance(discard_age, float):
+              raise TypeError("Parameter discard_age must be float")
+        if interval_offset is not None:
+           if not isinstance(interval_offset, float):
+              raise TypeError("Parameter interval_offset must be float")
+        
+        win._evict_time_interval(interval_duration, creation_period, discard_age, interval_offset)
+
+        return win
+
+
     def union(self, streamSet):
         """
         Creates a stream that is a union of this stream and other streams
@@ -2788,7 +2830,7 @@ class Window(object):
     A `Window` enables transforms against collection (or window)
     of tuples on a stream rather than per-tuple transforms.
     Windows are created against a stream using :py:meth:`Stream.batch`, :py:meth:`Stream.batchSeconds`
-    or :py:meth:`Stream.last`, :py:meth:`Stream.lastSeconds`.
+    or :py:meth:`Stream.last`, :py:meth:`Stream.lastSeconds` or :py:meth:`Stream.time_interval`.
 
     Supported transforms are:
 
@@ -2821,6 +2863,15 @@ class Window(object):
         wc = Window(self.stream, None)
         wc._config.update(self._config)
         return wc
+
+    def _evict_time_interval(self, interval_duration, creation_period, discard_age, interval_offset):
+        self._config['intervalDuration'] = interval_duration
+        if creation_period is not None:
+           self._config['creationPeriod'] = creation_period
+        if discard_age is not None:
+           self._config['discardAge'] = discard_age
+        if interval_offset is not None:
+           self._config['intervalOffset'] = interval_offset
 
     def _evict_punct(self):
         self._config['evictPolicy'] = 'PUNCTUATION'
