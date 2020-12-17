@@ -72,6 +72,7 @@
 		     <arg value="test2_punctor.TestPunctor"/>
 		     <arg value="test2_flat_map.TestFlatMap"/>
 		     <arg value="test2_namedtuple.TestNamedTupleSource"/>
+		     <arg value="test2_event_time.TestEventTime"/>
 		     <arg value="-v"/>
 		   </exec>
 	   </target>
