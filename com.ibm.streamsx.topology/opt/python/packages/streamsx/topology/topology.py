@@ -3134,6 +3134,12 @@ class Window(object):
         .. versionchanged:: 1.11 Support for aggregation of streams with structured schemas.
         .. versionchanged:: 1.13 Support for partitioned aggregation.
         """
+
+        if self._config is not None:
+           if 'type' in self._config:
+              if self._config['type'] == 'TIME_INTERVAL':
+                 raise TypeError('Time-interval window is not supported.')
+
         hints = streamsx._streams._hints.check_aggregate(function, self)
         schema = hints.schema if hints else streamsx.topology.schema.CommonSchema.Python
         
