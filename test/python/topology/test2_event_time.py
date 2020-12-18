@@ -115,18 +115,21 @@ class TestEventTime(unittest.TestCase):
         # add event-time annotation for attribute ts to the "event_time_source"
         s = s.set_event_time('ts')
 
-        agg_schema = StreamSchema('tuple<uint64 sum>').as_tuple(named=True)
+        agg_schema = StreamSchema('tuple<uint64 sum, rstring pane_timing>').as_tuple(named=True)
         # timeInterval window
         win = s.time_interval(interval_duration=5.0, discard_age=30.0)
         agg = op.Map('spl.relational::Aggregate', win, schema=agg_schema)
         agg.sum = agg.output('Sum((uint64)num)')
+        agg.pane_timing = agg.output('(rstring)paneTiming()')
+        #agg.stream.print()
 
         result = agg.stream.map(lambda x : x.sum)
-        #result.print()
+        result_pane_timing = agg.stream.map(lambda x : x.pane_timing)
 
         tester = Tester(topo)
         tester.tuple_count(result, 2)
         tester.contents(result, [3, 7])
+        tester.contents(result_pane_timing, ['paneOnComplete', 'paneOnComplete'])
         tester.test(self.test_ctxtype, self.test_config)
 
 
