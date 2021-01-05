@@ -113,6 +113,9 @@ class OperatorGenerator {
             else if (jstring(annotation, OpProperties.ANNOTATION_TYPE).equals("service")) {
             	appendServiceAnnotation(sb, properties);
             }
+            else if (jstring(annotation, OpProperties.ANNOTATION_TYPE).equals("catch")) {
+            	appendCatchAnnotation(sb, properties);
+            }
             else {
                 boolean first = true;
                 for (Entry<String, JsonElement> property : properties.entrySet()) {
@@ -254,7 +257,32 @@ class OperatorGenerator {
             sb.append("}\"");
             first = false;
     	}
-    }    
+    }
+
+    private static void appendCatchAnnotation(StringBuilder sb, JsonObject properties) {
+    	boolean first = true;
+    	if (properties.has("exception")) {
+            sb.append("exception=");
+            sb.append(GsonUtilities.jstring(properties, "exception"));
+            first = false;
+    	}
+    	if (properties.has("tupleTrace")) {
+            if (!first) {
+                sb.append(',');
+            }
+            sb.append("tupleTrace=");
+            sb.append(GsonUtilities.jstring(properties, "tupleTrace"));
+            first = false;
+    	}
+    	if (properties.has("stackTrace")) {
+            if (!first) {
+                sb.append(',');
+            }
+            sb.append("stackTrace=");
+            sb.append(GsonUtilities.jstring(properties, "stackTrace"));
+            first = false;
+    	}
+    }
 
     private static void noteAnnotations(JsonObject op, StringBuilder sb) throws IOException {
 
