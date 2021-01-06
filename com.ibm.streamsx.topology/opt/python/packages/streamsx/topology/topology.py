@@ -1785,12 +1785,34 @@ class Stream(_placement._Placement, object):
     def catch_exceptions(self, exception_type:str='streams', tuple_trace:bool=False, stack_trace:bool=False):
         """ When applied to a primitive operator, exceptions of the specified type that are thrown by the operator while processing a tuple are caught. 
 
+        This functions adds the `@catch annotation <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.3.0/com.ibm.streams.ref.doc/doc/catchannotation.html>`_ on an operator.
+        
+        .. note:: You cannot use this on an operator without input streams.
+
         Example using default values (tuple trace and stack trace disabled) and catch exceptions thrown by the Python primitive operator calling the ``map()`` transformation. This **map** callable raises a ValueError (*"invalid literal for int() with base 10: 'five'"*) when processing the sixt tuple. With ``catch_exceptions()`` applied the application is able to process all 10 tuples and does not stop processing.::
+
+           from typing import NamedTuple
+           class NumbersSchema(NamedTuple):
+              num: int
 
            topo = Topology()
            str_stream = topo.source(['0','1','2','3','4','five','6','7','8','9']).as_string()
-           num_stream = str_stream.map(lambda t: {'num': int(t)}, schema='tuple<int64 num>')
+
+           num_stream = str_stream.map(lambda t: {'num': int(t)}, schema=NumbersSchema)
            num_stream.catch_exceptions()
+
+           num_stream.print()
+
+        Example using the SPL operator Functor and enabled tuple trace::
+
+           topo = Topology()
+           str_stream = topo.source(['0','1','2','3','4','five','6','7','8','9']).as_string()
+
+           f = op.Map('spl.relational::Functor', s, schema='tuple<int64 num>')
+           f.num = f.output('(int64) string')
+           num_stream = f.stream
+           num_stream.catch_exceptions(tuple_trace=True)
+
            num_stream.print()
 
         Args:
