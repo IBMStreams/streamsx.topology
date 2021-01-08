@@ -2105,6 +2105,21 @@ class Stream(_placement._Placement, object):
         * Event-time connectivity extends only downstream.
         * The event-time graph ends at a sink or at an operator which does not output the event-time attribute.
 
+        A sample application creating an event_time stream and using a *time-interval* window (:py:func:`streamsx.topology.topology.Stream.time_interval`) is located in the samples directory: `Event-Time-Sample <https://github.com/IBMStreams/streamsx.topology/tree/develop/samples/python/topology/spl/vwap_event_time>`_
+
+        Sample with an attribute named ``ts`` of type ``timestamp`` used as event-time attribute::
+
+           from streamsx.spl.types import Timestamp
+           ts1 = Timestamp(1608196, 235000000, 0)
+           s = topo.source([(1,ts1)])
+
+           # transform to structured schema
+           ts_schema = StreamSchema('tuple<int64 num, timestamp ts>').as_tuple(named=True)
+           s = s.map(lambda x : x, schema=ts_schema, name='event_time_source')
+
+           # add event-time annotation for attribute ts to the "event_time_source"
+           s = s.set_event_time('ts')
+
         Args:
             name(str): Name of the event-time attribute.
             lag(float|submission parameter created by :py:meth:`Topology.create_submission_parameter`): Defines the duration in seconds between the maximum event-time of submitted tuples and the value of the watermark to submit. If it is not specified, the default value is 0.0.
@@ -2362,7 +2377,9 @@ class Stream(_placement._Placement, object):
         A *time-interval* window collects tuples into fixed-duration intervals defined over event time.
         *Time-interval* windows collect tuples into window panes specified by event-time intervals.
         A pane includes tuples with an event time greater or equal to the start time of the pane and lower than the end time.
- 
+
+        Find a sample application creating an *event-time* stream (:py:func:`streamsx.topology.topology.Stream.set_event_time`) and using a *time-interval* window in the samples directory: `Event-Time-Sample <https://github.com/IBMStreams/streamsx.topology/tree/develop/samples/python/topology/spl/vwap_event_time>`_
+
         Args:
             interval_duration(float): Specifies the required duration between the lower and upper interval endpoints. It must be greater than zero (0.0). The parameter value represents seconds.
             creation_period(float): Specifies the duration between adjacent intervals. The default value is equal to interval_duration. It must be greater than zero (0.0). The parameter value represents seconds.
@@ -2375,6 +2392,8 @@ class Stream(_placement._Placement, object):
 
         Returns:
             Window: Event-time window on this stream.
+
+        .. versionadded:: 2.1
         """
         win = Window(self, 'TIME_INTERVAL')
         if interval_duration is None:

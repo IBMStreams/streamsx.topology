@@ -54,6 +54,7 @@ class TestEventTime(unittest.TestCase):
         sr = streamsx.topology.context.submit('BUNDLE', topo)
         self.assertEqual(0, sr['return_code'])
         os.remove(sr.bundlePath)
+        os.remove(sr.jobConfigPath)
 
 
     def test_timestamp_event_time_attribute(self):
