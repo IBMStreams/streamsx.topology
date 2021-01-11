@@ -1785,8 +1785,6 @@ class Stream(_placement._Placement, object):
     def catch_exceptions(self, exception_type:str='streams', tuple_trace:bool=False, stack_trace:bool=False):
         """ When applied to a primitive operator, exceptions of the specified type that are thrown by the operator while processing a tuple are caught. 
 
-        This functions adds the `@catch annotation <https://www.ibm.com/support/knowledgecenter/SSCRJU_4.3.0/com.ibm.streams.ref.doc/doc/catchannotation.html>`_ on an operator.
-        
         .. note:: You cannot use this on an operator without input streams.
 
         Example using default values (tuple trace and stack trace disabled) and catch exceptions thrown by the Python primitive operator calling the ``map()`` transformation. This **map** callable raises a ValueError (*"invalid literal for int() with base 10: 'five'"*) when processing the sixt tuple. With ``catch_exceptions()`` applied the application is able to process all 10 tuples and does not stop processing.::
@@ -1853,7 +1851,7 @@ class Stream(_placement._Placement, object):
            else:
               props['stackTrace'] = 'true'
 
-        # create eventtime annotation dict
+        # create annotation dict
         annotation = {'type':'catch', 'properties': props}
         self.oport.operator._annotation(annotation)
         return self._make_placeable()
