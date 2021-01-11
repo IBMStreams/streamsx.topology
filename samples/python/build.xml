@@ -28,6 +28,9 @@
     <ant dir="${pytk}" target="clean" inheritAll="true">
       <property name="tk" value="${tk}"/>
     </ant>
+    <delete>
+      <fileset dir="topology/spl/vwap_event_time" includes="out.txt"/>
+    </delete>
   </target>
 
 </project>

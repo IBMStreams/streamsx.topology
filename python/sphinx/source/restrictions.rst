@@ -94,3 +94,5 @@ Restrictions and known bugs
 * No hook for drain processing in consistent region for Python Callables
 * Submission time parameters, which are defined in SPL composites of other toolkits, or created by using
   `streamsx.spl.op.Expression` in the topology, cannot be accessed at runtime with `streamsx.ec.get_submission_time_value(name)`.
+* The *time-interval* window (:py:func:`streamsx.topology.topology.Stream.time_interval`) is not supported by :py:func:`streamsx.topology.topology.Window.aggregate`. Use the `spl.relational::Aggregate` operator in an *event-time* stream.
+
