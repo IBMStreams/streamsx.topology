@@ -17,6 +17,7 @@ import static com.ibm.streamsx.topology.generator.operator.WindowProperties.POLI
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_NOT_WINDOWED;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_SLIDING;
 import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_TUMBLING;
+import static com.ibm.streamsx.topology.generator.operator.WindowProperties.TYPE_TIME_INTERVAL;
 import static com.ibm.streamsx.topology.generator.port.PortProperties.inputPortRef;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.getSPLCompatibleName;
 import static com.ibm.streamsx.topology.generator.spl.SPLGenerator.stringLiteral;
@@ -115,6 +116,9 @@ class OperatorGenerator {
             }
             else if (jstring(annotation, OpProperties.ANNOTATION_TYPE).equals("catch")) {
             	appendCatchAnnotation(sb, properties);
+            }
+            else if (jstring(annotation, OpProperties.ANNOTATION_TYPE).equals("eventTime")) {
+            	appendEventTimeAnnotation(sb, properties);
             }
             else {
                 boolean first = true;
@@ -284,6 +288,57 @@ class OperatorGenerator {
     	}
     }
 
+    private static void appendEventTimeAnnotation(StringBuilder sb, JsonObject properties) {
+    	boolean first = true;
+    	if (properties.has("eventTimeAttribute")) {  
+            sb.append("eventTimeAttribute=");
+            sb.append(getSPLCompatibleName(GsonUtilities.jstring(properties, "eventTimeAttribute")));
+            first = false;
+    	}
+    	if (properties.has("lag")) {
+            if (!first) {
+                sb.append(',');
+            }
+            sb.append("lag=");
+            JsonElement lag = properties.get("lag");
+            if (lag.isJsonPrimitive()) {
+            	sb.append(GsonUtilities.jstring(properties, "lag"));
+            } else {
+            	JsonObject lagObj = lag.getAsJsonObject();
+                if (lagObj.has("type") && TYPE_SUBMISSION_PARAMETER.equals(lagObj.getAsJsonObject().get("type").getAsString())) {
+                	String name = jstring(jobject(lagObj, "value"), "name");
+                	sb.append("$__spl_stv_").append(name);
+                }
+            }
+            first = false;
+    	}
+    	if (properties.has("minimumGap")) {
+            if (!first) {
+                sb.append(',');
+            }
+            sb.append("minimumGap=");
+            JsonElement mg = properties.get("minimumGap");
+            if (mg.isJsonPrimitive()) {
+            	sb.append(GsonUtilities.jstring(properties, "minimumGap"));
+            } else {
+            	JsonObject mgObj = mg.getAsJsonObject();
+                if (mgObj.has("type") && TYPE_SUBMISSION_PARAMETER.equals(mgObj.getAsJsonObject().get("type").getAsString())) {
+                	String name = jstring(jobject(mgObj, "value"), "name");
+                	sb.append("$__spl_stv_").append(name);
+                }
+            }
+            first = false;
+    	}
+    	if (properties.has("resolution")) {
+            if (!first) {
+                sb.append(',');
+            }
+            sb.append("resolution=");
+            sb.append(GsonUtilities.jstring(properties, "resolution"));
+            first = false;
+    	}
+    }
+    
     private static void noteAnnotations(JsonObject op, StringBuilder sb) throws IOException {
 
         layoutNote(op, sb);
@@ -654,17 +709,46 @@ class OperatorGenerator {
             case TYPE_TUMBLING:
                 sb.append("tumbling,");
                 break;
+            case TYPE_TIME_INTERVAL:
+                sb.append("timeInterval,");
+                break;
             default:
                 throw new IllegalStateException(Messages.getString("GENERATOR_INTERNAL_ERROR"));
             }
 
-            appendWindowPolicy(jstring(window, "evictPolicy"), window.get("evictConfig"),
+            if (TYPE_TIME_INTERVAL.equals(type)) {
+            	String intervalDuration = jstring(window, "intervalDuration");
+                sb.append("intervalDuration(");
+                sb.append(intervalDuration);
+                sb.append(")");	
+                String creationPeriod = jstring(window, "creationPeriod");
+                if (creationPeriod != null) {
+                    sb.append(", creationPeriod(");
+                    sb.append(creationPeriod);
+                    sb.append(")");
+                }
+                String discardAge = jstring(window, "discardAge");
+                if (discardAge != null) {
+                    sb.append(", discardAge(");
+                    sb.append(discardAge);
+                    sb.append(")");
+                }
+                String intervalOffset = jstring(window, "intervalOffset");
+                if (intervalOffset != null) {
+                    sb.append(", intervalOffset(");
+                    sb.append(intervalOffset);
+                    sb.append(")");
+                }
+            }
+            else {
+                appendWindowPolicy(jstring(window, "evictPolicy"), window.get("evictConfig"),
                     jstring(window, "evictTimeUnit"), sb);
 
-            String triggerPolicy = jstring(window, "triggerPolicy");
-            if (triggerPolicy != null) {
-                sb.append(", ");
-                appendWindowPolicy(triggerPolicy, window.get("triggerConfig"), jstring(window, "triggerTimeUnit"), sb);
+                String triggerPolicy = jstring(window, "triggerPolicy");
+                if (triggerPolicy != null) {
+                    sb.append(", ");
+                    appendWindowPolicy(triggerPolicy, window.get("triggerConfig"), jstring(window, "triggerTimeUnit"), sb);
+                }
             }
 
             if (jboolean(window, "partitioned"))

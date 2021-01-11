@@ -98,13 +98,15 @@ class ConsistentRegionConfig(object):
 
     Example::
 
+        from streamsx.topology.state import ConsistentRegionConfig
         # set source to be the start of an operator driven consistent region
-        # with a drain timeout of five seconds and a reset timeout of twenty seconds.
-        source.set_consistent(ConsistentRegionConfig.operatorDriven(drain_timeout=5, reset_timeout=20))
+        # with a drain timeout of sixty seconds and a reset timeout of twenty seconds.
+        source.set_consistent(ConsistentRegionConfig.operator_driven(drain_timeout=60, reset_timeout=20))
 
     .. seealso:: :py:meth:`~streamsx.topology.topology.Stream.set_consistent`
 
     .. versionadded:: 1.11
+
     """
     
     _DEFAULT_DRAIN=180
@@ -114,6 +116,7 @@ class ConsistentRegionConfig(object):
     class Trigger(Enum):
         """
         Defines how the drain-checkpoint cycle of a consistent region is triggered.
+
         .. versionadded:: 1.11
         """
         OPERATOR_DRIVEN = 1

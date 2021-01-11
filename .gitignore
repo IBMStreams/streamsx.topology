@@ -65,7 +65,7 @@ com.ibm.streamsx.topology/com.ibm.streamsx.topology.functional.python/Py*/*.pm
 com.ibm.streamsx.topology/impl/nl/*.dat
 com.ibm.streamsx.topology/impl/nl/include/
 test/python/topology/tk*
-
+samples/python/topology/spl/vwap_event_time/out.txt
 com.ibm.streamsx.topology/lib/
 com.ibm.streamsx.topology/license/
 com.ibm.streamsx.topology/opt/icons/
