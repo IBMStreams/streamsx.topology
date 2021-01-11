@@ -2,6 +2,8 @@
 ==========
 
 ## branch latest: targeted for v2.1.0
+
+* [#2640](https://github.com/IBMStreams/streamsx.topology/issues/2640) Python: Support SPL annotation @catch
 * [#2590](https://github.com/IBMStreams/streamsx.topology/issues/2590) Python: Support definition of event-time streams
 * [#2589](https://github.com/IBMStreams/streamsx.topology/issues/2589) Python: Support definition of TimeInterval windows
 * [#2639](https://github.com/IBMStreams/streamsx.topology/issues/2639) Documentation: Typo in ConsistentRegionConfig example

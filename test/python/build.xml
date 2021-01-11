@@ -71,6 +71,7 @@
 		     <arg value="test2_schema_tuple.TestSchemaTypingNamedTuple"/>
 		     <arg value="test2_punctor.TestPunctor"/>
 		     <arg value="test2_flat_map.TestFlatMap"/>
+		     <arg value="test2_catch.TestCatch"/>
 		     <arg value="test2_namedtuple.TestNamedTupleSource"/>
 		     <arg value="test2_event_time.TestEventTime"/>
 		     <arg value="-v"/>
@@ -93,6 +94,7 @@
 		     <arg value="test2_aggregate.TestDistributedAggregate"/>
 		     <arg value="test2_spl_window.TestDistributedSPLWindow"/>
 		     <arg value="test2_flat_map.TestDistributedFlatMap"/>
+		     <arg value="test2_catch.TestDistributedCatch"/>
 		     <arg value="test2_checkpoint.TestDistributedCheckpointing"/>
 		     <arg value="test2_consistent.TestDistributedConsistentRegion"/>
 		     <arg value="test2_ec.TestDistributedEc"/>
