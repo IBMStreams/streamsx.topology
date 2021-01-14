@@ -70,10 +70,10 @@ class TestEndpoint(unittest.TestCase):
 
         stream1.for_each(EndpointSink(buffer_size=50000, consuming_reads=True, endpoint_documentation=endpoint_documentation), name='cpd_endpoint_sink')
 
-        sr = streamsx.topology.context.submit('BUNDLE', topo)
-        self.assertEqual(0, sr['return_code'])
-        os.remove(sr.bundlePath)
-        os.remove(sr.jobConfigPath)
+        tester = Tester(topo)
+        tester.tuple_count(stream1, 10, exact=False)
+        tester.run_for(10)
+        tester.test(self.test_ctxtype, self.test_config)
 
     @unittest.skipIf('CP4D_URL' not in os.environ and 'STREAMS_REST_URL' not in os.environ, 'CP4D_URL/STREAMS_REST_URL not set')
     def test_endpoint_source(self):
