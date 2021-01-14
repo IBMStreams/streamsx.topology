@@ -53,6 +53,29 @@ class TestEndpoint(unittest.TestCase):
         tester.test(self.test_ctxtype, self.test_config)
 
     @unittest.skipIf('CP4D_URL' not in os.environ and 'STREAMS_REST_URL' not in os.environ, 'CP4D_URL/STREAMS_REST_URL not set')
+    def test_param_consuming_reads(self):
+        topo = Topology('test_param_consuming_reads')
+
+        stream1 = topo.source(lambda : itertools.count()).as_string()
+
+        endpoint_documentation = dict()
+        endpoint_documentation['summary'] = 'Sample endpoint sink'
+        endpoint_documentation['tags'] = ['Output']
+        endpoint_documentation['description'] = 'Streams job endpoint emits some data with random numbers'
+
+        doc_attr = dict()
+        descr = {'string': {'description': 'number incremented by one'}}
+        doc_attr.update(descr)
+        endpoint_documentation['attributeDescriptions'] = doc_attr
+
+        stream1.for_each(EndpointSink(buffer_size=50000, consuming_reads=True, endpoint_documentation=endpoint_documentation), name='cpd_endpoint_sink')
+
+        tester = Tester(topo)
+        tester.tuple_count(stream1, 10, exact=False)
+        tester.run_for(10)
+        tester.test(self.test_ctxtype, self.test_config)
+
+    @unittest.skipIf('CP4D_URL' not in os.environ and 'STREAMS_REST_URL' not in os.environ, 'CP4D_URL/STREAMS_REST_URL not set')
     def test_endpoint_source(self):
         topo = Topology("test_endpoint_source")
 

@@ -206,7 +206,9 @@ class EndpointSink(streamsx.topology.composite.ForEach):
     Attributes
     ----------
     buffer_size : int
-        Size of the buffer
+        Size of the buffer. If the buffer capacity is reached, older tuples are removed to make room for the newer tuples. A warning is returned on an API request if the requested start time is before the oldest tuple in the buffer. The default buffer size is 1000.
+    consuming_reads : boolean
+        Indicates whether tuples should be removed from the endpoint buffer after they have been retuned on a REST API call. The default value is false.
     service_documentation: dict
         Content to describe the service. This is set once per application only.
         Apply a ``dict`` containing one or more of the keys: 'title, 'version', 'description', 'externalDocsUrl', 'externalDocsDescription', 'tags'::
@@ -233,8 +235,9 @@ class EndpointSink(streamsx.topology.composite.ForEach):
     Returns:
         :py:class:`topology_ref:streamsx.topology.topology.Sink`: Stream termination.
     """
-    def __init__(self, buffer_size=None, service_documentation=None, endpoint_documentation=None):
+    def __init__(self, buffer_size=None, consuming_reads=None, service_documentation=None, endpoint_documentation=None):
         self.buffer_size = buffer_size
+        self.consuming_reads = consuming_reads
         self.documentation = endpoint_documentation
         self.service_documentation = service_documentation
 
@@ -247,9 +250,12 @@ class EndpointSink(streamsx.topology.composite.ForEach):
         if schema is CommonSchema.Python:
             raise TypeError('CommonSchema.Python is not supported by the EndpointSink')
         # add toolkit dependency and required minimum Streams SPL toolkit version
-        spl_tk.add_toolkit_dependency(topology, 'spl', '1.5.0')
+        if self.consuming_reads is not None:
+           spl_tk.add_toolkit_dependency(topology, 'spl', '1.5.1')
+        else:
+           spl_tk.add_toolkit_dependency(topology, 'spl', '1.5.0')
         # invoke spl operator
-        _op = _EndpointSink(stream, self.buffer_size, name)
+        _op = _EndpointSink(stream, self.buffer_size, self.consuming_reads, name)
         # apply endpoint annotation
         if self.documentation is not None:
            _op._add_annotation(self.documentation, schema)
@@ -390,12 +396,14 @@ class _EndpointSource(streamsx.spl.op.Source):
 
 class _EndpointSink(streamsx.spl.op.Sink):
 
-    def __init__(self, stream, bufferSize=None, name=None):
+    def __init__(self, stream, bufferSize=None, consumingReads=None, name=None):
         topology = stream.topology
         kind="spl.endpoint::EndpointSink"
         params = dict()
         if bufferSize is not None:
             params['bufferSize'] = bufferSize
+        if consumingReads is not None:
+            params['consumingReads'] = consumingReads
         self.spl_op = super(_EndpointSink, self)
         self.spl_op.__init__(kind,stream,params,name)
         self.stream_name = stream.name
