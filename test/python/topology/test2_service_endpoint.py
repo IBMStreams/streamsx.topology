@@ -115,8 +115,8 @@ class TestEndpoint(unittest.TestCase):
            stream1.for_each(EndpointSink())
 
 
-    def test_spl_annotation(self):
-        name = 'test_spl_annotation'
+    def test_spl_generation(self):
+        name = 'test_spl_generation'
         topo = Topology(name)
         scriptname = os.path.basename(__file__)[:-3]
         service_documentation={
@@ -136,8 +136,9 @@ class TestEndpoint(unittest.TestCase):
 
         stream1 = topo.source(lambda : itertools.count()).as_string()
         stream1.for_each(EndpointSink(
-          service_documentation=service_documentation,
-          endpoint_documentation=endpoint_documentation))
+            consuming_reads=True,
+            service_documentation=service_documentation,
+            endpoint_documentation=endpoint_documentation))
 
         submission_result = submit(ContextTypes.TOOLKIT, topo)
         # check generated SPL file
@@ -156,5 +157,13 @@ class TestEndpoint(unittest.TestCase):
         print(str(service_annotation))
         self.assertTrue('__SERVICE__TITLE__' in str(service_annotation), msg=service_annotation)
         self.assertTrue('__SERVICE__DESC__' in str(service_annotation), msg=service_annotation)
+        # test consumingReads operator parameter in generated SPL code
+        with open(splfile, "r") as fileHandle:
+            sink_invocation = [line.strip() for line in fileHandle if "spl.endpoint::EndpointSink" in line or 'param' in line or 'consumingReads' in line]
+        print(str(sink_invocation))
+        self.assertTrue('spl.endpoint::EndpointSink' in sink_invocation[-3]
+                        and 'param' in sink_invocation[-2]
+                        and 'consumingReads' in sink_invocation[-1] and 'true' in sink_invocation[-1],
+                        msg=sink_invocation)
 
 
