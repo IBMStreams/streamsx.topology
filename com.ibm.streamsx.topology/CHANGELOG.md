@@ -1,8 +1,7 @@
 # Changes
 ==========
 
-## branch latest: targeted for v2.1.0
-
+## v2.1.0
 * [#2649](https://github.com/IBMStreams/streamsx.topology/issues/2649) Python scripts: Print diagnostic info in verbose mode when spl-python-extract skips python modules
 * [#2646](https://github.com/IBMStreams/streamsx.topology/issues/2646) Python: Support new consumingReads parameter of spl.endpoint::EndpointSink
 * [#2640](https://github.com/IBMStreams/streamsx.topology/issues/2640) Python: Support SPL annotation @catch
