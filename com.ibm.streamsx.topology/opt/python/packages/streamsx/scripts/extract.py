@@ -155,6 +155,8 @@ class _Extractor(object):
                    help='Toolkit directory')
         cmd_parser.add_argument('--make-toolkit', action='store_true',
                    help='Index toolkit using spl-make-toolkit')
+        cmd_parser.add_argument('-f', '--force', action='store_true',
+                   help='Force SPL operator extraction ignoring the modification times of toolkit index and Python modules')
         cmd_parser.add_argument('-v', '--verbose', action='store_true',
                    help='Print more diagnostics')
         return cmd_parser.parse_args(args)
@@ -503,6 +505,8 @@ def _extract_from_toolkit(args):
     tk_streams = os.path.join(tk_dir, 'opt', 'python', 'streams')
     if not os.path.isdir(tk_streams) or not fnmatch.filter(os.listdir(tk_streams), '*.py'):
         # Nothing to do for Python extraction
+        if extractor._cmd_args.verbose:
+            print('directory ' + str(tk_streams) + ' is not present or it does not contains Python files. Nothing to do.')
         extractor._make_toolkit()
         return
 
@@ -511,13 +515,24 @@ def _extract_from_toolkit(args):
         fcntl.flock(lfno, fcntl.LOCK_EX)
 
         tk_idx = os.path.join(tk_dir, 'toolkit.xml')
-        tk_time = os.path.getmtime(tk_idx) if os.path.exists(tk_idx) else None
+        if extractor._cmd_args.force:
+            tk_time = None
+        else:
+            tk_time = os.path.getmtime(tk_idx) if os.path.exists(tk_idx) else None
         changed = False if tk_time else True
         if tk_time:
             for mf in glob.glob(os.path.join(tk_streams, '*.py')):
-               if os.path.getmtime(mf) >= tk_time:
-                   changed = True
-                   break
+                if os.path.getmtime(mf) >= tk_time:
+                    changed = True
+                    break
+                else:
+                    if extractor._cmd_args.verbose:
+                        print(str(mf) + " is older than toolkit.xml")
+
+            if extractor._cmd_args.verbose and not changed:
+                print('The toolkit.xml (the toolkit index) is newer than all python modules in opt/python/streams.')
+                print('Assuming the toolkit index already contains the Python operators. Skipping operator extraction.')
+                print('Consider to use the -f | --force option to force SPL operator extraction.')
 
         if changed:
             path_items = _setup_path(tk_dir, tk_streams)
@@ -538,7 +553,7 @@ def _extract_from_toolkit(args):
             extractor._make_toolkit()
 
             _reset_path(path_items)
-            fcntl.flock(lfno, fcntl.LOCK_UN)
+        fcntl.flock(lfno, fcntl.LOCK_UN)
 
 def _setup_path(tk_dir, tk_streams):
     sys.path.insert(1, tk_streams)
