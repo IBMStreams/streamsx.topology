@@ -1,5 +1,7 @@
 # Changes
 ==========
+## develop/latest
+* [#2643](https://github.com/IBMStreams/streamsx.topology/issues/2643) Documentation: Specifying a space in a notebook
 
 ## v2.1.0
 * [#2649](https://github.com/IBMStreams/streamsx.topology/issues/2649) Python scripts: Print diagnostic info in verbose mode when spl-python-extract skips python modules
