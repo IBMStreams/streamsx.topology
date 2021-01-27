@@ -1233,7 +1233,12 @@ class ConfigParams(object):
     """
     SPACE_NAME = 'topology.spaceName'
     """
-    Key for a deployment space on a Cloud Pak for Data, when submitted to :py:const:`DISTRIBUTED`
+    Key for a deployment space on a Cloud Pak for Data, when submitted to :py:const:`DISTRIBUTED`.
+    When a space name is specified for an application submitted from a project in Cloud Pak for Data,
+    for example from a Jupyter notebook, the resulting job will not be associated with the project and can
+    therefore not be found within the project. The job will be associated with a deployment space instead.
+    
+    When the specified space does not exist, it will be automatically created.
     
     .. versionadded:: 1.17
     """
