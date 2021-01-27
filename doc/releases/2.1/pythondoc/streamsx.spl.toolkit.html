@@ -1,0 +1,321 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx.spl.toolkit &mdash; streamsx 2.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="streamsx.spl.spl" href="streamsx.spl.spl.html" />
+    <link rel="prev" title="streamsx.spl.types" href="streamsx.spl.types.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.html">streamsx.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.topology.html">streamsx.topology.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.context.html">streamsx.topology.context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.schema.html">streamsx.topology.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.state.html">streamsx.topology.state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.composite.html">streamsx.topology.composite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester.html">streamsx.topology.tester</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester_runtime.html">streamsx.topology.tester_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.ec.html">streamsx.ec</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.service.html">streamsx.service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.op.html">streamsx.spl.op</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.types.html">streamsx.spl.types</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">streamsx.spl.toolkit</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.spl.html">streamsx.spl.spl</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.build.html">streamsx.build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest.html">streamsx.rest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest_primitives.html">streamsx.rest_primitives</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="scripts/extract.html">spl-python-extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/info.html">streamsx-info</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/runner.html">streamsx-runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/sc.html">streamsx-sc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/service.html">streamsx-service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/streamtool.html">streamsx-streamtool</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysetup.html">IBM Streams Python setup</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">Restrictions and known bugs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">streamsx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>streamsx.spl.toolkit</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/streamsx.spl.toolkit.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-streamsx.spl.toolkit">
+<span id="streamsx-spl-toolkit"></span><h1>streamsx.spl.toolkit<a class="headerlink" href="#module-streamsx.spl.toolkit" title="Permalink to this headline">¶</a></h1>
+<p>SPL toolkit integration.</p>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>SPL operators are defined by an SPL toolkit. When a <code class="docutils literal notranslate"><span class="pre">Topology</span></code>
+contains invocations of SPL operators, their defining toolkit must
+be made known using <a class="reference internal" href="#streamsx.spl.toolkit.add_toolkit" title="streamsx.spl.toolkit.add_toolkit"><code class="xref py py-func docutils literal notranslate"><span class="pre">add_toolkit()</span></code></a>.</p>
+<p>Toolkits shipped with the IBM Streams product under
+<code class="docutils literal notranslate"><span class="pre">$STREAMS_INSTALL/toolkits</span></code> are implictly known and
+must not be added through <code class="docutils literal notranslate"><span class="pre">add_toolkit</span></code>.</p>
+</div>
+<div class="section" id="module-contents">
+<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Functions</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.spl.toolkit.add_toolkit" title="streamsx.spl.toolkit.add_toolkit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_toolkit</span></code></a></p></td>
+<td><p>Add an SPL toolkit to a topology.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#streamsx.spl.toolkit.add_toolkit_dependency" title="streamsx.spl.toolkit.add_toolkit_dependency"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_toolkit_dependency</span></code></a></p></td>
+<td><p>Add a version dependency on an SPL toolkit to a topology.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="function">
+<dt id="streamsx.spl.toolkit.add_toolkit">
+<code class="sig-prename descclassname">streamsx.spl.toolkit.</code><code class="sig-name descname">add_toolkit</code><span class="sig-paren">(</span><em class="sig-param">topology</em>, <em class="sig-param">location</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.toolkit.add_toolkit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an SPL toolkit to a topology.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>topology</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology" title="streamsx.topology.topology.Topology"><em>Topology</em></a>) – Topology to include toolkit in.</p></li>
+<li><p><strong>location</strong> (<em>str</em>) – Location of the toolkit directory.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="streamsx.spl.toolkit.add_toolkit_dependency">
+<code class="sig-prename descclassname">streamsx.spl.toolkit.</code><code class="sig-name descname">add_toolkit_dependency</code><span class="sig-paren">(</span><em class="sig-param">topology</em>, <em class="sig-param">name</em>, <em class="sig-param">version</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.spl.toolkit.add_toolkit_dependency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a version dependency on an SPL toolkit to a topology.</p>
+<p>To specify a range of versions for the dependent toolkits,
+use brackets (<code class="docutils literal notranslate"><span class="pre">[]</span></code>) or parentheses. Use brackets to represent an
+inclusive range and parentheses to represent an exclusive range.
+The following examples describe how to specify a dependency on a range of toolkit versions:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">[1.0.0,</span> <span class="pre">2.0.0]</span></code> represents a dependency on toolkit versions 1.0.0 - 2.0.0, both inclusive.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[1.0.0,</span> <span class="pre">2.0.0)</span></code> represents a dependency on toolkit versions 1.0.0 or later, but not including 2.0.0.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(1.0.0,</span> <span class="pre">2.0.0]</span></code> represents a dependency on toolkits versions later than 1.0.0 and less than or equal to 2.0.0.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(1.0.0,</span> <span class="pre">2.0.0)</span></code> represents a dependency on toolkit versions 1.0.0 - 2.0.0, both exclusive.</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>topology</strong> (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology" title="streamsx.topology.topology.Topology"><em>Topology</em></a>) – Topology to include toolkit in.</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – Toolkit name.</p></li>
+<li><p><strong>version</strong> (<em>str</em>) – Toolkit version dependency.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://www.ibm.com/support/knowledgecenter/SSCRJU_4.3.0/com.ibm.streams.dev.doc/doc/toolkitinformationmodelfile.html">Toolkit information model file</a></p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.12.</span></p>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="streamsx.spl.spl.html" class="btn btn-neutral float-right" title="streamsx.spl.spl" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="streamsx.spl.types.html" class="btn btn-neutral float-left" title="streamsx.spl.types" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2020 IBM Corp.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

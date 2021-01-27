@@ -1,0 +1,598 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>streamsx.service &mdash; streamsx 2.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="streamsx.spl.op" href="streamsx.spl.op.html" />
+    <link rel="prev" title="streamsx.ec" href="streamsx.ec.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.html">streamsx.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.topology.html">streamsx.topology.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.context.html">streamsx.topology.context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.schema.html">streamsx.topology.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.state.html">streamsx.topology.state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.composite.html">streamsx.topology.composite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester.html">streamsx.topology.tester</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester_runtime.html">streamsx.topology.tester_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.ec.html">streamsx.ec</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">streamsx.service</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-contents">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.op.html">streamsx.spl.op</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.types.html">streamsx.spl.types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.toolkit.html">streamsx.spl.toolkit</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.spl.html">streamsx.spl.spl</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.build.html">streamsx.build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest.html">streamsx.rest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest_primitives.html">streamsx.rest_primitives</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="scripts/extract.html">spl-python-extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/info.html">streamsx-info</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/runner.html">streamsx-runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/sc.html">streamsx-sc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/service.html">streamsx-service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/streamtool.html">streamsx-streamtool</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysetup.html">IBM Streams Python setup</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">Restrictions and known bugs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">streamsx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>streamsx.service</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/streamsx.service.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-streamsx.service">
+<span id="streamsx-service"></span><h1>streamsx.service<a class="headerlink" href="#module-streamsx.service" title="Permalink to this headline">¶</a></h1>
+<p>Streams Jobs as a Cloud Pak for Data Service</p>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>A <cite>streams-application</cite> service can be used to insert data into and retrieve data from a Streams job.
+When adding one or more callables using <a class="reference internal" href="#streamsx.service.EndpointSource" title="streamsx.service.EndpointSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">EndpointSource</span></code></a> or <a class="reference internal" href="#streamsx.service.EndpointSink" title="streamsx.service.EndpointSink"><code class="xref py py-class docutils literal notranslate"><span class="pre">EndpointSink</span></code></a> to your topology application and submitting the application to run as a job, a <cite>streams-application</cite> service is created.</p>
+<p>Exchanging data with the job is done by using a REST API.</p>
+<p>The <cite>streams-application</cite> service instances are included in the <strong>Services &gt; Instances</strong> page of the Cloud Pak for Data web client.
+Selecting a service entry in the list opens the REST API documentation for the service.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference external" href="https://ibm.biz/streams-job-service">Streams Jobs as a Service</a></dt><dd><p>Resources for Streams developers in the IBM Community.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="module-contents">
+<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline">¶</a></h2>
+<p class="rubric">Classes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#streamsx.service.EndpointSink" title="streamsx.service.EndpointSink"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EndpointSink</span></code></a></p></td>
+<td><p>Creates a service endpoint to consume data from that stream via REST.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#streamsx.service.EndpointSource" title="streamsx.service.EndpointSource"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EndpointSource</span></code></a></p></td>
+<td><p>Creates a service endpoint that produces a stream of data received via REST.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="streamsx.service.EndpointSink">
+<em class="property">class </em><code class="sig-prename descclassname">streamsx.service.</code><code class="sig-name descname">EndpointSink</code><span class="sig-paren">(</span><em class="sig-param">buffer_size=None</em>, <em class="sig-param">consuming_reads=None</em>, <em class="sig-param">service_documentation=None</em>, <em class="sig-param">endpoint_documentation=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.service.EndpointSink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="streamsx.topology.composite.html#streamsx.topology.composite.ForEach" title="streamsx.topology.composite.ForEach"><code class="xref py py-class docutils literal notranslate"><span class="pre">streamsx.topology.composite.ForEach</span></code></a></p>
+<p>Creates a service endpoint to consume data from that stream via REST.</p>
+<p>With this sink the Streams job is enabled as a Cloud Pak for Data service and emits job data using REST API.</p>
+<p>Use an instance of this class in <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.for_each" title="streamsx.topology.topology.Stream.for_each"><code class="xref py py-meth docutils literal notranslate"><span class="pre">for_each()</span></code></a> and terminate a stream:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">streamsx.service</span> <span class="k">import</span> <span class="n">EndpointSink</span>
+<span class="n">stream</span><span class="o">.</span><span class="n">for_each</span><span class="p">(</span><span class="n">EndpointSink</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Simple example without service or endpoint documentation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">streamsx.topology.topology</span> <span class="k">import</span> <span class="n">Topology</span>
+<span class="kn">from</span> <span class="nn">streamsx.topology.context</span> <span class="k">import</span> <span class="n">submit</span><span class="p">,</span> <span class="n">ContextTypes</span><span class="p">,</span> <span class="n">ConfigParams</span><span class="p">,</span> <span class="n">JobConfig</span>
+<span class="kn">from</span> <span class="nn">streamsx.service</span> <span class="k">import</span> <span class="n">EndpointSink</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">NamedTuple</span>
+<span class="kn">import</span> <span class="nn">itertools</span><span class="o">,</span> <span class="nn">random</span>
+
+<span class="k">class</span> <span class="nc">SampleSourceSchema</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">num</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="c1"># Callable of the Source</span>
+<span class="k">class</span> <span class="nc">SampleSource</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">SampleSourceSchema</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">output_event</span> <span class="o">=</span> <span class="n">SampleSourceSchema</span><span class="p">(</span>
+                <span class="nb">id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">num</span><span class="p">),</span>
+                <span class="n">num</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">num</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">yield</span> <span class="n">output_event</span>
+
+<span class="n">topo</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">(</span><span class="s1">&#39;endpoint_sink_sample&#39;</span><span class="p">)</span>
+
+<span class="n">stream1</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="n">SampleSource</span><span class="p">())</span>
+<span class="n">stream1</span><span class="o">.</span><span class="n">for_each</span><span class="p">(</span><span class="n">EndpointSink</span><span class="p">(</span><span class="n">buffer_size</span><span class="o">=</span><span class="mi">50000</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Example with service and endpoint documentation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">service_documentation</span><span class="o">=</span><span class="p">{</span>
+   <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;streamsx-sample-endpoint-sink&#39;</span><span class="p">,</span>
+   <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;NUMBER GENERATOR&#39;</span><span class="p">,</span>
+   <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="s1">&#39;1.0.0&#39;</span><span class="p">,</span>
+   <span class="s1">&#39;externalDocsUrl&#39;</span><span class="p">:</span> <span class="s1">&#39;https://mycompany.com/numgen/doc&#39;</span><span class="p">,</span>
+   <span class="s1">&#39;externalDocsDescription&#39;</span><span class="p">:</span> <span class="s1">&#39;Number generator documentation&#39;</span>
+<span class="p">}</span>
+<span class="n">tags</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="n">tag1</span> <span class="o">=</span> <span class="p">{</span>
+   <span class="s1">&#39;Output&#39;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;Output tag description&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;externalDocs&#39;</span><span class="p">:</span> <span class="p">{</span>
+         <span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="s1">&#39;https://mycompany.com/numgen/input/doc&#39;</span><span class="p">,</span>
+         <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;Output tag external doc description&#39;</span>
+      <span class="p">}</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+<span class="n">tags</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">tag1</span><span class="p">)</span>
+<span class="n">service_documentation</span><span class="p">[</span><span class="s1">&#39;tags&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tags</span>
+
+<span class="n">endpoint_documentation</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="n">endpoint_documentation</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Sample endpoint sink&#39;</span>
+<span class="n">endpoint_documentation</span><span class="p">[</span><span class="s1">&#39;tags&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Output&#39;</span><span class="p">]</span>
+<span class="n">endpoint_documentation</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Streams job emits some data with random numbers&#39;</span>
+
+<span class="n">doc_attr</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="n">descr</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;IDENTIFIER (incremented by one per tuple)&#39;</span><span class="p">}}</span>
+<span class="n">doc_attr</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">descr</span><span class="p">)</span>
+<span class="n">descr</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;num&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;RANDOM NUMBER&#39;</span><span class="p">}}</span>
+<span class="n">doc_attr</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">descr</span><span class="p">)</span>
+<span class="n">endpoint_documentation</span><span class="p">[</span><span class="s1">&#39;attributeDescriptions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">doc_attr</span>
+
+<span class="n">stream1</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="n">SampleSource</span><span class="p">())</span>
+<span class="n">stream1</span><span class="o">.</span><span class="n">for_each</span><span class="p">(</span><span class="n">EndpointSink</span><span class="p">(</span>
+   <span class="n">buffer_size</span><span class="o">=</span><span class="mi">50000</span><span class="p">,</span>
+   <span class="n">service_documentation</span><span class="o">=</span><span class="n">service_documentation</span><span class="p">,</span>
+   <span class="n">endpoint_documentation</span><span class="o">=</span><span class="n">endpoint_documentation</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;cpd_endpoint_sink&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.18.</span></p>
+</div>
+<dl class="attribute">
+<dt id="streamsx.service.EndpointSink.buffer_size">
+<code class="sig-name descname">buffer_size</code><a class="headerlink" href="#streamsx.service.EndpointSink.buffer_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of the buffer. If the buffer capacity is reached, older tuples are removed to make room for the newer tuples. A warning is returned on an API request if the requested start time is before the oldest tuple in the buffer. The default buffer size is 1000.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.service.EndpointSink.consuming_reads">
+<code class="sig-name descname">consuming_reads</code><a class="headerlink" href="#streamsx.service.EndpointSink.consuming_reads" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates whether tuples should be removed from the endpoint buffer after they have been retuned on a REST API call. The default value is false.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>boolean</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.service.EndpointSink.service_documentation">
+<code class="sig-name descname">service_documentation</code><a class="headerlink" href="#streamsx.service.EndpointSink.service_documentation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Content to describe the service. This is set once per application only.
+Apply a <code class="docutils literal notranslate"><span class="pre">dict</span></code> containing one or more of the keys: ‘title, ‘version’, ‘description’, ‘externalDocsUrl’, ‘externalDocsDescription’, ‘tags’:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span> <span class="o">=</span> <span class="p">{</span>
+   <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">,</span>
+   <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">,</span>
+   <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">,</span>
+   <span class="s1">&#39;externalDocsUrl&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">,</span>
+   <span class="s1">&#39;externalDocsDescription&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">,</span>
+   <span class="s1">&#39;tags&#39;</span><span class="p">:</span> <span class="p">{</span><span class="o">&lt;</span><span class="n">key</span><span class="o">&gt;</span> <span class="p">{</span><span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">,</span> <span class="s1">&#39;externalDocs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">,</span> <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">}},</span> <span class="o">...</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.service.EndpointSink.endpoint_documentation">
+<code class="sig-name descname">endpoint_documentation</code><a class="headerlink" href="#streamsx.service.EndpointSink.endpoint_documentation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Additional content to be included for an API endpoint to describe the endpoint sink.
+Apply a <code class="docutils literal notranslate"><span class="pre">dict</span></code> containing one or more of the keys: ‘summary, ‘tags’, ‘description’, ‘attributeDescriptions’:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span> <span class="o">=</span> <span class="p">{</span>
+   <span class="s1">&#39;summary&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">,</span>
+   <span class="s1">&#39;tags&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">array</span> <span class="n">of</span> <span class="n">strings</span><span class="o">&gt;</span><span class="p">,</span>
+   <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">,</span>
+   <span class="s1">&#39;attributeDescriptions&#39;</span><span class="p">:</span> <span class="p">{</span><span class="o">&lt;</span><span class="n">key</span><span class="o">&gt;</span> <span class="p">{</span><span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">},</span> <span class="o">...</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.service.EndpointSink.Returns">
+<code class="sig-name descname">Returns</code><a class="headerlink" href="#streamsx.service.EndpointSink.Returns" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">topology_ref:streamsx.topology.topology.Sink</span></code>: Stream termination.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.service.EndpointSink.populate">
+<code class="sig-name descname">populate</code><span class="sig-paren">(</span><em class="sig-param">topology</em>, <em class="sig-param">stream</em>, <em class="sig-param">name</em>, <em class="sig-param">**options</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.service.EndpointSink.populate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Populate the topology with this composite for each transformation.
+Subclasses must implement the <code class="docutils literal notranslate"><span class="pre">populate</span></code> function.
+<code class="docutils literal notranslate"><span class="pre">populate</span></code> is called when the composite is added to the topology with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sink</span> <span class="o">=</span> <span class="n">input_stream</span><span class="o">.</span><span class="n">for_each</span><span class="p">(</span><span class="n">myForEachComposite</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>topology</strong> – Topology containing the composite map.</p></li>
+<li><p><strong>stream</strong> – Stream to be transformed.</p></li>
+<li><p><strong>name</strong> – Name passed into <code class="docutils literal notranslate"><span class="pre">for_each</span></code>.</p></li>
+<li><p><strong>**options</strong> – Future options passed to <code class="docutils literal notranslate"><span class="pre">for_each</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Termination for this composite transformation of <cite>stream</cite>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Sink" title="streamsx.topology.topology.Sink">Sink</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="streamsx.service.EndpointSource">
+<em class="property">class </em><code class="sig-prename descclassname">streamsx.service.</code><code class="sig-name descname">EndpointSource</code><span class="sig-paren">(</span><em class="sig-param">schema</em>, <em class="sig-param">buffer_size=None</em>, <em class="sig-param">endpoint_documentation=None</em>, <em class="sig-param">service_documentation=None</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.service.EndpointSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="streamsx.topology.composite.html#streamsx.topology.composite.Source" title="streamsx.topology.composite.Source"><code class="xref py py-class docutils literal notranslate"><span class="pre">streamsx.topology.composite.Source</span></code></a></p>
+<p>Creates a service endpoint that produces a stream of data received via REST.</p>
+<p>With this source the Streams job is enabled as a Cloud Pak for Data service and retrieves job data using REST API.</p>
+<p>Use an instance of this class in <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Topology.source" title="streamsx.topology.topology.Topology.source"><code class="xref py py-meth docutils literal notranslate"><span class="pre">source()</span></code></a> and create a stream:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">streamsx.service</span> <span class="k">import</span> <span class="n">EndpointSource</span>
+<span class="n">topo</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="n">EndpointSource</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Example endpoint that receives data in JSON format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">streamsx.service</span> <span class="k">import</span> <span class="n">EndpointSource</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="n">EndpointSource</span><span class="p">(</span><span class="n">schema</span><span class="o">=</span><span class="n">CommonSchema</span><span class="o">.</span><span class="n">Json</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;cpd_endpoint_src_json&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Example with structured Stream schema, service and endpoint documentation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">streamsx.topology.topology</span> <span class="k">import</span> <span class="n">Topology</span>
+<span class="kn">from</span> <span class="nn">streamsx.service</span> <span class="k">import</span> <span class="n">EndpointSource</span>
+
+<span class="n">topo</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">(</span><span class="s1">&#39;endpoint_source_sample&#39;</span><span class="p">)</span>
+<span class="n">service_documentation</span><span class="o">=</span><span class="p">{</span>
+   <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;streamsx-sample-endpoint-source&#39;</span><span class="p">,</span>
+   <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;Streams job as service receives data&#39;</span><span class="p">,</span>
+   <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="s1">&#39;1.0.0&#39;</span>
+<span class="p">}</span>
+<span class="n">endpoint_documentation</span> <span class="o">=</span> <span class="p">{</span>
+   <span class="s1">&#39;summary&#39;</span><span class="p">:</span> <span class="s1">&#39;Sample endpoint source&#39;</span><span class="p">,</span>
+   <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;CPD job endpoint injects some data&#39;</span>
+<span class="p">}</span>
+<span class="n">schema</span> <span class="o">=</span> <span class="s1">&#39;tuple&lt;rstring id, int64 number&gt;&#39;</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="n">EndpointSource</span><span class="p">(</span>
+   <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">,</span>
+   <span class="n">buffer_size</span><span class="o">=</span><span class="mi">200000</span><span class="p">,</span>
+   <span class="n">service_documentation</span><span class="o">=</span><span class="n">service_documentation</span><span class="p">,</span>
+   <span class="n">endpoint_documentation</span><span class="o">=</span><span class="n">endpoint_documentation</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;cpd_endpoint_src&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">New in version 1.18.</span></p>
+</div>
+<dl class="attribute">
+<dt id="streamsx.service.EndpointSource.schema">
+<code class="sig-name descname">schema</code><a class="headerlink" href="#streamsx.service.EndpointSource.schema" title="Permalink to this definition">¶</a></dt>
+<dd><p>Schema of the source stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="streamsx.topology.schema.html#streamsx.topology.schema.StreamSchema" title="streamsx.topology.schema.StreamSchema">StreamSchema</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.service.EndpointSource.buffer_size">
+<code class="sig-name descname">buffer_size</code><a class="headerlink" href="#streamsx.service.EndpointSource.buffer_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of the buffer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.service.EndpointSource.service_documentation">
+<code class="sig-name descname">service_documentation</code><a class="headerlink" href="#streamsx.service.EndpointSource.service_documentation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Content to describe the service. This is set once per application only.
+Apply a <code class="docutils literal notranslate"><span class="pre">dict</span></code> containing one or more of the keys: ‘title, ‘version’, ‘description’, ‘externalDocsUrl’, ‘externalDocsDescription’, ‘tags’:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span> <span class="o">=</span> <span class="p">{</span>
+   <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">,</span>
+   <span class="s1">&#39;version&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">,</span>
+   <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">,</span>
+   <span class="s1">&#39;externalDocsUrl&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">,</span>
+   <span class="s1">&#39;externalDocsDescription&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">,</span>
+   <span class="s1">&#39;tags&#39;</span><span class="p">:</span> <span class="p">{</span><span class="o">&lt;</span><span class="n">key</span><span class="o">&gt;</span> <span class="p">{</span><span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">,</span> <span class="s1">&#39;externalDocs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;url&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">,</span> <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">}},</span> <span class="o">...</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.service.EndpointSource.endpoint_documentation">
+<code class="sig-name descname">endpoint_documentation</code><a class="headerlink" href="#streamsx.service.EndpointSource.endpoint_documentation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Additional content to be included for an API endpoint to describe the endpoint source.
+Apply a <code class="docutils literal notranslate"><span class="pre">dict</span></code> containing one or more of the keys: ‘summary, ‘tags’, ‘description’, ‘attributeDescriptions’:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">d</span> <span class="o">=</span> <span class="p">{</span>
+   <span class="s1">&#39;summary&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">,</span>
+   <span class="s1">&#39;tags&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">array</span> <span class="n">of</span> <span class="n">strings</span><span class="o">&gt;</span><span class="p">,</span>
+   <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">,</span>
+   <span class="s1">&#39;attributeDescriptions&#39;</span><span class="p">:</span> <span class="p">{</span><span class="o">&lt;</span><span class="n">key</span><span class="o">&gt;</span> <span class="p">{</span><span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">string</span> <span class="n">value</span><span class="o">&gt;</span><span class="p">},</span> <span class="o">...</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="streamsx.service.EndpointSource.Returns">
+<code class="sig-name descname">Returns</code><a class="headerlink" href="#streamsx.service.EndpointSource.Returns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stream.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="streamsx.service.EndpointSource.populate">
+<code class="sig-name descname">populate</code><span class="sig-paren">(</span><em class="sig-param">topology</em>, <em class="sig-param">name</em>, <em class="sig-param">**options</em><span class="sig-paren">)</span><a class="headerlink" href="#streamsx.service.EndpointSource.populate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Populate the topology with this composite source. Subclasses must implement the <code class="docutils literal notranslate"><span class="pre">populate</span></code> function.
+<code class="docutils literal notranslate"><span class="pre">populate</span></code> is called when the composite is added to the topology with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">topo</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">()</span>
+<span class="n">source_stream</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="n">mySourceComposite</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>topology</strong> – Topology containing the source.</p></li>
+<li><p><strong>name</strong> – Name passed into <code class="docutils literal notranslate"><span class="pre">source</span></code>.</p></li>
+<li><p><strong>**options</strong> – Future options passed to <code class="docutils literal notranslate"><span class="pre">source</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Single stream representing the source.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream" title="streamsx.topology.topology.Stream">Stream</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="streamsx.spl.op.html" class="btn btn-neutral float-right" title="streamsx.spl.op" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="streamsx.ec.html" class="btn btn-neutral float-left" title="streamsx.ec" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2020 IBM Corp.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="Submission of SPL tuples from Python"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_page"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>Submission of SPL tuples from Python</title>
+</head>
+<body id="spldoc_page">
+
+
+<h1 class="title topictitle1">Submission of SPL tuples from Python</h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">Toolkits</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.topology.html">com.ibm.streamsx.topology 2.1.0</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python.html">com.ibm.streamsx.topology.python</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.topology.python$4.html">Creating SPL Operators from Python code</a> &gt; Submission of SPL tuples from Python</p>
+
+</div>
+
+
+<div class="section">
+<p class="p">The return from a decorated callable results in submission of SPL tuples on the associated outut port.
+</p>
+
+<div class="p">A Python function must return:
+<ul class="ul">
+<li class="li"> <tt class="ph tt">None</tt></li>
+
+<li class="li"> a Python tuple</li>
+
+<li class="li"> a Python dictionary</li>
+
+<li class="li"> a list containing any of the above.</li>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">None
+</h2>
+
+<p class="p">When <tt class="ph tt">None</tt> is return then no tuple will be submitted to the operator's output port.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Python tuple
+</h2>
+
+<p class="p">When a Python tuple is returned is is converted to an SPL tuple and submitted to the output port.
+</p>
+
+<p class="p">The values of a Python tuple are assigned to an output SPL tuple by position, so the first value in the Python tuple is assigned to the first attribute in the SPL tuple.
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+# SPL input schema: tuple&lt;int32 x, float64 y&gt;
+# SPL output schema: tuple&lt;int32 x, float64 y, float32 z&gt;
+@spl.pipe
+def myfunc(a,b):
+   return (a,b,a+b)
+
+# The SPL output will be:
+# All values explictly set by returned Python tuple
+# based on the x,y values from the input tuple
+# x is set to: x 
+# y is set to: y
+# z is set to: x+y
+</pre>
+
+
+</div>
+
+<p class="p">The returned tuple may be <em class="ph i">sparse</em>, any attribute value in the tuple that is <tt class="ph tt">None</tt> will be set to their SPL default or copied from the input tuple, depending on the operator kind.
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+# SPL input schema: tuple&lt;int32 x, float64 x&gt;
+# SPL output schema: tuple&lt;int32 x, float64 y, float32 z&gt;
+@spl.pipe
+def myfunc(a,b):
+   return (a,None,a+b)
+
+# The SPL output will be:
+# x is set to: x (explictly set by returned Python tuple)
+# y is set to: y (set by matching input SPL attribute)
+# z is set to: x+y
+</pre>
+
+
+</div>
+
+<p class="p">When a returned tuple has less values than attributes in the SPL output schema the attributes not set by the Python function will be set to their SPL default or copied from the input tuple, depending on the operator kind.
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+# SPL input schema: tuple&lt;int32 x, float64 x&gt;
+# SPL output schema: tuple&lt;int32 x, float64 y, float32 z&gt;
+@spl.pipe
+def myfunc(a,b):
+   return a,
+
+# The SPL output will be:
+# x is set to: x (explictly set by returned Python tuple)
+# y is set to: y (set by matching input SPL attribute)
+# z is set to: 0 (default int32 value)
+</pre>
+
+
+</div>
+
+<p class="p">When a returned tuple has more values than attributes in the SPL output schema then the additional values are ignored.
+</p>
+
+<div class="p">
+<pre class="pre codeblock">
+# SPL input schema: tuple&lt;int32 x, float64 x&gt;
+# SPL output schema: tuple&lt;int32 x, float64 y, float32 z&gt;
+@spl.pipe
+def myfunc(a,b):
+   return (a,b,a+b,a/b)
+
+# The SPL output will be:
+# All values explictly set by returned Python tuple
+# based on the x,y values from the input tuple
+# x is set to: x
+# y is set to: y
+# z is set to: x+y
+#
+# The fourth value in the tuple a/b = x/y is ignored.
+</pre>
+
+
+</div>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Python dictionary
+</h2>
+
+<p class="p">A Python dictionary is converted to a SPL tuple for submission to the associated output port. An SPL attribute is set from the dictionary if the dictionary contains a key equal to the attribute name. The value is used to set the attribute, unless the attribute is <tt class="ph tt">None</tt>.
+</p>
+
+<p class="p">If the value in the dictionary is <tt class="ph tt">None</tt> or no matching key exists then the attribute's value is set fom the input tuple or to its default value depending on the operator kind.
+</p>
+
+<p class="p">Any keys in the dictionary that do not map to SPL attribute names are ignored.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Python list
+</h2>
+
+<p class="p">When a list returned, each value is converted to an SPL tuple and submitted to the output port, in order of the list starting with the first tuple (position 0). If the list contains <tt class="ph tt">None</tt> at an index then no SPL tuple is submitted for that index.
+</p>
+
+<p class="p">The list must only contain Python tuples, dictionaries or <tt class="ph tt">None</tt>. The list can contain a mix of valid values.
+</p>
+
+<p class="p">The list may be empty resulting in no tuples being submitted.
+</p>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

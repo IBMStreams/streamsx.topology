@@ -1,0 +1,335 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Restrictions and known bugs &mdash; streamsx 2.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="IBM Streams Python setup" href="pysetup.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> streamsx
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                2.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.html">streamsx.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.topology.html">streamsx.topology.topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.context.html">streamsx.topology.context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.schema.html">streamsx.topology.schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.state.html">streamsx.topology.state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.composite.html">streamsx.topology.composite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester.html">streamsx.topology.tester</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.topology.tester_runtime.html">streamsx.topology.tester_runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.ec.html">streamsx.ec</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.service.html">streamsx.service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.op.html">streamsx.spl.op</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.types.html">streamsx.spl.types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.toolkit.html">streamsx.spl.toolkit</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.spl.spl.html">streamsx.spl.spl</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.build.html">streamsx.build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest.html">streamsx.rest</a></li>
+<li class="toctree-l1"><a class="reference internal" href="streamsx.rest_primitives.html">streamsx.rest_primitives</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="scripts/extract.html">spl-python-extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/info.html">streamsx-info</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/runner.html">streamsx-runner</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/sc.html">streamsx-sc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/service.html">streamsx-service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scripts/streamtool.html">streamsx-streamtool</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="service.html">IBM Streaming Analytics service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysetup.html">IBM Streams Python setup</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Restrictions and known bugs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">streamsx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Restrictions and known bugs</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/restrictions.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="restrictions-and-known-bugs">
+<h1>Restrictions and known bugs<a class="headerlink" href="#restrictions-and-known-bugs" title="Permalink to this headline">¶</a></h1>
+<ul>
+<li><p><em>streamsx</em> versions 2.0 and higher are incompatible with Cloud Pak for Data less than version 3.5.0.0</p></li>
+<li><p>For use of <em>streamsx</em> 2.0, the <cite>com.ibm.streamsx.iot</cite> toolkit must be updated to minimum version 1.3.0 on the build service or a local Streams installation. Otherwise dependency errors will occur when the application is compiled:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>/opt/ibm/streams/bin/sc -M `cat main_composite.txt` ...
+CDISP0384E ERROR: The &lt;application&gt; toolkit requires version 2.0.0 of the com.ibm.streamsx.topology toolkit, but version 1.17.0 of the required toolkit is currently installed.
+CDISP0884W WARNING: Errors occurred while the toolkits were loading.
+
+CDISP0092E ERROR: Because of previous compilation errors, the compile process cannot continue.
+make: *** [all] Error 1
+Exception in thread &quot;main&quot; java.lang.IllegalStateException: Error submitting archive for build: &lt;build-ID&gt;
+</pre></div>
+</div>
+<p>When this error occurs, the IOT-Toolkit must be updated or added to the toolkit path (for example environment variable STREAMS_SPLPATH). To update the IoT toolkit on the
+CP4D buildservice to version 1.3.0, follow these steps:</p>
+<ul class="simple">
+<li><p>download the <a class="reference external" href="https://github.com/IBMStreams/streamsx.iot/releases/download/v1.3.0/streamsx.iot.toolkits-1.3.0-20201208-1147.tgz">toolkit version 1.3.0 tarball</a>
+from the <a class="reference external" href="https://github.com/IBMStreams/streamsx.iot/releases/">toolkits release page</a> on GitHub.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cd</span></code> to your download location</p></li>
+<li><p>unpack the downloaded tarball: <code class="docutils literal notranslate"><span class="pre">tar</span> <span class="pre">-zxf</span> <span class="pre">streamsx.iot.toolkits-1.3.0-20201208-1147.tgz</span></code></p></li>
+<li><p>upload the toolkit: <code class="docutils literal notranslate"><span class="pre">streamsx-streamtool</span> <span class="pre">[--disable-ssl-verify]</span> <span class="pre">uploadtoolkit</span> <span class="pre">--path</span> <span class="pre">com.ibm.streamsx.iot</span></code></p></li>
+<li><p>you can verify that the new version is present, with <code class="docutils literal notranslate"><span class="pre">streamsx-streamtool</span> <span class="pre">[--disable-ssl-verify]</span> <span class="pre">lstoolkit</span> <span class="pre">--name</span> <span class="pre">com.ibm.streamsx.iot</span></code>. The old and the new version should be listed.</p></li>
+</ul>
+</li>
+<li><p>A job that is submitted with <cite>streamsx-streamtool</cite> to a Cloud Pak for Data with version above 3.0 is only visible in the Streams Console.</p></li>
+<li><p>Job submission from a Python notebook within a CP4D project on Cloud Pak for Data with version above 3.0 may fail with exception message</p>
+<p><cite>CDIST3419E: Submission failed. Please provide the CP4D URL in your submission configuration.</cite></p>
+<p>In this case, specify the CP4D URL, for example from your browser’s address bar, in the submission configuration, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span> <span class="o">=</span> <span class="o">...</span>
+<span class="n">cfg</span><span class="p">[</span><span class="n">ConfigParams</span><span class="o">.</span><span class="n">CP4D_URL</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;https://cp4d-cluster.com&#39;</span>
+<span class="n">submission_result</span> <span class="o">=</span> <span class="n">submit</span><span class="p">(</span><span class="n">ContextTypes</span><span class="o">.</span><span class="n">DISTRIBUTED</span><span class="p">,</span> <span class="n">topology</span><span class="p">,</span> <span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>For Python development outside of a CP4D, for example with a Jupyter notebook outside of CP4D, you must use an Anaconda or Miniconda Python installation.</p></li>
+<li><p>No support for nested parallel regions at sources, i.e. nested <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.set_parallel" title="streamsx.topology.topology.Stream.set_parallel"><code class="xref py py-func docutils literal notranslate"><span class="pre">streamsx.topology.topology.Stream.set_parallel()</span></code></a>, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">topo</span> <span class="o">=</span> <span class="n">Topology</span><span class="p">()</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">topo</span><span class="o">.</span><span class="n">source</span><span class="p">(</span><span class="n">S</span><span class="p">())</span>
+<span class="n">s</span><span class="o">.</span><span class="n">set_parallel</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">set_parallel</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, <cite>set_parallel(3)</cite> is ignored.</p>
+</li>
+<li><p>When tuples are nested within other tuples in a stream schema, the call style of instances of <cite>StreamSchema</cite> for a callable is always dict, whatever value the <cite>style</cite> property has. When the return value of a callable represents also a structured schema with nested tuples, the return type must also be a <cite>dict</cite>. Otherwise the behaviour is not defined.</p></li>
+<li><p>No schema support for container types (list, map, set, and the like) with non-primitive value or element types as value or element types for other containers, also when encapsulated in a named tuple:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">A_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">y</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="k">class</span> <span class="nc">B_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">a_list</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">A_schema</span><span class="p">]</span>     <span class="c1"># supported, A_schema does not contain a container type at all</span>
+
+<span class="k">class</span> <span class="nc">C_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">c1</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">c2</span><span class="p">:</span> <span class="n">B_schema</span>                      <span class="c1"># supported, a container type can be nested at any depth</span>
+
+<span class="k">class</span> <span class="nc">D_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">d1</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">d2</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>       <span class="c1"># supported</span>
+    <span class="n">d3</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">typing</span><span class="o">.</span><span class="n">List</span><span class="p">[</span><span class="n">A_schema</span><span class="p">]</span>  <span class="c1"># not supported: a container with non-primitive element type is direct value type of a map</span>
+
+<span class="k">class</span> <span class="nc">E_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">e1</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">e2</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">C_schema</span><span class="p">]</span>   <span class="c1"># not supported: C_schema.c2.a_list is a list with non-primitive element type</span>
+</pre></div>
+</div>
+</li>
+<li><p>Schemas support only primitive types for the key type of a map:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">A_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">a1</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">a2</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="k">class</span> <span class="nc">B_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">b1</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">b2</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">A_schema</span><span class="p">]</span>   <span class="c1"># supported</span>
+    <span class="n">b3</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Mapping</span><span class="p">[</span><span class="n">A_schema</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>   <span class="c1"># not supported, A_schema not supported as key type</span>
+</pre></div>
+</div>
+</li>
+<li><p>Schemas support only primitive types as element type of a set:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">A_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">a1</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">a2</span><span class="p">:</span> <span class="nb">int</span>
+
+<span class="k">class</span> <span class="nc">B_schema</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="n">b1</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">b2</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>       <span class="c1"># supported</span>
+    <span class="n">b3</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Set</span><span class="p">[</span><span class="n">A_schema</span><span class="p">]</span>  <span class="c1"># not supported</span>
+</pre></div>
+</div>
+</li>
+<li><p>Python Composites (derived from <a class="reference internal" href="streamsx.topology.composite.html#streamsx.topology.composite.Composite" title="streamsx.topology.composite.Composite"><code class="xref py py-class docutils literal notranslate"><span class="pre">streamsx.topology.composite.Composite</span></code></a>) can have only one input port.</p></li>
+<li><p>No support to process final marker (end of stream) in Python Callables like in SPL operators</p></li>
+<li><p>No hook for drain processing in consistent region for Python Callables</p></li>
+<li><p>Submission time parameters, which are defined in SPL composites of other toolkits, or created by using
+<cite>streamsx.spl.op.Expression</cite> in the topology, cannot be accessed at runtime with <cite>streamsx.ec.get_submission_time_value(name)</cite>.</p></li>
+<li><p>The <em>time-interval</em> window (<a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Stream.time_interval" title="streamsx.topology.topology.Stream.time_interval"><code class="xref py py-func docutils literal notranslate"><span class="pre">streamsx.topology.topology.Stream.time_interval()</span></code></a>) is not supported by <a class="reference internal" href="streamsx.topology.topology.html#streamsx.topology.topology.Window.aggregate" title="streamsx.topology.topology.Window.aggregate"><code class="xref py py-func docutils literal notranslate"><span class="pre">streamsx.topology.topology.Window.aggregate()</span></code></a>. Use the <cite>spl.relational::Aggregate</cite> operator in an <em>event-time</em> stream.</p></li>
+</ul>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="pysetup.html" class="btn btn-neutral float-left" title="IBM Streams Python setup" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015,2020 IBM Corp.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
