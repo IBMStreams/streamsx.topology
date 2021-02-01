@@ -536,8 +536,10 @@ class _SPLInvocation(object):
 
         # Wrap a lambda as a callable class instance
         inline_fn = False
+        recurse = None
         if isinstance(function, types.LambdaType) and function.__name__ == "<lambda>" :
             inline_fn = True
+            recurse = True
             if nargs:
                 function = streamsx.topology.runtime._Callable1(function, no_context=True)
             else:
@@ -546,6 +548,7 @@ class _SPLInvocation(object):
             # Function/Class defined in main, create a callable wrapping its
             # dill'ed form
             inline_fn = True
+            recurse = True
             if nargs:
                 function = streamsx.topology.runtime._Callable1(function,
                     no_context = True if inspect.isroutine(function) else None)
@@ -565,7 +568,7 @@ class _SPLInvocation(object):
             # callable is a callable class instance
             self.params["pyName"] = function.__class__.__name__
             # dill format is binary; base64 encode so it is json serializable 
-            self.params["pyCallable"] = base64.b64encode(dill.dumps(function, recurse=None )).decode("ascii")
+            self.params["pyCallable"] = base64.b64encode(dill.dumps(function, recurse=recurse)).decode("ascii")
 
         if stateful is not None:
             self.params['pyStateful'] = bool(stateful)

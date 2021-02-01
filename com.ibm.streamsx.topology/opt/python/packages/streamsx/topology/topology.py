@@ -3006,13 +3006,16 @@ class Window(object):
         stateful = _determine_statefulness(function)
 
         # This is based on graph._addOperatorFunction.
+        recurse = None
         if isinstance(function, types.LambdaType) and function.__name__ == "<lambda>" :
             function = streamsx.topology.runtime._Callable1(function, no_context=True)
+            recurse = True
         elif function.__module__ == '__main__':
             # Function/Class defined in main, create a callable wrapping its
             # dill'ed form
             function = streamsx.topology.runtime._Callable1(function,
                 no_context = True if inspect.isroutine(function) else None)
+            recurse = True
          
         if inspect.isroutine(function):
             # callable is a function
@@ -3021,7 +3024,7 @@ class Window(object):
             # callable is a callable class instance
             name = function.__class__.__name__
             # dill format is binary; base64 encode so it is json serializable 
-            dilled_callable = base64.b64encode(dill.dumps(function, recurse=None)).decode("ascii")
+            dilled_callable = base64.b64encode(dill.dumps(function, recurse=recurse)).decode("ascii")
 
         self._config['partitioned'] = True
         if dilled_callable is not None:
