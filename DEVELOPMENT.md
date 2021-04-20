@@ -66,6 +66,20 @@ The top-level Ant file `streamsx.topology/build.xml` has these main targets:
 ### Implementing toolkit messages
 This toolkit supports globalized messages with unique message IDs. The guidelines for implementing a message bundle are described in [Messages and National Language Support for Toolkits](https://github.com/IBMStreams/administration/wiki/Messages-and-National-Language-Support-for-toolkits).
 
+### Develop
+
+#### Python - streamsx
+
+Find the sources of the streamsx Python package in the toolkit directory `com.ibm.streamsx.topology/opt/python/packages/streamsx`:
+
+[Python package in the toolkit](https://github.com/IBMStreams/streamsx.topology/tree/develop/com.ibm.streamsx.topology/opt/python/packages/streamsx)
+
+#### Java sources
+
+The Java sources are located in the `java` directory:
+
+[Java sources](https://github.com/IBMStreams/streamsx.topology/tree/develop/java)
+
 ### Distributed testing
 
 By default the Ant `test` target does not run the tests against a Streams instance (distributed), as it requires an instance to be running, which may not always be the case. A sub-set of the tests can also be run against a Streams instance like this:
