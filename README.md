@@ -8,7 +8,7 @@ http://ibmstreams.github.io/streamsx.topology/
 [CHANGELOG.md](com.ibm.streamsx.topology/CHANGELOG.md)
 
 ## Development
-[DEVELOPMENT.md](com.ibm.streamsx.topology/DEVELOPMENT.md)
+[DEVELOPMENT.md](DEVELOPMENT.md)
 
 ## Testing
-[TESTING.md](com.ibm.streamsx.topology/TESTING.md)
+[TESTING.md](TESTING.md)
