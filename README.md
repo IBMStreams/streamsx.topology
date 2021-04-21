@@ -6,3 +6,9 @@ http://ibmstreams.github.io/streamsx.topology/
 
 ## Changes
 [CHANGELOG.md](com.ibm.streamsx.topology/CHANGELOG.md)
+
+## Development
+[DEVELOPMENT.md](com.ibm.streamsx.topology/DEVELOPMENT.md)
+
+## Testing
+[TESTING.md](com.ibm.streamsx.topology/TESTING.md)
