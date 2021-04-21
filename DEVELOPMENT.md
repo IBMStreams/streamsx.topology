@@ -66,13 +66,54 @@ The top-level Ant file `streamsx.topology/build.xml` has these main targets:
 ### Implementing toolkit messages
 This toolkit supports globalized messages with unique message IDs. The guidelines for implementing a message bundle are described in [Messages and National Language Support for Toolkits](https://github.com/IBMStreams/administration/wiki/Messages-and-National-Language-Support-for-toolkits).
 
-### Develop
+### Functionality / Overview
 
-#### Python - streamsx
+#### Python/Java topology goals
+
+A Python/Java developer can develop an IBM Streams application
+* With no knowledge of SPL
+* Using constructs natural to Python/Java
+
+![Build server flow](https://github.com/IBMStreams/streamsx.topology/blob/gh-pages/images/build_server_flow.png)
+
+#### Python Topology - streamsx
+
+* Exposed through streamsx
+    * No dependency on IBM Streams install
+    * Does require local Java VM
+* Tuples are:
+    * Structured – Instances of (depends on setting of StreamSchema)
+        * dict
+        * tuple
+        * NamedTuple
+    * String – str
+    * Json – dict
+    * Object – Any Python object
+* Topology becomes a flow of C++ primitive operators that host the Python VM
+    * Single VM per PE
+* Schemas can by set by Python type-hints
+* Encouraging use of typed NamedTuples to define structured schemas
+* Checking of functions where possible, e.g. check that a map function takes a single argument (or self + single argument for class __call__)
+    * Detects errors at declaration time (easier) instead of at Streams runtime
+* Composite operators
+    * Some transforms can be passed class instances that expand into a subflow
 
 Find the sources of the streamsx Python package in the toolkit directory `com.ibm.streamsx.topology/opt/python/packages/streamsx`:
 
 [Python package in the toolkit](https://github.com/IBMStreams/streamsx.topology/tree/develop/com.ibm.streamsx.topology/opt/python/packages/streamsx)
+
+#### Java Topology
+
+* Tuples are:
+    * Structured – Instances of com.ibm.streams.operator.Tuple
+        * Hence Java topology depends on jars within IBM Streams install
+    * String – java.lang.String
+    * Json – com.ibm.json.JSONObject – another dependency on IBM Streams install
+    * Typed object – instance of class/interface
+* Topology becomes a flow of SPL Java primitive operators 
+* Supports embedded execution mode using Java operator mock framework
+    * Topologies then limited to only Java primitive operators
+
 
 #### Java sources
 
