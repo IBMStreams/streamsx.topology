@@ -119,7 +119,7 @@
   <manifestclasspath property="jar.classpath" jarfile="${jar}">
      <classpath>
        <path refid="tk.classpath"/>
-       <fileset dir="${tk.opt}/slf4j-1.7.5">
+       <fileset dir="${tk.opt}/slf4j-1.7.36">
           <include name="*.jar"/>
        </fileset>
      </classpath>

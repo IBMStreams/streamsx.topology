@@ -3,6 +3,9 @@
 ## develop/latest
 * [#2643](https://github.com/IBMStreams/streamsx.topology/issues/2643) Documentation: Specifying a space in a notebook
 
+## v2.2.0
+remove log4j jar files from toolkit
+
 ## v2.1.0
 * [#2649](https://github.com/IBMStreams/streamsx.topology/issues/2649) Python scripts: Print diagnostic info in verbose mode when spl-python-extract skips python modules
 * [#2646](https://github.com/IBMStreams/streamsx.topology/issues/2646) Python: Support new consumingReads parameter of spl.endpoint::EndpointSink
